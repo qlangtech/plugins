@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.qlangtech.tis.tools</groupId>
+        <artifactId>plugin</artifactId>
+        <version>saturn-1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+
+    <groupId>com.qlangtech.tis</groupId>
+    <artifactId>tis-aliyun-hdfs-plugin</artifactId>
+    <packaging>tpi</packaging>
+
+    <name>tis-aliyun-hdfs-plugin</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <plugins>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-builder-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.8.0</version>
+        </dependency>
+        <!--
+        aliyun oss random write example
+        https://github.com/aliyun/aliyun-oss-java-sdk/blob/master/src/samples/ConcurrentGetObjectSample.java-->
+        <!--
+        aliyun-sdk-dfs 这个应该是在服务端将oss包了一下，将来可以考虑兼容
+        https://mvnrepository.com/artifact/com.aliyun.dfs/aliyun-sdk-dfs
+        <dependency>
+            <groupId>com.aliyun.dfs</groupId>
+            <artifactId>aliyun-sdk-dfs</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+ -->
+
+    </dependencies>
+
+
+</project>

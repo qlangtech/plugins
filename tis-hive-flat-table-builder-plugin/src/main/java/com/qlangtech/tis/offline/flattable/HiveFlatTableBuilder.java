@@ -23,8 +23,8 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -38,7 +38,10 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
+import org.apache.commons.dbcp.DelegatingConnection;
+
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Objects;
 
 /*
@@ -52,18 +55,18 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     public static final String KEY_FIELD_NAME = "fsName";
 
-    @FormField(ordinal = 0, validate = { Validator.require, Validator.identity })
+    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1, validate = { Validator.require, Validator.host })
+    @FormField(ordinal = 1, validate = {Validator.require, Validator.host})
     public String // "jdbc:hive2://10.1.5.68:10000/tis";
-    hiveAddress;
+            hiveAddress;
 
-    @FormField(ordinal = 2, validate = { Validator.require, Validator.identity })
+    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
     public String // "jdbc:hive2://10.1.5.68:10000/tis";
-    dbName;
+            dbName;
 
-    @FormField(ordinal = 3, validate = { Validator.require, Validator.identity }, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 3, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
     public String fsName;
 
     private FileSystemFactory fileSystem;
@@ -85,31 +88,39 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     }
 
     @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode
+            , ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
         HiveTaskFactory taskFactory = getTaskFactory(tplContext);
-        return taskFactory.createTask(nodeMeta, tplContext, taskContext, fs2Table, joinTaskStatus);
+        return taskFactory.createTask(nodeMeta,isFinalNode, tplContext, taskContext, fs2Table, joinTaskStatus);
     }
 
     private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
         ERRules erRules = tplContext.joinTaskContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
         Objects.nonNull(erRules);
         Objects.nonNull(getFs());
-        this.taskFactory = new HiveTaskFactory(erRules.getTabFieldProcessorMap(), getFs());
+        this.taskFactory = new HiveTaskFactory(erRules, getFs());
         return taskFactory;
     }
 
     @Override
     public void startTask(ITableBuildTask dumpTask) {
         final Connection conn = HiveDBUtils.getInstance(this.hiveAddress, this.dbName).createConnection();
+        final DelegatingConnection delegate = new DelegatingConnection(conn) {
+            @Override
+            public void close() throws SQLException {
+                throw new UnsupportedOperationException("in exec phrase close is not supported");
+            }
+        };
         ITaskContext context = new ITaskContext() {
-
             @Override
             public Connection getObj() {
-                return conn;
+                return delegate;
             }
         };
         try {
             dumpTask.process(context);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
             try {
                 conn.close();
@@ -128,6 +139,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
+
         @Override
         public String getDisplayName() {
             return "hive";

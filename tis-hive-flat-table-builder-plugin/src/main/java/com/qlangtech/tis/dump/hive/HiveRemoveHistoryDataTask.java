@@ -17,16 +17,17 @@
  */
 package com.qlangtech.tis.dump.hive;
 
-import com.qlangtech.tis.dump.DumpTable;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Connection;
@@ -92,7 +93,7 @@ public class HiveRemoveHistoryDataTask {
      * @param hiveConnection
      * @throws Exception
      */
-    public void deleteHdfsHistoryFile(DumpTable dumpTable, Connection hiveConnection) {
+    public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection) {
         try {
             this.deleteMetadata(dumpTable);
             this.deleteHdfsFile(dumpTable, false);
@@ -110,14 +111,14 @@ public class HiveRemoveHistoryDataTask {
      * @param hiveConnection
      * @throws Exception
      */
-    public void deleteHdfsHistoryFile(DumpTable dumpTable, Connection hiveConnection, String timestamp) {
+    public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection, String timestamp) {
         try {
             this.deleteMetadata(dumpTable, timestamp);
             this.deleteHdfsFile(dumpTable, false, /* isBuildFile */
-            timestamp);
+                    timestamp);
             // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306
             this.deleteHdfsFile(dumpTable, true, /* isBuildFile */
-            timestamp);
+                    timestamp);
             this.dropHistoryHiveTable(dumpTable, hiveConnection, (r) -> StringUtils.equals(r, timestamp), 0);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -129,20 +130,20 @@ public class HiveRemoveHistoryDataTask {
      * example:/user/admin/search4customerregistercard/all/20160106131304
      * example:/user/admin/scmdb/supply_goods/all/20160106131304
      */
-    private void deleteMetadata(DumpTable dumpTable) throws Exception {
+    private void deleteMetadata(EntityName dumpTable) throws Exception {
         this.deleteMetadata(dumpTable, (r) -> {
             return true;
         }, MAX_PARTITION_SAVE);
     }
 
-    private void deleteMetadata(DumpTable dumpTable, String timestamp) throws Exception {
+    private void deleteMetadata(EntityName dumpTable, String timestamp) throws Exception {
         if (StringUtils.isEmpty(timestamp)) {
             throw new IllegalArgumentException("param timestamp can not be null");
         }
         this.deleteMetadata(dumpTable, (r) -> {
-            return StringUtils.equals(r.getName(), timestamp);
-        }, // MAX_PARTITION_SAVE
-        0);
+                    return StringUtils.equals(r.getName(), timestamp);
+                }, // MAX_PARTITION_SAVE
+                0);
     }
 
     /**
@@ -150,7 +151,7 @@ public class HiveRemoveHistoryDataTask {
      * example:/user/admin/search4customerregistercard/all/20160106131304
      * example:/user/admin/scmdb/supply_goods/all/20160106131304
      */
-    private void deleteMetadata(DumpTable dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
+    private void deleteMetadata(EntityName dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
         String hdfsPath = getJoinTableStorePath(this.fsFactory.getRootDir(), dumpTable) + "/all";
         ITISFileSystem fileSys = this.fsFactory.getFileSystem();
         IPath parent = fileSys.getPath(hdfsPath);
@@ -224,21 +225,21 @@ public class HiveRemoveHistoryDataTask {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public void removeHistoryBuildFile(DumpTable dumpTable) throws IOException, FileNotFoundException {
+    public void removeHistoryBuildFile(EntityName dumpTable) throws IOException, FileNotFoundException {
         this.deleteHdfsFile(dumpTable, true);
     }
 
-    private void deleteHdfsFile(DumpTable dumpTable, boolean isBuildFile) throws IOException {
+    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile) throws IOException {
         this.deleteHdfsFile(dumpTable, isBuildFile, (r) -> true, MAX_PARTITION_SAVE);
     }
 
-    private void deleteHdfsFile(DumpTable dumpTable, boolean isBuildFile, String timestamp) throws IOException {
+    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, String timestamp) throws IOException {
         // MAX_PARTITION_SAVE
         this.deleteHdfsFile(// MAX_PARTITION_SAVE
-        dumpTable, // MAX_PARTITION_SAVE
-        isBuildFile, // MAX_PARTITION_SAVE
-        (r) -> StringUtils.equals(r.getName(), timestamp), // MAX_PARTITION_SAVE
-        0);
+                dumpTable, // MAX_PARTITION_SAVE
+                isBuildFile, // MAX_PARTITION_SAVE
+                (r) -> StringUtils.equals(r.getName(), timestamp), // MAX_PARTITION_SAVE
+                0);
     }
 
     /**
@@ -247,7 +248,7 @@ public class HiveRemoveHistoryDataTask {
      * @param isBuildFile
      * @throws IOException
      */
-    private void deleteHdfsFile(DumpTable dumpTable, boolean isBuildFile, ITISFileSystem.IPathFilter filter, int maxPartitionSave) throws IOException {
+    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, ITISFileSystem.IPathFilter filter, int maxPartitionSave) throws IOException {
         // dump数据: /user/admin/scmdb/supply_goods/all/0/20160105003307
         String hdfsPath = getJoinTableStorePath(fsFactory.getRootDir(), dumpTable) + "/all";
         ITISFileSystem fileSys = fsFactory.getFileSystem();
@@ -285,21 +286,21 @@ public class HiveRemoveHistoryDataTask {
         Collections.sort(timestampList, (o1, o2) -> (int) (o2.timeStamp - o1.timeStamp));
     }
 
-    public void dropHistoryHiveTable(DumpTable dumpTable, Connection conn) {
+    public void dropHistoryHiveTable(EntityName dumpTable, Connection conn) {
         this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, MAX_PARTITION_SAVE);
     }
 
     /**
      * 删除hive中的历史表
      */
-    public void dropHistoryHiveTable(DumpTable dumpTable, Connection conn, PartitionFilter filter, int maxPartitionSave) {
+    public void dropHistoryHiveTable(EntityName dumpTable, Connection conn, PartitionFilter filter, int maxPartitionSave) {
         // String dbName = getDbName() == null ? "tis" : getDbName();
         // String tableName = getTableName();
         // String path = dbName + "." + tableName;
         // if (!(this.pathGetter instanceof DumpTable)) {
         // return;
         // }
-        final DumpTable table = dumpTable;
+        final EntityName table = dumpTable;
         if (StringUtils.isBlank(pt)) {
             throw new IllegalStateException("pt name shall be set");
         }

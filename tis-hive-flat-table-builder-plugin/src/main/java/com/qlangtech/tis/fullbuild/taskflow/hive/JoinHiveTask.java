@@ -17,13 +17,11 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.qlangtech.tis.dump.DumpTable;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder.SQLCommandTailAppend;
 import com.qlangtech.tis.fs.IFs2Table;
-import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
@@ -32,15 +30,14 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.common.utils.TSearcherConfigFetcher;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /* *
@@ -57,8 +54,9 @@ public class JoinHiveTask extends HiveTask {
 
     private final IFs2Table fs2Table;
 
-    public JoinHiveTask(ISqlTask nodeMeta, Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap, IJoinTaskStatus joinTaskStatus, ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
-        super(nodeMeta, dumpNodeExtraMetaMap, joinTaskStatus);
+    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, ERRules erRules, IJoinTaskStatus joinTaskStatus
+            , ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
+        super(nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;
         Objects.nonNull(fs2Table);
         this.fs2Table = fs2Table;
@@ -68,15 +66,11 @@ public class JoinHiveTask extends HiveTask {
     protected void executeSql(String taskName, String rewritedSql) {
         // 处理历史表，多余的partition要删除，表不同了需要删除重建
         processJoinTask(rewritedSql);
-        final DumpTable newCreateTab = DumpTable.createTable(this.nodeMeta.getExportName());
-        final String insertSql = SQL_INSERT_TABLE.format(new Object[] { newCreateTab.getFullName(), rewritedSql });
+        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
+        final String insertSql = SQL_INSERT_TABLE.format(new Object[]{newCreateTab.getFullName(), rewritedSql});
         super.executeSql(taskName, insertSql);
     }
 
-    // @Override
-    // protected Connection getHiveConnection() {
-    // return HiveTaskFactory.getConnection(this.getContext());
-    // }
     /**
      * 处理join表，是否需要自动创建表或者删除重新创建表
      *
@@ -88,7 +82,7 @@ public class JoinHiveTask extends HiveTask {
             final Connection conn = this.getTaskContext().getObj();
             // final DumpTable dumpTable =
             // DumpTable.createTable(insertParser.getTargetTableName());
-            final DumpTable dumpTable = DumpTable.createTable(this.getName());
+            final EntityName dumpTable = EntityName.parse(this.getName());
             if (HiveTableBuilder.isTableExists(conn, dumpTable)) {
                 if (HiveTableBuilder.isTableSame(conn, insertParser.getCols(), dumpTable)) {
                     // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
@@ -130,13 +124,13 @@ public class JoinHiveTask extends HiveTask {
     /**
      * 创建hive表
      */
-    private void createHiveTable(DumpTable dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
+    private void createHiveTable(EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
         // final String user = this.getContext().joinTaskContext().getContextUserName();
         HiveTableBuilder.createHiveTable(conn, dumpTable, cols, new SQLCommandTailAppend() {
 
             @Override
             public void append(StringBuffer hiveSQl) {
-                TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
+                // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
                 // .append(config.getHdfsAddress())
                 hiveSQl.append("\n LOCATION '").append(HiveRemoveHistoryDataTask.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable).replaceAll("\\.", "/")).append("'");
             }

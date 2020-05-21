@@ -33,7 +33,7 @@ public class ServerTaskExecutor {
      *
      * @param taskMapper
      */
-    public void startTask(TaskMapper taskMapper, TaskContext taskContext, AMRMClientAsync.CallbackHandler callbackHandler) {
+    public void startTask(TaskMapper taskMapper, TaskContext taskContext, AMRMClientAsync.CallbackHandler callbackHandler) throws Exception {
         AMRMClientAsync<AMRMClient.ContainerRequest> rmClient = null;
         try {
 
@@ -65,9 +65,8 @@ public class ServerTaskExecutor {
             /* 执行索引build end */
             masterShutdown(rmClient, FinalApplicationStatus.SUCCEEDED, StringUtils.EMPTY);
         } catch (Throwable e) {
-            // logger.error(e.getMessage(), e);
-            logger.error(e.getMessage(), e);
             masterShutdown(rmClient, FinalApplicationStatus.FAILED, ExceptionUtils.getRootCauseMessage(e));
+            throw new Exception(e);
         } finally {
             try {
                 rmClient.close();

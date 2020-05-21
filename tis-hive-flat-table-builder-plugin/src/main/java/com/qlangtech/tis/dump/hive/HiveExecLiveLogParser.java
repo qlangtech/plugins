@@ -99,6 +99,7 @@ public class HiveExecLiveLogParser {
             @Override
             public void process(Matcher m) {
                 execOver = true;
+                joinTaskStatus.setStart();
                 joinTaskStatus.setComplete(true);
                 joinTaskStatus.setFaild(false);
                 joinTaskStatus.jobsLog().forEach((log) -> {
@@ -147,6 +148,7 @@ public class HiveExecLiveLogParser {
 
             @Override
             public void process(Matcher m) {
+                joinTaskStatus.setStart();
                 startprocess = true;
             }
         });

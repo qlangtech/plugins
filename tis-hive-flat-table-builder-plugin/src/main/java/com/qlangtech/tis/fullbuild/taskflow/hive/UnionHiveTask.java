@@ -18,7 +18,6 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
 import com.qlangtech.tis.fs.IFs2Table;
-import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
@@ -27,12 +26,12 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.er.ERRules;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.antlr.runtime.tree.Tree;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,8 +55,9 @@ public class UnionHiveTask extends JoinHiveTask {
 
     private static final Logger logger = LoggerFactory.getLogger(UnionHiveTask.class);
 
-    public UnionHiveTask(SqlTaskNodeMeta nodeMeta, Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap, JoinTaskStatus joinTaskStatus, ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
-        super(nodeMeta, dumpNodeExtraMetaMap, joinTaskStatus, fileSystem, fs2Table);
+    public UnionHiveTask(SqlTaskNodeMeta nodeMeta, boolean isFinalNode, ERRules erRules
+            , JoinTaskStatus joinTaskStatus, ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
+        super(nodeMeta, isFinalNode, erRules, joinTaskStatus, fileSystem, fs2Table);
     }
 
     // public UnionHiveTask(JoinTaskStatus joinTaskStatus) {
@@ -110,9 +110,9 @@ public class UnionHiveTask extends JoinHiveTask {
             parser.start(subTaskSql);
             parserList.add(parser);
             parser.getCols().stream().filter(column -> !partitionColumns.contains(column.getName())).forEach(column -> columnSet.add(column.getName()));
-        // } catch (IOException | ParseException e) {
-        // throw new IllegalStateException("parse sub table " + e.getMessage(), e);
-        // }
+            // } catch (IOException | ParseException e) {
+            // throw new IllegalStateException("parse sub table " + e.getMessage(), e);
+            // }
         }
         columnSet.addAll(partitionColumns);
         // FIXME: in order to pass the compile phase ,make setContent comment
@@ -205,20 +205,20 @@ public class UnionHiveTask extends JoinHiveTask {
     }
 
     public static void main(String[] args) throws Exception {
-    // TaskConfigParser parse = TaskConfigParser.getInstance();
-    // UnionHiveTask unionTask =
-    // parse.getUnionHiveTask("search4supplyUnionTabs");
-    // System.out.println(unionTask.getUnionSql());
-    // HiveInsertFromSelectParser unionParser =
-    // unionTask.getSQLParserResult(new TemplateContext(null));
-    // List<HiveColumn> columns = unionParser.getColsExcludePartitionCols();
-    // String blank = " ";
-    // for (HiveColumn c : unionParser.getCols()) {
-    // 
-    // System.out.println("<field name=\"" + c.getName() + "\" "
-    // + StringUtils.substring(blank, 0, 20 -
-    // StringUtils.length(c.getName()))
-    // + " type=\"string\" stored=\"true\" indexed=\"false\" />");
-    // }
+        // TaskConfigParser parse = TaskConfigParser.getInstance();
+        // UnionHiveTask unionTask =
+        // parse.getUnionHiveTask("search4supplyUnionTabs");
+        // System.out.println(unionTask.getUnionSql());
+        // HiveInsertFromSelectParser unionParser =
+        // unionTask.getSQLParserResult(new TemplateContext(null));
+        // List<HiveColumn> columns = unionParser.getColsExcludePartitionCols();
+        // String blank = " ";
+        // for (HiveColumn c : unionParser.getCols()) {
+        //
+        // System.out.println("<field name=\"" + c.getName() + "\" "
+        // + StringUtils.substring(blank, 0, 20 -
+        // StringUtils.length(c.getName()))
+        // + " type=\"string\" stored=\"true\" indexed=\"false\" />");
+        // }
     }
 }

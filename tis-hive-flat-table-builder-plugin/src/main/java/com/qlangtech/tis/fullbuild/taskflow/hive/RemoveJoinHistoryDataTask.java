@@ -17,7 +17,6 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.qlangtech.tis.dump.DumpTable;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask.PathInfo;
 import com.qlangtech.tis.fs.IPath;
@@ -25,12 +24,14 @@ import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.fs.Path;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年11月26日 上午11:54:31
  */
@@ -45,7 +46,7 @@ class RemoveJoinHistoryDataTask {
      * @param chainContext
      * @throws Exception
      */
-    void deleteHistoryJoinTable(DumpTable dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys) throws Exception {
+    void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys) throws Exception {
         if (chainContext == null) {
             throw new IllegalArgumentException("param: execContext can not be null");
         }

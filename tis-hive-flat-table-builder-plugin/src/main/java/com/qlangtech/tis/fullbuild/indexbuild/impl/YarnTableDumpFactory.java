@@ -23,7 +23,6 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.build.task.TaskMapper;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
-import com.qlangtech.tis.dump.DumpTable;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
@@ -41,6 +40,9 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.Set;
@@ -54,6 +56,8 @@ import java.util.regex.Matcher;
  * @date 2020/04/13
  */
 public class YarnTableDumpFactory extends TableDumpFactory implements IContainerPodSpec {
+
+    private static final Logger logger = LoggerFactory.getLogger(YarnTableDumpFactory.class);
 
     private static final String KEY_FIELD_YARN_CONTAINER = "yarnCfg";
 
@@ -102,6 +106,11 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     private transient HiveRemoveHistoryDataTask removeHistoryDataTask;
 
+    @Override
+    public FileSystemFactory getFileSystem() {
+        return this.getFs();
+    }
+
     /**
      * 构建宽表
      *
@@ -139,30 +148,44 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
     @Override
-    public void dropHistoryTable(DumpTable dumpTable, ITaskContext context) {
+    public void dropHistoryTable(EntityName dumpTable, ITaskContext context) {
         Connection conn = context.getObj();
         this.getHiveRemoveHistoryDataTask().dropHistoryHiveTable(dumpTable, conn);
     }
 
     @Override
-    public void deleteHistoryFile(DumpTable dumpTable, ITaskContext context) {
+    public void deleteHistoryFile(EntityName dumpTable, ITaskContext context) {
         Connection hiveConnection = context.getObj();
         getHiveRemoveHistoryDataTask().dropHistoryHiveTable(dumpTable, hiveConnection);
     }
 
     @Override
-    public void deleteHistoryFile(DumpTable dumpTable, ITaskContext context, String timestamp) {
+    public void deleteHistoryFile(EntityName dumpTable, ITaskContext context, String timestamp) {
         Connection hiveConnection = context.getObj();
         getHiveRemoveHistoryDataTask().deleteHdfsHistoryFile(dumpTable, hiveConnection, timestamp);
     }
 
     @Override
-    public void bindTables(Set<DumpTable> hiveTables, String timestamp, ITaskContext context) {
+    public void bindTables(Set<EntityName> hiveTables, String timestamp, ITaskContext context) {
         BindHiveTableTool.bindHiveTables(this.getFs(), hiveTables, timestamp, context);
     }
 
     @Override
     public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
+        //  org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback not org.apache.hadoop.security.GroupMappingServiceProvider
+
+//        try {
+//            // 因为TIS工程中有使用hadoop-rpc，加载Configuration会报
+//            // err:java.lang.RuntimeException: class org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback not org.apache.hadoop.security.GroupMappingServiceProvider
+//            // 所以要在插件中保证
+//            ClassLoader cl = Hadoop020RemoteJobTriggerFactory.class.getClassLoader();
+//            logger.info("show classloader==============================");
+//            logger.info(cl.loadClass("org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback").getClassLoader().toString());
+//            logger.info(cl.loadClass("org.apache.hadoop.security.GroupMappingServiceProvider").getClassLoader().toString());
+//        } catch (ClassNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+
         Hadoop020RemoteJobTriggerFactory dumpTriggerFactory
                 = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFs(), this);
         return dumpTriggerFactory.createSingleTableDumpJob(table, startTime, context);
@@ -175,7 +198,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
      * @param taskContext
      */
     @Override
-    public void startTask(TaskMapper taskMapper, TaskContext taskContext) {
+    public void startTask(TaskMapper taskMapper, TaskContext taskContext) throws Exception {
         ServerTaskExecutor taskExecutor = new ServerTaskExecutor(this.getYarnConfig());
         DefaultCallbackHandler callbackHandler = new DefaultCallbackHandler();
         taskExecutor.startTask(taskMapper, taskContext, callbackHandler);

@@ -20,7 +20,6 @@ package com.qlangtech.tis.dump.hive;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.dump.DumpTable;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
@@ -28,10 +27,12 @@ import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -41,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import static java.sql.Types.*;
 
 /*
@@ -72,7 +74,7 @@ public class HiveTableBuilder {
             throw new IllegalArgumentException("param timestamp can not be null");
         }
         this.timestamp = timestamp;
-    // this.user = user;
+        // this.user = user;
     }
 
     /**
@@ -114,7 +116,7 @@ public class HiveTableBuilder {
      * @param sqlCommandTailAppend
      * @throws Exception
      */
-    public static void createHiveTable(Connection conn, DumpTable table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+    public static void createHiveTable(Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
         int maxColLength = 0;
         int tmpLength = 0;
         for (HiveColumn c : cols) {
@@ -150,7 +152,7 @@ public class HiveTableBuilder {
     }
 
     private static String getHiveType(int type) {
-        switch(type) {
+        switch (type) {
             case BIT:
             case TINYINT:
             case SMALLINT:
@@ -180,28 +182,29 @@ public class HiveTableBuilder {
     // buildTableDDL(conn, indexName, timestamp,
     // StringUtils.substringAfter(indexName, "search4"));
     // }
+
     /**
      * 和hdfs上已经导入的数据进行绑定
      *
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(ITISFileSystemFactory fileSystem, Set<DumpTable> hiveTables, ITaskContext context) throws Exception {
+    public void bindHiveTables(ITISFileSystemFactory fileSystem, Set<EntityName> hiveTables, ITaskContext context) throws Exception {
         Connection conn = null;
         try {
             conn = context.getObj();
-            for (DumpTable hiveTable : hiveTables) {
+            for (EntityName hiveTable : hiveTables) {
                 String hivePath = hiveTable.getNameWithPath();
                 final List<String> tables = getExistTables(conn, hiveTable.getDbName());
                 List<HiveColumn> columns = getColumns(hivePath, timestamp);
                 if (tables.contains(hiveTable.getTableName())) {
                     if (isTableSame(conn, columns, hiveTable)) {
-                    // 需要清空原来表数据
-                    // HiveRemoveHistoryDataTask hiveHistoryClear = new
-                    // HiveRemoveHistoryDataTask(tableName,
-                    // userName, fileSystem);
-                    // hiveHistoryClear.dropHistoryHiveTable(conn);
-                    // 之前已经清理过了
+                        // 需要清空原来表数据
+                        // HiveRemoveHistoryDataTask hiveHistoryClear = new
+                        // HiveRemoveHistoryDataTask(tableName,
+                        // userName, fileSystem);
+                        // hiveHistoryClear.dropHistoryHiveTable(conn);
+                        // 之前已经清理过了
                     } else {
                         // 原表有改动，需要把表drop掉
                         HiveDBUtils.execute(conn, "drop table `" + hiveTable + "`");
@@ -221,7 +224,7 @@ public class HiveTableBuilder {
         }
     }
 
-    public static boolean isTableSame(Connection conn, List<HiveColumn> columns, DumpTable tableName) throws Exception {
+    public static boolean isTableSame(Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
         boolean isTableSame;
         final StringBuffer errMsg = new StringBuffer();
         final StringBuffer equalsCols = new StringBuffer("compar equals:");
@@ -278,7 +281,7 @@ public class HiveTableBuilder {
      * @return
      * @throws Exception
      */
-    public static boolean isTableExists(Connection connection, DumpTable dumpTable) throws Exception {
+    public static boolean isTableExists(Connection connection, EntityName dumpTable) throws Exception {
         // 判断表是否存在
         if (!isDBExists(connection, dumpTable.getDbName())) {
             // DB都不存在，table肯定就不存在啦
@@ -305,7 +308,7 @@ public class HiveTableBuilder {
      * @param hivePath
      * @throws Exception
      */
-    public void createTablePartition(Connection conn, String hivePath, DumpTable table) throws Exception {
+    public void createTablePartition(Connection conn, String hivePath, EntityName table) throws Exception {
         int index = 0;
         String sql = null;
         ITISFileSystem fs = this.fileSystem.getFileSystem();
@@ -346,7 +349,7 @@ public class HiveTableBuilder {
         return cols;
     }
 
-    private void createHiveTable(Connection conn, List<HiveColumn> columns, DumpTable tableName) throws Exception {
+    private void createHiveTable(Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
         createHiveTable(conn, tableName, columns, new SQLCommandTailAppend() {
 
             @Override

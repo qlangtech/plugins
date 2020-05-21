@@ -121,12 +121,6 @@ public class HiveDBUtils {
     public Connection createConnection(int retry) {
         Connection conn = null;
         try {
-//            Class<?> aClass = this.getClass().forName("com.qlangtech.tis.dump.hive.HiveExecLiveLogParser");
-//
-//            System.out.println("==========" + aClass.getClassLoader());
-
-         //   org.apache.hadoop.conf.Configuration;
-
             conn = hiveDatasource.getConnection();
             executeNoLog(conn, "set hive.exec.dynamic.partition.mode=nonstrict");
             return conn;
@@ -158,8 +152,7 @@ public class HiveDBUtils {
     }
 
     public static boolean execute(Connection conn, String sql, IJoinTaskStatus joinTaskStatus) throws SQLException {
-        return execute(conn, sql, true, /* listenLog */
-                joinTaskStatus);
+        return execute(conn, sql, true, /* listenLog */          joinTaskStatus);
     }
 
     public static boolean execute(Connection conn, String sql) throws SQLException {

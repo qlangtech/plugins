@@ -1,4 +1,4 @@
-/* * Copyright 2020 QingLang, Inc.
+/** Copyright 2020 QingLang, Inc.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -21,37 +21,38 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2018年11月23日
  */
 public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFileSystemFactory {
 
-    @FormField(require = true, ordinal = 0, validate = { Validator.require, Validator.identity })
+    @FormField(require = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(require = true, ordinal = 1, validate = { Validator.require, Validator.host })
+    @FormField(require = true, ordinal = 1, validate = {Validator.require, Validator.host})
     public String hdfsAddress;
 
-    @FormField(require = true, ordinal = 2, validate = { Validator.require })
+    @FormField(require = true, ordinal = 2, validate = {Validator.require})
     public String rootDir;
 
-    @FormField(require = true, ordinal = 3, type = FormFieldType.TEXTAREA, validate = { Validator.require })
+    @FormField(require = true, ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String hdfsSiteContent;
 
     private ITISFileSystem fileSystem;
@@ -92,107 +93,24 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     private static class HdfsUtils {
 
-        // private static final Logger logger = LoggerFactory.getLogger(HdfsUtils.class);
-        // /**
-        // * @param
-        // * @param
-        // * @param
-        // * @return
-        // */
-        // public static List<Path> getLibPaths(final String localJarDir, Path dest /* hdfs 目标目录 */) {
-        // try {
-        // // String localJarDir = null;
-        // // if (commandLine != null) {
-        // // localJarDir =
-        // // commandLine.getOptionValue(YarnConstant.PARAM_OPTION_LOCAL_JAR_DIR);
-        // // }
-        // 
-        // List<Path> libs = null;
-        // if (StringUtils.isNotBlank(localJarDir)) {
-        // libs = copyLibs2Hdfs(localJarDir, dest);
-        // } else {
-        // libs = new ArrayList<Path>();
-        // // new Path(YarnConstant.HDFS_GROUP_LIB_DIR + "/" +
-        // // runtime.getKeyName())
-        // 
-        // if (!getFileSystem().exists(dest)) {
-        // throw new IllegalStateException("target dest:" + dest
-        // + " is not exist ,please make sure having deploy the index build jar to hdfs.");
-        // }
-        // 
-        // for (FileStatus s : getFileSystem().listStatus(dest)) {
-        // libs.add(s.getPath());
-        // }
-        // }
-        // if (libs.size() < 1) {
-        // throw new IllegalStateException("libs size can not small than 1");
-        // }
-        // return libs;
-        // } catch (Exception e) {
-        // throw new RuntimeException(e);
-        // }
-        // }
-        /**
-         * 将本地jar包上传到hdfs上去
-         *
-         * @param localJarDir
-         * @param
-         * @return
-         * @throws Exception
-         */
-        // public static List<Path> copyLibs2Hdfs(String localJarDir, Path dest /* hdfs 目标目录 */) throws Exception {
-        // List<Path> libs = new ArrayList<Path>();
-        // if (StringUtils.isBlank(localJarDir)) {
-        // throw new IllegalArgumentException("param localJarDir can not be null");
-        // }
-        // 
-        // // 本地删除
-        // FileSystem fs = getFileSystem();
-        // // final Path path = new Path(YarnConstant.HDFS_GROUP_LIB_DIR + "/" +
-        // // runtime.getKeyName());
-        // fs.delete(dest, true);
-        // logger.info("path:" + dest + " have been delete");
-        // 
-        // // 取得需要的lib包
-        // File dir = new File(localJarDir);
-        // String[] childs = null;
-        // if (!dir.isDirectory() || (childs = dir.list(new FilenameFilter() {
-        // @Override
-        // public boolean accept(File dir, String name) {
-        // return StringUtils.endsWith(name, ".jar");
-        // }
-        // })).length < 1) {
-        // throw new IllegalStateException("dir:" + dir.getAbsolutePath() + " has not find any jars");
-        // }
-        // 
-        // URI source = null;
-        // Path d = null;
-        // for (String f : childs) {
-        // source = (new File(dir, f)).toURI();
-        // d = new Path(dest, f);
-        // fs.copyFromLocalFile(new Path(source), d);
-        // libs.add(d);
-        // logger.info("local:" + source + " have been copy to hdfs");
-        // }
-        // 
-        // return libs;
-        // }
         private static final Map<String, FileSystem> fileSys = new HashMap<String, FileSystem>();
 
-        // public static FileSystem getFileSystem() {
-        // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
-        // return getFileSystem(config.getHdfsAddress());
-        // }
         public static FileSystem getFileSystem(String hdfsAddress, String hdfsContent) {
-            try {
-                FileSystem fileSystem = fileSys.get(hdfsAddress);
-                if (fileSystem == null) {
-                    synchronized (HdfsUtils.class) {
+
+            FileSystem fileSystem = fileSys.get(hdfsAddress);
+            if (fileSystem == null) {
+                synchronized (HdfsUtils.class) {
+
+                   final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+                    try {
+                        Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+
                         fileSystem = fileSys.get(hdfsAddress);
                         if (fileSystem == null) {
                             Configuration conf = new Configuration();
                             conf.set(FsPermission.UMASK_LABEL, "000");
                             // fs.defaultFS
+                            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
                             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
                             conf.set("fs.default.name", hdfsAddress);
                             conf.set("hadoop.job.ugi", "admin");
@@ -239,22 +157,28 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
                                     @Override
                                     public void close() throws IOException {
-                                    // super.close();
-                                    // 设置不被关掉
+                                        // super.close();
+                                        // 设置不被关掉
                                     }
                                 };
                                 fileSystem.listStatus(new Path("/"));
                                 fileSys.put(hdfsAddress, fileSystem);
                             }
                         }
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        Thread.currentThread().setContextClassLoader(contextClassLoader);
                     }
                 }
-                return fileSystem;
-            } catch (IOException e) {
-                throw new RuntimeException("hdfsAddress:" + hdfsAddress, e);
+
             }
+            return fileSystem;
         }
+
+
     }
+
 
     @TISExtension(ordinal = 0)
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {
@@ -269,3 +193,4 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         }
     }
 }
+

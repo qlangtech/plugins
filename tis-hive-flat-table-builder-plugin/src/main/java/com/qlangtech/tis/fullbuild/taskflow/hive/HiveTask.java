@@ -17,13 +17,18 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.qlangtech.tis.dump.DumpTable;
+import com.facebook.presto.sql.parser.ParsingOptions;
+import com.facebook.presto.sql.parser.SqlParser;
+import com.facebook.presto.sql.tree.Expression;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
+import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlRewriter;
 import com.qlangtech.tis.sql.parser.SqlRewriter.AliasTable;
@@ -31,13 +36,9 @@ import com.qlangtech.tis.sql.parser.SqlStringBuilder;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.facebook.presto.sql.parser.ParsingOptions;
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Expression;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
@@ -56,22 +57,24 @@ public abstract class HiveTask extends AdapterTask {
     private final IJoinTaskStatus joinTaskStatus;
 
     protected final ISqlTask nodeMeta;
+    protected final boolean isFinalNode;
 
     private static final SqlParser sqlParser = new com.facebook.presto.sql.parser.SqlParser();
 
-    private final Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap;
+    private final ERRules erRules;
 
     /**
      * @param joinTaskStatus
      */
-    protected HiveTask(ISqlTask nodeMeta, Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap, IJoinTaskStatus joinTaskStatus) {
+    protected HiveTask(ISqlTask nodeMeta, boolean isFinalNode, ERRules erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
         }
-        this.dumpNodeExtraMetaMap = dumpNodeExtraMetaMap;
+        this.erRules = erRules;
         this.joinTaskStatus = joinTaskStatus;
         this.nodeMeta = nodeMeta;
+        this.isFinalNode = isFinalNode;
     }
 
     @Override
@@ -95,8 +98,9 @@ public abstract class HiveTask extends AdapterTask {
             // nodeMeta.getDependencies();
             // logger.info("raw sql:\n" + sqlContent);
             Optional<List<Expression>> parameters = Optional.empty();
+            IJoinTaskContext joinContext = this.getContext().joinTaskContext();
             SqlStringBuilder builder = new SqlStringBuilder();
-            SqlRewriter rewriter = new SqlRewriter(builder, getDumpPartition(), this.dumpNodeExtraMetaMap, parameters);
+            SqlRewriter rewriter = new SqlRewriter(builder, getDumpPartition(), this.erRules, parameters, this.isFinalNode, joinContext);
             // 执行rewrite
             rewriter.process(sqlParser.createStatement(sqlContent, new ParsingOptions()), 0);
             this.primaryTable = rewriter.getPrimayTable();
@@ -125,7 +129,7 @@ public abstract class HiveTask extends AdapterTask {
     protected void executeSql(String taskname, String sql) {
         this.validateDependenciesNode(taskname);
         final Connection conn = this.getTaskContext().getObj();
-        final DumpTable newCreateTab = DumpTable.createTable(this.nodeMeta.getExportName());
+        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
         final String newCreatePt = primaryTable.getTabPartition();
         List<String> allpts = null;
         try {
@@ -143,7 +147,8 @@ public abstract class HiveTask extends AdapterTask {
         // 校验最新的Partition 是否已经生成
         if (!allpts.contains(newCreatePt)) {
             StringBuffer errInfo = new StringBuffer();
-            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + newCreatePt + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
+            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + newCreatePt
+                    + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
             child = primaryTable.getChild();
             if (child != null && !child.isSubQueryTable()) {
                 try {
@@ -151,7 +156,9 @@ public abstract class HiveTask extends AdapterTask {
                 } catch (Exception e) {
                     throw new RuntimeException(child.getTable().getFullName(), e);
                 }
-                errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT).append(":").append(newCreatePt).append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
+                errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT)
+                        .append(":").append(newCreatePt)
+                        .append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
             }
             throw new IllegalStateException(errInfo.toString());
         }
@@ -168,7 +175,10 @@ public abstract class HiveTask extends AdapterTask {
         }
         if (!lackDependencies.isEmpty()) {
             // 说明有依赖到的node没有被执行
-            throw new IllegalStateException("taskname:" + taskname + " lackDependencies:" + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.getDbName() + "." + r.taskNode.getName() + ",status:" + (r.dependencyWorkStatus == null ? "notExecute" : r.dependencyWorkStatus) + ")").collect(Collectors.joining()));
+            throw new IllegalStateException("taskname:" + taskname + " lackDependencies:"
+                    + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.getDbName() + "." + r.taskNode.getName()
+                    + ",status:" + (r.dependencyWorkStatus == null ? "notExecute" : r.dependencyWorkStatus) + ")")
+                    .collect(Collectors.joining()));
         }
     }
 }

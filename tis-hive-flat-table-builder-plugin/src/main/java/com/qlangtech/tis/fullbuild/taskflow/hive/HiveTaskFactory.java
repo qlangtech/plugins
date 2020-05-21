@@ -17,16 +17,15 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.qlangtech.tis.dump.hive.HiveDBUtils;
-import com.qlangtech.tis.fs.*;
+import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITISFileSystemFactory;
+import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.ITaskFactory;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import java.util.Map;
 
 /* *
  * @author 百岁（baisui@qlangtech.com）
@@ -35,14 +34,14 @@ import java.util.Map;
 public class HiveTaskFactory implements ITaskFactory {
 
     // private final HiveDBUtils hiveDBHelper;
-    private final Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap;
+    private final ERRules erRules;
 
     private final ITISFileSystemFactory fileSystem;
 
-    public HiveTaskFactory(Map<EntityName, ERRules.TabFieldProcessor> dumpNodeExtraMetaMap, ITISFileSystemFactory fileSystem) {
+    public HiveTaskFactory(ERRules erRules, ITISFileSystemFactory fileSystem) {
         super();
         // this.hiveDBHelper = HiveDBUtils.getInstance();
-        this.dumpNodeExtraMetaMap = dumpNodeExtraMetaMap;
+        this.erRules = erRules;
         this.fileSystem = fileSystem;
     }
 
@@ -59,11 +58,11 @@ public class HiveTaskFactory implements ITaskFactory {
     // return conn;
     // }
     @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
         if (fileSystem == null) {
             throw new IllegalStateException("filesystem can not be null");
         }
-        JoinHiveTask task = new JoinHiveTask(nodeMeta, dumpNodeExtraMetaMap, joinTaskStatus, fileSystem, fs2Table);
+        JoinHiveTask task = new JoinHiveTask(nodeMeta, isFinalNode, this.erRules, joinTaskStatus, fileSystem, fs2Table);
         task.setContext(tplContext, taskContext);
         // task.setHiveDBHelper(hiveDBHelper);
         return task;

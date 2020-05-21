@@ -108,7 +108,7 @@ public class TestPlugin extends BaseTestCase {
             for (int i = 0; i < jsonArray.size(); i++) {
                 // 创建一个item
                 jsonObject = jsonArray.getJSONObject(i);
-                describable = parseDescribable(jsonObject);
+                describable = parseDescribable(jsonObject).instance;
             }
         }
         assertNotNull(describable);
@@ -119,7 +119,7 @@ public class TestPlugin extends BaseTestCase {
         assertNotNull(mqListenerFactory.getDeserialize());
     }
 
-    private Describable parseDescribable(com.alibaba.fastjson.JSONObject jsonObject) {
+    private Descriptor.ParseDescribable parseDescribable(com.alibaba.fastjson.JSONObject jsonObject) {
         String impl;
         JSONArray vals;
         Descriptor descriptor;
@@ -131,7 +131,7 @@ public class TestPlugin extends BaseTestCase {
         vals = jsonObject.getJSONArray("vals");
         descriptor = TIS.get().getDescriptor(impl);
         assertNotNull("impl:" + impl, descriptor);
-        Describable describable = descriptor.newInstance(Descriptor.parseAttrValMap(jsonObject.getJSONArray("vals")));
+        Descriptor.ParseDescribable describable = descriptor.newInstance(Descriptor.parseAttrValMap(jsonObject.getJSONArray("vals")));
         return describable;
     }
 

@@ -1,14 +1,15 @@
-/* * Copyright 2020 QingLang, Inc.
- *
+/**
+ * Copyright 2020 QingLang, Inc.
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +35,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
+/**
  * @create: 2020-04-08 14:11
  *
  * @author 百岁（baisui@qlangtech.com）
@@ -76,7 +77,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
         return this.name;
     }
 
-    private FileSystemFactory getFsFactory() {
+    public FileSystemFactory getFsFactory() {
         return FileSystemFactory.getFsFactory(this.fsName);
     }
 
@@ -97,10 +98,11 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
      *
      * @param taskMapper
      */
-    public void startTask(TaskMapper taskMapper, final TaskContext taskContext) {
+    @Override
+    public void startTask(TaskMapper taskMapper, final TaskContext taskContext) throws Exception {
         ServerTaskExecutor taskExecutor = new ServerTaskExecutor(this.getYarnConfig());
 
-       final DefaultCallbackHandler callbackHandler = new DefaultCallbackHandler() {
+        final DefaultCallbackHandler callbackHandler = new DefaultCallbackHandler() {
             @Override
             public float getProgress() {
 //                if (indexBuilder == null || taskContext == null) {

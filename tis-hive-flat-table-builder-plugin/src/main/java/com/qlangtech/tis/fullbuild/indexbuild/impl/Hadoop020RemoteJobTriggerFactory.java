@@ -17,18 +17,15 @@
  */
 package com.qlangtech.tis.fullbuild.indexbuild.impl;
 
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.build.task.TaskMapper;
-import com.qlangtech.tis.common.utils.TSearcherConfigFetcher;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.fullbuild.indexbuild.*;
 import com.qlangtech.tis.manage.common.ConfigFileReader;
 import com.qlangtech.tis.manage.common.IndexBuildParam;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.pubhook.common.RunEnvironment;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
-import com.qlangtech.tis.util.XStream2;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.records.*;
@@ -48,8 +45,6 @@ import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -93,8 +88,8 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
     public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
             , String groupNum, IIndexBuildParam state, TaskContext context) throws Exception {
         final String coreName = indexName + "-" + groupNum;
-        return getRemoteJobTrigger(coreName
-                , createIndexBuildLauncherParam(state, Integer.parseInt(groupNum), podSpec.getName()));
+        return getRemoteJobTrigger(coreName, "index-build-" + context.getTaskId()
+                , createIndexBuildLauncherParam(context, state, Integer.parseInt(groupNum), podSpec.getName()));
     }
 
     @Override
@@ -102,23 +97,32 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
 
     }
 
+    /**
+     * 单表导出
+     *
+     * @param table
+     * @param startTime
+     * @param context
+     * @return
+     */
     @Override
     public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
 
-        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(table, startTime, podSpec.getName());
+
+        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, startTime, podSpec.getName());
         final String jobName = table.getDbName() + "." + table.getTableName();
         try {
-            return getRemoteJobTrigger(jobName, tabDumpParams);
+            return getRemoteJobTrigger(jobName, "dump-" + context.getTaskId(), tabDumpParams);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
 
-    private IRemoteJobTrigger getRemoteJobTrigger(String name, JobConfParams launcherParam) throws IOException, YarnException {
+    private IRemoteJobTrigger getRemoteJobTrigger(String name, String appType, JobConfParams launcherParam) throws IOException, YarnException {
 
-        TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
-        RunEnvironment runtime = config.getRuntime();
+//        TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
+//        RunEnvironment runtime = config.getRuntime();
         ParamsConfig pConfig = (ParamsConfig) this.yarnConfig;
 
         YarnConfiguration yarnConfig = pConfig.createConfigInstance();
@@ -128,7 +132,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
 
         YarnClientApplication app = yarnClient.createApplication();
         ApplicationSubmissionContext submissionContext = app.getApplicationSubmissionContext();
-        submissionContext.setApplicationType(name);
+        submissionContext.setApplicationType(appType);
         submissionContext.setMaxAppAttempts(2);
         submissionContext.setKeepContainersAcrossApplicationAttempts(false);
         final ApplicationId appid = submissionContext.getApplicationId();
@@ -140,9 +144,15 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         String javaCommand = StringUtils.isEmpty(JAVA_HOME) ? "java" : (JAVA_HOME + "/bin/java ");
 
         final int memoryConsume = podSpec.getMaxHeapMemory();
+//        amContainer.setCommands(
+//                Collections.singletonList(javaCommand + getMemorySpec(memoryConsume) + getRemoteDebugParam()
+//                        + " -Druntime=" + runtime.getKeyName() + " com.qlangtech.tis.build.NodeMaster "
+//                        + launcherParam.paramSerialize() + " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
+//                        + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"));
+
         amContainer.setCommands(
                 Collections.singletonList(javaCommand + getMemorySpec(memoryConsume) + getRemoteDebugParam()
-                        + " -Druntime=" + runtime.getKeyName() + " com.qlangtech.tis.build.yarn.NodeMaster "
+                        + " com.qlangtech.tis.build.NodeMaster "
                         + launcherParam.paramSerialize() + " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
                         + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"));
 
@@ -215,14 +225,16 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         this.maxDocMakeFaild = maxDocMakeFaild;
     }
 
-    private JobConfParams createIndexBuildLauncherParam(
-            IIndexBuildParam state, int groupNum, String indexBuilderTriggerFactoryName) {
+    private JobConfParams createIndexBuildLauncherParam( //
+                                                         TaskContext context,
+                                                         IIndexBuildParam state, int groupNum, String indexBuilderTriggerFactoryName) {
         if (StringUtils.isEmpty(indexBuilderTriggerFactoryName)) {
             throw new IllegalArgumentException("param 'indexBuilderTriggerFactoryName' can not be empty");
         }
         final String coreName = state.getIndexName() + '-' + groupNum;
         // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
         JobConfParams jobConf = new JobConfParams();
+        jobConf.set(IParamContext.KEY_TASK_ID, String.valueOf(context.getTaskId()));
         // 设置记录条数
         if (state.getDumpCount() != null) {
             jobConf.set(IndexBuildParam.INDEXING_ROW_COUNT, String.valueOf(state.getDumpCount()));
@@ -277,13 +289,13 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
                 File.pathSeparator);
         Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), "/opt/data/tis/conf", File.pathSeparator);
 
-        for (String c : YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH) {
-            Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), c.trim(), File.pathSeparator);
-        }
-        Apps.addToEnvironment(environment //
-                , ApplicationConstants.Environment.CLASSPATH.name() //
-                , ApplicationConstants.Environment.HADOOP_COMMON_HOME.$() + "/share/hadoop/mapreduce/*",
-                File.pathSeparator);
+//        for (String c : YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH) {
+//            Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), c.trim(), File.pathSeparator);
+//        }
+//        Apps.addToEnvironment(environment //
+//                , ApplicationConstants.Environment.CLASSPATH.name() //
+//                , ApplicationConstants.Environment.HADOOP_COMMON_HOME.$() + "/share/hadoop/mapreduce/*",
+//                File.pathSeparator);
         ctx.setEnvironment(environment);
         logger.info("classpath:" + environment.get(ApplicationConstants.Environment.CLASSPATH.name()));
     }

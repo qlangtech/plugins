@@ -53,7 +53,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     private final List<ILogListener> listeners = Lists.newArrayList();
 
-    private final LoopQueue<ExecuteState<String>> loopQueue = new LoopQueue<>(new ExecuteState[100]);
+    private final LoopQueue<ExecuteState> loopQueue = new LoopQueue<>(new ExecuteState[100]);
 
     private final Logger logger = LoggerFactory.getLogger(K8sIncrSync.class);
 
@@ -77,7 +77,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
     @Override
     public void addListener(ILogListener listener) {
         synchronized (this) {
-            ExecuteState<String>[] buffer = this.loopQueue.readBuffer();
+            ExecuteState[] buffer = this.loopQueue.readBuffer();
             // 将缓冲区中的数据写入到外部监听者中
             for (int i = 0; i < buffer.length; i++) {
                 if (buffer[i] == null || listener.isClosed()) {
@@ -138,7 +138,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
             monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName);
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, "utf8");
             while (lineIt.hasNext()) {
-                ExecuteState<String> event = ExecuteState.create(InfoType.INFO, lineIt.nextLine());
+                ExecuteState event = ExecuteState.create(InfoType.INFO, lineIt.nextLine());
                 sendMsg(indexName, event);
             }
         } catch (Exception e) {
@@ -156,7 +156,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
      *
      * @param event
      */
-    private void sendMsg(String indexName, ExecuteState<String> event) {
+    private void sendMsg(String indexName, ExecuteState event) {
         event.setServiceName(indexName);
         event.setLogType(LogType.INCR_DEPLOY_STATUS_CHANGE);
         synchronized (this) {

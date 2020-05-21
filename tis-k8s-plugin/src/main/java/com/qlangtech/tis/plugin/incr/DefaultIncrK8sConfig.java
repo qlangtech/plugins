@@ -31,7 +31,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class DefaultIncrK8sConfig extends IncrK8sConfig {
+public class DefaultIncrK8sConfig extends IncrStreamFactory {
 
     public static final String KEY_FIELD_NAME = "k8sName";
 
@@ -65,7 +65,7 @@ public class DefaultIncrK8sConfig extends IncrK8sConfig {
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends Descriptor<IncrK8sConfig> {
+    public static class DescriptorImpl extends Descriptor<IncrStreamFactory> {
 
         public DescriptorImpl() {
             super();

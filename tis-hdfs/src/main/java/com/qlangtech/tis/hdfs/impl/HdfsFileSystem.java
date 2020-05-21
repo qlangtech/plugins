@@ -17,23 +17,18 @@
  */
 package com.qlangtech.tis.hdfs.impl;
 
+import com.qlangtech.tis.fs.FSDataInputStream;
+import com.qlangtech.tis.fs.*;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.permission.FsPermission;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import com.qlangtech.tis.fs.*;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.ContentSummary;
-import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FsServerDefaults;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.fs.permission.FsPermission;
 
 /*
  * 相关的类是:TisAbstractDirectory
@@ -193,12 +188,14 @@ public class HdfsFileSystem implements ITISFileSystem {
 
         @Override
         public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-            ((FSDataInputStream) this.in).readFully(position, buffer, offset, length);
+            // ((FSDataInputStream) this.in).readFully(position, buffer, offset, length);
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void seek(long position) {
-            ((FSDataInputStream) this.in).seek(position);
+            throw new UnsupportedOperationException();
+            //  ((FSDataInputStream) this.in).seek(position);
         }
     }
 

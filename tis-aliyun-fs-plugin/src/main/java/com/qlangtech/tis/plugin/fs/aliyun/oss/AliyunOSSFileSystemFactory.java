@@ -29,23 +29,27 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
  * 基于阿里云OSS的
- * @create: 2020-04-12 20:03
  *
  * @author 百岁（baisui@qlangtech.com）
+ * @create: 2020-04-12 20:03
  * @date 2020/04/13
  */
 public class AliyunOSSFileSystemFactory extends FileSystemFactory {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = { Validator.require, Validator.identity })
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = { Validator.require })
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String rootDir;
 
-    @FormField(ordinal = 3, type = FormFieldType.SELECTABLE, validate = { Validator.require, Validator.identity })
+    @FormField(ordinal = 3, type = FormFieldType.SELECTABLE, validate = {Validator.require, Validator.identity})
     public String aliyunToken;
 
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = { Validator.require })
+    //example: http://oss-cn-hangzhou.aliyuncs.com
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.url})
+    public String endpoint;
+
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String bucketName;
 
     @Override
@@ -58,7 +62,8 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     @Override
     public ITISFileSystem getFileSystem() {
         if (ossFs == null) {
-            ossFs = new AliyunOSSFileSystem(this);
+            IAliyunToken aliyunToken = ParamsConfig.getItem(this.aliyunToken, IAliyunToken.class);
+            ossFs = new AliyunOSSFileSystem(aliyunToken, this.endpoint, this.bucketName);
         }
         return ossFs;
     }

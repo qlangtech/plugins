@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin;
 
+import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import junit.framework.TestCase;
@@ -11,6 +12,7 @@ import junit.framework.TestCase;
 public class BaiscPluginTest extends TestCase {
     static {
         HttpUtils.addMockGlobalParametersConfig();
-        Config.setNotFetchFromCenterRepository();
+       // Config.setNotFetchFromCenterRepository();
+        CenterResource.setNotFetchFromCenterRepository();
     }
 }

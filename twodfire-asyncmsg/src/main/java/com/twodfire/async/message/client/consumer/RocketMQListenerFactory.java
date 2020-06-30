@@ -25,8 +25,10 @@ import com.qlangtech.tis.async.message.client.consumer.impl.AbstractMQListenerFa
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,16 +40,16 @@ import java.util.regex.Pattern;
  */
 public class RocketMQListenerFactory extends AbstractMQListenerFactory {
 
-    @FormField(require = true, ordinal = 2)
+    @FormField(validate = {Validator.require}, ordinal = 2)
     public String consumeName;
 
-    @FormField(require = true, ordinal = 0)
+    @FormField(validate = {Validator.require}, ordinal = 0)
     public String mqTopic;
 
-    @FormField(require = true, ordinal = 3)
+    @FormField(validate = {Validator.require}, ordinal = 3)
     public String namesrvAddr;
 
-    @FormField(require = true, ordinal = 1)
+    @FormField(validate = {Validator.require}, ordinal = 1)
     public AbstractAsyncMsgDeserialize deserialize;
 
     public String getConsumeName() {
@@ -57,9 +59,9 @@ public class RocketMQListenerFactory extends AbstractMQListenerFactory {
     private final String consumerHandle = "default";
 
     public static void main(String[] args) {
-    // System.out.println(spec_pattern.matcher("c_otter_binlogorder_solr").matches());
-    // 
-    // System.out.println(host_pattern.matcher("10.1.21.148:9876").matches());
+        // System.out.println(spec_pattern.matcher("c_otter_binlogorder_solr").matches());
+        //
+        // System.out.println(host_pattern.matcher("10.1.21.148:9876").matches());
     }
 
     @Override

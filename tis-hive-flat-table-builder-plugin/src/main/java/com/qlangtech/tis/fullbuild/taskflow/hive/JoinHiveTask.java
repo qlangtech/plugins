@@ -20,7 +20,6 @@ package com.qlangtech.tis.fullbuild.taskflow.hive;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder;
-import com.qlangtech.tis.dump.hive.HiveTableBuilder.SQLCommandTailAppend;
 import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -61,6 +60,7 @@ public class JoinHiveTask extends HiveTask {
         Objects.nonNull(fs2Table);
         this.fs2Table = fs2Table;
     }
+
 
     @Override
     protected void executeSql(String taskName, String rewritedSql) {
@@ -126,14 +126,11 @@ public class JoinHiveTask extends HiveTask {
      */
     private void createHiveTable(EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
         // final String user = this.getContext().joinTaskContext().getContextUserName();
-        HiveTableBuilder.createHiveTable(conn, dumpTable, cols, new SQLCommandTailAppend() {
-
-            @Override
-            public void append(StringBuffer hiveSQl) {
-                // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
-                // .append(config.getHdfsAddress())
-                hiveSQl.append("\n LOCATION '").append(HiveRemoveHistoryDataTask.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable).replaceAll("\\.", "/")).append("'");
-            }
+        HiveTableBuilder tableBuilder = new HiveTableBuilder("0");
+        tableBuilder.createHiveTableAndBindPartition(conn, dumpTable, cols, (hiveSQl) -> {
+            hiveSQl.append("\n LOCATION '").append(
+                    HiveRemoveHistoryDataTask.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)
+                            .replaceAll("\\.", "/")).append("'");
         });
     }
     // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306

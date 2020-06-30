@@ -65,10 +65,10 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     private static final String KEY_FIELD_FLAT_TABLE_BUILDER_NAME = "destination";
 
-    @FormField(require = true, ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(require = true, ordinal = 1, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 1, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
     public String yarnCfg;
 
     @FormField(ordinal = 3, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
@@ -156,7 +156,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     @Override
     public void deleteHistoryFile(EntityName dumpTable, ITaskContext context) {
         Connection hiveConnection = context.getObj();
-        getHiveRemoveHistoryDataTask().dropHistoryHiveTable(dumpTable, hiveConnection);
+        getHiveRemoveHistoryDataTask().deleteHdfsHistoryFile(dumpTable, hiveConnection);
     }
 
     @Override
@@ -232,22 +232,5 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
             }
             return true;
         }
-        // public boolean validateTransserver(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-        // Matcher matcher = host_pattern.matcher(value);
-        // if (!matcher.matches()) {
-        // msgHandler.addFieldError(context, fieldName, MSG_HOST_IP_ERROR);
-        // return false;
-        // }
-        // return true;
-        // }
-        // 
-        // public boolean validateRpcserver(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-        // Matcher matcher = host_pattern.matcher(value);
-        // if (!matcher.matches()) {
-        // msgHandler.addFieldError(context, fieldName, MSG_HOST_IP_ERROR);
-        // return false;
-        // }
-        // return true;
-        // }
     }
 }

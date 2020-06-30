@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static java.sql.Types.*;
 
@@ -52,6 +53,7 @@ import static java.sql.Types.*;
  * @date 2015年10月31日 下午3:43:14
  */
 public class HiveTableBuilder {
+
 
     private static final Logger log = LoggerFactory.getLogger(HiveTableBuilder.class);
 
@@ -74,7 +76,6 @@ public class HiveTableBuilder {
             throw new IllegalArgumentException("param timestamp can not be null");
         }
         this.timestamp = timestamp;
-        // this.user = user;
     }
 
     /**
@@ -85,10 +86,10 @@ public class HiveTableBuilder {
     public static List<String> getExistTables(Connection conn) throws Exception {
         final List<String> tables = new ArrayList<>();
         HiveDBUtils.query(conn, "show tables", new HiveDBUtils.ResultProcess() {
-
             @Override
-            public void callback(ResultSet result) throws Exception {
+            public boolean callback(ResultSet result) throws Exception {
                 tables.add(result.getString(1));
+                return true;
             }
         });
         return tables;
@@ -105,18 +106,22 @@ public class HiveTableBuilder {
             // DB都不存在，table肯定就不存在啦
             return tables;
         }
-        HiveDBUtils.query(conn, "show tables from " + dbName, result -> tables.add(result.getString(1)));
+        HiveDBUtils.query(conn, "show tables from " + dbName, result -> tables.add(result.getString(2)));
         return tables;
     }
 
     /**
+     * Reference:https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
+     *
      * @param conn
      * @param table
      * @param cols
      * @param sqlCommandTailAppend
      * @throws Exception
      */
-    public static void createHiveTable(Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+    public void createHiveTableAndBindPartition(Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+
+
         int maxColLength = 0;
         int tmpLength = 0;
         for (HiveColumn c : cols) {
@@ -131,8 +136,8 @@ public class HiveTableBuilder {
         HiveColumn o = null;
         String colformat = "%-" + (++maxColLength) + "s";
         StringBuffer hiveSQl = new StringBuffer();
-        HiveDBUtils.executeNoLog(conn, "CREATE DATABASE IF NOT EXISTS `" + table.getDbName() + "`");
-        hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS `" + table.getFullName() + "` (\n");
+        HiveDBUtils.executeNoLog(conn, "CREATE DATABASE IF NOT EXISTS " + table.getDbName() + "");
+        hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + table.getFullName() + " (\n");
         final int colsSize = cols.size();
         for (int i = 0; i < colsSize; i++) {
             o = cols.get(i);
@@ -145,7 +150,10 @@ public class HiveTableBuilder {
             }
             hiveSQl.append("\n");
         }
-        hiveSQl.append(") COMMENT 'tis_hive_tmp_" + table + "' PARTITIONED BY(pt string,pmod string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' LINES " + "TERMINATED BY '\\n' NULL DEFINED AS '' STORED AS TEXTFILE");
+        //hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(pt string,pmod string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' LINES " + "TERMINATED BY '\\n' NULL DEFINED AS '' STORED AS TEXTFILE ");
+        hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(pt string,pmod string)   ");
+        hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='\n','field.delim'='\t')");
+        hiveSQl.append("STORED AS TEXTFILE");
         sqlCommandTailAppend.append(hiveSQl);
         log.info(hiveSQl.toString());
         HiveDBUtils.executeNoLog(conn, hiveSQl.toString());
@@ -171,18 +179,6 @@ public class HiveTableBuilder {
         }
     }
 
-    // /**
-    // * 构建hive中的表
-    // *
-    // * @param indexName
-    // * @throws Exception
-    // */
-    // public void createHiveTable(Connection conn, String indexName) throws
-    // Exception {
-    // buildTableDDL(conn, indexName, timestamp,
-    // StringUtils.substringAfter(indexName, "search4"));
-    // }
-
     /**
      * 和hdfs上已经导入的数据进行绑定
      *
@@ -198,23 +194,24 @@ public class HiveTableBuilder {
                 final List<String> tables = getExistTables(conn, hiveTable.getDbName());
                 List<HiveColumn> columns = getColumns(hivePath, timestamp);
                 if (tables.contains(hiveTable.getTableName())) {
-                    if (isTableSame(conn, columns, hiveTable)) {
-                        // 需要清空原来表数据
-                        // HiveRemoveHistoryDataTask hiveHistoryClear = new
-                        // HiveRemoveHistoryDataTask(tableName,
-                        // userName, fileSystem);
-                        // hiveHistoryClear.dropHistoryHiveTable(conn);
-                        // 之前已经清理过了
-                    } else {
+                    if (!isTableSame(conn, columns, hiveTable)) {
                         // 原表有改动，需要把表drop掉
-                        HiveDBUtils.execute(conn, "drop table `" + hiveTable + "`");
-                        this.createHiveTable(conn, columns, hiveTable);
+                        log.info("table:" + hiveTable.getTableName() + " exist but table col metadta has been changed");
+                        HiveDBUtils.execute(conn, "DROP TABLE " + hiveTable);
+                        this.createHiveTableAndBindPartition(conn, columns, hiveTable);
+                        //return;
+                    } else {
+                        log.info("table:" + hiveTable.getTableName() + " exist will bind new partition");
                     }
                 } else {
-                    this.createHiveTable(conn, columns, hiveTable);
+                    log.info("table not exist,will create now:" + hiveTable.getTableName() + ",exist table:["
+                            + tables.stream().collect(Collectors.joining(",")) + "]");
+                    this.createHiveTableAndBindPartition(conn, columns, hiveTable);
+                    //return;
                 }
+
                 // 生成 hive partitiion
-                this.createTablePartition(conn, hivePath, hiveTable);
+                this.bindPartition(conn, hivePath, hiveTable, 0);
             }
         } finally {
             try {
@@ -234,32 +231,37 @@ public class HiveTableBuilder {
             int index = 0;
 
             @Override
-            public void callback(ResultSet result) throws Exception {
+            public boolean callback(ResultSet result) throws Exception {
                 if (errMsg.length() > 0) {
-                    return;
+                    return false;
                 }
                 final String keyName = result.getString(1);
                 if (compareOver.get() || (StringUtils.isBlank(keyName) && compareOver.compareAndSet(false, true))) {
                     // 所有列都解析完成
-                    return;
+                    return false;
                 }
                 if (omitKeys.contains(keyName)) {
                     // 忽略pt和pmod
-                    return;
+                    return true;
+                }
+                if (StringUtils.startsWith(keyName, "#")) {
+                    return false;
                 }
                 if (index > (columns.size() - 1)) {
-                    errMsg.append("create table " + tableName + " col:" + keyName + " is not exist");
-                    return;
+                    errMsg.append("create table " + tableName + " col:[" + keyName + "] is not exist");
+                    return false;
                 }
                 HiveColumn column = columns.get(index++);
                 if (column.getIndex() != (index - 1)) {
                     throw new IllegalStateException("col:" + column.getName() + " index shall be " + (index - 1) + " but is " + column.getIndex());
                 }
                 if (!StringUtils.equals(keyName, column.getName())) {
-                    errMsg.append("target tanle keyName:" + keyName + " is not equal with source table col:" + column.getName());
+                    errMsg.append("target table keyName[" + index + "]:" + keyName + " is not equal with source table col:" + column.getName());
+                    return false;
                 } else {
                     equalsCols.append(keyName).append(",");
                 }
+                return true;
             }
         });
         if (errMsg.length() > 0) {
@@ -288,7 +290,12 @@ public class HiveTableBuilder {
             return false;
         }
         final List<String> tables = new ArrayList<>();
-        HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName(), result -> tables.add(result.getString(1)));
+//        +-----------+---------------+--------------+--+
+//        | database  |   tableName   | isTemporary  |
+//        +-----------+---------------+--------------+--+
+//        | order     | totalpayinfo  | false        |
+//        +-----------+---------------+--------------+--+
+        HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName(), result -> tables.add(result.getString(2)));
         return tables.contains(dumpTable.getTableName());
     }
 
@@ -298,6 +305,7 @@ public class HiveTableBuilder {
             if (StringUtils.equals(result.getString(1), dbName)) {
                 dbExist.set(true);
             }
+            return true;
         });
         return dbExist.get();
     }
@@ -308,21 +316,52 @@ public class HiveTableBuilder {
      * @param hivePath
      * @throws Exception
      */
-    public void createTablePartition(Connection conn, String hivePath, EntityName table) throws Exception {
-        int index = 0;
-        String sql = null;
-        ITISFileSystem fs = this.fileSystem.getFileSystem();
-        IPath path = null;
-        while (true) {
-            path = fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + (index));
-            if (!fs.exists(path)) {
-                break;
-            }
-            sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + index + "') location '" + path.toString() + "'";
+    public void bindPartition(Connection conn, String hivePath, EntityName table, int startIndex) throws Exception {
+
+        visitSubPmodPath(hivePath, startIndex, (pmod, path) -> {
+            String sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + pmod + "') location '" + path.toString() + "'";
             log.info(sql);
             HiveDBUtils.executeNoLog(conn, sql);
-            index++;
+            return true;
+        });
+
+
+//        String sql = null;
+//        ITISFileSystem fs = this.fileSystem.getFileSystem();
+//        IPath path = null;
+//        while (true) {
+//            path = fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + (startIndex));
+//            if (!fs.exists(path)) {
+//                break;
+//            }
+//            sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + startIndex + "') location '" + path.toString() + "'";
+//            log.info(sql);
+//            HiveDBUtils.executeNoLog(conn, sql);
+//            startIndex++;
+//        }
+    }
+
+    private IPath visitSubPmodPath(String hivePath, int startIndex, FSPathVisitor pathVisitor) throws Exception {
+
+        // String sql = null;
+        ITISFileSystem fs = this.fileSystem.getFileSystem();
+        IPath path = null;
+
+        while (true) {
+            path = fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + (startIndex));
+            if (!fs.exists(path)) {
+                return path;
+            }
+            if (!pathVisitor.process(startIndex, path)) { return path;}
+//            sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + startIndex + "') location '" + path.toString() + "'";
+//            log.info(sql);
+//            HiveDBUtils.executeNoLog(conn, sql);
+            startIndex++;
         }
+    }
+
+    private interface FSPathVisitor {
+        boolean process(int pmod, IPath path) throws Exception;
     }
 
     @SuppressWarnings("all")
@@ -349,13 +388,26 @@ public class HiveTableBuilder {
         return cols;
     }
 
-    private void createHiveTable(Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
-        createHiveTable(conn, tableName, columns, new SQLCommandTailAppend() {
+    private void createHiveTableAndBindPartition(Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
+        createHiveTableAndBindPartition(conn, tableName, columns, (hiveSQl) -> {
+                    final String hivePath = tableName.getNameWithPath();
+                    int startIndex = 0;
+                    //final StringBuffer tableLocation = new StringBuffer();
+                    AtomicBoolean hasSubPmod = new AtomicBoolean(false);
+                    IPath p = this.visitSubPmodPath(hivePath, startIndex, (pmod, path) -> {
+                        // hiveSQl.append(" partition(pt='" + timestamp + "',pmod='" + pmod + "') location '" + path.toString() + "'");
 
-            @Override
-            public void append(StringBuffer hiveSQl) {
-            }
-        });
+                        hiveSQl.append(" location '" + path.toString() + "'");
+
+                        hasSubPmod.set(true);
+                        return false;
+                    });
+
+                    if (!hasSubPmod.get()) {
+                        throw new IllegalStateException("dump table:" + tableName.getFullName() + " has any valid of relevant fs in timestamp path:" + p);
+                    }
+                }
+        );
     }
 
     // public HiveDBUtils getHiveDbHeler() {
@@ -372,8 +424,7 @@ public class HiveTableBuilder {
         this.fileSystem = fileSystem;
     }
 
-    public abstract static class SQLCommandTailAppend {
-
-        public abstract void append(StringBuffer hiveSQl);
+    public interface SQLCommandTailAppend {
+        public void append(StringBuffer hiveSQl) throws Exception;
     }
 }

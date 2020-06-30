@@ -7,7 +7,8 @@ public interface IContainerPodSpec extends IdentityName {
 //    // 最大yarn堆内存大小,单位为M
 //    private final int maxYarnHeapMemory;
 //    // 单个任务CPU内核大小
-//    private final int maxYarnCPUCores;
+//     private final int maxYarnCPUCores;
+
     /**
      * 最大内存开销，单位：M兆
      *
@@ -28,5 +29,14 @@ public interface IContainerPodSpec extends IdentityName {
      * @return
      */
     public int getRunjdwpPort();
+
+    /**
+     * 最大容忍错误数量
+     *
+     * @return
+     */
+    default int getMaxMakeFaild() {
+        return Integer.MAX_VALUE;
+    }
 
 }

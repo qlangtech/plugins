@@ -23,6 +23,7 @@ import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -41,30 +42,16 @@ import java.util.regex.Pattern;
  */
 public class HiveRemoveHistoryDataTask {
 
-    private static final Logger log = LoggerFactory.getLogger(HiveRemoveHistoryDataTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(HiveRemoveHistoryDataTask.class);
 
-    // private final DumpTable dumpTable;
-    // tableName;
-    // private final String dbName;
-    public static final int MAX_PARTITION_SAVE = 1;
+
 
     // daily ps name
     private static final String pt = IDumpTable.PARTITION_PT;
 
-    // private final String userName;
-    // 
-    // private final ITISFileSystem fileSystem;
     private final ITISFileSystemFactory fsFactory;
 
-    // private final Connection hiveConnection;
     public static void main(String[] arg) {
-        // Matcher matcher = INDEX_NAME_PATTERN.matcher("4xxxxx");
-        // if (!matcher.matches()) {
-        // throw new IllegalStateException(
-        // "table name is not illegal,tableName:");
-        // }
-        // 
-        // System.out.println(matcher.group(2));
         List<PathInfo> timestampList = new ArrayList<PathInfo>();
         PathInfo path = null;
         for (int i = 0; i < 100; i++) {
@@ -95,6 +82,7 @@ public class HiveRemoveHistoryDataTask {
      */
     public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection) {
         try {
+            logger.info("start deleteHdfsHistoryFile data[{}] files", dumpTable);
             this.deleteMetadata(dumpTable);
             this.deleteHdfsFile(dumpTable, false);
             // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306
@@ -113,6 +101,7 @@ public class HiveRemoveHistoryDataTask {
      */
     public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection, String timestamp) {
         try {
+            logger.info("start delete history data{} files", dumpTable);
             this.deleteMetadata(dumpTable, timestamp);
             this.deleteHdfsFile(dumpTable, false, /* isBuildFile */
                     timestamp);
@@ -133,7 +122,7 @@ public class HiveRemoveHistoryDataTask {
     private void deleteMetadata(EntityName dumpTable) throws Exception {
         this.deleteMetadata(dumpTable, (r) -> {
             return true;
-        }, MAX_PARTITION_SAVE);
+        }, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 
     private void deleteMetadata(EntityName dumpTable, String timestamp) throws Exception {
@@ -160,7 +149,6 @@ public class HiveRemoveHistoryDataTask {
             return;
         }
         List<IPathInfo> child = fileSys.listChildren(parent, pathFilter);
-        // FileStatus[] child = fileSys.listStatus(parent, pathFilter);
         List<PathInfo> timestampList = new ArrayList<>();
         PathInfo pathinfo;
         Matcher matcher;
@@ -192,7 +180,7 @@ public class HiveRemoveHistoryDataTask {
             toDelete = fileSys.getPath(parent, timestampList.get(index).pathName);
             // toDelete = new Path(parent, timestampList.get(index).pathName);
             // 删除历史数据
-            log.info("history old hdfs file path:" + toDelete.toString() + " delete,success:" + fileSys.delete(toDelete, true) + ",getMaxPartitionSave:" + maxPartitionSave);
+            logger.info("history old hdfs file path:" + toDelete.toString() + " delete,success:" + fileSys.delete(toDelete, true) + ",getMaxPartitionSave:" + maxPartitionSave);
         }
     }
 
@@ -230,7 +218,7 @@ public class HiveRemoveHistoryDataTask {
     }
 
     private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile) throws IOException {
-        this.deleteHdfsFile(dumpTable, isBuildFile, (r) -> true, MAX_PARTITION_SAVE);
+        this.deleteHdfsFile(dumpTable, isBuildFile, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 
     private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, String timestamp) throws IOException {
@@ -287,7 +275,7 @@ public class HiveRemoveHistoryDataTask {
     }
 
     public void dropHistoryHiveTable(EntityName dumpTable, Connection conn) {
-        this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, MAX_PARTITION_SAVE);
+        this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 
     /**
@@ -307,21 +295,21 @@ public class HiveRemoveHistoryDataTask {
         try {
             // 判断表是否存在
             if (!HiveTableBuilder.isTableExists(conn, table)) {
-                log.info(table + " is not exist");
+                logger.info(table + " is not exist");
                 return;
             }
             List<String> ptList = getHistoryPts(conn, filter, table);
             int count = 0;
-            log.info("maxPartitionSave:" + maxPartitionSave);
+            logger.info("maxPartitionSave:" + maxPartitionSave);
             for (int i = ptList.size() - 1; i >= 0; i--) {
                 if ((++count) > maxPartitionSave) {
                     String alterSql = "alter table " + table + " drop partition (  " + pt + " = '" + ptList.get(i) + "' )";
                     try {
                         HiveDBUtils.execute(conn, alterSql);
                     } catch (Throwable e) {
-                        log.error("alterSql:" + alterSql, e);
+                        logger.error("alterSql:" + alterSql, e);
                     }
-                    log.info("history table:" + table + ", partition:" + pt + "='" + ptList.get(i) + "', have been removed");
+                    logger.info("history table:" + table + ", partition:" + pt + "='" + ptList.get(i) + "', have been removed");
                 }
             }
         } catch (Exception e) {
@@ -342,8 +330,9 @@ public class HiveRemoveHistoryDataTask {
             if (matcher.find() && filter.accept(matcher.group(1))) {
                 ptSet.add(matcher.group(1));
             } else {
-                log.warn(table + ",partition" + result.getString(1) + ",is not match pattern:" + ptPattern);
+                logger.warn(table + ",partition" + result.getString(1) + ",is not match pattern:" + ptPattern);
             }
+            return true;
         });
         List<String> ptList = new LinkedList<>(ptSet);
         Collections.sort(ptList);

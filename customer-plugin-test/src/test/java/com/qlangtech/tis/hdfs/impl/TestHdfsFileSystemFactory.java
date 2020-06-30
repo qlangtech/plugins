@@ -22,8 +22,8 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.BaiscPluginTest;
 import com.qlangtech.tis.plugin.PluginStore;
-import junit.framework.TestCase;
 
 import java.util.List;
 
@@ -33,19 +33,31 @@ import java.util.List;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class TestHdfsFileSystemFactory extends TestCase {
+public class TestHdfsFileSystemFactory extends BaiscPluginTest {
 
     public void testCreate() {
         PluginStore pluginStore = TIS.getPluginStore(FileSystemFactory.class);
         assertNotNull(pluginStore);
         Describable<FileSystemFactory> plugin = pluginStore.getPlugin();
         assertNotNull(plugin);
-        assertTrue("real class:" + plugin.getClass().getName(), plugin instanceof HdfsFileSystemFactory);
-        HdfsFileSystemFactory fsFactory = (HdfsFileSystemFactory) plugin;
+
+        FileSystemFactory fsFactory = (FileSystemFactory) plugin;
+
         ITISFileSystem fileSystem = fsFactory.getFileSystem();
-        List<IPathInfo> paths = fileSystem.listChildren(fileSystem.getPath(fsFactory.getRootDir() + "/"));
+
+        List<IPathInfo> paths = fileSystem.listChildren(fileSystem.getPath("/"));
         for (IPathInfo i : paths) {
             System.out.println(i.getName());
         }
+
+//        plugin.
+//
+//        assertTrue("real class:" + plugin.getClass().getName(), plugin instanceof HdfsFileSystemFactory);
+//        HdfsFileSystemFactory fsFactory = (HdfsFileSystemFactory) plugin;
+//        ITISFileSystem fileSystem = fsFactory.getFileSystem();
+//        List<IPathInfo> paths = fileSystem.listChildren(fileSystem.getPath(fsFactory.getRootDir() + "/"));
+//        for (IPathInfo i : paths) {
+//            System.out.println(i.getName());
+//        }
     }
 }

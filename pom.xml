@@ -54,10 +54,11 @@
 
     <properties>
 
-        <hadoop-version>2.6.0</hadoop-version>
-
-        <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>
-        <hive.version>1.1.0</hive.version>
+        <hadoop-version>2.6.5</hadoop-version>
+        <!--
+                <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>
+            -->
+        <hive.version>1.2.1</hive.version>
 
         <maven-tpi-plugin.classpathDependentExcludes>
             commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:logback-classic
@@ -120,18 +121,31 @@
     </properties>
 
     <modules>
-
+        <module>tis-spark-hive-server-extends</module>
         <module>tis-hdfs</module>
         <module>twodfire-asyncmsg</module>
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
         <module>customer-plugin-test</module>
+
     </modules>
 
     <dependencyManagement>
         <dependencies>
 
+            <dependency>
+                <groupId>com.qlangtech.tis.tools</groupId>
+                <artifactId>tis-spark-extends-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>4.2</version>
+                <scope>test</scope>
+            </dependency>
 
             <dependency>
                 <groupId>org.apache.hive</groupId>
@@ -417,7 +431,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
 
 
         </dependencies>
@@ -881,7 +894,8 @@
                 <configuration>
                     <pluginFirstClassLoader>true</pluginFirstClassLoader>
                     <minimumJavaVersion>1.${java.level}</minimumJavaVersion>
-                    <classpathDependentExcludes>${maven-tpi-plugin.classpathDependentExcludes}</classpathDependentExcludes>
+                    <classpathDependentExcludes>${maven-tpi-plugin.classpathDependentExcludes}
+                    </classpathDependentExcludes>
                 </configuration>
             </plugin>
 

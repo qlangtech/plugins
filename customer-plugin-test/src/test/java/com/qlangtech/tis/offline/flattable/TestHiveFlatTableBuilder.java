@@ -1,7 +1,6 @@
 package com.qlangtech.tis.offline.flattable;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.common.utils.TSearcherConfigFetcher;
 import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
 import com.qlangtech.tis.plugin.PluginStore;
@@ -17,14 +16,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @create: 2020-04-21 13:39
  **/
 public class TestHiveFlatTableBuilder extends BaiscPluginTest {
+    private PluginStore<FlatTableBuilder> flatTableBuilderStore;
+
+    @Override
+    protected void setUp() throws Exception {
+        this.flatTableBuilderStore = TIS.getPluginStore(FlatTableBuilder.class);
+    }
+
+
 
 
     public void testCreate() {
 
-       // assertNotNull(TSearcherConfigFetcher.get().getLogFlumeAddress());
+        // assertNotNull(TSearcherConfigFetcher.get().getLogFlumeAddress());
 
-        PluginStore<FlatTableBuilder> store = TIS.getPluginStore(FlatTableBuilder.class);
-        FlatTableBuilder flatTableBuilder = store.getPlugin();
+        // PluginStore<FlatTableBuilder> store = TIS.getPluginStore(FlatTableBuilder.class);
+        FlatTableBuilder flatTableBuilder = flatTableBuilderStore.getPlugin();
         assertNotNull(flatTableBuilder);
 
         AtomicBoolean success = new AtomicBoolean(false);

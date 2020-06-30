@@ -36,9 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @create: 2020-04-08 14:11
- *
  * @author 百岁（baisui@qlangtech.com）
+ * @create: 2020-04-08 14:11
  * @date 2020/04/13
  */
 public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory implements IContainerPodSpec {
@@ -87,10 +86,15 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
 
     @Override
     public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
-            , String groupNum, IIndexBuildParam buildParam, TaskContext context) throws Exception {
+            , String groupNum, IIndexBuildParam buildParam) throws Exception {
         Hadoop020RemoteJobTriggerFactory indexBuilderTriggerFactory
-                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFsFactory(), null);
-        return indexBuilderTriggerFactory.createBuildJob(timePoint, indexName, groupNum, buildParam, context);
+                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFsFactory(), this);
+        return indexBuilderTriggerFactory.createBuildJob(timePoint, indexName, groupNum, buildParam);
+    }
+
+    @Override
+    public int getMaxMakeFaild() {
+        return this.maxDocMakeFaild;
     }
 
     /**

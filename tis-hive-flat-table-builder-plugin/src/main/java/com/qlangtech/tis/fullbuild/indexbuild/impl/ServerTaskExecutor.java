@@ -1,7 +1,6 @@
 package com.qlangtech.tis.fullbuild.indexbuild.impl;
 
 import com.qlangtech.tis.build.task.TaskMapper;
-import com.qlangtech.tis.build.task.TaskReturn;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.fullbuild.indexbuild.TaskContext;
@@ -38,7 +37,7 @@ public class ServerTaskExecutor {
         try {
 
 
-          //  DefaultCallbackHandler callbackHandler = new DefaultCallbackHandler();
+            //  DefaultCallbackHandler callbackHandler = new DefaultCallbackHandler();
             rmClient = AMRMClientAsync.createAMRMClientAsync(1000, callbackHandler);
             rmClient.init(conf);
             rmClient.start();
@@ -46,7 +45,8 @@ public class ServerTaskExecutor {
             rmClient.registerApplicationMaster("", 0, "");
             logger.info("have register master");
 
-            TaskReturn result = taskMapper.map(taskContext);
+            // TaskReturn result =
+            taskMapper.map(taskContext);
 
 //            /* 执行索引build start */
 //            HdfsIndexGetConfig configJob = new HdfsIndexGetConfig();
@@ -57,10 +57,10 @@ public class ServerTaskExecutor {
 //                return;
 //            }
 //            result = indexBuilder.map(taskContext);
-            if (result.getReturnCode() == TaskReturn.ReturnCode.FAILURE) {
-                masterShutdown(rmClient, FinalApplicationStatus.FAILED, result.getMsg());
-                return;
-            }
+//            if (result.getReturnCode() == TaskReturn.ReturnCode.FAILURE) {
+//                masterShutdown(rmClient, FinalApplicationStatus.FAILED, result.getMsg());
+//                return;
+//            }
 
             /* 执行索引build end */
             masterShutdown(rmClient, FinalApplicationStatus.SUCCEEDED, StringUtils.EMPTY);

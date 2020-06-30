@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.dump.hive;
 
+import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.JobLog;
 import org.slf4j.Logger;
@@ -27,12 +28,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /*
- * 对应一个SQL的执行
+ * 对应一个Hive SQL的执行
  *
  * @author 百岁（baisui@qlangtech.com）
  * @date 2017年6月26日
  */
-public class HiveExecLiveLogParser {
+public class HiveExecLiveLogParser implements IExecLiveLogParser {
 
     private static final Pattern START_QUERY = Pattern.compile("Compiling\\s{1}command\\(queryId=(.+)\\)");
 
@@ -88,7 +89,6 @@ public class HiveExecLiveLogParser {
     public HiveExecLiveLogParser(IJoinTaskStatus joinTaskStatus) {
         this.joinTaskStatus = joinTaskStatus;
         this.tokens.add(new TokenProcess(START_QUERY) {
-
             @Override
             public void process(Matcher m) {
                 queryId = m.group(1);
@@ -110,13 +110,8 @@ public class HiveExecLiveLogParser {
             }
         });
         this.tokens.add(new TokenProcess(TOTAL_JOB) {
-
             @Override
             public void process(Matcher m) {
-                // if (!queryStart) {
-                // throw new IllegalStateException("has not pre match query
-                // start");
-                // }
                 jobCount = Integer.parseInt(m.group(1));
                 for (int i = 0; i < jobCount; i++) {
                     joinTaskStatus.createJobStatus(i);
@@ -126,7 +121,6 @@ public class HiveExecLiveLogParser {
             }
         });
         this.tokens.add(new TokenProcess(LAUNCH_JOB) {
-
             @Override
             public void process(Matcher m) {
                 // if (!queryStart) {
@@ -145,7 +139,6 @@ public class HiveExecLiveLogParser {
             }
         });
         this.tokens.add(new TokenProcess(START_TASK) {
-
             @Override
             public void process(Matcher m) {
                 joinTaskStatus.setStart();
@@ -153,7 +146,6 @@ public class HiveExecLiveLogParser {
             }
         });
         this.tokens.add(new TokenProcess(END_TASK) {
-
             @Override
             public void process(Matcher m) {
                 if (currentJobLog == null) {
@@ -182,6 +174,7 @@ public class HiveExecLiveLogParser {
      * @param log
      * @return 是否处理完成 ，如果处理完成就没有必要再处理了
      */
+    @Override
     public void process(String log) {
         // System.out.println(log);
         Matcher matcher = null;
@@ -201,6 +194,7 @@ public class HiveExecLiveLogParser {
      *
      * @return
      */
+    @Override
     public boolean isExecOver() {
         return this.execOver;
     }

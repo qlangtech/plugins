@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.Configuration;
@@ -35,8 +36,6 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /*
 DefaultK8sContext
@@ -46,13 +45,13 @@ DefaultK8sContext
  */
 public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
 
-    @FormField(ordinal = 0)
+    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1)
+    @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
     public String kubeBasePath;
 
-    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA)
+    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String kubeConfigContent;
 
     @Override
@@ -89,9 +88,8 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
 
-        private static final Pattern host_pattern = Pattern.compile("http(s?)://[\\da-z]{1}[\\da-z.:/]+");
-
-        public static final String MSG_HTTP_HOST_ERROR = "必须由https或http开头的地址";
+//        private static final Pattern host_pattern = Pattern.compile("http(s?)://[\\da-z]{1}[\\da-z.:/]+");s
+//        public static final String MSG_HTTP_HOST_ERROR = "必须由https或http开头的地址";
 
         public DefaultDescriptor() {
             super();
@@ -117,21 +115,21 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
             return "k8s";
         }
 
-        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            if (!validateIdentity(msgHandler, context, fieldName, value)) {
-                return false;
-            }
-            return true;
-        }
+//        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            if (!validateIdentity(msgHandler, context, fieldName, value)) {
+//                return false;
+//            }
+//            return true;
+//        }
 
-        public boolean validateKubeBasePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            Matcher matcher = host_pattern.matcher(value);
-            if (!matcher.matches()) {
-                msgHandler.addFieldError(context, fieldName, MSG_HTTP_HOST_ERROR);
-                return false;
-            }
-            return true;
-        }
+//        public boolean validateKubeBasePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            Matcher matcher = host_pattern.matcher(value);
+//            if (!matcher.matches()) {
+//                msgHandler.addFieldError(context, fieldName, MSG_HTTP_HOST_ERROR);
+//                return false;
+//            }
+//            return true;
+//        }
 
         public boolean validateKubeConfigContent(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             final Yaml yaml = new Yaml(new SafeConstructor());

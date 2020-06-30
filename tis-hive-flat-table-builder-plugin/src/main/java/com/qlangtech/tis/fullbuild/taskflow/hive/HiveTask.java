@@ -17,22 +17,18 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.facebook.presto.sql.parser.ParsingOptions;
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Expression;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.SqlRewriter;
 import com.qlangtech.tis.sql.parser.SqlRewriter.AliasTable;
-import com.qlangtech.tis.sql.parser.SqlStringBuilder;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -42,16 +38,14 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年11月1日 下午10:58:29
  */
 public abstract class HiveTask extends AdapterTask {
 
-    // private HiveDBUtils hiveDBHelper;
     private static final Logger logger = LoggerFactory.getLogger(HiveTask.class);
 
     private final IJoinTaskStatus joinTaskStatus;
@@ -59,7 +53,7 @@ public abstract class HiveTask extends AdapterTask {
     protected final ISqlTask nodeMeta;
     protected final boolean isFinalNode;
 
-    private static final SqlParser sqlParser = new com.facebook.presto.sql.parser.SqlParser();
+    //private static final SqlParser sqlParser = new com.facebook.presto.sql.parser.SqlParser();
 
     private final ERRules erRules;
 
@@ -82,35 +76,48 @@ public abstract class HiveTask extends AdapterTask {
         return this.nodeMeta.getExportName();
     }
 
-    private String sqlContent;
+    @Override
+    public FullbuildPhase phase() {
+        return FullbuildPhase.JOIN;
+    }
 
-    private AliasTable primaryTable;
+    @Override
+    public String getIdentityName() {
+        return nodeMeta.getExportName();
+    }
+
+    private ISqlTask.RewriteSql rewriteSql;
+
+    // private AliasTable primaryTable;
 
     @Override
     public String getContent() {
-        if (this.sqlContent == null) {
+        if (this.rewriteSql == null) {
             // 执行sql rewrite
-            if (getDumpPartition().size() < 1) {
-                throw new IllegalStateException("dumpPartition set size can not small than 1");
-            }
             // SQL rewrite
-            final String sqlContent = nodeMeta.getSql();
+            //final String sqlContent = nodeMeta.getSql();
             // nodeMeta.getDependencies();
             // logger.info("raw sql:\n" + sqlContent);
-            Optional<List<Expression>> parameters = Optional.empty();
-            IJoinTaskContext joinContext = this.getContext().joinTaskContext();
-            SqlStringBuilder builder = new SqlStringBuilder();
-            SqlRewriter rewriter = new SqlRewriter(builder, getDumpPartition(), this.erRules, parameters, this.isFinalNode, joinContext);
-            // 执行rewrite
-            rewriter.process(sqlParser.createStatement(sqlContent, new ParsingOptions()), 0);
-            this.primaryTable = rewriter.getPrimayTable();
-            if (this.primaryTable == null) {
-                throw new IllegalStateException("task:" + this.getName() + " has not find primary table");
-            }
-            this.sqlContent = builder.toString();
+            //SqlStringBuilder builder = ;
+            this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition(), this.erRules, this.getContext(), this.isFinalNode);
         }
-        return this.sqlContent;
+        return this.rewriteSql.sqlContent;
     }
+
+//    private static String getRewriteSql(String taskName,String sqlContent, Map<IDumpTable, ITabPartition> dumpPartition, ERRules erRules
+//            , ITemplateContext templateContext,boolean isFinalNode) {
+//        Optional<List<Expression>> parameters = Optional.empty();
+//        IJoinTaskContext joinContext = templateContext.joinTaskContext();
+//        SqlStringBuilder builder = new SqlStringBuilder();
+//        SqlRewriter rewriter = new SqlRewriter(builder, dumpPartition, erRules, parameters, isFinalNode, joinContext);
+//        // 执行rewrite
+//        rewriter.process(sqlParser.createStatement(sqlContent, new ParsingOptions()), 0);
+//        AliasTable primaryTable = rewriter.getPrimayTable();
+//        if (primaryTable == null) {
+//            throw new IllegalStateException("task:" + taskName + " has not find primary table");
+//        }
+//        return builder.toString();
+//    }
 
     private static class DependencyNodeStatus {
 
@@ -130,26 +137,27 @@ public abstract class HiveTask extends AdapterTask {
         this.validateDependenciesNode(taskname);
         final Connection conn = this.getTaskContext().getObj();
         final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
-        final String newCreatePt = primaryTable.getTabPartition();
+        //final String newCreatePt = primaryTable.getTabPartition();
+        this.getContent();
         List<String> allpts = null;
         try {
             logger.info("\n execute hive task:{} \n{}", taskname, sql);
             HiveDBUtils.execute(conn, sql, joinTaskStatus);
             // 将当前的join task的partition设置到当前上下文中
             Map<IDumpTable, ITabPartition> dumpPartition = this.getDumpPartition();
-            dumpPartition.put(newCreateTab, () -> newCreatePt);
+            dumpPartition.put(newCreateTab, this.rewriteSql.primaryTable);
             allpts = HiveRemoveHistoryDataTask.getHistoryPts(conn, newCreateTab);
         } catch (Exception e) {
             // TODO 一旦有异常要将整个链路执行都停下来
             throw new RuntimeException("taskname:" + taskname, e);
         }
-        AliasTable child = null;
+        IAliasTable child = null;
         // 校验最新的Partition 是否已经生成
-        if (!allpts.contains(newCreatePt)) {
+        if (!allpts.contains(this.rewriteSql.primaryTable.getPt())) {
             StringBuffer errInfo = new StringBuffer();
-            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + newCreatePt
+            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + this.rewriteSql.primaryTable
                     + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
-            child = primaryTable.getChild();
+            child = this.rewriteSql.primaryTable.getChild();
             if (child != null && !child.isSubQueryTable()) {
                 try {
                     allpts = HiveRemoveHistoryDataTask.getHistoryPts(conn, child.getTable());
@@ -157,7 +165,7 @@ public abstract class HiveTask extends AdapterTask {
                     throw new RuntimeException(child.getTable().getFullName(), e);
                 }
                 errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT)
-                        .append(":").append(newCreatePt)
+                        .append(":").append(this.rewriteSql.primaryTable)
                         .append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
             }
             throw new IllegalStateException(errInfo.toString());

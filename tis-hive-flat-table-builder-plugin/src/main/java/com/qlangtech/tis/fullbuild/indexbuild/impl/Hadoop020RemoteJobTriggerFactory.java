@@ -17,12 +17,15 @@
  */
 package com.qlangtech.tis.fullbuild.indexbuild.impl;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.build.task.TaskMapper;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.fullbuild.indexbuild.*;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.ConfigFileReader;
 import com.qlangtech.tis.manage.common.IndexBuildParam;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
@@ -33,7 +36,6 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.apache.hadoop.yarn.util.Apps;
 import org.apache.hadoop.yarn.util.Records;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +45,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -63,13 +65,20 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
     private final IContainerPodSpec podSpec;
 
     // 构建索引过程中最大索引出错条数，超过了这个阀值就终止构建索引了
-    private int maxDocMakeFaild;
+    //private int maxDocMakeFaild;
+
+    private static final String CLASS_NAME_TASK = "com.qlangtech.tis.build.NodeMaster";
+    //private static final String CLASS_NAME_TASK = "com.qlangtech.tis.build.MockNodeMaster";
+
 
     public Hadoop020RemoteJobTriggerFactory(IYarnConfig yarnConfig, FileSystemFactory fsFactory, IContainerPodSpec podSpec) {
         super();
         this.yarnConfig = yarnConfig;
         this.fsFactory = fsFactory;
         this.podSpec = podSpec;
+        if (this.podSpec == null) {
+            throw new IllegalStateException("podSpec can not be null");
+        }
     }
 
     /**
@@ -80,21 +89,20 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
      * @param
      * @param groupNum
      * @param state
-     * @param context
      * @return
      * @throws Exception
      */
     @Override
     public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
-            , String groupNum, IIndexBuildParam state, TaskContext context) throws Exception {
+            , String groupNum, IIndexBuildParam state) throws Exception {
         final String coreName = indexName + "-" + groupNum;
-        return getRemoteJobTrigger(coreName, "index-build-" + context.getTaskId()
-                , createIndexBuildLauncherParam(context, state, Integer.parseInt(groupNum), podSpec.getName()));
+        return getRemoteJobTrigger(coreName, CLASS_NAME_TASK, "index-build-" + state.getTaskId()
+                , createIndexBuildLauncherParam(state, Integer.parseInt(groupNum), podSpec.getName()));
     }
 
     @Override
     public void startTask(TaskMapper taskMapper, TaskContext taskContext) {
-
+ throw new UnsupportedOperationException();
     }
 
     /**
@@ -112,17 +120,17 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, startTime, podSpec.getName());
         final String jobName = table.getDbName() + "." + table.getTableName();
         try {
-            return getRemoteJobTrigger(jobName, "dump-" + context.getTaskId(), tabDumpParams);
+            return getRemoteJobTrigger(jobName, CLASS_NAME_TASK
+                    , "dump-" + context.getTaskId(), tabDumpParams);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
 
-    private IRemoteJobTrigger getRemoteJobTrigger(String name, String appType, JobConfParams launcherParam) throws IOException, YarnException {
+    private IRemoteJobTrigger getRemoteJobTrigger(String name, String startClassName, String appType, JobConfParams launcherParam)
+            throws IOException, YarnException {
 
-//        TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
-//        RunEnvironment runtime = config.getRuntime();
         ParamsConfig pConfig = (ParamsConfig) this.yarnConfig;
 
         YarnConfiguration yarnConfig = pConfig.createConfigInstance();
@@ -143,22 +151,22 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
 
         String javaCommand = StringUtils.isEmpty(JAVA_HOME) ? "java" : (JAVA_HOME + "/bin/java ");
 
+
         final int memoryConsume = podSpec.getMaxHeapMemory();
-//        amContainer.setCommands(
-//                Collections.singletonList(javaCommand + getMemorySpec(memoryConsume) + getRemoteDebugParam()
-//                        + " -Druntime=" + runtime.getKeyName() + " com.qlangtech.tis.build.NodeMaster "
-//                        + launcherParam.paramSerialize() + " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
-//                        + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"));
+        logger.info("index build podSpec MaxHeapMemory:{},MaxCPUCores:{}", memoryConsume, podSpec.getMaxCPUCores());
 
-        amContainer.setCommands(
-                Collections.singletonList(javaCommand + getMemorySpec(memoryConsume) + getRemoteDebugParam()
-                        + " com.qlangtech.tis.build.NodeMaster "
-                        + launcherParam.paramSerialize() + " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
-                        + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr"));
+        final String command = javaCommand + getMemorySpec(memoryConsume) + getRemoteDebugParam()
+                + " -cp " + getClasspath()
+                + " " + startClassName + " "
+                + launcherParam.paramSerialize() + " 1>" + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stdout" + " 2>"
+                + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/stderr";
 
-        /* CLASSPATH 运行依賴的環境變量 */
-        Map<String, String> environment = new HashMap<String, String>();
-        setEnvironment(environment, amContainer, true);
+        logger.info("\n=============================================\n"
+                + command
+                + "\n=============================================");
+
+        amContainer.setCommands(Collections.singletonList(command));
+
         submissionContext.setAMContainerSpec(amContainer);
         // 使用4核10G的节点，原则上越大越好
         Resource capability = Records.newRecord(Resource.class);
@@ -217,24 +225,23 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         };
     }
 
-    public int getMaxDocMakeFaild() {
-        return maxDocMakeFaild;
-    }
+//    public int getMaxDocMakeFaild() {
+//        return maxDocMakeFaild;
+//    }
+//
+//    public void setMaxDocMakeFaild(int maxDocMakeFaild) {
+//        this.maxDocMakeFaild = maxDocMakeFaild;
+//    }
 
-    public void setMaxDocMakeFaild(int maxDocMakeFaild) {
-        this.maxDocMakeFaild = maxDocMakeFaild;
-    }
-
-    private JobConfParams createIndexBuildLauncherParam( //
-                                                         TaskContext context,
-                                                         IIndexBuildParam state, int groupNum, String indexBuilderTriggerFactoryName) {
+    private JobConfParams createIndexBuildLauncherParam(
+            IIndexBuildParam state, int groupNum, String indexBuilderTriggerFactoryName) {
         if (StringUtils.isEmpty(indexBuilderTriggerFactoryName)) {
             throw new IllegalArgumentException("param 'indexBuilderTriggerFactoryName' can not be empty");
         }
         final String coreName = state.getIndexName() + '-' + groupNum;
         // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
         JobConfParams jobConf = new JobConfParams();
-        jobConf.set(IParamContext.KEY_TASK_ID, String.valueOf(context.getTaskId()));
+        jobConf.set(IParamContext.KEY_TASK_ID, String.valueOf(state.getTaskId()));
         // 设置记录条数
         if (state.getDumpCount() != null) {
             jobConf.set(IndexBuildParam.INDEXING_ROW_COUNT, String.valueOf(state.getDumpCount()));
@@ -256,14 +263,14 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
                 : state.getHdfsSourcePath().build(String.valueOf(groupNum));
 
         try {
-            jobConf.set(IndexBuildParam.INDEXING_SOURCE_PATH, URLEncoder.encode(hdfsSourcePath, "utf8"));
+            jobConf.set(IndexBuildParam.INDEXING_SOURCE_PATH, URLEncoder.encode(hdfsSourcePath, TisUTF8.getName()));
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(IndexBuildParam.INDEXING_SOURCE_PATH, e);
         }
         final String schemaPath = this.fsFactory.getRootDir() + "/" + coreName + "/config/"
                 + ConfigFileReader.FILE_SCHEMA.getFileName();
         final String solrConifgPath = this.fsFactory.getRootDir() + "/" + coreName + "/config/"
-                + ConfigFileReader.FILE_SOLOR.getFileName();
+                + ConfigFileReader.FILE_SOLR.getFileName();
         jobConf.set(IndexBuildParam.INDEXING_SCHEMA_PATH, schemaPath);
         jobConf.set(IndexBuildParam.INDEXING_SOLRCONFIG_PATH, solrConifgPath);
 
@@ -278,26 +285,26 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
             jobConf.set(IndexBuildParam.INDEXING_DELIMITER, state.getHdfsdelimiter());
         }
         jobConf.set(IndexBuildParam.JOB_TYPE, IndexBuildParam.JOB_TYPE_INDEX_BUILD);
-        jobConf.set(IndexBuildParam.INDEXING_MAX_DOC_FAILD_LIMIT, String.valueOf(this.getMaxDocMakeFaild()));
+
+        jobConf.set(IndexBuildParam.INDEXING_MAX_DOC_FAILD_LIMIT, String.valueOf(this.podSpec.getMaxMakeFaild()));
         return jobConf;
     }
 
-    private static void setEnvironment(Map<String, String> environment, ContainerLaunchContext ctx,
-                                       boolean includeHadoopJars) throws IOException {
+    private static String getClasspath() {
 
-        Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), "/opt/data/tis/sharelib/indexbuild7.6/*",
-                File.pathSeparator);
-        Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), "/opt/data/tis/conf", File.pathSeparator);
-
-//        for (String c : YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH) {
-//            Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), c.trim(), File.pathSeparator);
-//        }
-//        Apps.addToEnvironment(environment //
-//                , ApplicationConstants.Environment.CLASSPATH.name() //
-//                , ApplicationConstants.Environment.HADOOP_COMMON_HOME.$() + "/share/hadoop/mapreduce/*",
+        File libDir = Config.getLibDir();
+        List<String> cp = Lists.newArrayList();
+        cp.add(libDir.getAbsolutePath() + "/sharelib/indexbuild7.6/*");
+        cp.add(libDir.getAbsolutePath() + "/conf");
+        String classpath = cp.stream().collect(Collectors.joining(File.pathSeparator));
+        // logger.info("classpath:" + classpath);
+        return classpath;
+//        Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), libDir.getAbsolutePath() + "/sharelib/indexbuild7.6/*",
 //                File.pathSeparator);
-        ctx.setEnvironment(environment);
-        logger.info("classpath:" + environment.get(ApplicationConstants.Environment.CLASSPATH.name()));
+//        Apps.addToEnvironment(environment, ApplicationConstants.Environment.CLASSPATH.name(), libDir.getAbsolutePath() + "/conf", File.pathSeparator);
+//
+//        ctx.setEnvironment(environment);
+
     }
 
 

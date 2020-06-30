@@ -22,6 +22,7 @@ import com.qlangtech.tis.fs.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -188,14 +189,16 @@ public class HdfsFileSystem implements ITISFileSystem {
 
         @Override
         public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-            // ((FSDataInputStream) this.in).readFully(position, buffer, offset, length);
-            throw new UnsupportedOperationException();
+            ((HdfsDataInputStream) this.in).readFully(position, buffer, offset, length);
         }
 
         @Override
         public void seek(long position) {
-            throw new UnsupportedOperationException();
-            //  ((FSDataInputStream) this.in).seek(position);
+            try {
+                ((HdfsDataInputStream) this.in).seek(position);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

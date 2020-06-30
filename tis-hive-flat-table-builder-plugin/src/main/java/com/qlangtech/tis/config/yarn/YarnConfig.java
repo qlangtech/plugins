@@ -23,7 +23,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.Hadoop020RemoteJobTriggerFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 
 /*
@@ -37,10 +36,10 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
     @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(require = true, ordinal = 1, validate = {Validator.host})
+    @FormField(ordinal = 1, validate = {Validator.host, Validator.require})
     public String rmAddress;
-   // SCHEDULER
-    @FormField(require = true, ordinal = 2, validate = {Validator.host})
+    // SCHEDULER
+    @FormField(ordinal = 2, validate = {Validator.host, Validator.require})
     public String schedulerAddress;
 
     @Override

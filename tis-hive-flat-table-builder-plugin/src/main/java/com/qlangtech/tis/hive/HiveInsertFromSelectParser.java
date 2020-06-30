@@ -69,6 +69,7 @@ public class HiveInsertFromSelectParser {
         try {
             parseDriver = new ParseDriver();
             Configuration config = new Configuration();
+            config.set("hive.support.sql11.reserved.keywords", "false");
             config.set("_hive.hdfs.session.path", "/user");
             config.set("_hive.local.session.path", "/user");
             parseContext = new Context(config);
@@ -196,7 +197,7 @@ public class HiveInsertFromSelectParser {
                 continue;
             }
             if (isPartition) {
-                ps.add(astNode.getText());
+                //ps.add(astNode.getText());
             }
             if (isTableName) {
                 setTargetTableName(astNode.getText());
@@ -277,8 +278,8 @@ public class HiveInsertFromSelectParser {
      */
     public void start(String sql) {
         try {
-            ASTNode astNode = parseDriver.parse(sql, parseContext, false);
-            System.out.println(astNode.dump());
+            ASTNode astNode = parseDriver.parse(sql, parseContext);
+            //System.out.println(astNode.dump());
             parseCreateTable(astNode);
         } catch (ParseException e) {
             throw new RuntimeException(sql, e);

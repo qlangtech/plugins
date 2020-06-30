@@ -21,6 +21,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDese
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.twodfire.async.message.client.util.HessianUtil;
 import java.io.IOException;
 
@@ -30,7 +31,7 @@ import java.io.IOException;
  */
 public class DummyHessianDeserialize extends AbstractAsyncMsgDeserialize {
 
-    @FormField(require = true)
+    @FormField(validate = {Validator.require})
     public String testProp;
 
     @Override

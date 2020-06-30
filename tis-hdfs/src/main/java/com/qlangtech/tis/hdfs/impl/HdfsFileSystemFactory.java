@@ -1,14 +1,15 @@
-/** Copyright 2020 QingLang, Inc.
- *
+/**
+ * Copyright 2020 QingLang, Inc.
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,16 +44,16 @@ import java.util.Map;
  */
 public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFileSystemFactory {
 
-    @FormField(require = true, ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(require = true, ordinal = 1, validate = {Validator.require, Validator.host})
+    @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
     public String hdfsAddress;
 
-    @FormField(require = true, ordinal = 2, validate = {Validator.require})
+    @FormField(ordinal = 2, validate = {Validator.require})
     public String rootDir;
 
-    @FormField(require = true, ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String hdfsSiteContent;
 
     private ITISFileSystem fileSystem;
@@ -101,7 +102,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             if (fileSystem == null) {
                 synchronized (HdfsUtils.class) {
 
-                   final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+                    final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
                     try {
                         Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
 

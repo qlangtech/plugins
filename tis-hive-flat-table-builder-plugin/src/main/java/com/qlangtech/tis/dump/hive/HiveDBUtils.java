@@ -18,6 +18,8 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.dump.IExecLiveLogParser;
+import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -37,7 +39,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年10月7日 下午4:20:38
  */
@@ -51,6 +53,7 @@ public class HiveDBUtils {
     private static final Logger log = LoggerFactory.getLogger(HiveDBUtils.class);
 
     private static final int DEFAULT_QUERY_PROGRESS_INTERVAL = 500;
+
 
     // =
     private static final ExecutorService exec;
@@ -96,7 +99,7 @@ public class HiveDBUtils {
         hiveDatasource.setDriverClassLoader(this.getClass().getClassLoader());
 
         Assert.assertNotNull("driverClassLoader can not be null", hiveDatasource.getDriverClassLoader());
-
+        // hiveDatasource.setUsername("hive");
         // 这个配置是在每次操作之后连接没有有效关闭时候，定时会执行清理操作，把没有及时归还的，將2.5小時還沒有歸還pool的連接直接關閉掉
         hiveDatasource.setMaxActive(-1);
         hiveDatasource.setRemoveAbandoned(true);
@@ -108,7 +111,7 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/" + defaultDbName;
+        hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/" + defaultDbName;
         hiveDatasource.setUrl(hiveJdbcUrl);
         log.info("hiveJdbcUrl:" + hiveJdbcUrl);
         return hiveDatasource;
@@ -181,8 +184,10 @@ public class HiveDBUtils {
                     }
                     return stmt.execute(sql);
                 } catch (SQLException e) {
+                    joinTaskStatus.setFaild(true);
                     throw new RuntimeException(sql, e);
                 } finally {
+                    joinTaskStatus.setComplete(true);
                     try {
                         if (listenLog) {
                             // f.cancel(true);
@@ -203,16 +208,14 @@ public class HiveDBUtils {
             hStatement = (HiveStatement) ((DelegatingStatement) statement).getInnermostDelegate();
         } else {
             log.debug("The statement instance is not HiveStatement type: " + statement.getClass());
-            return new Runnable() {
-
-                @Override
-                public void run() {
-                    // do nothing.
-                }
+            return () -> {
             };
         }
         final HiveStatement hiveStatement = hStatement;
-        final HiveExecLiveLogParser hiveLiveLogParser = new HiveExecLiveLogParser(joinTaskStatus);
+
+        // TODO 这里将来可以按照配置切换
+        // final IExecLiveLogParser hiveLiveLogParser = new HiveExecLiveLogParser(joinTaskStatus);
+        final IExecLiveLogParser hiveLiveLogParser = new SparkExecLiveLogParser(joinTaskStatus);
         Runnable runnable = new Runnable() {
 
             @Override
@@ -220,11 +223,12 @@ public class HiveDBUtils {
                 if (collection != null) {
                     MDC.put("app", collection);
                 }
+                // getStatementId(hiveStatement);
                 while (hiveStatement.hasMoreLogs()) {
                     try {
                         for (String logmsg : hiveStatement.getQueryLog()) {
-                            log.info(logmsg);
                             if (!hiveLiveLogParser.isExecOver()) {
+                                log.info(logmsg);
                                 hiveLiveLogParser.process(logmsg);
                             }
                         }
@@ -243,6 +247,26 @@ public class HiveDBUtils {
         return runnable;
     }
 
+//    private static void getStatementId(HiveStatement hiveStatement) {
+//        // private TOperationHandle stmtHandle = null;
+//        TOperationHandle stmtHandle = null;
+//        try {
+//            int i = 0;
+//            while (stmtHandle == null && i++ < 4) {
+//                Field stmtHandleField = HiveStatement.class.getDeclaredField("stmtHandle");
+//                stmtHandleField.setAccessible(true);
+//                stmtHandle = (TOperationHandle) stmtHandleField.get(hiveStatement);
+//                if (stmtHandle == null) {
+//                    Thread.sleep(1000);
+//                }
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//        Objects.requireNonNull(stmtHandle, "stmtHandle can not be null");
+//       new String( stmtHandle.getOperationId().getGuid());
+//    }
+
     /**
      * 执行一个查询语句
      *
@@ -256,7 +280,9 @@ public class HiveDBUtils {
                 try {
                     try (ResultSet result = stmt.executeQuery(sql)) {
                         while (result.next()) {
-                            resultProcess.callback(result);
+                            if (!resultProcess.callback(result)) {
+                                return;
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -266,22 +292,36 @@ public class HiveDBUtils {
         }
     }
 
-    public static interface ResultProcess {
+    public interface ResultProcess {
 
-        public void callback(ResultSet result) throws Exception;
+        /**
+         * @param result
+         * @return false: 中断执行
+         * @throws Exception
+         */
+        public boolean callback(ResultSet result) throws Exception;
     }
 
     public static void main(String[] args) throws Exception {
-        // Connection con = hiveDatasource.getConnection();
+
+        HiveDBUtils.class.getResource("/org/apache/hive/service/cli/operation/SQLOperation.class");
+
+        HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200", "tis");
+
+        Connection con = dbUtils.createConnection();
+
         // // Connection con = DriverManager.getConnection(
         // // "jdbc:hive://10.1.6.211:10000/tis", "", "");
         // System.out.println("start create connection");
         // // Connection con = DriverManager.getConnection(
         // // "jdbc:hive2://hadoop6:10001/tis", "", "");
         // System.out.println("create conn");
-        // Statement stmt = con.createStatement();
+        Statement stmt = con.createStatement();
         //
-        // ResultSet result = stmt.executeQuery("desc totalpay_summary");
+        ResultSet result = stmt.executeQuery("select 1");
+        if (result.next()) {
+            System.out.println(result.getInt(1));
+        }
         //
         // while (result.next()) {
         // System.out.println("cols:" + result.getString(1));

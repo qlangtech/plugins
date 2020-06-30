@@ -24,6 +24,7 @@ import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.fs.Path;
 
@@ -73,6 +74,6 @@ class RemoveJoinHistoryDataTask {
                 timestampList.add(pathinfo);
             }
         }
-        HiveRemoveHistoryDataTask.deleteOldHdfsfile(fs, parent, timestampList, HiveRemoveHistoryDataTask.MAX_PARTITION_SAVE);
+        HiveRemoveHistoryDataTask.deleteOldHdfsfile(fs, parent, timestampList, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 }

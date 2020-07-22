@@ -46,7 +46,7 @@ public class RocketMQListenerFactory extends AbstractMQListenerFactory {
     @FormField(validate = {Validator.require}, ordinal = 0)
     public String mqTopic;
 
-    @FormField(validate = {Validator.require}, ordinal = 3)
+    @FormField(validate = {Validator.require, Validator.host}, ordinal = 3)
     public String namesrvAddr;
 
     @FormField(validate = {Validator.require}, ordinal = 1)
@@ -87,16 +87,6 @@ public class RocketMQListenerFactory extends AbstractMQListenerFactory {
         return rmListener;
     }
 
-    // @JSONField(serialize = false)
-    // public IConsumerHandle getConsumeHandle() {
-    // 
-    // Optional<AbstractConsumerHandle> first = AbstractConsumerHandle.all().stream().filter((r)
-    // -> StringUtils.equals(r.getName(), this.consumerHandle)).findFirst();
-    // if (!first.isPresent()) {
-    // throw new IllegalStateException("consumerHandle:" + this.consumerHandle + " can not find relevant plugin");
-    // }
-    // return first.get();
-    // }
     public void setConsumeName(String consumeName) {
         this.consumeName = consumeName;
     }
@@ -135,20 +125,20 @@ public class RocketMQListenerFactory extends AbstractMQListenerFactory {
 
         private static final Pattern spec_pattern = Pattern.compile("[\\da-z_]+");
 
-        private static final Pattern host_pattern = Pattern.compile("[\\da-z]{1}[\\da-z.:]+");
+        // private static final Pattern host_pattern = Pattern.compile("[\\da-z]{1}[\\da-z.:]+");
 
-        public static final String MSG_HOST_IP_ERROR = "必须由IP、HOST及端口号组成";
+        //  public static final String MSG_HOST_IP_ERROR = "必须由IP、HOST及端口号组成";
 
         public static final String MSG_DIGITAL_Alpha_CHARACTER_ERROR = "必须由数字、小写字母、下划线组成";
 
-        public boolean validateNamesrvAddr(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            Matcher matcher = host_pattern.matcher(value);
-            if (!matcher.matches()) {
-                msgHandler.addFieldError(context, fieldName, MSG_HOST_IP_ERROR);
-                return false;
-            }
-            return true;
-        }
+//        public boolean validateNamesrvAddr(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            Matcher matcher = host_pattern.matcher(value);
+//            if (!matcher.matches()) {
+//                msgHandler.addFieldError(context, fieldName, MSG_HOST_IP_ERROR);
+//                return false;
+//            }
+//            return true;
+//        }
 
         public boolean validateMqTopic(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return validateConsumeName(msgHandler, context, fieldName, value);

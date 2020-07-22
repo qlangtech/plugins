@@ -81,7 +81,6 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     private HiveTaskFactory taskFactory;
 
-    // private HiveRemoveHistoryDataTask removeHistoryDataTask;
     @Override
     public String getName() {
         return this.name;
@@ -91,13 +90,13 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode
             , ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
         HiveTaskFactory taskFactory = getTaskFactory(tplContext);
-        return taskFactory.createTask(nodeMeta,isFinalNode, tplContext, taskContext, fs2Table, joinTaskStatus);
+        return taskFactory.createTask(nodeMeta, isFinalNode, tplContext, taskContext, fs2Table, joinTaskStatus);
     }
 
     private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
         ERRules erRules = tplContext.joinTaskContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
-        Objects.nonNull(erRules);
-        Objects.nonNull(getFs());
+        Objects.requireNonNull(erRules, "erRule can not be null");
+        Objects.requireNonNull(getFs(), "join relevant FS can not be null");
         this.taskFactory = new HiveTaskFactory(erRules, getFs());
         return taskFactory;
     }

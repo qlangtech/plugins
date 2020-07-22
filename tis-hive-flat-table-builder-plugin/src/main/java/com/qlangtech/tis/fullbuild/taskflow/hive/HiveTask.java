@@ -28,7 +28,6 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.SqlRewriter.AliasTable;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +65,7 @@ public abstract class HiveTask extends AdapterTask {
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
         }
+        Objects.requireNonNull(erRules, "param erRule can not be null");
         this.erRules = erRules;
         this.joinTaskStatus = joinTaskStatus;
         this.nodeMeta = nodeMeta;
@@ -184,9 +185,13 @@ public abstract class HiveTask extends AdapterTask {
         if (!lackDependencies.isEmpty()) {
             // 说明有依赖到的node没有被执行
             throw new IllegalStateException("taskname:" + taskname + " lackDependencies:"
-                    + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.getDbName() + "." + r.taskNode.getName()
+                    + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.parseEntityName()
                     + ",status:" + (r.dependencyWorkStatus == null ? "notExecute" : r.dependencyWorkStatus) + ")")
-                    .collect(Collectors.joining()));
+                    .collect(Collectors.joining())
+                    + "/n TaskWorkStatus:"
+                    + this.getTaskWorkStatus().entrySet().stream()
+                    .map((e) -> "[" + e.getKey() + "->" + e.getValue() + "]")
+                    .collect(Collectors.joining(",")));
         }
     }
 }

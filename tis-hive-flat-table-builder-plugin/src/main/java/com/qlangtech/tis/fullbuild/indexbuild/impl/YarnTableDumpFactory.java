@@ -224,13 +224,13 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
             return "yarn";
         }
 
-        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            Matcher matcher = pattern_identity.matcher(value);
-            if (!matcher.matches()) {
-                msgHandler.addFieldError(context, fieldName, MSG_IDENTITY_ERROR);
-                return false;
-            }
-            return true;
-        }
+//        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            Matcher matcher = pattern_identity.matcher(value);
+//            if (!matcher.matches()) {
+//                msgHandler.addFieldError(context, fieldName, MSG_IDENTITY_ERROR);
+//                return false;
+//            }
+//            return true;
+//        }
     }
 }

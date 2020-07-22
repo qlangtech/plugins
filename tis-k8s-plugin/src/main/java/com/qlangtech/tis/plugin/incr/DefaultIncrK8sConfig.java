@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 
 /*
  * @create: 2020-04-12 11:06
@@ -35,13 +36,13 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
 
     public static final String KEY_FIELD_NAME = "k8sName";
 
-    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE)
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sName;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String namespace;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
 

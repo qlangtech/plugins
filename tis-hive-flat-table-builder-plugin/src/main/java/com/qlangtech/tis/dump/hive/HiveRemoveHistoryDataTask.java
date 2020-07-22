@@ -45,7 +45,6 @@ public class HiveRemoveHistoryDataTask {
     private static final Logger logger = LoggerFactory.getLogger(HiveRemoveHistoryDataTask.class);
 
 
-
     // daily ps name
     private static final String pt = IDumpTable.PARTITION_PT;
 
@@ -74,7 +73,7 @@ public class HiveRemoveHistoryDataTask {
     }
 
     // 20160106131304
-    public static final Pattern DATE_PATTERN = Pattern.compile("20\\d{8}");
+    public static final Pattern DATE_PATTERN = Pattern.compile("20\\d{12}");
 
     /**
      * @param hiveConnection
@@ -142,6 +141,7 @@ public class HiveRemoveHistoryDataTask {
      */
     private void deleteMetadata(EntityName dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
         String hdfsPath = getJoinTableStorePath(this.fsFactory.getRootDir(), dumpTable) + "/all";
+        logger.info("hdfsPath:{}", hdfsPath);
         ITISFileSystem fileSys = this.fsFactory.getFileSystem();
         IPath parent = fileSys.getPath(hdfsPath);
         // Path parent = new Path(hdfsPath);

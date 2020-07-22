@@ -47,7 +47,7 @@ class RemoveJoinHistoryDataTask {
      * @param chainContext
      * @throws Exception
      */
-    void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys) throws Exception {
+    public static void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys) throws Exception {
         if (chainContext == null) {
             throw new IllegalArgumentException("param: execContext can not be null");
         }

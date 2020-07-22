@@ -287,6 +287,7 @@ public class HiveTableBuilder {
         // 判断表是否存在
         if (!isDBExists(connection, dumpTable.getDbName())) {
             // DB都不存在，table肯定就不存在啦
+            log.debug("dumpTable'DB is not exist:{}", dumpTable);
             return false;
         }
         final List<String> tables = new ArrayList<>();
@@ -296,7 +297,11 @@ public class HiveTableBuilder {
 //        | order     | totalpayinfo  | false        |
 //        +-----------+---------------+--------------+--+
         HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName(), result -> tables.add(result.getString(2)));
-        return tables.contains(dumpTable.getTableName());
+        boolean contain = tables.contains(dumpTable.getTableName());
+        if (!contain) {
+            log.debug("table:{} is not exist in[{}]", dumpTable.getTableName(), tables.stream().collect(Collectors.joining(",")));
+        }
+        return contain;
     }
 
     private static boolean isDBExists(Connection connection, String dbName) throws Exception {

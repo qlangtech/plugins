@@ -85,16 +85,14 @@ public class JoinHiveTask extends HiveTask {
             final EntityName dumpTable = EntityName.parse(this.getName());
             if (HiveTableBuilder.isTableExists(conn, dumpTable)) {
                 if (HiveTableBuilder.isTableSame(conn, insertParser.getCols(), dumpTable)) {
-                    // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
-                    // RemoveJoinHistoryDataTask historyJoinTableClear = new RemoveJoinHistoryDataTask();
-                    this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
-                    // this.fs2Table.deleteHistoryJoinTable(
-                    // dumpTable, this.getContext().joinTaskContext(), this.fileSystem);
-                    // 清理hive数据
+                    log.info("Start clean up history file '{}'", dumpTable);
                     IJoinTaskContext param = this.getContext().joinTaskContext();
-                    // HiveRemoveHistoryDataTask hiveHistoryClear = new HiveRemoveHistoryDataTask(dumpTable,
-                    // param.getContextUserName(), fileSystem);
-                    // hiveHistoryClear.dropHistoryHiveTable(conn);
+                    //  EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys;
+                    RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, param, this.fileSystem);
+                    // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
+                    //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
+                    // 清理hive数据
+
                     fs2Table.dropHistoryTable(dumpTable, this.getTaskContext());
                 } else {
                     HiveDBUtils.execute(conn, "drop table " + dumpTable);

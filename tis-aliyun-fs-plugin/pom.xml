@@ -10,7 +10,6 @@
     </parent>
 
 
-    <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-aliyun-hdfs-plugin</artifactId>
     <packaging>tpi</packaging>
 

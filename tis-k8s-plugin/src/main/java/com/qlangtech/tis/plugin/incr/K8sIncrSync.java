@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-/*
+/**
  * @create: 2020-04-12 11:12
  *
  * @author 百岁（baisui@qlangtech.com）
@@ -54,18 +54,8 @@ public class K8sIncrSync implements IIncrSync {
 
     public K8sIncrSync(DefaultIncrK8sConfig k8sConfig) {
         this.config = k8sConfig;
-
         client = config.getK8SContext().createConfigInstance();
         this.api = new CoreV1Api(client);
-//            try (Reader reader = new StringReader(config.getK8SContext().getKubeConfigContent())) {
-//                client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(reader)).setBasePath(config.getK8SContext().getKubeBasePath()).build();
-//                client.getHttpClient().setReadTimeout(720, TimeUnit.SECONDS);
-//                Configuration.setDefaultApiClient(client);
-//                this.api = new CoreV1Api(client);
-//            }
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
     public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {
@@ -131,7 +121,6 @@ public class K8sIncrSync implements IIncrSync {
         meta.setName(indexName);
         rc.setMetadata(meta);
         api.createNamespacedReplicationController(this.config.namespace, rc, true, resultPrettyShow, null);
-        // loopQueue.cleanBuffer();
     }
 
     /**

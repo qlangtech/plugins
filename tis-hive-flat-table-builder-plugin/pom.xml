@@ -7,7 +7,6 @@
         <version>saturn-1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-hive-flat-table-builder-plugin</artifactId>
     <packaging>tpi</packaging>
 

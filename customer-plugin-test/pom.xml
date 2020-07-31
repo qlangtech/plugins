@@ -6,9 +6,8 @@
         <artifactId>plugin</artifactId>
         <version>saturn-1.0.0-SNAPSHOT</version>
     </parent>
-    <groupId>com.qlangtech.tis</groupId>
+
     <artifactId>customer-plugin-test</artifactId>
-    <version>saturn-1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>customer-plugin-test</name>

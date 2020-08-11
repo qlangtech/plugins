@@ -1,4 +1,4 @@
-/* * Copyright 2020 QingLang, Inc.
+/** Copyright 2020 QingLang, Inc.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -37,8 +37,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.concurrent.TimeUnit;
 
-/*
-DefaultK8sContext
+/**
+ * DefaultK8sContext
  *
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
@@ -59,16 +59,6 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         return this.name;
     }
 
-//    @Override
-//    public String getKubeConfigContent() {
-//        return this.kubeConfigContent;
-//    }
-//
-//    @Override
-//    public String getKubeBasePath() {
-//        return this.kubeBasePath;
-//    }
-
     @Override
     public ApiClient createConfigInstance() {
 
@@ -88,48 +78,15 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
 
-//        private static final Pattern host_pattern = Pattern.compile("http(s?)://[\\da-z]{1}[\\da-z.:/]+");s
-//        public static final String MSG_HTTP_HOST_ERROR = "必须由https或http开头的地址";
-
         public DefaultDescriptor() {
             super();
             this.load();
         }
 
-        // public void setInstallations(List<K8sContext> installations) {
-        // List<K8sContext> tmpList = new ArrayList<>();
-        // // remote empty Maven installation :
-        // if (installations != null) {
-        // CollectionUtils.addAll(tmpList, installations.iterator());
-        // for (K8sContext installation : installations) {
-        // if (StringUtils.isEmpty(installation.getName())) {
-        // tmpList.remove(installation);
-        // }
-        // }
-        // }
-        // this.installations = tmpList.toArray(new K8sContext[tmpList.size()]);
-        // save();
-        // }
         @Override
         public String getDisplayName() {
             return "k8s";
         }
-
-//        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            if (!validateIdentity(msgHandler, context, fieldName, value)) {
-//                return false;
-//            }
-//            return true;
-//        }
-
-//        public boolean validateKubeBasePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            Matcher matcher = host_pattern.matcher(value);
-//            if (!matcher.matches()) {
-//                msgHandler.addFieldError(context, fieldName, MSG_HTTP_HOST_ERROR);
-//                return false;
-//            }
-//            return true;
-//        }
 
         public boolean validateKubeConfigContent(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             final Yaml yaml = new Yaml(new SafeConstructor());

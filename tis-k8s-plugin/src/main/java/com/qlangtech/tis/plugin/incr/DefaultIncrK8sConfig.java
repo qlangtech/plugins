@@ -1,4 +1,4 @@
-/* * Copyright 2020 QingLang, Inc.
+/** Copyright 2020 QingLang, Inc.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,7 +26,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
-/*
+/**
  * @create: 2020-04-12 11:06
  *
  * @author 百岁（baisui@qlangtech.com）

@@ -17,10 +17,10 @@
  */
 package com.qlangtech.async.message.client.to.impl;
 
-import com.qlangtech.async.message.client.util.HessianUtil;
 import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDeserialize;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.TisUTF8;
 
 import java.io.IOException;
 
@@ -33,8 +33,8 @@ public class HessianDeserialize extends AbstractAsyncMsgDeserialize {
     // @FormField(require = true)
     // public String testProp;
     @Override
-    public <T> T deserialize(byte[] content) throws IOException {
-        return (T) HessianUtil.deserialize(content);
+    public String deserialize(byte[] content) throws IOException {
+        return new String(content, TisUTF8.get());
     }
 
     @TISExtension()

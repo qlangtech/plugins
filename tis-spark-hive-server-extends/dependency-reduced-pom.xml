@@ -168,19 +168,19 @@
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-builder-api</artifactId>
-      <version>${tis.version}</version>
+      <version>saturn-1.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
-      <version>${tis.version}</version>
+      <version>saturn-1.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-global-config</artifactId>
-      <version>${tis.version}</version>
+      <version>saturn-1.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

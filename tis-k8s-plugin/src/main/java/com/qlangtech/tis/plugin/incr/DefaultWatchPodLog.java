@@ -1,4 +1,4 @@
-/* * Copyright 2020 QingLang, Inc.
+/** Copyright 2020 QingLang, Inc.
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -43,7 +43,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/*
+/**
  * @create: 2020-04-12 16:02
  *
  * @author 百岁（baisui@qlangtech.com）

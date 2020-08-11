@@ -20,13 +20,13 @@ package com.qlangtech.tis.component;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONArray;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.util.AttrValMap;
+import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
-import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
+import com.qlangtech.tis.util.AttrValMap;
 import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -59,7 +59,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         List<List<DefaultFieldErrorHandler.FieldError>> /**
          * item
          */
-        itemsErrorList = (List<List<DefaultFieldErrorHandler.FieldError>>) fieldErrors.get(IFieldErrorHandler.ACTION_ERROR_FIELDS);
+                itemsErrorList = (List<List<DefaultFieldErrorHandler.FieldError>>) fieldErrors.get(IFieldErrorHandler.ACTION_ERROR_FIELDS);
         assertNotNull(itemsErrorList);
         assertEquals(1, itemsErrorList.size());
         List<DefaultFieldErrorHandler.FieldError> fieldErrors1 = itemsErrorList.get(0);
@@ -79,11 +79,11 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         List<DefaultFieldErrorHandler.FieldError> /**
          * item
          */
-        dValsItem = dErr.itemsErrorList.get(0);
+                dValsItem = dErr.itemsErrorList.get(0);
         assertEquals(1, dValsItem.size());
         DefaultFieldErrorHandler.FieldError testName = dValsItem.get(0);
         assertEquals(testProp, testName.getFieldName());
-        assertEquals(Descriptor.MSG_EMPTY_INPUT_ERROR, testName.getMsg());
+        assertEquals("ddd", testName.getMsg());
         assertNull(testName.itemsErrorList);
     }
 
@@ -95,12 +95,12 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         List<List<DefaultFieldErrorHandler.FieldError>> /**
          * item
          */
-        itemsErrorList = (List<List<DefaultFieldErrorHandler.FieldError>>) fieldErrors.get(IFieldErrorHandler.ACTION_ERROR_FIELDS);
+                itemsErrorList = (List<List<DefaultFieldErrorHandler.FieldError>>) fieldErrors.get(IFieldErrorHandler.ACTION_ERROR_FIELDS);
         assertEquals(1, itemsErrorList.size());
         List<DefaultFieldErrorHandler.FieldError> /**
          * item
          */
-        fErrors = itemsErrorList.get(0);
+                fErrors = itemsErrorList.get(0);
         assertEquals(4, fErrors.size());
         Map<String, DefaultFieldErrorHandler.FieldError> filedErrorMap = fErrors.stream().collect(Collectors.toMap((r) -> r.getFieldName(), (r) -> r));
         assertNotNull(filedErrorMap.get(mqTopic));
@@ -108,16 +108,20 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         assertNotNull(filedErrorMap.get(consumeName));
         assertNotNull(filedErrorMap.get(namesrvAddr));
         for (DefaultFieldErrorHandler.FieldError errMsg : filedErrorMap.values()) {
-            assertEquals(Descriptor.MSG_EMPTY_INPUT_ERROR, errMsg.getMsg());
+            assertEquals("ddd", errMsg.getMsg());
         }
     }
 
     private void validatePluginPostForm(String jsonPath, Context context) throws IOException {
         DefaultFieldErrorHandler fieldErrorHandler = new DefaultFieldErrorHandler();
         List<AttrValMap> attrValMaps = null;
-        try (InputStream reader = this.getClass().getResourceAsStream(jsonPath)) {
-            JSONArray itemsArray = JSONArray.parseArray(IOUtils.toString(reader, TisUTF8.get()));
-            attrValMaps = AttrValMap.describableAttrValMapList(fieldErrorHandler, itemsArray);
+        try {
+            try (InputStream reader = this.getClass().getResourceAsStream(jsonPath)) {
+                JSONArray itemsArray = JSONArray.parseArray(IOUtils.toString(reader, TisUTF8.get()));
+                attrValMaps = AttrValMap.describableAttrValMapList(fieldErrorHandler, itemsArray);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("jsonPath:" + jsonPath, e);
         }
         assertNotNull(attrValMaps);
         assertEquals(1, attrValMaps.size());

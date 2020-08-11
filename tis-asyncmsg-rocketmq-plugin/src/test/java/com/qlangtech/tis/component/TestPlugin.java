@@ -18,17 +18,18 @@
 package com.qlangtech.tis.component;
 
 import com.alibaba.fastjson.JSONArray;
-import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.async.message.client.consumer.impl.AbstractMQListenerFactory;
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.util.HeteroList;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
 import com.qlangtech.async.message.client.to.impl.HessianDeserialize;
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.util.HeteroList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -141,7 +142,7 @@ public class TestPlugin extends BaseTestCase {
             IncrComponent incrComponent = createIncrComponent();
             TIS.get().saveComponent(collection, incrComponent);
             incrComponent = TIS.get().loadIncrComponent(collection);
-            List<AbstractMQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
+            List<MQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
             assertEquals(1, mqListenerFactory.size());
             RocketMQListenerFactory rocketMQListenerFactory = (RocketMQListenerFactory) mqListenerFactory.get(0);
             assertEquals(collection, incrComponent.getCollection());
@@ -151,20 +152,20 @@ public class TestPlugin extends BaseTestCase {
             assertNotNull(rocketMQListenerFactory.getDeserialize());
             assertTrue(rocketMQListenerFactory.getDeserialize() instanceof HessianDeserialize);
         } finally {
-        // FileUtils.forceDelete(tmpDir);
+            // FileUtils.forceDelete(tmpDir);
         }
     }
 
     public void testSerialize() throws Exception {
         IncrComponent incrComponent = createIncrComponent();
-        List<AbstractMQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
-        HeteroList<AbstractMQListenerFactory> hList = new HeteroList<>();
+        List<MQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
+        HeteroList<MQListenerFactory> hList = new HeteroList<>();
         hList.setCaption("MQ消息监听");
         hList.setItems(mqListenerFactory);
-        hList.setDescriptors(TIS.getPluginStore(AbstractMQListenerFactory.class).allDescriptor());
+        hList.setDescriptors(TIS.getPluginStore(MQListenerFactory.class).allDescriptor());
         assertEquals(1, hList.getDescriptors().size());
         Map<String, Descriptor.PropertyType> propertyTypes;
-        for (Descriptor<AbstractMQListenerFactory> f : hList.getDescriptors()) {
+        for (Descriptor<MQListenerFactory> f : hList.getDescriptors()) {
             System.out.println(f.getId());
             propertyTypes = f.getPropertyTypes();
             for (Map.Entry<String, Descriptor.PropertyType> entry : propertyTypes.entrySet()) {
@@ -179,7 +180,7 @@ public class TestPlugin extends BaseTestCase {
 
     private IncrComponent createIncrComponent() {
         IncrComponent incrComponent = new IncrComponent("search4totalpay");
-        List<AbstractMQListenerFactory> mqListenerFactory = new ArrayList<>();
+        List<MQListenerFactory> mqListenerFactory = new ArrayList<>();
         RocketMQListenerFactory listener = new RocketMQListenerFactory();
         listener.setConsumeName(consumeId);
         listener.setDeserialize(new HessianDeserialize());

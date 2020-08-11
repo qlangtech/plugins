@@ -17,9 +17,10 @@
  */
 package com.qlangtech.tis.util;
 
-import com.qlangtech.tis.async.message.client.consumer.impl.AbstractMQListenerFactory;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import junit.framework.TestCase;
+
 import java.util.List;
 
 /*
@@ -34,12 +35,12 @@ public class TestHeteroList extends TestCase {
 
     public void testReflectAllMethod() {
         // HeteroList<AbstractMQListenerFactory> hList = new HeteroList<>();
-        List<AbstractMQListenerFactory> items = Lists.newArrayList();
+        List<MQListenerFactory> items = Lists.newArrayList();
         // 
         // final Type col = Types.getBaseClass(items.getClass(), List.class);
         // System.out.println(col);
         // System.out.println(items.getClass().getComponentType());
-        HeteroList<AbstractMQListenerFactory> heteroList = HeteroList.getHeteroList(caption, items, AbstractMQListenerFactory.class);
+        HeteroList<MQListenerFactory> heteroList = HeteroList.getHeteroList(caption, items, MQListenerFactory.class);
         assertEquals(caption, heteroList.getCaption());
         // assertEquals(1, heteroList.getDescriptors().size());
         assertEquals(0, heteroList.getItems().size());

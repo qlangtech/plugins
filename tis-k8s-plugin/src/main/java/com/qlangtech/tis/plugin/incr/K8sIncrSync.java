@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.coredefine.module.action.IIncrSync;
 import com.qlangtech.tis.coredefine.module.action.IncrSpec;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.pubhook.common.RunEnvironment;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.ApiClient;
@@ -35,9 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @create: 2020-04-12 11:12
- *
  * @author 百岁（baisui@qlangtech.com）
+ * @create: 2020-04-12 11:12
  * @date 2020/04/13
  */
 public class K8sIncrSync implements IIncrSync {
@@ -56,6 +56,13 @@ public class K8sIncrSync implements IIncrSync {
         this.config = k8sConfig;
         client = config.getK8SContext().createConfigInstance();
         this.api = new CoreV1Api(client);
+    }
+
+    @Override
+    public void removeInstance(String indexName) throws Exception {
+        //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
+        this.api.deleteNamespacedReplicationController(
+                indexName, this.config.namespace, resultPrettyShow, null, null, null, null, null);
     }
 
     public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {
@@ -84,20 +91,10 @@ public class K8sIncrSync implements IIncrSync {
         port.setProtocol("TCP");
         ports.add(port);
         c.setPorts(ports);
-        List<V1EnvVar> envVars = Lists.newArrayList();
-        V1EnvVar var = new V1EnvVar();
-        var.setName("JVM_PROPERTY");
-        var.setValue("-Ddata.dir=/opt/data");
-        envVars.add(var);
-        var = new V1EnvVar();
-        var.setName("JAVA_RUNTIME");
-        var.setValue(RunEnvironment.getSysRuntime().getKeyName());
-        envVars.add(var);
-        var = new V1EnvVar();
-        var.setName("APP_OPTIONS");
-        var.setValue(indexName + " " + timestamp);
-        envVars.add(var);
-        c.setEnv(envVars);
+
+        //V1Container c  c.setEnv(envVars);
+        c.setEnv(this.addEnvVars(indexName, timestamp));
+
         V1ResourceRequirements rRequirements = new V1ResourceRequirements();
         Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
         limitQuantityMap.put("cpu", new Quantity(incrSpec.getCpuLimit().literalVal()));
@@ -121,6 +118,52 @@ public class K8sIncrSync implements IIncrSync {
         meta.setName(indexName);
         rc.setMetadata(meta);
         api.createNamespacedReplicationController(this.config.namespace, rc, true, resultPrettyShow, null);
+    }
+
+    private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {
+        List<V1EnvVar> envVars = Lists.newArrayList();
+        V1EnvVar var = new V1EnvVar();
+        var.setName("JVM_PROPERTY");
+        var.setValue("-Ddata.dir=/opt/data -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
+        envVars.add(var);
+
+        RunEnvironment runtime = RunEnvironment.getSysRuntime();
+        var = new V1EnvVar();
+        var.setName("JAVA_RUNTIME");
+        var.setValue(runtime.getKeyName());
+        envVars.add(var);
+        var = new V1EnvVar();
+        var.setName("APP_OPTIONS");
+        var.setValue(indexName + " " + timestamp);
+        envVars.add(var);
+
+        var = new V1EnvVar();
+        var.setName("APP_NAME");
+        var.setValue("tis-incr");
+        envVars.add(var);
+
+        var = new V1EnvVar();
+        var.setName(Config.KEY_RUNTIME);
+        var.setName(runtime.getKeyName());
+        envVars.add(var);
+
+        var = new V1EnvVar();
+        var.setName(Config.KEY_ZK_HOST);
+        var.setName(Config.getZKHost());
+        envVars.add(var);
+
+        var = new V1EnvVar();
+        var.setName(Config.KEY_ASSEMBLE_HOST);
+        var.setName(Config.getAssembleHost());
+        envVars.add(var);
+
+        var = new V1EnvVar();
+        var.setName(Config.KEY_TIS_HOST);
+        var.setName(Config.getTisHost());
+        envVars.add(var);
+
+        return envVars;
+
     }
 
     /**

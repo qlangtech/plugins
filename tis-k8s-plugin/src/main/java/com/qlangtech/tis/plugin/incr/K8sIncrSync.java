@@ -144,22 +144,22 @@ public class K8sIncrSync implements IIncrSync {
 
         var = new V1EnvVar();
         var.setName(Config.KEY_RUNTIME);
-        var.setName(runtime.getKeyName());
+        var.setValue(runtime.getKeyName());
         envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_ZK_HOST);
-        var.setName(Config.getZKHost());
+        var.setValue(Config.getZKHost());
         envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_ASSEMBLE_HOST);
-        var.setName(Config.getAssembleHost());
+        var.setValue(Config.getAssembleHost());
         envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_TIS_HOST);
-        var.setName(Config.getTisHost());
+        var.setValue(Config.getTisHost());
         envVars.add(var);
 
         return envVars;

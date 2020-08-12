@@ -17,10 +17,6 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     private static final String s4totalpay = "search4totalpay";
 
-    public void testDeleteIncrDeployment() throws Exception {
-
-    }
-
     public void testCreateIncrDeployment() throws Exception {
         PluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
         IncrStreamFactory incrFactory = s4totalpayIncr.getPlugin();

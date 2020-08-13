@@ -87,7 +87,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
              * 一个应用创建一个Consumer，由应用来维护此对象，可以设置为全局对象或者单例<br>
              * 注意：ConsumerGroupName需要由应用来保证唯一
              */
-            Assert.isTrue(consumerGroup.startsWith("c_") && consumerGroup.contains(topic), "消费者不符合规范！consumerGroup:" + consumerGroup + ",topic:" + topic);
+            // Assert.isTrue(consumerGroup.startsWith("c_") && consumerGroup.contains(topic), "消费者不符合规范！consumerGroup:" + consumerGroup + ",topic:" + topic);
             // 广播模式采用动态消费组的方式
             if (messageModel.equals(MessageModel.BROADCASTING)) {
                 consumerGroup = consumerGroup + InetAddress.getLocalHost().getHostAddress().replace(".", "_");
@@ -118,7 +118,8 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
                     break;
             }
             consumer.start();
-            logger.info("ConsumerListenerForRm started!topic:" + topic + ",expression:" + consumerHandle.getSubExpression() + "  consumerGroup:" + consumerGroup + "   namesrvAddr:" + namesrvAddr);
+            logger.info("ConsumerListenerForRm started!topic:" + topic + ",expression:" + consumerHandle.getSubExpression()
+                    + "  consumerGroup:" + consumerGroup + "   namesrvAddr:" + namesrvAddr);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

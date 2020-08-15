@@ -21,20 +21,22 @@ import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDese
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.realtime.transfer.DTO;
 
 import java.io.IOException;
+import java.nio.charset.CharsetDecoder;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class HessianDeserialize extends AbstractAsyncMsgDeserialize {
-
+public class DefaultJSONFormatDeserialize extends AbstractAsyncMsgDeserialize {
+    private static final CharsetDecoder utf8CharsetDecoder = TisUTF8.get().newDecoder();
     // @FormField(require = true)
     // public String testProp;
     @Override
-    public String deserialize(byte[] content) throws IOException {
-        return new String(content, TisUTF8.get());
+    public final DTO deserialize(byte[] content) throws IOException {
+        return com.alibaba.fastjson.JSONObject.parseObject(content, 0, content.length, utf8CharsetDecoder, DTO.class);
     }
 
     @TISExtension()
@@ -42,7 +44,7 @@ public class HessianDeserialize extends AbstractAsyncMsgDeserialize {
 
         @Override
         public String getDisplayName() {
-            return "Hessian";
+            return "defaultJson";
         }
     }
 }

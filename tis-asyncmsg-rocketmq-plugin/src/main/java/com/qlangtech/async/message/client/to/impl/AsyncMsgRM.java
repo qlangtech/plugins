@@ -21,6 +21,7 @@ import com.alibaba.rocketmq.common.message.MessageExt;
 import com.qlangtech.async.message.client.util.MsgUtils;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
@@ -53,7 +54,7 @@ public class AsyncMsgRM implements AsyncMsg {
      *
      * @return
      */
-    public <T> T getContent() throws IOException {
+    public DTO getContent() throws IOException {
         return this.deserialize.deserialize(messageExt.getBody());
     }
 
@@ -111,10 +112,10 @@ public class AsyncMsgRM implements AsyncMsg {
         return MsgUtils.getOriginMsgId(messageExt);
     }
 
-    @Override
-    public MessageExt getMessage() {
-        return messageExt;
-    }
+//    @Override
+//    public MessageExt getMessage() {
+//        return messageExt;
+//    }
 
     public String toString() {
         return messageExt.toString();

@@ -8,12 +8,14 @@ import com.alibaba.rocketmq.common.message.Message;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -24,8 +26,15 @@ import java.util.stream.Collectors;
  **/
 public class TestProducter extends TestCase {
 
-    public static final String nameAddress = "192.168.28.200:9876";
+    public static final String nameAddress = "192.168.28.201:9876";
     public static final String topic = "baisui-test";
+
+    private static final Map<String, String> ossPathMap = Maps.newHashMap();
+
+    static {
+        ossPathMap.put("order", "totalpay/7d4c33f07948492f9ba4b4040bc905fc");
+        ossPathMap.put("binlogmsg", "binlogmsg/0f1305acfe534f8cb9d730aa9b1f9a26");
+    }
 
     static final OSS client;
 
@@ -65,7 +74,7 @@ public class TestProducter extends TestCase {
 
     private void consumeFile(DefaultMQProducer producer) throws Exception {
 
-        OSSObject object = client.getObject("incr-log", "binlogmsg/0f1305acfe534f8cb9d730aa9b1f9a26");
+        OSSObject object = client.getObject("incr-log", ossPathMap.get("order"));
         LineIterator lit = null;
         Message msg = null;
         JSONObject m = null;
@@ -85,15 +94,13 @@ public class TestProducter extends TestCase {
                     m = JSON.parseObject(line);
                     tag = m.getString("orginTableName");
 
-                    msg = new Message(topic /* Topic */,
-                            tag,
-                            line.getBytes(TisUTF8.get()) /* Message body */
-                    );
+                    msg = new Message(topic /* Topic */, tag, line.getBytes(TisUTF8.get()) /* Message body */);
                     if ((incr = statis.get(tag)) == null) {
                         incr = statis.computeIfAbsent(tag, (key) -> new AtomicInteger());
                     }
                     incr.incrementAndGet();
-                    //SendResult sendResult = producer.send(msg);
+                    SendResult sendResult = producer.send(msg);
+                    Thread.sleep(100);
                     current = System.currentTimeMillis();
                     if (current > (lastTimestamp + 5000)) {
                         System.out.println("<---------------------------");
@@ -102,6 +109,7 @@ public class TestProducter extends TestCase {
                         lastTimestamp = current;
                         System.out.println("--------------------------->");
                     }
+
                 } catch (Exception e) {
                     throw new IllegalStateException("line:" + line, e);
                 }

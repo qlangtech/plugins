@@ -6,7 +6,7 @@
             <consumeName>c_otter_binlogorder_solr</consumeName>
             <mqTopic>otter_binlogorder</mqTopic>
             <namesrvAddr>10.1.21.148:9876</namesrvAddr>
-            <deserialize class="com.qlangtech.async.message.client.to.impl.HessianDeserialize"/>
+            <deserialize class="com.qlangtech.async.message.client.to.impl.DefaultJSONFormatDeserialize"/>
             <consumerHandle>default</consumerHandle>
         </com.twodfire.async.message.client.consumer.RocketMQListenerFactory>
     </mqListenerFactory>

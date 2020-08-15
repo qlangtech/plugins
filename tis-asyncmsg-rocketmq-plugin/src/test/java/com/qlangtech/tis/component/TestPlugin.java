@@ -19,12 +19,13 @@ package com.qlangtech.tis.component;
 
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
-import com.qlangtech.async.message.client.to.impl.HessianDeserialize;
+import com.qlangtech.async.message.client.to.impl.DefaultJSONFormatDeserialize;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.util.HeteroList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -100,7 +101,7 @@ public class TestPlugin extends BaseTestCase {
         String attr = null;
         String attrVal = null;
         TIS tis = TIS.get();
-        IncrComponent incrComponent = tis.loadIncrComponent(collection);
+       // IncrComponent incrComponent = tis.loadIncrComponent(collection);
         // incrComponent.setMqListenerFactory();
         Describable describable = null;
         try (InputStream input = TestPlugin.class.getResourceAsStream("RocketMQListenerFactory.json")) {
@@ -139,26 +140,29 @@ public class TestPlugin extends BaseTestCase {
     public void testSaveAndLoad() throws IOException {
         FileUtils.forceMkdir(tmpDir);
         try {
-            IncrComponent incrComponent = createIncrComponent();
-            TIS.get().saveComponent(collection, incrComponent);
-            incrComponent = TIS.get().loadIncrComponent(collection);
-            List<MQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
+//            IncrComponent incrComponent = createIncrComponent();
+//            TIS.get().saveComponent(collection, incrComponent);
+//            incrComponent = TIS.get().loadIncrComponent(collection);
+            PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+            List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();// incrComponent.getMqListenerFactory();
             assertEquals(1, mqListenerFactory.size());
             RocketMQListenerFactory rocketMQListenerFactory = (RocketMQListenerFactory) mqListenerFactory.get(0);
-            assertEquals(collection, incrComponent.getCollection());
+          //  assertEquals(collection, incrComponent.getCollection());
             assertEquals(consumeId, rocketMQListenerFactory.consumeName);
             assertEquals(MQ_TOPIC, rocketMQListenerFactory.getMqTopic());
             assertEquals(NamesrvAddr, rocketMQListenerFactory.getNamesrvAddr());
             assertNotNull(rocketMQListenerFactory.getDeserialize());
-            assertTrue(rocketMQListenerFactory.getDeserialize() instanceof HessianDeserialize);
+            assertTrue(rocketMQListenerFactory.getDeserialize() instanceof DefaultJSONFormatDeserialize);
         } finally {
             // FileUtils.forceDelete(tmpDir);
         }
     }
 
     public void testSerialize() throws Exception {
-        IncrComponent incrComponent = createIncrComponent();
-        List<MQListenerFactory> mqListenerFactory = incrComponent.getMqListenerFactory();
+
+        PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+//        IncrComponent incrComponent = createIncrComponent();
+        List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();
         HeteroList<MQListenerFactory> hList = new HeteroList<>();
         hList.setCaption("MQ消息监听");
         hList.setItems(mqListenerFactory);
@@ -178,21 +182,21 @@ public class TestPlugin extends BaseTestCase {
         System.out.println("==============================");
     }
 
-    private IncrComponent createIncrComponent() {
-        IncrComponent incrComponent = new IncrComponent("search4totalpay");
-        List<MQListenerFactory> mqListenerFactory = new ArrayList<>();
-        RocketMQListenerFactory listener = new RocketMQListenerFactory();
-        listener.setConsumeName(consumeId);
-        listener.setDeserialize(new HessianDeserialize());
-        listener.setMqTopic(MQ_TOPIC);
-        listener.setNamesrvAddr(NamesrvAddr);
-        // assertNotNull("consumeHandle can not null", listener.getConsumeHandle());
-        Descriptor.PropertyType deserializeProptype = listener.getDescriptor().getPropertyType("deserialize");
-        assertNotNull("deserializeProptype can not be null", deserializeProptype);
-        List<? extends Descriptor> applicableDescriptors = deserializeProptype.getApplicableDescriptors();
-        assertTrue("applicableDescriptors size:" + applicableDescriptors.size(), applicableDescriptors.size() > 0);
-        mqListenerFactory.add(listener);
-        incrComponent.setMqListenerFactory(mqListenerFactory);
-        return incrComponent;
-    }
+//    private IncrComponent createIncrComponent() {
+//        IncrComponent incrComponent = new IncrComponent("search4totalpay");
+//        List<MQListenerFactory> mqListenerFactory = new ArrayList<>();
+//        RocketMQListenerFactory listener = new RocketMQListenerFactory();
+//        listener.setConsumeName(consumeId);
+//        listener.setDeserialize(new DefaultJSONFormatDeserialize());
+//        listener.setMqTopic(MQ_TOPIC);
+//        listener.setNamesrvAddr(NamesrvAddr);
+//        // assertNotNull("consumeHandle can not null", listener.getConsumeHandle());
+//        Descriptor.PropertyType deserializeProptype = listener.getDescriptor().getPropertyType("deserialize");
+//        assertNotNull("deserializeProptype can not be null", deserializeProptype);
+//        List<? extends Descriptor> applicableDescriptors = deserializeProptype.getApplicableDescriptors();
+//        assertTrue("applicableDescriptors size:" + applicableDescriptors.size(), applicableDescriptors.size() > 0);
+//        mqListenerFactory.add(listener);
+//        incrComponent.setMqListenerFactory(mqListenerFactory);
+//        return incrComponent;
+//    }
 }

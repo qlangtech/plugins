@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.realtime.transfer.DTO;
 
 import java.io.IOException;
 
@@ -32,15 +33,14 @@ import java.io.IOException;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class DummyHessianDeserialize extends AbstractAsyncMsgDeserialize {
+public class DummyHessianDeserialize extends DefaultJSONFormatDeserialize {
 
-    @FormField(validate = {Validator.require})
-    public String testProp;
-
-    @Override
-    public <T> T deserialize(byte[] content) throws IOException {
-        return (T) new String(content, TisUTF8.get());
-    }
+//    @FormField(validate = {Validator.require})
+//    public String testProp;
+//    @Override
+//    public DTO deserialize(byte[] content) throws IOException {
+//        return (T) new String(content, TisUTF8.get());
+//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<AbstractAsyncMsgDeserialize> {

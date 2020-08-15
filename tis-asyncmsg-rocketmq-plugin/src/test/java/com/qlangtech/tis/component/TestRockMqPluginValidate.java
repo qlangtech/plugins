@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
 import com.qlangtech.tis.util.AttrValMap;
@@ -66,7 +67,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         assertEquals(2, fieldErrors1.size());
         Optional<DefaultFieldErrorHandler.FieldError> mqTopicErr = fieldErrors1.stream().filter((r) -> mqTopic.equals(r.getFieldName())).findFirst();
         assertTrue(mqTopicErr.isPresent());
-        assertEquals(RocketMQListenerFactory.DefaultDescriptor.MSG_DIGITAL_Alpha_CHARACTER_ERROR, mqTopicErr.get().getMsg());
+        assertEquals(ValidatorCommons.MSG_IDENTITY_ERROR, mqTopicErr.get().getMsg());
         assertNull(mqTopicErr.get().itemsErrorList);
         assertEquals(mqTopic, mqTopicErr.get().getFieldName());
         Optional<DefaultFieldErrorHandler.FieldError> deserializeErr = fieldErrors1.stream().filter((r) -> deserialize.equals(r.getFieldName())).findFirst();

@@ -18,9 +18,10 @@
 package com.qlangtech.tis.component;
 
 import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
-import com.qlangtech.async.message.client.to.impl.HessianDeserialize;
+import com.qlangtech.async.message.client.to.impl.DefaultJSONFormatDeserialize;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.plugin.PluginStore;
 
 import java.util.List;
 
@@ -35,9 +36,12 @@ public class TestIncrComponent extends BaseTestCase {
     private static final String collection = "search4totalpay";
 
     public void testLoad() {
-        IncrComponent incrComponent = TIS.get().loadIncrComponent(collection);
-        assertNotNull(incrComponent);
-        List<MQListenerFactory> mqListenerFactoryList = incrComponent.getMqListenerFactory();
+       // IncrComponent incrComponent = TIS.get().loadIncrComponent(collection);
+
+        PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+
+      //  assertNotNull(incrComponent);
+        List<MQListenerFactory> mqListenerFactoryList = pluginStore.getPlugins();// incrComponent.getMqListenerFactory();
         assertEquals(1, mqListenerFactoryList.size());
         MQListenerFactory mqListenerFactory = mqListenerFactoryList.stream().findFirst().get();
         assertTrue(mqListenerFactory instanceof RocketMQListenerFactory);
@@ -45,7 +49,7 @@ public class TestIncrComponent extends BaseTestCase {
         assertEquals("c_otter_binlogorder_solr", rmFactory.getConsumeName());
         assertEquals("otter_binlogorder", rmFactory.getMqTopic());
         assertEquals("10.1.21.148:9876", rmFactory.getNamesrvAddr());
-        assertTrue(rmFactory.getDeserialize() instanceof HessianDeserialize);
-        assertEquals(collection, incrComponent.getCollection());
+        assertTrue(rmFactory.getDeserialize() instanceof DefaultJSONFormatDeserialize);
+      //  assertEquals(collection, incrComponent.getCollection());
     }
 }

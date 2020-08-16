@@ -124,7 +124,7 @@ public class K8sIncrSync implements IIncrSync {
         meta = new V1ObjectMeta();
         meta.setName(indexName);
         rc.setMetadata(meta);
-        api.createNamespacedReplicationController(this.config.namespace, rc, null, resultPrettyShow, null);
+        api.createNamespacedReplicationController(this.config.namespace, rc, resultPrettyShow, null, null);
     }
 
     private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {

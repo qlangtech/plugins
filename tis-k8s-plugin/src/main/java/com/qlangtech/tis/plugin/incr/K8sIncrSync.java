@@ -24,11 +24,12 @@ import com.qlangtech.tis.coredefine.module.action.IncrSpec;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.pubhook.common.RunEnvironment;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.models.*;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.*;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,12 @@ public class K8sIncrSync implements IIncrSync {
 
     @Override
     public void removeInstance(String indexName) throws Exception {
+        if (StringUtils.isBlank(indexName)) {
+            throw new IllegalArgumentException("param indexName can not be null");
+        }
+        if (this.config == null || StringUtils.isBlank(this.config.namespace)) {
+            throw new IllegalArgumentException("this.config.namespace can not be null");
+        }
         //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
         this.api.deleteNamespacedReplicationController(
                 indexName, this.config.namespace, resultPrettyShow, null, null, null, null, null);
@@ -117,7 +124,7 @@ public class K8sIncrSync implements IIncrSync {
         meta = new V1ObjectMeta();
         meta.setName(indexName);
         rc.setMetadata(meta);
-        api.createNamespacedReplicationController(this.config.namespace, rc, true, resultPrettyShow, null);
+        api.createNamespacedReplicationController(this.config.namespace, rc, null, resultPrettyShow, null);
     }
 
     private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {

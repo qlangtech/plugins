@@ -1,14 +1,15 @@
-/** Copyright 2020 QingLang, Inc.
- *
+/**
+ * Copyright 2020 QingLang, Inc.
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,23 +20,24 @@ package com.qlangtech.tis.plugin.incr;
 
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
-import com.squareup.okhttp.Call;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import com.qlangtech.tis.trigger.socket.InfoType;
 import com.qlangtech.tis.trigger.socket.LogType;
-import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.PodLogs;
-import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1ObjectMeta;
-import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodStatus;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.util.Watch;
+import okhttp3.Call;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
@@ -99,7 +101,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
             // this.api = new CoreV1Api(client);
             exec.execute(() -> {
                 try {
-                    Call call = api.listNamespacedPodCall(this.config.namespace, false, null, null, null, "app=" + indexName, 100, null, 600, true, null, null);
+                    Call call = api.listNamespacedPodCall(this.config.namespace, null, null, null, null, "app=" + indexName, 100, null, 600, true, null);
                     Watch<V1Pod> podWatch = Watch.createWatch(client, call, new TypeToken<Watch.Response<V1Pod>>() {
                     }.getType());
                     V1PodStatus status = null;

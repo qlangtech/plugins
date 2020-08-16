@@ -1,14 +1,15 @@
-/** Copyright 2020 QingLang, Inc.
- *
+/**
+ * Copyright 2020 QingLang, Inc.
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +27,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.Configuration;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import org.yaml.snakeyaml.Yaml;
@@ -35,7 +36,6 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.concurrent.TimeUnit;
 
 /**
  * DefaultK8sContext
@@ -66,7 +66,7 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         try {
             try (Reader reader = new StringReader(this.kubeConfigContent)) {
                 client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(reader)).setBasePath(this.kubeBasePath).build();
-                client.getHttpClient().setReadTimeout(720, TimeUnit.SECONDS);
+                // client.getHttpClient().setReadTimeout(720, TimeUnit.SECONDS);
                 Configuration.setDefaultApiClient(client);
             }
             return client;

@@ -33,9 +33,7 @@
         <version>saturn-1.0.0-SNAPSHOT</version>
     </parent>
 
-    <!--
-      <groupId>org.jenkins-ci.plugins</groupId>
-    -->
+
     <groupId>com.qlangtech.tis.tools</groupId>
     <artifactId>plugin</artifactId>
 
@@ -710,7 +708,6 @@
                         <configuration>
                             <rules>
 
-
                                 <requireMavenVersion>
                                     <version>[3.3.1,)</version>
                                     <message>3.3.1 required to at least look at .mvn/ if it exists.</message>
@@ -723,52 +720,7 @@
                                   <banSnapshots>false</banSnapshots>
                                 </requirePluginVersions>
                                 -->
-                                <enforceBytecodeVersion>
-                                    <maxJdkVersion>1.${java.level}</maxJdkVersion>
-                                    <ignoredScopes>
-                                        <ignoredScope>test</ignoredScope>
-                                    </ignoredScopes>
-                                    <excludes>
-                                        <!-- Makes no sense to check core itself: -->
 
-                                        <exclude>om.qlangtech.tis:tis-plugin</exclude>
-                                        <exclude>om.qlangtech.tis:tis-global-config</exclude>
-
-                                        <!--
-                                                            <exclude>org.jenkins-ci.main:jenkins-core</exclude>
-                                                            <exclude>org.jenkins-ci.main:cli</exclude>
-                                                            <exclude>org.jenkins-ci.main:jenkins-test-harness</exclude>
-                                                            <exclude>org.jenkins-ci.main:remoting</exclude>
-                                                            <exclude>org.kohsuke.stapler:stapler</exclude>
-                                                            <exclude>org.kohsuke.stapler:stapler-groovy</exclude>
-                                                            <exclude>org.kohsuke.stapler:stapler-jelly</exclude>
-                                                            <exclude>org.kohsuke.stapler:stapler-jrebel</exclude>
-                                                            <exclude>org.jenkins-ci:task-reactor</exclude>
-                                        -->
-                                        <!--  findbugs dep managed to provided and optional so is not shipped and missing annotations ok -->
-                                        <exclude>com.google.code.findbugs:annotations</exclude>
-                                        <exclude>com.github.spotbugs:spotbugs-annotations</exclude>
-                                    </excludes>
-                                    <!-- To add exclusions in a Jenkins plugin, use:
-                                    <plugin>
-                                        <artifactId>maven-enforcer-plugin</artifactId>
-                                        <executions>
-                                            <execution>
-                                                <id>display-info</id>
-                                                <configuration>
-                                                    <rules>
-                                                        <enforceBytecodeVersion>
-                                                            <excludes combine.children="append">
-                                                                <exclude>…</exclude>
-                                                            </excludes>
-                                                        </enforceBytecodeVersion>
-                                                    </rules>
-                                                </configuration>
-                                            </execution>
-                                        </executions>
-                                    </plugin>
-                                    (or just override java.level) -->
-                                </enforceBytecodeVersion>
                                 <bannedDependencies>
                                     <excludes>
                                         <exclude>javax.servlet:servlet-api</exclude>

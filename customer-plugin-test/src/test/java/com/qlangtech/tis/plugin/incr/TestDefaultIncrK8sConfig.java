@@ -16,11 +16,18 @@ import com.qlangtech.tis.plugin.PluginStore;
 public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     private static final String s4totalpay = "search4totalpay";
+    private IncrStreamFactory incrFactory;
+
+    @Override
+    public void setUp() throws Exception {
+        //super.setUp();
+        PluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
+        incrFactory = s4totalpayIncr.getPlugin();
+        assertNotNull(incrFactory);
+    }
 
     public void testCreateIncrDeployment() throws Exception {
-        PluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
-        IncrStreamFactory incrFactory = s4totalpayIncr.getPlugin();
-        assertNotNull(incrFactory);
+
         IIncrSync incr = incrFactory.getIncrSync();
         assertNotNull(incr);
         assertFalse(s4totalpay + " shall have not deploy incr instance in k8s", incr.isRCDeployment(s4totalpay));
@@ -40,5 +47,15 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
             throw e;
         }
 
+    }
+
+
+    public void testDeleteIncrDeployment() throws Exception {
+        try {
+            incrFactory.getIncrSync().removeInstance(s4totalpay);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

@@ -68,8 +68,10 @@ public class K8sIncrSync implements IIncrSync {
             throw new IllegalArgumentException("this.config.namespace can not be null");
         }
         //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
+        //https://raw.githubusercontent.com/kubernetes-client/java/master/kubernetes/docs/CoreV1Api.md
+        V1DeleteOptions body = new V1DeleteOptions();
         this.api.deleteNamespacedReplicationController(
-                indexName, this.config.namespace, resultPrettyShow, null, null, null, null, null);
+                indexName, this.config.namespace, resultPrettyShow, null, null, null, "Background", body);
     }
 
     public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {

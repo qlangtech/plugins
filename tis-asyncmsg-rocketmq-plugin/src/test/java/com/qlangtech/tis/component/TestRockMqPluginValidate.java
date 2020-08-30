@@ -57,10 +57,10 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         final DefaultContext context = new DefaultContext();
         final Map<String, Object> fieldErrors = context.getContextMap();
         validatePluginPostForm("rockmq_plugin_from_invalid.json", context);
-        List<List<DefaultFieldErrorHandler.FieldError>> /**
-         * item
-         */
+
+        List<List<DefaultFieldErrorHandler.FieldError>> /** item*/
                 itemsErrorList = (List<List<DefaultFieldErrorHandler.FieldError>>) fieldErrors.get(IFieldErrorHandler.ACTION_ERROR_FIELDS);
+
         assertNotNull(itemsErrorList);
         assertEquals(1, itemsErrorList.size());
         List<DefaultFieldErrorHandler.FieldError> fieldErrors1 = itemsErrorList.get(0);

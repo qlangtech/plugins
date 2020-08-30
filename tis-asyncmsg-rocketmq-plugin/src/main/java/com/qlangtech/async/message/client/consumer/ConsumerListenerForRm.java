@@ -17,23 +17,24 @@
  */
 package com.qlangtech.async.message.client.consumer;
 
-import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.consumer.listener.*;
-import com.alibaba.rocketmq.common.consumer.ConsumeFromWhere;
-import com.alibaba.rocketmq.common.message.MessageExt;
-import com.alibaba.rocketmq.common.protocol.heartbeat.MessageModel;
 import com.qlangtech.async.message.client.to.impl.AsyncMsgRM;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
-import com.qlangtech.async.message.client.util.Assert;
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.consumer.listener.*;
+import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+
 import java.net.InetAddress;
 import java.util.List;
+
 import static com.qlangtech.async.message.client.util.MD5Util.stringIsEmpty;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
@@ -87,13 +88,13 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
              * 一个应用创建一个Consumer，由应用来维护此对象，可以设置为全局对象或者单例<br>
              * 注意：ConsumerGroupName需要由应用来保证唯一
              */
-             // Assert.isTrue(consumerGroup.startsWith("c_") && consumerGroup.contains(topic), "消费者不符合规范！consumerGroup:" + consumerGroup + ",topic:" + topic);
+            // Assert.isTrue(consumerGroup.startsWith("c_") && consumerGroup.contains(topic), "消费者不符合规范！consumerGroup:" + consumerGroup + ",topic:" + topic);
             // 广播模式采用动态消费组的方式
             if (messageModel.equals(MessageModel.BROADCASTING)) {
                 consumerGroup = consumerGroup + InetAddress.getLocalHost().getHostAddress().replace(".", "_");
             }
             if (// MessageConfig.checkUnPublishEnv() &&
-            suspend)
+                    suspend)
                 return;
             consumer = new DefaultMQPushConsumer(consumerGroup);
             consumer.setNamesrvAddr(namesrvAddr);
@@ -108,7 +109,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
             if (consumeFromWhere.equals(ConsumeFromWhere.CONSUME_FROM_TIMESTAMP) && !stringIsEmpty(consumeTimestamp)) {
                 consumer.setConsumeTimestamp(consumeTimestamp);
             }
-            switch(registerConsumeType) {
+            switch (registerConsumeType) {
                 case ORDERLY:
                     consumer.registerMessageListener(new BaseListenerOrderly());
                     break;

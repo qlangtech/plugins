@@ -17,7 +17,7 @@
  */
 package com.qlangtech.async.message.client.util;
 
-import com.alibaba.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.message.MessageExt;
 
 /*
  * @Date 2017/3/21

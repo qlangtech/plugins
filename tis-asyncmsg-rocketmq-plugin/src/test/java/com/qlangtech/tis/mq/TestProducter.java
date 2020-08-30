@@ -2,17 +2,18 @@ package com.qlangtech.tis.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.rocketmq.client.producer.DefaultMQProducer;
-import com.alibaba.rocketmq.client.producer.SendResult;
-import com.alibaba.rocketmq.common.message.Message;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.common.message.Message;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -74,7 +75,9 @@ public class TestProducter extends TestCase {
 
     private void consumeFile(DefaultMQProducer producer) throws Exception {
 
-        OSSObject object = client.getObject("incr-log", ossPathMap.get("order"));
+        GetObjectRequest getObjectRequest = new GetObjectRequest("incr-log", ossPathMap.get("order"));
+        // getObjectRequest.setRange(3000, -1);
+        OSSObject object = client.getObject(getObjectRequest);
         LineIterator lit = null;
         Message msg = null;
         JSONObject m = null;
@@ -100,7 +103,7 @@ public class TestProducter extends TestCase {
                     }
                     incr.incrementAndGet();
                     SendResult sendResult = producer.send(msg);
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                     current = System.currentTimeMillis();
                     if (current > (lastTimestamp + 5000)) {
                         System.out.println("<---------------------------");

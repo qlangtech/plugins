@@ -72,6 +72,9 @@ public class K8sIncrSync implements IIncrSync {
         V1DeleteOptions body = new V1DeleteOptions();
         this.api.deleteNamespacedReplicationController(
                 indexName, this.config.namespace, resultPrettyShow, null, null, null, "Background", body);
+
+
+       // this.api.deleteNamespacedReplicationControllerCall()
     }
 
     public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {

@@ -26,8 +26,11 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import org.apache.commons.lang.StringUtils;
+import org.apache.rocketmq.common.MixAll;
+import org.apache.rocketmq.common.admin.ConsumeStats;
+import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 
-/*
+/**
  * 基于rockmq的消息监听器，插件实现
  *
  * @author 百岁（baisui@qlangtech.com）
@@ -57,6 +60,29 @@ public class RocketMQListenerFactory extends MQListenerFactory {
         // System.out.println(spec_pattern.matcher("c_otter_binlogorder_solr").matches());
         //
         // System.out.println(host_pattern.matcher("10.1.21.148:9876").matches());
+    }
+
+    @Override
+    public IMQConsumerStatus createConsumerStatus() {
+        //https://github.com/apache/rocketmq/blob/9f95a972e10e0681bc3f2d00e9957aa212e897b5/tools/src/main/java/org/apache/rocketmq/tools/command/consumer/ConsumerProgressSubCommand.java#L48
+        try {
+            if (StringUtils.isBlank(this.namesrvAddr)) {
+                throw new IllegalStateException("prop 'namesrvAddr' can not be blank.");
+            }
+            System.setProperty(MixAll.NAMESRV_ADDR_PROPERTY, this.namesrvAddr);
+            // RPCHook rpcHook = null  ;//AclUtils.getAclRPCHook(rocketmqHome + MixAll.ACL_CONF_TOOLS_FILE);
+
+            DefaultMQAdminExt defaultMQAdminExt = new DefaultMQAdminExt();
+            defaultMQAdminExt.setInstanceName(Long.toString(System.currentTimeMillis()));
+
+            defaultMQAdminExt.start();
+
+            ConsumeStats consumeStats = defaultMQAdminExt.examineConsumeStats(this.consumeName, this.mqTopic);
+            return new RocketMQConsumerStatus(consumeStats, defaultMQAdminExt);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override

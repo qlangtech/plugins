@@ -17,12 +17,13 @@
  */
 package com.qlangtech.async.message.client.consumer;
 
-import com.alibaba.rocketmq.client.consumer.DefaultMQPushConsumer;
-import com.alibaba.rocketmq.client.impl.consumer.ProcessQueue;
-import com.alibaba.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.impl.consumer.ProcessQueue;
+import org.apache.rocketmq.common.message.MessageQueue;
+
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /*
  * Created with IntelliJ IDEA.
@@ -49,12 +50,12 @@ public class ConsumerAPI {
      */
     public long computeAccumulationTotal() {
         long msgAccTotal = 0;
-        ConcurrentHashMap<MessageQueue, ProcessQueue> processQueueTable = consumer.getDefaultMQPushConsumerImpl().getRebalanceImpl().getProcessQueueTable();
+        ConcurrentMap<MessageQueue, ProcessQueue> processQueueTable = consumer.getDefaultMQPushConsumerImpl().getRebalanceImpl().getProcessQueueTable();
         Iterator<Map.Entry<MessageQueue, ProcessQueue>> it = processQueueTable.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<MessageQueue, ProcessQueue> next = it.next();
             ProcessQueue value = next.getValue();
-        // msgAccTotal += value.getMsgDuijiCnt(); // 当前的消息总量，在客户端这边，是通过 offset 来计算的
+            // msgAccTotal += value.getMsgDuijiCnt(); // 当前的消息总量，在客户端这边，是通过 offset 来计算的
         }
         return msgAccTotal;
     }

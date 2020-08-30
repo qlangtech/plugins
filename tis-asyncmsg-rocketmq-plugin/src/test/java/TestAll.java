@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.qlangtech.async.message.client.consumer.TestRocketMQListenerFactory;
 import com.qlangtech.tis.component.TestIncrComponent;
 import com.qlangtech.tis.component.TestPlugin;
 import com.qlangtech.tis.component.TestRockMqPluginValidate;
@@ -37,6 +38,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestIncrComponent.class);
         suite.addTestSuite(TestRockMqPluginValidate.class);
         suite.addTestSuite(TestHeteroList.class);
+        suite.addTestSuite(TestRocketMQListenerFactory.class);
         return suite;
     }
 }

@@ -17,8 +17,8 @@
  */
 package com.qlangtech.async.message.client.sender;
 
-import com.alibaba.rocketmq.client.producer.SendCallback;
 import com.qlangtech.async.message.client.constants.NotifyDelayType;
+import org.apache.rocketmq.client.producer.SendCallback;
 
 import java.util.Map;
 

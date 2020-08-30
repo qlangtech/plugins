@@ -17,13 +17,14 @@
  */
 package com.qlangtech.async.message.client.to.impl;
 
-import com.alibaba.rocketmq.common.message.MessageExt;
 import com.qlangtech.async.message.client.util.MsgUtils;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import org.apache.rocketmq.common.message.MessageExt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 /*

@@ -15,6 +15,7 @@
     <url>http://maven.apache.org</url>
 
     <properties>
+        <rocketmq.version>4.7.1</rocketmq.version>
     </properties>
 
 
@@ -39,9 +40,15 @@
         </dependency>
         -->
         <dependency>
-            <groupId>com.alibaba.rocketmq</groupId>
+            <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-client</artifactId>
-            <version>3.6.2.Final</version>
+            <version>${rocketmq.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-tools</artifactId>
+            <version>${rocketmq.version}</version>
         </dependency>
 
         <dependency>

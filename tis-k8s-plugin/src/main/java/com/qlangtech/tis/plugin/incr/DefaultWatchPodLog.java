@@ -21,9 +21,9 @@ package com.qlangtech.tis.plugin.incr;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
-import com.qlangtech.tis.trigger.socket.InfoType;
 import com.qlangtech.tis.trigger.socket.LogType;
 import io.kubernetes.client.PodLogs;
 import io.kubernetes.client.openapi.ApiClient;
@@ -46,9 +46,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @create: 2020-04-12 16:02
- *
  * @author 百岁（baisui@qlangtech.com）
+ * @create: 2020-04-12 16:02
  * @date 2020/04/13
  */
 public class DefaultWatchPodLog extends WatchPodLog {
@@ -138,9 +137,9 @@ public class DefaultWatchPodLog extends WatchPodLog {
         try {
             PodLogs logs = new PodLogs(this.client);
             monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName);
-            LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, "utf8");
+            LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             while (lineIt.hasNext()) {
-                ExecuteState event = ExecuteState.create(InfoType.INFO, lineIt.nextLine());
+                ExecuteState event = ExecuteState.create(LogType.INCR_DEPLOY_STATUS_CHANGE, lineIt.nextLine());
                 sendMsg(indexName, event);
             }
         } catch (Exception e) {
@@ -160,7 +159,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
      */
     private void sendMsg(String indexName, ExecuteState event) {
         event.setServiceName(indexName);
-        event.setLogType(LogType.INCR_DEPLOY_STATUS_CHANGE);
+        // event.setLogType(LogType.INCR_DEPLOY_STATUS_CHANGE);
         synchronized (this) {
             Iterator<ILogListener> lit = this.listeners.iterator();
             ILogListener l = null;

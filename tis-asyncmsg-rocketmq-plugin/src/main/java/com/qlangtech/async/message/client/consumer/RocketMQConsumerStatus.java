@@ -22,20 +22,22 @@ public class RocketMQConsumerStatus implements IMQConsumerStatusFactory.IMQConsu
         this.defaultMQAdminExt = defaultMQAdminExt;
     }
 
-    @Override
-    public long getTotalDiff() {
-        Set<MessageQueue> mqList = consumeStats.getOffsetTable().keySet();
-        long diffTotal = 0L;
-        for (MessageQueue mq : mqList) {
-            OffsetWrapper offsetWrapper = consumeStats.getOffsetTable().get(mq);
-            long diff = offsetWrapper.getBrokerOffset() - offsetWrapper.getConsumerOffset();
-            diffTotal += diff;
-        }
-        return diffTotal;
-    }
+//    @Override
+//    public long getTotalDiff() {
+//        Set<MessageQueue> mqList = consumeStats.getOffsetTable().keySet();
+//        long diffTotal = 0L;
+//        long diff;
+//        OffsetWrapper offsetWrapper = null;
+//        for (MessageQueue mq : mqList) {
+//            offsetWrapper = consumeStats.getOffsetTable().get(mq);
+//            diff = (offsetWrapper.getBrokerOffset() - offsetWrapper.getConsumerOffset());
+//            diffTotal += diff;
+//        }
+//        return diffTotal;
+//    }
 
-    @Override
-    public void close() {
-        this.defaultMQAdminExt.shutdown();
-    }
+//    @Override
+//    public void close() {
+//        this.defaultMQAdminExt.shutdown();
+//    }
 }

@@ -11,6 +11,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.rocketmq.client.log.ClientLogger;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
@@ -33,6 +34,7 @@ public class TestProducter extends TestCase {
     private static final Map<String, String> ossPathMap = Maps.newHashMap();
 
     static {
+        System.setProperty(ClientLogger.CLIENT_LOG_USESLF4J, String.valueOf(Boolean.TRUE));
         ossPathMap.put("order", "totalpay/7d4c33f07948492f9ba4b4040bc905fc");
         ossPathMap.put("binlogmsg", "binlogmsg/0f1305acfe534f8cb9d730aa9b1f9a26");
     }
@@ -47,21 +49,14 @@ public class TestProducter extends TestCase {
     public void testProduce() throws Exception {
         //Instantiate with a producer group name.
         DefaultMQProducer producer = new DefaultMQProducer("produce_baisui_test");
+        // https://github.com/apache/rocketmq/issues/568
+        producer.setVipChannelEnabled(false);
+        producer.setSendMsgTimeout(30000);
         // Specify name server addresses.
         producer.setNamesrvAddr(nameAddress);
         //Launch the instance.
         producer.start();
-//        for (int i = 0; i < 100; i++) {
-//            //Create a message instance, specifying topic, tag and message body.
-//            Message msg = new Message(topic /* Topic */,
-//                    "TagA" /* Tag */,
-//                    ("Hello RocketMQ " +
-//                            i).getBytes(TisUTF8.get()) /* Message body */
-//            );
-//            //Call send message to deliver message to one of brokers.
-//            SendResult sendResult = producer.send(msg);
-//            System.out.printf("%s%n", sendResult);
-//        }
+        System.out.println("start to send message to MQ");
 
         consumeFile(producer);
 
@@ -114,6 +109,7 @@ public class TestProducter extends TestCase {
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     throw new IllegalStateException("line:" + line, e);
                 }
             }

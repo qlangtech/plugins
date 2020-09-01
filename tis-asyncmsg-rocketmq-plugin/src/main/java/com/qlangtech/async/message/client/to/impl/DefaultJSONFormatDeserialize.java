@@ -31,12 +31,19 @@ import java.nio.charset.CharsetDecoder;
  * @date 2020/04/13
  */
 public class DefaultJSONFormatDeserialize extends AbstractAsyncMsgDeserialize {
-    private static final CharsetDecoder utf8CharsetDecoder = TisUTF8.get().newDecoder();
+    // CharsetDecoder 有线程安全问题
+    private static final ThreadLocal<CharsetDecoder> utf8CharsetDecoder = new ThreadLocal<CharsetDecoder>() {
+        @Override
+        protected CharsetDecoder initialValue() {
+            return TisUTF8.get().newDecoder();
+        }
+    };
+
     // @FormField(require = true)
     // public String testProp;
     @Override
     public final DTO deserialize(byte[] content) throws IOException {
-        return com.alibaba.fastjson.JSONObject.parseObject(content, 0, content.length, utf8CharsetDecoder, DTO.class);
+        return com.alibaba.fastjson.JSONObject.parseObject(content, 0, content.length, utf8CharsetDecoder.get(), DTO.class);
     }
 
     @TISExtension()

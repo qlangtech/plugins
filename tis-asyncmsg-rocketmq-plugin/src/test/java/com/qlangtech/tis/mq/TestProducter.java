@@ -98,7 +98,7 @@ public class TestProducter extends TestCase {
                     }
                     incr.incrementAndGet();
                     SendResult sendResult = producer.send(msg);
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                     current = System.currentTimeMillis();
                     if (current > (lastTimestamp + 5000)) {
                         System.out.println("<---------------------------");

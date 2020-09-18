@@ -18,8 +18,7 @@
  */
 package com.qlangtech.tis.plugin.incr;
 
-import com.google.common.collect.Lists;
-import com.google.gson.reflect.TypeToken;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -28,19 +27,18 @@ import com.qlangtech.tis.trigger.socket.LogType;
 import io.kubernetes.client.PodLogs;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V1Pod;
-import io.kubernetes.client.openapi.models.V1PodStatus;
-import io.kubernetes.client.util.Watch;
-import okhttp3.Call;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,7 +50,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DefaultWatchPodLog extends WatchPodLog {
 
-    private final List<ILogListener> listeners = Lists.newArrayList();
+    // 为了保证listeners不重复添加使用set
+    private final Set<ILogListener> listeners = Sets.newHashSet();
 
     private final LoopQueue<ExecuteState> loopQueue = new LoopQueue<>(new ExecuteState[100]);
 
@@ -65,11 +64,16 @@ public class DefaultWatchPodLog extends WatchPodLog {
     private final CoreV1Api api;
 
     private final String indexName;
+    private final String podName;
 
     private final DefaultIncrK8sConfig config;
 
-    public DefaultWatchPodLog(String indexName, ApiClient client, CoreV1Api api, final DefaultIncrK8sConfig config) {
+    public DefaultWatchPodLog(String indexName, String podName, ApiClient client, CoreV1Api api, final DefaultIncrK8sConfig config) {
         this.indexName = indexName;
+        if (StringUtils.isBlank(podName)) {
+            throw new IllegalArgumentException("param podName can not be null");
+        }
+        this.podName = podName;
         this.api = api;
         this.client = client;
         this.config = config;
@@ -77,55 +81,71 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     @Override
     public void addListener(ILogListener listener) {
-        synchronized (this) {
-            ExecuteState[] buffer = this.loopQueue.readBuffer();
-            // 将缓冲区中的数据写入到外部监听者中
-            for (int i = 0; i < buffer.length; i++) {
-                if (buffer[i] == null || listener.isClosed()) {
-                    break;
+        try {
+            synchronized (this) {
+                ExecuteState[] buffer = this.loopQueue.readBuffer();
+                // 将缓冲区中的数据写入到外部监听者中
+                for (int i = 0; i < buffer.length; i++) {
+                    if (buffer[i] == null || listener.isClosed()) {
+                        break;
+                    }
+                    listener.sendMsg2Client(buffer[i]);
                 }
-                listener.read(buffer[i]);
+                this.listeners.add(listener);
             }
-            this.listeners.add(listener);
+            this.startProcess();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     // private final ReentrantLock lock = new ReentrantLock();
     private final AtomicBoolean lock = new AtomicBoolean();
 
-    @Override
+    //private final ReentrantLock lock = new ReentrantLock();
+
     void startProcess() {
-        if (lock.compareAndSet(false, true)) {
+        if (this.lock.compareAndSet(false, true)) {
+            // try {
             logger.info("has gain the watch lock " + this.indexName);
-            // this.api = new CoreV1Api(client);
+            // final CountDownLatch countdown = new CountDownLatch(1);
             exec.execute(() -> {
                 try {
-                    Call call = api.listNamespacedPodCall(this.config.namespace, null, null, null, null, "app=" + indexName, 100, null, 600, true, null);
-                    Watch<V1Pod> podWatch = Watch.createWatch(client, call, new TypeToken<Watch.Response<V1Pod>>() {
-                    }.getType());
-                    V1PodStatus status = null;
-                    V1ObjectMeta metadata = null;
-                    try {
-                        for (Watch.Response<V1Pod> item : podWatch) {
-                            status = item.object.getStatus();
-                            if ("running".equalsIgnoreCase(status.getPhase())) {
-                                metadata = item.object.getMetadata();
-                                break;
-                            }
-                        }
-                    } finally {
-                        podWatch.close();
-                    }
-                    if (metadata != null) {
-                        monitorPodLog(indexName, metadata.getNamespace(), metadata.getName());
-                    }
-                } catch (Exception e) {
+//                    Call call = api.listNamespacedPodCall(this.config.namespace, null, null, null, null, "app=" + indexName, 100, null, 600, true, null);
+//                    Watch<V1Pod> podWatch = Watch.createWatch(client, call, new TypeToken<Watch.Response<V1Pod>>() {
+//                    }.getType());
+//                    V1PodStatus status = null;
+                    //V1ObjectMeta metadata = null;
+//                    try {
+//                        for (Watch.Response<V1Pod> item : podWatch) {
+//                            status = item.object.getStatus();
+//                            if ("running".equalsIgnoreCase(status.getPhase())) {
+//                                metadata = item.object.getMetadata();
+//                                break;
+//                            }
+//                        }
+//                    } finally {
+//                        podWatch.close();
+//                    }
+                    //if (metadata != null) {
+                    monitorPodLog(indexName, this.config.namespace, this.podName);
+                    //}
+                } catch (Throwable e) {
                     logger.error("monitor " + this.indexName + " incr_log", e);
                     throw new RuntimeException(e);
                 } finally {
-                    lock.lazySet(false);
+                    // countdown.countDown();
+                    this.lock.set(false);
                 }
             });
+//            try {
+//                countdown.await();
+//            } catch (InterruptedException e) {
+//                logger.error(e.getMessage(), e);
+//            }
+//            } finally {
+//               // lock.unlock();
+//            }
         } else {
             logger.info("has not gain the watch lock");
         }
@@ -133,33 +153,53 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     private InputStream monitorLogStream;
 
-    private void monitorPodLog(String indexName, String namespace, String podName) {
+    /**
+     * @param indexName
+     * @param namespace
+     * @param podName
+     * @return 是否是正常退出
+     */
+    private boolean monitorPodLog(String indexName, String namespace, String podName) {
         try {
             PodLogs logs = new PodLogs(this.client);
-            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName);
+            // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
+            // 显示200行
+            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName, null, 200, false);
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
-            while (lineIt.hasNext()) {
-                ExecuteState event = ExecuteState.create(LogType.INCR_DEPLOY_STATUS_CHANGE, lineIt.nextLine());
-                sendMsg(indexName, event);
+            ExecuteState event = null;
+            boolean allConnectionDie = false;
+            while (!allConnectionDie && lineIt.hasNext()) {
+                event = ExecuteState.create(LogType.INCR_DEPLOY_STATUS_CHANGE, lineIt.nextLine());
+                // 如果所有的监听者都死了，这里也就不用继续监听日志了
+                allConnectionDie = sendMsg(indexName, event);
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            if (ExceptionUtils.indexOfThrowable(e, SocketTimeoutException.class) > -1) {
+                // 连接超时需要向客户端发一个信号告诉它连接失效了，以便再次重连
+                logger.warn("indexName:" + indexName + " monitor pod:" + podName + " logs timeout");
+                try {
+                    sendMsg(indexName, ExecuteState.create(LogType.INCR_DEPLOY_STATUS_CHANGE, new ExecuteState.TimeoutResult()));
+                } catch (Throwable ex) {
+                }
+                return false;
+            }
+            throw new RuntimeException("indexName:" + indexName + ",namespace:" + namespace + ",podName:" + podName, e);
         } finally {
-            try {
-                IOUtils.closeQuietly(monitorLogStream);
-            } catch (Throwable e) {
-            }
+            this.clearStatConnection();
         }
+        return true;
     }
 
     /**
      * 向监听者发送消息
      *
      * @param event
+     * @return 是否所有的监听者都死了？
      */
-    private void sendMsg(String indexName, ExecuteState event) {
+    private boolean sendMsg(String indexName, ExecuteState event) throws IOException {
         event.setServiceName(indexName);
         // event.setLogType(LogType.INCR_DEPLOY_STATUS_CHANGE);
+        boolean allConnectionDie = true;
         synchronized (this) {
             Iterator<ILogListener> lit = this.listeners.iterator();
             ILogListener l = null;
@@ -168,18 +208,31 @@ public class DefaultWatchPodLog extends WatchPodLog {
                 if (l.isClosed()) {
                     lit.remove();
                     continue;
+                } else {
+                    allConnectionDie = false;
                 }
                 loopQueue.write(event);
-                l.read(event);
+                l.sendMsg2Client(event);
             }
         }
+        return allConnectionDie;
     }
 
+    @Override
     public void close() {
+        clearStatConnection();
+        //this.exec.shutdownNow();
+    }
+
+    /**
+     * 清除有状态的连接
+     */
+    private void clearStatConnection() {
         try {
             IOUtils.closeQuietly(monitorLogStream);
         } catch (Throwable e) {
         }
-        this.exec.shutdownNow();
+        loopQueue.cleanBuffer();
+        this.listeners.clear();
     }
 }

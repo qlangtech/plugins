@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>plugin</artifactId>
-    <groupId>com.qlangtech.tis.tools</groupId>
+    <artifactId>tis-plugin-parent</artifactId>
+    <groupId>com.qlangtech.tis</groupId>
     <version>saturn-1.0.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
+  <groupId>com.qlangtech.tis.plugins</groupId>
   <artifactId>tis-spark-hive-server-extends</artifactId>
   <build>
     <pluginManagement>
@@ -165,12 +166,6 @@
     </plugins>
   </build>
   <dependencies>
-    <dependency>
-      <groupId>com.qlangtech.tis</groupId>
-      <artifactId>tis-builder-api</artifactId>
-      <version>saturn-1.0.0-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>

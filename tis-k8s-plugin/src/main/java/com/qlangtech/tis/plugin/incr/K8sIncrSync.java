@@ -20,7 +20,9 @@ package com.qlangtech.tis.plugin.incr;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.coredefine.module.action.IIncrSync;
+import com.qlangtech.tis.coredefine.module.action.IncrDeployment;
 import com.qlangtech.tis.coredefine.module.action.IncrSpec;
+import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.pubhook.common.RunEnvironment;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -29,7 +31,9 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
+import okhttp3.Call;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +64,32 @@ public class K8sIncrSync implements IIncrSync {
     }
 
     @Override
+    public void relaunch(String collection) {
+
+//String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
+        try {
+            // V1PodList v1PodList = api.listNamespacedPod(this.config.namespace, null, null, null, null, "app=" + collection, 100, null, 600, false);
+            V1DeleteOptions options = new V1DeleteOptions();
+            Call call = null;
+            for (V1Pod pod : this.getRCPods(collection)) {
+//String name, String namespace, String pretty, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy, V1DeleteOptions body
+                call = api.deleteNamespacedPodCall(pod.getMetadata().getName(), this.config.namespace, "true", null, 20, true, null, options, null);
+                this.client.execute(call, null);
+                logger.info(" delete pod {}", pod.getMetadata().getName());
+            }
+        } catch (ApiException e) {
+            throw new RuntimeException(collection, e);
+        }
+
+    }
+
+    private List<V1Pod> getRCPods(String collection) throws ApiException {
+        V1PodList v1PodList = api.listNamespacedPod(this.config.namespace, null, null
+                , null, null, "app=" + collection, 100, null, 600, false);
+        return v1PodList.getItems();
+    }
+
+    @Override
     public void removeInstance(String indexName) throws Exception {
         if (StringUtils.isBlank(indexName)) {
             throw new IllegalArgumentException("param indexName can not be null");
@@ -70,11 +100,29 @@ public class K8sIncrSync implements IIncrSync {
         //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
         //https://raw.githubusercontent.com/kubernetes-client/java/master/kubernetes/docs/CoreV1Api.md
         V1DeleteOptions body = new V1DeleteOptions();
-        this.api.deleteNamespacedReplicationController(
-                indexName, this.config.namespace, resultPrettyShow, null, null, null, "Background", body);
+        body.setOrphanDependents(true);
+        // Boolean orphanDependents = true;
+        try {
+            // this.api.deleteNamespacedReplicationControllerCall()
+            Call call = this.api.deleteNamespacedReplicationControllerCall(
+                    indexName, this.config.namespace, resultPrettyShow, null, null, true, null, null, null);
+            client.execute(call, null);
+
+            this.relaunch(indexName);
+
+        } catch (Throwable e) {
+//            if (ExceptionUtils.indexOfThrowable(e, JsonSyntaxException.class) > -1) {
+//                //TODO: 不知道为啥api的代码里面一直没有解决这个问题
+//                //https://github.com/kubernetes-client/java/issues/86
+//                logger.warn(indexName + e.getMessage());
+//                return;
+//            } else {
+            throw new RuntimeException(indexName, e);
+            //}
+        }
 
 
-       // this.api.deleteNamespacedReplicationControllerCall()
+        // this.api.deleteNamespacedReplicationControllerCall()
     }
 
     public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {
@@ -179,28 +227,109 @@ public class K8sIncrSync implements IIncrSync {
     }
 
     /**
-     * 是否存在RC，有即证明已经完成发布流程
+     * 取得RC实体对象，有即证明已经完成发布流程
      *
      * @return
      */
-    public boolean isRCDeployment(String indexName) {
+    @Override
+    public IncrDeployment getRCDeployment(String collection) {
+        IncrDeployment rcDeployment = null;
         try {
-            V1ReplicationController rc = api.readNamespacedReplicationController(indexName, this.config.namespace, resultPrettyShow, null, null);
-            return rc != null;
+            V1ReplicationController rc = api.readNamespacedReplicationController(collection, this.config.namespace, resultPrettyShow, null, null);
+            if (rc == null) {
+                return null;
+            }
+            rcDeployment = new IncrDeployment();
+            rcDeployment.setReplicaCount(rc.getSpec().getReplicas());
+
+            for (V1Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
+                for (V1EnvVar env : container.getEnv()) {
+                    rcDeployment.addEnv(env.getName(), env.getValue());
+                }
+                rcDeployment.setDockerImage(container.getImage());
+
+                V1ResourceRequirements resources = container.getResources();
+                String cpu = "cpu";
+                String memory = "memory";
+                Map<String, Quantity> requests = resources.getRequests();
+                Map<String, Quantity> limits = resources.getLimits();
+
+                rcDeployment.setMemoryLimit(Specification.parse(limits.get(memory).toSuffixedString()));
+                rcDeployment.setMemoryRequest(Specification.parse(requests.get(memory).toSuffixedString()));
+                rcDeployment.setCpuLimit(Specification.parse(limits.get(cpu).toSuffixedString()));
+                rcDeployment.setCpuRequest(Specification.parse(requests.get(cpu).toSuffixedString()));
+                break;
+            }
+
+            V1ReplicationControllerStatus status = rc.getStatus();
+
+            IncrDeployment.ReplicationControllerStatus rControlStatus = new IncrDeployment.ReplicationControllerStatus();
+            rControlStatus.setAvailableReplicas(status.getAvailableReplicas());
+            rControlStatus.setFullyLabeledReplicas(status.getFullyLabeledReplicas());
+            rControlStatus.setObservedGeneration(status.getObservedGeneration());
+            rControlStatus.setReadyReplicas(status.getReadyReplicas());
+            rControlStatus.setReplicas(status.getReplicas());
+
+            rcDeployment.setStatus(rControlStatus);
+
+            DateTime creationTimestamp = rc.getMetadata().getCreationTimestamp();
+            rcDeployment.setCreationTimestamp(creationTimestamp.getMillis());
+
+
+            List<V1Pod> rcPods = this.getRCPods(collection);
+
+            //Call call = api.listNamespacedPodCall(this.config.namespace, null, null, null, null, "app=" + collection, 100, null, 600, true, null);
+//            Watch<V1Pod> podWatch = Watch.createWatch(client, call, new TypeToken<Watch.Response<V1Pod>>() {
+//            }.getType());
+            V1PodStatus podStatus = null;
+            IncrDeployment.PodStatus pods;
+            V1ObjectMeta metadata = null;
+
+            for (V1Pod item : rcPods) {
+                metadata = item.getMetadata();
+                pods = new IncrDeployment.PodStatus();
+                pods.setName(metadata.getName());
+                podStatus = item.getStatus();
+                pods.setPhase(podStatus.getPhase());
+                pods.setStartTime(podStatus.getStartTime().getMillis());
+                rcDeployment.addPod(pods);
+            }
+
         } catch (ApiException e) {
             if (e.getCode() == 404) {
-                return false;
+                logger.warn("can not get collection rc deployment:" + collection);
+                return null;
             } else {
                 throw new RuntimeException("code:" + e.getCode(), e);
             }
         }
+        return rcDeployment;
     }
+
+//    /**
+//     * 是否存在RC，有即证明已经完成发布流程
+//     *
+//     * @return
+//     */
+//    public boolean isRCDeployment(String indexName) {
+//        try {
+//            V1ReplicationController rc = api.readNamespacedReplicationController(indexName, this.config.namespace, resultPrettyShow, null, null);
+//            return rc != null;
+//        } catch (ApiException e) {
+//            if (e.getCode() == 404) {
+//                return false;
+//            } else {
+//                throw new RuntimeException("code:" + e.getCode(), e);
+//            }
+//        }
+//    }
 
     /**
      * 列表pod，并且显示日志
      */
-    public WatchPodLog listPodAndWatchLog(String indexName, ILogListener listener) {
-        DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, client, api, config);
+    @Override
+    public WatchPodLog listPodAndWatchLog(String indexName, String podName, ILogListener listener) {
+        DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, podName, client, api, config);
         podlog.addListener(listener);
         podlog.startProcess();
         return podlog;

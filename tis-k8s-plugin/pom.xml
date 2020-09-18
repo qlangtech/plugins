@@ -2,11 +2,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.qlangtech.tis.tools</groupId>
-        <artifactId>plugin</artifactId>
+        <groupId>com.qlangtech.tis</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
         <version>saturn-1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+    <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-k8s-plugin</artifactId>
     <packaging>tpi</packaging>
 
@@ -30,10 +31,6 @@
             <artifactId>client-java</artifactId>
             <version>9.0.1</version>
             <scope>compile</scope>
-            <!--
-<version>5.0.0</version>
-            -->
-
         </dependency>
 
         <dependency>
@@ -41,10 +38,7 @@
             <artifactId>tis-builder-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-plugin</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>commons-io</groupId>

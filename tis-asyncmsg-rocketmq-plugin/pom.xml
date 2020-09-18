@@ -1,12 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.qlangtech.tis.tools</groupId>
-        <artifactId>plugin</artifactId>
+        <groupId>com.qlangtech.tis</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
         <version>saturn-1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-asyncmsg-rocketmq-plugin</artifactId>
 
     <packaging>tpi</packaging>
@@ -56,6 +57,13 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.23</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.8.0</version>
+            <scope>test</scope>
         </dependency>
 
 

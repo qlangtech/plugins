@@ -66,6 +66,9 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         try {
             try (Reader reader = new StringReader(this.kubeConfigContent)) {
                 client = ClientBuilder.kubeconfig(KubeConfig.loadKubeConfig(reader)).setBasePath(this.kubeBasePath).build();
+                // 30秒连接超时
+                client.setConnectTimeout(30000);
+                client.setReadTimeout(30000);
                 // client.getHttpClient().setReadTimeout(720, TimeUnit.SECONDS);
                 Configuration.setDefaultApiClient(client);
             }

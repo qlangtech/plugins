@@ -1,27 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
- ~ The MIT License
- ~
- ~ Copyright (c) 2016, CloudBees, Inc.
- ~
- ~ Permission is hereby granted, free of charge, to any person obtaining a copy
- ~ of this software and associated documentation files (the "Software"), to deal
- ~ in the Software without restriction, including without limitation the rights
- ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- ~ copies of the Software, and to permit persons to whom the Software is
- ~ furnished to do so, subject to the following conditions:
- ~
- ~ The above copyright notice and this permission notice shall be included in
- ~ all copies or substantial portions of the Software.
- ~
- ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- ~ THE SOFTWARE.
- -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -33,23 +10,22 @@
         <version>saturn-1.0.0-SNAPSHOT</version>
     </parent>
 
-
-    <groupId>com.qlangtech.tis.tools</groupId>
-    <artifactId>plugin</artifactId>
+    <artifactId>tis-plugin-parent</artifactId>
 
     <packaging>pom</packaging>
 
     <name>TIS Plugin Parent POM</name>
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
-
-    <scm>
-        <!--reference to https://github.com/jenkinsci/plugin-pom-->
-        <connection>scm:git:ssh://git@github.com:qlangtech/plugins.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:qlangtech/plugins.git</developerConnection>
-        <url>https://github.com/qlangtech/plugins</url>
-        <tag>HEAD</tag>
-    </scm>
+    <modules>
+        <module>tis-spark-hive-server-extends</module>
+        <module>tis-hdfs-plugin</module>
+        <module>tis-asyncmsg-rocketmq-plugin</module>
+        <module>tis-hive-flat-table-builder-plugin</module>
+        <module>tis-k8s-plugin</module>
+        <module>tis-aliyun-fs-plugin</module>
+        <module>customer-plugin-test</module>
+    </modules>
 
     <properties>
 
@@ -119,16 +95,6 @@
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>
     </properties>
 
-    <modules>
-        <module>tis-spark-hive-server-extends</module>
-        <module>tis-hdfs-plugin</module>
-        <module>tis-asyncmsg-rocketmq-plugin</module>
-        <module>tis-hive-flat-table-builder-plugin</module>
-        <module>tis-k8s-plugin</module>
-        <module>tis-aliyun-fs-plugin</module>
-        <module>customer-plugin-test</module>
-
-    </modules>
 
     <dependencyManagement>
         <dependencies>
@@ -436,12 +402,12 @@
     </dependencyManagement>
 
     <dependencies>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-builder-api</artifactId>
-        </dependency>
-
+        <!--
+                <dependency>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-builder-api</artifactId>
+                </dependency>
+        -->
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -668,7 +634,7 @@
                     <version>4.0.0</version>
                 </plugin>
                 <plugin>
-                    <groupId>com.qlangtech.tis.tools</groupId>
+                    <groupId>com.qlangtech.tis</groupId>
                     <artifactId>maven-tpi-plugin</artifactId>
                     <version>${maven-tpi-plugin.version}</version>
                     <extensions>true</extensions>
@@ -703,7 +669,9 @@
                         <phase>validate</phase>
                         <goals>
                             <goal>display-info</goal>
+
                             <goal>enforce</goal>
+
                         </goals>
                         <configuration>
                             <rules>
@@ -774,13 +742,16 @@
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>extra-enforcer-rules</artifactId>
-                        <version>1.2</version>
-                    </dependency>
-                </dependencies>
+                <!-- FIXME 暂时去除掉
+                https://www.mojohaus.org/extra-enforcer-rules/index.html
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>extra-enforcer-rules</artifactId>
+                            <version>1.2</version>
+                        </dependency>
+                    </dependencies>
+                -->
             </plugin>
 
             <!--
@@ -841,7 +812,7 @@
                 <artifactId>maven-eclipse-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>com.qlangtech.tis.tools</groupId>
+                <groupId>com.qlangtech.tis</groupId>
                 <artifactId>maven-tpi-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
@@ -964,17 +935,17 @@
                             <inlineScript><![CDATA[
                 filter {
                     def plugins = [] as Set
-                    
+
                     // collect all Jenkins plugins
                     models.entrySet().each { e ->
                         if (e.value.packaging=="hpi")
                             plugins.add(e.key.id)
                     }
-                    
+
                     // filter out dependencies that don't belong to this plugin
                     models.entrySet().removeAll(models.entrySet().findAll { e ->
                         def a = e.key;
-                        
+
                         if (a.dependencyTrail.size()>0 && plugins.contains(a.dependencyTrail[1]))
                             return true; // ignore transitive dependencies through other plugins
 
@@ -983,10 +954,10 @@
                         // dependencies into the artifact list.
                         if (a.dependencyTrail.find { trail -> trail.contains(":hudson-core:") || trail.contains(":jenkins-core:") })
                             return true;
-                            
+
                         return false;
                     })
-                }              
+                }
               ]]></inlineScript>
                         </configuration>
                     </execution>

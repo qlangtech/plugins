@@ -46,7 +46,7 @@
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tisasm-maven-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
+          <assembleFileExtension>.jar</assembleFileExtension>
         </configuration>
       </plugin>
       <plugin>

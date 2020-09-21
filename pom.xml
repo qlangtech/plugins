@@ -668,6 +668,10 @@
                             <goal>put</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase/>
+                    </execution>
                 </executions>
             </plugin>
 

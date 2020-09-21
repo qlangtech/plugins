@@ -402,6 +402,8 @@
     </dependencyManagement>
 
     <dependencies>
+
+
         <!--
                 <dependency>
                     <groupId>com.qlangtech.tis</groupId>
@@ -642,6 +644,33 @@
             </plugins>
         </pluginManagement>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tisasm-maven-plugin</artifactId>
+                <configuration>
+                    <assembleFileExtension>.tpi</assembleFileExtension>
+                    <subDir>tis-plugin</subDir>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>put</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>

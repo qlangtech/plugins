@@ -41,7 +41,17 @@
     </dependencies>
     <build>
 
+
+
         <plugins>
+
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tisasm-maven-plugin</artifactId>
+                <configuration>
+                    <assembleFileExtension>.jar</assembleFileExtension>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

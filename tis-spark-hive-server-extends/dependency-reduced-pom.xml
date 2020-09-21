@@ -43,6 +43,13 @@
     </pluginManagement>
     <plugins>
       <plugin>
+        <groupId>com.qlangtech.tis</groupId>
+        <artifactId>tisasm-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.4</version>
         <executions>

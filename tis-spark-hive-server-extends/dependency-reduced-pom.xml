@@ -45,8 +45,19 @@
       <plugin>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tisasm-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>tisasm</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
-          <assembleFileExtension>.jar</assembleFileExtension>
+          <assembleFileExtension>.tar.gz</assembleFileExtension>
+          <descriptor>./assembly.xml</descriptor>
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
       </plugin>
       <plugin>

@@ -30,7 +30,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
         IIncrSync incr = incrFactory.getIncrSync();
         assertNotNull(incr);
-        assertFalse(s4totalpay + " shall have not deploy incr instance in k8s", incr.isRCDeployment(s4totalpay));
+        assertFalse(s4totalpay + " shall have not deploy incr instance in k8s", incr.getRCDeployment(s4totalpay) != null);
 
         IncrSpec incrSpec = new IncrSpec();
         incrSpec.setCpuLimit(Specification.parse("1"));

@@ -26,10 +26,11 @@ public class TestDefaultIncrK8sConfig extends TestCase {
 
     public void testlistPodsAndWatchLog() throws Exception {
         IIncrSync incrSync = getIncrSync();
+        String podName = "podname";
 
         assertNotNull(incrSync);
         final AtomicInteger msgReceiveCount = new AtomicInteger();
-        incrSync.listPodAndWatchLog(totalpay, new ILogListener() {
+        incrSync.listPodAndWatchLog(totalpay, podName, new ILogListener() {
             @Override
             public void sendMsg2Client(Object biz) throws IOException {
 

@@ -20,6 +20,7 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
@@ -157,7 +158,7 @@ public class TestHiveFlatTableBuilder extends TestCase {
         }
 
         @Override
-        public RewriteSql getRewriteSql(String taskName, Map<IDumpTable, ITabPartition> dumpPartition
+        public RewriteSql getRewriteSql(String taskName, TabPartitions dumpPartition
                 , IPrimaryTabFinder erRules, ITemplateContext templateContext, boolean isFinalNode) {
 
             return new RewriteSql(sql, new MockAliasTable("1"));

@@ -28,6 +28,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -145,8 +146,8 @@ public abstract class HiveTask extends AdapterTask {
             logger.info("\n execute hive task:{} \n{}", taskname, sql);
             HiveDBUtils.execute(conn, sql, joinTaskStatus);
             // 将当前的join task的partition设置到当前上下文中
-            Map<IDumpTable, ITabPartition> dumpPartition = this.getDumpPartition();
-            dumpPartition.put(newCreateTab, this.rewriteSql.primaryTable);
+            TabPartitions dumpPartition = this.getDumpPartition();
+            dumpPartition.putPt(newCreateTab, this.rewriteSql.primaryTable);
             allpts = HiveRemoveHistoryDataTask.getHistoryPts(conn, newCreateTab);
         } catch (Exception e) {
             // TODO 一旦有异常要将整个链路执行都停下来

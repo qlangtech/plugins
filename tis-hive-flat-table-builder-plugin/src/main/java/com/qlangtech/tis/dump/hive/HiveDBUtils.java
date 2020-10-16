@@ -142,7 +142,7 @@ public class HiveDBUtils {
                 log.warn("retry:" + retry, e);
                 return createConnection(++retry);
             } else {
-                throw new IllegalStateException("retry:" + retry + "hivehost:" + hiveJdbcUrl, e);
+                throw new IllegalStateException("retry:" + retry + ",hivehost:" + hiveJdbcUrl, e);
             }
         }
     }

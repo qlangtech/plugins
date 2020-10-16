@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.offline.flattable;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -36,9 +37,12 @@ import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import org.apache.commons.dbcp.DelegatingConnection;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -54,6 +58,8 @@ import java.util.Objects;
 public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     public static final String KEY_FIELD_NAME = "fsName";
+    public static final String KEY_HIVE_ADDRESS = "hiveAddress";
+    public static final String KEY_DB_NAME = "dbName";
 
     @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
@@ -103,7 +109,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     @Override
     public void startTask(ITableBuildTask dumpTask) {
-        final Connection conn = HiveDBUtils.getInstance(this.hiveAddress, this.dbName).createConnection();
+        final Connection conn = getConnection();
         final DelegatingConnection delegate = new DelegatingConnection(conn) {
             @Override
             public void close() throws SQLException {
@@ -128,6 +134,15 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         }
     }
 
+    private Connection getConnection() {
+        try {
+            return HiveDBUtils.getInstance(this.hiveAddress, this.dbName).createConnection();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
         return HiveRemoveHistoryDataTask.getJoinTableStorePath(user, pathGetter);
     }
@@ -142,6 +157,33 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         @Override
         public String getDisplayName() {
             return "hive";
+        }
+
+        @Override
+        protected boolean validate(IFieldErrorHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
+            String dbName = postFormVals.getField(KEY_DB_NAME);
+
+            Connection conn = null;
+            try {
+                conn = HiveDBUtils.getInstance(hiveAddress, dbName).createConnection();
+            } catch (Throwable e) {
+                Throwable[] throwables = ExceptionUtils.getThrowables(e);
+                for (Throwable t : throwables) {
+                    if (StringUtils.indexOf(t.getMessage(), "NoSuchDatabaseException") > -1) {
+                        msgHandler.addFieldError(context, KEY_DB_NAME, "dbName:" + dbName + " is not exist ,please create");
+                        return false;
+                    }
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.close();
+                } catch (Throwable e) {}
+            }
+
+            return true;
         }
     }
 }

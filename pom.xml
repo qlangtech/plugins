@@ -192,12 +192,7 @@
                 <scope>provided</scope>
             </dependency>
 
-            <dependency>
-                <groupId>com.qlangtech.tis</groupId>
-                <artifactId>tis-global-config</artifactId>
-                <version>${tis.version}</version>
-                <scope>provided</scope>
-            </dependency>
+
 
             <dependency>
                 <groupId>junit</groupId>
@@ -415,10 +410,7 @@
             <artifactId>tis-plugin</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-global-config</artifactId>
-        </dependency>
+
 
         <!-- dependencies provided by virtue of running in Jenkins -->
         <dependency>

@@ -7,11 +7,11 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis-solr-parent</artifactId>
-        <version>saturn-1.0.0-SNAPSHOT</version>
+        <version>2.0.0</version>
     </parent>
-
+    <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-plugin-parent</artifactId>
-
+    <version>2.0.0</version>
     <packaging>pom</packaging>
 
     <name>TIS Plugin Parent POM</name>
@@ -89,7 +89,6 @@
 
         <!-- To opt in to @Restricted(Beta.class) APIs, set to true: -->
         <useBeta>false</useBeta>
-        <incrementals.url>https://repo.jenkins-ci.org/incrementals/</incrementals.url>
         <scmTag>HEAD</scmTag>
         <!-- Where to put temporary files during test runs. -->
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>

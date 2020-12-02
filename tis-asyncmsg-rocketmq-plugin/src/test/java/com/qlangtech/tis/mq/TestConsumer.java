@@ -17,11 +17,11 @@ public class TestConsumer extends TestCase {
 
     public void testConsume() throws Exception {
         // Instantiate with specified consumer group name.
-        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(TestProducter.topic + "_consume1");
+        DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(TestTotalpayProducter.topic + "_consume1");
         // Specify name server addresses.
-        consumer.setNamesrvAddr(TestProducter.nameAddress);
+        consumer.setNamesrvAddr(TestTotalpayProducter.nameAddress);
         // Subscribe one more more topics to consume.
-        consumer.subscribe(TestProducter.topic, "*");
+        consumer.subscribe(TestTotalpayProducter.topic, "*");
         // Register callback to execute on arrival of messages fetched from brokers.
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override

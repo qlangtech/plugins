@@ -25,6 +25,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
+import com.qlangtech.tis.runtime.module.misc.impl.DelegateControl4JsonPostMsgHandler;
 import com.qlangtech.tis.util.AttrValMap;
 import org.apache.commons.io.IOUtils;
 
@@ -114,7 +115,10 @@ public class TestRockMqPluginValidate extends BaseTestCase {
     }
 
     private void validatePluginPostForm(String jsonPath, Context context) throws IOException {
-        DefaultFieldErrorHandler fieldErrorHandler = new DefaultFieldErrorHandler();
+      //  DefaultFieldErrorHandler fieldErrorHandler = new DefaultFieldErrorHandler();
+
+        DelegateControl4JsonPostMsgHandler fieldErrorHandler = null;
+
         List<AttrValMap> attrValMaps = null;
         try {
             try (InputStream reader = this.getClass().getResourceAsStream(jsonPath)) {

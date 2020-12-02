@@ -1,0 +1,10 @@
+{
+  "pdAddrs": {
+    "label": "PD地址",
+    "placeholder": "192.168.28.201:2379"
+  },
+  "dbName": {
+    "label": "数据库名",
+    "placeholder": "order"
+  }
+}

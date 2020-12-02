@@ -18,6 +18,7 @@
 package com.qlangtech.tis.component;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
 import com.qlangtech.async.message.client.to.impl.DefaultJSONFormatDeserialize;
 import com.qlangtech.tis.TIS;
@@ -29,7 +30,7 @@ import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.util.HeteroList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONObject;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -178,7 +179,7 @@ public class TestPlugin extends BaseTestCase {
         }
         JSONObject j = hList.toJSON();
         System.out.println("==============================");
-        System.out.println(j.toString(1));
+        System.out.println(j.toJSONString());
         System.out.println("==============================");
     }
 

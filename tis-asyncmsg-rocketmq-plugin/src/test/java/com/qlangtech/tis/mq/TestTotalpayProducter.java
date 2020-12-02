@@ -8,7 +8,6 @@ import com.aliyun.oss.model.GetObjectRequest;
 import com.aliyun.oss.model.OSSObject;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.rocketmq.client.log.ClientLogger;
@@ -26,10 +25,7 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2020-08-06 13:21
  **/
-public class TestProducter extends TestCase {
-
-    public static final String nameAddress = "192.168.28.201:9876";
-    public static final String topic = "baisui-test";
+public class TestTotalpayProducter extends BasicProducer {
 
     private static final Map<String, String> ossPathMap = Maps.newHashMap();
 
@@ -48,20 +44,13 @@ public class TestProducter extends TestCase {
 
     public void testProduce() throws Exception {
         //Instantiate with a producer group name.
-        DefaultMQProducer producer = new DefaultMQProducer("produce_baisui_test");
-        // https://github.com/apache/rocketmq/issues/568
-        producer.setVipChannelEnabled(false);
-        producer.setSendMsgTimeout(30000);
-        // Specify name server addresses.
-        producer.setNamesrvAddr(nameAddress);
-        //Launch the instance.
-        producer.start();
+        DefaultMQProducer producter = createProducter();
         System.out.println("start to send message to MQ");
 
-        consumeFile(producer);
+        consumeFile(producter);
 
         //Shut down once the producer instance is not longer in use.
-        producer.shutdown();
+        producter.shutdown();
     }
 
 //    public void testConsumeFile() throws Exception {
@@ -92,7 +81,7 @@ public class TestProducter extends TestCase {
                     m = JSON.parseObject(line);
                     tag = m.getString("orginTableName");
 
-                    msg = new Message(topic /* Topic */, tag, line.getBytes(TisUTF8.get()) /* Message body */);
+                    msg = createMsg(line, tag);
                     if ((incr = statis.get(tag)) == null) {
                         incr = statis.computeIfAbsent(tag, (key) -> new AtomicInteger());
                     }
@@ -133,4 +122,6 @@ public class TestProducter extends TestCase {
 //        }
 //        System.out.println("count:" + count);
     }
+
+
 }

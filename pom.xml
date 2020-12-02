@@ -25,6 +25,8 @@
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
         <module>customer-plugin-test</module>
+        <module>tis-ds-tidb-plugin</module>
+        <module>tis-ds-mysql-plugin</module>
     </modules>
 
     <properties>

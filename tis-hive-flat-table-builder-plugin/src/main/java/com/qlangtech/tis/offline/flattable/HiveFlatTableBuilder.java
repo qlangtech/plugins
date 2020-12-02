@@ -37,6 +37,7 @@ import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
@@ -160,7 +161,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         }
 
         @Override
-        protected boolean validate(IFieldErrorHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
             String dbName = postFormVals.getField(KEY_DB_NAME);

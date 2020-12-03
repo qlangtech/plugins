@@ -1,22 +1,23 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.db.parser.domain.DBConfig;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.DataSourceRegister;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 针对MySQL作为数据源实现
@@ -25,6 +26,7 @@ import java.util.*;
  * @create: 2020-11-24 10:55
  **/
 public class MySQLDataSourceFactory extends DataSourceFactory {
+
     static {
         try {
             DriverManager.registerDriver(new com.mysql.jdbc.Driver());
@@ -63,14 +65,209 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
 
     @Override
     public DataSource createFacadeDataSource() {
+
+
         return null;
     }
 
     @Override
-    public Iterator<IDataSourceDumper> getDataDumpers() {
-        return null;
+    public DataDumpers getDataDumpers(TISTable table) {
+        if (table == null) {
+            throw new IllegalArgumentException("param table can not be null");
+        }
+        final DBConfig dbLinkMetaData = this.getDbConfig();
+        List<String> jdbcUrls = Lists.newArrayList();
+        final com.qlangtech.tis.manage.common.DataSourceRegister.DBRegister dbRegister
+                = new DataSourceRegister.DBRegister(dbLinkMetaData.getName(), dbLinkMetaData) {
+            @Override
+            protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
+                jdbcUrls.add(jdbcUrl);
+//                BasicDataSource ds = new BasicDataSource();
+//                ds.setDriverClassName(driverClassName);
+//                ds.setUrl(jdbcUrl);
+//                ds.setUsername(userName);
+//                ds.setPassword(password);
+//                ds.setValidationQuery("select 1");
+//                synchronized (dbNames) {
+//                    dsMap.put(dbDefinitionId, ds);
+//                    dbCount.incrementAndGet();
+//                    dbNames.append(dbDefinitionId).append(";");
+//                }
+            }
+        };
+        dbRegister.visitAll();
+        final int length = jdbcUrls.size();
+        final AtomicInteger index = new AtomicInteger();
+        Iterator<IDataSourceDumper> dsIt = new Iterator<IDataSourceDumper>() {
+            @Override
+            public boolean hasNext() {
+                return index.get() < length;
+            }
+
+            @Override
+            public IDataSourceDumper next() {
+                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
+                return new MySqlDataSourceDumper(jdbcUrl, table);
+            }
+        };
+
+        return new DataDumpers(length, dsIt);
     }
 
+    private class MySqlDataSourceDumper implements IDataSourceDumper {
+        private final String jdbcUrl;
+        private final TISTable table;
+
+        private Connection connection;
+        private Statement statement;
+        private ResultSetMetaData metaData;
+        private ResultSet resultSet;
+        int columCount;
+
+        public MySqlDataSourceDumper(String jdbcUrl, TISTable table) {
+            this.jdbcUrl = jdbcUrl;
+            this.table = table;
+        }
+
+        @Override
+        public void closeResource() {
+            columCount = -1;
+            closeResultSet(resultSet);
+            closeResultSet(statement);
+            closeResultSet(connection);
+        }
+
+        @Override
+        public int getRowSize() {
+            int[] count = new int[1];
+            validateConnection(jdbcUrl, null, userName, password, (connection) -> {
+                Statement statement = null;
+                ResultSet result = null;
+                try {
+                    StringBuffer refactSql = parseRowCountSql();
+                    statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                    result = statement.executeQuery(refactSql.toString());
+                    result.last();
+                    final int rowSize = result.getRow();
+                    count[0] = rowSize;
+                } finally {
+                    closeResultSet(result);
+                    closeResultSet(statement);
+                }
+            });
+            return count[0];
+        }
+
+        private StringBuffer parseRowCountSql() {
+
+            StringBuffer refactSql = new StringBuffer("SELECT 1 FROM ");
+            refactSql.append(this.table.getTableName());
+            // FIXME where 先缺省以后加上
+            return refactSql;
+        }
+
+
+        @Override
+        public List<ColumnMetaData> getMetaData() {
+            if (columCount < 1 || metaData == null) {
+                throw new IllegalStateException("shall execute startDump first");
+            }
+            List<ColumnMetaData> result = new ArrayList<>();
+            try {
+                for (int i = 1; i <= columCount; i++) {
+                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), metaData.getColumnType(i), false));
+                }
+                return result;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Iterator<Map<String, String>> startDump() {
+            String executeSql = table.getSelectSql();
+            if (StringUtils.isEmpty(executeSql)) {
+                throw new IllegalStateException("executeSql can not be null");
+            }
+            try {
+                this.connection = getConnection(jdbcUrl, userName, password);
+                this.statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                this.resultSet = statement.executeQuery(executeSql);
+                metaData = resultSet.getMetaData();
+                columCount = metaData.getColumnCount();
+                final ResultSet result = resultSet;
+                return new Iterator<Map<String, String>>() {
+                    @Override
+                    public boolean hasNext() {
+                        try {
+                            return result.next();
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public Map<String, String> next() {
+                        Map<String, String> row = new LinkedHashMap<>(columCount);
+                        String key = null;
+                        String value = null;
+                        for (int i = 1; i <= columCount; i++) {
+                            try {
+                                key = metaData.getColumnLabel(i);
+                                // 防止特殊字符造成HDFS文本文件出现错误
+                                value = filter(resultSet, i);
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+
+                            }
+                            // 在数据来源为数据库情况下，客户端提供一行的数据对于Solr来说是一个Document
+                            row.put(key, value != null ? value : "");
+                        }
+                        return row;
+                    }
+                };
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public String getDbHost() {
+            return this.jdbcUrl;
+        }
+    }
+
+    public static String filter(ResultSet resultSet, int index) {
+        String value = null;
+        try {
+            value = resultSet.getString(index);
+        } catch (Throwable e) {
+            return value;
+        }
+        return filter(value);
+    }
+
+    public static String filter(String input) {
+        if (input == null) {
+            return input;
+        }
+        StringBuffer filtered = new StringBuffer(input.length());
+        char c;
+        for (int i = 0; i <= input.length() - 1; i++) {
+            c = input.charAt(i);
+            switch (c) {
+                case '\t':
+                    break;
+                case '\r':
+                    break;
+                case '\n':
+                    break;
+                default:
+                    filtered.append(c);
+            }
+        }
+        return (filtered.toString());
+    }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(final String table) {
@@ -113,6 +310,29 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    private void closeResultSet(Connection rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                // ignore
+                ;
+            }
+        }
+    }
+
+    private void closeResultSet(Statement rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                // ignore
+                ;
+            }
         }
     }
 
@@ -211,12 +431,13 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    private static void validateConnection(String jdbcUrl, DBConfig db, String username, String password, IConnProcessor p) throws Exception {
+    private static void validateConnection(String jdbcUrl, DBConfig db, String username, String password, IConnProcessor p) {
         Connection conn = null;
         try {
-
-            conn = DriverManager.getConnection(jdbcUrl, username, password);
+            conn = getConnection(jdbcUrl, username, password);
             p.vist(conn);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         } finally {
             if (conn != null) {
                 try {
@@ -225,6 +446,10 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
                 }
             }
         }
+    }
+
+    private static Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        return DriverManager.getConnection(jdbcUrl, username, password);
     }
 
     public interface IConnProcessor {
@@ -238,10 +463,12 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL;
         }
+
         @Override
         public boolean supportFacade() {
             return true;
         }
+
         @Override
         public List<String> facadeSourceTypes() {
             return Collections.singletonList(DS_TYPE_MYSQL);

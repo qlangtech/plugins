@@ -18,7 +18,6 @@
  */
 package com.qlangtech.tis.fullbuild.indexbuild.impl;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.build.task.TaskMapper;
 import com.qlangtech.tis.config.ParamsConfig;
@@ -39,14 +38,12 @@ import com.qlangtech.tis.offline.TableDumpFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 /**
  * 基于YARN容器的表Dump实现
@@ -118,7 +115,8 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
      */
     @Override
     public void startTask(ITableBuildTask task) {
-        FlatTableBuilder flatTableBuilder = TIS.getPluginStore(FlatTableBuilder.class).find(this.destination);
+        FlatTableBuilder flatTableBuilder
+                = TIS.getPluginStore(FlatTableBuilder.class).find(this.destination);
         flatTableBuilder.startTask(task);
     }
 
@@ -172,19 +170,6 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     @Override
     public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
-        //  org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback not org.apache.hadoop.security.GroupMappingServiceProvider
-
-//        try {
-//            // 因为TIS工程中有使用hadoop-rpc，加载Configuration会报
-//            // err:java.lang.RuntimeException: class org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback not org.apache.hadoop.security.GroupMappingServiceProvider
-//            // 所以要在插件中保证
-//            ClassLoader cl = Hadoop020RemoteJobTriggerFactory.class.getClassLoader();
-//            logger.info("show classloader==============================");
-//            logger.info(cl.loadClass("org.apache.hadoop.security.JniBasedUnixGroupsMappingWithFallback").getClassLoader().toString());
-//            logger.info(cl.loadClass("org.apache.hadoop.security.GroupMappingServiceProvider").getClassLoader().toString());
-//        } catch (ClassNotFoundException e) {
-//            throw new RuntimeException(e);
-//        }
 
         Hadoop020RemoteJobTriggerFactory dumpTriggerFactory
                 = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFs(), this);

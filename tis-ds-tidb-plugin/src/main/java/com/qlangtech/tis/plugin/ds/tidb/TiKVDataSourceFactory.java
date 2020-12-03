@@ -10,9 +10,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +38,11 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     public String dbName;
 
     @Override
+    public DataDumpers getDataDumpers(TISTable table) {
+        return null;
+    }
+
+    @Override
     public List<String> getTablesInDB() {
         TiConfiguration conf = TiConfiguration.createDefault(this.pdAddrs);
         TiSession session = TiSession.getInstance(conf);
@@ -65,11 +68,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return null;
     }
 
-
-    @Override
-    public Iterator<IDataSourceDumper> getDataDumpers() {
-        return null;
-    }
 
     @TISExtension
     public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {

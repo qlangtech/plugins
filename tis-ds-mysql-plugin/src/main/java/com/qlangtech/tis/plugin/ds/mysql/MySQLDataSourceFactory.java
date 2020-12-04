@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.db.parser.domain.DBConfig;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.DataSourceRegister;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -77,7 +76,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         }
         final DBConfig dbLinkMetaData = this.getDbConfig();
         List<String> jdbcUrls = Lists.newArrayList();
-        final com.qlangtech.tis.manage.common.DataSourceRegister.DBRegister dbRegister
+        final DataSourceRegister.DBRegister dbRegister
                 = new DataSourceRegister.DBRegister(dbLinkMetaData.getName(), dbLinkMetaData) {
             @Override
             protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {

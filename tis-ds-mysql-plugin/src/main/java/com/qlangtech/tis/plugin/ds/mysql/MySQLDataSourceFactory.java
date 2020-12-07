@@ -119,12 +119,18 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
 
         private Connection connection;
         private Statement statement;
-        private ResultSetMetaData metaData;
+        // private ResultSetMetaData metaData;
+
+        private List<ColumnMetaData> colMeta;
+
         private ResultSet resultSet;
         int columCount;
 
         public MySqlDataSourceDumper(String jdbcUrl, TISTable table) {
             this.jdbcUrl = jdbcUrl;
+            if (table == null || StringUtils.isEmpty(table.getTableName())) {
+                throw new IllegalArgumentException("param table either instance or tableName of instance is empty");
+            }
             this.table = table;
         }
 
@@ -160,6 +166,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         private StringBuffer parseRowCountSql() {
 
             StringBuffer refactSql = new StringBuffer("SELECT 1 FROM ");
+
             refactSql.append(this.table.getTableName());
             // FIXME where 先缺省以后加上
             return refactSql;
@@ -168,6 +175,15 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
 
         @Override
         public List<ColumnMetaData> getMetaData() {
+            if (this.colMeta == null) {
+                throw new IllegalStateException("colMeta can not be null");
+            }
+            return this.colMeta;
+
+
+        }
+
+        private List<ColumnMetaData> buildColumnMetaData(ResultSetMetaData metaData) {
             if (columCount < 1 || metaData == null) {
                 throw new IllegalStateException("shall execute startDump first");
             }
@@ -192,8 +208,11 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
                 this.connection = getConnection(jdbcUrl, userName, password);
                 this.statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);
-                metaData = resultSet.getMetaData();
-                columCount = metaData.getColumnCount();
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                this.columCount = metaData.getColumnCount();
+                this.colMeta = buildColumnMetaData(metaData);
+
+
                 final ResultSet result = resultSet;
                 return new Iterator<Map<String, String>>() {
                     @Override
@@ -210,17 +229,19 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
                         Map<String, String> row = new LinkedHashMap<>(columCount);
                         String key = null;
                         String value = null;
-                        for (int i = 1; i <= columCount; i++) {
-                            try {
-                                key = metaData.getColumnLabel(i);
-                                // 防止特殊字符造成HDFS文本文件出现错误
-                                value = filter(resultSet, i);
-                            } catch (SQLException e) {
-                                throw new RuntimeException(e);
 
-                            }
+
+                        for (ColumnMetaData colMeta : colMeta) {
+
+                            key = colMeta.getKey(); //metaData.getColumnLabel(i);
+                            // 防止特殊字符造成HDFS文本文件出现错误
+                            value = filter(resultSet, colMeta);
                             // 在数据来源为数据库情况下，客户端提供一行的数据对于Solr来说是一个Document
                             row.put(key, value != null ? value : "");
+                        }
+
+                        for (int i = 1; i <= columCount; i++) {
+
                         }
                         return row;
                     }
@@ -236,14 +257,19 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    public static String filter(ResultSet resultSet, int index) {
+    public static String filter(ResultSet resultSet, ColumnMetaData colMeta) {
         String value = null;
         try {
-            value = resultSet.getString(index);
+            value = resultSet.getString(colMeta.getIndex());
         } catch (Throwable e) {
+            return null;
+        }
+
+        if (colMeta.getType() == Types.VARCHAR || colMeta.getType() == Types.BLOB) {
+            return filter(value);
+        } else {
             return value;
         }
-        return filter(value);
     }
 
     public static String filter(String input) {

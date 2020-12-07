@@ -1,0 +1,63 @@
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building tis-ds-tidb-plugin 2.0.0
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:3.1.2:tree (default-cli) @ tis-ds-tidb-plugin ---
+[INFO] com.qlangtech.tis:tis-ds-tidb-plugin:tpi:2.0.0
+[INFO] +- com.pingcap.tikv:tikv-client:jar:2.3.9:compile
+[INFO] +- com.qlangtech.tis:tis-plugin:jar:2.0.0:provided
+[INFO] |  +- commons-io:commons-io:jar:2.5:provided
+[INFO] |  +- org.jenkins-ci:task-reactor:jar:1.5:provided
+[INFO] |  +- org.yaml:snakeyaml:jar:1.23:provided
+[INFO] |  +- com.thoughtworks.xstream:xstream:jar:1.4.10:provided
+[INFO] |  |  +- xmlpull:xmlpull:jar:1.1.3.1:provided
+[INFO] |  |  \- xpp3:xpp3_min:jar:1.1.4c:provided
+[INFO] |  +- commons-beanutils:commons-beanutils:jar:1.9.4:provided
+[INFO] |  |  +- commons-logging:commons-logging:jar:1.2:provided
+[INFO] |  |  \- commons-collections:commons-collections:jar:3.2.2:provided
+[INFO] |  +- com.qlangtech.tis:tis-manage-pojo:jar:2.0.0:provided
+[INFO] |  |  +- org.springframework:spring-core:jar:3.0.6.RELEASE:provided
+[INFO] |  |  |  \- org.springframework:spring-asm:jar:3.0.6.RELEASE:provided
+[INFO] |  |  +- org.springframework:spring-context:jar:3.0.6.RELEASE:provided
+[INFO] |  |  |  +- org.springframework:spring-aop:jar:3.0.6.RELEASE:provided
+[INFO] |  |  |  |  \- aopalliance:aopalliance:jar:1.0:provided
+[INFO] |  |  |  +- org.springframework:spring-beans:jar:3.0.6.RELEASE:provided
+[INFO] |  |  |  \- org.springframework:spring-expression:jar:3.0.6.RELEASE:provided
+[INFO] |  |  +- org.apache.zookeeper:zookeeper:jar:3.4.14:provided
+[INFO] |  |  |  +- com.github.spotbugs:spotbugs-annotations:jar:3.1.9:provided
+[INFO] |  |  |  |  \- com.google.code.findbugs:jsr305:jar:3.0.2:provided
+[INFO] |  |  |  +- log4j:log4j:jar:1.2.17:provided
+[INFO] |  |  |  +- jline:jline:jar:0.9.94:provided
+[INFO] |  |  |  +- org.apache.yetus:audience-annotations:jar:0.5.0:provided
+[INFO] |  |  |  \- io.netty:netty:jar:3.10.6.Final:provided
+[INFO] |  |  +- commons-lang:commons-lang:jar:2.6:provided
+[INFO] |  |  +- commons-codec:commons-codec:jar:1.13:provided
+[INFO] |  |  +- org.json:json:jar:20151123:provided
+[INFO] |  |  \- com.qlangtech.tis:tis-ibatis:jar:3.0:provided
+[INFO] |  |     +- org.springframework:spring-orm:jar:3.0.6.RELEASE:provided
+[INFO] |  |     |  +- org.springframework:spring-jdbc:jar:3.0.6.RELEASE:provided
+[INFO] |  |     |  \- org.springframework:spring-tx:jar:3.0.6.RELEASE:provided
+[INFO] |  |     \- org.apache.ibatis:ibatis-sqlmap:jar:2.3.4.726:provided
+[INFO] |  +- com.qlangtech.tis:tis-builder-api:jar:2.0.0:provided
+[INFO] |  +- org.jvnet:tiger-types:jar:2.2:provided
+[INFO] |  +- net.java.sezpoz:sezpoz:jar:1.13:provided
+[INFO] |  +- com.google.guava:guava:jar:20.0:provided
+[INFO] |  +- com.alibaba:fastjson:jar:1.2.25.sec10:provided
+[INFO] |  \- org.apache.ant:ant:jar:1.9.15:provided
+[INFO] |     \- org.apache.ant:ant-launcher:jar:1.9.15:provided
+[INFO] +- javax.servlet:javax.servlet-api:jar:3.1.0:provided
+[INFO] +- org.codehaus.mojo:animal-sniffer-annotations:jar:1.18:provided (optional) 
+[INFO] +- junit:junit:jar:4.13:test
+[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] +- org.slf4j:slf4j-api:jar:1.7.7:compile
+[INFO] \- ch.qos.logback:logback-classic:jar:1.1.3:compile
+[INFO]    \- ch.qos.logback:logback-core:jar:1.1.3:compile
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1.295 s
+[INFO] Finished at: 2020-12-07T10:34:55+08:00
+[INFO] Final Memory: 27M/437M
+[INFO] ------------------------------------------------------------------------

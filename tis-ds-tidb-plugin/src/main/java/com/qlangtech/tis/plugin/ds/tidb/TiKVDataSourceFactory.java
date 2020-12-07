@@ -1,24 +1,42 @@
+/**
+ * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
+ * <p>
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
+ * <p>
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.qlangtech.tis.plugin.ds.tidb;
 
 import com.alibaba.citrus.turbine.Context;
+import com.pingcap.com.google.common.collect.Lists;
+import com.pingcap.com.google.common.collect.Maps;
 import com.pingcap.tikv.TiConfiguration;
 import com.pingcap.tikv.TiSession;
 import com.pingcap.tikv.catalog.Catalog;
+import com.pingcap.tikv.meta.TiDAGRequest;
 import com.pingcap.tikv.meta.TiDBInfo;
 import com.pingcap.tikv.meta.TiTableInfo;
+import com.pingcap.tikv.util.RangeSplitter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +47,7 @@ import java.util.stream.Collectors;
  **/
 public class TiKVDataSourceFactory extends DataSourceFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(TiKVDataSourceFactory.class);
+    private transient static final Logger logger = LoggerFactory.getLogger(TiKVDataSourceFactory.class);
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
     public String pdAddrs;
@@ -39,22 +57,136 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
-        return null;
+
+        // target cols
+        final List<ColumnMetaData> reflectCols = table.getReflectCols();
+        if (CollectionUtils.isEmpty(reflectCols)) {
+            throw new IllegalStateException("param reflectCols can not be null");
+        }
+
+        final AtomicReference<TiTableInfoWrapper> tabRef = new AtomicReference<>();
+
+        final List<TiPartition> parts = this.openTiDB((session, c, db) -> {
+
+            TiTableInfo tiTable = c.getTable(db, table.getTableName());
+            tabRef.set(new TiTableInfoWrapper(tiTable));
+            TiDAGRequest dagRequest = getTiDAGRequest(reflectCols, session, tiTable);
+
+            // Snapshot snapshot = session.createSnapshot(dagRequest.getStartTs());
+            List<Long> prunedPhysicalIds = dagRequest.getPrunedPhysicalIds();
+            List<TiPartition> partitions = null;
+            // Iterator<TiChunk> iterator = null;
+
+            return prunedPhysicalIds.stream().flatMap((prunedPhysicalId)
+                    -> createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId)).stream())
+                    .collect(Collectors.toList());
+
+            // int rowCount = 0;
+//            for (Long prunedPhysicalId : prunedPhysicalIds) {
+//                partitions = createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId));
+//                for (TiPartition p : partitions) {
+//                    parts.add(p);
+//                }
+//            }
+        });
+
+        int[] index = new int[1];
+        final int splitCount = parts.size();
+        Objects.requireNonNull(tabRef.get(), "instacne of TiTableInfo can not be null");
+        Iterator<IDataSourceDumper> dumpers = new Iterator<IDataSourceDumper>() {
+            @Override
+            public boolean hasNext() {
+                return index[0] < splitCount;
+            }
+
+            @Override
+            public IDataSourceDumper next() {
+                return new TiKVDataSourceDumper(TiKVDataSourceFactory.this, parts.get(index[0]++), tabRef.get(), reflectCols);
+            }
+        };
+        return new DataDumpers(splitCount, dumpers);
+    }
+
+
+    public TiDAGRequest getTiDAGRequest(List<ColumnMetaData> reflectCols, TiSession session, TiTableInfo tiTable) {
+        return TiDAGRequest.Builder
+                .newBuilder()
+                .setFullTableScan(tiTable)
+                //                .addFilter(
+                //                        ComparisonBinaryExpression
+                //                                .equal(
+                //                                        ColumnRef.create("table_id", IntegerType.BIGINT),
+                //                                        Constant.create(targetTblId, IntegerType.BIGINT)))
+                .addRequiredCols(reflectCols.stream().map((col) -> col.getKey()).collect(Collectors.toList()))
+                .setStartTs(session.getTimestamp())
+                .build(TiDAGRequest.PushDownType.NORMAL);
+    }
+
+    public List<TiPartition> createPartitions(Long physicalId, TiSession session, TiDAGRequest dagRequest) {
+
+        final List<TiPartition> partitions = Lists.newArrayList();
+
+        List<RangeSplitter.RegionTask> keyWithRegionTasks = RangeSplitter
+                .newSplitter(session.getRegionManager())
+                .splitRangeByRegion(dagRequest.getRangesByPhysicalId(physicalId), dagRequest.getStoreType());
+
+        Map<String, List<RangeSplitter.RegionTask>> hostTasksMap = Maps.newHashMap();
+        List<RangeSplitter.RegionTask> tasks = null;
+        for (RangeSplitter.RegionTask task : keyWithRegionTasks) {
+            tasks = hostTasksMap.get(task.getHost());
+            if (tasks == null) {
+                tasks = Lists.newArrayList();
+                hostTasksMap.put(task.getHost(), tasks);
+            }
+            tasks.add(task);
+        }
+        int index = 0;
+        for (List<RangeSplitter.RegionTask> tks : hostTasksMap.values()) {
+            partitions.add(new TiPartition(index++, tks));
+        }
+        return partitions;
     }
 
     @Override
     public List<String> getTablesInDB() {
-        TiConfiguration conf = TiConfiguration.createDefault(this.pdAddrs);
-        TiSession session = TiSession.getInstance(conf);
-        Catalog cat = session.getCatalog();
-        TiDBInfo db = cat.getDatabase(dbName);
-        List<TiTableInfo> tabs = cat.listTables(db);
-        return tabs.stream().map((tt) -> tt.getName()).collect(Collectors.toList());
+        return this.openTiDB((s, c, d) -> {
+            List<TiTableInfo> tabs = c.listTables(d);
+            return tabs.stream().map((tt) -> tt.getName()).collect(Collectors.toList());
+        });
     }
+
+    <T> T openTiDB(IVistTiDB<T> vistTiDB) {
+        TiSession session = null;
+        try {
+            session = getTiSession();
+            try (Catalog cat = session.getCatalog()) {
+                TiDBInfo db = cat.getDatabase(dbName);
+                return vistTiDB.visit(session, cat, db);
+            }
+        } finally {
+            try {
+                session.close();
+            } catch (Throwable e) {}
+        }
+    }
+
+    public TiSession getTiSession() {
+        TiConfiguration conf = TiConfiguration.createDefault(this.pdAddrs);
+        return TiSession.getInstance(conf);
+    }
+
+
 
     @Override
     public List<ColumnMetaData> getTableMetadata(String table) {
-        throw new UnsupportedOperationException();
+        return this.openTiDB((session, c, db) -> {
+            TiTableInfo table1 = c.getTable(db, table);
+            int[] index = new int[1];
+
+            return table1.getColumns().stream().map((col) -> {
+                return new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), false);
+            }).collect(Collectors.toList());
+        });
     }
 
     @Override

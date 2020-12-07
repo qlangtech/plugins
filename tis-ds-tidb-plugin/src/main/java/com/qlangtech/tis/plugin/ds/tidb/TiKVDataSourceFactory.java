@@ -176,7 +176,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     }
 
 
-
     @Override
     public List<ColumnMetaData> getTableMetadata(String table) {
         return this.openTiDB((session, c, db) -> {
@@ -184,7 +183,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             int[] index = new int[1];
 
             return table1.getColumns().stream().map((col) -> {
-                return new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), false);
+                return new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), col.isPrimaryKey());
             }).collect(Collectors.toList());
         });
     }

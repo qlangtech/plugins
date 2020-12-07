@@ -26,9 +26,15 @@ public class TestTiKVDataSourceFactory extends TestCase {
         List<ColumnMetaData> employeesCols = dataSourceFactory.getTableMetadata(TABLE_NAME);
         assertNotNull(employeesCols);
         assertEquals(6, employeesCols.size());
+        ColumnMetaData pk = null;
         for (ColumnMetaData cmeta : employeesCols) {
+            if (cmeta.isPk()) {
+                pk = cmeta;
+            }
             System.out.println(cmeta.getIndex() + ":" + cmeta.getKey() + ":" + cmeta.getType());
         }
+        assertNotNull(pk);
+        assertEquals("emp_no", pk.getKey());
 
         TISTable dumpTable = new TISTable();
         dumpTable.setDbName(DB_NAME);

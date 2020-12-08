@@ -11,6 +11,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
 import javax.sql.DataSource;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author: baisui 百岁
  * @create: 2020-11-24 10:55
  **/
-public class MySQLDataSourceFactory extends DataSourceFactory {
+public class MySQLDataSourceFactory extends DataSourceFactory implements IFacadeDataSource {
 
     static {
         try {
@@ -41,7 +42,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String userName;
 
-    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
@@ -65,8 +66,26 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
     @Override
     public DataSource createFacadeDataSource() {
 
-
-        return null;
+        final DBConfig dbConfig = this.getDbConfig();
+        List<String> jdbcUrls = Lists.newArrayList();
+        final DataSourceRegister.DBRegister dbRegister
+                = new DataSourceRegister.DBRegister(dbConfig.getName(), dbConfig) {
+            @Override
+            protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
+                jdbcUrls.add(jdbcUrl);
+            }
+        };
+        dbRegister.visitAll();
+        if (jdbcUrls.size() > 1) {
+            throw new IllegalStateException("datasource count can't big than 1");
+        }
+        BasicDataSource basicDataSource = new BasicDataSource();
+        basicDataSource.setDriverClassName(Driver.class.getName());
+        basicDataSource.setUrl(jdbcUrls.stream().findFirst().get());
+        basicDataSource.setUsername(dbConfig.getUserName());
+        basicDataSource.setPassword(dbConfig.getPassword());
+        basicDataSource.setValidationQuery("select 1");
+        return basicDataSource;
     }
 
     @Override
@@ -321,7 +340,8 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
                         int i = 0;
                         String colName = null;
                         while (columns1.next()) {
-                            columns.add(new ColumnMetaData((i++), (colName = columns1.getString("COLUMN_NAME")), columns1.getInt("DATA_TYPE"), pkCols.contains(colName)));
+                            columns.add(new ColumnMetaData((i++), (colName = columns1.getString("COLUMN_NAME"))
+                                    , columns1.getInt("DATA_TYPE"), pkCols.contains(colName)));
                         }
 
                     } finally {
@@ -435,9 +455,9 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
         if (StringUtils.isEmpty(username)) {
             throw new IllegalArgumentException("param username can not be null");
         }
-        if (StringUtils.isEmpty(password)) {
-            throw new IllegalArgumentException("param password can not be null");
-        }
+//        if (StringUtils.isEmpty(password)) {
+//            throw new IllegalArgumentException("param password can not be null");
+//        }
         if (p == null) {
             throw new IllegalArgumentException("param IConnProcessor can not be null");
         }
@@ -474,7 +494,8 @@ public class MySQLDataSourceFactory extends DataSourceFactory {
     }
 
     private static Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-        return DriverManager.getConnection(jdbcUrl, username, password);
+        // 密码可以为空
+        return DriverManager.getConnection(jdbcUrl, username, StringUtils.trimToNull(password));
     }
 
     public interface IConnProcessor {

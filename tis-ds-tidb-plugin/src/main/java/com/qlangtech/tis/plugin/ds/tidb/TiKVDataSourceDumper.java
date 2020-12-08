@@ -36,17 +36,18 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
     private final TiTableInfoWrapper tab;
 
     private final TiKVDataSourceFactory dsFactory;
-    private final TiPartition partition;
+    private TiPartition partition;
     private final List<ColumnMetaData> targetCols;
 
     private TiSession tiSession;
 
-    public TiKVDataSourceDumper(TiKVDataSourceFactory dsFactory, TiPartition partition
+    public TiKVDataSourceDumper(TiKVDataSourceFactory dsFactory, TiPartition p
             , TiTableInfoWrapper tab, List<ColumnMetaData> targetCols) {
+        this.partition = p;
         this.dsFactory = dsFactory;
         this.targetCols = targetCols;
         this.tab = tab;
-        this.partition = partition;
+
     }
 
     @Override

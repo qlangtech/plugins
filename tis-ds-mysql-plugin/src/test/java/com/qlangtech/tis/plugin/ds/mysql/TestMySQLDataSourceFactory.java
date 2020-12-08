@@ -1,13 +1,12 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.manage.common.CenterResource;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import junit.framework.TestCase;
-
-import java.util.List;
 
 /**
  * @author: baisui 百岁
@@ -16,6 +15,11 @@ import java.util.List;
 public class TestMySQLDataSourceFactory extends TestCase {
 
     private static final String DB_ORDER = "order1";
+
+    static {
+        CenterResource.setNotFetchFromCenterRepository();
+        HttpUtils.addMockGlobalParametersConfig();
+    }
 
     public void testGetPlugin() {
 

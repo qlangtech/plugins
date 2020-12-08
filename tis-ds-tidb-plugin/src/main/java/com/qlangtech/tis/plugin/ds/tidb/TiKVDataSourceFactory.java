@@ -66,6 +66,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
         final AtomicReference<TiTableInfoWrapper> tabRef = new AtomicReference<>();
 
+
         final List<TiPartition> parts = this.openTiDB((session, c, db) -> {
 
             TiTableInfo tiTable = c.getTable(db, table.getTableName());
@@ -81,13 +82,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                     -> createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId)).stream())
                     .collect(Collectors.toList());
 
-            // int rowCount = 0;
-//            for (Long prunedPhysicalId : prunedPhysicalIds) {
-//                partitions = createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId));
-//                for (TiPartition p : partitions) {
-//                    parts.add(p);
-//                }
-//            }
         });
 
         int[] index = new int[1];

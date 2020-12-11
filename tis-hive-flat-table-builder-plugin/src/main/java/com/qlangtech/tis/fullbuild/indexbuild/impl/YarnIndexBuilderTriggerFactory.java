@@ -48,7 +48,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
 
     public static final String FIELD_FS_NAME = "fsName";
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
@@ -71,10 +71,10 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
     public int maxDocMakeFaild;
 
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     public FileSystemFactory getFsFactory() {
         return FileSystemFactory.getFsFactory(this.fsName);

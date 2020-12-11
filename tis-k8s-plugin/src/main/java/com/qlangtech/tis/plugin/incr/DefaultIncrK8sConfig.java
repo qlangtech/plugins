@@ -1,14 +1,15 @@
-/** Copyright 2020 QingLang, Inc.
- *
+/**
+ * Copyright 2020 QingLang, Inc.
+ * <p>
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +37,7 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
 
     public static final String KEY_FIELD_NAME = "k8sName";
 
-    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sName;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -46,9 +47,9 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
 
-    public String getName() {
-        return this.k8sName;
-    }
+//    public String getName() {
+//        return this.k8sName;
+//    }
 
     public ParamsConfig getK8SContext() {
         return (ParamsConfig) ParamsConfig.getItem(this.k8sName, IK8sContext.class);

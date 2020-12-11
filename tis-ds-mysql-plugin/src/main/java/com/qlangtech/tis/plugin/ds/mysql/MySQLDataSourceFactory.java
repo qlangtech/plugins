@@ -4,8 +4,8 @@ import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.db.parser.DBConfigParser;
-import com.qlangtech.tis.db.parser.domain.DBConfig;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -14,7 +14,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +35,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
     }
 
     // 数据库名称
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -64,12 +63,12 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
     public String nodeDesc;
 
     @Override
-    public DataSource createFacadeDataSource() {
+    public FacadeDataSource createFacadeDataSource() {
 
         final DBConfig dbConfig = this.getDbConfig();
         List<String> jdbcUrls = Lists.newArrayList();
-        final DataSourceRegister.DBRegister dbRegister
-                = new DataSourceRegister.DBRegister(dbConfig.getName(), dbConfig) {
+        final DBRegister dbRegister
+                = new DBRegister(dbConfig.getName(), dbConfig) {
             @Override
             protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
                 jdbcUrls.add(jdbcUrl);
@@ -79,13 +78,13 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         if (jdbcUrls.size() > 1) {
             throw new IllegalStateException("datasource count can't big than 1");
         }
-        BasicDataSource basicDataSource = new BasicDataSource();
-        basicDataSource.setDriverClassName(Driver.class.getName());
-        basicDataSource.setUrl(jdbcUrls.stream().findFirst().get());
-        basicDataSource.setUsername(dbConfig.getUserName());
-        basicDataSource.setPassword(dbConfig.getPassword());
-        basicDataSource.setValidationQuery("select 1");
-        return basicDataSource;
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName(Driver.class.getName());
+        ds.setUrl(jdbcUrls.stream().findFirst().get());
+        ds.setUsername(dbConfig.getUserName());
+        ds.setPassword(dbConfig.getPassword());
+        ds.setValidationQuery("select 1");
+        return new FacadeDataSource(dbConfig, ds);
     }
 
     @Override
@@ -95,8 +94,8 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         }
         final DBConfig dbLinkMetaData = this.getDbConfig();
         List<String> jdbcUrls = Lists.newArrayList();
-        final DataSourceRegister.DBRegister dbRegister
-                = new DataSourceRegister.DBRegister(dbLinkMetaData.getName(), dbLinkMetaData) {
+        final DBRegister dbRegister
+                = new DBRegister(dbLinkMetaData.getName(), dbLinkMetaData) {
             @Override
             protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
                 jdbcUrls.add(jdbcUrl);
@@ -433,13 +432,13 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         return dbConfig;
     }
 
-    @Override
-    public String getName() {
-        if (StringUtils.isEmpty(this.dbName)) {
-            throw new IllegalStateException("prop dbName can not be null");
-        }
-        return this.dbName;
-    }
+//    @Override
+//    public String getName() {
+//        if (StringUtils.isEmpty(this.dbName)) {
+//            throw new IllegalStateException("prop dbName can not be null");
+//        }
+//        return this.dbName;
+//    }
 
 
     private void visitConnection(DBConfig db, String ip, String dbName, String username, String password, IConnProcessor p) throws Exception {
@@ -472,7 +471,8 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         try {
             validateConnection(jdbcUrl, db, username, password, p);
         } catch (Exception e) {
-            throw new RuntimeException(jdbcUrl, e);
+            //MethodHandles.lookup().lookupClass()
+            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue(), e);
         }
     }
 

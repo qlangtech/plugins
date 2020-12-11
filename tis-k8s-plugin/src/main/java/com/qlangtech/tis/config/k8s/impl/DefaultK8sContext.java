@@ -45,7 +45,7 @@ import java.io.StringReader;
  */
 public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
@@ -54,10 +54,10 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String kubeConfigContent;
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     @Override
     public ApiClient createConfigInstance() {

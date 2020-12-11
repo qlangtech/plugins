@@ -97,7 +97,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
             , String groupNum, IIndexBuildParam state) throws Exception {
         final String coreName = indexName + "-" + groupNum;
         return getRemoteJobTrigger(coreName, CLASS_NAME_TASK, "index-build-" + state.getTaskId()
-                , createIndexBuildLauncherParam(state, Integer.parseInt(groupNum), podSpec.getName()));
+                , createIndexBuildLauncherParam(state, Integer.parseInt(groupNum), podSpec.identityValue()));
     }
 
     @Override
@@ -117,7 +117,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
     public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
 
 
-        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, startTime, podSpec.getName());
+        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, startTime, podSpec.identityValue());
         final String jobName = table.getDbName() + "." + table.getTableName();
         try {
             return getRemoteJobTrigger(jobName, CLASS_NAME_TASK

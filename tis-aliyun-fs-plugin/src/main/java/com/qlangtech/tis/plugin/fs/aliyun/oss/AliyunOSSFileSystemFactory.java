@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  */
 public class AliyunOSSFileSystemFactory extends FileSystemFactory {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -68,10 +68,10 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
         return ossFs;
     }
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {

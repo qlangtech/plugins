@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFileSystemFactory {
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
@@ -71,10 +71,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         return this.rootDir;
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
+//    @Override
+//    public String getName() {
+//        return name;
+//    }
 
     public String getHdfsAddress() {
         return hdfsAddress;

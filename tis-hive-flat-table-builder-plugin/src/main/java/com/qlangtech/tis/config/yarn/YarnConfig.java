@@ -33,7 +33,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
  */
 public class YarnConfig extends ParamsConfig implements IYarnConfig {
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.host, Validator.require})
@@ -62,10 +62,10 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
         return conf;
     }
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {

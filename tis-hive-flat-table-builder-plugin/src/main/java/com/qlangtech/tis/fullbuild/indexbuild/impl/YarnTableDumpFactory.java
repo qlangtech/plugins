@@ -62,7 +62,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     private static final String KEY_FIELD_FLAT_TABLE_BUILDER_NAME = "destination";
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
@@ -121,10 +121,10 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     @Override
     public String getJoinTableStorePath(INameWithPathGetter pathGetter) {

@@ -73,7 +73,7 @@ public class AsyncMsgRM implements AsyncMsg {
         return messageExt.getTags();
     }
 
-    @Override
+   // @Override
     public String getKey() {
         return messageExt.getKeys();
     }
@@ -93,7 +93,7 @@ public class AsyncMsgRM implements AsyncMsg {
      *
      * @return
      */
-    @Override
+  //  @Override
     public int getReconsumeTimes() {
         return messageExt.getReconsumeTimes();
     }
@@ -103,12 +103,12 @@ public class AsyncMsgRM implements AsyncMsg {
      *
      * @return
      */
-    @Override
+  //  @Override
     public long getStartDeliverTime() {
         return messageExt.getBornTimestamp();
     }
 
-    @Override
+  //  @Override
     public String getOriginMsgID() {
         return MsgUtils.getOriginMsgId(messageExt);
     }

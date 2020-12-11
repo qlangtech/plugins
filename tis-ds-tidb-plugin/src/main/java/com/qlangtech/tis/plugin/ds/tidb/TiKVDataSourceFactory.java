@@ -52,7 +52,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
     public String pdAddrs;
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true,ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
     @Override
@@ -182,16 +182,13 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         });
     }
 
-    @Override
-    public String getName() {
-        return this.dbName;
-    }
+//    @Override
+//    public String getName() {
+//        return this.dbName;
+//    }
 
 
-    @Override
-    public DataSource createFacadeDataSource() {
-        return null;
-    }
+
 
 
     @TISExtension
@@ -220,7 +217,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                 DataSourceFactory sourceFactory = tikv.instance;
                 List<String> tables = sourceFactory.getTablesInDB();
                 if (tables.size() < 1) {
-                    msgHandler.addErrorMessage(context, "TiKV库" + sourceFactory.getName() + "中的没有数据表");
+                    msgHandler.addErrorMessage(context, "TiKV库" + sourceFactory.identityValue() + "中的没有数据表");
                     return false;
                 }
             } catch (Exception e) {

@@ -5,8 +5,11 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.FacadeDataSource;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import junit.framework.TestCase;
+
+import javax.sql.DataSource;
 
 /**
  * @author: baisui 百岁
@@ -28,6 +31,9 @@ public class TestMySQLDataSourceFactory extends TestCase {
         DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
 
         assertNotNull(dataSourceFactory);
+
+        FacadeDataSource datasource = dbPluginStore.createFacadeDataSource();
+        assertNotNull(datasource);
 
 //        List<Descriptor<DataSourceFactory>> descList
 //                = TIS.get().getDescriptorList(DataSourceFactory.class);

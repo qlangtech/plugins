@@ -27,6 +27,7 @@
         <module>customer-plugin-test</module>
         <module>tis-ds-tidb-plugin</module>
         <module>tis-ds-mysql-plugin</module>
+        <module>tis-kafka-plugin</module>
     </modules>
 
     <properties>

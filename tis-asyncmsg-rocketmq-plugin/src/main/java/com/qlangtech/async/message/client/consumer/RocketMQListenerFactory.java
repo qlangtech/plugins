@@ -105,7 +105,6 @@ public class RocketMQListenerFactory extends MQListenerFactory {
         rmListener.setTopic(this.mqTopic);
         rmListener.setNamesrvAddr(this.namesrvAddr);
         rmListener.setDeserialize(deserialize);
-        // rmListener.setConsumerHandle();
         return rmListener;
     }
 

@@ -38,7 +38,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import org.apache.commons.dbcp.DelegatingConnection;
@@ -62,7 +61,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_DB_NAME = "dbName";
 
-    @FormField(ordinal = 0, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
     @FormField(ordinal = 1, validate = {Validator.require, Validator.host})
@@ -88,10 +87,10 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     private HiveTaskFactory taskFactory;
 
-    @Override
-    public String getName() {
-        return this.name;
-    }
+//    @Override
+//    public String getName() {
+//        return this.name;
+//    }
 
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode

@@ -28,6 +28,7 @@ import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public class JoinHiveTask extends HiveTask {
 
     private final IFs2Table fs2Table;
 
-    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, ERRules erRules, IJoinTaskStatus joinTaskStatus
+    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
             , ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
         super(nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;

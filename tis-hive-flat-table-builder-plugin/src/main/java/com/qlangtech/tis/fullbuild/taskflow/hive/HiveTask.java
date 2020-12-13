@@ -30,6 +30,7 @@ import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.ERRules;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
@@ -56,12 +57,12 @@ public abstract class HiveTask extends AdapterTask {
 
     //private static final SqlParser sqlParser = new com.facebook.presto.sql.parser.SqlParser();
 
-    private final ERRules erRules;
+    private final IPrimaryTabFinder erRules;
 
     /**
      * @param joinTaskStatus
      */
-    protected HiveTask(ISqlTask nodeMeta, boolean isFinalNode, ERRules erRules, IJoinTaskStatus joinTaskStatus) {
+    protected HiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");

@@ -25,7 +25,7 @@ import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.ITaskFactory;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.er.ERRules;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 
 /* *
  * @author 百岁（baisui@qlangtech.com）
@@ -34,11 +34,11 @@ import com.qlangtech.tis.sql.parser.er.ERRules;
 public class HiveTaskFactory implements ITaskFactory {
 
     // private final HiveDBUtils hiveDBHelper;
-    private final ERRules erRules;
+    private final IPrimaryTabFinder erRules;
 
     private final ITISFileSystemFactory fileSystem;
 
-    public HiveTaskFactory(ERRules erRules, ITISFileSystemFactory fileSystem) {
+    public HiveTaskFactory(IPrimaryTabFinder erRules, ITISFileSystemFactory fileSystem) {
         super();
         // this.hiveDBHelper = HiveDBUtils.getInstance();
         this.erRules = erRules;

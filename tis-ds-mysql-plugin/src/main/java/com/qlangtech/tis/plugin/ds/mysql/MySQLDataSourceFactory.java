@@ -472,7 +472,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
             validateConnection(jdbcUrl, db, username, password, p);
         } catch (Exception e) {
             //MethodHandles.lookup().lookupClass()
-            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue(), e);
+            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
         }
     }
 

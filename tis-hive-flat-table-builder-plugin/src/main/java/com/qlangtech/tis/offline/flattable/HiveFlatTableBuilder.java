@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.ERRules;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -100,7 +101,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     }
 
     private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
-        ERRules erRules = tplContext.joinTaskContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
+        IPrimaryTabFinder erRules = tplContext.joinTaskContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
         Objects.requireNonNull(erRules, "erRule can not be null");
         Objects.requireNonNull(getFs(), "join relevant FS can not be null");
         this.taskFactory = new HiveTaskFactory(erRules, getFs());

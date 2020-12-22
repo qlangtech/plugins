@@ -34,7 +34,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -52,7 +51,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
     public String pdAddrs;
 
-    @FormField(identity = true,ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
     @Override
@@ -175,7 +174,9 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return this.openTiDB((session, c, db) -> {
             TiTableInfo table1 = c.getTable(db, table);
             int[] index = new int[1];
-
+            if (table1 == null) {
+                throw new IllegalStateException("table:" + table + " can not find relevant table in db:" + db.getName());
+            }
             return table1.getColumns().stream().map((col) -> {
                 return new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), col.isPrimaryKey());
             }).collect(Collectors.toList());
@@ -186,9 +187,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 //    public String getName() {
 //        return this.dbName;
 //    }
-
-
-
 
 
     @TISExtension

@@ -198,9 +198,9 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeLong:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
             case TypeFloat:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
             case TypeDouble:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.DOUBLE;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.DOUBLE);
             case TypeNull:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
             case TypeTimestamp:
@@ -214,7 +214,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeDatetime:
             case TypeYear:
             case TypeNewDate:
-            case TypeVarchar:
             case TypeBit:
             case TypeJSON:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
@@ -230,6 +229,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeBlob:
             case TypeVarString:
             case TypeString:
+            case TypeVarchar:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING, true);
             default:
                 throw new RuntimeException("illegal type:" + dtype);

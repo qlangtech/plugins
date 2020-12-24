@@ -221,7 +221,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeNewDecimal:
                 return ColumnMetaData.ReservedFieldType.FLOAT;
             case TypeEnum:
-                return ColumnMetaData.ReservedFieldType.INT;
+               // return ColumnMetaData.ReservedFieldType.STRING;
             case TypeSet:
             case TypeTinyBlob:
             case TypeMediumBlob:

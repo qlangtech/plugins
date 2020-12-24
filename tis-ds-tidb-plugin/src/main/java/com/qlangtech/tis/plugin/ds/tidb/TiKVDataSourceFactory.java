@@ -191,25 +191,25 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
         switch (dtype.getType()) {
             case TypeDecimal:
-                return ColumnMetaData.ReservedFieldType.FLOAT;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
             case TypeTiny:
             case TypeShort:
-                return ColumnMetaData.ReservedFieldType.INT;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.INT);
             case TypeLong:
-                return ColumnMetaData.ReservedFieldType.LONG;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
             case TypeFloat:
-                return ColumnMetaData.ReservedFieldType.FLOAT;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT;
             case TypeDouble:
-                return ColumnMetaData.ReservedFieldType.DOUBLE;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.DOUBLE;
             case TypeNull:
-                return ColumnMetaData.ReservedFieldType.STRING;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
             case TypeTimestamp:
             case TypeLonglong:
             case TypeInt24:
             case TypeDate:
                 // TypeDuration is just MySQL time type.
                 // MySQL uses the 'HHH:MM:SS' format, which is larger than 24 hours.
-                return ColumnMetaData.ReservedFieldType.LONG;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
             case TypeDuration:
             case TypeDatetime:
             case TypeYear:
@@ -217,20 +217,20 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeVarchar:
             case TypeBit:
             case TypeJSON:
-                return ColumnMetaData.ReservedFieldType.STRING;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
             case TypeNewDecimal:
-                return ColumnMetaData.ReservedFieldType.FLOAT;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
             case TypeEnum:
-               // return ColumnMetaData.ReservedFieldType.STRING;
             case TypeSet:
+            case TypeGeometry:
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
             case TypeTinyBlob:
             case TypeMediumBlob:
             case TypeLongBlob:
             case TypeBlob:
             case TypeVarString:
             case TypeString:
-            case TypeGeometry:
-                return ColumnMetaData.ReservedFieldType.STRING;
+                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING, true);
             default:
                 throw new RuntimeException("illegal type:" + dtype);
         }

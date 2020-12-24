@@ -23,6 +23,7 @@ import com.pingcap.tikv.catalog.Catalog;
 import com.pingcap.tikv.meta.TiDAGRequest;
 import com.pingcap.tikv.meta.TiDBInfo;
 import com.pingcap.tikv.meta.TiTableInfo;
+import com.pingcap.tikv.types.DataType;
 import com.pingcap.tikv.util.RangeSplitter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -178,9 +179,61 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                 throw new IllegalStateException("table:" + table + " can not find relevant table in db:" + db.getName());
             }
             return table1.getColumns().stream().map((col) -> {
-                return new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), col.isPrimaryKey());
+                // ref: com.pingcap.tikv.types.MySQLType
+                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), col.isPrimaryKey());
+                cmd.setSchemaFieldType(typeMap(col.getType()));
+                return cmd;
             }).collect(Collectors.toList());
         });
+    }
+
+    private ColumnMetaData.ReservedFieldType typeMap(DataType dtype) {
+
+        switch (dtype.getType()) {
+            case TypeDecimal:
+                return ColumnMetaData.ReservedFieldType.FLOAT;
+            case TypeTiny:
+            case TypeShort:
+                return ColumnMetaData.ReservedFieldType.INT;
+            case TypeLong:
+                return ColumnMetaData.ReservedFieldType.LONG;
+            case TypeFloat:
+                return ColumnMetaData.ReservedFieldType.FLOAT;
+            case TypeDouble:
+                return ColumnMetaData.ReservedFieldType.DOUBLE;
+            case TypeNull:
+                return ColumnMetaData.ReservedFieldType.STRING;
+            case TypeTimestamp:
+            case TypeLonglong:
+            case TypeInt24:
+            case TypeDate:
+                // TypeDuration is just MySQL time type.
+                // MySQL uses the 'HHH:MM:SS' format, which is larger than 24 hours.
+                return ColumnMetaData.ReservedFieldType.LONG;
+            case TypeDuration:
+            case TypeDatetime:
+            case TypeYear:
+            case TypeNewDate:
+            case TypeVarchar:
+            case TypeBit:
+            case TypeJSON:
+                return ColumnMetaData.ReservedFieldType.STRING;
+            case TypeNewDecimal:
+                return ColumnMetaData.ReservedFieldType.FLOAT;
+            case TypeEnum:
+                return ColumnMetaData.ReservedFieldType.INT;
+            case TypeSet:
+            case TypeTinyBlob:
+            case TypeMediumBlob:
+            case TypeLongBlob:
+            case TypeBlob:
+            case TypeVarString:
+            case TypeString:
+            case TypeGeometry:
+                return ColumnMetaData.ReservedFieldType.STRING;
+            default:
+                throw new RuntimeException("illegal type:" + dtype);
+        }
     }
 
 //    @Override

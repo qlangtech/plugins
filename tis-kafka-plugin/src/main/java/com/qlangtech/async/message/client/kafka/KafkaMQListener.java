@@ -9,6 +9,7 @@ import com.pingcap.ticdc.cdc.value.TicdcEventResolve;
 import com.pingcap.ticdc.cdc.value.TicdcEventRowChange;
 import com.qlangtech.tis.async.message.client.consumer.*;
 import org.apache.commons.lang.StringUtils;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -132,8 +133,8 @@ public class KafkaMQListener implements IMQListener {
         props.put("max.poll.records", CONSUMER_MAX_POLL_RECORDS);
         //earliest,latest,和none
         props.put("auto.offset.reset", listenerFactory.offsetResetStrategy);
-        props.put("key.deserializer", ByteArrayDeserializer.class.getName());
-        props.put("value.deserializer", ByteArrayDeserializer.class.getName());
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
         return props;
     }
 

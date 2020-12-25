@@ -1,7 +1,7 @@
 {
   "mqAddress": {
     "label": "MQ服务端地址",
-    "placeholder": "192.168.28.201:9092"
+    "placeholder": "192.168.28.202:9092"
   },
   "topic": {
     "label": "主题",

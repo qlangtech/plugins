@@ -36,7 +36,7 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
     private final TiTableInfoWrapper tab;
 
     private final TiKVDataSourceFactory dsFactory;
-    private TiPartition partition;
+    private final TiPartition partition;
     private final List<ColumnMetaData> targetCols;
 
     private TiSession tiSession;
@@ -47,7 +47,6 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
         this.dsFactory = dsFactory;
         this.targetCols = targetCols;
         this.tab = tab;
-
     }
 
     @Override
@@ -102,18 +101,29 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
             @Override
             public Map<String, String> next() {
                 Map<String, String> row = new HashMap<>();
+                MySQLType colType = null;
                 for (int i = 0; i < targetCols.size(); i++) {
                     column = next.column(i);
+                    colType = column.dataType().getType();
                     columnMetaData = targetCols.get(i);
-
-                    if (columnMetaData.getType() == MySQLType.TypeVarchar.getTypeCode()
-                            || columnMetaData.getType() == MySQLType.TypeString.getTypeCode()
-                            || columnMetaData.getType() == MySQLType.TypeBlob.getTypeCode()) {
+                    if (colType == MySQLType.TypeVarchar
+                            || colType == MySQLType.TypeString
+                            || colType == MySQLType.TypeBlob) {
                         row.put(columnMetaData.getKey(), filter(column.getUTF8String(rowIndex)));
-                    } else if (columnMetaData.getType() == MySQLType.TypeDate.getTypeCode()) {
-                        //System.out.println((column.getLong(rowIndex)));   ;
+                    } else if (colType == MySQLType.TypeDate || colType == MySQLType.TypeNewDate) {
                         // FIXME 日期格式化 一个1970年的一个偏移量，按照实际情况估计要重新format一下
-                        row.put(columnMetaData.getKey(), String.valueOf(column.getLong(rowIndex)));
+                        // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-date
+
+                        row.put(columnMetaData.getKey()
+                                , dsFactory.datetimeFormat
+                                        ? DateUtils.formatDate(column.getLong(rowIndex))
+                                        : String.valueOf(column.getLong(rowIndex)));
+
+                    } else if (colType == MySQLType.TypeTimestamp || colType == MySQLType.TypeDatetime) {
+                        row.put(columnMetaData.getKey(),
+                                dsFactory.datetimeFormat
+                                        ? DateUtils.formatTimestamp(column.getLong(rowIndex))
+                                        : String.valueOf(column.getLong(rowIndex)));
                     } else {
                         row.put(columnMetaData.getKey(), column.getUTF8String(rowIndex));
                     }

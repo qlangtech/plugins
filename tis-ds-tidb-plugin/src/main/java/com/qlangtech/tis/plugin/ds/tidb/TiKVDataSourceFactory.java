@@ -35,6 +35,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -54,6 +55,12 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
+
+    /**
+     * 是否要对date或者timestamp进行格式化
+     */
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public boolean datetimeFormat;
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
@@ -180,11 +187,60 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             }
             return table1.getColumns().stream().map((col) -> {
                 // ref: com.pingcap.tikv.types.MySQLType
-                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), col.getType().getTypeCode(), col.isPrimaryKey());
+                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), map2JdbcType(col.getType()), col.isPrimaryKey());
                 cmd.setSchemaFieldType(typeMap(col.getType()));
                 return cmd;
             }).collect(Collectors.toList());
         });
+    }
+
+    private int map2JdbcType(DataType type) {
+
+        switch (type.getType()) {
+            case TypeDecimal:
+                return Types.DECIMAL;
+            case TypeTiny:
+            case TypeShort:
+                return Types.TINYINT;
+            case TypeLong:
+                return Types.BIGINT;
+            case TypeFloat:
+                return Types.FLOAT;
+            case TypeDouble:
+                return Types.DOUBLE;
+            case TypeNull:
+                return Types.NULL;
+            case TypeInt24:
+            case TypeLonglong:
+                return Types.INTEGER;
+            case TypeTimestamp:
+            case TypeDatetime:
+                return datetimeFormat ? Types.TIMESTAMP : Types.BIGINT;
+            case TypeDate:
+            case TypeNewDate:
+                return datetimeFormat ? Types.DATE : Types.INTEGER;
+            case TypeDuration:
+            case TypeYear:
+            case TypeBit:
+            case TypeJSON:
+                return Types.VARCHAR;
+            case TypeNewDecimal:
+                return Types.DECIMAL;
+            case TypeEnum:
+            case TypeSet:
+            case TypeGeometry:
+                return Types.VARCHAR;
+            case TypeTinyBlob:
+            case TypeMediumBlob:
+            case TypeLongBlob:
+            case TypeBlob:
+            case TypeVarString:
+            case TypeString:
+            case TypeVarchar:
+                return Types.VARCHAR;
+            default:
+                throw new RuntimeException("illegal type:" + type);
+        }
     }
 
     private ColumnMetaData.ReservedFieldType typeMap(DataType dtype) {
@@ -204,16 +260,25 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeNull:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
             case TypeTimestamp:
+            case TypeDatetime:
+                return new ColumnMetaData.ReservedFieldType(
+                        this.datetimeFormat ?
+                                ColumnMetaData.ReflectSchemaFieldType.TIMESTAMP
+                                : ColumnMetaData.ReflectSchemaFieldType.STRING);
+            case TypeDate:
+            case TypeNewDate:
+                return new ColumnMetaData.ReservedFieldType(
+                        this.datetimeFormat ?
+                                ColumnMetaData.ReflectSchemaFieldType.DATE
+                                : ColumnMetaData.ReflectSchemaFieldType.STRING);
+            // return this.datetimeFormat ?
             case TypeLonglong:
             case TypeInt24:
-            case TypeDate:
                 // TypeDuration is just MySQL time type.
                 // MySQL uses the 'HHH:MM:SS' format, which is larger than 24 hours.
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
             case TypeDuration:
-            case TypeDatetime:
             case TypeYear:
-            case TypeNewDate:
             case TypeBit:
             case TypeJSON:
                 return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);

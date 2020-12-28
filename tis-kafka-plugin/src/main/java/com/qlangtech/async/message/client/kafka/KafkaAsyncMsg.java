@@ -18,7 +18,10 @@ import java.util.Map;
  **/
 public class KafkaAsyncMsg implements AsyncMsg {
     // private final TicdcEventData data;
-    private static final  Map<String,String> beforeValues = Collections.emptyMap();
+    // 为了让DefaultTable的validateTable方法通过，这里需要添加一个占位符，其实没有什么用的
+    private static final Map<String, String> beforeValues = Collections.singletonMap("tis_placeholder", "1");
+
+
     private final String tableName;
     private final String topicName;
     private final TicdcEventKey ticdcEventKey;

@@ -1,3 +1,5 @@
+package com.qlangtech.tis;
+
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.offline.flattable.HiveFlatTableBuilder;
 import org.apache.commons.lang.exception.ExceptionUtils;

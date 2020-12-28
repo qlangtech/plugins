@@ -88,7 +88,6 @@ public class ServerTaskExecutor {
         }
         try {
             rmClient.unregisterApplicationMaster(appStatus
-                    // FinalApplicationStatus.SUCCEEDED
                     , msg, "");
         } catch (Exception exc) {
             // safe to ignore ... this usually fails anyway

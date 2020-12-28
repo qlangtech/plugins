@@ -27,6 +27,7 @@ import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -160,6 +161,8 @@ public class HiveTableBuilder {
     }
 
     private static String getHiveType(int type) {
+        // java.sql.Types
+        // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
         switch (type) {
             case BIT:
             case TINYINT:
@@ -174,6 +177,10 @@ public class HiveTableBuilder {
             case NUMERIC:
             case DECIMAL:
                 return "DOUBLE";
+            case TIMESTAMP:
+                return "TIMESTAMP";
+            case DATE:
+                return "DATE";
             default:
                 return HiveColumn.HIVE_TYPE_STRING;
         }
@@ -296,10 +303,12 @@ public class HiveTableBuilder {
 //        +-----------+---------------+--------------+--+
 //        | order     | totalpayinfo  | false        |
 //        +-----------+---------------+--------------+--+
-        HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName(), result -> tables.add(result.getString(2)));
+        HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName()
+                , result -> tables.add(result.getString(2)));
         boolean contain = tables.contains(dumpTable.getTableName());
         if (!contain) {
-            log.debug("table:{} is not exist in[{}]", dumpTable.getTableName(), tables.stream().collect(Collectors.joining(",")));
+            log.debug("table:{} is not exist in[{}]", dumpTable.getTableName()
+                    , tables.stream().collect(Collectors.joining(",")));
         }
         return contain;
     }
@@ -324,7 +333,8 @@ public class HiveTableBuilder {
     public void bindPartition(Connection conn, String hivePath, EntityName table, int startIndex) throws Exception {
 
         visitSubPmodPath(hivePath, startIndex, (pmod, path) -> {
-            String sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + pmod + "') location '" + path.toString() + "'";
+            String sql = "alter table " + table + " add if not exists partition(pt='"
+                    + timestamp + "',pmod='" + pmod + "') location '" + path.toString() + "'";
             log.info(sql);
             HiveDBUtils.executeNoLog(conn, sql);
             return true;
@@ -375,7 +385,7 @@ public class HiveTableBuilder {
         List<HiveColumn> cols = new ArrayList<>();
         try {
             ITISFileSystem fs = this.fileSystem.getFileSystem();
-            input = fs.open(fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/cols-metadata"));
+            input = fs.open(fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + ColumnMetaData.KEY_COLS_METADATA));
             // input = fileSystem.open(path);
             String content = IOUtils.toString(input, TisUTF8.getName());
             JSONArray array = (JSONArray) JSON.parse(content);

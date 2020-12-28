@@ -6,5 +6,19 @@
   "dbName": {
     "label": "数据库名",
     "placeholder": "order"
+  },
+  "datetimeFormat": {
+    "label": "时间格式化",
+    "dftVal": "true",
+    "enum": [
+      {
+        "label": "是",
+        "val": "true"
+      },
+      {
+        "label": "否",
+        "val": "false"
+      }
+    ]
   }
 }

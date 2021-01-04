@@ -38,7 +38,6 @@ public class TestKafkaMQListener extends TestCase {
 
         @Override
         public boolean consume(AsyncMsg asyncMsg) {
-
             try {
                 System.out.println(JSON.toJSONString(asyncMsg.getContent()));
             } catch (IOException e) {

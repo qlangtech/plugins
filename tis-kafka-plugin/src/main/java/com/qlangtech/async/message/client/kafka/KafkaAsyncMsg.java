@@ -10,6 +10,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,7 +20,7 @@ import java.util.Map;
 public class KafkaAsyncMsg implements AsyncMsg {
     // private final TicdcEventData data;
     // 为了让DefaultTable的validateTable方法通过，这里需要添加一个占位符，其实没有什么用的
-    private static final Map<String, String> beforeValues = Collections.singletonMap("tis_placeholder", "1");
+   // private static final Map<String, String> beforeValues = Collections.singletonMap("tis_placeholder", "1");
 
 
     private final String tableName;
@@ -54,11 +55,19 @@ public class KafkaAsyncMsg implements AsyncMsg {
         dto.setEventType(this.update ? DTO.EventType.UPDATE.getTypeName() : DTO.EventType.ADD.getTypeName());
         dto.setOrginTableName(this.tableName);
         Map<String, String> after = Maps.newHashMap();
+        Map<String, String> before = Maps.newHashMap();
         for (TicdcEventColumn col : this.value.getColumns()) {
             after.put(col.getName(), String.valueOf(col.getV()));
         }
         dto.setAfter(after);
-        dto.setBefore(beforeValues);
+        List<TicdcEventColumn> oldCols = value.getOldColumns();
+        if (oldCols != null) {
+            for (TicdcEventColumn col : oldCols) {
+                before.put(col.getName(), String.valueOf(col.getV()));
+            }
+        }
+
+        dto.setBefore(before);
         return dto;
     }
 

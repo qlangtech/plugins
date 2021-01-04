@@ -13,11 +13,11 @@
     "enum": [
       {
         "label": "是",
-        "val": "true"
+        "val": true
       },
       {
         "label": "否",
-        "val": "false"
+        "val": false
       }
     ]
   }

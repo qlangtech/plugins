@@ -30,7 +30,7 @@ public class KafkaMQListener implements IMQListener {
     public static final String CONSUMER_AUTO_COMMIT_INTERVAL_MS = "1000";
     public static final String CONSUMER_SESSION_TIMEOUT_MS = "30000";                //连接超时时间
     public static final int CONSUMER_MAX_POLL_RECORDS = 10;                            //每次拉取数
-    public static final Duration CONSUMER_POLL_TIME_OUT = Duration.ofMillis(3000);    //拉去数据超时时间
+    public static final Duration CONSUMER_POLL_TIME_OUT = Duration.ofMillis(6000);    //拉取数据超时时间
 
     private final TiKVKafkaMQListenerFactory listenerFactory;
     private IConsumerHandle consumerHandle;

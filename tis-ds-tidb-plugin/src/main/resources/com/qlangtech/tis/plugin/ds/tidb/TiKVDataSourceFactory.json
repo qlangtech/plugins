@@ -9,7 +9,7 @@
   },
   "datetimeFormat": {
     "label": "时间格式化",
-    "dftVal": "true",
+    "dftVal": true,
     "enum": [
       {
         "label": "是",

@@ -258,9 +258,9 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
                             row.put(key, value != null ? value : "");
                         }
 
-                        for (int i = 1; i <= columCount; i++) {
-
-                        }
+//                        for (int i = 1; i <= columCount; i++) {
+//
+//                        }
                         return row;
                     }
                 };
@@ -278,7 +278,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
     public static String filter(ResultSet resultSet, ColumnMetaData colMeta) {
         String value = null;
         try {
-            value = resultSet.getString(colMeta.getIndex());
+            value = resultSet.getString(colMeta.getIndex() + 1);
         } catch (Throwable e) {
             return null;
         }

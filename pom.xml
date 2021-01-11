@@ -11,7 +11,7 @@
     </parent>
     <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-plugin-parent</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
     <packaging>pom</packaging>
 
     <name>TIS Plugin Parent POM</name>

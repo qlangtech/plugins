@@ -5,31 +5,23 @@
     <parent>
         <artifactId>tis-plugin-parent</artifactId>
         <groupId>com.qlangtech.tis</groupId>
+        <relativePath>../pom.xml</relativePath>
         <version>2.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>tis-ds-mysql-plugin</artifactId>
     <packaging>tpi</packaging>
+
+    <artifactId>tis-solr-plugin</artifactId>
     <dependencies>
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-common</artifactId>
+            <artifactId>tis-solrcore-extend</artifactId>
+            <version>${tis.version}</version>
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.30</version>
-        </dependency>
-
     </dependencies>
-
-
-
-
 
 
 </project>

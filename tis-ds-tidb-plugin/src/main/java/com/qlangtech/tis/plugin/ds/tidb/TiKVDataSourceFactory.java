@@ -113,11 +113,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return TiDAGRequest.Builder
                 .newBuilder()
                 .setFullTableScan(tiTable)
-                //                .addFilter(
-                //                        ComparisonBinaryExpression
-                //                                .equal(
-                //                                        ColumnRef.create("table_id", IntegerType.BIGINT),
-                //                                        Constant.create(targetTblId, IntegerType.BIGINT)))
                 .addRequiredCols(reflectCols.stream().map((col) -> col.getKey()).collect(Collectors.toList()))
                 .setStartTs(session.getTimestamp())
                 .build(TiDAGRequest.PushDownType.NORMAL);

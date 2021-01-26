@@ -26,16 +26,22 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1NamespaceList;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.stream.Collectors;
 
 /**
  * DefaultK8sContext
@@ -44,6 +50,7 @@ import java.io.StringReader;
  * @date 2020/04/13
  */
 public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultK8sContext.class);
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
@@ -71,10 +78,12 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
                 client.setReadTimeout(30000);
                 // client.getHttpClient().setReadTimeout(720, TimeUnit.SECONDS);
                 Configuration.setDefaultApiClient(client);
+
+
             }
             return client;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("kubeConfigContent illegal:\n" + kubeConfigContent, e);
         }
     }
 
@@ -89,6 +98,31 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         @Override
         public String getDisplayName() {
             return "k8s";
+        }
+
+        @Override
+        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            //return super.validate(msgHandler, context, postFormVals);
+            ParseDescribable<ParamsConfig> k8s = this.newInstance(postFormVals.rawFormData);
+            DefaultK8sContext k8sCfg = (DefaultK8sContext) k8s.instance;
+            try {
+                ApiClient client = k8sCfg.createConfigInstance();
+                CoreV1Api api = new CoreV1Api(client);
+                //String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
+                V1NamespaceList namespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null);
+                if (namespaceList.getItems().size() < 1) {
+                    msgHandler.addActionMessage(context, "now the namespace is empty");
+                } else {
+                    msgHandler.addActionMessage(context, "exist namespace is:" + namespaceList.getItems().stream().map((ns) -> {
+                        return ns.getMetadata().getName();
+                    }).collect(Collectors.joining(",")));
+                }
+            } catch (Throwable e) {
+                logger.warn(e.getMessage(), e);
+                msgHandler.addErrorMessage(context, e.getMessage());
+                return false;
+            }
+            return true;
         }
 
         public boolean validateKubeConfigContent(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

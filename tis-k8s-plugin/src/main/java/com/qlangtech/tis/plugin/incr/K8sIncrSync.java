@@ -84,6 +84,7 @@ public class K8sIncrSync implements IIncrSync {
     }
 
     private List<V1Pod> getRCPods(String collection) throws ApiException {
+
         V1PodList v1PodList = api.listNamespacedPod(this.config.namespace, null, null
                 , null, null, "app=" + collection, 100, null, 600, false);
         return v1PodList.getItems();

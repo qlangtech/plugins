@@ -40,6 +40,11 @@ public class JSONFieldTypeFactory extends FieldTypeFactory {
     public String includeKeys;
 
     @Override
+    public boolean forStringTokenizer() {
+        return true;
+    }
+
+    @Override
     public ISolrFieldType createInstance() {
         JSONField jsonField = new JSONField();
         jsonField.propPrefix = this.propPrefix;

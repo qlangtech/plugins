@@ -238,51 +238,51 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    private ColumnMetaData.ReservedFieldType typeMap(DataType dtype) {
+    private ReservedFieldType typeMap(DataType dtype) {
 
         switch (dtype.getType()) {
             case TypeDecimal:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
+                return new ReservedFieldType(ReflectSchemaFieldType.FLOAT);
             case TypeTiny:
             case TypeShort:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.INT);
+                return new ReservedFieldType(ReflectSchemaFieldType.INT);
             case TypeLong:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
+                return new ReservedFieldType(ReflectSchemaFieldType.LONG);
             case TypeFloat:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
+                return new ReservedFieldType(ReflectSchemaFieldType.FLOAT);
             case TypeDouble:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.DOUBLE);
+                return new ReservedFieldType(ReflectSchemaFieldType.DOUBLE);
             case TypeNull:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
+                return new ReservedFieldType(ReflectSchemaFieldType.STRING);
             case TypeTimestamp:
             case TypeDatetime:
-                return new ColumnMetaData.ReservedFieldType(
+                return new ReservedFieldType(
                         this.datetimeFormat ?
-                                ColumnMetaData.ReflectSchemaFieldType.TIMESTAMP
-                                : ColumnMetaData.ReflectSchemaFieldType.STRING);
+                                ReflectSchemaFieldType.TIMESTAMP
+                                : ReflectSchemaFieldType.STRING);
             case TypeDate:
             case TypeNewDate:
-                return new ColumnMetaData.ReservedFieldType(
+                return new ReservedFieldType(
                         this.datetimeFormat ?
-                                ColumnMetaData.ReflectSchemaFieldType.DATE
-                                : ColumnMetaData.ReflectSchemaFieldType.STRING);
+                                ReflectSchemaFieldType.DATE
+                                : ReflectSchemaFieldType.STRING);
             // return this.datetimeFormat ?
             case TypeLonglong:
             case TypeInt24:
                 // TypeDuration is just MySQL time type.
                 // MySQL uses the 'HHH:MM:SS' format, which is larger than 24 hours.
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.LONG);
+                return new ReservedFieldType(ReflectSchemaFieldType.LONG);
             case TypeDuration:
             case TypeYear:
             case TypeBit:
             case TypeJSON:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
+                return new ReservedFieldType(ReflectSchemaFieldType.STRING);
             case TypeNewDecimal:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.FLOAT);
+                return new ReservedFieldType(ReflectSchemaFieldType.FLOAT);
             case TypeEnum:
             case TypeSet:
             case TypeGeometry:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING);
+                return new ReservedFieldType(ReflectSchemaFieldType.STRING);
             case TypeTinyBlob:
             case TypeMediumBlob:
             case TypeLongBlob:
@@ -290,7 +290,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             case TypeVarString:
             case TypeString:
             case TypeVarchar:
-                return new ColumnMetaData.ReservedFieldType(ColumnMetaData.ReflectSchemaFieldType.STRING, true);
+                return new ReservedFieldType(ReflectSchemaFieldType.STRING, true);
             default:
                 throw new RuntimeException("illegal type:" + dtype);
         }

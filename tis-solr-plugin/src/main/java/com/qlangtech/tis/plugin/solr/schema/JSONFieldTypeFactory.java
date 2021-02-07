@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -33,11 +34,35 @@ public class JSONFieldTypeFactory extends FieldTypeFactory {
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1, validate = {Validator.require, Validator.identity})
-    public String propPrefix;
-
-    @FormField(ordinal = 2, validate = {})
+    @FormField(ordinal = 1, validate = {})
     public String includeKeys;
+
+    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
+    public String extraPrefix;
+
+    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public String extraType;
+
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public boolean extraStored;
+
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public boolean extraIndexed;
+
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public boolean extraDocVal;
+
+
+    @Override
+    public void process(org.jdom2.Document document2, com.yushu.tis.xmodifier.XModifier modifier) {
+        // super.process(document2, modifier);
+        //  modifySchemaProperty(String.format("/fields/dynamicField[@name='%s']/@%s", field.getName(), key), value, modifier);
+
+        modifier.addModify(String.format("/fields/dynamicField[@name='%s']/@type", extraPrefix + "*"), extraType);
+        modifier.addModify(String.format("/fields/dynamicField[@name='%s']/@stored", extraPrefix + "*"), String.valueOf(extraStored));
+        modifier.addModify(String.format("/fields/dynamicField[@name='%s']/@indexed", extraPrefix + "*"), String.valueOf(extraIndexed));
+        modifier.addModify(String.format("/fields/dynamicField[@name='%s']/@docValues", extraPrefix + "*"), String.valueOf(extraDocVal));
+    }
 
     @Override
     public boolean forStringTokenizer() {
@@ -47,11 +72,11 @@ public class JSONFieldTypeFactory extends FieldTypeFactory {
     @Override
     public ISolrFieldType createInstance() {
         JSONField jsonField = new JSONField();
-        jsonField.propPrefix = this.propPrefix;
+        jsonField.propPrefix = this.extraPrefix;
         if (StringUtils.isNotEmpty(includeKeys)) {
             jsonField.includeKeys = Sets.newHashSet(StringUtils.split(includeKeys, ","));
         }
-        logger.info("create json field,name:" + this.name + ",propPrefix:" + propPrefix + ",includeKeys:" + includeKeys);
+        logger.info("create json field,name:" + this.name + ",propPrefix:" + extraPrefix + ",includeKeys:" + includeKeys);
         return jsonField;
     }
 

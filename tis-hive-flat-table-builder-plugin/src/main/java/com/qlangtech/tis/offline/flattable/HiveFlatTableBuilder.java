@@ -101,7 +101,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     }
 
     private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
-        IPrimaryTabFinder erRules = tplContext.joinTaskContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
+        IPrimaryTabFinder erRules = tplContext.getExecContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
         Objects.requireNonNull(erRules, "erRule can not be null");
         Objects.requireNonNull(getFs(), "join relevant FS can not be null");
         this.taskFactory = new HiveTaskFactory(erRules, getFs());

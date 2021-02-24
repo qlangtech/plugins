@@ -99,7 +99,7 @@ public class UnionHiveTask extends JoinHiveTask {
     }
 
     private void parseSubTab() {
-        IJoinTaskContext chainContext = getContext().joinTaskContext();
+        IJoinTaskContext chainContext = getContext().getExecContext();
         for (String subTaskSql : getSubTaskSqls()) {
             HiveInsertFromSelectParser parser = new HiveInsertFromSelectParser();
             // try {

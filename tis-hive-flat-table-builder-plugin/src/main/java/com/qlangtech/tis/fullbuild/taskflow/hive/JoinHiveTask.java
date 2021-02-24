@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年12月22日 下午7:14:24
  */
@@ -87,7 +87,7 @@ public class JoinHiveTask extends HiveTask {
             if (HiveTableBuilder.isTableExists(conn, dumpTable)) {
                 if (HiveTableBuilder.isTableSame(conn, insertParser.getCols(), dumpTable)) {
                     log.info("Start clean up history file '{}'", dumpTable);
-                    IJoinTaskContext param = this.getContext().joinTaskContext();
+                    IJoinTaskContext param = this.getContext().getExecContext();
                     //  EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys;
                     RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, param, this.fileSystem);
                     // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据

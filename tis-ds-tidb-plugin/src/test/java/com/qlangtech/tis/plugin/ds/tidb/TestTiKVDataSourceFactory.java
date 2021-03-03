@@ -106,16 +106,6 @@ public class TestTiKVDataSourceFactory extends TestCase {
             }
         }
         assertEquals(300024, rowCount);
-
-//        List<Descriptor<DataSourceFactory>> descList
-//                = TIS.get().getDescriptorList(DataSourceFactory.class);
-//        assertNotNull(descList);
-//        assertEquals(1, descList.size());
-
-
-//        Descriptor<DataSourceFactory> mysqlDS = descList.get(0);
-//
-//        mysqlDS.validate()
     }
 
     private class GetColsMeta {

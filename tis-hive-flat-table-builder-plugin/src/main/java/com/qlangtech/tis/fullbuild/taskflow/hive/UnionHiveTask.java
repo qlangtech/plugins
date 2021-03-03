@@ -18,6 +18,7 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
@@ -56,7 +57,7 @@ public class UnionHiveTask extends JoinHiveTask {
     private static final Logger logger = LoggerFactory.getLogger(UnionHiveTask.class);
 
     public UnionHiveTask(SqlTaskNodeMeta nodeMeta, boolean isFinalNode, ERRules erRules
-            , JoinTaskStatus joinTaskStatus, ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
+            , JoinTaskStatus joinTaskStatus, ITISFileSystem fileSystem, IFs2Table fs2Table) {
         super(nodeMeta, isFinalNode, erRules, joinTaskStatus, fileSystem, fs2Table);
     }
 

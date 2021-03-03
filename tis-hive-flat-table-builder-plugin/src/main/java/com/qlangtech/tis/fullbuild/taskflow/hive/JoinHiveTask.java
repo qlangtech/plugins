@@ -21,6 +21,7 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder;
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
@@ -50,12 +51,12 @@ public class JoinHiveTask extends HiveTask {
 
     private static final Logger log = LoggerFactory.getLogger(JoinHiveTask.class);
 
-    private final ITISFileSystemFactory fileSystem;
+    private final ITISFileSystem fileSystem;
 
     private final IFs2Table fs2Table;
 
     public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
-            , ITISFileSystemFactory fileSystem, IFs2Table fs2Table) {
+            , ITISFileSystem fileSystem, IFs2Table fs2Table) {
         super(nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;
         Objects.nonNull(fs2Table);

@@ -88,7 +88,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
     public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
             , String groupNum, IIndexBuildParam buildParam) throws Exception {
         Hadoop020RemoteJobTriggerFactory indexBuilderTriggerFactory
-                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFsFactory(), this);
+                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFsFactory().getFileSystem(), this);
         return indexBuilderTriggerFactory.createBuildJob(timePoint, indexName, groupNum, buildParam);
     }
 

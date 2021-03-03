@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.build.task.TaskMapper;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.*;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.ConfigFileReader;
@@ -61,7 +62,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
 
     private IYarnConfig yarnConfig;
 
-    private FileSystemFactory fsFactory;
+    private ITISFileSystem fsFactory;
     private final IContainerPodSpec podSpec;
 
     // 构建索引过程中最大索引出错条数，超过了这个阀值就终止构建索引了
@@ -71,7 +72,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
     //private static final String CLASS_NAME_TASK = "com.qlangtech.tis.build.MockNodeMaster";
 
 
-    public Hadoop020RemoteJobTriggerFactory(IYarnConfig yarnConfig, FileSystemFactory fsFactory, IContainerPodSpec podSpec) {
+    public Hadoop020RemoteJobTriggerFactory(IYarnConfig yarnConfig, ITISFileSystem fsFactory, IContainerPodSpec podSpec) {
         super();
         this.yarnConfig = yarnConfig;
         this.fsFactory = fsFactory;
@@ -109,15 +110,15 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
      * 单表导出
      *
      * @param table
-     * @param startTime
+     * @param
      * @param context
      * @return
      */
     @Override
-    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
+    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
 
 
-        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, startTime, podSpec.identityValue());
+        JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, context.getStartTime(), podSpec.identityValue());
         final String jobName = table.getDbName() + "." + table.getTableName();
         try {
             return getRemoteJobTrigger(jobName, CLASS_NAME_TASK

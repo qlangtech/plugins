@@ -21,7 +21,6 @@ import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -48,7 +47,7 @@ public class HiveRemoveHistoryDataTask {
     // daily ps name
     private static final String pt = IDumpTable.PARTITION_PT;
 
-    private final ITISFileSystemFactory fsFactory;
+    private final ITISFileSystem fileSystem;
 
     public static void main(String[] arg) {
         List<PathInfo> timestampList = new ArrayList<PathInfo>();
@@ -64,12 +63,12 @@ public class HiveRemoveHistoryDataTask {
         }
     }
 
-    public HiveRemoveHistoryDataTask(ITISFileSystemFactory fsFactory) {
+    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory) {
         super();
         // this.dumpTable = dumpTable;
         // this.userName = userName;
         // this.fileSystem = fileSystem;
-        this.fsFactory = fsFactory;
+        this.fileSystem = fsFactory;
     }
 
     // 20160106131304
@@ -140,9 +139,9 @@ public class HiveRemoveHistoryDataTask {
      * example:/user/admin/scmdb/supply_goods/all/20160106131304
      */
     private void deleteMetadata(EntityName dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
-        String hdfsPath = getJoinTableStorePath(this.fsFactory.getRootDir(), dumpTable) + "/all";
+        String hdfsPath = getJoinTableStorePath(this.fileSystem.getRootDir(), dumpTable) + "/all";
         logger.info("hdfsPath:{}", hdfsPath);
-        ITISFileSystem fileSys = this.fsFactory.getFileSystem();
+        ITISFileSystem fileSys = this.fileSystem;
         IPath parent = fileSys.getPath(hdfsPath);
         // Path parent = new Path(hdfsPath);
         if (!fileSys.exists(parent)) {
@@ -238,8 +237,8 @@ public class HiveRemoveHistoryDataTask {
      */
     private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, ITISFileSystem.IPathFilter filter, int maxPartitionSave) throws IOException {
         // dump数据: /user/admin/scmdb/supply_goods/all/0/20160105003307
-        String hdfsPath = getJoinTableStorePath(fsFactory.getRootDir(), dumpTable) + "/all";
-        ITISFileSystem fileSys = fsFactory.getFileSystem();
+        String hdfsPath = getJoinTableStorePath(fileSystem.getRootDir(), dumpTable) + "/all";
+        ITISFileSystem fileSys = fileSystem;
         int group = 0;
         List<IPathInfo> children = null;
         while (true) {

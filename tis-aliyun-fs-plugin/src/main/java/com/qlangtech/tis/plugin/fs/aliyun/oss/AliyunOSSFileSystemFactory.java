@@ -52,10 +52,6 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String bucketName;
 
-    @Override
-    public String getRootDir() {
-        return this.rootDir;
-    }
 
     private ITISFileSystem ossFs;
 
@@ -63,15 +59,10 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     public ITISFileSystem getFileSystem() {
         if (ossFs == null) {
             IAliyunToken aliyunToken = ParamsConfig.getItem(this.aliyunToken, IAliyunToken.class);
-            ossFs = new AliyunOSSFileSystem(aliyunToken, this.endpoint, this.bucketName);
+            ossFs = new AliyunOSSFileSystem(aliyunToken, this.endpoint, this.bucketName, this.rootDir);
         }
         return ossFs;
     }
-
-//    @Override
-//    public String getName() {
-//        return this.name;
-//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {

@@ -20,7 +20,7 @@ package com.qlangtech.tis.component;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONArray;
-import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -115,7 +115,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
     }
 
     private void validatePluginPostForm(String jsonPath, Context context) throws IOException {
-      //  DefaultFieldErrorHandler fieldErrorHandler = new DefaultFieldErrorHandler();
+        //  DefaultFieldErrorHandler fieldErrorHandler = new DefaultFieldErrorHandler();
 
         DelegateControl4JsonPostMsgHandler fieldErrorHandler = null;
 
@@ -131,6 +131,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         assertNotNull(attrValMaps);
         assertEquals(1, attrValMaps.size());
         AttrValMap attrValMap = attrValMaps.get(0);
-        assertFalse("validate false", attrValMap.validate(context));
+        Descriptor.PluginValidateResult validateResult = attrValMap.validate(context);
+        assertFalse("validate false", validateResult.isValid());
     }
 }

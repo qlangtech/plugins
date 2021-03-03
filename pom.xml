@@ -29,6 +29,7 @@
         <module>tis-ds-mysql-plugin</module>
         <module>tis-kafka-plugin</module>
         <module>tis-solr-plugin</module>
+        <module>tis-local-dump-build</module>
     </modules>
 
     <properties>
@@ -394,6 +395,12 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-base-test</artifactId>
+                <version>${tis.version}</version>
+                <scope>test</scope>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>
@@ -412,7 +419,6 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
         </dependency>
-
 
 
         <!-- dependencies provided by virtue of running in Jenkins -->

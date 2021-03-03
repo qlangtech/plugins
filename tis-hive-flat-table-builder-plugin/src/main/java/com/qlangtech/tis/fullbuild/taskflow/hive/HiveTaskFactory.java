@@ -18,6 +18,7 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -36,35 +37,24 @@ public class HiveTaskFactory implements ITaskFactory {
     // private final HiveDBUtils hiveDBHelper;
     private final IPrimaryTabFinder erRules;
 
-    private final ITISFileSystemFactory fileSystem;
+    private final ITISFileSystem fileSystem;
 
     public HiveTaskFactory(IPrimaryTabFinder erRules, ITISFileSystemFactory fileSystem) {
         super();
         // this.hiveDBHelper = HiveDBUtils.getInstance();
         this.erRules = erRules;
-        this.fileSystem = fileSystem;
+        this.fileSystem = fileSystem.getFileSystem();
     }
 
-    // private static final String HIVE_JDBC_CONNECTION_KEY = "hive_jdbc_connection_key";
-    // public void startTaskInitialize(ITemplateContext tplContext) {
-    // tplContext.putContextValue(HIVE_JDBC_CONNECTION_KEY, HiveDBUtils.getInstance().createConnection());
-    // }
-    // 
-    // public static Connection getConnection(ITemplateContext templateContext) {
-    // Connection conn = templateContext.getContextValue(HIVE_JDBC_CONNECTION_KEY);
-    // if (conn == null) {
-    // throw new IllegalStateException("conn can not be null");
-    // }
-    // return conn;
-    // }
+
     @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
+            , ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
         if (fileSystem == null) {
             throw new IllegalStateException("filesystem can not be null");
         }
         JoinHiveTask task = new JoinHiveTask(nodeMeta, isFinalNode, this.erRules, joinTaskStatus, fileSystem, fs2Table);
         task.setContext(tplContext, taskContext);
-        // task.setHiveDBHelper(hiveDBHelper);
         return task;
     }
     // @Override

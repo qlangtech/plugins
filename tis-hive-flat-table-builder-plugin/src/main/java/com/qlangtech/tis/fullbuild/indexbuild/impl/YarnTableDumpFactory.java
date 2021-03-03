@@ -27,6 +27,7 @@ import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
@@ -99,12 +100,12 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
         return runjdwpPort;
     }
 
-    private transient FileSystemFactory fileSystem;
+    private transient ITISFileSystem fileSystem;
 
     private transient HiveRemoveHistoryDataTask removeHistoryDataTask;
 
     @Override
-    public FileSystemFactory getFileSystem() {
+    public ITISFileSystem getFileSystem() {
         return this.getFs();
     }
 
@@ -138,9 +139,9 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
         return removeHistoryDataTask;
     }
 
-    private FileSystemFactory getFs() {
+    private ITISFileSystem getFs() {
         if (fileSystem == null) {
-            fileSystem = FileSystemFactory.getFsFactory(this.fsName);
+            fileSystem = FileSystemFactory.getFsFactory(this.fsName).getFileSystem();
         }
         return fileSystem;
     }
@@ -169,11 +170,11 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
     @Override
-    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, String startTime, TaskContext context) {
+    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
 
         Hadoop020RemoteJobTriggerFactory dumpTriggerFactory
                 = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFs(), this);
-        return dumpTriggerFactory.createSingleTableDumpJob(table, startTime, context);
+        return dumpTriggerFactory.createSingleTableDumpJob(table, context);
     }
 
     /**

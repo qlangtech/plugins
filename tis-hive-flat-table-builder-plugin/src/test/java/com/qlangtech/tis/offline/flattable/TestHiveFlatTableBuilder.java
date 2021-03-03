@@ -5,6 +5,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
@@ -92,7 +93,7 @@ public class TestHiveFlatTableBuilder extends TestCase {
 
     private static class MockFs2Table implements IFs2Table {
         @Override
-        public ITISFileSystemFactory getFileSystem() {
+        public ITISFileSystem getFileSystem() {
             return null;
         }
 
@@ -140,7 +141,7 @@ public class TestHiveFlatTableBuilder extends TestCase {
         }
 
         @Override
-        public IJoinTaskContext joinTaskContext() {
+        public IJoinTaskContext getExecContext() {
             return joinTaskContext;
         }
     }

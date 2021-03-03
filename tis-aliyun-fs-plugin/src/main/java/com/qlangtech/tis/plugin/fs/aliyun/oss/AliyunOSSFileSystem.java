@@ -41,14 +41,19 @@ public class AliyunOSSFileSystem implements ITISFileSystem {
     //private final IAliyunToken aliyunToken;
     private final OSS client;
     private final String bucketName;
+    private final String rootDir;
 
     private static final ExecutorService ossPutExecutor = Executors.newCachedThreadPool();
 
-    public AliyunOSSFileSystem(IAliyunToken aliyunToken, String endpoint, String buket) {
-        //this.aliyunToken = aliyunToken;
+    public AliyunOSSFileSystem(IAliyunToken aliyunToken, String endpoint, String buket, String rootDir) {
         this.bucketName = buket;
-        //endpoint, accessKeyId, accessKeySecret
+        this.rootDir = rootDir;
         client = new OSSClientBuilder().build(endpoint, aliyunToken.getAccessKeyId(), aliyunToken.getAccessKeySecret());
+    }
+
+    @Override
+    public String getRootDir() {
+        return this.rootDir;
     }
 
     @Override
@@ -273,12 +278,12 @@ public class AliyunOSSFileSystem implements ITISFileSystem {
 
         @Override
         public void write(int b) throws IOException {
-
+            this.out.write(b);
         }
 
         @Override
         public long getPos() throws IOException {
-            return 0;
+            throw new UnsupportedOperationException();
         }
     }
 }

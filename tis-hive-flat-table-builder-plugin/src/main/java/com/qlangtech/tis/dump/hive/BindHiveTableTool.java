@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.dump.hive;
 
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -34,7 +35,7 @@ public class BindHiveTableTool {
 
     // private static final Logger logger = LoggerFactory
     // .getLogger(BindHiveTableTool.class);
-    public static void bindHiveTables(ITISFileSystemFactory fileSystem, Set<EntityName> hiveTables, String timestamp, ITaskContext context) {
+    public static void bindHiveTables(ITISFileSystem fileSystem, Set<EntityName> hiveTables, String timestamp, ITaskContext context) {
         Objects.nonNull(fileSystem);
         // Objects.nonNull(userName);
         Objects.nonNull(timestamp);

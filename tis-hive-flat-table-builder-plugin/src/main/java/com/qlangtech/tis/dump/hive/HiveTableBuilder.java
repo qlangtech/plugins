@@ -62,7 +62,7 @@ public class HiveTableBuilder {
 
     // private final String user;
     // private HiveDBUtils hiveDbHeler;
-    private ITISFileSystemFactory fileSystem;
+    private ITISFileSystem fileSystem;
 
     private static HashSet<String> omitKeys = new HashSet<String>();
 
@@ -192,7 +192,7 @@ public class HiveTableBuilder {
      * @param hiveTables
      * @throws Exception
      */
-    public void bindHiveTables(ITISFileSystemFactory fileSystem, Set<EntityName> hiveTables, ITaskContext context) throws Exception {
+    public void bindHiveTables(ITISFileSystem fileSystem, Set<EntityName> hiveTables, ITaskContext context) throws Exception {
         Connection conn = null;
         try {
             conn = context.getObj();
@@ -359,7 +359,7 @@ public class HiveTableBuilder {
     private IPath visitSubPmodPath(String hivePath, int startIndex, FSPathVisitor pathVisitor) throws Exception {
 
         // String sql = null;
-        ITISFileSystem fs = this.fileSystem.getFileSystem();
+        ITISFileSystem fs = this.fileSystem;
         IPath path = null;
 
         while (true) {
@@ -384,8 +384,8 @@ public class HiveTableBuilder {
         InputStream input = null;
         List<HiveColumn> cols = new ArrayList<>();
         try {
-            ITISFileSystem fs = this.fileSystem.getFileSystem();
-            input = fs.open(fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + ColumnMetaData.KEY_COLS_METADATA));
+            ITISFileSystem fs = this.fileSystem;
+            input = fs.open(fs.getPath(fs.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + ColumnMetaData.KEY_COLS_METADATA));
             // input = fileSystem.open(path);
             String content = IOUtils.toString(input, TisUTF8.getName());
             JSONArray array = (JSONArray) JSON.parse(content);
@@ -435,7 +435,7 @@ public class HiveTableBuilder {
     // public ITISFileSystem getFileSystem() {
     // return fileSystem;
     // }
-    public void setFileSystem(ITISFileSystemFactory fileSystem) {
+    public void setFileSystem(ITISFileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 

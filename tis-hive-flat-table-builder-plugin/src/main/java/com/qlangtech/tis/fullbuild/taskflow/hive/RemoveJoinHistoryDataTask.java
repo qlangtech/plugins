@@ -47,7 +47,7 @@ class RemoveJoinHistoryDataTask {
      * @param chainContext
      * @throws Exception
      */
-    public static void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys) throws Exception {
+    public static void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystem fileSys) throws Exception {
         if (chainContext == null) {
             throw new IllegalArgumentException("param: execContext can not be null");
         }
@@ -55,7 +55,7 @@ class RemoveJoinHistoryDataTask {
         if (fileSys == null) {
             throw new IllegalStateException("fileSys can not be null");
         }
-        ITISFileSystem fs = fileSys.getFileSystem();
+        ITISFileSystem fs = fileSys;
         // new Path(hdfsPath);
         IPath parent = fs.getPath(path);
         if (!fs.exists(parent)) {

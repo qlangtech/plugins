@@ -14,9 +14,12 @@
  */
 package com.qlangtech.tis.dump;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.TisZkClient;
 import com.qlangtech.tis.build.task.TaskMapper;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITableBuildTask;
@@ -26,6 +29,7 @@ import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.fullbuild.indexbuild.TaskContext;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.DbScope;
 import com.qlangtech.tis.offline.TableDumpFactory;
 import com.qlangtech.tis.order.dump.task.SingleTableDumpTask;
@@ -34,12 +38,16 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClient;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -57,8 +65,8 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1, validate = {Validator.require})
-    public String rootDir;
+//    @FormField(ordinal = 1, validate = {Validator.require})
+//    public String rootDir;
 
     private transient ITISFileSystem fileSystem;
 
@@ -72,7 +80,7 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
         return dataSourceFactoryGetter.get(table);
     }
 
-    interface DetailedDataSourceFactoryGetter {
+    public interface DetailedDataSourceFactoryGetter {
         DataSourceFactory get(IDumpTable table);
     }
 
@@ -80,10 +88,21 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
         this.dataSourceFactoryGetter = dataSourceFactoryGetter;
     }
 
+    public static File getLocalOfflineRootDir() {
+        try {
+            File localOfflineRoot = new File(Config.getDataDir(), "localOffline");
+            FileUtils.forceMkdir(localOfflineRoot);
+            return localOfflineRoot;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     @Override
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
-            fileSystem = new LocalFileSystem(this.rootDir);
+            fileSystem = new LocalFileSystem(getLocalOfflineRootDir().getAbsolutePath());
         }
         return fileSystem;
     }
@@ -92,6 +111,19 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
     @Override
     public IRemoteJobTrigger createSingleTableDumpJob(final IDumpTable table, TaskContext context) {
 
+        return triggerTask(context, (rpc) -> {
+            SingleTableDumpTask tableDumpTask = new SingleTableDumpTask(LocalTableDumpFactory.this
+                    , getDataSourceFactory(table), context.getCoordinator().unwrap(), rpc) {
+                protected void registerZKDumpNodeIn(TaskContext context) {
+                }
+            };
+            // 开始执行数据dump
+            tableDumpTask.map(context);
+        });
+    }
+
+
+    public static IRemoteJobTrigger triggerTask(TaskContext context, ILocalTask task) {
         TisZkClient zk = context.getCoordinator().unwrap();
         Objects.requireNonNull(zk, "zk(TisZkClient) can not be null");
 
@@ -101,7 +133,7 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
             Thread t = new Thread(r);
             t.setUncaughtExceptionHandler((thread, e) -> {
                 errRef.set(e);
-                logger.error("execute local table:" + table + " dump faild", e);
+                logger.error(e.getMessage(), e);
                 countDown.countDown();
             });
             return t;
@@ -115,12 +147,7 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
                     RpcServiceReference statusRpc = null;
                     try {
                         statusRpc = StatusRpcClient.getService(zk);
-                        SingleTableDumpTask tableDumpTask = new SingleTableDumpTask(LocalTableDumpFactory.this, getDataSourceFactory(table), zk, statusRpc) {
-                            protected void registerZKDumpNodeIn(TaskContext context) {
-                            }
-                        };
-                        // 开始执行数据dump
-                        tableDumpTask.map(context);
+                        task.process(statusRpc);
                         countDown.countDown();
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -150,6 +177,10 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
         };
     }
 
+    public interface ILocalTask {
+        public void process(RpcServiceReference statusRpc) throws Exception;
+    }
+
 
     @Override
     public void bindTables(Set<EntityName> hiveTables, String timestamp, ITaskContext context) {
@@ -158,22 +189,26 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
 
     @Override
     public void deleteHistoryFile(EntityName dumpTable, ITaskContext taskContext) {
-
+        try {
+            getFileSystem().deleteHistoryFile(dumpTable);
+        } catch (Exception e) {
+            throw new RuntimeException("delete table:" + dumpTable.toString() + " relevant history file", e);
+        }
     }
 
     @Override
     public void deleteHistoryFile(EntityName dumpTable, ITaskContext taskContext, String timestamp) {
-
+        try {
+            getFileSystem().deleteHistoryFile(dumpTable, timestamp);
+        } catch (Exception e) {
+            throw new RuntimeException("delete table:" + dumpTable.toString()
+                    + ",timestamp:" + timestamp + " relevant history file,", e);
+        }
     }
 
     @Override
     public void dropHistoryTable(EntityName dumpTable, ITaskContext taskContext) {
-
-    }
-
-    @Override
-    public String getJoinTableStorePath(INameWithPathGetter pathGetter) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
 
@@ -195,5 +230,23 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @TISExtension()
+    public static class DefaultDescriptor extends Descriptor<TableDumpFactory> {
+        @Override
+        public String getDisplayName() {
+            return "localDump";
+        }
+
+        public boolean validateRootDir(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            File rootDir = new File(value);
+            if (!rootDir.exists()) {
+                msgHandler.addFieldError(context, fieldName, "path:" + rootDir.getAbsolutePath() + " is not exist");
+                return false;
+            }
+            return true;
+        }
+
     }
 }

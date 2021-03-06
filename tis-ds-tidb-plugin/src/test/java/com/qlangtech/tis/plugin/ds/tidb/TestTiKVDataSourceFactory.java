@@ -108,11 +108,11 @@ public class TestTiKVDataSourceFactory extends TestCase {
         assertEquals(300024, rowCount);
     }
 
-    private class GetColsMeta {
-        private TiKVDataSourceFactory dataSourceFactory;
+    private static class GetColsMeta {
+        private com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory dataSourceFactory;
         private List<ColumnMetaData> employeesCols;
 
-        public TiKVDataSourceFactory getDataSourceFactory() {
+        public com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory getDataSourceFactory() {
             return dataSourceFactory;
         }
 

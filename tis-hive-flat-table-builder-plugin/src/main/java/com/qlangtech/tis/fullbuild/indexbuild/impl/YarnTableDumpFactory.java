@@ -27,6 +27,7 @@ import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
@@ -127,10 +128,10 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 //        return this.name;
 //    }
 
-    @Override
-    public String getJoinTableStorePath(INameWithPathGetter pathGetter) {
-        return HiveRemoveHistoryDataTask.getJoinTableStorePath(this.getFs().getRootDir(), pathGetter);
-    }
+//    @Override
+//    public String getJoinTableStorePath(INameWithPathGetter pathGetter) {
+//        return FSHistoryFileUtils.getJoinTableStorePath(this.getFs().getRootDir(), pathGetter);
+//    }
 
     private HiveRemoveHistoryDataTask getHiveRemoveHistoryDataTask() {
         if (removeHistoryDataTask == null) {

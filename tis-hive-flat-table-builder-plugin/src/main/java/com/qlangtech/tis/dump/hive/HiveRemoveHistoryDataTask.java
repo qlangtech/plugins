@@ -17,9 +17,6 @@
  */
 package com.qlangtech.tis.dump.hive;
 
-import com.qlangtech.tis.dump.INameWithPathGetter;
-import com.qlangtech.tis.fs.IPath;
-import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
@@ -28,8 +25,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -50,29 +45,23 @@ public class HiveRemoveHistoryDataTask {
     private final ITISFileSystem fileSystem;
 
     public static void main(String[] arg) {
-        List<PathInfo> timestampList = new ArrayList<PathInfo>();
-        PathInfo path = null;
-        for (int i = 0; i < 100; i++) {
-            path = new PathInfo();
-            path.setTimeStamp(i);
-            timestampList.add(path);
-        }
-        sortTimestamp(timestampList);
-        for (PathInfo info : timestampList) {
-            System.out.println(info.timeStamp);
-        }
+//        List<PathInfo> timestampList = new ArrayList<PathInfo>();
+//        PathInfo path = null;
+//        for (int i = 0; i < 100; i++) {
+//            path = new PathInfo();
+//            path.setTimeStamp(i);
+//            timestampList.add(path);
+//        }
+//        sortTimestamp(timestampList);
+//        for (PathInfo info : timestampList) {
+//            System.out.println(info.timeStamp);
+//        }
     }
 
     public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory) {
         super();
-        // this.dumpTable = dumpTable;
-        // this.userName = userName;
-        // this.fileSystem = fileSystem;
         this.fileSystem = fsFactory;
     }
-
-    // 20160106131304
-    public static final Pattern DATE_PATTERN = Pattern.compile("20\\d{12}");
 
     /**
      * @param hiveConnection
@@ -81,10 +70,11 @@ public class HiveRemoveHistoryDataTask {
     public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection) {
         try {
             logger.info("start deleteHdfsHistoryFile data[{}] files", dumpTable);
-            this.deleteMetadata(dumpTable);
-            this.deleteHdfsFile(dumpTable, false);
+            this.fileSystem.deleteHistoryFile(dumpTable);
+            // this.deleteMetadata(dumpTable);
+            // this.deleteHdfsFile(dumpTable, false);
             // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306
-            this.deleteHdfsFile(dumpTable, true);
+            // this.deleteHdfsFile(dumpTable, true);
             this.dropHistoryHiveTable(dumpTable, hiveConnection);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -100,178 +90,124 @@ public class HiveRemoveHistoryDataTask {
     public void deleteHdfsHistoryFile(EntityName dumpTable, Connection hiveConnection, String timestamp) {
         try {
             logger.info("start delete history data{} files", dumpTable);
-            this.deleteMetadata(dumpTable, timestamp);
-            this.deleteHdfsFile(dumpTable, false, /* isBuildFile */
-                    timestamp);
-            // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306
-            this.deleteHdfsFile(dumpTable, true, /* isBuildFile */
-                    timestamp);
+//            this.deleteMetadata(dumpTable, timestamp);
+//            this.deleteHdfsFile(dumpTable, false, /* isBuildFile */
+//                    timestamp);
+//            // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306
+//            this.deleteHdfsFile(dumpTable, true, /* isBuildFile */
+//                    timestamp);
+            this.fileSystem.deleteHistoryFile(dumpTable, timestamp);
             this.dropHistoryHiveTable(dumpTable, hiveConnection, (r) -> StringUtils.equals(r, timestamp), 0);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * 删除dump的metadata<br>
-     * example:/user/admin/search4customerregistercard/all/20160106131304
-     * example:/user/admin/scmdb/supply_goods/all/20160106131304
-     */
-    private void deleteMetadata(EntityName dumpTable) throws Exception {
-        this.deleteMetadata(dumpTable, (r) -> {
-            return true;
-        }, ITableDumpConstant.MAX_PARTITION_SAVE);
-    }
+//    /**
+//     * 删除dump的metadata<br>
+//     * example:/user/admin/search4customerregistercard/all/20160106131304
+//     * example:/user/admin/scmdb/supply_goods/all/20160106131304
+//     */
+//    private void deleteMetadata(EntityName dumpTable) throws Exception {
+//        this.deleteMetadata(dumpTable, (r) -> {
+//            return true;
+//        }, ITableDumpConstant.MAX_PARTITION_SAVE);
+//    }
 
-    private void deleteMetadata(EntityName dumpTable, String timestamp) throws Exception {
-        if (StringUtils.isEmpty(timestamp)) {
-            throw new IllegalArgumentException("param timestamp can not be null");
-        }
-        this.deleteMetadata(dumpTable, (r) -> {
-                    return StringUtils.equals(r.getName(), timestamp);
-                }, // MAX_PARTITION_SAVE
-                0);
-    }
+//    private void deleteMetadata(EntityName dumpTable, String timestamp) throws Exception {
+//        if (StringUtils.isEmpty(timestamp)) {
+//            throw new IllegalArgumentException("param timestamp can not be null");
+//        }
+//        this.deleteMetadata(dumpTable, (r) -> {
+//                    return StringUtils.equals(r.getName(), timestamp);
+//                }, // MAX_PARTITION_SAVE
+//                0);
+//    }
 
-    /**
-     * 删除dump的metadata<br>
-     * example:/user/admin/search4customerregistercard/all/20160106131304
-     * example:/user/admin/scmdb/supply_goods/all/20160106131304
-     */
-    private void deleteMetadata(EntityName dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
-        String hdfsPath = getJoinTableStorePath(this.fileSystem.getRootDir(), dumpTable) + "/all";
-        logger.info("hdfsPath:{}", hdfsPath);
-        ITISFileSystem fileSys = this.fileSystem;
-        IPath parent = fileSys.getPath(hdfsPath);
-        // Path parent = new Path(hdfsPath);
-        if (!fileSys.exists(parent)) {
-            return;
-        }
-        List<IPathInfo> child = fileSys.listChildren(parent, pathFilter);
-        List<PathInfo> timestampList = new ArrayList<>();
-        PathInfo pathinfo;
-        Matcher matcher;
-        for (IPathInfo c : child) {
-            matcher = DATE_PATTERN.matcher(c.getPath().getName());
-            if (matcher.matches()) {
-                pathinfo = new PathInfo();
-                pathinfo.pathName = c.getPath().getName();
-                pathinfo.timeStamp = Long.parseLong(matcher.group());
-                timestampList.add(pathinfo);
-            }
-        }
-        if (timestampList.size() > 0) {
-            deleteOldHdfsfile(fileSys, parent, timestampList, maxPartitionSave);
-        }
-    }
+//    /**
+//     * 删除dump的metadata<br>
+//     * example:/user/admin/search4customerregistercard/all/20160106131304
+//     * example:/user/admin/scmdb/supply_goods/all/20160106131304
+//     */
+//    private void deleteMetadata(EntityName dumpTable, ITISFileSystem.IPathFilter pathFilter, int maxPartitionSave) throws Exception {
+//        String hdfsPath = getJoinTableStorePath(this.fileSystem.getRootDir(), dumpTable) + "/all";
+//        logger.info("hdfsPath:{}", hdfsPath);
+//        ITISFileSystem fileSys = this.fileSystem;
+//        IPath parent = fileSys.getPath(hdfsPath);
+//        // Path parent = new Path(hdfsPath);
+//        if (!fileSys.exists(parent)) {
+//            return;
+//        }
+//        List<IPathInfo> child = fileSys.listChildren(parent, pathFilter);
+//        List<PathInfo> timestampList = new ArrayList<>();
+//        PathInfo pathinfo;
+//        Matcher matcher;
+//        for (IPathInfo c : child) {
+//            matcher = DATE_PATTERN.matcher(c.getPath().getName());
+//            if (matcher.matches()) {
+//                pathinfo = new PathInfo();
+//                pathinfo.pathName = c.getPath().getName();
+//                pathinfo.timeStamp = Long.parseLong(matcher.group());
+//                timestampList.add(pathinfo);
+//            }
+//        }
+//        if (timestampList.size() > 0) {
+//            deleteOldHdfsfile(fileSys, parent, timestampList, maxPartitionSave);
+//        }
+//    }
 
-    /**
-     * @param fileSys
-     * @param parent
-     * @param timestampList
-     * @throws IOException
-     */
-    public static void deleteOldHdfsfile(ITISFileSystem fileSys, IPath parent, List<PathInfo> timestampList, int maxPartitionSave) throws IOException {
-        // 倒序排列，保留最近的一次
-        sortTimestamp(timestampList);
-        IPath toDelete = null;
-        for (int index = (maxPartitionSave); index < timestampList.size(); index++) {
-            toDelete = fileSys.getPath(parent, timestampList.get(index).pathName);
-            // toDelete = new Path(parent, timestampList.get(index).pathName);
-            // 删除历史数据
-            logger.info("history old hdfs file path:" + toDelete.toString() + " delete,success:" + fileSys.delete(toDelete, true) + ",getMaxPartitionSave:" + maxPartitionSave);
-        }
-    }
 
-    public static class PathInfo {
+//    /**
+//     * 删除历史索引build文件
+//     *
+//     * @throws IOException
+//     * @throws FileNotFoundException
+//     */
+//    public void removeHistoryBuildFile(EntityName dumpTable) throws IOException, FileNotFoundException {
+//        this.deleteHdfsFile(dumpTable, true);
+//    }
 
-        private long timeStamp;
+//    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile) throws IOException {
+//        this.deleteHdfsFile(dumpTable, isBuildFile, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
+//    }
 
-        private String pathName;
 
-        public long getTimeStamp() {
-            return timeStamp;
-        }
+//    /**
+//     * 删除hdfs中的文件
+//     *
+//     * @param isBuildFile
+//     * @throws IOException
+//     */
+//    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, ITISFileSystem.IPathFilter filter, int maxPartitionSave) throws IOException {
+//        // dump数据: /user/admin/scmdb/supply_goods/all/0/20160105003307
+//        String hdfsPath = getJoinTableStorePath(fileSystem.getRootDir(), dumpTable) + "/all";
+//        ITISFileSystem fileSys = fileSystem;
+//        int group = 0;
+//        List<IPathInfo> children = null;
+//        while (true) {
+//            IPath parent = fileSys.getPath(hdfsPath + "/" + (group++));
+//            if (isBuildFile) {
+//                parent = fileSys.getPath(parent, "output");
+//            }
+//            if (!fileSys.exists(parent)) {
+//                break;
+//            }
+//            children = fileSys.listChildren(parent, filter);
+//            // FileStatus[] child = fileSys.listStatus(parent, filter);
+//            List<PathInfo> dumpTimestamps = new ArrayList<>();
+//            for (IPathInfo f : children) {
+//                try {
+//                    PathInfo pathinfo = new PathInfo();
+//                    pathinfo.pathName = f.getPath().getName();
+//                    pathinfo.timeStamp = Long.parseLong(f.getPath().getName());
+//                    dumpTimestamps.add(pathinfo);
+//                } catch (Throwable e) {
+//                }
+//            }
+//            deleteOldHdfsfile(fileSys, parent, dumpTimestamps, maxPartitionSave);
+//        }
+//    }
 
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp = timeStamp;
-        }
-
-        public String getPathName() {
-            return pathName;
-        }
-
-        public void setPathName(String pathName) {
-            this.pathName = pathName;
-        }
-    }
-
-    /**
-     * 删除历史索引build文件
-     *
-     * @throws IOException
-     * @throws FileNotFoundException
-     */
-    public void removeHistoryBuildFile(EntityName dumpTable) throws IOException, FileNotFoundException {
-        this.deleteHdfsFile(dumpTable, true);
-    }
-
-    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile) throws IOException {
-        this.deleteHdfsFile(dumpTable, isBuildFile, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
-    }
-
-    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, String timestamp) throws IOException {
-        // MAX_PARTITION_SAVE
-        this.deleteHdfsFile(// MAX_PARTITION_SAVE
-                dumpTable, // MAX_PARTITION_SAVE
-                isBuildFile, // MAX_PARTITION_SAVE
-                (r) -> StringUtils.equals(r.getName(), timestamp), // MAX_PARTITION_SAVE
-                0);
-    }
-
-    /**
-     * 删除hdfs中的文件
-     *
-     * @param isBuildFile
-     * @throws IOException
-     */
-    private void deleteHdfsFile(EntityName dumpTable, boolean isBuildFile, ITISFileSystem.IPathFilter filter, int maxPartitionSave) throws IOException {
-        // dump数据: /user/admin/scmdb/supply_goods/all/0/20160105003307
-        String hdfsPath = getJoinTableStorePath(fileSystem.getRootDir(), dumpTable) + "/all";
-        ITISFileSystem fileSys = fileSystem;
-        int group = 0;
-        List<IPathInfo> children = null;
-        while (true) {
-            IPath parent = fileSys.getPath(hdfsPath + "/" + (group++));
-            if (isBuildFile) {
-                parent = fileSys.getPath(parent, "output");
-            }
-            if (!fileSys.exists(parent)) {
-                break;
-            }
-            children = fileSys.listChildren(parent, filter);
-            // FileStatus[] child = fileSys.listStatus(parent, filter);
-            List<PathInfo> dumpTimestamps = new ArrayList<>();
-            for (IPathInfo f : children) {
-                try {
-                    PathInfo pathinfo = new PathInfo();
-                    pathinfo.pathName = f.getPath().getName();
-                    pathinfo.timeStamp = Long.parseLong(f.getPath().getName());
-                    dumpTimestamps.add(pathinfo);
-                } catch (Throwable e) {
-                }
-            }
-            deleteOldHdfsfile(fileSys, parent, dumpTimestamps, maxPartitionSave);
-        }
-    }
-
-    /**
-     * @param timestampList
-     */
-    private static void sortTimestamp(List<PathInfo> timestampList) {
-        // 最大的应该的index为0的位置上
-        Collections.sort(timestampList, (o1, o2) -> (int) (o2.timeStamp - o1.timeStamp));
-    }
 
     public void dropHistoryHiveTable(EntityName dumpTable, Connection conn) {
         this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
@@ -342,20 +278,4 @@ public class HiveRemoveHistoryDataTask {
 
         boolean accept(String ps);
     }
-
-    public static String getJoinTableStorePath(String rootDir, INameWithPathGetter pathGetter) {
-        return rootDir + "/" + pathGetter.getNameWithPath();
-    }
-
-    public String getPt() {
-        return pt;
-    }
-    // /**
-    // * 这个标记位表示在绑定表的时候 是否需要绑定hive表，因为宽表是不需要绑定的
-    // *
-    // * @return
-    // */
-    // public boolean isBindtable() {
-    // return bindtable;
-    // }
 }

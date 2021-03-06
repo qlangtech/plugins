@@ -21,9 +21,9 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
-import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
@@ -39,7 +39,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.lang.StringUtils;
@@ -87,11 +86,6 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     }
 
     private HiveTaskFactory taskFactory;
-
-//    @Override
-//    public String getName() {
-//        return this.name;
-//    }
 
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode
@@ -145,7 +139,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
 
     public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
-        return HiveRemoveHistoryDataTask.getJoinTableStorePath(user, pathGetter);
+        return FSHistoryFileUtils.getJoinTableStorePath(user, pathGetter);
     }
 
     @TISExtension

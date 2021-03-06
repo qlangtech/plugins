@@ -18,17 +18,15 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
-import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.HiveTableBuilder;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -129,7 +127,7 @@ public class JoinHiveTask extends HiveTask {
         HiveTableBuilder tableBuilder = new HiveTableBuilder("0");
         tableBuilder.createHiveTableAndBindPartition(conn, dumpTable, cols, (hiveSQl) -> {
             hiveSQl.append("\n LOCATION '").append(
-                    HiveRemoveHistoryDataTask.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)
+                    FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)
                             .replaceAll("\\.", "/")).append("'");
         });
     }

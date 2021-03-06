@@ -17,12 +17,11 @@
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
-import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
-import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask.PathInfo;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
+import com.qlangtech.tis.fs.FSHistoryFileUtils.PathInfo;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -51,7 +50,7 @@ class RemoveJoinHistoryDataTask {
         if (chainContext == null) {
             throw new IllegalArgumentException("param: execContext can not be null");
         }
-        final String path = HiveRemoveHistoryDataTask.getJoinTableStorePath(fileSys.getRootDir(), dumpTable).replaceAll("\\.", Path.SEPARATOR);
+        final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSys.getRootDir(), dumpTable).replaceAll("\\.", Path.SEPARATOR);
         if (fileSys == null) {
             throw new IllegalStateException("fileSys can not be null");
         }
@@ -62,11 +61,11 @@ class RemoveJoinHistoryDataTask {
             return;
         }
         List<IPathInfo> child = fs.listChildren(parent);
-        PathInfo pathinfo;
+        FSHistoryFileUtils.PathInfo pathinfo;
         List<PathInfo> timestampList = new ArrayList<>();
         Matcher matcher;
         for (IPathInfo c : child) {
-            matcher = HiveRemoveHistoryDataTask.DATE_PATTERN.matcher(c.getPath().getName());
+            matcher = ITISFileSystem.DATE_PATTERN.matcher(c.getPath().getName());
             if (matcher.find()) {
                 pathinfo = new PathInfo();
                 pathinfo.setPathName(c.getPath().getName());
@@ -74,6 +73,6 @@ class RemoveJoinHistoryDataTask {
                 timestampList.add(pathinfo);
             }
         }
-        HiveRemoveHistoryDataTask.deleteOldHdfsfile(fs, parent, timestampList, ITableDumpConstant.MAX_PARTITION_SAVE);
+        FSHistoryFileUtils.deleteOldHdfsfile(fs, parent, timestampList, ITableDumpConstant.MAX_PARTITION_SAVE);
     }
 }

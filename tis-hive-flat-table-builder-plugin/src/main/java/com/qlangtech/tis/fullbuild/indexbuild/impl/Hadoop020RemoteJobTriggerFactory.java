@@ -27,7 +27,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.ConfigFileReader;
 import com.qlangtech.tis.manage.common.IndexBuildParam;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
 import org.apache.commons.lang.StringUtils;
@@ -94,7 +94,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
      * @throws Exception
      */
     @Override
-    public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
+    public IRemoteJobTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
             , String groupNum, IIndexBuildParam state) throws Exception {
         final String coreName = indexName + "-" + groupNum;
         return getRemoteJobTrigger(coreName, CLASS_NAME_TASK, "index-build-" + state.getTaskId()
@@ -103,7 +103,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
 
     @Override
     public void startTask(TaskMapper taskMapper, TaskContext taskContext) {
- throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -244,9 +244,9 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         JobConfParams jobConf = new JobConfParams();
         jobConf.set(IParamContext.KEY_TASK_ID, String.valueOf(state.getTaskId()));
         // 设置记录条数
-        if (state.getDumpCount() != null) {
-            jobConf.set(IndexBuildParam.INDEXING_ROW_COUNT, String.valueOf(state.getDumpCount()));
-        }
+//        if (state.getDumpCount() != null) {
+//            jobConf.set(IndexBuildParam.INDEXING_ROW_COUNT, String.valueOf(state.getDumpCount()));
+//        }
         jobConf.set(IndexBuildParam.INDEXING_BUILDER_TRIGGER_FACTORY, indexBuilderTriggerFactoryName);
         jobConf.set(IndexBuildParam.INDEXING_BUILD_TABLE_TITLE_ITEMS, state.getBuildTableTitleItems());
 
@@ -257,14 +257,13 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
                 , false);
 
         jobConf.set(IndexBuildParam.INDEXING_OUTPUT_PATH, outPath);
-
-        String hdfsSourcePath = state.getHdfsSourcePath() == null //
-                ? ImportDataProcessInfo.createIndexDir(this.fsFactory, state.getTimepoint(), String.valueOf(groupNum),
-                state.getIndexName(), true) //
-                : state.getHdfsSourcePath().build(String.valueOf(groupNum));
+        IndexBuildSourcePathCreator indexBuildSourcePathCreator = state.getIndexBuildSourcePathCreator();
+//        String hdfsSourcePath = state.getHdfsSourcePath() == null //
+//                ? ImportDataProcessInfo.createIndexDir(this.fsFactory, state.getTimepoint(), String.valueOf(groupNum), state.getIndexName(), true) //
+//                : state.getHdfsSourcePath().build(String.valueOf(groupNum));
 
         try {
-            jobConf.set(IndexBuildParam.INDEXING_SOURCE_PATH, URLEncoder.encode(hdfsSourcePath, TisUTF8.getName()));
+            jobConf.set(IndexBuildParam.INDEXING_SOURCE_PATH, URLEncoder.encode(indexBuildSourcePathCreator.build(String.valueOf(groupNum)), TisUTF8.getName()));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(IndexBuildParam.INDEXING_SOURCE_PATH, e);
         }

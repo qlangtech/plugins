@@ -17,11 +17,11 @@ package com.qlangtech.tis.fs.local;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.fs.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -55,12 +55,12 @@ public class LocalFileSystem implements ITISFileSystem {
 
     @Override
     public IPath getPath(IPath parent, String name) {
-        return null;
+        return new LocalFilePath(new File(getUnwrap(parent), name));
     }
 
     @Override
     public OutputStream getOutputStream(IPath path) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -131,17 +131,42 @@ public class LocalFileSystem implements ITISFileSystem {
     @Override
     public IFileSplitor getSplitor(IPath path) throws Exception {
         File local = getUnwrap(path);
+        if (!local.exists()) {
+            throw new IllegalStateException("file is not exist:" + local.getAbsolutePath());
+        }
         return new IFileSplitor() {
             @Override
             public List<IFileSplit> getSplits(IndexBuildConfig config) throws Exception {
-                return Collections.singletonList(new LocalFileSplit((LocalFilePath) path));
+                List<IFileSplit> splits = Lists.newArrayList();
+                String[] subDir = local.list();
+                for (String sub : subDir) {
+                    if (StringUtils.isNumeric(sub)) {
+                        collectAllDataFile(new File(local, sub), splits);
+                    }
+                }
+                return splits;
             }
+
 
             @Override
             public long getTotalSize() {
                 return local.length();
             }
         };
+    }
+
+    private void collectAllDataFile(File dir, List<IFileSplit> splits) {
+        if (dir.isFile()) {
+            throw new IllegalArgumentException("path:" + dir.getAbsolutePath() + " must be a dir");
+        }
+        File dataFile = null;
+        for (String f : dir.list()) {
+            dataFile = new File(dir, f);
+            if (dataFile.isDirectory() || dataFile.length() < 1) {
+                continue;
+            }
+            splits.add(new LocalFileSplit(new LocalFilePath(dataFile)));
+        }
     }
 
     @Override
@@ -180,7 +205,7 @@ public class LocalFileSystem implements ITISFileSystem {
 
     @Override
     public boolean delete(IPath f, boolean recursive) throws IOException {
-        return delete(f);
+        return this.delete(f);
     }
 
     @Override

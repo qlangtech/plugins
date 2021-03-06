@@ -24,16 +24,21 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.indexbuild.IIndexBuildParam;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.TaskContext;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fullbuild.indexbuild.*;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.IndexBuilderTriggerFactory;
+import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -71,25 +76,38 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
     public int maxDocMakeFaild;
 
 
-//    @Override
-//    public String getName() {
-//        return this.name;
-//    }
+    @Override
+    public IndexBuildSourcePathCreator createIndexBuildSourcePathCreator(IJoinTaskContext ctx, ITabPartition ps) {
+        IndexBuildSourcePathCreator pathCreator = ((group) -> {
+            // 需要构建倒排索引的表名称
+            EntityName targetTableName = ctx.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME);
+            Objects.requireNonNull(targetTableName, "targetTableName can not be null");
+            String fsPath = FSHistoryFileUtils.getJoinTableStorePath(getFileSystem().getRootDir(), targetTableName)
+                    + "/" + IDumpTable.PARTITION_PT + "=%s/" + IDumpTable.PARTITION_PMOD + "=%s";
+            logger.info("hdfs sourcepath:" + fsPath);
+            return fsPath;
+        });
 
-    public FileSystemFactory getFsFactory() {
-        return FileSystemFactory.getFsFactory(this.fsName);
+        return pathCreator;
     }
+
+
+    @Override
+    public ITISFileSystem getFileSystem() {
+        return FileSystemFactory.getFsFactory(this.fsName).getFileSystem();
+    }
+
 
     private IYarnConfig getYarnConfig() {
         return ParamsConfig.getItem(this.containerName, IYarnConfig.class);
     }
 
     @Override
-    public IRemoteJobTrigger createBuildJob(String timePoint, String indexName
+    public IRemoteJobTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
             , String groupNum, IIndexBuildParam buildParam) throws Exception {
         Hadoop020RemoteJobTriggerFactory indexBuilderTriggerFactory
-                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFsFactory().getFileSystem(), this);
-        return indexBuilderTriggerFactory.createBuildJob(timePoint, indexName, groupNum, buildParam);
+                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFileSystem(), this);
+        return indexBuilderTriggerFactory.createBuildJob(execContext, timePoint, indexName, groupNum, buildParam);
     }
 
     @Override

@@ -70,13 +70,16 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
 
     private transient ITISFileSystem fileSystem;
 
-    private transient DetailedDataSourceFactoryGetter dataSourceFactoryGetter = (tab) -> {
-        PluginStore<DataSourceFactory> dbPlugin = TIS.getDataBasePluginStore(new PostedDSProp(tab.getDbName(), DbScope.DETAILED));
-        return dbPlugin.getPlugin();
-    };
+    private transient DetailedDataSourceFactoryGetter dataSourceFactoryGetter;
 
 
     private DataSourceFactory getDataSourceFactory(IDumpTable table) {
+        if (dataSourceFactoryGetter == null) {
+            dataSourceFactoryGetter = (tab) -> {
+                PluginStore<DataSourceFactory> dbPlugin = TIS.getDataBasePluginStore(new PostedDSProp(tab.getDbName(), DbScope.DETAILED));
+                return dbPlugin.getPlugin();
+            };
+        }
         return dataSourceFactoryGetter.get(table);
     }
 

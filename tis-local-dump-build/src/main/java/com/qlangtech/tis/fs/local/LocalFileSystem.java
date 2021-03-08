@@ -171,7 +171,10 @@ public class LocalFileSystem implements ITISFileSystem {
 
     @Override
     public IContentSummary getContentSummary(IPath path) {
-        throw new UnsupportedOperationException();
+        File f = this.getUnwrap(path);
+        return () -> {
+            return FileUtils.sizeOf(f);
+        };
     }
 
     @Override

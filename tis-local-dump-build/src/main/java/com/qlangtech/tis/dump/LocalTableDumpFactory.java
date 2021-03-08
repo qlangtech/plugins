@@ -116,7 +116,7 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
     public IRemoteJobTrigger createSingleTableDumpJob(final IDumpTable table, TaskContext context) {
 
         return triggerTask(context, (rpc) -> {
-            SingleTableDumpTask tableDumpTask = new SingleTableDumpTask(LocalTableDumpFactory.this
+            SingleTableDumpTask tableDumpTask = new SingleTableDumpTask((EntityName) table, LocalTableDumpFactory.this
                     , getDataSourceFactory(table), context.getCoordinator().unwrap(), rpc) {
                 protected void registerZKDumpNodeIn(TaskContext context) {
                 }

@@ -78,7 +78,11 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
             dataSourceFactoryGetter = (tab) -> {
                 PluginStore<DataSourceFactory> dbPlugin = TIS.getDataBasePluginStore(new PostedDSProp(tab.getDbName(), DbScope.DETAILED));
                 Objects.requireNonNull(dbPlugin, "dbPlugin can not be null");
-                return dbPlugin.getPlugin();
+                DataSourceFactory dsFactory = dbPlugin.getPlugin();
+                if (dsFactory == null) {
+                    throw new IllegalStateException("table:" + table + " can not find relevant ds config,config file:" + dbPlugin.getTargetFile());
+                }
+                return dsFactory;
             };
         }
         return dataSourceFactoryGetter.get(table);

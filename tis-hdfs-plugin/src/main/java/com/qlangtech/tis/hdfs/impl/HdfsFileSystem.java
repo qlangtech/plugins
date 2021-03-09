@@ -16,6 +16,7 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.qlangtech.tis.fs.FSDataInputStream;
 import com.qlangtech.tis.fs.*;
+import com.qlangtech.tis.hdfs.impl.directory.TISDirectory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -49,6 +50,15 @@ public class HdfsFileSystem implements ITISFileSystem {
         super();
         this.fs = fs;
         this.rootDir = rootDir;
+    }
+
+    @Override
+    public org.apache.lucene.store.Directory createIndexBackFlowChildDirectory(IPath path) {
+        try {
+            return new TISDirectory(path, this);
+        } catch (IOException e) {
+            throw new RuntimeException("path:" + path, e);
+        }
     }
 
     @Override

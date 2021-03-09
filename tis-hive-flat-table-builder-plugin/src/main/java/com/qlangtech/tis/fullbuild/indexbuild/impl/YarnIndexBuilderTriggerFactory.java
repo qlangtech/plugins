@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
+import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.*;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -74,6 +75,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
 
     @FormField(ordinal = 6, validate = {Validator.require}, type = FormFieldType.INT_NUMBER)
     public int maxDocMakeFaild;
+
 
 
     @Override

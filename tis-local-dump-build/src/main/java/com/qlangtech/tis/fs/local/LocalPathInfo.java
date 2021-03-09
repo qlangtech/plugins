@@ -2,6 +2,7 @@ package com.qlangtech.tis.fs.local;
 
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
+import org.apache.commons.io.FileUtils;
 
 /**
  * @author: baisui 百岁
@@ -10,9 +11,11 @@ import com.qlangtech.tis.fs.IPathInfo;
 public class LocalPathInfo implements IPathInfo {
 
     private final LocalFilePath path;
+    private final long sizeOf;
 
     public LocalPathInfo(LocalFilePath path) {
         this.path = path;
+        this.sizeOf = FileUtils.sizeOf(path.file);
     }
 
     @Override
@@ -37,6 +40,6 @@ public class LocalPathInfo implements IPathInfo {
 
     @Override
     public long getLength() {
-        return 0;
+        return this.sizeOf;
     }
 }

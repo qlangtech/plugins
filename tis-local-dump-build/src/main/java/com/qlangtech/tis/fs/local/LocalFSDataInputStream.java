@@ -1,11 +1,11 @@
 package com.qlangtech.tis.fs.local;
 
+import com.google.common.io.CountingInputStream;
 import com.qlangtech.tis.fs.FSDataInputStream;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author: baisui 百岁
@@ -13,8 +13,13 @@ import java.io.IOException;
  **/
 public class LocalFSDataInputStream extends FSDataInputStream {
 
-    public LocalFSDataInputStream(File file) throws IOException {
-        super(FileUtils.openInputStream(file));
+    private final CountingInputStream pos;
+
+    public LocalFSDataInputStream(InputStream input, int bufferSize) {
+        // super(new CountingInputStream(new BufferedInputStream(input, bufferSize)));
+        super(new CountingInputStream(input));
+
+        this.pos = (CountingInputStream) in;
     }
 
     @Override
@@ -24,6 +29,16 @@ public class LocalFSDataInputStream extends FSDataInputStream {
 
     @Override
     public void seek(long position) {
-        throw new UnsupportedOperationException("position:" + position);
+        try {
+            long count = pos.getCount();
+            if (position > 0 && position > count) {
+                this.skip(position - count);
+                //this.in.skip(position - p);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
+
 }

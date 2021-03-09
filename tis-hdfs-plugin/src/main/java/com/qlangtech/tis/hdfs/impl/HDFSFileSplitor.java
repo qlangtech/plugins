@@ -77,7 +77,9 @@ public final class HDFSFileSplitor implements IFileSplitor {
             if (stat.isDirectory()) {
                 traverse(stat.getPath(), result);
             } else {
-                String name = stat.getPath().getName();
+
+                org.apache.hadoop.fs.Path path = stat.getPath();
+                String name = path.getName();
                 if ((!name.endsWith(".suc")) && (!name.endsWith(".ok"))) {
                     result.add(stat);
                 }

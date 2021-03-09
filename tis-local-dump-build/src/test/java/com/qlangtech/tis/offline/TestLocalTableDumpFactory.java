@@ -2,6 +2,7 @@ package com.qlangtech.tis.offline;
 
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import com.google.common.io.CountingInputStream;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.cloud.MockZKUtils;
 import com.qlangtech.tis.dump.LocalTableDumpFactory;
@@ -23,9 +24,15 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.test.TISTestCase;
 import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.lucene.codecs.CodecUtil;
+import org.apache.solr.handler.admin.MockTisCoreAdminHandler;
+import org.apache.solr.response.SolrQueryResponse;
 import org.easymock.EasyMock;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +52,7 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
     protected void setUp() throws Exception {
         super.setUp();
         this.clearMocks();
-        FileUtils.deleteQuietly(LocalTableDumpFactory.getLocalOfflineRootDir());
+         FileUtils.deleteQuietly(LocalTableDumpFactory.getLocalOfflineRootDir());
     }
 
     public void testSingleTableDump() throws Exception {
@@ -62,6 +69,8 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
         });
 
         ITISCoordinator zkCoordinator = MockZKUtils.createZkMock();
+        //search4(.+?)_shard(\d+?)_replica_n(\d+?)
+        String mockSolrCore = INDEX_COLLECTION + "_shard1_replica_n1";
         IJoinTaskContext execContext = this.mock("execContext", IJoinTaskContext.class);
         //EntityName targetTableName = EntityName.parse(DB_EMPLOYEES+"."); ctx.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME);
         EasyMock.expect(execContext.getAttribute(IParamContext.KEY_BUILD_TARGET_TABLE_NAME)).andReturn(getEmployeeTab()).anyTimes();
@@ -83,7 +92,7 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
             /** -----------------------------------------------------------
              * 开始执行索引构建流程
              -----------------------------------------------------------*/
-            startIndexBuild(execContext, zkCoordinator, MockTaskContextUtils.timeFormatYyyyMMddHHmmss.get().format(timestamp));
+            startIndexBuild(mockSolrCore, execContext, zkCoordinator, MockTaskContextUtils.timeFormatYyyyMMddHHmmss.get().format(timestamp));
             Thread.sleep(1000);
         }
         int index = 0;
@@ -110,7 +119,7 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
     }
 
 
-    public void startIndexBuild(IJoinTaskContext execContext, ITISCoordinator zkCoordinator, String timePoint) throws Exception {
+    public void startIndexBuild(String solrCoreName, IJoinTaskContext execContext, ITISCoordinator zkCoordinator, String timePoint) throws Exception {
         LocalIndexBuilderTriggerFactory builderTriggerFactory = new LocalIndexBuilderTriggerFactory();
 
         File localOfflineDir = LocalTableDumpFactory.getLocalOfflineRootDir();
@@ -141,7 +150,57 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
          * 开始执行索引build
          -----------------------------------------------------------*/
         TestLocalTableDumpFactory.waitJobTerminatorAndAssert(buildJob);
+        // long hdfsTimeStamp, String hdfsUser, SolrCore core, File indexDir, SolrQueryResponse rsp, String taskId
+        indexFlowback2SolrEngineNode(solrCoreName, timePoint, localOfflineDir, taskId);
 
+    }
+
+//    public void testIndexFlowback2SolrEngineNode() throws Exception {
+//
+//        int footerMagic = CodecUtil.FOOTER_MAGIC;
+//        File cfs = new File("/opt/data/tis/localOffline/search4employees/all/0/output/20210204144833/index/0/_m.cfs");
+//
+//        try {
+//            byte[] bytes = IOUtils.toByteArray(FileUtils.openInputStream(cfs));
+//            for (int i = 0; i < bytes.length; i++) {
+//                if (getInt(bytes, i) == footerMagic) {
+//                    System.out.println("match the FOOTER_MAGIC:" + i);
+//                }
+//            }
+//        } catch (Throwable e) {
+//
+//        }
+//
+//        CountingInputStream input = new CountingInputStream(new BufferedInputStream(FileUtils.openInputStream(cfs)));
+//        input.skip(819826);
+//        byte[] b = new byte[4];
+//        input.read(b, 0, 4);
+//        System.out.println("===========" + (getInt(b, 0) == footerMagic));
+//
+////        System.out.println("cfs.length():" + cfs.getParent().length());
+////        System.out.println("FileUtils.sizeOf(cfs):" + FileUtils.sizeOf(cfs.getParentFile()));
+////        System.out.println("IOUtils.toByteArray(FileUtils.openInputStream(cfs) ).length:" + IOUtils.toByteArray(FileUtils.openInputStream(cfs)).length);
+//
+//        String mockSolrCore = INDEX_COLLECTION + "_shard1_replica_n1";
+//        File localOfflineDir = LocalTableDumpFactory.getLocalOfflineRootDir();
+////String timepoint ="20210309104515";
+//        String timepoint = "20210204144833";
+//        indexFlowback2SolrEngineNode(mockSolrCore, timepoint, localOfflineDir, 123);
+//    }
+//
+//    private int getInt(byte[] bytes, int offset) {
+//        return ((bytes[offset] & 0xFF) << 24) | ((bytes[offset + 1] & 0xFF) << 16)
+//                | ((bytes[offset + 2] & 0xFF) << 8) | (bytes[offset + 3] & 0xFF);
+//    }
+
+    private void indexFlowback2SolrEngineNode(String solrCoreName, String timePoint, File localOfflineDir, Integer taskId) throws IOException {
+        MockTisCoreAdminHandler coreAdminHandler = new MockTisCoreAdminHandler(null);
+        coreAdminHandler.addRunningTask(String.valueOf(taskId));
+        File indexDir = new File(localOfflineDir, "index");
+        FileUtils.forceMkdir(indexDir);
+        SolrQueryResponse solrResponse = new SolrQueryResponse();
+        // 将索引文件回流到目标目录里去
+        coreAdminHandler.downloadIndexFile2IndexDir(Long.parseLong(timePoint), solrCoreName, indexDir, solrResponse, String.valueOf(taskId));
     }
 
 
@@ -154,10 +213,7 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
      */
     private void startDump(LocalTableDumpFactory tableDumpFactory, TaskContext taskContext) throws Exception {
         IRemoteJobTrigger singleTableDumpJob = tableDumpFactory.createSingleTableDumpJob(this.getEmployeeTab(), taskContext);
-
-
         singleTableDumpJob.submitJob();
-
         waitJobTerminatorAndAssert(singleTableDumpJob);
     }
 

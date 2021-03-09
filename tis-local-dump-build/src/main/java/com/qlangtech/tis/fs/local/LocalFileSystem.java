@@ -18,6 +18,10 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.fs.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.MMapDirectory;
+import org.apache.lucene.store.NoLockFactory;
+import org.apache.solr.store.blockcache.CustomBufferedIndexInput;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,15 +68,29 @@ public class LocalFileSystem implements ITISFileSystem {
     }
 
     @Override
+    public Directory createIndexBackFlowChildDirectory(IPath path) {
+        try {
+            return new MMapDirectory(this.getUnwrap(path).toPath(), NoLockFactory.INSTANCE);
+        } catch (IOException e) {
+            throw new RuntimeException("path:" + path, e);
+        }
+    }
+
+    @Override
     public FSDataInputStream open(IPath path, int bufferSize) {
-        return open(path);
+        File local = getUnwrap(path);
+        try {
+            return new LocalFSDataInputStream(FileUtils.openInputStream(local), bufferSize);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public FSDataInputStream open(IPath path) {
         File local = getUnwrap(path);
         try {
-            return new LocalFSDataInputStream(local);
+            return new LocalFSDataInputStream(FileUtils.openInputStream(local), CustomBufferedIndexInput.BUFFER_SIZE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -134,6 +152,7 @@ public class LocalFileSystem implements ITISFileSystem {
         if (!local.exists()) {
             throw new IllegalStateException("file is not exist:" + local.getAbsolutePath());
         }
+        final long sizeOf = FileUtils.sizeOf(local);
         return new IFileSplitor() {
             @Override
             public List<IFileSplit> getSplits(IndexBuildConfig config) throws Exception {
@@ -150,7 +169,7 @@ public class LocalFileSystem implements ITISFileSystem {
 
             @Override
             public long getTotalSize() {
-                return local.length();
+                return sizeOf;//local.length();
             }
         };
     }

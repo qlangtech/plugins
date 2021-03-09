@@ -41,4 +41,9 @@ public class LocalFilePath implements IPath {
         }
         return (T) file;
     }
+
+    @Override
+    public String toString() {
+        return file.getAbsolutePath();
+    }
 }

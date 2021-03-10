@@ -35,7 +35,7 @@ import java.util.List;
  * @create: 2021-03-02 13:00
  **/
 public class LocalFileSystem implements ITISFileSystem {
-    private static final String NAME_FS = "localFileSystem";
+   // private static final String NAME_LOCAL_FS = "localFileSys";
     private final String rootDir;
 
     public LocalFileSystem(String rootDir) {
@@ -49,7 +49,7 @@ public class LocalFileSystem implements ITISFileSystem {
 
     @Override
     public String getName() {
-        return NAME_FS;
+        return NAME_LOCAL_FS;
     }
 
     @Override
@@ -67,27 +67,22 @@ public class LocalFileSystem implements ITISFileSystem {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Directory createIndexBackFlowChildDirectory(IPath path) {
-        try {
-            return new MMapDirectory(this.getUnwrap(path).toPath(), NoLockFactory.INSTANCE);
-        } catch (IOException e) {
-            throw new RuntimeException("path:" + path, e);
-        }
-    }
+
 
     @Override
     public FSDataInputStream open(IPath path, int bufferSize) {
-        File local = getUnwrap(path);
-        try {
-            return new LocalFSDataInputStream(FileUtils.openInputStream(local), bufferSize);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        File local = getUnwrap(path);
+//        try {
+//            return new LocalFSDataInputStream(FileUtils.openInputStream(local), bufferSize);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FSDataInputStream open(IPath path) {
+
         File local = getUnwrap(path);
         try {
             return new LocalFSDataInputStream(FileUtils.openInputStream(local), CustomBufferedIndexInput.BUFFER_SIZE);

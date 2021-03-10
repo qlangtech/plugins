@@ -16,7 +16,6 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.qlangtech.tis.fs.FSDataInputStream;
 import com.qlangtech.tis.fs.*;
-import com.qlangtech.tis.hdfs.impl.directory.TISDirectory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -41,6 +40,11 @@ public class HdfsFileSystem implements ITISFileSystem {
 
     private static final String HDFS = "hdfs";
 
+    @Override
+    public String getName() {
+        return HDFS;
+    }
+
     public static final String HDFS_SYNC_BLOCK = "solr.hdfs.sync.block";
 
     public static final int BUFFER_SIZE = 16384;
@@ -52,14 +56,6 @@ public class HdfsFileSystem implements ITISFileSystem {
         this.rootDir = rootDir;
     }
 
-    @Override
-    public org.apache.lucene.store.Directory createIndexBackFlowChildDirectory(IPath path) {
-        try {
-            return new TISDirectory(path, this);
-        } catch (IOException e) {
-            throw new RuntimeException("path:" + path, e);
-        }
-    }
 
     @Override
     public String getRootDir() {
@@ -225,10 +221,6 @@ public class HdfsFileSystem implements ITISFileSystem {
         }
     }
 
-    @Override
-    public String getName() {
-        return HDFS;
-    }
 
     @Override
     public IPath getPath(String path) {

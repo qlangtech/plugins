@@ -49,11 +49,6 @@
         </dependency>
         -->
 
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-solrcore-extend</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>

@@ -66,15 +66,6 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         return fileSystem;
     }
 
-//    @Override
-//    public String getRootDir() {
-//        return this.rootDir;
-//    }
-
-//    @Override
-//    public String getName() {
-//        return name;
-//    }
 
     public String getHdfsAddress() {
         return hdfsAddress;

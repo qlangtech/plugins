@@ -2,7 +2,6 @@ package com.qlangtech.tis.offline;
 
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import com.google.common.io.CountingInputStream;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.cloud.MockZKUtils;
 import com.qlangtech.tis.dump.LocalTableDumpFactory;
@@ -24,13 +23,10 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.test.TISTestCase;
 import com.qlangtech.tis.trigger.jst.ImportDataProcessInfo;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.lucene.codecs.CodecUtil;
 import org.apache.solr.handler.admin.MockTisCoreAdminHandler;
 import org.apache.solr.response.SolrQueryResponse;
 import org.easymock.EasyMock;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -45,7 +41,7 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2021-03-03 13:52
  **/
-public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpCommon {
+public class TestLocalTableDumpAndIndex extends TISTestCase implements ITestDumpCommon {
 
 
     @Override
@@ -149,7 +145,7 @@ public class TestLocalTableDumpFactory extends TISTestCase implements ITestDumpC
         /** -----------------------------------------------------------
          * 开始执行索引build
          -----------------------------------------------------------*/
-        TestLocalTableDumpFactory.waitJobTerminatorAndAssert(buildJob);
+        TestLocalTableDumpAndIndex.waitJobTerminatorAndAssert(buildJob);
         // long hdfsTimeStamp, String hdfsUser, SolrCore core, File indexDir, SolrQueryResponse rsp, String taskId
         indexFlowback2SolrEngineNode(solrCoreName, timePoint, localOfflineDir, taskId);
 

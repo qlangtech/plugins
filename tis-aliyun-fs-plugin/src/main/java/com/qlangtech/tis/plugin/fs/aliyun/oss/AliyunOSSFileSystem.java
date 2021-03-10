@@ -52,6 +52,11 @@ public class AliyunOSSFileSystem implements ITISFileSystem {
     }
 
     @Override
+    public <Directory> Directory createIndexBackFlowChildDirectory(IPath path) {
+        return null;
+    }
+
+    @Override
     public String getRootDir() {
         return this.rootDir;
     }

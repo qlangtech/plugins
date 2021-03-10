@@ -51,10 +51,6 @@ public class AliyunOSSFileSystem implements ITISFileSystem {
         client = new OSSClientBuilder().build(endpoint, aliyunToken.getAccessKeyId(), aliyunToken.getAccessKeySecret());
     }
 
-    @Override
-    public <Directory> Directory createIndexBackFlowChildDirectory(IPath path) {
-        return null;
-    }
 
     @Override
     public String getRootDir() {

@@ -104,6 +104,9 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
                 MySQLType colType = null;
                 for (int i = 0; i < targetCols.size(); i++) {
                     column = next.column(i);
+                    if (column.isNullAt(rowIndex)) {
+                        continue;
+                    }
                     colType = column.dataType().getType();
                     columnMetaData = targetCols.get(i);
                     if (colType == MySQLType.TypeVarchar

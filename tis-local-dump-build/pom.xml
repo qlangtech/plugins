@@ -28,11 +28,52 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-ds-dump</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-index-builder</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>logback-flume-appender</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-solrcore-extend</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-lang</groupId>
+                    <artifactId>commons-lang</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-solrconfig-parser</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-solrcore-extend</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

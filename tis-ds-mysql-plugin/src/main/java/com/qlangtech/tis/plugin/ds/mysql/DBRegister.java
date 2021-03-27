@@ -1,7 +1,6 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import org.springframework.beans.BeansException;
 
 /**
  * @author: baisui 百岁
@@ -23,10 +22,8 @@ public abstract class DBRegister {
 
     /**
      * 读取多个数据源中的一个一般是用于读取数据源Meta信息用
-     *
-     * @throws BeansException
      */
-    public void visitFirst() throws BeansException {
+    public void visitFirst() {
         this.setApplicationContext(false, true);
     }
 
@@ -37,7 +34,7 @@ public abstract class DBRegister {
         this.setApplicationContext(true, false);
     }
 
-    private void setApplicationContext(boolean resolveHostIp, boolean facade) throws BeansException {
+    private void setApplicationContext(boolean resolveHostIp, boolean facade) {
         this.dbConfig.vistDbURL(resolveHostIp, (dbName, jdbcUrl) -> {
             final String dbDefinitionId = (facade ? DBRegister.this.dbName : dbName);
             createDefinition(dbDefinitionId, "com.mysql.jdbc.Driver", jdbcUrl, dbConfig.getUserName(), dbConfig.getPassword());

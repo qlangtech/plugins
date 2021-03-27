@@ -117,10 +117,6 @@ public class TestHiveFlatTableBuilder extends TestCase {
 
         }
 
-        @Override
-        public String getJoinTableStorePath(INameWithPathGetter pathGetter) {
-            return null;
-        }
     }
 
     private static class MockTemplateContext implements ITemplateContext {

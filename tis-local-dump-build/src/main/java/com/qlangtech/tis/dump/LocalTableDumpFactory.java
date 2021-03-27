@@ -65,9 +65,6 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-//    @FormField(ordinal = 1, validate = {Validator.require})
-//    public String rootDir;
-
     private transient ITISFileSystem fileSystem;
 
     private transient DetailedDataSourceFactoryGetter dataSourceFactoryGetter;

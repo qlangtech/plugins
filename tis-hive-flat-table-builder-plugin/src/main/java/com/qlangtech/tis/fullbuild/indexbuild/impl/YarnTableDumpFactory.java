@@ -22,12 +22,10 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.build.task.TaskMapper;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
-import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
@@ -111,7 +109,8 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
     /**
-     * 构建宽表
+     * 构建宽表<br>
+     * ref: ITableBuildTaskContext
      *
      * @param task
      */
@@ -121,17 +120,6 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
                 = TIS.getPluginStore(FlatTableBuilder.class).find(this.destination);
         flatTableBuilder.startTask(task);
     }
-
-
-//    @Override
-//    public String getName() {
-//        return this.name;
-//    }
-
-//    @Override
-//    public String getJoinTableStorePath(INameWithPathGetter pathGetter) {
-//        return FSHistoryFileUtils.getJoinTableStorePath(this.getFs().getRootDir(), pathGetter);
-//    }
 
     private HiveRemoveHistoryDataTask getHiveRemoveHistoryDataTask() {
         if (removeHistoryDataTask == null) {
@@ -210,14 +198,5 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
         public String getDisplayName() {
             return "yarn";
         }
-
-//        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            Matcher matcher = pattern_identity.matcher(value);
-//            if (!matcher.matches()) {
-//                msgHandler.addFieldError(context, fieldName, MSG_IDENTITY_ERROR);
-//                return false;
-//            }
-//            return true;
-//        }
     }
 }

@@ -27,7 +27,6 @@ import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -38,7 +37,7 @@ import static com.qlangtech.async.message.client.util.MD5Util.stringIsEmpty;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class ConsumerListenerForRm extends BaseConsumerListener implements InitializingBean {
+public class ConsumerListenerForRm extends BaseConsumerListener {
 
     private Logger logger = LoggerFactory.getLogger(ConsumerListenerForRm.class);
 
@@ -82,6 +81,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
     /**
      * 启动，需要在bean中初始化
      */
+    @Override
     public void start() throws MQConsumeException {
         try {
             /**
@@ -181,10 +181,10 @@ public class ConsumerListenerForRm extends BaseConsumerListener implements Initi
         ORDERLY, CONCURRENTLY
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        this.start();
-    }
+//    @Override
+//    public void afterPropertiesSet() throws Exception {
+//        this.start();
+//    }
 
     /**
      * 消费消息线程数目

@@ -67,6 +67,12 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-solrcore-extend</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-solrj-client</artifactId>
+                </exclusion>
+            </exclusions>
             <!--
             <scope>provided</scope>
             -->

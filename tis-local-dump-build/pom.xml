@@ -72,6 +72,14 @@
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>tis-solrj-client</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-solr-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-manage-pojo</artifactId>
+                </exclusion>
             </exclusions>
             <!--
             <scope>provided</scope>

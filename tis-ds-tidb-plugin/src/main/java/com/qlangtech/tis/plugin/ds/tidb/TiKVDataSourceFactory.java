@@ -147,7 +147,9 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     public List<String> getTablesInDB() {
         return this.openTiDB((s, c, d) -> {
             List<TiTableInfo> tabs = c.listTables(d);
-            return tabs.stream().map((tt) -> tt.getName()).collect(Collectors.toList());
+            // either view or sequence shall be filter
+            return tabs.stream().filter((tbl) -> (tbl != null && !(tbl.isView() || tbl.isSequence())))
+                    .map((tt) -> tt.getName()).collect(Collectors.toList());
         });
     }
 

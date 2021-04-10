@@ -30,10 +30,12 @@
         <module>tis-kafka-plugin</module>
         <module>tis-solr-plugin</module>
         <module>tis-local-dump-build</module>
+        <module>tis-datax-mysql-plugin</module>
     </modules>
 
     <properties>
 
+        <alibaba.datax.version>0.0.1-SNAPSHOT</alibaba.datax.version>
         <hadoop-version>2.6.5</hadoop-version>
         <!--
                 <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>

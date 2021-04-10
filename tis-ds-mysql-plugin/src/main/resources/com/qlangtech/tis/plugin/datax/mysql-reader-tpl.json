@@ -1,0 +1,12 @@
+{
+  "name": "mysqlreader",
+  "parameter": {
+  "connection": [
+    {
+      "jdbcUrl": ["${reader.slaverUrl}"],
+      "querySql": ["SELECT ${reader.cols} FROM ${cfg.name} #if(reader.showWhere) WHERE ${reader.sqlCriteria} #end"]
+    }
+  ],
+  "password": "${reader.password}",
+  "username": "${reader.username}"}
+}

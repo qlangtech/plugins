@@ -1,0 +1,23 @@
+{
+  "splitPk": {
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  },
+  "dbName": {
+    "label": "数据库名",
+    "enum": "com.qlangtech.tis.offline.module.action.OfflineDatasourceAction.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")"
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataxMySQLReader.getDftTemplate()",
+    "rows": 18
+  }
+}

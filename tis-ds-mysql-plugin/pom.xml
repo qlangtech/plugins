@@ -25,11 +25,19 @@
             <version>5.1.30</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>mysqlreader</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>mysqlwriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
+
     </dependencies>
-
-
-
-
 
 
 </project>

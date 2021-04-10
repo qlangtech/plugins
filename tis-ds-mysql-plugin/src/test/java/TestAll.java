@@ -1,3 +1,4 @@
+import com.qlangtech.tis.plugin.datax.TestDataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.mysql.TestMySQLDataSourceFactory;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -12,6 +13,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestMySQLDataSourceFactory.class);
+        suite.addTestSuite(TestDataxMySQLReader.class);
         return suite;
     }
 }

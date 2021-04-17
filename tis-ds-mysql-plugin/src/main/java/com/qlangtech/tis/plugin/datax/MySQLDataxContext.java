@@ -1,7 +1,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +15,7 @@ public class MySQLDataxContext implements IDataxContext {
     String password;
     String username;
     String jdbcUrl;
-    List<ColumnMetaData> cols = new ArrayList<>();
+    List<String> cols = new ArrayList<>();
 
     public String getTabName() {
         return tabName;
@@ -39,6 +38,6 @@ public class MySQLDataxContext implements IDataxContext {
     }
 
     private String getColumnWithLink(String left, String right) {
-        return this.cols.stream().map(r -> (left + r.getKey() + right)).collect(Collectors.joining(","));
+        return this.cols.stream().map(r -> (left + r + right)).collect(Collectors.joining(","));
     }
 }

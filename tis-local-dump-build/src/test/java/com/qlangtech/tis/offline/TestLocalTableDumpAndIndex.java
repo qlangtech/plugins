@@ -48,7 +48,7 @@ public class TestLocalTableDumpAndIndex extends TISTestCase implements ITestDump
     protected void setUp() throws Exception {
         super.setUp();
         this.clearMocks();
-         FileUtils.deleteQuietly(LocalTableDumpFactory.getLocalOfflineRootDir());
+        FileUtils.deleteQuietly(LocalTableDumpFactory.getLocalOfflineRootDir());
     }
 
     public void testSingleTableDump() throws Exception {
@@ -196,7 +196,7 @@ public class TestLocalTableDumpAndIndex extends TISTestCase implements ITestDump
         FileUtils.forceMkdir(indexDir);
         SolrQueryResponse solrResponse = new SolrQueryResponse();
         // 将索引文件回流到目标目录里去
-        coreAdminHandler.downloadIndexFile2IndexDir(Long.parseLong(timePoint), solrCoreName, indexDir, solrResponse, String.valueOf(taskId));
+        coreAdminHandler.downloadIndexFile2IndexDir(null, Long.parseLong(timePoint), solrCoreName, indexDir, solrResponse, String.valueOf(taskId));
     }
 
 

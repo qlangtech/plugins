@@ -392,34 +392,38 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
     }
 
     @Override
-    public List<String> getTablesInDB() throws Exception {
-        final List<String> tabs = new ArrayList<>();
+    public List<String> getTablesInDB() {
+        try {
+            final List<String> tabs = new ArrayList<>();
 
-        final DBConfig dbConfig = getDbConfig();
+            final DBConfig dbConfig = getDbConfig();
 
-        dbConfig.vistDbName((config, ip, databaseName) -> {
-            visitConnection(config, ip, databaseName, config.getUserName(), config.getPassword(), (conn) -> {
-                Statement statement = null;
-                ResultSet resultSet = null;
-                try {
-                    statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                    statement.execute("show tables");
-                    resultSet = statement.getResultSet();
-                    while (resultSet.next()) {
-                        tabs.add(resultSet.getString(1));
+            dbConfig.vistDbName((config, ip, databaseName) -> {
+                visitConnection(config, ip, databaseName, config.getUserName(), config.getPassword(), (conn) -> {
+                    Statement statement = null;
+                    ResultSet resultSet = null;
+                    try {
+                        statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                        statement.execute("show tables");
+                        resultSet = statement.getResultSet();
+                        while (resultSet.next()) {
+                            tabs.add(resultSet.getString(1));
+                        }
+                    } finally {
+                        if (resultSet != null) {
+                            resultSet.close();
+                        }
+                        if (statement != null) {
+                            statement.close();
+                        }
                     }
-                } finally {
-                    if (resultSet != null) {
-                        resultSet.close();
-                    }
-                    if (statement != null) {
-                        statement.close();
-                    }
-                }
+                });
+                return true;
             });
-            return true;
-        });
-        return tabs;
+            return tabs;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private DBConfig getDbConfig() {

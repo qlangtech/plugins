@@ -1,0 +1,9 @@
+{
+  "where": {
+    "placeholder": "1=1"
+  },
+  "cols": {
+    "label": "同步列",
+    "enum": []
+  }
+}

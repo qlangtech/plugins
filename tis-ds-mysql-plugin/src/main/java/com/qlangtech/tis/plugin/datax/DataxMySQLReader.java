@@ -1,17 +1,20 @@
 package com.qlangtech.tis.plugin.datax;
 
-import com.google.common.base.Joiner;
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.Memoizer;
 
 import java.util.Iterator;
@@ -28,8 +31,6 @@ import java.util.stream.Collectors;
  **/
 public class DataxMySQLReader extends DataxReader {
     private static final String DATAX_NAME = "MySQL";
-    // public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
-
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
@@ -37,16 +38,25 @@ public class DataxMySQLReader extends DataxReader {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
     public boolean splitPk;
 
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT)
-//    public String where;
-
-    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA)
+    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
-    private List<SelectedTab> selectedTabs;
+    @SubForm(desClazz = SelectedTab.class
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter.param(\"" + DataxUtils.DATAX_NAME + "\"));")
+    public List<SelectedTab> selectedTabs;
 
     public List<SelectedTab> getSelectedTabs() {
         return this.selectedTabs;
+    }
+
+    @Override
+    public boolean hasMulitTable() {
+        return getSelectedTabs().size() > 1;
+    }
+
+    @Override
+    public boolean hasExplicitTable() {
+        return true;
     }
 
     public static String getDftTemplate() {
@@ -117,11 +127,11 @@ public class DataxMySQLReader extends DataxReader {
                 dataxContext.password = dsFactory.password;
                 List<ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
                 if (tab.isAllCols()) {
-                    dataxContext.cols = tableMetadata;
+                    dataxContext.cols = tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
                 } else {
                     dataxContext.cols = tableMetadata.stream().filter((col) -> {
                         return tab.containCol(col.getKey());
-                    }).collect(Collectors.toList());
+                    }).map((t) -> t.getValue()).collect(Collectors.toList());
                 }
 
                 return dataxContext;
@@ -140,7 +150,7 @@ public class DataxMySQLReader extends DataxReader {
     }
 
     @Override
-    public List<String> getTablesInDB() throws Exception {
+    public List<String> getTablesInDB() {
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTablesInDB();
     }
@@ -157,9 +167,14 @@ public class DataxMySQLReader extends DataxReader {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader> {
+    public static class DefaultDescriptor extends Descriptor<DataxReader> implements FormFieldType.IMultiSelectValidator {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean validate(IFieldErrorHandler msgHandler, Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
+            return true;
         }
 
         @Override

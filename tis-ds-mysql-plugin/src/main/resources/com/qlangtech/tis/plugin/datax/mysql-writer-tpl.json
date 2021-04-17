@@ -1,0 +1,16 @@
+{
+  "name": "mysqlwriter",
+  "parameter": {
+    "column": [${writer.colsQuotes}],
+    "connection":[
+      {
+        "jdbcUrl":"$cfg.masterUrl",
+        "table": ["$cfg.name"]
+      }
+    ],
+    "password": "$cfg.password",
+    "session": ["set session sql_mode='ANSI'"],
+    "username": "$cfg.username",
+    "writeMode": "replace"
+  }
+}

@@ -2,12 +2,18 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import org.apache.commons.collections.CollectionUtils;
+import java.util.Optional;
 
 /**
  * @author: baisui 百岁
@@ -17,22 +23,106 @@ public class DataxMySQLWriter extends DataxWriter {
     private static final String DATAX_NAME = "MySQL";
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
 
-    // @FormField(identity = true, ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String dbName;
 
-    @Override
-    public String getWriterName() {
-        return "mysqlwriter";
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String writeMode;
+
+    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {})
+    public String preSql;
+
+    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
+    public String postSql;
+
+    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
+    public String session;
+
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer batchSize;
+
+    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public String template;
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
     }
+
 
     @Override
     public String getTemplate() {
-        return null;
+        return this.template;
     }
 
     @Override
-    public IDataxContext getSubTask() {
-        return new MySQLDataxContext();
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+        if (!tableMap.isPresent()) {
+            throw new IllegalArgumentException("param tableMap shall be present");
+        }
+        MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
+        IDataxProcessor.TableMap tm = tableMap.get();
+        if (CollectionUtils.isEmpty(tm.getSourceCols())) {
+            throw new IllegalStateException("tablemap " + tm + " source cols can not be null");
+        }
+        TISTable table = new TISTable();
+        table.setTableName(tm.getTo());
+        DataDumpers dataDumpers = dsFactory.getDataDumpers(table);
+        if (dataDumpers.splitCount > 1) {
+            throw new IllegalStateException("dbSplit can not max than 1");
+        }
+        MySQLWriterContext context = new MySQLWriterContext();
+        if (dataDumpers.dumpers.hasNext()) {
+            IDataSourceDumper next = dataDumpers.dumpers.next();
+            context.jdbcUrl = next.getDbHost();
+            context.password = dsFactory.password;
+            context.username = dsFactory.userName;
+            context.tabName = table.getTableName();
+            context.cols = tm.getSourceCols();
+            context.dbName = this.dbName;
+            context.writeMode = writeMode;
+            context.preSql = preSql;
+            context.postSql = postSql;
+            context.session = session;
+            context.batchSize = batchSize;
+            return context;
+        }
+
+        throw new RuntimeException("dbName:" + dbName + " relevant DS is empty");
+    }
+
+
+    public static class MySQLWriterContext extends MySQLDataxContext {
+
+        private String dbName;
+        private String writeMode;
+        private String preSql;
+        private String postSql;
+        private String session;
+        private Integer batchSize;
+
+        public String getDbName() {
+            return dbName;
+        }
+
+        public String getWriteMode() {
+            return writeMode;
+        }
+
+        public String getPreSql() {
+            return preSql;
+        }
+
+        public String getPostSql() {
+            return postSql;
+        }
+
+        public String getSession() {
+            return session;
+        }
+
+        public Integer getBatchSize() {
+            return batchSize;
+        }
     }
 
     private DataSourceFactory getDataSourceFactory() {
@@ -44,10 +134,6 @@ public class DataxMySQLWriter extends DataxWriter {
     public static class DefaultDescriptor extends Descriptor<DataxWriter> {
         public DefaultDescriptor() {
             super();
-//            this.registerSelectOptions(KEY_DB_NAME_FIELD_NAME, () -> {
-//                List<DataSourceFactory> allDbs = DataSourceFactory.all();
-//                return allDbs.stream().filter((db) -> db instanceof MySQLDataSourceFactory).collect(Collectors.toList());
-//            });
         }
 
         @Override

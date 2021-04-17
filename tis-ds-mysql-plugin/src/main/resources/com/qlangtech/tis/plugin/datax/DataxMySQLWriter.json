@@ -1,0 +1,35 @@
+{
+  "writeMode": {
+    "dftVal": false,
+    "enum": [
+      {
+        "val": "insert",
+        "label": "Insert"
+      },
+      {
+        "val": "replace",
+        "label": "Replace"
+      },
+      {
+        "val": "update",
+        "label": "Update"
+      }
+    ]
+  },
+  "preSql": {
+    "placeholder": "delete from tabXX"
+  },
+  "postSql": {
+  },
+  "session": {
+    "placeholder": "set session sql_mode='ANSI'"
+  },
+  "dbName": {
+    "label": "数据库名",
+    "enum": "com.qlangtech.tis.offline.module.action.OfflineDatasourceAction.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")"
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataxMySQLWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

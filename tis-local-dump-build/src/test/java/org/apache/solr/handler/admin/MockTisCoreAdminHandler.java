@@ -20,9 +20,10 @@ public class MockTisCoreAdminHandler extends TisCoreAdminHandler {
         super(coreContainer);
     }
 
+    //  protected void downloadIndexFile2IndexDir(TaskObject taskObj, long hdfsTimeStamp, String solrCoreName, final File indexDir, final SolrQueryResponse rsp, String taskId)
     @Override
-    public void downloadIndexFile2IndexDir(long hdfsTimeStamp, String solrCoreName, File indexDir, SolrQueryResponse rsp, String taskId) {
-        super.downloadIndexFile2IndexDir(hdfsTimeStamp, solrCoreName, indexDir, rsp, taskId);
+    public void downloadIndexFile2IndexDir(TaskObject taskObj, long hdfsTimeStamp, String solrCoreName, File indexDir, SolrQueryResponse rsp, String taskId) {
+        super.downloadIndexFile2IndexDir(taskObj, hdfsTimeStamp, solrCoreName, indexDir, rsp, taskId);
     }
 
 //    public void addCompletedTask(String taskId) {

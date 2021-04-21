@@ -11,6 +11,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
@@ -527,10 +528,11 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         @Override
         protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance(postFormVals.rawFormData);
+            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
 
             try {
-                mysqlDS.instance.getTablesInDB();
+                List<String> tables = mysqlDS.instance.getTablesInDB();
+                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
             } catch (Exception e) {
                 msgHandler.addErrorMessage(context, e.getMessage());
                 return false;

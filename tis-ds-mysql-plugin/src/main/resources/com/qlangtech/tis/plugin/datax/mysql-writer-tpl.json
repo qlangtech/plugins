@@ -4,13 +4,24 @@
     "column": [${writer.colsQuotes}],
     "connection":[
       {
-        "jdbcUrl":"$cfg.masterUrl",
-        "table": ["$cfg.name"]
+        "jdbcUrl":"$writer.jdbcUrl",
+        "table": ["$writer.tabName"]
       }
     ],
-    "password": "$cfg.password",
-    "session": ["set session sql_mode='ANSI'"],
-    "username": "$cfg.username",
-    "writeMode": "replace"
+  #if($writer.preSql)  "preSql": [
+         "$writer.preSql"
+    ],
+#end
+  #if($writer.preSql)  "postSql": [
+      "$writer.postSql"
+   ],
+#end
+  #if($writer.session)  "batchSize": $writer.batchSize,
+#end
+    "password": "$writer.password",
+  #if($writer.session)  "session": ["$writer.session"],
+#end
+    "username": "$writer.username",
+    "writeMode": "$writer.writeMode"
   }
 }

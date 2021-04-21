@@ -2,7 +2,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -45,6 +45,7 @@ public class DataxMySQLReader extends DataxReader {
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter.param(\"" + DataxUtils.DATAX_NAME + "\"));")
     public List<SelectedTab> selectedTabs;
 
+    @Override
     public List<SelectedTab> getSelectedTabs() {
         return this.selectedTabs;
     }
@@ -63,13 +64,9 @@ public class DataxMySQLReader extends DataxReader {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-reader-tpl.json");
     }
 
-//    @Override
-//    public String identityValue() {
-//        return this.dbName;
-//    }
 
     @Override
-    public Iterator<IDataxContext> getSubTasks() {
+    public Iterator<IDataxReaderContext> getSubTasks() {
 
         MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
 
@@ -85,7 +82,7 @@ public class DataxMySQLReader extends DataxReader {
 
         AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
 
-        return new Iterator<IDataxContext>() {
+        return new Iterator<IDataxReaderContext>() {
             @Override
             public boolean hasNext() {
 
@@ -116,11 +113,11 @@ public class DataxMySQLReader extends DataxReader {
             }
 
             @Override
-            public IDataxContext next() {
+            public IDataxReaderContext next() {
                 Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
                 IDataSourceDumper dumper = dumperIterator.next();
                 SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
-                MySQLDataxContext dataxContext = new MySQLDataxContext();
+                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(tab.getName() + "_" + selectedTabIndex.get());
                 dataxContext.jdbcUrl = dumper.getDbHost();
                 dataxContext.tabName = tab.getName();
                 dataxContext.username = dsFactory.userName;

@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -11,7 +12,7 @@ import java.util.List;
  * @author: baisui 百岁
  * @create: 2021-04-08 13:29
  **/
-public class SelectedTab {
+public class SelectedTab implements ISelectedTab {
     // 表名称
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;

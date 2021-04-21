@@ -23,7 +23,7 @@ public class DataxMySQLWriter extends DataxWriter {
     private static final String DATAX_NAME = "MySQL";
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -79,9 +79,9 @@ public class DataxMySQLWriter extends DataxWriter {
             context.tabName = table.getTableName();
             context.cols = tm.getSourceCols();
             context.dbName = this.dbName;
-            context.writeMode = writeMode;
-            context.preSql = preSql;
-            context.postSql = postSql;
+            context.writeMode = this.writeMode;
+            context.preSql = this.preSql;
+            context.postSql = this.postSql;
             context.session = session;
             context.batchSize = batchSize;
             return context;

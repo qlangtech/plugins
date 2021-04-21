@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -8,7 +9,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -28,6 +33,16 @@ import java.util.Optional;
  **/
 public class TestDataxMySQLWriter extends BasicTest {
     public static String dbWriterName = "baisuitestWriterdb";
+
+    public void testFieldCount() throws Exception {
+        DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
+        Descriptor<DataxWriter> descriptor = mySQLWriter.getDescriptor();
+        PluginFormProperties pluginFormPropertyTypes = descriptor.getPluginFormPropertyTypes();
+
+        assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
+        assertEquals(7, pluginFormPropertyTypes.getKVTuples().size());
+
+    }
 
     public void testTempateGenerate() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
@@ -53,10 +68,28 @@ public class TestDataxMySQLWriter extends BasicTest {
 
 
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
+        mySQLWriter.writeMode = "replace";
         mySQLWriter.dbName = dbWriterName;
         mySQLWriter.template = DataxMySQLWriter.getDftTemplate();
-        mySQLWriter.batchSize = 1000;
+        mySQLWriter.batchSize = 1001;
         mySQLWriter.preSql = "delete from test";
+        mySQLWriter.postSql = "delete from test1";
+        mySQLWriter.session = "set session sql_mode='ANSI'";
+        validateConfigGenerate("mysql-datax-writer-assert.json", mySQLWriter);
+        //  System.out.println(mySQLWriter.getTemplate());
+
+
+        // 将非必须输入的值去掉再测试一遍
+        mySQLWriter.batchSize = null;
+        mySQLWriter.preSql = null;
+        mySQLWriter.postSql = null;
+        mySQLWriter.session = null;
+        validateConfigGenerate("mysql-datax-writer-assert-without-option-val.json", mySQLWriter);
+
+
+    }
+
+    private void validateConfigGenerate(String assertFileName, DataxMySQLWriter mySQLWriter) throws IOException {
         IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
         tm.setFrom("orderinfo");
         tm.setTo("orderinfo_new");
@@ -72,28 +105,36 @@ public class TestDataxMySQLWriter extends BasicTest {
         assertEquals("orderinfo_new", mySQLDataxContext.tabName);
         assertEquals("root", mySQLDataxContext.getUsername());
 
-        IDataxReader dataxReader = EasyMock.createMock("dataxReader", IDataxReader.class);
 
-        MockDataxProcessor dataProcessor = new MockDataxProcessor(dataxReader, mySQLWriter);
+        MockDataxProcessor dataProcessor = new MockDataxProcessor(mySQLWriter);
 
-        dataProcessor.generateDataxConfig(null);
+        System.out.println(dataProcessor.generateDataxConfig(null, Optional.of(tm)));
 
-      //  System.out.println(mySQLWriter.getTemplate());
-
+        assertEquals(JSON.parseObject(IOUtils.loadResourceFromClasspath(this.getClass(), assertFileName)).toJSONString(),
+                JSON.parseObject(dataProcessor.generateDataxConfig(null, Optional.of(tm))).toJSONString()
+        );
     }
 
     public static class MockDataxProcessor extends DataxProcessor {
-        private final IDataxReader dataxReader;
         private final IDataxWriter dataxWriter;
 
-        public MockDataxProcessor(IDataxReader dataxReader, IDataxWriter dataxWriter) {
-            this.dataxReader = dataxReader;
+        public MockDataxProcessor(IDataxWriter dataxWriter) {
             this.dataxWriter = dataxWriter;
         }
 
         @Override
-        public String generateDataxConfig(IDataxContext readerContext) throws IOException {
-            return super.generateDataxConfig(readerContext);
+        public IDataxReader getReader() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public String getTemplateContent() {
+            return dataxWriter.getTemplate();
+        }
+
+        @Override
+        public String generateDataxConfig(IDataxContext readerContext, Optional<TableMap> tableMap) throws IOException {
+            return super.generateDataxConfig(readerContext, tableMap);
         }
 
         @Override
@@ -111,10 +152,6 @@ public class TestDataxMySQLWriter extends BasicTest {
             return 0;
         }
 
-        @Override
-        public IDataxReader getReader() {
-            return this.dataxReader;
-        }
 
         @Override
         public IDataxWriter getWriter() {

@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxReaderContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,8 @@ public class MySQLDataxContext implements IDataxContext {
     String username;
     String jdbcUrl;
     List<String> cols = new ArrayList<>();
+
+
 
     public String getTabName() {
         return tabName;

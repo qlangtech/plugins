@@ -16,6 +16,9 @@
       }
     ]
   },
+  "batchSize": {
+    "dftVal": 1000
+  },
   "preSql": {
     "placeholder": "delete from tabXX"
   },
@@ -29,6 +32,7 @@
     "enum": "com.qlangtech.tis.offline.module.action.OfflineDatasourceAction.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")"
   },
   "template": {
+    "label": "配置模版",
     "dftVal": "com.qlangtech.tis.plugin.datax.DataxMySQLWriter.getDftTemplate()",
     "rows": 18
   }

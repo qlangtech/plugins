@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>tis-plugin-parent</artifactId>
+        <groupId>com.qlangtech.tis</groupId>
+        <version>2.3.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>tpi</packaging>
+
+    <artifactId>tis-datax-postgresql-plugin</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>postgresqlreader</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>postgresqlwriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
+
+
+    </dependencies>
+
+
+</project>

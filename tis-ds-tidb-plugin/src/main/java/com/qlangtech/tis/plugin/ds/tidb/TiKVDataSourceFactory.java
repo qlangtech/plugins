@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -326,7 +327,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             try {
-                ParseDescribable<DataSourceFactory> tikv = this.newInstance(postFormVals.rawFormData);
+                ParseDescribable<DataSourceFactory> tikv = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
                 DataSourceFactory sourceFactory = tikv.instance;
                 List<String> tables = sourceFactory.getTablesInDB();
                 if (tables.size() < 1) {

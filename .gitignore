@@ -8,6 +8,7 @@
 **/*.tar.gz
 **/*.xml.orig
 **/.idea
+.flattened-pom.xml
 *.jar
 *.ipr
 *.iml

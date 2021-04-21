@@ -231,27 +231,4 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             return ret ? ConsumeOrderlyStatus.SUCCESS : ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
         }
     }
-    // private ActiveSpan buildSpan(MessageExt msg) {
-    // return null;
-    // Tracer tracer = Tracing.current().tracer();
-    // Tracer.SpanBuilder spanBuilder = tracer.buildSpan("consumeMsg");
-    // if (msg.getProperties() != null) {
-    // SpanContext spanContext = tracer.extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(msg.getProperties()));
-    // if (spanContext != null) {
-    // spanBuilder.asChildOf(spanContext);
-    // }
-    // }
-    // ActiveSpan span = spanBuilder.startActive();
-    // Tags.COMPONENT.set(span, TracerConfig.MQ_COMPONENT);
-    // span.setTag(com.dfire.magiceye.Constants.REMOTE_HOST, msg.getBornHostString());
-    // span.setTag(TracerConfig.TOPIC, this.topic);
-    // span.setTag(Constants.SERVICE_PATH, this.topic);
-    // span.setTag(TracerConfig.CONSUMER_GROUP, this.consumerGroup);
-    // span.setTag(TracerConfig.CONSUME_FROM_WHERE, this.consumeFromWhere.toString());
-    // span.setTag(TracerConfig.MESSAGE_MODEL, this.messageModel.toString());
-    // span.setTag(TracerConfig.TAG, this.consumerHandle.getSubExpression());
-    // span.setTag(Constants.BUSINESS_ID, msg.getMsgId());
-    // Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-    // return span;
-    // }
 }

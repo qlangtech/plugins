@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -41,6 +42,7 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -103,7 +105,7 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         @Override
         protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             //return super.validate(msgHandler, context, postFormVals);
-            ParseDescribable<ParamsConfig> k8s = this.newInstance(postFormVals.rawFormData);
+            ParseDescribable<ParamsConfig> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
             DefaultK8sContext k8sCfg = (DefaultK8sContext) k8s.instance;
             try {
                 ApiClient client = k8sCfg.createConfigInstance();

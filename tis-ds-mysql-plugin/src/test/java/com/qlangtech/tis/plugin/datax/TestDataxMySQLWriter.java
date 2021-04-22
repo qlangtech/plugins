@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
+ * <p>
+ *   This program is free software: you can use, redistribute, and/or modify
+ *   it under the terms of the GNU Affero General Public License, version 3
+ *   or later ("AGPL"), as published by the Free Software Foundation.
+ * <p>
+ *  This program is distributed in the hope that it will be useful, but WITHOUT
+ *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ *   FITNESS FOR A PARTICULAR PURPOSE.
+ * <p>
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
@@ -5,10 +20,9 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.IDataxWriter;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
@@ -32,6 +46,7 @@ import java.util.Optional;
  * @create: 2021-04-15 16:10
  **/
 public class TestDataxMySQLWriter extends BasicTest {
+    public static String mysqlJdbcUrl = "jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8";
     public static String dbWriterName = "baisuitestWriterdb";
 
     public void testFieldCount() throws Exception {
@@ -100,64 +115,35 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         MySQLDataxContext mySQLDataxContext = (MySQLDataxContext) subTaskCtx;
         assertEquals("\"`col1`\",\"`col2`\",\"`col3`\"", mySQLDataxContext.getColsQuotes());
-        assertEquals("jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8", mySQLDataxContext.getJdbcUrl());
+        assertEquals(mysqlJdbcUrl, mySQLDataxContext.getJdbcUrl());
         assertEquals("123456", mySQLDataxContext.getPassword());
         assertEquals("orderinfo_new", mySQLDataxContext.tabName);
         assertEquals("root", mySQLDataxContext.getUsername());
 
+        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
+        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
 
-        MockDataxProcessor dataProcessor = new MockDataxProcessor(mySQLWriter);
+        EasyMock.expect(processor.getWriter()).andReturn(mySQLWriter);
+        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
+        EasyMock.replay(processor, dataxGlobalCfg);
 
-        System.out.println(dataProcessor.generateDataxConfig(null, Optional.of(tm)));
+
+        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
+            @Override
+            public String getTemplateContent() {
+                return mySQLWriter.getTemplate();
+            }
+        };
+
+
+        String cfgResult = dataProcessor.generateDataxConfig(null, Optional.of(tm));
+
+        System.out.println(cfgResult);
 
         assertEquals(JSON.parseObject(IOUtils.loadResourceFromClasspath(this.getClass(), assertFileName)).toJSONString(),
-                JSON.parseObject(dataProcessor.generateDataxConfig(null, Optional.of(tm))).toJSONString()
+                JSON.parseObject(cfgResult).toJSONString()
         );
+        EasyMock.verify(processor, dataxGlobalCfg);
     }
 
-    public static class MockDataxProcessor extends DataxProcessor {
-        private final IDataxWriter dataxWriter;
-
-        public MockDataxProcessor(IDataxWriter dataxWriter) {
-            this.dataxWriter = dataxWriter;
-        }
-
-        @Override
-        public IDataxReader getReader() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getTemplateContent() {
-            return dataxWriter.getTemplate();
-        }
-
-        @Override
-        public String generateDataxConfig(IDataxContext readerContext, Optional<TableMap> tableMap) throws IOException {
-            return super.generateDataxConfig(readerContext, tableMap);
-        }
-
-        @Override
-        protected int getChannel() {
-            return 0;
-        }
-
-        @Override
-        protected int getErrorLimitCount() {
-            return 0;
-        }
-
-        @Override
-        protected int getErrorLimitPercentage() {
-            return 0;
-        }
-
-
-        @Override
-        public IDataxWriter getWriter() {
-            return this.dataxWriter;
-        }
-
-
-    }
 }

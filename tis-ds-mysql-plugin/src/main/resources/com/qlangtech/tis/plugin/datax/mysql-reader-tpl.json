@@ -3,8 +3,8 @@
   "parameter": {
   "connection": [
     {
-      "jdbcUrl": ["${reader.slaverUrl}"],
-      "querySql": ["SELECT ${reader.cols} FROM ${cfg.name} #if(reader.showWhere) WHERE ${reader.sqlCriteria} #end"]
+      "jdbcUrl": ["${reader.jdbcUrl}"],
+      "querySql": ["SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.showWhere) WHERE ${reader.sqlCriteria} #end"]
     }
   ],
   "password": "${reader.password}",

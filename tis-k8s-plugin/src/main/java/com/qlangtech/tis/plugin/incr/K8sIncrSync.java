@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.plugin.incr;
 
@@ -18,9 +18,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.coredefine.module.action.IIncrSync;
 import com.qlangtech.tis.coredefine.module.action.IncrDeployment;
-import com.qlangtech.tis.coredefine.module.action.IncrSpec;
+import com.qlangtech.tis.coredefine.module.action.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.pubhook.common.RunEnvironment;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.Quantity;
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 弹性扩容：https://github.com/kubernetes-client/java/blob/f20788272291c0e79a8c831d8d5a7dd94d96d2de/kubernetes/docs/AutoscalingV2beta1Api.md
+ *
  * @author 百岁（baisui@qlangtech.com）
  * @create: 2020-04-12 11:12
  * @date 2020/04/13
@@ -46,17 +49,20 @@ public class K8sIncrSync implements IIncrSync {
 
     private final Logger logger = LoggerFactory.getLogger(K8sIncrSync.class);
 
-    private final String resultPrettyShow = "true";
+    private static final String resultPrettyShow = "true";
 
-    private final DefaultIncrK8sConfig config;
+    // private final DefaultIncrK8sConfig config;
+
+    private final K8sImage config;
 
     private final ApiClient client;
 
     private final CoreV1Api api;
 
-    public K8sIncrSync(DefaultIncrK8sConfig k8sConfig) {
+    public K8sIncrSync(K8sImage k8sConfig) {
         this.config = k8sConfig;
-        client = config.getK8SContext().createConfigInstance();
+        //  client = config.getK8SContext().createConfigInstance();
+        client = config.createApiClient();
         this.api = new CoreV1Api(client);
     }
 
@@ -70,7 +76,8 @@ public class K8sIncrSync implements IIncrSync {
             Call call = null;
             for (V1Pod pod : this.getRCPods(collection)) {
 //String name, String namespace, String pretty, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy, V1DeleteOptions body
-                call = api.deleteNamespacedPodCall(pod.getMetadata().getName(), this.config.namespace, "true", null, 20, true, null, options, null);
+                call = api.deleteNamespacedPodCall(pod.getMetadata().getName(), this.config.getNamespace()
+                        , "true", null, 20, true, null, options, null);
                 this.client.execute(call, null);
                 logger.info(" delete pod {}", pod.getMetadata().getName());
             }
@@ -82,7 +89,7 @@ public class K8sIncrSync implements IIncrSync {
 
     private List<V1Pod> getRCPods(String collection) throws ApiException {
 
-        V1PodList v1PodList = api.listNamespacedPod(this.config.namespace, null, null
+        V1PodList v1PodList = api.listNamespacedPod(this.config.getNamespace(), null, null
                 , null, null, "app=" + collection, 100, null, 600, false);
         return v1PodList.getItems();
     }
@@ -92,7 +99,7 @@ public class K8sIncrSync implements IIncrSync {
         if (StringUtils.isBlank(indexName)) {
             throw new IllegalArgumentException("param indexName can not be null");
         }
-        if (this.config == null || StringUtils.isBlank(this.config.namespace)) {
+        if (this.config == null || StringUtils.isBlank(this.config.getNamespace())) {
             throw new IllegalArgumentException("this.config.namespace can not be null");
         }
         //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
@@ -103,7 +110,7 @@ public class K8sIncrSync implements IIncrSync {
         try {
             // this.api.deleteNamespacedReplicationControllerCall()
             Call call = this.api.deleteNamespacedReplicationControllerCall(
-                    indexName, this.config.namespace, resultPrettyShow, null, null, true, null, null, null);
+                    indexName, this.config.getNamespace(), resultPrettyShow, null, null, true, null, null, null);
             client.execute(call, null);
 
             this.relaunch(indexName);
@@ -123,25 +130,38 @@ public class K8sIncrSync implements IIncrSync {
         // this.api.deleteNamespacedReplicationControllerCall()
     }
 
-    public void deploy(String indexName, IncrSpec incrSpec, final long timestamp) throws Exception {
+    public void deploy(String indexName, ReplicasSpec incrSpec, final long timestamp) throws Exception {
         if (timestamp < 1) {
             throw new IllegalArgumentException("argument timestamp can not small than 1");
         }
+        createReplicationController(this.config, api, indexName, incrSpec, this.addEnvVars(indexName, timestamp));
+    }
+
+    /**
+     * 在k8s容器容器中创建一个RC
+     *
+     * @param config
+     * @param name
+     * @param incrSpec
+     * @param envs
+     * @throws ApiException
+     */
+    public static void createReplicationController(K8sImage config, CoreV1Api api, String name, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws ApiException {
         V1ReplicationController rc = new V1ReplicationController();
         V1ReplicationControllerSpec spec = new V1ReplicationControllerSpec();
         spec.setReplicas(incrSpec.getReplicaCount());
         V1PodTemplateSpec templateSpec = new V1PodTemplateSpec();
         V1ObjectMeta meta = new V1ObjectMeta();
-        meta.setName(indexName);
+        meta.setName(name);
         Map<String, String> labes = Maps.newHashMap();
-        labes.put("app", indexName);
+        labes.put("app", name);
         meta.setLabels(labes);
         templateSpec.setMetadata(meta);
         V1PodSpec podSpec = new V1PodSpec();
         List<V1Container> containers = Lists.newArrayList();
         V1Container c = new V1Container();
-        c.setName(indexName);
-        c.setImage(config.imagePath);
+        c.setName(name);
+        c.setImage(config.getImagePath());
         List<V1ContainerPort> ports = Lists.newArrayList();
         V1ContainerPort port = new V1ContainerPort();
         port.setContainerPort(8080);
@@ -151,7 +171,7 @@ public class K8sIncrSync implements IIncrSync {
         c.setPorts(ports);
 
         //V1Container c  c.setEnv(envVars);
-        c.setEnv(this.addEnvVars(indexName, timestamp));
+        c.setEnv(envs);
 
         V1ResourceRequirements rRequirements = new V1ResourceRequirements();
         Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
@@ -173,9 +193,9 @@ public class K8sIncrSync implements IIncrSync {
         rc.setSpec(spec);
         rc.setApiVersion("v1");
         meta = new V1ObjectMeta();
-        meta.setName(indexName);
+        meta.setName(name);
         rc.setMetadata(meta);
-        api.createNamespacedReplicationController(this.config.namespace, rc, resultPrettyShow, null, null);
+        api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
     }
 
     private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {
@@ -233,7 +253,7 @@ public class K8sIncrSync implements IIncrSync {
     public IncrDeployment getRCDeployment(String collection) {
         IncrDeployment rcDeployment = null;
         try {
-            V1ReplicationController rc = api.readNamespacedReplicationController(collection, this.config.namespace, resultPrettyShow, null, null);
+            V1ReplicationController rc = api.readNamespacedReplicationController(collection, this.config.getNamespace(), resultPrettyShow, null, null);
             if (rc == null) {
                 return null;
             }

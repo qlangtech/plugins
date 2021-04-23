@@ -17,6 +17,7 @@ package com.qlangtech.tis.plugin.incr;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import com.qlangtech.tis.trigger.socket.LogType;
@@ -62,9 +63,10 @@ public class DefaultWatchPodLog extends WatchPodLog {
     private final String indexName;
     private final String podName;
 
-    private final DefaultIncrK8sConfig config;
+  //  private final DefaultIncrK8sConfig config;
+    private final K8sImage config;
 
-    public DefaultWatchPodLog(String indexName, String podName, ApiClient client, CoreV1Api api, final DefaultIncrK8sConfig config) {
+    public DefaultWatchPodLog(String indexName, String podName, ApiClient client, CoreV1Api api, final K8sImage config) {
         this.indexName = indexName;
         if (StringUtils.isBlank(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
@@ -124,7 +126,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
 //                        podWatch.close();
 //                    }
                     //if (metadata != null) {
-                    monitorPodLog(indexName, this.config.namespace, this.podName);
+                    monitorPodLog(indexName, this.config.getNamespace(), this.podName);
                     //}
                 } catch (Throwable e) {
                     logger.error("monitor " + this.indexName + " incr_log", e);

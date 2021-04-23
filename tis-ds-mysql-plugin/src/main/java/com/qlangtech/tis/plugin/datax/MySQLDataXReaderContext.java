@@ -24,6 +24,15 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 public class MySQLDataXReaderContext extends MySQLDataxContext implements IDataxReaderContext {
     private final String name;
     private final String sourceTableName;
+    private String where;
+
+    public String getWhere() {
+        return where;
+    }
+
+    public void setWhere(String where) {
+        this.where = where;
+    }
 
     @Override
     public String getTaskName() {

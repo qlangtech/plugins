@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -27,14 +28,16 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
+import java.io.IOException;
+import java.sql.Types;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,26 +47,47 @@ import java.util.Optional;
 public class TestDataxMySQLReader extends BasicTest {
 
     public static String dbName = "baisuitestdb";
+    String userName = "root";
+    String password = "123456";
+    static final String tabNameOrderDetail = "orderdetail";
+    List<ColumnMetaData> tabColsMetaOrderDetail
+            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
+            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
+            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
+            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
+    );
 
-    public void testTempateGenerate() throws Exception {
+    static final String tabNameTotalpayinfo = "totalpayinfo";
+    List<ColumnMetaData> tabColsMetaTotalpayinfo
+            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
+            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
+            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
+            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
+    );
 
-        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
-        assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
+    public void testGetPluginFormPropertyTypes() {
+        DataxMySQLReader mySQLReader = new DataxMySQLReader();
+        Descriptor<DataxReader> descriptor = mySQLReader.getDescriptor();
+        assertNotNull(descriptor);
 
+        PluginFormProperties propertyTypes = descriptor.getPluginFormPropertyTypes();
+        assertEquals(3, propertyTypes.getKVTuples().size());
+    }
 
-        IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
-        Context context = EasyMock.createMock("context", Context.class);
-        EasyMock.expect(context.hasErrors()).andReturn(false);
-
-
-        DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
-        //IPluginContext pluginContext = null;
-        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory();
-
-        String userName = "root";
-        String password = "123456";
-        String tabName = "orderdetail";
-
+    public void testGetSubTasks() {
+        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
+            @Override
+            public List<ColumnMetaData> getTableMetadata(String table) {
+                switch (table) {
+                    case tabNameOrderDetail:
+                        return tabColsMetaOrderDetail;
+                    case tabNameTotalpayinfo:
+                        return tabColsMetaTotalpayinfo;
+                    default:
+                        throw new IllegalArgumentException("table:" + table);
+                }
+            }
+        };
         mysqlDs.dbName = dbName;
         mysqlDs.port = 3306;
         mysqlDs.encode = "utf8";
@@ -71,34 +95,153 @@ public class TestDataxMySQLReader extends BasicTest {
         mysqlDs.password = password;
         mysqlDs.nodeDesc = "192.168.28.200[0-7]";
         Descriptor.ParseDescribable<DataSourceFactory> desc = new Descriptor.ParseDescribable<>(mysqlDs);
+        Context context = EasyMock.createMock("context", Context.class);
+        EasyMock.expect(context.hasErrors()).andReturn(false);
+        IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         pluginContext.addDb(desc, dbName, context, true);
+        EasyMock.replay(pluginContext, context);
+        DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
+        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)));
+
+        DataxMySQLReader mySQLReader = new DataxMySQLReader() {
+            @Override
+            protected DataSourceFactory getDataSourceFactory() {
+                return mysqlDs;
+            }
+        };
+
+        List<SelectedTab> selectedTabs = Lists.newArrayList();
+        SelectedTab selectedTab = new SelectedTab();
+        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3"));
+        selectedTab.setWhere("delete = 0");
+        selectedTab.name = tabNameOrderDetail;
+        selectedTabs.add(selectedTab);
+
+        selectedTab = new SelectedTab();
+        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3", "col4"));
+        selectedTab.setWhere("delete = 0");
+        selectedTab.name = tabNameTotalpayinfo;
+        selectedTabs.add(selectedTab);
+
+        mySQLReader.setSelectedTabs(selectedTabs);
+
+        List<String> tabs = Lists.newArrayList();
+        for (SelectedTab tab : selectedTabs) {
+            for (int i = 0; i < 8; i++) {
+                tabs.add(tab.name);
+            }
+        }
+
+        int readerContextCount = 0;
+        IDataxReaderContext readerContext = null;
+        Iterator<IDataxReaderContext> subTasks = mySQLReader.getSubTasks();
+
+
+        while (subTasks.hasNext()) {
+            readerContext = subTasks.next();
+            assertEquals(tabs.get(readerContextCount), readerContext.getSourceEntityName());
+            assertEquals(tabs.get(readerContextCount) + "_" + readerContextCount, readerContext.getTaskName());
+            System.out.println(readerContext.getSourceEntityName() + " " + readerContext.getTaskName());
+            assertNotNull(readerContext);
+            readerContextCount++;
+        }
+        assertEquals(16, readerContextCount);
+        EasyMock.verify(pluginContext, context);
+    }
+
+    public void testTempateGenerate() throws Exception {
+
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
+        assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
+
+
+        //IPluginContext pluginContext = null;
+
 
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
+
+        EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(null).anyTimes();
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
         // IDataxReaderContext dataxReaderContext = EasyMock.mock("dataxReaderContext", IDataxReaderContext.class);
 
 
-        MySQLDataXReaderContext dataxReaderContext = new MySQLDataXReaderContext(tabName + "_0", tabName);
-        dataxReaderContext.jdbcUrl = TestDataxMySQLWriter.mysqlJdbcUrl;
-        dataxReaderContext.tabName = tabName;
-        dataxReaderContext.username = userName;
-        dataxReaderContext.password = password;
-        dataxReaderContext.cols = Lists.newArrayList("col1", "col2", "col3");//tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
+//        MySQLDataXReaderContext dataxReaderContext = new MySQLDataXReaderContext(tabName + "_0", tabName);
+//        dataxReaderContext.jdbcUrl = TestDataxMySQLWriter.mysqlJdbcUrl;
+//        dataxReaderContext.tabName = tabName;
+//        dataxReaderContext.username = userName;
+//        dataxReaderContext.password = password;
+//        dataxReaderContext.cols = Lists.newArrayList("col1", "col2", "col3");//tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
 
-        EasyMock.expect(processor.getWriter()).andReturn(dataxWriter);
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
-        EasyMock.replay(pluginContext, context, processor, dataxGlobalCfg);
-        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)));
+        EasyMock.expect(processor.getWriter()).andReturn(dataxWriter).anyTimes();
+        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
 
 
-        DataxMySQLReader mySQLReader = new DataxMySQLReader();
+        MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
+        EasyMock.expect(mysqlDataSource.getPassword()).andReturn(password).anyTimes();
+        EasyMock.expect(mysqlDataSource.getUserName()).andReturn(userName).anyTimes();
+        IDataSourceDumper dataDumper = EasyMock.createMock(tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
+        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).times(2);
+// int index, String key, int type, boolean pk
+        TISTable targetTable = new TISTable();
+        targetTable.setTableName(tabNameOrderDetail);
+
+        EasyMock.expect(mysqlDataSource.getTableMetadata(tabNameOrderDetail))
+                .andReturn(tabColsMetaOrderDetail).anyTimes();
+
+
+        EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
+            @Override
+            public DataDumpers getDataDumpers(TISTable table) {
+                return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());
+            }
+        }).times(2);//.andReturn(new DataDumpers(1, Collections.singletonList(dataDumper).iterator()));
+
+
+        EasyMock.replay(processor, dataxGlobalCfg, mysqlDataSource, dataDumper, dataxWriter);
+
+
+        DataxMySQLReader mySQLReader = new DataxMySQLReader() {
+            @Override
+            protected DataSourceFactory getDataSourceFactory() {
+                return mysqlDataSource;
+            }
+        };
+
         mySQLReader.template = DataxMySQLReader.getDftTemplate();
-        Descriptor<DataxReader> descriptor = mySQLReader.getDescriptor();
-        assertNotNull(descriptor);
 
-        PluginFormProperties propertyTypes = descriptor.getPluginFormPropertyTypes();
-        assertEquals(3, propertyTypes.getKVTuples().size());
+        SelectedTab selectedTab = new SelectedTab();
+        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3"));
+        selectedTab.setWhere("delete = 0");
+        selectedTab.name = tabNameOrderDetail;
+
+        //校验证列和 where条件都设置的情况
+        valiateReaderCfgGenerate("mysql-datax-reader-assert.json", processor, mySQLReader, selectedTab);
+
+
+        selectedTab = new SelectedTab();
+        selectedTab.setCols(Collections.emptyList());
+        selectedTab.name = tabNameOrderDetail;
+        valiateReaderCfgGenerate("mysql-datax-reader-asser-without-option-val.json"
+                , processor, mySQLReader, selectedTab);
+
+        EasyMock.verify(processor, dataxGlobalCfg, mysqlDataSource, dataDumper, dataxWriter);
+    }
+
+    private void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxMySQLReader mySQLReader, SelectedTab selectedTab) throws IOException {
+        List<SelectedTab> selectedTabs = Lists.newArrayList();
+
+        selectedTabs.add(selectedTab);
+        mySQLReader.setSelectedTabs(selectedTabs);
+        MySQLDataXReaderContext dataxReaderContext = null;
+        Iterator<IDataxReaderContext> subTasks = mySQLReader.getSubTasks();
+        int dataxReaderContextCount = 0;
+        while (subTasks.hasNext()) {
+            dataxReaderContext = (MySQLDataXReaderContext) subTasks.next();
+            dataxReaderContextCount++;
+        }
+        assertEquals(1, dataxReaderContextCount);
+        assertNotNull(dataxReaderContext);
 
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
@@ -111,7 +254,7 @@ public class TestDataxMySQLReader extends BasicTest {
         String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
         assertNotNull(readerCfg);
         System.out.println(readerCfg);
-        EasyMock.verify(pluginContext, context, processor, dataxGlobalCfg);
+        TestDataxMySQLWriter.assertJSONEqual(assertFileName, readerCfg);
     }
 
 }

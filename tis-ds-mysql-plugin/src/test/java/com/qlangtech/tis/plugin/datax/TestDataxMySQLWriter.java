@@ -1,22 +1,23 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -38,6 +39,7 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -135,15 +137,21 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
         };
 
-
         String cfgResult = dataProcessor.generateDataxConfig(null, Optional.of(tm));
 
-        System.out.println(cfgResult);
-
-        assertEquals(JSON.parseObject(IOUtils.loadResourceFromClasspath(this.getClass(), assertFileName)).toJSONString(),
-                JSON.parseObject(cfgResult).toJSONString()
-        );
+        assertJSONEqual(assertFileName, cfgResult);
         EasyMock.verify(processor, dataxGlobalCfg);
+    }
+
+    public static void assertJSONEqual(String assertFileName, String actual) {
+
+        String expectJson = com.alibaba.fastjson.JSON.toJSONString(
+                JSON.parseObject(IOUtils.loadResourceFromClasspath(MethodHandles.lookup().lookupClass(), assertFileName))
+                , SerializerFeature.DisableCircularReferenceDetect, SerializerFeature.PrettyFormat);
+        System.out.println(assertFileName + "\n" + expectJson);
+        String actualJson = com.alibaba.fastjson.JSON.toJSONString(JSON.parseObject(actual)
+                , SerializerFeature.DisableCircularReferenceDetect, SerializerFeature.PrettyFormat);
+        assertEquals("assertFile:" + assertFileName, expectJson, actualJson);
     }
 
 }

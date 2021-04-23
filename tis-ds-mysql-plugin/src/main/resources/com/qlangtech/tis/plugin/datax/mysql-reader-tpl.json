@@ -4,7 +4,7 @@
   "connection": [
     {
       "jdbcUrl": ["${reader.jdbcUrl}"],
-      "querySql": ["SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.showWhere) WHERE ${reader.sqlCriteria} #end"]
+      "querySql": ["SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.where) WHERE ${reader.where} #end"]
     }
   ],
   "password": "${reader.password}",

@@ -32,8 +32,8 @@ import java.util.Map;
  * @create: 2020-11-24 17:57
  **/
 public class TestTiKVDataSourceFactory extends TestCase {
-    private static final String DB_NAME = "employees";
-    private static final String TABLE_NAME = "employees";
+    public static final String DB_NAME = "employees";
+    public static final String TABLE_NAME = "employees";
 
     private static final String COL_EMP_NO = "emp_no";
     private static final String COL_BIRTH_DATE = "birth_date";
@@ -123,31 +123,4 @@ public class TestTiKVDataSourceFactory extends TestCase {
         assertEquals(300024, rowCount);
     }
 
-    private static class GetColsMeta {
-        private com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory dataSourceFactory;
-        private List<ColumnMetaData> employeesCols;
-
-        public com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory getDataSourceFactory() {
-            return dataSourceFactory;
-        }
-
-        public List<ColumnMetaData> getEmployeesCols() {
-            return employeesCols;
-        }
-
-        public GetColsMeta invoke() {
-            return invoke(true);
-        }
-
-        public GetColsMeta invoke(boolean datetimeFormat) {
-            dataSourceFactory = new TiKVDataSourceFactory();
-            dataSourceFactory.dbName = DB_NAME;
-            dataSourceFactory.pdAddrs = "192.168.28.202:2379";
-            dataSourceFactory.datetimeFormat = datetimeFormat;
-            employeesCols = dataSourceFactory.getTableMetadata(TABLE_NAME);
-            assertNotNull(employeesCols);
-            assertEquals(6, employeesCols.size());
-            return this;
-        }
-    }
 }

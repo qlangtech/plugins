@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -31,9 +31,11 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.Memoizer;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -93,6 +95,7 @@ public class DataxMySQLReader extends DataxReader {
         };
 
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
+        AtomicInteger taskIndex = new AtomicInteger(0);
         final int selectedTabsSize = this.selectedTabs.size();
 
         AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
@@ -101,19 +104,7 @@ public class DataxMySQLReader extends DataxReader {
             @Override
             public boolean hasNext() {
 
-                Iterator<IDataSourceDumper> dumperIt = null;
-                if ((dumperIt = dumperItRef.get()) == null) {
-                    SelectedTab tab = selectedTabs.get(selectedTabIndex.getAndIncrement());
-                    List<ColumnMetaData> tableMetadata = null;
-                    IDataSourceDumper dumper = null;
-                    DataDumpers dataDumpers = null;
-                    TISTable tisTab = new TISTable();
-                    tisTab.setTableName(tab.getName());
-
-                    dataDumpers = dsFactory.getDataDumpers(tisTab);
-                    dumperIt = dataDumpers.dumpers;
-                    dumperItRef.set(dumperIt);
-                }
+                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
 
                 if (dumperIt.hasNext()) {
                     return true;
@@ -122,21 +113,45 @@ public class DataxMySQLReader extends DataxReader {
                         return false;
                     } else {
                         dumperItRef.set(null);
+                        initDataSourceDumperIterator();
                         return true;
                     }
                 }
             }
 
+            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
+                Iterator<IDataSourceDumper> dumperIt;
+                if ((dumperIt = dumperItRef.get()) == null) {
+                    SelectedTab tab = selectedTabs.get(selectedTabIndex.getAndIncrement());
+                    if (StringUtils.isEmpty(tab.getName())) {
+                        throw new IllegalStateException("tableName can not be null");
+                    }
+//                    List<ColumnMetaData> tableMetadata = null;
+//                    IDataSourceDumper dumper = null;
+                    DataDumpers dataDumpers = null;
+                    TISTable tisTab = new TISTable();
+                    tisTab.setTableName(tab.getName());
+
+                    dataDumpers = dsFactory.getDataDumpers(tisTab);
+                    dumperIt = dataDumpers.dumpers;
+                    dumperItRef.set(dumperIt);
+                }
+                return dumperIt;
+            }
+
             @Override
             public IDataxReaderContext next() {
                 Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
+                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
                 IDataSourceDumper dumper = dumperIterator.next();
                 SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
-                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(tab.getName() + "_" + selectedTabIndex.get(), tab.getName());
+                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(tab.getName() + "_" + taskIndex.getAndIncrement(), tab.getName());
                 dataxContext.jdbcUrl = dumper.getDbHost();
                 dataxContext.tabName = tab.getName();
-                dataxContext.username = dsFactory.userName;
-                dataxContext.password = dsFactory.password;
+                dataxContext.username = dsFactory.getUserName();
+                dataxContext.password = dsFactory.getPassword();
+                dataxContext.setWhere(tab.getWhere());
+
                 List<ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
                 if (tab.isAllCols()) {
                     dataxContext.cols = tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
@@ -167,7 +182,7 @@ public class DataxMySQLReader extends DataxReader {
         return plugin.getTablesInDB();
     }
 
-    private DataSourceFactory getDataSourceFactory() {
+    protected DataSourceFactory getDataSourceFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return dsStore.getPlugin();
     }

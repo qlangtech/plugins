@@ -22,8 +22,10 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.tis.hadoop.rpc.RpcServiceReference;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,12 +35,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  **/
 @TISExtension()
 public class LocalDataXJobSubmit extends DataXJobSubmit {
-    private final DataxExecutor dataxExecutor = new DataxExecutor();
+
     private static final ExecutorService dataXExecutor = newFixedThreadPool(10);// Executors.newCachedThreadPool();
 
     public static ExecutorService newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(20),
+                new LinkedBlockingQueue<Runnable>(40),
                 Executors.defaultThreadFactory());
     }
 
@@ -48,8 +50,11 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext
+    public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc
             , IDataxProcessor dataxProcessor, String dataXfileName) {
+        Objects.requireNonNull(statusRpc, "statusRpc can not be null");
+
+        DataxExecutor dataxExecutor = new DataxExecutor(statusRpc);
 
         File jobPath = new File(dataxProcessor.getDataxCfgDir(), dataXfileName);
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -59,7 +64,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             public void submitJob() {
                 dataXExecutor.submit(() -> {
                     try {
-                        dataxExecutor.startWork(taskContext.getIndexName(), jobPath.getAbsolutePath());
+                        dataxExecutor.startWork(taskContext.getIndexName()
+                                , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath());
                         success.set(true);
                     } catch (Throwable e) {
                         success.set(false);

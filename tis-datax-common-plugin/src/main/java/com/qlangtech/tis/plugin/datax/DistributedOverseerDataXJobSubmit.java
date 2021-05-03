@@ -20,6 +20,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.tis.hadoop.rpc.RpcServiceReference;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,7 +34,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, IDataxProcessor dataxProcessor, String dataXfileName) {
+    public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
         return null;
     }
 }

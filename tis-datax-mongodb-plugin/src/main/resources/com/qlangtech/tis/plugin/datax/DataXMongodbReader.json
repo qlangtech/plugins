@@ -1,0 +1,34 @@
+{
+  "address": {
+    "help": "MongoDB的数据地址信息，因为MonogDB可能是个集群，则ip端口信息需要以Json数组的形式给出。【必填】"
+  },
+  "userName": {
+    "help": "MongoDB的用户名。【选填】"
+  },
+  "userPassword": {
+    "help": "MongoDB的密码。【选填】"
+  },
+  "collectionName": {
+    "help": "MonogoDB的集合名。【必填】"
+  },
+  "column": {
+    "help": "MongoDB的文档列名。【必填】"
+  },
+  "name": {
+    "help": "Column的名字。【必填】"
+  },
+  "type": {
+    "help": "Column的类型。【选填】"
+  },
+  "splitter": {
+    "help": "因为MongoDB支持数组类型，但是Datax框架本身不支持数组类型，所以mongoDB读出来的数组类型要通过这个分隔符合并成字符串。【选填】"
+  },
+  "query": {
+    "help": "MongoDB的额外查询条件。【选填】"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbReader.getDftTemplate()",
+    "rows": 18
+  }
+}

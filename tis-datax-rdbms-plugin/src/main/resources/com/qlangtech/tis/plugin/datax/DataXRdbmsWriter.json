@@ -1,0 +1,31 @@
+{
+  "jdbcUrl": {
+    "help": "描述：描述的是到对端数据库的JDBC连接信息，jdbcUrl按照RDBMS官方规范，并可以填写连接附件控制信息。请注意不同的数据库jdbc的格式是不同的，DataX会根据具体jdbc的格式选择合适的数据库驱动完成数据读取。"
+  },
+  "username": {
+    "help": "描述：数据源的用户名 "
+  },
+  "password": {
+    "help": "描述：数据源指定用户名的密码 "
+  },
+  "table": {
+    "help": "描述：目标表名称，如果表的schema信息和上述配置username不一致，请使用schema.table的格式填写table信息。 "
+  },
+  "column": {
+    "help": "描述：所配置的表中需要同步的列名集合。以英文逗号（,）进行分隔。"
+  },
+  "preSql": {
+    "help": "描述：执行数据同步任务之前率先执行的sql语句，目前只允许执行一条SQL语句，例如清除旧数据。"
+  },
+  "postSql": {
+    "help": "描述：执行数据同步任务之后执行的sql语句，目前只允许执行一条SQL语句，例如加上某一个时间戳。 "
+  },
+  "batchSize": {
+    "help": "描述：一次性批量提交的记录数大小，该值可以极大减少DataX与RDBMS的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXRdbmsWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "host": {
+    "help": "描述：Cassandra连接点的域名或ip，多个node之间用逗号分隔。 "
+  },
+  "port": {
+    "help": "描述：Cassandra端口。 "
+  },
+  "username": {
+    "help": "描述：数据源的用户名 "
+  },
+  "password": {
+    "help": "描述：数据源指定用户名的密码 "
+  },
+  "useSSL": {
+    "help": "描述：是否使用SSL连接。"
+  },
+  "connectionsPerHost": {
+    "help": "描述：客户端连接池配置：与服务器每个节点建多少个连接。"
+  },
+  "maxPendingPerConnection": {
+    "help": "描述：客户端连接池配置：每个连接最大请求数。"
+  },
+  "keyspace": {
+    "help": "描述：需要同步的表所在的keyspace。"
+  },
+  "table": {
+    "help": "描述：所选取的需要同步的表。"
+  },
+  "column": {
+    "help": "描述：所配置的表中需要同步的列集合。"
+  },
+  "consistancyLevel": {
+    "help": "描述：数据一致性级别。可选ONE|QUORUM|LOCAL_QUORUM|EACH_QUORUM|ALL|ANY|TWO|THREE|LOCAL_ONE"
+  },
+  "batchSize": {
+    "help": "描述：一次批量提交(UNLOGGED BATCH)的记录数大小（条数）。注意batch的大小有如下限制："
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXCassandraWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

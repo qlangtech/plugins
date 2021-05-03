@@ -1,0 +1,11 @@
+{
+  "k8sImage": {
+    "creator": {
+      "routerLink": "/base/basecfg",
+      "label": "镜像管理"
+    }
+  },
+  "zkAddress": {
+    "placeholder": "127.0.0.1:2181/tis"
+  }
+}

@@ -50,6 +50,7 @@
         <module>tis-datax-postgresql-plugin</module>
         <module>tis-datax-mongodb-plugin</module>
         <module>tis-datax-common-plugin</module>
+        <module>tis-datax-ftp-plugin</module>
     </modules>
 
     <properties>

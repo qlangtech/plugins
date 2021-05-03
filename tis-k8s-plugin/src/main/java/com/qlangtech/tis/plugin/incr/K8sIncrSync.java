@@ -16,9 +16,9 @@ package com.qlangtech.tis.plugin.incr;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IIncrSync;
 import com.qlangtech.tis.coredefine.module.action.IncrDeployment;
-import com.qlangtech.tis.coredefine.module.action.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
@@ -142,14 +142,14 @@ public class K8sIncrSync implements IIncrSync {
      *
      * @param config
      * @param name
-     * @param incrSpec
+     * @param replicasSpec
      * @param envs
      * @throws ApiException
      */
-    public static void createReplicationController(K8sImage config, CoreV1Api api, String name, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws ApiException {
+    public static void createReplicationController(K8sImage config, CoreV1Api api, String name, ReplicasSpec replicasSpec, List<V1EnvVar> envs) throws ApiException {
         V1ReplicationController rc = new V1ReplicationController();
         V1ReplicationControllerSpec spec = new V1ReplicationControllerSpec();
-        spec.setReplicas(incrSpec.getReplicaCount());
+        spec.setReplicas(replicasSpec.getReplicaCount());
         V1PodTemplateSpec templateSpec = new V1PodTemplateSpec();
         V1ObjectMeta meta = new V1ObjectMeta();
         meta.setName(name);
@@ -175,12 +175,12 @@ public class K8sIncrSync implements IIncrSync {
 
         V1ResourceRequirements rRequirements = new V1ResourceRequirements();
         Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
-        limitQuantityMap.put("cpu", new Quantity(incrSpec.getCpuLimit().literalVal()));
-        limitQuantityMap.put("memory", new Quantity(incrSpec.getMemoryLimit().literalVal()));
+        limitQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuLimit().literalVal()));
+        limitQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryLimit().literalVal()));
         rRequirements.setLimits(limitQuantityMap);
         Map<String, Quantity> requestQuantityMap = Maps.newHashMap();
-        requestQuantityMap.put("cpu", new Quantity(incrSpec.getCpuRequest().literalVal()));
-        requestQuantityMap.put("memory", new Quantity(incrSpec.getMemoryRequest().literalVal()));
+        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
+        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
         rRequirements.setRequests(requestQuantityMap);
         c.setResources(rRequirements);
         containers.add(c);

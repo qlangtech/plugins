@@ -18,16 +18,27 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>tis-plugin-parent</artifactId>
         <groupId>com.qlangtech.tis</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
         <version>2.3.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tis-datax-mongodb-plugin</artifactId>
-
+    <packaging>tpi</packaging>
     <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-plugin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>mongodbreader</artifactId>
@@ -57,14 +68,9 @@
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>plugin-unstructured-storage-util</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>plugin-rdbms-util</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
 
     </dependencies>
-
 
 </project>

@@ -1,0 +1,40 @@
+{
+  "address： MongoDB的数据地址信息，因为MonogDB可能是个集群，则ip端口信息需要以Json数组的形式给出。【必填】": {
+    "help": ""
+  },
+  "userName：MongoDB的用户名。【选填】": {
+    "help": ""
+  },
+  "userPassword： MongoDB的密码。【选填】": {
+    "help": ""
+  },
+  "collectionName： MonogoDB的集合名。【必填】": {
+    "help": ""
+  },
+  "column：MongoDB的文档列名。【必填】": {
+    "help": ""
+  },
+  "name：Column的名字。【必填】": {
+    "help": ""
+  },
+  "type：Column的类型。【选填】": {
+    "help": ""
+  },
+  "splitter：特殊分隔符，当且仅当要处理的字符串要用分隔符分隔为字符数组时，才使用这个参数，通过这个参数指定的分隔符，将字符串分隔存储到MongoDB的数组中。【选填】": {
+    "help": ""
+  },
+  "upsertInfo：指定了传输数据时更新的信息。【选填】": {
+    "help": ""
+  },
+  "isUpsert：当设置为true时，表示针对相同的upsertKey做更新操作。【选填】": {
+    "help": ""
+  },
+  "upsertKey：upsertKey指定了没行记录的业务主键。用来做更新时使用。【选填】": {
+    "help": ""
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

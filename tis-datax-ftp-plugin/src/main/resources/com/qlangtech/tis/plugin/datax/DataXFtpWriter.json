@@ -1,0 +1,58 @@
+{
+  "protocol": {
+    "help": "描述：ftp服务器协议，目前支持传输协议有ftp和sftp。 "
+  },
+  "host": {
+    "help": "描述：ftp服务器地址。 "
+  },
+  "port": {
+    "help": "描述：ftp服务器端口。 "
+  },
+  "timeout": {
+    "help": "描述：连接ftp服务器连接超时时间，单位毫秒。 "
+  },
+  "username": {
+    "help": "描述：ftp服务器访问用户名。 "
+  },
+  "password": {
+    "help": "描述：ftp服务器访问密码。 "
+  },
+  "path": {
+    "help": "描述：FTP文件系统的路径信息，FtpWriter会写入Path目录下属多个文件。 "
+  },
+  "fileName": {
+    "help": "描述：FtpWriter写入的文件名，该文件名会添加随机的后缀作为每个线程写入实际文件名。 "
+  },
+  "writeMode": {
+    "help": "描述：FtpWriter写入前数据清理处理模式： "
+  },
+  "fieldDelimiter": {
+    "help": "描述：读取的字段分隔符 "
+  },
+  "compress": {
+    "help": "描述：文本压缩类型，暂时不支持。 "
+  },
+  "encoding": {
+    "help": "描述：读取文件的编码配置。"
+  },
+  "nullFormat": {
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。"
+  },
+  "dateFormat": {
+    "help": "描述：日期类型的数据序列化到文件中时的格式，例如 "dateFormat": "yyyy-MM-dd"。"
+  },
+  "fileFormat": {
+    "help": "描述：文件写出的格式，包括csv (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号"；text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。"
+  },
+  "suffix": {
+    "help": "描述：最后输出文件的后缀，当前支持 ".text"以及".csv""
+  },
+  "header": {
+    "help": "描述：txt写出时的表头，示例['id', 'name', 'age']。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXFtpWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

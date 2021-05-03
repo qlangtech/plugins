@@ -1,0 +1,31 @@
+{
+  "jdbcUrl": {
+    "help": "描述：目的数据库的 JDBC 连接信息 ,jdbcUrl必须包含在connection配置单元中。"
+  },
+  "username": {
+    "help": "描述：目的数据库的用户名 "
+  },
+  "password": {
+    "help": "描述：目的数据库的密码 "
+  },
+  "table": {
+    "help": "描述：目的表的表名称。支持写入一个或者多个表。当配置为多张表时，必须确保所有表结构保持一致。"
+  },
+  "column": {
+    "help": "描述：目的表需要写入数据的字段,字段之间用英文逗号分隔。例如: "column": ["id","name","age"]。如果要依次写入全部列，使用"
+  },
+  "preSql": {
+    "help": "描述：写入数据到目的表前，会先执行这里的标准语句。如果 Sql 中有你需要操作到的表名称，请使用 "
+  },
+  "postSql": {
+    "help": "描述：写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ） "
+  },
+  "batchSize": {
+    "help": "描述：一次性批量提交的记录数大小，该值可以极大减少DataX与SqlServer的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXSqlserverWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

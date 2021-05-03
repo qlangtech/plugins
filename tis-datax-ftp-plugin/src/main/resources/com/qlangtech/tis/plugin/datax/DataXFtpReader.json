@@ -1,0 +1,55 @@
+{
+  "protocol": {
+    "help": "描述：ftp服务器协议，目前支持传输协议有ftp和sftp。 "
+  },
+  "host": {
+    "help": "描述：ftp服务器地址。 "
+  },
+  "port": {
+    "help": "描述：ftp服务器端口。 "
+  },
+  "timeout": {
+    "help": "描述：连接ftp服务器连接超时时间，单位毫秒。 "
+  },
+  "connectPattern": {
+    "help": "描述：连接模式（主动模式或者被动模式）。该参数只在传输协议是标准ftp协议时使用，值只能为：PORT (主动)，PASV（被动）。两种模式主要的不同是数据连接建立的不同。对于Port模式，是客户端在本地打开一个端口等服务器去连接建立数据连接，而Pasv模式就是服务器打开一个端口等待客户端去建立一个数据连接。"
+  },
+  "username": {
+    "help": "描述：ftp服务器访问用户名。 "
+  },
+  "password": {
+    "help": "描述：ftp服务器访问密码。 "
+  },
+  "path": {
+    "help": "描述：远程FTP文件系统的路径信息，注意这里可以支持填写多个路径。 "
+  },
+  "column": {
+    "help": "描述：读取字段列表，type指定源数据的类型，index指定当前列来自于文本第几列(以0开始)，value指定当前类型为常量，不从源头文件读取数据，而是根据value值自动生成对应的列。 "
+  },
+  "fieldDelimiter": {
+    "help": "描述：读取的字段分隔符 "
+  },
+  "compress": {
+    "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。 "
+  },
+  "encoding": {
+    "help": "描述：读取文件的编码配置。"
+  },
+  "skipHeader": {
+    "help": "描述：类CSV格式文件可能存在表头为标题情况，需要跳过。默认不跳过。"
+  },
+  "nullFormat": {
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。"
+  },
+  "maxTraversalLevel": {
+    "help": "描述：允许遍历文件夹的最大层数。"
+  },
+  "csvReaderConfig": {
+    "help": "描述：读取CSV类型文件参数配置，Map类型。读取CSV类型文件使用的CsvReader进行读取，会有很多配置，不配置则使用默认值。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXFtpReader.getDftTemplate()",
+    "rows": 18
+  }
+}

@@ -31,8 +31,10 @@ import com.qlangtech.tis.plugin.k8s.K8sImage;
  */
 public class DefaultIncrK8sConfig extends IncrStreamFactory {
 
-    public static final String KEY_FIELD_NAME = "k8sName";
+    public static final String KEY_FIELD_NAME = "k8sImage";
 
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String name;
 
     @FormField(identity = false, ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sImage;

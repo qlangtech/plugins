@@ -1,0 +1,34 @@
+{
+  "jdbcUrl": {
+    "help": "描述：描述的是到对端数据库的JDBC连接信息，jdbcUrl按照RDBMS官方规范，并可以填写连接附件控制信息。请注意不同的数据库jdbc的格式是不同的，DataX会根据具体jdbc的格式选择合适的数据库驱动完成数据读取。"
+  },
+  "username": {
+    "help": "描述：数据源的用户名。 "
+  },
+  "password": {
+    "help": "描述：数据源指定用户名的密码。 "
+  },
+  "table": {
+    "help": "描述：所选取的需要同步的表名。"
+  },
+  "column": {
+    "help": "描述：所配置的表中需要同步的列名集合，使用JSON的数组描述字段信息。用户使用"
+  },
+  "splitPk": {
+    "help": "描述：RDBMSReader进行数据抽取时，如果指定splitPk，表示用户希望使用splitPk代表的字段进行数据分片，DataX因此会启动并发任务进行数据同步，这样可以大大提供数据同步的效能。"
+  },
+  "where": {
+    "help": "描述：筛选条件，RDBMSReader根据指定的column、table、where条件拼接SQL，并根据这个SQL进行数据抽取。例如在做测试时，可以将where条件指定为limit 10；在实际业务场景中，往往会选择当天的数据进行同步，可以将where条件指定为gmt_create > $bizdate 。"
+  },
+  "querySql": {
+    "help": "描述：在有些业务场景下，where这一配置项不足以描述所筛选的条件，用户可以通过该配置型来自定义筛选SQL。当用户配置了这一项之后，DataX系统就会忽略table，column这些配置型，直接使用这个配置项的内容对数据进行筛选，例如需要进行多表join后同步数据，使用select a,b from table_a join table_b on table_a.id = table_b.id "
+  },
+  "fetchSize": {
+    "help": "描述：该配置项定义了插件和数据库服务器端每次批量数据获取条数，该值决定了DataX和服务器端的网络交互次数，能够较大的提升数据抽取性能。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXRdbmsReader.getDftTemplate()",
+    "rows": 18
+  }
+}

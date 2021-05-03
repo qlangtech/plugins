@@ -1,0 +1,46 @@
+{
+  "endpoint": {
+    "help": "描述：OSS Server的EndPoint地址，例如http://oss.aliyuncs.com。"
+  },
+  "accessId": {
+    "help": "描述：OSS的accessId "
+  },
+  "accessKey": {
+    "help": "描述：OSS的accessKey  "
+  },
+  "bucket": {
+    "help": "描述：OSS的bucket  "
+  },
+  "object": {
+    "help": "描述：OSSWriter写入的文件名，OSS使用文件名模拟目录的实现。 "
+  },
+  "writeMode": {
+    "help": "描述：OSSWriter写入前数据清理处理： "
+  },
+  "fieldDelimiter": {
+    "help": "描述：读取的字段分隔符 "
+  },
+  "encoding": {
+    "help": "描述：写出文件的编码配置。"
+  },
+  "nullFormat": {
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。"
+  },
+  "dateFormat": {
+    "help": "描述：日期类型的数据序列化到object中时的格式，例如 "dateFormat": "yyyy-MM-dd"。"
+  },
+  "fileFormat": {
+    "help": "描述：文件写出的格式，包括csv  (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号"；text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。"
+  },
+  "header": {
+    "help": "描述：Oss写出时的表头，示例['id', 'name', 'age']。"
+  },
+  "maxFileSize": {
+    "help": "描述：Oss写出时单个Object文件的最大大小，默认为10000*10MB，类似log4j日志打印时根据日志文件大小轮转。OSS分块上传时，每个分块大小为10MB，每个OSS InitiateMultipartUploadRequest支持的分块最大数量为10000。轮转发生时，object名字规则是：在原有object前缀加UUID随机数的基础上，拼接_1,_2,_3等后缀。"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXOssWriter.getDftTemplate()",
+    "rows": 18
+  }
+}

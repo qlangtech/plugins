@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +73,7 @@ public class PGDataSourceFactory extends DataSourceFactory {
 
         @Override
         public List<String> facadeSourceTypes() {
-            throw new UnsupportedOperationException();
+            return Collections.emptyList();
         }
 
         @Override

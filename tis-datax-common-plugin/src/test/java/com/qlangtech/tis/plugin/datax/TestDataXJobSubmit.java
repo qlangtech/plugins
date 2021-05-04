@@ -27,7 +27,6 @@ import junit.framework.TestCase;
 public class TestDataXJobSubmit extends TestCase {
     public void testTwoInstanceGetter() {
         ExtensionList<DataXJobSubmit> extensionList = TIS.get().getExtensionList(DataXJobSubmit.class);
-
         assertNotNull(extensionList);
         assertEquals(2, extensionList.size());
     }

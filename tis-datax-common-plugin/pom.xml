@@ -39,6 +39,13 @@
             <artifactId>tis-plugin</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -48,6 +55,10 @@
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>tis-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>

@@ -3,7 +3,7 @@
     "help": "描述：Hadoop hdfs文件系统namenode节点地址。格式：hdfs://ip:端口；例如：hdfs://127.0.0.1:9000"
   },
   "fileType": {
-    "help": "描述：文件的类型，目前只支持用户配置为"text"或"orc"。 "
+    "help": "描述：文件的类型，目前只支持用户配置为\"text\"或\"orc\" "
   },
   "path": {
     "help": "描述：存储到Hadoop hdfs文件系统的路径信息，HdfsWriter会根据并发配置在Path目录下写入多个文件。为与hive表关联，请填写hive表在hdfs上的存储路径。例：Hive上设置的数据仓库的存储路径为：/user/hive/warehouse/ ，已建立数据库：test，表：hello；则对应的存储路径为：/user/hive/warehouse/test.db/hello  "

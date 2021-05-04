@@ -15,6 +15,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.core.util.container.JarLoader;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -23,6 +25,8 @@ import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.RpcServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Objects;
@@ -36,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @TISExtension()
 public class LocalDataXJobSubmit extends DataXJobSubmit {
 
+    private static final Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
     private static final ExecutorService dataXExecutor = newFixedThreadPool(10);// Executors.newCachedThreadPool();
 
     public static ExecutorService newFixedThreadPool(int nThreads) {
@@ -54,7 +59,14 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
-        DataxExecutor dataxExecutor = new DataxExecutor(statusRpc);
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."}) {
+            @Override
+            protected Class<?> findClass(String name) throws ClassNotFoundException {
+                return TIS.get().getPluginManager().uberClassLoader.findClass(name);
+            }
+        };
+
+        DataxExecutor dataxExecutor = new DataxExecutor(statusRpc, uberClassLoader);
 
         File jobPath = new File(dataxProcessor.getDataxCfgDir(), dataXfileName);
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -68,6 +80,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
                                 , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath());
                         success.set(true);
                     } catch (Throwable e) {
+                        logger.error(jobPath.getAbsolutePath(), e);
                         success.set(false);
                         throw new RuntimeException(e);
                     } finally {

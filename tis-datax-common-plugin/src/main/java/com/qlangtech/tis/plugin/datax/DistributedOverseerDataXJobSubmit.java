@@ -15,12 +15,20 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.CuratorTaskMessage;
+import com.qlangtech.tis.datax.DataXJobConsumer;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.RpcServiceReference;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.queue.DistributedQueue;
+
+import java.io.File;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -28,6 +36,11 @@ import com.tis.hadoop.rpc.RpcServiceReference;
  **/
 @TISExtension()
 public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
+
+    public DistributedOverseerDataXJobSubmit() {
+
+    }
+
     @Override
     public InstanceType getType() {
         return InstanceType.DISTRIBUTE;
@@ -35,6 +48,49 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
-        return null;
+
+        DistributedQueue<CuratorTaskMessage> distributedQueue = getCuratorDistributedQueue();
+        File jobPath = new File(dataxProcessor.getDataxCfgDir(), dataXfileName);
+        return new IRemoteJobTrigger() {
+            @Override
+            public void submitJob() {
+                try {
+                    CuratorTaskMessage msg = new CuratorTaskMessage();
+                    msg.setDataXName(taskContext.getIndexName());
+                    msg.setJobId(taskContext.getTaskId());
+                    msg.setJobName(dataXfileName);
+                    msg.setJobPath(jobPath.getAbsolutePath());
+                    distributedQueue.put(msg);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            @Override
+            public RunningStatus getRunningStatus() {
+                return RunningStatus.SUCCESS;
+            }
+        };
+    }
+
+    private CuratorFramework curatorClient = null;
+    private DistributedQueue<CuratorTaskMessage> curatorDistributedQueue = null;
+
+    private DistributedQueue<CuratorTaskMessage> getCuratorDistributedQueue() {
+        synchronized (this) {
+            if (curatorClient != null && !curatorClient.getZookeeperClient().isConnected()) {
+                curatorClient.close();
+                curatorClient = null;
+                curatorDistributedQueue = null;
+            }
+            if (curatorDistributedQueue == null) {
+                DataXJobWorker dataxJobWorker = DataXJobWorker.getDataxJobWorker();
+                if (curatorClient == null) {
+                    this.curatorClient = DataXJobConsumer.getCuratorFramework(dataxJobWorker.getZookeeperAddress());
+                }
+                this.curatorDistributedQueue = DataXJobConsumer.createQueue(curatorClient, dataxJobWorker.getZkQueuePath(), null);
+            }
+            return this.curatorDistributedQueue;
+        }
     }
 }

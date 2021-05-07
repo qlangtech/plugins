@@ -72,6 +72,11 @@ public class DefaultK8SImage extends K8sImage {
         return this.imagePath;
     }
 
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
+
     //    public ParamsConfig getK8SContext() {
 //        return (ParamsConfig)ParamsConfig.getItem(this.k8sCfg, IK8sContext.class);
 //    }

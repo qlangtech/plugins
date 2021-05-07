@@ -52,18 +52,9 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-builder-api</artifactId>
         </dependency>
-
-
-
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.curator</groupId>
-            <artifactId>curator-framework</artifactId>
-            <version>4.0.1</version>
-            <scope>compile</scope>
         </dependency>
 
     </dependencies>

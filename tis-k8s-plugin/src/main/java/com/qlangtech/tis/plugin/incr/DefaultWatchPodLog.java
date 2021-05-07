@@ -102,7 +102,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     //private final ReentrantLock lock = new ReentrantLock();
 
-    void startProcess() {
+   public void startProcess() {
         if (this.lock.compareAndSet(false, true)) {
             // try {
             logger.info("has gain the watch lock " + this.indexName);

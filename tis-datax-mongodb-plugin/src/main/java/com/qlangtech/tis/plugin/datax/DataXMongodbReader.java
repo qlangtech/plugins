@@ -57,7 +57,7 @@ public class DataXMongodbReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXMongodbReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXMongodbReader.class, "DataXMongodbReader-tpl.json");
     }
 
     @Override

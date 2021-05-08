@@ -66,7 +66,7 @@ public class DataXCassandraWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXCassandraWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXCassandraWriter.class,"DataXCassandraWriter-tpl.json");
     }
 
 

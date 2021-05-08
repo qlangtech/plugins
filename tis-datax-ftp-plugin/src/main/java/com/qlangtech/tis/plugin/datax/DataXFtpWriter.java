@@ -73,7 +73,7 @@ public class DataXFtpWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXFtpWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXFtpWriter.class, "DataXFtpWriter-tpl.json");
     }
 
 

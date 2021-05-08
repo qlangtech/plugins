@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
@@ -58,7 +57,7 @@ public class DataXPostgresqlReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXPostgresqlReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXPostgresqlReader.class, "DataXPostgresqlReader-tpl.json");
     }
 
 

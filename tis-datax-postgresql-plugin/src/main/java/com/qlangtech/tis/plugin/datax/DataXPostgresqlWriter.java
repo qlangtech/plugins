@@ -55,7 +55,7 @@ public class DataXPostgresqlWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXPostgresqlWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class ,"DataXPostgresqlWriter-tpl.json");
     }
 
 

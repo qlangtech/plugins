@@ -15,21 +15,16 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.Memoizer;
 import org.apache.commons.lang.StringUtils;
 
@@ -41,7 +36,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
@@ -52,7 +46,7 @@ public class DataXOdpsReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXOdpsReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXOdpsReader.class, "DataXOdpsReader-tpl.json");
     }
 
 
@@ -168,7 +162,7 @@ public class DataXOdpsReader extends DataxReader {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader>  {
+    public static class DefaultDescriptor extends Descriptor<DataxReader> {
         public DefaultDescriptor() {
             super();
         }

@@ -58,7 +58,7 @@ public class DataXHbase11xsqlReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXHbase11xsqlReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXHbase11xsqlReader.class ,"DataXHbase11xsqlReader-tpl.json");
     }
 
 

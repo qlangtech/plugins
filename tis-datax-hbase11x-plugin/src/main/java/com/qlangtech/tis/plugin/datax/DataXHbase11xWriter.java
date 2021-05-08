@@ -52,7 +52,7 @@ public class DataXHbase11xWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXHbase11xWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXHbase11xWriter.class,"DataXHbase11xWriter-tpl.json");
     }
 
 

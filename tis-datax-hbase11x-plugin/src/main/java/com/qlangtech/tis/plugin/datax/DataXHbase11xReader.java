@@ -15,21 +15,16 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.Memoizer;
 import org.apache.commons.lang.StringUtils;
 
@@ -41,28 +36,27 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
 public class DataXHbase11xReader extends DataxReader {
     private static final String DATAX_NAME = "Hbase11x";
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {  Validator.require })
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String hbaseConfig;
-        @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {  Validator.require })
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String mode;
-        @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {  Validator.require })
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String table;
-        @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = { })
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
     public String encoding;
-        @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = { })
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
     public String column;
-    
+
     @FormField(ordinal = 5, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXHbase11xReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXHbase11xReader.class, "DataXHbase11xReader-tpl.json");
     }
 
 
@@ -178,7 +172,7 @@ public class DataXHbase11xReader extends DataxReader {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader>  {
+    public static class DefaultDescriptor extends Descriptor<DataxReader> {
         public DefaultDescriptor() {
             super();
         }

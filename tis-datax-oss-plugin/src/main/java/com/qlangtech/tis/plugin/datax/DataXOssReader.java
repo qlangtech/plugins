@@ -64,7 +64,8 @@ public class DataXOssReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXOssReader-tpl.json");
+
+        return IOUtils.loadResourceFromClasspath(DataXOssReader.class, "DataXOssReader-tpl.json");
     }
 
 

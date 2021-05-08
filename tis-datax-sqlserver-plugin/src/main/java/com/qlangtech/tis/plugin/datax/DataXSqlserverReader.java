@@ -70,7 +70,7 @@ public class DataXSqlserverReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXSqlserverReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXSqlserverReader.class,"DataXSqlserverReader-tpl.json");
     }
 
 

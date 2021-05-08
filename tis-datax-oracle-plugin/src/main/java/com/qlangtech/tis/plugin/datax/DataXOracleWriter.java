@@ -60,7 +60,7 @@ public class DataXOracleWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXOracleWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXOracleWriter.class,"DataXOracleWriter-tpl.json");
     }
 
 

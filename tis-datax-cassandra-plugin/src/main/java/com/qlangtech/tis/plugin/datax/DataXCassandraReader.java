@@ -74,7 +74,7 @@ public class DataXCassandraReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXCassandraReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXCassandraReader.class,"DataXCassandraReader-tpl.json");
     }
 
 

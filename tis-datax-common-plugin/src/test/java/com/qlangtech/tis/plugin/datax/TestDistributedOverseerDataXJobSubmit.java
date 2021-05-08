@@ -43,7 +43,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
     public void testPushMsgToDistributeQueue() {
 
         DataXJobWorker dataxJobWorker = DataXJobWorker.getDataxJobWorker();
-        assertEquals("/datax", dataxJobWorker.getZkQueuePath());
+        assertEquals("/datax/jobs", dataxJobWorker.getZkQueuePath());
         assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 
 

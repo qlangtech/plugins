@@ -72,7 +72,7 @@ public class DataXFtpReader extends DataxReader {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXFtpReader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXFtpReader.class,"DataXFtpReader-tpl.json");
     }
 
     @Override

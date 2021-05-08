@@ -65,7 +65,7 @@ public class DataXOssWriter extends DataxWriter {
     public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath("DataXOssWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXOssWriter.class,"DataXOssWriter-tpl.json");
     }
 
 

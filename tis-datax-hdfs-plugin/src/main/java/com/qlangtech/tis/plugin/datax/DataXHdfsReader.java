@@ -15,8 +15,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -24,16 +24,10 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.util.Memoizer;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -45,101 +39,64 @@ public class DataXHdfsReader extends DataxReader {
     public String path;
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String defaultFS;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fileType;
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
     public String column;
 
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
+    public String fieldDelimiter;
+
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
+    public String encoding;
+
+    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
+    public String nullFormat;
+
+    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
+    public String haveKerberos;
+
+    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+    public String kerberosKeytabFilePath;
+
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
+    public String kerberosPrincipal;
+
+    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
+    public String compress;
+
+    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, validate = {})
+    public String hadoopConfig;
+
+    @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
+    public String csvReaderConfig;
+
+    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHdfsReader.class, "DataXHdfsReader-tpl.json");
     }
 
+    @Override
+    public boolean hasMulitTable() {
+        return false;
+    }
+
+    @Override
+    public <T extends ISelectedTab> List<T> getSelectedTabs() {
+        return null;
+    }
+
+    @Override
+    public boolean hasExplicitTable() {
+        return false;
+    }
 
     @Override
     public Iterator<IDataxReaderContext> getSubTasks() {
 
-        MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
-
-        Memoizer<String, List<ColumnMetaData>> tabColsMap = new Memoizer<String, List<ColumnMetaData>>() {
-            @Override
-            public List<ColumnMetaData> compute(String tab) {
-                return dsFactory.getTableMetadata(tab);
-            }
-        };
-
-        AtomicInteger selectedTabIndex = new AtomicInteger(0);
-        AtomicInteger taskIndex = new AtomicInteger(0);
-        final int selectedTabsSize = this.selectedTabs.size();
-
-        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-
-        return new Iterator<IDataxReaderContext>() {
-            @Override
-            public boolean hasNext() {
-
-                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
-
-                if (dumperIt.hasNext()) {
-                    return true;
-                } else {
-                    if (selectedTabIndex.get() >= selectedTabsSize) {
-                        return false;
-                    } else {
-                        dumperItRef.set(null);
-                        initDataSourceDumperIterator();
-                        return true;
-                    }
-                }
-            }
-
-            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
-                Iterator<IDataSourceDumper> dumperIt;
-                if ((dumperIt = dumperItRef.get()) == null) {
-                    SelectedTab tab = selectedTabs.get(selectedTabIndex.getAndIncrement());
-                    if (StringUtils.isEmpty(tab.getName())) {
-                        throw new IllegalStateException("tableName can not be null");
-                    }
-//                    List<ColumnMetaData> tableMetadata = null;
-//                    IDataSourceDumper dumper = null;
-                    DataDumpers dataDumpers = null;
-                    TISTable tisTab = new TISTable();
-                    tisTab.setTableName(tab.getName());
-
-                    dataDumpers = dsFactory.getDataDumpers(tisTab);
-                    dumperIt = dataDumpers.dumpers;
-                    dumperItRef.set(dumperIt);
-                }
-                return dumperIt;
-            }
-
-            @Override
-            public IDataxReaderContext next() {
-                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
-                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
-                IDataSourceDumper dumper = dumperIterator.next();
-                SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
-                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(tab.getName() + "_" + taskIndex.getAndIncrement(), tab.getName());
-                dataxContext.jdbcUrl = dumper.getDbHost();
-                dataxContext.tabName = tab.getName();
-                dataxContext.username = dsFactory.getUserName();
-                dataxContext.password = dsFactory.getPassword();
-                dataxContext.setWhere(tab.getWhere());
-
-                List<ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-                if (tab.isAllCols()) {
-                    dataxContext.cols = tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
-                } else {
-                    dataxContext.cols = tableMetadata.stream().filter((col) -> {
-                        return tab.containCol(col.getKey());
-                    }).map((t) -> t.getValue()).collect(Collectors.toList());
-                }
-
-                return dataxContext;
-            }
-        };
+        return null;
     }
 
 
@@ -148,25 +105,21 @@ public class DataXHdfsReader extends DataxReader {
         return template;
     }
 
-    public void setSelectedTabs(List<SelectedTab> selectedTabs) {
-        this.selectedTabs = selectedTabs;
-    }
+    // public void setSelectedTabs(List<SelectedTab> selectedTabs) {
+    //     this.selectedTabs = selectedTabs;
+    // }
 
     @Override
     public List<String> getTablesInDB() {
-        DataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTablesInDB();
+//        DataSourceFactory plugin = getDataSourceFactory();
+//        return plugin.getTablesInDB();
+        return null;
     }
 
-    protected DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return dsStore.getPlugin();
-    }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(String table) {
-        DataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTableMetadata(table);
+        return null;
     }
 
     @TISExtension()

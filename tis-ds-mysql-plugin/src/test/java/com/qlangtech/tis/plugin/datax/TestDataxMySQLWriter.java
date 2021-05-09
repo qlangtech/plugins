@@ -154,4 +154,14 @@ public class TestDataxMySQLWriter extends BasicTest {
         assertEquals("assertFile:" + assertFileName, expectJson, actualJson);
     }
 
+    public void testGetDftTemplate() {
+        String dftTemplate = DataxMySQLWriter.getDftTemplate();
+        assertNotNull("dftTemplate can not be null", dftTemplate);
+    }
+
+    public void testPluginExtraPropsLoad() throws Exception {
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
+        assertTrue(extraProps.isPresent());
+    }
+
 }

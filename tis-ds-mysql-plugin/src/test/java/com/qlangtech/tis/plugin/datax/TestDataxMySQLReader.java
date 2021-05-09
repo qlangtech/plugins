@@ -257,4 +257,14 @@ public class TestDataxMySQLReader extends BasicTest {
         TestDataxMySQLWriter.assertJSONEqual(assertFileName, readerCfg);
     }
 
+    public void testGetDftTemplate() {
+        String dftTemplate = DataxMySQLReader.getDftTemplate();
+        assertNotNull("dftTemplate can not be null", dftTemplate);
+    }
+
+    public void testPluginExtraPropsLoad() throws Exception {
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
+        assertTrue(extraProps.isPresent());
+    }
+
 }

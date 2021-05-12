@@ -37,6 +37,13 @@
         </developer>
     </developers>
 
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-hdfs-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
 
         <!--

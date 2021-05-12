@@ -27,6 +27,13 @@
     <packaging>tpi</packaging>
     <artifactId>tis-kafka-plugin</artifactId>
 
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-kafka-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <dependencies>
 
         <dependency>

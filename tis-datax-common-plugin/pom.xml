@@ -25,7 +25,12 @@
     </parent>
     <packaging>tpi</packaging>
     <modelVersion>4.0.0</modelVersion>
-
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-datax-common-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
     <artifactId>tis-datax-common-plugin</artifactId>
 
 

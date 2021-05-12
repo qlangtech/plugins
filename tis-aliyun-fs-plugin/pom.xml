@@ -31,8 +31,16 @@
     <name>tis-aliyun-hdfs-plugin</name>
     <url>http://maven.apache.org</url>
 
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-aliyun-fs-plugin</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <properties>
     </properties>
+
 
     <build>
         <plugins>

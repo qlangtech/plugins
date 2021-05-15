@@ -27,7 +27,7 @@
     "help": "描述：FtpWriter写入前数据清理处理模式： "
   },
   "fieldDelimiter": {
-    "help": "描述：读取的字段分隔符 "
+    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符"
   },
   "compress": {
     "help": "描述：文本压缩类型，暂时不支持。 "
@@ -39,13 +39,13 @@
     "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。"
   },
   "dateFormat": {
-    "help": "描述：日期类型的数据序列化到文件中时的格式，例如 "dateFormat": "yyyy-MM-dd"。"
+    "help": "描述：日期类型的数据序列化到文件中时的格式，例如 \"dateFormat\": \"yyyy-MM-dd\"。"
   },
   "fileFormat": {
-    "help": "描述：文件写出的格式，包括csv (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号"；text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。"
+    "help": "描述：文件写出的格式，包括csv (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号。text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。"
   },
   "suffix": {
-    "help": "描述：最后输出文件的后缀，当前支持 ".text"以及".csv""
+    "help": "描述：最后输出文件的后缀，当前支持 \".text\"以及\".csv\""
   },
   "header": {
     "help": "描述：txt写出时的表头，示例['id', 'name', 'age']。"

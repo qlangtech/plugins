@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  **/
 public class DataXOdpsReader extends DataxReader {
-    private static final String DATAX_NAME = "Odps";
+    private static final String DATAX_NAME = "ODPS";
 
     @FormField(ordinal = 0, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;

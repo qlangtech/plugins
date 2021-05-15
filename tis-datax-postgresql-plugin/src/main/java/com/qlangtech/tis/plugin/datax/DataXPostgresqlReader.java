@@ -72,31 +72,32 @@ public class DataXPostgresqlReader extends DataxReader {
         return template;
     }
 
-
     @Override
     public List<String> getTablesInDB() {
         return null;
     }
 
-    @Override
-    public boolean hasMulitTable() {
-        return false;
-    }
 
     @Override
     public <T extends ISelectedTab> List<T> getSelectedTabs() {
         return null;
     }
 
-    @Override
-    public boolean hasExplicitTable() {
-        return false;
-    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader> {
+    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean hasExplicitTable() {
+            return true;
+        }
+
+        @Override
+        public boolean isMulitTableSelectable() {
+            return true;
         }
 
         @Override

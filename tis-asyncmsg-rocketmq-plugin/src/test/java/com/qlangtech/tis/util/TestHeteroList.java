@@ -31,13 +31,10 @@ public class TestHeteroList extends TestCase {
     private static final String caption = "test-caption";
 
     public void testReflectAllMethod() {
-        // HeteroList<AbstractMQListenerFactory> hList = new HeteroList<>();
+
         List<MQListenerFactory> items = Lists.newArrayList();
-        // 
-        // final Type col = Types.getBaseClass(items.getClass(), List.class);
-        // System.out.println(col);
-        // System.out.println(items.getClass().getComponentType());
-        HeteroList<MQListenerFactory> heteroList = HeteroList.getHeteroList(caption, items, MQListenerFactory.class);
+        UploadPluginMeta pluginMeta = UploadPluginMeta.parse(HeteroEnum.MQ.identity);
+        HeteroList<?> heteroList = pluginMeta.getHeteroList(null);
         assertEquals(caption, heteroList.getCaption());
         // assertEquals(1, heteroList.getDescriptors().size());
         assertEquals(0, heteroList.getItems().size());

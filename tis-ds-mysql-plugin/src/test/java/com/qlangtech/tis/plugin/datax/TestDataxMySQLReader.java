@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
+import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.util.IPluginContext;
@@ -254,7 +255,7 @@ public class TestDataxMySQLReader extends BasicTest {
         String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
         assertNotNull(readerCfg);
         System.out.println(readerCfg);
-        TestDataxMySQLWriter.assertJSONEqual(assertFileName, readerCfg);
+        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
     }
 
     public void testGetDftTemplate() {

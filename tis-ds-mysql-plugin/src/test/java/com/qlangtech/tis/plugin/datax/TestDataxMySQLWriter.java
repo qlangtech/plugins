@@ -16,8 +16,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -27,10 +25,10 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
+import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -39,7 +37,6 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -139,20 +136,10 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         String cfgResult = dataProcessor.generateDataxConfig(null, Optional.of(tm));
 
-        assertJSONEqual(assertFileName, cfgResult);
+        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, cfgResult);
         EasyMock.verify(processor, dataxGlobalCfg);
     }
 
-    public static void assertJSONEqual(String assertFileName, String actual) {
-
-        String expectJson = com.alibaba.fastjson.JSON.toJSONString(
-                JSON.parseObject(IOUtils.loadResourceFromClasspath(MethodHandles.lookup().lookupClass(), assertFileName))
-                , SerializerFeature.DisableCircularReferenceDetect, SerializerFeature.PrettyFormat);
-        System.out.println(assertFileName + "\n" + expectJson);
-        String actualJson = com.alibaba.fastjson.JSON.toJSONString(JSON.parseObject(actual)
-                , SerializerFeature.DisableCircularReferenceDetect, SerializerFeature.PrettyFormat);
-        assertEquals("assertFile:" + assertFileName, expectJson, actualJson);
-    }
 
     public void testGetDftTemplate() {
         String dftTemplate = DataxMySQLWriter.getDftTemplate();

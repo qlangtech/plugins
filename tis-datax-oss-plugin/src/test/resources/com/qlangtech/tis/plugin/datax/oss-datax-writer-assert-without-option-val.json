@@ -1,0 +1,13 @@
+{
+  "parameter":{
+    "accessId":"LTAICjPfS8Y2fDkN",
+    "bucket":"testBucket",
+    "endpoint":"http://oss-cn-beijing.aliyuncs.com",
+    "accessKey":"0xkKmOFLLbvrbM6gknWbbw2EDSabdR",
+    "writeMode":"nonConflict",
+    "object":[
+      "tis/mytable/*"
+    ]
+  },
+  "name":"osswriter"
+}

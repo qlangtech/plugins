@@ -1,0 +1,12 @@
+{
+  "endpoint": {
+    "dftVal": "http://oss.aliyuncs.com",
+    "help": "Server的EndPoint地址，例如http://oss.aliyuncs.com"
+  },
+  "accessKeyId": {
+    "help": "aliyun服务的accessId"
+  },
+  "accessKeySecret": {
+    "help": "aliyun服务的accessKeySecret"
+  }
+}

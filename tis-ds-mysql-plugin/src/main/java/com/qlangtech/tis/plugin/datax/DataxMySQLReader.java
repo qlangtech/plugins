@@ -19,7 +19,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -67,15 +66,11 @@ public class DataxMySQLReader extends DataxReader {
         return this.selectedTabs;
     }
 
-    @Override
-    public boolean hasMulitTable() {
-        return getSelectedTabs().size() > 1;
-    }
+//    @Override
+//    public boolean hasMulitTable() {
+//        return getSelectedTabs().size() > 1;
+//    }
 
-    @Override
-    public boolean hasExplicitTable() {
-        return true;
-    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-reader-tpl.json");
@@ -194,9 +189,19 @@ public class DataxMySQLReader extends DataxReader {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader> implements FormFieldType.IMultiSelectValidator {
+    public static class DefaultDescriptor extends BaseDataxReaderDescriptor implements FormFieldType.IMultiSelectValidator {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean hasExplicitTable() {
+            return true;
+        }
+
+        @Override
+        public boolean isMulitTableSelectable() {
+            return true;
         }
 
         @Override

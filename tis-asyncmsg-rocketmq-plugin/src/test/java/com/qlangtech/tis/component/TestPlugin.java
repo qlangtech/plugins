@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.component;
 
@@ -22,19 +22,22 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.impl.PropertyType;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.util.HeteroList;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /*
  * @create: 2020-01-14 09:21
@@ -57,10 +60,11 @@ public class TestPlugin extends BaseTestCase {
 
     private static final String collection = "search4totalpay";
 
-    private static final File tmpDir = new File("/tmp/opt/data");
+   // private static final File tmpDir = new File("/tmp/opt/data");
 
     static {
-        System.setProperty("data.dir", tmpDir.getAbsolutePath());
+       // System.setProperty("data.dir", tmpDir.getAbsolutePath());
+        Config.setTestDataDir();
     }
 
     public static class Person {
@@ -76,30 +80,20 @@ public class TestPlugin extends BaseTestCase {
         private int age;
     }
 
-    // public void testSetVal() throws Exception {
-    // 
-    // Person p = new Person();
-    // 
-    // BeanUtils.setProperty(p, "age", "12");
-    // 
-    // System.out.println(p.getAge());
-    // 
-    // ConvertUtilsBean convertUtils = new ConvertUtilsBean();
-    // 
-    // System.out.println(convertUtils.convert("99887", Integer.class));
-    // }
+
     public void testReceiceRequestFromClient() throws Exception {
         com.alibaba.fastjson.JSONArray jsonArray = null;
         com.alibaba.fastjson.JSONObject jsonObject = null;
         com.alibaba.fastjson.JSONObject valJ = null;
         String impl = null;
-        Descriptor.PropertyType attrDesc = null;
+
+        PropertyType attrDesc = null;
         Descriptor descriptor = null;
         JSONArray vals = null;
         String attr = null;
         String attrVal = null;
         TIS tis = TIS.get();
-       // IncrComponent incrComponent = tis.loadIncrComponent(collection);
+        // IncrComponent incrComponent = tis.loadIncrComponent(collection);
         // incrComponent.setMqListenerFactory();
         Describable describable = null;
         try (InputStream input = TestPlugin.class.getResourceAsStream("RocketMQListenerFactory.json")) {
@@ -108,7 +102,7 @@ public class TestPlugin extends BaseTestCase {
             for (int i = 0; i < jsonArray.size(); i++) {
                 // 创建一个item
                 jsonObject = jsonArray.getJSONObject(i);
-                describable = parseDescribable(jsonObject).instance;
+                describable = (Describable) parseDescribable(jsonObject).instance;
             }
         }
         assertNotNull(describable);
@@ -124,19 +118,20 @@ public class TestPlugin extends BaseTestCase {
         JSONArray vals;
         Descriptor descriptor;
         String attr;
-        Descriptor.PropertyType attrDesc;
+        PropertyType attrDesc;
         com.alibaba.fastjson.JSONObject valJ;
         String attrVal;
         impl = jsonObject.getString("impl");
         vals = jsonObject.getJSONArray("vals");
         descriptor = TIS.get().getDescriptor(impl);
         assertNotNull("impl:" + impl, descriptor);
-        Descriptor.ParseDescribable describable = descriptor.newInstance(Descriptor.parseAttrValMap(jsonObject.getJSONArray("vals")));
+        Descriptor.ParseDescribable describable
+                = descriptor.newInstance(null, Descriptor.parseAttrValMap(jsonObject.getJSONArray("vals")), Optional.empty());
         return describable;
     }
 
     public void testSaveAndLoad() throws IOException {
-        FileUtils.forceMkdir(tmpDir);
+       // FileUtils.forceMkdir(tmpDir);
         try {
 //            IncrComponent incrComponent = createIncrComponent();
 //            TIS.get().saveComponent(collection, incrComponent);
@@ -145,7 +140,7 @@ public class TestPlugin extends BaseTestCase {
             List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();// incrComponent.getMqListenerFactory();
             assertEquals(1, mqListenerFactory.size());
             RocketMQListenerFactory rocketMQListenerFactory = (RocketMQListenerFactory) mqListenerFactory.get(0);
-          //  assertEquals(collection, incrComponent.getCollection());
+            //  assertEquals(collection, incrComponent.getCollection());
             assertEquals(consumeId, rocketMQListenerFactory.consumeName);
             assertEquals(MQ_TOPIC, rocketMQListenerFactory.getMqTopic());
             assertEquals(NamesrvAddr, rocketMQListenerFactory.getNamesrvAddr());
@@ -161,16 +156,17 @@ public class TestPlugin extends BaseTestCase {
         PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
 //        IncrComponent incrComponent = createIncrComponent();
         List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();
-        HeteroList<MQListenerFactory> hList = new HeteroList<>();
+        UploadPluginMeta meta = UploadPluginMeta.parse("mq");
+        HeteroList<MQListenerFactory> hList = new HeteroList<>(meta);
         hList.setCaption("MQ消息监听");
         hList.setItems(mqListenerFactory);
         hList.setDescriptors(TIS.getPluginStore(MQListenerFactory.class).allDescriptor());
         assertEquals(1, hList.getDescriptors().size());
-        Map<String, Descriptor.PropertyType> propertyTypes;
+        PluginFormProperties propertyTypes;
         for (Descriptor<MQListenerFactory> f : hList.getDescriptors()) {
             System.out.println(f.getId());
-            propertyTypes = f.getPropertyTypes();
-            for (Map.Entry<String, Descriptor.PropertyType> entry : propertyTypes.entrySet()) {
+            propertyTypes = f.getPluginFormPropertyTypes();//getPropertyTypes();
+            for (Map.Entry<String, PropertyType> entry : propertyTypes.getKVTuples()) {
                 System.out.println(entry.getKey() + ":" + entry.getValue());
             }
         }

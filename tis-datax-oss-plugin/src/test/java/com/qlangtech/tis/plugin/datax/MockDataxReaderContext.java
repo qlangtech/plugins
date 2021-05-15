@@ -13,9 +13,22 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+package com.qlangtech.tis.plugin.datax;
+
+import com.qlangtech.tis.datax.IDataxReaderContext;
+
 /**
- * @author: baisui 百岁
- * @create: 2020-04-21 15:42
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2021-05-14 13:42
  **/
-public class Test {
+public class MockDataxReaderContext implements IDataxReaderContext {
+    @Override
+    public String getTaskName() {
+        return null;
+    }
+
+    @Override
+    public String getSourceEntityName() {
+        return null;
+    }
 }

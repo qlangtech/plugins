@@ -18,7 +18,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -71,15 +70,8 @@ public class DataXMongodbReader extends DataxReader {
     }
 
     @Override
-    public boolean hasExplicitTable() {
-        return false;
-    }
-
-    @Override
     public Iterator<IDataxReaderContext> getSubTasks() {
-
         return null;
-
     }
 
 
@@ -96,9 +88,19 @@ public class DataXMongodbReader extends DataxReader {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxReader> {
+    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean hasExplicitTable() {
+            return true;
+        }
+
+        @Override
+        public boolean isMulitTableSelectable() {
+            return true;
         }
 
         @Override

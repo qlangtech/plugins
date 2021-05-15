@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  */
 public class BaseTestCase extends TestCase {
 
-    static {
-        System.setProperty("data.dir", "./test_sources");
-    }
+//    static {
+//        System.setProperty("data.dir", "./test_sources");
+//    }
 }

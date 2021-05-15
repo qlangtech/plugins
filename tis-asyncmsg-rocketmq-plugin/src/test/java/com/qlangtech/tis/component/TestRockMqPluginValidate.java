@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.component;
 
@@ -120,7 +120,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         try {
             try (InputStream reader = this.getClass().getResourceAsStream(jsonPath)) {
                 JSONArray itemsArray = JSONArray.parseArray(IOUtils.toString(reader, TisUTF8.get()));
-                attrValMaps = AttrValMap.describableAttrValMapList(fieldErrorHandler, itemsArray);
+                attrValMaps = AttrValMap.describableAttrValMapList(fieldErrorHandler, itemsArray, Optional.empty());
             }
         } catch (Exception e) {
             throw new IllegalStateException("jsonPath:" + jsonPath, e);
@@ -128,7 +128,7 @@ public class TestRockMqPluginValidate extends BaseTestCase {
         assertNotNull(attrValMaps);
         assertEquals(1, attrValMaps.size());
         AttrValMap attrValMap = attrValMaps.get(0);
-        Descriptor.PluginValidateResult validateResult = attrValMap.validate(context);
+        Descriptor.PluginValidateResult validateResult = attrValMap.validate(context, true);
         assertFalse("validate false", validateResult.isValid());
     }
 }

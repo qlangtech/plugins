@@ -31,8 +31,7 @@ public class SelectedTab implements ISelectedTab {
     // 表名称
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
-    // 是否选择所有的列
-    // public boolean allCols;
+
     // 用户可以自己设置where条件
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
     public String where;

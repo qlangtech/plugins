@@ -15,30 +15,20 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.IDataxContext;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
-
-import java.util.Optional;
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-04-25 11:39
+ * @create: 2021-05-15 16:19
  **/
-public class DataXFtpWriterPlugin extends DataxWriter {
+public class MockFieldErrorHandler implements IFieldErrorHandler {
     @Override
-    public String getTemplate() {
-        return null;
+    public void addFieldError(Context context, String fieldName, String msg, Object... params) {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
-    }
-
-    @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public boolean validateBizLogic(BizLogic logicType, Context context, String fieldName, String value) {
+        return false;
     }
 }

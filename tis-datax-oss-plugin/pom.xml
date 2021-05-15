@@ -37,6 +37,12 @@
 
     <dependencies>
 
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugin</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
@@ -61,6 +67,12 @@
                     <artifactId>plugin-unstructured-storage-util</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.8.0</version>
         </dependency>
 
         <dependency>

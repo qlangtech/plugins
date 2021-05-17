@@ -8,18 +8,18 @@
         "table": ["$writer.tabName"]
       }
     ],
-  #if($writer.preSql)  "preSql": [
+  #if($writer.containPreSql)  "preSql": [
          "$writer.preSql"
     ],
 #end
-  #if($writer.preSql)  "postSql": [
+  #if($writer.containPostSql)  "postSql": [
       "$writer.postSql"
    ],
 #end
-  #if($writer.session)  "batchSize": $writer.batchSize,
+  #if($writer.batchSize)  "batchSize": $writer.batchSize,
 #end
     "password": "$writer.password",
-  #if($writer.session)  "session": ["$writer.session"],
+  #if($writer.containSession)  "session": ["$writer.session"],
 #end
     "username": "$writer.username",
     "writeMode": "$writer.writeMode"

@@ -86,9 +86,14 @@ public class DataXHdfsWriter extends DataxWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean isRdbms() {
+            return false;
         }
 
         @Override

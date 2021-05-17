@@ -16,7 +16,8 @@
     "help": "描述：读取字段列表，type指定源数据的类型，index指定当前列来自于文本第几列(以0开始)，value指定当前类型为常量，不从源头文件读取数据，而是根据value值自动生成对应的列。 "
   },
   "fieldDelimiter": {
-    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符"
+    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符，默认值：\",\"",
+    "dftVal": ","
   },
   "compress": {
     "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。",
@@ -50,7 +51,7 @@
     ]
   },
   "nullFormat": {
-    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。",
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。例如如果用户配置: nullFormat=\"\\N\"，那么如果源头数据是\"\\N\"，DataX视作null字段",
     "dftVal": "\\N"
   },
   "skipHeader": {

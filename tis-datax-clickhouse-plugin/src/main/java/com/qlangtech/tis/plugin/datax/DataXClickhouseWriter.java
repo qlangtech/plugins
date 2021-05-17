@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -28,41 +29,17 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * @author: baisui 百岁
- * @create: 2021-04-07 15:30
+ * https://github.com/alibaba/DataX/blob/master/clickhousewriter/src/main/resources/plugin_job_template.json
+ *
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2021-05-16 21:48
  **/
-public class DataXMongodbReader extends DataxReader {
-    private static final String DATAX_NAME = "Mongodb";
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
-    public String address;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
-    public String userName;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-    public String userPassword;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
-    public String collectionName;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
-    public String column;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-    public String name;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-    public String type;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-    public String splitter;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    public String query;
+public class DataXClickhouseWriter extends DataxReader {
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public static final String DATAX_NAME = "Clickhouse";
+
+    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
-
-    public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataXMongodbReader.class, "DataXMongodbReader-tpl.json");
-    }
-
-    @Override
-    public boolean hasMulitTable() {
-        return false;
-    }
 
     @Override
     public <T extends ISelectedTab> List<T> getSelectedTabs() {
@@ -74,21 +51,19 @@ public class DataXMongodbReader extends DataxReader {
         return null;
     }
 
-
     @Override
     public String getTemplate() {
         return template;
     }
 
 
-    @Override
-    public List<String> getTablesInDB() {
-        return null;
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataXClickhouseWriter.class, "DataXElasticsearchWriter-tpl.json");
     }
 
-
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
+    public static class DefaultDescriptor extends DataxWriter.BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
         }

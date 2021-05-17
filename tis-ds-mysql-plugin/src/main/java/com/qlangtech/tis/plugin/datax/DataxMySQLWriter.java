@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -19,7 +19,6 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -28,6 +27,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Optional;
 
 /**
@@ -135,6 +136,18 @@ public class DataxMySQLWriter extends DataxWriter {
             return session;
         }
 
+        public boolean isContainPreSql() {
+            return StringUtils.isNotBlank(preSql);
+        }
+
+        public boolean isContainPostSql() {
+            return StringUtils.isNotBlank(postSql);
+        }
+
+        public boolean isContainSession() {
+            return StringUtils.isNotBlank(session);
+        }
+
         public Integer getBatchSize() {
             return batchSize;
         }
@@ -146,9 +159,14 @@ public class DataxMySQLWriter extends DataxWriter {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean isRdbms() {
+            return true;
         }
 
         @Override

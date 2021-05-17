@@ -22,7 +22,7 @@
 #if($reader.skipHeader)
     ,"skipHeader" : ${reader.skipHeader}
 #end
-#if($reader.csvReaderConfig)
+#if($reader.containCsvReaderConfig)
     ,"csvReaderConfig" : ${reader.csvReaderConfig}
 #end}
 }

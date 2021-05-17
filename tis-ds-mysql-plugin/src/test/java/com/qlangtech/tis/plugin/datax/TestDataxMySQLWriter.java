@@ -100,6 +100,11 @@ public class TestDataxMySQLWriter extends BasicTest {
         mySQLWriter.session = null;
         validateConfigGenerate("mysql-datax-writer-assert-without-option-val.json", mySQLWriter);
 
+        mySQLWriter.preSql = " ";
+        mySQLWriter.postSql = " ";
+        mySQLWriter.session = " ";
+        validateConfigGenerate("mysql-datax-writer-assert-without-option-val.json", mySQLWriter);
+
 
     }
 

@@ -15,8 +15,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -24,6 +27,17 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
  **/
 public class OSSReaderContext implements IDataxReaderContext {
     private final DataXOssReader reader;
+
+    @Override
+    public String getTaskName() {
+        //throw new UnsupportedOperationException();
+        return StringUtils.replace(StringUtils.remove(reader.object, "*"), "/", "-");
+    }
+
+    @Override
+    public String getSourceEntityName() {
+        throw new UnsupportedOperationException();
+    }
 
     public OSSReaderContext(DataXOssReader reader) {
         this.reader = reader;
@@ -65,18 +79,19 @@ public class OSSReaderContext implements IDataxReaderContext {
         return reader.skipHeader;
     }
 
+    public boolean isContainCsvReaderConfig() {
+        try {
+            JSONObject o = JSON.parseObject(reader.csvReaderConfig);
+            return o.keySet().size() > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public String getCsvReaderConfig() {
         // 为一个json格式
         return reader.csvReaderConfig;
     }
 
-    @Override
-    public String getTaskName() {
-        throw new UnsupportedOperationException();
-    }
 
-    @Override
-    public String getSourceEntityName() {
-        throw new UnsupportedOperationException();
-    }
 }

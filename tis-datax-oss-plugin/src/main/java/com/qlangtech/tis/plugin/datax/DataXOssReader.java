@@ -19,6 +19,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.Bucket;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -140,11 +142,13 @@ public class DataXOssReader extends DataxReader {
         private final List<DataXColMeta> cols = Lists.newArrayList();
 
         @Override
+        @JSONField(serialize = false)
         public String getName() {
             throw new UnsupportedOperationException();
         }
 
         @Override
+        @JSONField(serialize = false)
         public String getWhere() {
             throw new UnsupportedOperationException();
         }
@@ -155,20 +159,27 @@ public class DataXOssReader extends DataxReader {
         }
 
         @Override
-        public List<String> getCols() {
+        public List<ColMeta> getCols() {
             if (isAllCols()) {
                 return Collections.emptyList();
             }
-            return null;
+            return cols.stream().map((c) -> {
+                ColMeta cmeta = new ColMeta();
+                cmeta.setName(null);
+                cmeta.setType(c.parseType);
+                return cmeta;
+            }).collect(Collectors.toList());
         }
     }
 
     private static class DataXColMeta {
-        private final DataXOSSType parseType;
+        private final ISelectedTab.DataXReaderColType parseType;
+
+        // index和value两个属性为2选1
         private int index;
         private String value;
 
-        public DataXColMeta(DataXOSSType parseType) {
+        public DataXColMeta(ISelectedTab.DataXReaderColType parseType) {
             this.parseType = parseType;
         }
     }
@@ -197,12 +208,7 @@ public class DataXOssReader extends DataxReader {
         }
 
         @Override
-        public boolean hasExplicitTable() {
-            return false;
-        }
-
-        @Override
-        public boolean isMulitTableSelectable() {
+        public boolean isRdbms() {
             return false;
         }
 
@@ -235,7 +241,7 @@ public class DataXOssReader extends DataxReader {
                 }
                 JSONObject col = null;
                 String type = null;
-                DataXOSSType parseType = null;
+                ISelectedTab.DataXReaderColType parseType = null;
                 Integer index = null;
                 String appValue = null;
                 for (int i = 0; i < cols.size(); i++) {
@@ -245,9 +251,9 @@ public class DataXOssReader extends DataxReader {
                         msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type不能为空");
                         return parseOSSColsResult.faild();
                     }
-                    parseType = DataXOSSType.parse(type);
+                    parseType = ISelectedTab.DataXReaderColType.parse(type);
                     if (parseType == null) {
-                        msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type必须为:" + DataXOSSType.toDesc() + "中之一");
+                        msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type必须为:" + ISelectedTab.DataXReaderColType.toDesc() + "中之一");
                         return parseOSSColsResult.faild();
                     }
 

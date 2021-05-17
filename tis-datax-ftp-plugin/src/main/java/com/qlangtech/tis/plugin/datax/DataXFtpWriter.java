@@ -32,7 +32,7 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  **/
 public class DataXFtpWriter extends DataxWriter {
-    private static final String DATAX_NAME = "Ftp";
+    private static final String DATAX_NAME = "FTP";
 
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String protocol;
@@ -89,9 +89,14 @@ public class DataXFtpWriter extends DataxWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public boolean isRdbms() {
+            return false;
         }
 
         @Override

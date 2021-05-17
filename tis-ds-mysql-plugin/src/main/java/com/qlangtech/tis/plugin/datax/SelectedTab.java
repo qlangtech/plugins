@@ -22,6 +22,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -56,8 +57,12 @@ public class SelectedTab implements ISelectedTab {
         return this.cols.isEmpty();
     }
 
-    public List<String> getCols() {
-        return this.cols;
+    public List<ColMeta> getCols() {
+        return this.cols.stream().map((c) -> {
+            ColMeta colMeta = new ColMeta();
+            colMeta.setName(c);
+            return colMeta;
+        }).collect(Collectors.toList());
     }
 
     public boolean containCol(String col) {

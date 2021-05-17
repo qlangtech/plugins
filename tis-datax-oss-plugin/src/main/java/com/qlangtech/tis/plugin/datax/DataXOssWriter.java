@@ -101,12 +101,17 @@ public class DataXOssWriter extends DataxWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
 
 
         public DefaultDescriptor() {
             super();
             registerSelectOptions(DataXOssReader.FIELD_ENDPOINT, () -> ParamsConfig.getItems(IAliyunToken.class));
+        }
+
+        @Override
+        public boolean isRdbms() {
+            return false;
         }
 
         public boolean validateObject(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

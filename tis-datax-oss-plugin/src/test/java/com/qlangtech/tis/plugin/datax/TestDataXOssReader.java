@@ -15,15 +15,19 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.test.BasicTest;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.io.IOUtils;
 import org.easymock.EasyMock;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -102,12 +106,20 @@ public class TestDataXOssReader extends BasicTest {
 
 
         EasyMock.replay(processor, dataxGlobalCfg, dataxWriter, dataxContext);
+
+//        try (InputStream reader = this.getClass().getResourceAsStream("oss-datax-reader-assert.json")) {
+//            JSONObject jsonObject = JSON.parseObject(IOUtils.toString(reader, TisUTF8.getName()));
+//            System.out.println("nullFormat:" + jsonObject.getJSONObject("parameter").getString("nullFormat"));
+//        }
+
         valiateReaderCfgGenerate("oss-datax-reader-assert.json", processor, ossReader);
+
+
         ossReader.encoding = null;
         ossReader.compress = null;
         ossReader.nullFormat = null;
         ossReader.skipHeader = null;
-        ossReader.csvReaderConfig = null;
+        ossReader.csvReaderConfig = "{}";
         valiateReaderCfgGenerate("oss-datax-reader-assert-without-option-val.json", processor, ossReader);
 
         EasyMock.verify(processor, dataxGlobalCfg, dataxWriter, dataxContext);

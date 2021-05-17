@@ -91,12 +91,7 @@ public class DataXPostgresqlReader extends DataxReader {
         }
 
         @Override
-        public boolean hasExplicitTable() {
-            return true;
-        }
-
-        @Override
-        public boolean isMulitTableSelectable() {
+        public boolean isRdbms() {
             return true;
         }
 

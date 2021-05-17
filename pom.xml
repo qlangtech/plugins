@@ -47,7 +47,8 @@
         <module>tis-local-dump-build</module>
         <module>tis-datax-test-common</module>
         <module>tis-datax-oss-plugin</module>
-        <module>tis-datax-elasricsearch-plugin</module>
+        <module>tis-datax-elasticsearch-plugin</module>
+        <module>tis-datax-clickhouse-plugin</module>
         <module>tis-datax-postgresql-plugin</module>
         <module>tis-datax-mongodb-plugin</module>
         <module>tis-datax-common-plugin</module>

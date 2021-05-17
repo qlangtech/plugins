@@ -144,7 +144,7 @@ public class DataXSqlserverWriter extends DataxWriter {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<DataxWriter> {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
         }

@@ -101,12 +101,7 @@ public class DataXFtpReader extends DataxReader {
         }
 
         @Override
-        public boolean hasExplicitTable() {
-            return false;
-        }
-
-        @Override
-        public boolean isMulitTableSelectable() {
+        public boolean isRdbms() {
             return false;
         }
 

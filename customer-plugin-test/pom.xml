@@ -47,6 +47,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -86,6 +92,12 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-solrconfig-parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <version>2.3.0</version>
+            <scope>test</scope>
         </dependency>
 
 

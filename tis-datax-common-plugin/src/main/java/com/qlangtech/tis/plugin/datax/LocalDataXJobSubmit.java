@@ -77,16 +77,16 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
         try {
             System.out.println("aaaaaaaaaaaaaaaaaaaaaaa:" +
-                    uberClassLoader.loadClass("com.alibaba.datax.common.spi.Reader"));
+                    uberClassLoader.loadClass("com.alibaba.datax.common.spi.Reader.Job"));
         } catch (Exception e) {
-            System.out.println("********************aaaaaaaaaaaaaaaaaaaaaaa");
+            System.out.println("********************aaaaaaaaaaaaaaaaaaaaaaa:" + e.getMessage());
         }
 
         try {
             System.out.println("bbbbbbbbbbbbbbbbbbbbbbb:"
-                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader"));
+                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader.Job"));
         } catch (ClassNotFoundException e) {
-            System.out.println("********************bbbbbbbbbbbbbbbbbbbb");
+            System.out.println("********************bbbbbbbbbbbbbbbbbbbb:" + e.getMessage());
         }
 
         DataxExecutor dataxExecutor = new DataxExecutor(statusRpc, uberClassLoader);

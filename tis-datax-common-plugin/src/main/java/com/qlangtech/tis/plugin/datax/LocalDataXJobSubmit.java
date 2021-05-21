@@ -61,7 +61,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."}) {
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."}, this.getClass().getClassLoader()) {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
                 PluginManager pluginManager = TIS.get().getPluginManager();

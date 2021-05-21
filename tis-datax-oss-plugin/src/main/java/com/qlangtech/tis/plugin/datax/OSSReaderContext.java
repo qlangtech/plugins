@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -67,12 +68,25 @@ public class OSSReaderContext implements IDataxReaderContext {
         return reader.compress;
     }
 
+    public boolean isContainCompress() {
+        return StringUtils.isNotBlank(reader.compress);
+    }
+
+    public boolean isContainEncoding() {
+        return StringUtils.isNotBlank(reader.encoding);
+    }
+
+    public boolean isContainNullFormat() {
+        return StringUtils.isNotBlank(reader.nullFormat);
+    }
+
     public String getEncoding() {
         return reader.encoding;
     }
 
     public String getNullFormat() {
-        return reader.nullFormat;
+        // \N  -> \\N
+        return StringEscapeUtils.escapeJava(reader.nullFormat);
     }
 
     public Boolean getSkipHeader() {

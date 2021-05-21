@@ -96,7 +96,7 @@ public class TestDataXOssReader extends BasicTest {
         ossReader.fieldDelimiter = "\t";
         ossReader.compress = "zip";
 
-        ossReader.nullFormat = "\\\\N";
+        ossReader.nullFormat = "\\N";
         ossReader.skipHeader = true;
         ossReader.csvReaderConfig = "{\n" +
                 "        \"safetySwitch\": false,\n" +

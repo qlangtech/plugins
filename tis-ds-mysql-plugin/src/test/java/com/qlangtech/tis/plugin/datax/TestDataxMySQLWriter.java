@@ -21,6 +21,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
@@ -39,6 +40,7 @@ import org.easymock.EasyMock;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -112,7 +114,11 @@ public class TestDataxMySQLWriter extends BasicTest {
         IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
         tm.setFrom("orderinfo");
         tm.setTo("orderinfo_new");
-        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3"));
+        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
+            ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
+            meta.setName(c);
+            return meta;
+        }).collect(Collectors.toList()));
         Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);
         IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
         assertNotNull(subTaskCtx);

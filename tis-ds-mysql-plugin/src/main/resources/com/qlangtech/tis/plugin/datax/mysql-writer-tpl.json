@@ -12,7 +12,7 @@
          "$writer.preSql"
     ],
 #end
-  #if($writer.containPostSql)  "postSql": [
+  #if($writer.containPostSql) "postSql": [
       "$writer.postSql"
    ],
 #end

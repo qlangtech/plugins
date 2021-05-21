@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.impl.DataFlowAppSource;
+import com.qlangtech.tis.plugin.test.BasicTest;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -31,7 +32,7 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-03 23:15
  **/
-public class TestDefaultDataxProcessor extends TestCase {
+public class TestDefaultDataxProcessor extends BasicTest {
 
     public void testSaveProcess() {
         final String appName = "test" + RandomStringUtils.randomAlphanumeric(2);
@@ -45,7 +46,7 @@ public class TestDefaultDataxProcessor extends TestCase {
             dataxProcessor.setTableMaps(tableMaps);
 
             dataxProcessor.globalCfg = "datax-global-config";
-            dataxProcessor.dptId = 356;
+            dataxProcessor.dptId = "356";
             dataxProcessor.recept = "小明";
 
             DataFlowAppSource.save(appName, dataxProcessor);

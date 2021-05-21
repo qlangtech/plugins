@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.util.Objects;
 
@@ -46,15 +47,16 @@ public class DefaultDataxProcessor extends DataxProcessor {
     public String globalCfg;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public int dptId;
+    public String dptId;
     @FormField(ordinal = 3, validate = {Validator.require})
     public String recept;
+
 
     @Override
     public Application buildApp() {
         Application app = new Application();
         app.setProjectName(this.name);
-        app.setDptId(this.dptId);
+        app.setDptId(Integer.parseInt(this.dptId));
         app.setRecept(this.recept);
         app.setAppType(AppType.DataXPipe.getType());
         return app;
@@ -80,6 +82,11 @@ public class DefaultDataxProcessor extends DataxProcessor {
         }
 
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            UploadPluginMeta pluginMeta = (UploadPluginMeta) context.get(UploadPluginMeta.KEY_PLUGIN_META);
+            Objects.requireNonNull(pluginMeta, "pluginMeta can not be null");
+            if (pluginMeta.isUpdate()) {
+                return true;
+            }
             return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.APP_NAME_DUPLICATE, context, fieldName, value);
         }
 

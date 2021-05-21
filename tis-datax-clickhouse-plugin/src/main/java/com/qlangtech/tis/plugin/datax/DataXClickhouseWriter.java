@@ -15,6 +15,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -27,6 +29,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/clickhousewriter/src/main/resources/plugin_job_template.json
@@ -34,7 +37,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-16 21:48
  **/
-public class DataXClickhouseWriter extends DataxReader {
+public class DataXClickhouseWriter extends DataxWriter {
 
     public static final String DATAX_NAME = "Clickhouse";
 
@@ -42,12 +45,7 @@ public class DataXClickhouseWriter extends DataxReader {
     public String template;
 
     @Override
-    public <T extends ISelectedTab> List<T> getSelectedTabs() {
-        return null;
-    }
-
-    @Override
-    public Iterator<IDataxReaderContext> getSubTasks() {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
         return null;
     }
 

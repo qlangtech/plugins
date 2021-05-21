@@ -30,6 +30,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -93,7 +94,7 @@ public class DataxMySQLWriter extends DataxWriter {
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = tm.getSourceCols();
+            context.cols = tm.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList());
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;

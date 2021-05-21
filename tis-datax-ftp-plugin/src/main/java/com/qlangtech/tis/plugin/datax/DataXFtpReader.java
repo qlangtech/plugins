@@ -32,7 +32,7 @@ import java.util.List;
  * @create: 2021-04-07 15:30
  **/
 public class DataXFtpReader extends DataxReader {
-    private static final String DATAX_NAME = "Ftp";
+    private static final String DATAX_NAME = "FTP";
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String protocol;
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})

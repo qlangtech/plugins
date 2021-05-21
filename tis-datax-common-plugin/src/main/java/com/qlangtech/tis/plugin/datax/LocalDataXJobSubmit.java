@@ -20,6 +20,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
@@ -32,6 +33,7 @@ import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -62,7 +64,14 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."}) {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
-                return TIS.get().getPluginManager().uberClassLoader.findClass(name);
+                PluginManager pluginManager = TIS.get().getPluginManager();
+                try {
+                    PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
+                    return classLoader.findClass(name);
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException("scan the plugins:"
+                            + pluginManager.activePlugins.stream().map((p) -> p.getDisplayName()).collect(Collectors.joining(",")), e);
+                }
             }
         };
 

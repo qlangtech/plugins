@@ -46,6 +46,7 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -60,6 +61,7 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-executor</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>

@@ -61,33 +61,37 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
 
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."}, this.getClass().getClassLoader()) {
+        PluginManager pluginManager = TIS.get().getPluginManager();
+
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."}) {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
-                PluginManager pluginManager = TIS.get().getPluginManager();
+
                 try {
                     PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
                     return classLoader.findClass(name);
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException("scan the plugins:"
+                } catch (Throwable e) {
+                    throw new RuntimeException("className:" + name + ",scan the plugins:"
                             + pluginManager.activePlugins.stream().map((p) -> p.getDisplayName()).collect(Collectors.joining(",")), e);
                 }
             }
         };
 
-        try {
-            System.out.println("aaaaaaaaaaaaaaaaaaaaaaa:" +
-                    uberClassLoader.loadClass("com.alibaba.datax.common.spi.Reader.Job"));
-        } catch (Exception e) {
-            System.out.println("********************aaaaaaaaaaaaaaaaaaaaaaa:" + e.getMessage());
-        }
-
-        try {
-            System.out.println("bbbbbbbbbbbbbbbbbbbbbbb:"
-                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader.Job"));
-        } catch (ClassNotFoundException e) {
-            System.out.println("********************bbbbbbbbbbbbbbbbbbbb:" + e.getMessage());
-        }
+//        try {
+//            System.out.println("aaaaaaaaaaaaaaaaaaaaaaa:" +
+//                    uberClassLoader.loadClass("com.alibaba.datax.common.spi.Reader$Job"));
+//        } catch (Exception e) {
+//            System.out.println("********************aaaaaaaaaaaaaaaaaaaaaaa:" + e.getMessage());
+//        }
+//
+//        try {
+//            System.out.println("xxxxxxxxxxxxxxxxxxxxxx:"
+//                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader"));
+//            System.out.println("bbbbbbbbbbbbbbbbbbbbbbb:"
+//                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader$Job"));
+//        } catch (Exception e) {
+//            System.out.println("********************bbbbbbbbbbbbbbbbbbbb:" + e.getMessage());
+//        }
 
         DataxExecutor dataxExecutor = new DataxExecutor(statusRpc, uberClassLoader);
 

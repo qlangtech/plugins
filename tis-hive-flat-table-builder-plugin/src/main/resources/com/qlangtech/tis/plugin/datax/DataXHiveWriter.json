@@ -3,10 +3,10 @@
     "help": "ElasticSearch的连接地址"
   },
   "index": {
-    "help": "Elasticsearch中的index名"
+    "help": "ElasticSearch中的index名"
   },
   "type": {
-    "help": "Elasticsearch中index的type名"
+    "help": "ElasticSearch中index的type名"
   },
   "cleanup": {
     "help": "是否删除原表"
@@ -129,7 +129,7 @@
     "dftVal": ","
   },
   "column": {
-    "help": "elasticsearch所支持的字段类型，样例中包含了全部"
+    "help": "Elasticsearch所支持的字段类型，样例中包含了全部"
   },
   "dynamic": {
     "help": "不使用datax的mappings，使用es自己的自动mappings",

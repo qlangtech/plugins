@@ -79,7 +79,7 @@ public class DataxMySQLReader extends DataxReader {
 
     @Override
     public Iterator<IDataxReaderContext> getSubTasks() {
-
+        Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
         MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
 
         Memoizer<String, List<ColumnMetaData>> tabColsMap = new Memoizer<String, List<ColumnMetaData>>() {
@@ -91,6 +91,7 @@ public class DataxMySQLReader extends DataxReader {
 
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
         AtomicInteger taskIndex = new AtomicInteger(0);
+
         final int selectedTabsSize = this.selectedTabs.size();
 
         AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();

@@ -33,15 +33,15 @@ import java.util.List;
  **/
 public class DataXFtpReader extends DataxReader {
     private static final String DATAX_NAME = "FTP";
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String protocol;
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String host;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-    public String port;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
-    public String timeout;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {})
+    public Integer port;
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {})
+    public Integer timeout;
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {})
     public String connectPattern;
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String username;

@@ -43,7 +43,10 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -128,14 +131,9 @@ public class DataXOssReader extends DataxReader {
     }
 
     public IAliyunToken getOSSConfig() {
-        return getiAliyunToken(this.endpoint);
+        return IAliyunToken.getToken(this.endpoint);
     }
 
-    public static IAliyunToken getiAliyunToken(String endpoint) {
-        IAliyunToken aliyunToken = ParamsConfig.getItem(endpoint, IAliyunToken.class);
-        Objects.requireNonNull(aliyunToken, "aliyunToekn can not be null");
-        return aliyunToken;
-    }
 
     public static class DataXReaderTabMeta implements ISelectedTab {
         private boolean allCols = false;

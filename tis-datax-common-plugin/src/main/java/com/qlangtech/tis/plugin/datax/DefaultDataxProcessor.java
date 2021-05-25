@@ -30,6 +30,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.UploadPluginMeta;
 
+import java.io.File;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -72,6 +74,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
         Objects.requireNonNull(globalCfg, "dataX Global config can not be null");
         return globalCfg;
     }
+
 
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<IAppSource> {

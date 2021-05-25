@@ -336,21 +336,6 @@ public class HiveTableBuilder {
             HiveDBUtils.executeNoLog(conn, sql);
             return true;
         });
-
-
-//        String sql = null;
-//        ITISFileSystem fs = this.fileSystem.getFileSystem();
-//        IPath path = null;
-//        while (true) {
-//            path = fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + (startIndex));
-//            if (!fs.exists(path)) {
-//                break;
-//            }
-//            sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + startIndex + "') location '" + path.toString() + "'";
-//            log.info(sql);
-//            HiveDBUtils.executeNoLog(conn, sql);
-//            startIndex++;
-//        }
     }
 
     private IPath visitSubPmodPath(String hivePath, int startIndex, FSPathVisitor pathVisitor) throws Exception {
@@ -365,9 +350,6 @@ public class HiveTableBuilder {
                 return path;
             }
             if (!pathVisitor.process(startIndex, path)) { return path;}
-//            sql = "alter table " + table + " add if not exists partition(pt='" + timestamp + "',pmod='" + startIndex + "') location '" + path.toString() + "'";
-//            log.info(sql);
-//            HiveDBUtils.executeNoLog(conn, sql);
             startIndex++;
         }
     }
@@ -422,16 +404,6 @@ public class HiveTableBuilder {
         );
     }
 
-    // public HiveDBUtils getHiveDbHeler() {
-    // return hiveDbHeler;
-    // }
-    // 
-    // public void setHiveDbHeler(HiveDBUtils hiveDbHeler) {
-    // this.hiveDbHeler = hiveDbHeler;
-    // }
-    // public ITISFileSystem getFileSystem() {
-    // return fileSystem;
-    // }
     public void setFileSystem(ITISFileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }

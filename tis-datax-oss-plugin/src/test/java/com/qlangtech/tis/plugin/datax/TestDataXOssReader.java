@@ -15,20 +15,10 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.datax.*;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.common.JsonUtils;
+import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.test.BasicTest;
-import org.apache.commons.io.IOUtils;
-import org.easymock.EasyMock;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.regex.Matcher;
 
@@ -73,19 +63,11 @@ public class TestDataXOssReader extends BasicTest {
 
     public void testTempateGenerate() throws Exception {
 
+        final String dataXName = "testDataXName";
+
 //        String tab = "\\t";
 //
 //        System.out.println("tab:" + StringEscapeUtils.unescapeJava(tab).length());
-
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
-
-        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
-        IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
-        EasyMock.expect(processor.getWriter()).andReturn(dataxWriter).anyTimes();
-        IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
-        EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
-
         DataXOssReader ossReader = new DataXOssReader();
         ossReader.endpoint = "aliyun-bj-endpoint";
         ossReader.bucket = "testBucket";
@@ -103,52 +85,14 @@ public class TestDataXOssReader extends BasicTest {
                 "        \"skipEmptyRecords\": false,\n" +
                 "        \"useTextQualifier\": false\n" +
                 "}";
-
-
-        EasyMock.replay(processor, dataxGlobalCfg, dataxWriter, dataxContext);
-
-//        try (InputStream reader = this.getClass().getResourceAsStream("oss-datax-reader-assert.json")) {
-//            JSONObject jsonObject = JSON.parseObject(IOUtils.toString(reader, TisUTF8.getName()));
-//            System.out.println("nullFormat:" + jsonObject.getJSONObject("parameter").getString("nullFormat"));
-//        }
-
-        valiateReaderCfgGenerate("oss-datax-reader-assert.json", processor, ossReader);
-
+        ReaderTemplate.validateDataXReader("oss-datax-reader-assert.json", dataXName, ossReader);
 
         ossReader.encoding = null;
         ossReader.compress = null;
         ossReader.nullFormat = null;
         ossReader.skipHeader = null;
         ossReader.csvReaderConfig = "{}";
-        valiateReaderCfgGenerate("oss-datax-reader-assert-without-option-val.json", processor, ossReader);
-
-        EasyMock.verify(processor, dataxGlobalCfg, dataxWriter, dataxContext);
+        ReaderTemplate.validateDataXReader("oss-datax-reader-assert-without-option-val.json", dataXName, ossReader);
     }
 
-    private void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataXOssReader ossReader) throws IOException {
-
-
-        OSSReaderContext dataxReaderContext = null;
-        Iterator<IDataxReaderContext> subTasks = ossReader.getSubTasks();
-        int dataxReaderContextCount = 0;
-        while (subTasks.hasNext()) {
-            dataxReaderContext = (OSSReaderContext) subTasks.next();
-            dataxReaderContextCount++;
-        }
-        assertEquals(1, dataxReaderContextCount);
-        assertNotNull(dataxReaderContext);
-
-
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
-            @Override
-            public String getTemplateContent() {
-                return ossReader.getTemplate();
-            }
-        };
-
-        String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
-        assertNotNull(readerCfg);
-        System.out.println(readerCfg);
-        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
-    }
 }

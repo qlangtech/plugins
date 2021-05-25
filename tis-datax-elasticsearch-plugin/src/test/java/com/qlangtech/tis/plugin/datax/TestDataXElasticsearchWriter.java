@@ -16,8 +16,13 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import junit.framework.TestCase;
 
+import junit.framework.TestCase;
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.apache.commons.lang.StringUtils;
+
+import java.beans.PropertyDescriptor;
 import java.util.Optional;
 
 /**
@@ -33,5 +38,9 @@ public class TestDataXElasticsearchWriter extends TestCase {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXElasticsearchWriter.class);
         assertTrue(extraProps.isPresent());
+    }
+
+    public void testTemplateGenerate() {
+
     }
 }

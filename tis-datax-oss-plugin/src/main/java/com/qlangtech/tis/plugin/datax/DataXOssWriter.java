@@ -23,7 +23,6 @@ import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -96,7 +95,7 @@ public class DataXOssWriter extends DataxWriter {
     }
 
     public IAliyunToken getOSSConfig() {
-        return DataXOssReader.getiAliyunToken(this.endpoint);
+        return IAliyunToken.getToken(this.endpoint);
     }
 
 

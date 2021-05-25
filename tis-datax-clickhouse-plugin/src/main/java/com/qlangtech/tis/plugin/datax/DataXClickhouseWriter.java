@@ -41,6 +41,23 @@ public class DataXClickhouseWriter extends DataxWriter {
 
     public static final String DATAX_NAME = "Clickhouse";
 
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String jdbcUrl;
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String username;
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String password;
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String table;
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String column;
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
+    public String preSql;
+    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
+    public String postSql;
+    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
+    public String batchSize;
+
     @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
@@ -57,7 +74,8 @@ public class DataXClickhouseWriter extends DataxWriter {
 
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataXClickhouseWriter.class, "DataXElasticsearchWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(
+                DataXClickhouseWriter.class, "DataXClickhouseWriter-tpl.json");
     }
 
     @TISExtension()

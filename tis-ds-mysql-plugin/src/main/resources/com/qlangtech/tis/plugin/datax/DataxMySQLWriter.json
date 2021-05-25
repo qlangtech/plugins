@@ -1,6 +1,6 @@
 {
   "writeMode": {
-    "dftVal": false,
+    "dftVal": "insert",
     "enum": [
       {
         "val": "insert",

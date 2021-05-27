@@ -16,20 +16,23 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.test.BasicTest;
+import com.qlangtech.tis.util.DescriptorsJSON;
 
-import junit.framework.TestCase;
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.beanutils.PropertyUtilsBean;
-import org.apache.commons.lang.StringUtils;
-
-import java.beans.PropertyDescriptor;
 import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXElasticsearchWriter extends TestCase {
+public class TestDataXElasticsearchWriter extends BasicTest {
+
+    public void testDescriptorsJSONGenerate() {
+        DataXElasticsearchWriter esWriter = new DataXElasticsearchWriter();
+        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
+        descJson.getDescriptorsJSON().toJSONString();
+    }
+
     public void testGetDftTemplate() {
         String dftTemplate = DataXElasticsearchWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);

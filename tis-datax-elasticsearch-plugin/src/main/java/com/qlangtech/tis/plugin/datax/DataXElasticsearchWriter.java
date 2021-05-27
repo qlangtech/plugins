@@ -15,6 +15,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -32,6 +34,7 @@ import java.util.Optional;
  **/
 public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext {
     private static final String DATAX_NAME = "Elasticsearch";
+    private static final String FIELD_ENDPOINT = "endpoint";
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String endpoint;
@@ -104,6 +107,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IAliyunToken.class));
         }
 
         @Override

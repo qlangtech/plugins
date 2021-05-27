@@ -18,22 +18,18 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
-import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
-import java.io.IOException;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.Iterator;
@@ -150,7 +146,7 @@ public class TestDataxMySQLReader extends BasicTest {
     }
 
     public void testTempateGenerate() throws Exception {
-
+        final String dataXName = "dataXName";
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
 
@@ -218,7 +214,7 @@ public class TestDataxMySQLReader extends BasicTest {
         //校验证列和 where条件都设置的情况
         // valiateReaderCfgGenerate("mysql-datax-reader-assert.json", processor, mySQLReader);
 
-        ReaderTemplate.validateDataXReader("mysql-datax-reader-assert.json", mySQLReader);
+        ReaderTemplate.validateDataXReader("mysql-datax-reader-assert.json", dataXName, mySQLReader);
 
         selectedTab = new SelectedTab();
         selectedTab.setCols(Collections.emptyList());
@@ -227,7 +223,7 @@ public class TestDataxMySQLReader extends BasicTest {
 //        valiateReaderCfgGenerate("mysql-datax-reader-asser-without-option-val.json"
 //                , processor, mySQLReader);
 
-        ReaderTemplate.validateDataXReader("mysql-datax-reader-asser-without-option-val.json", mySQLReader);
+        ReaderTemplate.validateDataXReader("mysql-datax-reader-asser-without-option-val.json", dataXName, mySQLReader);
 
         EasyMock.verify(mysqlDataSource, dataDumper);
     }

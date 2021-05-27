@@ -21,7 +21,6 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
@@ -58,7 +57,7 @@ public class DataxMySQLReader extends DataxReader {
     public String template;
 
     @SubForm(desClazz = SelectedTab.class
-            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter.param(\"" + DataxUtils.DATAX_NAME + "\"));")
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public List<SelectedTab> selectedTabs;
 
     @Override

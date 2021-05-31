@@ -1,19 +1,21 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.dump.hive;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
@@ -26,6 +28,7 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /* *
  * @author 百岁（baisui@qlangtech.com）
@@ -207,46 +210,59 @@ public class HiveRemoveHistoryDataTask {
 
 
     public void dropHistoryHiveTable(EntityName dumpTable, Connection conn) {
-        this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, ITableDumpConstant.MAX_PARTITION_SAVE);
+        this.dropHistoryHiveTable(dumpTable, conn, ITableDumpConstant.MAX_PARTITION_SAVE);
+    }
+
+    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(EntityName dumpTable, Connection conn, Integer partitionRetainNum) {
+        return this.dropHistoryHiveTable(dumpTable, conn, (r) -> true, partitionRetainNum);
     }
 
     /**
      * 删除hive中的历史表
      */
-    public void dropHistoryHiveTable(EntityName dumpTable, Connection conn, PartitionFilter filter, int maxPartitionSave) {
-        // String dbName = getDbName() == null ? "tis" : getDbName();
-        // String tableName = getTableName();
-        // String path = dbName + "." + tableName;
-        // if (!(this.pathGetter instanceof DumpTable)) {
-        // return;
-        // }
+    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(EntityName dumpTable, Connection conn, PartitionFilter filter, Integer maxPartitionSave) {
+        if (maxPartitionSave < 1) {
+            throw new IllegalArgumentException("param maxPartitionSave can not small than 1");
+        }
         final EntityName table = dumpTable;
         if (StringUtils.isBlank(pt)) {
             throw new IllegalStateException("pt name shall be set");
         }
+        String existTimestamp = null;
+        FSHistoryFileUtils.PathInfo pathInfo = null;
+        List<FSHistoryFileUtils.PathInfo> deletePts = Lists.newArrayList();
         try {
             // 判断表是否存在
-            if (!HiveTableBuilder.isTableExists(conn, table)) {
+            if (!BindHiveTableTool.HiveTableBuilder.isTableExists(conn, table)) {
                 logger.info(table + " is not exist");
-                return;
+                return Collections.emptyList();
             }
             List<String> ptList = getHistoryPts(conn, filter, table);
             int count = 0;
-            logger.info("maxPartitionSave:" + maxPartitionSave);
+
             for (int i = ptList.size() - 1; i >= 0; i--) {
                 if ((++count) > maxPartitionSave) {
-                    String alterSql = "alter table " + table + " drop partition (  " + pt + " = '" + ptList.get(i) + "' )";
+                    existTimestamp = ptList.get(i);
+                    pathInfo = new FSHistoryFileUtils.PathInfo();
+                    pathInfo.setTimeStamp(Long.parseLong(existTimestamp));
+                    pathInfo.setPathName(existTimestamp);
+                    deletePts.add(pathInfo);
+                    String alterSql = "alter table " + table + " drop partition (  " + pt + " = '" + existTimestamp + "' )";
                     try {
                         HiveDBUtils.execute(conn, alterSql);
                     } catch (Throwable e) {
                         logger.error("alterSql:" + alterSql, e);
                     }
-                    logger.info("history table:" + table + ", partition:" + pt + "='" + ptList.get(i) + "', have been removed");
+                    logger.info("history table:" + table + ", partition:" + pt + "='" + existTimestamp + "', have been removed");
                 }
             }
+            logger.info("maxPartitionSave:" + maxPartitionSave + ",table:" + table.getFullName()
+                    + " exist partitions:" + ptList.stream().collect(Collectors.joining(",")) + " dropped partitions:"
+                    + deletePts.stream().map((p) -> p.getPathName()).collect(Collectors.joining(",")));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return deletePts;
     }
 
     public static List<String> getHistoryPts(Connection conn, final IDumpTable table) throws Exception {

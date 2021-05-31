@@ -14,8 +14,12 @@
  */
 
 import com.qlangtech.tis.dump.hive.TestHiveDBUtils;
+import com.qlangtech.tis.dump.hive.TestHiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.TestYarnTableDumpFactory;
 import com.qlangtech.tis.hive.TestHiveInsertFromSelectParser;
+import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
+import com.qlangtech.tis.plugin.datax.TestDataXHdfsWriter;
+import com.qlangtech.tis.plugin.datax.TestDataXHiveWriter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -28,6 +32,11 @@ public class TestAll extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
+
+        suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
+        suite.addTestSuite(TestDataXHdfsReader.class);
+        suite.addTestSuite(TestDataXHdfsWriter.class);
+        suite.addTestSuite(TestDataXHiveWriter.class);
         suite.addTestSuite(TestHiveInsertFromSelectParser.class);
         suite.addTestSuite(TestHiveDBUtils.class);
         suite.addTestSuite(TestYarnTableDumpFactory.class);

@@ -47,6 +47,82 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <version>${alibaba.datax.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-hdfs-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>hdfsreader</artifactId>
+            <version>${alibaba.datax.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>datax-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>plugin-unstructured-storage-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-serde</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-service</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive.hcatalog</groupId>
+                    <artifactId>hive-hcatalog-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>hdfswriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>datax-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>plugin-unstructured-storage-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-serde</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-service</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive.hcatalog</groupId>
+                    <artifactId>hive-hcatalog-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
 
         <dependency>
@@ -82,19 +158,23 @@
             <artifactId>commons-dbcp</artifactId>
             <version>1.4</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-yarn-client</artifactId>
-        </dependency>
 
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-        </dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-yarn-client</artifactId>
+    </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-common</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-mapreduce-client-core</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <groupId>com.qlangtech.tis.plugin</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
         </dependency>
 
     </dependencies>

@@ -1,31 +1,35 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
+import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
-import com.qlangtech.tis.dump.hive.HiveTableBuilder;
+import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IFs2Table;
+import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
+import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,29 +84,56 @@ public class JoinHiveTask extends HiveTask {
             // final DumpTable dumpTable =
             // DumpTable.createTable(insertParser.getTargetTableName());
             final EntityName dumpTable = EntityName.parse(this.getName());
-            if (HiveTableBuilder.isTableExists(conn, dumpTable)) {
-                if (HiveTableBuilder.isTableSame(conn, insertParser.getCols(), dumpTable)) {
-                    log.info("Start clean up history file '{}'", dumpTable);
-                    IJoinTaskContext param = this.getContext().getExecContext();
-                    //  EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystemFactory fileSys;
-                    RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, param, this.fileSystem);
-                    // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
-                    //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
-                    // 清理hive数据
 
-                    fs2Table.dropHistoryTable(dumpTable, this.getTaskContext());
-                } else {
-                    HiveDBUtils.execute(conn, "drop table " + dumpTable);
-                    createHiveTable(dumpTable, insertParser.getColsExcludePartitionCols(), conn);
-                }
-            } else {
-                // 说明原表并不存在 直接创建
-                log.info("table " + dumpTable + " doesn't exist");
-                log.info("create table " + dumpTable);
-                createHiveTable(dumpTable, insertParser.getColsExcludePartitionCols(), conn);
+            final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable).replaceAll("\\.", Path.SEPARATOR);
+            if (fileSystem == null) {
+                throw new IllegalStateException("fileSys can not be null");
             }
+            ITISFileSystem fs = fileSystem;
+            IPath parent = fs.getPath(path);
+            initializeHiveTable(this.fileSystem, parent, HdfsFormat.DEFAULT_FORMAT, insertParser.getCols(), insertParser.getColsExcludePartitionCols(), conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * @param fileSystem
+     * @param fsFormat
+     * @param cols
+     * @param colsExcludePartitionCols
+     * @param conn
+     * @param dumpTable
+     * @param partitionRetainNum       保留多少个分区
+     * @throws Exception
+     */
+    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, HdfsFormat fsFormat
+            , List<HiveColumn> cols, List<HiveColumn> colsExcludePartitionCols
+            , Connection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+        if (partitionRetainNum == null || partitionRetainNum < 1) {
+            throw new IllegalArgumentException("illegal param partitionRetainNum ");
+        }
+        if (BindHiveTableTool.HiveTableBuilder.isTableExists(conn, dumpTable)) {
+            if (BindHiveTableTool.HiveTableBuilder.isTableSame(conn, cols, dumpTable)) {
+                log.info("Start clean up history file '{}'", dumpTable);
+
+                // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
+                //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
+                // 清理hive数据
+                List<FSHistoryFileUtils.PathInfo> deletePts =
+                        (new HiveRemoveHistoryDataTask(fileSystem)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
+                // 清理Hdfs数据
+                FSHistoryFileUtils.deleteOldHdfsfile(fileSystem, parentPath, deletePts, 0);
+                //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
+            } else {
+                HiveDBUtils.execute(conn, "drop table " + dumpTable);
+                createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
+            }
+        } else {
+            // 说明原表并不存在 直接创建
+            log.info("table " + dumpTable + " doesn't exist");
+            log.info("create table " + dumpTable);
+            createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
         }
     }
 
@@ -116,12 +147,13 @@ public class JoinHiveTask extends HiveTask {
         return insertParser;
     }
 
+
     /**
      * 创建hive表
      */
-    private void createHiveTable(EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
+    public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat, EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
         // final String user = this.getContext().joinTaskContext().getContextUserName();
-        HiveTableBuilder tableBuilder = new HiveTableBuilder("0");
+        BindHiveTableTool.HiveTableBuilder tableBuilder = new BindHiveTableTool.HiveTableBuilder("0", fsFormat);
         tableBuilder.createHiveTableAndBindPartition(conn, dumpTable, cols, (hiveSQl) -> {
             hiveSQl.append("\n LOCATION '").append(
                     FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)

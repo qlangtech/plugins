@@ -1,153 +1,17 @@
 {
-  "endpoint": {
-    "help": "ElasticSearch的连接地址"
+  "hiveConn": {
+    "creator": {
+      "routerLink": "/base/basecfg",
+      "label": "数据源管理"
+    }
   },
-  "index": {
-    "help": "ElasticSearch中的index名"
-  },
-  "type": {
-    "help": "ElasticSearch中index的type名"
-  },
-  "cleanup": {
-    "help": "是否删除原表"
-  },
-  "batchSize": {
-    "help": "每次批量数据的条数",
-    "dftVal": 1000
-  },
-  "trySize": {
-    "help": "失败后重试的次数",
-    "dftVal": 30
-  },
-  "timeout": {
-    "help": "客户端超时时间",
-    "dftVal": 600000
-  },
-  "discovery": {
-    "help": "启用节点发现将(轮询)并定期更新客户机中的服务器列表",
-    "dftVal": false,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "compression": {
-    "help": "http请求，开启压缩",
-    "dftVal": true,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "multiThread": {
-    "help": "http请求，是否有多线程",
-    "dftVal": true,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "ignoreWriteError": {
-    "help": "忽略写入错误，不重试，继续写入",
-    "dftVal": false,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "ignoreParseError": {
-    "help": "忽略解析数据格式错误，继续写入",
-    "dftVal": true,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "alias": {
-    "help": "数据导入完成后写入别名",
-    "dftVal": false,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
-  },
-  "aliasMode": {
-    "help": "数据导入完成后增加别名的模式，append(增加模式), exclusive(只留这一个)",
-    "dftVal": "append",
-    "enum": [
-      {
-        "val": "exclusive",
-        "label": "Exclusive"
-      },
-      {
-        "val": "append",
-        "label": "Append"
-      }
-    ]
-  },
-  "settings": {
-    "help": "创建index时候的settings, 与elasticsearch官方相同"
-  },
-  "splitter": {
-    "help": "如果插入数据是array，就使用指定分隔符",
-    "dftVal": ","
-  },
-  "column": {
-    "help": "Elasticsearch所支持的字段类型，样例中包含了全部"
-  },
-  "dynamic": {
-    "help": "不使用datax的mappings，使用es自己的自动mappings",
-    "dftVal": false,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
+  "partitionRetainNum": {
+    "label": "分区保留数",
+    "help": "每进行一次DataX导入在Hive表中会生成一个新的分区，现在系统分区名称为'pt'格式为开始导入数据的时间戳，格式为'yyyyMMddHHmmss'"
   },
   "template": {
     "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter.getDftTemplate()",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHiveWriter.getDftTemplate()",
     "rows": 18
   }
 }

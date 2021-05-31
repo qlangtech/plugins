@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.offline.flattable;
 
@@ -54,7 +54,7 @@ import java.util.Objects;
  */
 public class HiveFlatTableBuilder extends FlatTableBuilder {
 
-    public static final String KEY_FIELD_NAME = "fsName";
+    public static final String KEY_FIELD_NAME_FS_NAME = "fsName";
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_DB_NAME = "dbName";
 
@@ -143,7 +143,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     public static class DefaultDescriptor extends Descriptor<FlatTableBuilder> {
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+            this.registerSelectOptions(KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 
         @Override
@@ -153,29 +153,35 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
 
         @Override
         protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
-            String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
-            String dbName = postFormVals.getField(KEY_DB_NAME);
-
-            Connection conn = null;
-            try {
-                conn = HiveDBUtils.getInstance(hiveAddress, dbName).createConnection();
-            } catch (Throwable e) {
-                Throwable[] throwables = ExceptionUtils.getThrowables(e);
-                for (Throwable t : throwables) {
-                    if (StringUtils.indexOf(t.getMessage(), "NoSuchDatabaseException") > -1) {
-                        msgHandler.addFieldError(context, KEY_DB_NAME, "dbName:" + dbName + " is not exist ,please create");
-                        return false;
-                    }
-                }
-                throw e;
-            } finally {
-                try {
-                    conn.close();
-                } catch (Throwable e) {}
-            }
-
-            return true;
+            return validateHiveAvailable(msgHandler, context, postFormVals);
         }
+    }
+
+    public static boolean validateHiveAvailable(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
+        String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
+        String dbName = postFormVals.getField(KEY_DB_NAME);
+
+        Connection conn = null;
+        try {
+            conn = HiveDBUtils.getInstance(hiveAddress, dbName).createConnection();
+        } catch (Throwable e) {
+            Throwable[] throwables = ExceptionUtils.getThrowables(e);
+            for (Throwable t : throwables) {
+                if (StringUtils.indexOf(t.getMessage(), "refused") > -1) {
+                    msgHandler.addFieldError(context, KEY_HIVE_ADDRESS, "连接地址不可用，请确保连接Hive服务地址可用");
+                    return false;
+                }
+                if (StringUtils.indexOf(t.getMessage(), "NoSuchDatabaseException") > -1) {
+                    msgHandler.addFieldError(context, KEY_DB_NAME, "dbName:" + dbName + " is not exist ,please create");
+                    return false;
+                }
+            }
+            throw e;
+        } finally {
+            try {
+                conn.close();
+            } catch (Throwable e) {}
+        }
+        return true;
     }
 }

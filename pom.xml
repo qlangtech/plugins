@@ -53,7 +53,7 @@
         <module>tis-datax-mongodb-plugin</module>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-ftp-plugin</module>
-        <module>tis-datax-hdfs-plugin</module>
+<!--        <module>tis-datax-hdfs-plugin</module>-->
     </modules>
 
     <properties>

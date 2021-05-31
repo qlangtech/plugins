@@ -15,35 +15,91 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.sql.Connection;
 import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-23 14:48
  **/
-public class DataXHiveWriter extends DataxWriter {
+public class DataXHiveWriter extends DataXHdfsWriter {
     private static final String DATAX_NAME = "Hive";
+    private static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
+
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String hiveConn;
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer partitionRetainNum;
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
+        if (!tableMap.isPresent()) {
+            throw new IllegalStateException("tableMap must be present");
+        }
+        IDataxProcessor.TableMap tabMap = tableMap.get();
+        return new HiveDataXContext(tabMap, this.dataXName);
+    }
+
+    public Connection getConnection() {
+        try {
+            ParamsConfig connGetter = (ParamsConfig) getHiveConnGetter();
+            return connGetter.createConfigInstance();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public IHiveConnGetter getHiveConnGetter() {
+        return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.class);
+    }
+
+    public class HiveDataXContext extends HdfsDataXContext {
+
+        public HiveDataXContext(IDataxProcessor.TableMap tabMap, String dataXName) {
+            super(tabMap, dataXName);
+        }
+
+        public Integer getPartitionRetainNum() {
+            return partitionRetainNum;
+        }
     }
 
     @Override
     public String getTemplate() {
-        return null;
+        return template;
     }
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.class));
         }
+
+        public boolean validatePartitionRetainNum(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Integer retainNum = Integer.parseInt(value);
+            if (retainNum < 1 || retainNum > 5) {
+                msgHandler.addFieldError(context, fieldName, "数目必须为不小于1且不大于5之间");
+                return false;
+            }
+            return true;
+        }
+
+//        @Override
+//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            return HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals);
+//        }
 
         @Override
         public boolean isRdbms() {

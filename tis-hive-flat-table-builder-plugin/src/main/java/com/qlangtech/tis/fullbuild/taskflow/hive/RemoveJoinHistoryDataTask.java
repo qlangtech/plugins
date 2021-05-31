@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
@@ -19,7 +19,6 @@ import com.qlangtech.tis.fs.FSHistoryFileUtils.PathInfo;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.fs.Path;
@@ -40,13 +39,11 @@ class RemoveJoinHistoryDataTask {
     /**
      * 删除宽表历史数据
      *
-     * @param chainContext
+     * @param dumpTable
      * @throws Exception
      */
-    public static void deleteHistoryJoinTable(EntityName dumpTable, IJoinTaskContext chainContext, ITISFileSystem fileSys) throws Exception {
-        if (chainContext == null) {
-            throw new IllegalArgumentException("param: execContext can not be null");
-        }
+    public static void deleteHistoryJoinTable(EntityName dumpTable, ITISFileSystem fileSys, Integer partitionRetainNum) throws Exception {
+
         final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSys.getRootDir(), dumpTable).replaceAll("\\.", Path.SEPARATOR);
         if (fileSys == null) {
             throw new IllegalStateException("fileSys can not be null");
@@ -70,6 +67,6 @@ class RemoveJoinHistoryDataTask {
                 timestampList.add(pathinfo);
             }
         }
-        FSHistoryFileUtils.deleteOldHdfsfile(fs, parent, timestampList, ITableDumpConstant.MAX_PARTITION_SAVE);
+        FSHistoryFileUtils.deleteOldHdfsfile(fs, parent, timestampList, partitionRetainNum);
     }
 }

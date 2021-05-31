@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.fullbuild.indexbuild.impl;
 
@@ -35,11 +35,14 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * 基于YARN容器的表Dump实现
@@ -150,8 +153,19 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
     @Override
-    public void bindTables(Set<EntityName> hiveTables, String timestamp, ITaskContext context) {
-        BindHiveTableTool.bindHiveTables(this.getFs(), hiveTables, timestamp, context);
+    public void bindTables(Set<EntityName> hiveTables, final String timestamp, ITaskContext context) {
+        BindHiveTableTool.bindHiveTables(this.getFs()
+                , hiveTables.stream().collect(Collectors.toMap((e) -> e, (e) -> {
+                    return new Callable<BindHiveTableTool.HiveBindConfig>() {
+                        @Override
+                        public BindHiveTableTool.HiveBindConfig call() throws Exception {
+                            Path tabDumpParentPath = getFs().getPath(getFs().getRootDir() + "/" + e.getNameWithPath() + "/all/" + timestamp).unwrap(Path.class);
+                            return new BindHiveTableTool.HiveBindConfig(BindHiveTableTool.getColumns(getFs(), e, timestamp), tabDumpParentPath);
+                        }
+                    };
+                }))
+                , timestamp
+                , context);
     }
 
     @Override

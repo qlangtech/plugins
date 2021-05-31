@@ -19,8 +19,8 @@ import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.test.BasicTest;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.easymock.EasyMock;
 
 import java.util.Optional;
@@ -79,7 +79,7 @@ public class TestDataXOssWriter extends BasicTest {
         ossWriter.fileFormat = "csv";
         ossWriter.maxFileSize = 300;
         ossWriter.nullFormat = "\\\\N";
-        EasyMock.expect(processor.getWriter()).andReturn(ossWriter).anyTimes();
+        EasyMock.expect(processor.getWriter(null)).andReturn(ossWriter).anyTimes();
         EasyMock.replay(processor, dataxGlobalCfg);
 
         valiateWriterCfgGenerate("oss-datax-writer-assert.json", processor, ossWriter);
@@ -101,7 +101,7 @@ public class TestDataXOssWriter extends BasicTest {
 
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
 
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
+        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, testDataXName, processor) {
             @Override
             public String getTemplateContent() {
                 return ossWriter.getTemplate();
@@ -111,6 +111,6 @@ public class TestDataXOssWriter extends BasicTest {
         String readerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.empty());
         assertNotNull(readerCfg);
         System.out.println(readerCfg);
-        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
+        JsonUtil.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
     }
 }

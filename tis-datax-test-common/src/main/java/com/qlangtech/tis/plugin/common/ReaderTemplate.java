@@ -20,6 +20,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
+import org.junit.Assert;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -79,6 +80,8 @@ public class ReaderTemplate {
         String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
         TestCase.assertNotNull(readerCfg);
         System.out.println(readerCfg);
-        JsonUtils.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg);
+        com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
+            Assert.assertEquals(msg, expect, actual);
+        });
     }
 }

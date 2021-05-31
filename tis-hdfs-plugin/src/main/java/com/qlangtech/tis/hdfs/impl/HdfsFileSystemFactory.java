@@ -1,19 +1,20 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.hdfs.impl;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -23,22 +24,31 @@ import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2018年11月23日
  */
 public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFileSystemFactory {
+
+    private static final Logger Logger = LoggerFactory.getLogger(HdfsFileSystemFactory.class);
+
+    private static final String KEY_FIELD_HDFS_ADDRESS = "hdfsAddress";
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
@@ -104,17 +114,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                             conf.set("hadoop.job.ugi", "admin");
                             try (InputStream input = new ByteArrayInputStream(hdfsContent.getBytes(TisUTF8.get()))) {
                                 conf.addResource(input);
-                                // conf.set("dfs.nameservices", "cluster-cdh");
-                                // conf.set("dfs.client.failover.proxy.provider.cluster-cdh",
-                                // "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
-                                // //////////////
-                                // conf.set("dfs.ha.automatic-failover.enabled.cluster-cdh",
-                                // "true");
-                                // conf.set("dfs.ha.automatic-failover.enabled.cluster-cdh",
-                                // "true");
-                                conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入的化就调用不到了
+                                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
                                 fileSystem = new FilterFileSystem(FileSystem.get(conf)) {
-
                                     @Override
                                     public boolean delete(Path f, boolean recursive) throws IOException {
                                         try {
@@ -170,10 +172,28 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @TISExtension(ordinal = 0)
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {
-
         @Override
         public String getDisplayName() {
-            return "hdfs";
+            return "HDFS";
+        }
+
+        @Override
+        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            ParseDescribable<FileSystemFactory> fs = null;
+            try {
+                fs = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+                HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.instance;
+                ITISFileSystem hdfs = hdfsFactory.getFileSystem();
+                hdfs.listChildren(hdfs.getPath("/"));
+                msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) fs.instance).hdfsAddress + "连接正常");
+                return true;
+            } catch (Exception e) {
+                Logger.warn(e.getMessage(), e);
+                msgHandler.addFieldError(context, KEY_FIELD_HDFS_ADDRESS, "请检查连接地址，服务端是否能正常,错误:" + e.getMessage());
+                return false;
+            }
+
+
         }
 
         public boolean validate() {

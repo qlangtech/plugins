@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.fs.local;
 
@@ -18,9 +18,6 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.fs.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.MMapDirectory;
-import org.apache.lucene.store.NoLockFactory;
 import org.apache.solr.store.blockcache.CustomBufferedIndexInput;
 
 import java.io.File;
@@ -35,11 +32,16 @@ import java.util.List;
  * @create: 2021-03-02 13:00
  **/
 public class LocalFileSystem implements ITISFileSystem {
-   // private static final String NAME_LOCAL_FS = "localFileSys";
+    // private static final String NAME_LOCAL_FS = "localFileSys";
     private final String rootDir;
 
     public LocalFileSystem(String rootDir) {
         this.rootDir = rootDir;
+    }
+
+    @Override
+    public <T> T unwrap() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -66,7 +68,6 @@ public class LocalFileSystem implements ITISFileSystem {
     public OutputStream getOutputStream(IPath path) {
         throw new UnsupportedOperationException();
     }
-
 
 
     @Override

@@ -13,22 +13,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.test;
+package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.plugin.test.BasicTest;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-14 10:15
+ * @create: 2021-05-08 20:02
  **/
-public abstract class BasicTest extends TestCase {
+public class TestDataXHdfsReader extends BasicTest {
 
-    public static final String testDataXName = "dataxname";
-
-    static {
-        CenterResource.setNotFetchFromCenterRepository();
-        HttpUtils.addMockGlobalParametersConfig();
+    public void testDescriptorsJSONGenerate() {
+        DataXHdfsReader reader = new DataXHdfsReader();
+        DescriptorsJSON descJson = new DescriptorsJSON(reader.getDescriptor());
+        System.out.println(JsonUtil.toString(descJson.getDescriptorsJSON()));
     }
 }

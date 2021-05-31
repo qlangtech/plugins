@@ -13,22 +13,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.test;
+package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.manage.common.HttpUtils;
-import junit.framework.TestCase;
+import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-14 10:15
+ * @create: 2021-05-27 17:04
  **/
-public abstract class BasicTest extends TestCase {
+public class TisExtendHdfsHelper extends HdfsHelper {
+    @Override
+    public void getFileSystem(String defaultFS, Configuration taskConfig) {
 
-    public static final String testDataXName = "dataxname";
-
-    static {
-        CenterResource.setNotFetchFromCenterRepository();
-        HttpUtils.addMockGlobalParametersConfig();
     }
 }

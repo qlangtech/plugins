@@ -13,22 +13,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.test;
+package com.qlangtech.tis.hive;
 
-import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.manage.common.HttpUtils;
-import junit.framework.TestCase;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-14 10:15
+ * @create: 2021-05-28 12:38
  **/
-public abstract class BasicTest extends TestCase {
+public enum HdfsFileType {
+    TEXTFILE("text"), ORC("orc");
+    private final String type;
 
-    public static final String testDataXName = "dataxname";
+    public String getType() {
+        return this.name();
+    }
 
-    static {
-        CenterResource.setNotFetchFromCenterRepository();
-        HttpUtils.addMockGlobalParametersConfig();
+    private HdfsFileType(String format) {
+        this.type = format;
+    }
+
+    public static HdfsFileType parse(String format) {
+        for (HdfsFileType f : HdfsFileType.values()) {
+            if (f.type.equals(StringUtils.lowerCase(format))) {
+                return f;
+            }
+        }
+        throw new IllegalStateException("format:" + format + " is illegal");
     }
 }

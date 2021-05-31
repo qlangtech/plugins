@@ -1,20 +1,20 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.hive;
 
-import com.google.common.collect.Lists;
+import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import org.antlr.runtime.tree.Tree;
 import org.apache.commons.io.FileUtils;
@@ -29,7 +29,10 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,11 +53,11 @@ public class HiveInsertFromSelectParser {
 
     private String sourceTableName;
 
-    private static final List<String> ps;
-
-    static {
-        ps = Collections.unmodifiableList(Lists.newArrayList(IDumpTable.PARTITION_PMOD, IDumpTable.PARTITION_PT));
-    }
+//    public static final List<String> preservedPsCols;
+//
+//    static {
+//        preservedPsCols = Collections.unmodifiableList(Lists.newArrayList(IDumpTable.PARTITION_PMOD, IDumpTable.PARTITION_PT));
+//    }
 
     private ASTNode where;
 
@@ -117,7 +120,7 @@ public class HiveInsertFromSelectParser {
      * 除去ps列
      */
     public List<HiveColumn> getColsExcludePartitionCols() {
-        return getCols().stream().filter((r) -> !ps.contains(r.getName())).collect(Collectors.toList());
+        return getCols().stream().filter((r) -> !IDumpTable.preservedPsCols.contains(r.getName())).collect(Collectors.toList());
     }
 
     private void parseCreateTable(Node node) {
@@ -220,7 +223,7 @@ public class HiveInsertFromSelectParser {
             }
         }
         column.setIndex(colIndex++);
-        column.setType(HiveColumn.HIVE_TYPE_STRING);
+        column.setType(SupportHiveDataType.STRING.name());
         this.cols.add(column);
         this.colsMap.put(column.getName(), column);
     }

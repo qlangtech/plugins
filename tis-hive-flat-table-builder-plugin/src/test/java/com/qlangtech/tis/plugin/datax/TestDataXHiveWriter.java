@@ -15,25 +15,14 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.common.element.ColumnCast;
-import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.core.job.JobContainer;
-import com.alibaba.datax.core.util.container.JarLoader;
-import com.alibaba.datax.core.util.container.LoadUtil;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -74,37 +63,8 @@ public class TestDataXHiveWriter extends BasicTest {
         hiveWriter.template = DataXHiveWriter.getDftTemplate();
         hiveWriter.partitionRetainNum = 2;
 
-        ISelectedTab.ColMeta colMeta = null;
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-        tableMap.setTo("customer_order_relation");
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
 
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("customerregister_id");
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("waitingorder_id");
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("kind");
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("create_time");
-        colMeta.setType(ISelectedTab.DataXReaderColType.Long);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("last_ver");
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT);
-        sourceCols.add(colMeta);
-
-        tableMap.setSourceCols(sourceCols);
+        IDataxProcessor.TableMap tableMap = TestDataXHdfsWriter.createCustomer_order_relationTableMap();
 
 
         WriterTemplate.valiateCfgGenerate("hive-datax-writer-assert.json", hiveWriter, tableMap);
@@ -117,54 +77,13 @@ public class TestDataXHiveWriter extends BasicTest {
 
     }
 
-    static final Field jarLoaderCenterField;
-
-    static {
-        try {
-            jarLoaderCenterField = LoadUtil.class.getDeclaredField("jarLoaderCenter");
-            jarLoaderCenterField.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException("can not get field 'jarLoaderCenter' of LoadUtil", e);
-        }
-    }
 
     public void testDataDump() throws Exception {
 
         final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hiveDataXName);
 
-        realExecuteDump("hive-datax-writer-assert-without-option-val.json", dataxWriter);
+        WriterTemplate.realExecuteDump("hive-datax-writer-assert-without-option-val.json", dataxWriter);
     }
 
-
-    protected void realExecuteDump(final String writerJson, DataxWriter dataxWriter) throws IllegalAccessException {
-        Map<String, JarLoader> jarLoaderCenter = (Map<String, JarLoader>) jarLoaderCenterField.get(null);
-        jarLoaderCenter.clear();
-
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
-        jarLoaderCenter.put("plugin.reader.streamreader", uberClassLoader);
-        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
-
-        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
-                , "container.json", true, (input) -> {
-                    Configuration cfg = Configuration.from(input);
-                    cfg.set("plugin.writer." + dataxWriter.getDataxMeta().getName() + ".class"
-                            , dataxWriter.getDataxMeta().getImplClass());
-                    cfg.set("job.content[0].writer" //
-                            , IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
-                                return Configuration.from(writerJsonInput);
-                            }));
-
-                    return cfg;
-                });
-
-
-        // 绑定column转换信息
-        ColumnCast.bind(allConf);
-        LoadUtil.bind(allConf);
-
-        JobContainer container = new JobContainer(allConf);
-
-        container.start();
-    }
 
 }

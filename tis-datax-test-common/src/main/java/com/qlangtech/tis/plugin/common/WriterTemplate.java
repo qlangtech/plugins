@@ -15,10 +15,18 @@
 
 package com.qlangtech.tis.plugin.common;
 
+import com.alibaba.datax.common.element.ColumnCast;
+import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.core.job.JobContainer;
+import com.alibaba.datax.core.util.container.JarLoader;
+import com.alibaba.datax.core.util.container.LoadUtil;
+import com.google.common.collect.Sets;
+import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -33,6 +41,17 @@ import java.util.Optional;
  **/
 public class WriterTemplate {
 
+
+//    public static final Field jarLoaderCenterField;
+//
+//    static {
+//        try {
+//            jarLoaderCenterField = LoadUtil.class.getDeclaredField("jarLoaderCenter");
+//            jarLoaderCenterField.setAccessible(true);
+//        } catch (NoSuchFieldException e) {
+//            throw new RuntimeException("can not get field 'jarLoaderCenter' of LoadUtil", e);
+//        }
+//    }
 
     public static void valiateCfgGenerate(String assertFileName, DataxWriter dataXWriter, IDataxProcessor.TableMap tableMap) throws Exception {
 
@@ -63,4 +82,45 @@ public class WriterTemplate {
         EasyMock.verify(processor, dataxGlobalCfg);
     }
 
+    /**
+     * dataXWriter执行
+     *
+     * @param writerJson
+     * @param dataxWriter
+     * @throws IllegalAccessException
+     */
+    public static void realExecuteDump(final String writerJson, DataxWriter dataxWriter) throws IllegalAccessException {
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+        DataxExecutor.initializeClassLoader(
+                Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxWriter.getDataxMeta().getName()), uberClassLoader);
+
+//        Map<String, JarLoader> jarLoaderCenter = (Map<String, JarLoader>) jarLoaderCenterField.get(null);
+//        jarLoaderCenter.clear();
+//
+//
+//        jarLoaderCenter.put("plugin.reader.streamreader", uberClassLoader);
+//        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
+
+        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
+                , "container.json", true, (input) -> {
+                    Configuration cfg = Configuration.from(input);
+                    cfg.set("plugin.writer." + dataxWriter.getDataxMeta().getName() + ".class"
+                            , dataxWriter.getDataxMeta().getImplClass());
+                    cfg.set("job.content[0].writer" //
+                            , IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
+                                return Configuration.from(writerJsonInput);
+                            }));
+
+                    return cfg;
+                });
+
+
+        // 绑定column转换信息
+        ColumnCast.bind(allConf);
+        LoadUtil.bind(allConf);
+
+        JobContainer container = new JobContainer(allConf);
+
+        container.start();
+    }
 }

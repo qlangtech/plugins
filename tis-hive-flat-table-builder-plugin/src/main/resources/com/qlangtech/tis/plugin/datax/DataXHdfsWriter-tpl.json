@@ -1,17 +1,17 @@
 {
     "name": "tishdfswriter",
     "parameter": {
+       "path": "$writer.path",
         "fileType": "$writer.fileType",
         "fileName": "$writer.dataXName",
         "dataxName" : "$writer.dataXName",
-        "ptRetainNum": $writer.partitionRetainNum,
         "column": [
             #foreach($c in $writer.cols)
-            {"$c.name":"$c.type"},
+            {"name":"$c.name","type":"$c.type"},
             #end],
         "writeMode": "$writer.writeMode",
          #if($writer.containEncoding) "encoding": "$writer.encoding", #end
          "fieldDelimiter": "$writer.fieldDelimiter",
          #if($writer.containCompress)"compress":"$writer.compress"#end
-         }
+    }
 }

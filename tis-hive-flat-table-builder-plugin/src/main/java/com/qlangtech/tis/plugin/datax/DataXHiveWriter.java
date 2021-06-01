@@ -16,24 +16,26 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.offline.flattable.HiveFlatTableBuilder;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 import java.sql.Connection;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-23 14:48
  **/
-public class DataXHiveWriter extends DataXHdfsWriter {
+public class DataXHiveWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hive";
     private static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
 
@@ -43,12 +45,13 @@ public class DataXHiveWriter extends DataXHdfsWriter {
     public Integer partitionRetainNum;
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        if (!tableMap.isPresent()) {
-            throw new IllegalStateException("tableMap must be present");
-        }
-        IDataxProcessor.TableMap tabMap = tableMap.get();
-        return new HiveDataXContext(tabMap, this.dataXName);
+    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
+        return new HiveDataXContext(tableMap, this.dataXName);
+    }
+
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataXHdfsWriter.class, "DataXHiveWriter-tpl.json");
     }
 
     public Connection getConnection() {
@@ -64,7 +67,7 @@ public class DataXHiveWriter extends DataXHdfsWriter {
         return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.class);
     }
 
-    public class HiveDataXContext extends HdfsDataXContext {
+    public class HiveDataXContext extends FSDataXContext {
 
         public HiveDataXContext(IDataxProcessor.TableMap tabMap, String dataXName) {
             super(tabMap, dataXName);
@@ -85,6 +88,8 @@ public class DataXHiveWriter extends DataXHdfsWriter {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.class));
+            this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
+                    , () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 
         public boolean validatePartitionRetainNum(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
@@ -94,6 +99,10 @@ public class DataXHiveWriter extends DataXHdfsWriter {
                 return false;
             }
             return true;
+        }
+
+        public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return DataXHdfsWriter.validateFsName(msgHandler, context, fieldName, value);
         }
 
 //        @Override

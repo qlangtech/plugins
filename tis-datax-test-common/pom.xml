@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-manage-pojo</artifactId>
-            <version>2.3.0</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
@@ -42,11 +42,14 @@
             <artifactId>easymock</artifactId>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-core</artifactId>
-            <version>${alibaba.datax.version}</version>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-datax-executor</artifactId>
+            <version>${project.version}</version>
         </dependency>
+
+
 
         <dependency>
             <groupId>com.alibaba.datax</groupId>

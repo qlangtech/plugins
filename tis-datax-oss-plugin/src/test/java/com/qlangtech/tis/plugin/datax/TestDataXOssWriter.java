@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.easymock.EasyMock;
+import org.junit.Assert;
 
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -111,6 +112,8 @@ public class TestDataXOssWriter extends BasicTest {
         String readerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.empty());
         assertNotNull(readerCfg);
         System.out.println(readerCfg);
-        JsonUtil.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
+        JsonUtil.assertJSONEqual(this.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
+            Assert.assertEquals(msg, expect, actual);
+        });
     }
 }

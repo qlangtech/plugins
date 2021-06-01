@@ -14,8 +14,8 @@
         "label": "TEXT"
       },
       {
-        "val": "ORC",
-        "label": "否"
+        "val": "orc",
+        "label": "ORC"
       }
     ]
   },

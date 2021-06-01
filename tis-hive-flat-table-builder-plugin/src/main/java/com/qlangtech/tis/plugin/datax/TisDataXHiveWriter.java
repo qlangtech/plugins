@@ -108,7 +108,7 @@ public class TisDataXHiveWriter extends Writer {
     public static class Job extends HdfsWriter.Job {
         private ITISFileSystem fileSystem = null;
         protected Configuration cfg = null;
-        private DataXHdfsWriter writerPlugin = null;
+        private BasicFSWriter writerPlugin = null;
         private EntityName dumpTable = null;
         private List<HiveColumn> colsExcludePartitionCols = null;
         private String dumpTimeStamp;
@@ -127,7 +127,7 @@ public class TisDataXHiveWriter extends Writer {
                 }
             }
 
-            this.ptRetainNum = Integer.parseInt(this.cfg.getNecessaryValue("ptRetainNum", HdfsWriterErrorCode.REQUIRED_VALUE));
+            this.ptRetainNum = getPtRetainNum();
 
             Objects.requireNonNull(writerPlugin, "writerPlugin can not be null");
             //this.getDumpTable();
@@ -147,6 +147,10 @@ public class TisDataXHiveWriter extends Writer {
 
 
             setHdfsHelper(this.getPluginJobConf(), jobHdfsHelperField, this.writerPlugin, this);
+        }
+
+        protected int getPtRetainNum() {
+            return Integer.parseInt(this.cfg.getNecessaryValue("ptRetainNum", HdfsWriterErrorCode.REQUIRED_VALUE));
         }
 
         public void prepare() {
@@ -176,7 +180,7 @@ public class TisDataXHiveWriter extends Writer {
             this.writerPlugin = getHdfsWriterPlugin(this.cfg);
             try {
                 if (this.tabDumpParentPath == null) {
-                    SimpleDateFormat timeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+                    SimpleDateFormat timeFormat = new SimpleDateFormat(" yyyyMMddHHmmss");
                     this.dumpTimeStamp = timeFormat.format(new Date());
                     this.dumpTable = this.createDumpTable();
                     this.tabDumpParentPath = new Path(this.writerPlugin.getFs().getFileSystem().getRootDir(), getHdfsSubPath());
@@ -352,7 +356,7 @@ public class TisDataXHiveWriter extends Writer {
 
     }
 
-    private static void setHdfsHelper(Configuration pluginJobConf, Field hdfsHelperField, DataXHdfsWriter hiveWriter, Object helperOwner) {
+    private static void setHdfsHelper(Configuration pluginJobConf, Field hdfsHelperField, BasicFSWriter hiveWriter, Object helperOwner) {
         try {
             TisExtendHdfsHelper hdfsHelper = new TisExtendHdfsHelper();
 
@@ -373,21 +377,21 @@ public class TisDataXHiveWriter extends Writer {
         }
     }
 
-    private static DataXHdfsWriter getHdfsWriterPlugin(Configuration cfg) {
+    private static BasicFSWriter getHdfsWriterPlugin(Configuration cfg) {
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
         DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
-        if (!(dataxWriter instanceof DataXHdfsWriter)) {
+        if (!(dataxWriter instanceof BasicFSWriter)) {
             throw new IllegalStateException("datax Writer must be type of 'DataXHiveWriter',but now is:" + dataxWriter.getClass());
         }
-        return (DataXHdfsWriter) dataxWriter;
+        return (BasicFSWriter) dataxWriter;
     }
 
-    public static DataXHiveWriter getHiveWriterPlugin(Configuration pluginJobConf) {
-        String dataxName = pluginJobConf.getString(DataxUtils.DATAX_NAME);
-        DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
-        if (!(dataxWriter instanceof DataXHiveWriter)) {
-            throw new IllegalStateException("datax Writer must be type of 'DataXHiveWriter',but now is:" + dataxWriter.getClass());
-        }
-        return (DataXHiveWriter) dataxWriter;
-    }
+//    public static DataXHiveWriter getHiveWriterPlugin(Configuration pluginJobConf) {
+//        String dataxName = pluginJobConf.getString(DataxUtils.DATAX_NAME);
+//        DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
+//        if (!(dataxWriter instanceof DataXHiveWriter)) {
+//            throw new IllegalStateException("datax Writer must be type of 'DataXHiveWriter',but now is:" + dataxWriter.getClass());
+//        }
+//        return (DataXHiveWriter) dataxWriter;
+//    }
 }

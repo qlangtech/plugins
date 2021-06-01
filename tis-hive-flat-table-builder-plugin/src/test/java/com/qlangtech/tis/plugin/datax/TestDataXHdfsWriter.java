@@ -15,12 +15,21 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,6 +37,8 @@ import java.util.Optional;
  * @create: 2021-05-08 11:35
  **/
 public class TestDataXHdfsWriter extends BasicTest {
+    private static final Logger logger = LoggerFactory.getLogger(TestDataXHdfsWriter.class);
+
     public void testGetDftTemplate() {
         String dftTemplate = DataXHdfsWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
@@ -43,4 +54,85 @@ public class TestDataXHdfsWriter extends BasicTest {
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
         System.out.println(JsonUtil.toString(descJson.getDescriptorsJSON()));
     }
+
+    private final String mysql2hdfsDataXName = "mysql2hdfs";
+    private static final String hdfsRelativePath = "tis/order";
+
+    public void testConfigGenerate() throws Exception {
+
+
+        DataXHdfsWriter hdfsWriter = new DataXHdfsWriter();
+        hdfsWriter.dataXName = mysql2hdfsDataXName;
+        hdfsWriter.fsName = "hdfs1";
+        hdfsWriter.fileType = "text";
+        hdfsWriter.writeMode = "nonConflict";
+        hdfsWriter.fieldDelimiter = "\t";
+        hdfsWriter.compress = "gzip";
+        hdfsWriter.encoding = "utf-8";
+        hdfsWriter.template = DataXHdfsWriter.getDftTemplate();
+        hdfsWriter.path = hdfsRelativePath;
+
+
+        IDataxProcessor.TableMap tableMap = createCustomer_order_relationTableMap();
+
+
+        WriterTemplate.valiateCfgGenerate("hdfs-datax-writer-assert.json", hdfsWriter, tableMap);
+
+
+        hdfsWriter.compress = null;
+        hdfsWriter.encoding = null;
+
+        WriterTemplate.valiateCfgGenerate("hdfs-datax-writer-assert-without-option-val.json", hdfsWriter, tableMap);
+    }
+
+    public void testDataDump() throws Exception {
+
+        final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hdfsDataXName);
+
+        DataXHdfsWriter hdfsWriter = (DataXHdfsWriter) dataxWriter;
+
+        ITISFileSystem fileSystem = hdfsWriter.getFs().getFileSystem();
+        IPath path = fileSystem.getPath(fileSystem.getPath(fileSystem.getRootDir()), hdfsRelativePath);
+        System.out.println("clear path:" + path);
+        fileSystem.delete(path, true);
+
+        WriterTemplate.realExecuteDump("hdfs-datax-writer-assert-without-option-val.json", dataxWriter);
+    }
+
+    public static IDataxProcessor.TableMap createCustomer_order_relationTableMap() {
+        ISelectedTab.ColMeta colMeta = null;
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        tableMap.setTo("customer_order_relation");
+        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("customerregister_id");
+        colMeta.setType(ISelectedTab.DataXReaderColType.STRING);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("waitingorder_id");
+        colMeta.setType(ISelectedTab.DataXReaderColType.STRING);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("kind");
+        colMeta.setType(ISelectedTab.DataXReaderColType.INT);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("create_time");
+        colMeta.setType(ISelectedTab.DataXReaderColType.Long);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("last_ver");
+        colMeta.setType(ISelectedTab.DataXReaderColType.INT);
+        sourceCols.add(colMeta);
+
+        tableMap.setSourceCols(sourceCols);
+        return tableMap;
+    }
+
+
 }

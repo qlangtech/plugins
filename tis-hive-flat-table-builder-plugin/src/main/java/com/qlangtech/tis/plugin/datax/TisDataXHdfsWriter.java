@@ -35,7 +35,7 @@ public class TisDataXHdfsWriter extends Writer {
     // private static final Logger logger = LoggerFactory.getLogger(TisDataXHdfsWriter.class);
 
     public static class Job extends TisDataXHiveWriter.Job {
-//        @Override
+        //        @Override
 //        protected DataXHdfsWriter getWriterPlugin() {
 //            return super.getWriterPlugin();
 //        }
@@ -52,6 +52,9 @@ public class TisDataXHdfsWriter extends Writer {
 //        public void post() {
 //            super.post();
 //        }
+        protected int getPtRetainNum() {
+            return -1;
+        }
 
         @Override
         protected EntityName createDumpTable() {

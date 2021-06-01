@@ -55,10 +55,11 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     public String fieldDelimiter;
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {})
     public String compress;
-    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
+    public String encoding;
 //    public String hadoopConfig;
 //    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
-    public String encoding;
+
     //    @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String haveKerberos;
 //    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
@@ -92,6 +93,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
     protected static SupportHiveDataType convert2HiveType(ISelectedTab.DataXReaderColType type) {
+        Objects.requireNonNull(type, "param type can not be null");
         switch (type) {
             case Long:
                 return SupportHiveDataType.BIGINT;

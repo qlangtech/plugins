@@ -17,10 +17,10 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.XmlFile;
-import com.qlangtech.tis.manage.impl.DataFlowAppSource;
+import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.test.BasicTest;
-import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -49,9 +49,9 @@ public class TestDefaultDataxProcessor extends BasicTest {
             dataxProcessor.dptId = "356";
             dataxProcessor.recept = "小明";
 
-            DataFlowAppSource.save(appName, dataxProcessor);
+            IAppSource.save(null, appName, dataxProcessor);
 
-            DefaultDataxProcessor loadDataxProcessor = DataFlowAppSource.load(appName);
+            DefaultDataxProcessor loadDataxProcessor = IAppSource.load(appName);
             assertNotNull("loadDataxProcessor can not be null", loadDataxProcessor);
             assertEquals(dataxProcessor.globalCfg, loadDataxProcessor.globalCfg);
             assertEquals(dataxProcessor.dptId, loadDataxProcessor.dptId);
@@ -67,7 +67,7 @@ public class TestDefaultDataxProcessor extends BasicTest {
             }
         } finally {
             try {
-                DataFlowAppSource.AppKey appKey = new DataFlowAppSource.AppKey(appName);
+                DataxReader.AppKey appKey = new DataxReader.AppKey(null, appName, IAppSource.class);
                 XmlFile storeFile = appKey.getSotreFile();
                 FileUtils.forceDelete(storeFile.getFile().getParentFile());
             } catch (IOException e) {

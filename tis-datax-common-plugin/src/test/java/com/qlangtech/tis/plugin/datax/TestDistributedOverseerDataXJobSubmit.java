@@ -19,6 +19,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.impl.DataFlowAppSource;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.ITISRpcService;
@@ -47,7 +48,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 
 
-        DataxProcessor dataxProcessor = DataFlowAppSource.load(DATAX_NAME);
+        DataxProcessor dataxProcessor = IAppSource.load(DATAX_NAME);
         assertNotNull(dataxProcessor);
 
         //IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);

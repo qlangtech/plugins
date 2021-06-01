@@ -90,6 +90,8 @@ public class TestDataxMySQLReader extends BasicTest {
         mysqlDs.userName = userName;
         mysqlDs.password = password;
         mysqlDs.nodeDesc = "192.168.28.200[0-7]";
+
+
         Descriptor.ParseDescribable<DataSourceFactory> desc = new Descriptor.ParseDescribable<>(mysqlDs);
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
@@ -120,6 +122,14 @@ public class TestDataxMySQLReader extends BasicTest {
         selectedTabs.add(selectedTab);
 
         mySQLReader.setSelectedTabs(selectedTabs);
+        List<SelectedTab> selectedTabs2 = mySQLReader.getSelectedTabs();
+        assertEquals(2, selectedTabs2.size());
+        for (SelectedTab tab : selectedTabs2) {
+            tab.getCols().forEach((c) -> {
+                assertNotNull("table:" + tab.getName() + "'s col " + c.getName() + " relevant type can not be null", c.getType());
+            });
+        }
+
 
         List<String> tabs = Lists.newArrayList();
         for (SelectedTab tab : selectedTabs) {
@@ -127,6 +137,7 @@ public class TestDataxMySQLReader extends BasicTest {
                 tabs.add(tab.name);
             }
         }
+
 
         int readerContextCount = 0;
         IDataxReaderContext readerContext = null;

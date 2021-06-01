@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -33,6 +34,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,15 +62,33 @@ public class DataxMySQLReader extends DataxReader {
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public List<SelectedTab> selectedTabs;
 
+    private transient boolean colTypeSetted;
+
     @Override
     public List<SelectedTab> getSelectedTabs() {
-        return this.selectedTabs;
-    }
 
-//    @Override
-//    public boolean hasMulitTable() {
-//        return getSelectedTabs().size() > 1;
-//    }
+        if (colTypeSetted) {
+            return selectedTabs;
+        }
+
+        try {
+            Memoizer<String, Map<String, ColumnMetaData>> tabsMeta = getTabsMeta();
+            return this.selectedTabs.stream().map((tab) -> {
+                Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
+                ColumnMetaData colMeta = null;
+                for (ISelectedTab.ColMeta col : tab.getCols()) {
+                    colMeta = colsMeta.get(col.getName());
+                    if (colMeta == null) {
+                        throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData'");
+                    }
+                    col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType()));
+                }
+                return tab;
+            }).collect(Collectors.toList());
+        } finally {
+            this.colTypeSetted = true;
+        }
+    }
 
 
     public static String getDftTemplate() {
@@ -81,12 +101,7 @@ public class DataxMySQLReader extends DataxReader {
         Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
         MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
 
-        Memoizer<String, List<ColumnMetaData>> tabColsMap = new Memoizer<String, List<ColumnMetaData>>() {
-            @Override
-            public List<ColumnMetaData> compute(String tab) {
-                return dsFactory.getTableMetadata(tab);
-            }
-        };
+        Memoizer<String, Map<String, ColumnMetaData>> tabColsMap = getTabsMeta();
 
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
         AtomicInteger taskIndex = new AtomicInteger(0);
@@ -147,16 +162,25 @@ public class DataxMySQLReader extends DataxReader {
                 dataxContext.password = dsFactory.getPassword();
                 dataxContext.setWhere(tab.getWhere());
 
-                List<ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
+                Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
                 if (tab.isAllCols()) {
-                    dataxContext.cols = tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
+                    dataxContext.cols = tableMetadata.keySet().stream().collect(Collectors.toList());
                 } else {
-                    dataxContext.cols = tableMetadata.stream().filter((col) -> {
+                    dataxContext.cols = tableMetadata.values().stream().filter((col) -> {
                         return tab.containCol(col.getKey());
                     }).map((t) -> t.getValue()).collect(Collectors.toList());
                 }
 
                 return dataxContext;
+            }
+        };
+    }
+
+    private Memoizer<String, Map<String, ColumnMetaData>> getTabsMeta() {
+        return new Memoizer<String, Map<String, ColumnMetaData>>() {
+            @Override
+            public Map<String, ColumnMetaData> compute(String tab) {
+                return getDataSourceFactory().getTableMetadata(tab).stream().collect(Collectors.toMap((m) -> m.getKey(), (m) -> m));
             }
         };
     }

@@ -29,11 +29,11 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
-import com.qlangtech.tis.plugin.common.JsonUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
@@ -133,12 +133,12 @@ public class TestDataxMySQLWriter extends BasicTest {
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
 
-        EasyMock.expect(processor.getWriter()).andReturn(mySQLWriter);
+        EasyMock.expect(processor.getWriter(null)).andReturn(mySQLWriter);
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
         EasyMock.replay(processor, dataxGlobalCfg);
 
 
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
+        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
             @Override
             public String getTemplateContent() {
                 return mySQLWriter.getTemplate();
@@ -147,7 +147,9 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         String cfgResult = dataProcessor.generateDataxConfig(null, Optional.of(tm));
 
-        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, cfgResult);
+        JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
+            assertEquals(m, e, a);
+        });
         EasyMock.verify(processor, dataxGlobalCfg);
     }
 

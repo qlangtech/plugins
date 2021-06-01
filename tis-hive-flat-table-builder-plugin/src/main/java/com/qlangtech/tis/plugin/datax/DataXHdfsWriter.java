@@ -37,8 +37,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 public class DataXHdfsWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hdfs";
 
-
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require,Validator.relative_path})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
 
 

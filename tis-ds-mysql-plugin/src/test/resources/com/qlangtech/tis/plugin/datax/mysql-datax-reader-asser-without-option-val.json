@@ -4,7 +4,7 @@
     "connection": [
       {
         "jdbcUrl": ["jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8"],
-        "querySql": ["SELECT `col1`,`col2`,`col3`,`col4` FROM orderdetail "]
+        "querySql": ["SELECT `col4`,`col2`,`col3`,`col1` FROM orderdetail "]
       }
     ],
     "password": "123456",

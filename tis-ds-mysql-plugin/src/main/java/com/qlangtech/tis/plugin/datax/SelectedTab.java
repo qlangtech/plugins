@@ -40,6 +40,15 @@ public class SelectedTab implements ISelectedTab {
     @FormField(ordinal = 2, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<String> cols = Lists.newArrayList();
 
+    private List<ColMeta> shadowCols = null;
+
+    public SelectedTab(String name) {
+        this.name = name;
+    }
+
+    public SelectedTab() {
+    }
+
     public String getWhere() {
         return this.where;
     }
@@ -58,25 +67,29 @@ public class SelectedTab implements ISelectedTab {
     }
 
     public List<ColMeta> getCols() {
-        return this.cols.stream().map((c) -> {
-            ColMeta colMeta = new ColMeta();
-            colMeta.setName(c);
-            return colMeta;
-        }).collect(Collectors.toList());
+        if (shadowCols == null) {
+            shadowCols = this.cols.stream().map((c) -> {
+                ColMeta colMeta = new ColMeta();
+                colMeta.setName(c);
+                return colMeta;
+            }).collect(Collectors.toList());
+        }
+        return shadowCols;
     }
 
     public boolean containCol(String col) {
+        // return cols != null && this.cols.stream().filter((c) -> col.equals(c.getName())).findAny().isPresent();
         return cols != null && this.cols.contains(col);
     }
 
     public void setCols(List<String> cols) {
+//        this.cols = cols.stream().map((c) -> {
+//            ColMeta meta = new ColMeta();
+//            meta.setName(c);
+//            return meta;
+//        }).collect(Collectors.toList());
         this.cols = cols;
     }
 
-    public SelectedTab(String name) {
-        this.name = name;
-    }
 
-    public SelectedTab() {
-    }
 }

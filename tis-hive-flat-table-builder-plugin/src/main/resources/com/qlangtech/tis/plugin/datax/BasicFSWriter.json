@@ -78,10 +78,5 @@
   },
   "kerberosPrincipal": {
     "help": "描述：Kerberos认证Principal名，如xxxx/hadoopclient@xxx.xxx "
-  },
-  "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHdfsWriter.getDftTemplate()",
-    "rows": 18
   }
 }

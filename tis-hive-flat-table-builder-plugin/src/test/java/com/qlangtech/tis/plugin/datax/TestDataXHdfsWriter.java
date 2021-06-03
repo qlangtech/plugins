@@ -15,6 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
@@ -52,7 +53,12 @@ public class TestDataXHdfsWriter extends BasicTest {
     public void testDescriptorsJSONGenerate() {
         DataXHdfsWriter writer = new DataXHdfsWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
-        System.out.println(JsonUtil.toString(descJson.getDescriptorsJSON()));
+        JSONObject desc = descJson.getDescriptorsJSON();
+        System.out.println(JsonUtil.toString(desc));
+
+        JsonUtil.assertJSONEqual(TestDataXHdfsWriter.class, "desc-json/datax-writer-hdfs.json", desc, (m, e, a) -> {
+            assertEquals(m, e, a);
+        });
     }
 
     private final String mysql2hdfsDataXName = "mysql2hdfs";

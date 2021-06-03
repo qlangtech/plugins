@@ -57,6 +57,8 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     public String compress;
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
     public String encoding;
+
+
 //    public String hadoopConfig;
 //    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
 
@@ -73,8 +75,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         this.dataXName = key.keyVal;
     }
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String template;
+
 
     private FileSystemFactory fileSystem;
 
@@ -87,10 +88,6 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
 
-    @Override
-    public String getTemplate() {
-        return this.template;
-    }
 
     protected static SupportHiveDataType convert2HiveType(ISelectedTab.DataXReaderColType type) {
         Objects.requireNonNull(type, "param type can not be null");

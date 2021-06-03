@@ -15,6 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
@@ -44,7 +45,13 @@ public class TestDataXHiveWriter extends BasicTest {
     public void testDescriptorsJSONGenerate() {
         DataXHiveWriter writer = new DataXHiveWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
-        System.out.println(JsonUtil.toString(descJson.getDescriptorsJSON()));
+
+        JSONObject desc = descJson.getDescriptorsJSON();
+        System.out.println(JsonUtil.toString(desc));
+
+        JsonUtil.assertJSONEqual(TestDataXHiveWriter.class, "desc-json/datax-writer-hive.json", desc, (m, e, a) -> {
+            assertEquals(m, e, a);
+        });
     }
 
     String mysql2hiveDataXName = "mysql2hive";

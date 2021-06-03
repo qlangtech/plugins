@@ -20,10 +20,13 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -61,8 +64,12 @@ public class WriterTemplate {
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
         EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
 
+        IDataxReader dataXReader = EasyMock.createMock("dataXReader", IDataxReader.class);
+
+        EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
+
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
-        EasyMock.replay(processor, dataxGlobalCfg);
+        EasyMock.replay(processor, dataxGlobalCfg, dataXReader);
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
             @Override
@@ -71,15 +78,17 @@ public class WriterTemplate {
             }
         };
 
-
         String writerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.of(tableMap));
         Assert.assertNotNull(writerCfg);
         System.out.println(writerCfg);
         JsonUtil.assertJSONEqual(dataXWriter.getClass(), assertFileName, writerCfg, (message, expected, actual) -> {
             Assert.assertEquals(message, expected, actual);
         });
+        JSONObject writer = JSON.parseObject(writerCfg);
 
-        EasyMock.verify(processor, dataxGlobalCfg);
+        Assert.assertEquals(dataXWriter.getDataxMeta().getName(), writer.getString("name"));
+
+        EasyMock.verify(processor, dataxGlobalCfg, dataXReader);
     }
 
     /**

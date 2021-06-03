@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
+import com.qlangtech.tis.fullbuild.indexbuild.impl.AsynRemoteJobTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.curator.framework.CuratorFramework;
@@ -51,7 +52,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
         DistributedQueue<CuratorTaskMessage> distributedQueue = getCuratorDistributedQueue();
         File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
-        return new IRemoteJobTrigger() {
+        return new AsynRemoteJobTrigger(dataXfileName) {
             @Override
             public void submitJob() {
                 try {

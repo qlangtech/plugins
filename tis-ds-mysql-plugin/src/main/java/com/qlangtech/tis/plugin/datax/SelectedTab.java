@@ -40,7 +40,7 @@ public class SelectedTab implements ISelectedTab {
     @FormField(ordinal = 2, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<String> cols = Lists.newArrayList();
 
-    private List<ColMeta> shadowCols = null;
+    private transient List<ColMeta> shadowCols = null;
 
     public SelectedTab(String name) {
         this.name = name;

@@ -40,6 +40,13 @@ public class DataXHdfsWriter extends BasicFSWriter {
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
 
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public String template;
+    @Override
+    public String getTemplate() {
+        return this.template;
+    }
+
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHdfsWriter.class, "DataXHdfsWriter-tpl.json");
@@ -68,7 +75,6 @@ public class DataXHdfsWriter extends BasicFSWriter {
             this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
                     , () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
-
 
         public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return DataXHdfsWriter.validateFsName(msgHandler, context, fieldName, value);

@@ -166,9 +166,10 @@ public class DataxMySQLReader extends DataxReader {
                 if (tab.isAllCols()) {
                     dataxContext.cols = tableMetadata.keySet().stream().collect(Collectors.toList());
                 } else {
-                    dataxContext.cols = tableMetadata.values().stream().filter((col) -> {
-                        return tab.containCol(col.getKey());
-                    }).map((t) -> t.getValue()).collect(Collectors.toList());
+                    dataxContext.cols = tab.cols.stream().filter((c)-> tableMetadata.containsKey(c)).collect(Collectors.toList());
+//                    dataxContext.cols = tableMetadata.values().stream().filter((col) -> {
+//                        return tab.containCol(col.getKey());
+//                    }).map((t) -> t.getValue()).collect(Collectors.toList());
                 }
 
                 return dataxContext;

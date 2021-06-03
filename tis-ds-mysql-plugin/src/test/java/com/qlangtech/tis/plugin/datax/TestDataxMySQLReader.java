@@ -213,12 +213,17 @@ public class TestDataxMySQLReader extends BasicTest {
             protected DataSourceFactory getDataSourceFactory() {
                 return mysqlDataSource;
             }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataxMySQLReader.class;
+            }
         };
 
         mySQLReader.template = DataxMySQLReader.getDftTemplate();
 
         SelectedTab selectedTab = new SelectedTab();
-        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3"));
+        selectedTab.setCols(Lists.newArrayList("col2", "col1", "col3"));
         selectedTab.setWhere("delete = 0");
         selectedTab.name = tabNameOrderDetail;
         mySQLReader.setSelectedTabs(Collections.singletonList(selectedTab));

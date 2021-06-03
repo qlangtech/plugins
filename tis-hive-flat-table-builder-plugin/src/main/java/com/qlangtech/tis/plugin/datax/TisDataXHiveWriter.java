@@ -180,7 +180,7 @@ public class TisDataXHiveWriter extends Writer {
             this.writerPlugin = getHdfsWriterPlugin(this.cfg);
             try {
                 if (this.tabDumpParentPath == null) {
-                    SimpleDateFormat timeFormat = new SimpleDateFormat(" yyyyMMddHHmmss");
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
                     this.dumpTimeStamp = timeFormat.format(new Date());
                     this.dumpTable = this.createDumpTable();
                     this.tabDumpParentPath = new Path(this.writerPlugin.getFs().getFileSystem().getRootDir(), getHdfsSubPath());
@@ -244,7 +244,7 @@ public class TisDataXHiveWriter extends Writer {
             try {
                 try (Connection conn = getHiveWriterPlugin().getConnection()) {
                     Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                    JoinHiveTask.initializeHiveTable(fileSystem, new HdfsPath(this.tabDumpParentPath), parseFSFormat()
+                    JoinHiveTask.initializeHiveTable(fileSystem, fileSystem.getPath(new HdfsPath(this.tabDumpParentPath), ".."), parseFSFormat()
                             , cols, colsExcludePartitionCols, conn, dumpTable, this.ptRetainNum);
                 }
             } catch (Exception e) {

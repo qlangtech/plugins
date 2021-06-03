@@ -15,6 +15,8 @@
 
 package com.qlangtech.tis.plugin.common;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -41,6 +43,7 @@ public class ReaderTemplate {
         IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
         EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
 
+        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
 
         EasyMock.replay(processor, dataxGlobalCfg, dataxWriter, dataxContext);
 
@@ -83,5 +86,7 @@ public class ReaderTemplate {
         com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
             Assert.assertEquals(msg, expect, actual);
         });
+        JSONObject reader = JSON.parseObject(readerCfg);
+        Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
     }
 }

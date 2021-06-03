@@ -16,14 +16,11 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.offline.flattable.HiveFlatTableBuilder;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -43,6 +40,15 @@ public class DataXHiveWriter extends BasicFSWriter {
     public String hiveConn;
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
+
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public String template;
+
+    @Override
+    public String getTemplate() {
+        return this.template;
+    }
+
 
     @Override
     protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
@@ -78,18 +84,11 @@ public class DataXHiveWriter extends BasicFSWriter {
         }
     }
 
-    @Override
-    public String getTemplate() {
-        return template;
-    }
-
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.class));
-            this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
-                    , () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 
         public boolean validatePartitionRetainNum(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
@@ -101,19 +100,10 @@ public class DataXHiveWriter extends BasicFSWriter {
             return true;
         }
 
-        public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return DataXHdfsWriter.validateFsName(msgHandler, context, fieldName, value);
-        }
-
 //        @Override
 //        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 //            return HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals);
 //        }
-
-        @Override
-        public boolean isRdbms() {
-            return false;
-        }
 
         @Override
         public String getDisplayName() {

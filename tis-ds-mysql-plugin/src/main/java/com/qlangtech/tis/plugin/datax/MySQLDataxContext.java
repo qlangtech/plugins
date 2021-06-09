@@ -15,26 +15,41 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.IDataxContext;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.qlangtech.tis.plugin.datax.common.TabCols;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-08 11:06
  **/
-public class MySQLDataxContext implements IDataxContext {
+public class MySQLDataxContext {
+    public TabCols cols;
     String tabName;
     String password;
     String username;
     String jdbcUrl;
-    List<String> cols = new ArrayList<>();
+    //  getColsQuotes
+//    public MySQLDataxContext(String name, String sourceTableName) {
+//        super(name, sourceTableName);
+//    }
 
+    public String getColsQuotes() {
+        return cols.getColsQuotes();
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setJdbcUrl(String jdbcUrl) {
+        this.jdbcUrl = jdbcUrl;
+    }
 
     public String getTabName() {
-        return tabName;
+        return this.tabName;
     }
 
     public String getPassword() {
@@ -47,17 +62,5 @@ public class MySQLDataxContext implements IDataxContext {
 
     public String getJdbcUrl() {
         return jdbcUrl;
-    }
-
-    public String getColsQuotes() {
-        return getColumnWithLink("\"`", "`\"");
-    }
-
-    public String getCols() {
-        return getColumnWithLink("`", "`");
-    }
-
-    private String getColumnWithLink(String left, String right) {
-        return this.cols.stream().map(r -> (left + r + right)).collect(Collectors.joining(","));
     }
 }

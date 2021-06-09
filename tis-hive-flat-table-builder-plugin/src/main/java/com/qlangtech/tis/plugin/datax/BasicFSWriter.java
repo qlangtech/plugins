@@ -72,10 +72,8 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
     @Override
     public void setKey(KeyedPluginStore.Key key) {
-        this.dataXName = key.keyVal;
+        this.dataXName = key.keyVal.getVal();
     }
-
-
 
     private FileSystemFactory fileSystem;
 
@@ -86,7 +84,6 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
         return fileSystem;
     }
-
 
 
     protected static SupportHiveDataType convert2HiveType(ISelectedTab.DataXReaderColType type) {

@@ -16,6 +16,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
 import java.util.Optional;
@@ -33,5 +35,16 @@ public class TestDataXPostgresqlReader extends TestCase {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXPostgresqlReader.class);
         assertTrue(extraProps.isPresent());
+    }
+
+    public void testDescriptorsJSONGenerate() {
+        DataXPostgresqlReader esWriter = new DataXPostgresqlReader();
+        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
+
+        JsonUtil.assertJSONEqual(DataXPostgresqlReader.class
+                , "postgres-datax-reader-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
     }
 }

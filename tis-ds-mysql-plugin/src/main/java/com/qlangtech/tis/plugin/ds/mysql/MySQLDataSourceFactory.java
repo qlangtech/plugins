@@ -15,18 +15,8 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
-import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.qlangtech.tis.db.parser.DBConfigParser;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
@@ -40,57 +30,47 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author: baisui 百岁
  * @create: 2020-11-24 10:55
  **/
-public class MySQLDataSourceFactory extends DataSourceFactory implements IFacadeDataSource {
+public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory implements IFacadeDataSource {
 
-    static {
-        try {
-            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    //private static final String DS_TYPE_MYSQL = "MySQL";
+    protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
+    protected static final String DS_TYPE_MYSQL_V8 = DS_TYPE_MYSQL + "-V8";
 
-    // 数据库名称
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String dbName;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String userName;
-
-    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
-    public String password;
-
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
-    public int port;
-    /**
-     * 数据库编码
-     */
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-    public String encode;
-    /**
-     * 附加参数
-     */
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
-    public String extraParams;
-    /**
-     * 节点描述
-     */
-    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String nodeDesc;
+//    // 数据库名称
+//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String dbName;
+//
+//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String userName;
+//
+//    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
+//    public String password;
+//
+//    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+//    public int port;
+//    /**
+//     * 数据库编码
+//     */
+//    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+//    public String encode;
+//    /**
+//     * 附加参数
+//     */
+//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
+//    public String extraParams;
+//    /**
+//     * 节点描述
+//     */
+//    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+//    public String nodeDesc;
 
     @Override
     public FacadeDataSource createFacadeDataSource() {
 
         final DBConfig dbConfig = this.getDbConfig();
-        List<String> jdbcUrls = Lists.newArrayList();
-        final DBRegister dbRegister
-                = new DBRegister(dbConfig.getName(), dbConfig) {
-            @Override
-            protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
-                jdbcUrls.add(jdbcUrl);
-            }
-        };
-        dbRegister.visitAll();
+        List<String> jdbcUrls = this.getJdbcUrls();// Lists.newArrayList();
+
         if (jdbcUrls.size() > 1) {
             throw new IllegalStateException("datasource count can't big than 1");
         }
@@ -104,10 +84,42 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
     }
 
     @Override
+    protected String buidJdbcUrl(DBConfig db, String ip, String dbName) {
+        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
+        if (StringUtils.isNotEmpty(this.encode)) {
+            jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
+        }
+        if (StringUtils.isNotEmpty(this.extraParams)) {
+            jdbcUrl = jdbcUrl + "&" + this.extraParams;
+        }
+        return jdbcUrl;
+    }
+
+    @Override
     public DataDumpers getDataDumpers(TISTable table) {
         if (table == null) {
             throw new IllegalArgumentException("param table can not be null");
         }
+        List<String> jdbcUrls = getJdbcUrls();
+        final int length = jdbcUrls.size();
+        final AtomicInteger index = new AtomicInteger();
+        Iterator<IDataSourceDumper> dsIt = new Iterator<IDataSourceDumper>() {
+            @Override
+            public boolean hasNext() {
+                return index.get() < length;
+            }
+
+            @Override
+            public IDataSourceDumper next() {
+                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
+                return new MySqlDataSourceDumper(jdbcUrl, table);
+            }
+        };
+
+        return new DataDumpers(length, dsIt);
+    }
+
+    protected List<String> getJdbcUrls() {
         final DBConfig dbLinkMetaData = this.getDbConfig();
         List<String> jdbcUrls = Lists.newArrayList();
         final DBRegister dbRegister
@@ -129,22 +141,7 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
             }
         };
         dbRegister.visitAll();
-        final int length = jdbcUrls.size();
-        final AtomicInteger index = new AtomicInteger();
-        Iterator<IDataSourceDumper> dsIt = new Iterator<IDataSourceDumper>() {
-            @Override
-            public boolean hasNext() {
-                return index.get() < length;
-            }
-
-            @Override
-            public IDataSourceDumper next() {
-                final String jdbcUrl = jdbcUrls.get(index.getAndIncrement());
-                return new MySqlDataSourceDumper(jdbcUrl, table);
-            }
-        };
-
-        return new DataDumpers(length, dsIt);
+        return jdbcUrls;
     }
 
     public String getUserName() {
@@ -336,50 +333,50 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         return (filtered.toString());
     }
 
-    @Override
-    public List<ColumnMetaData> getTableMetadata(final String table) {
-        if (StringUtils.isBlank(table)) {
-            throw new IllegalArgumentException("param table can not be null");
-        }
-        List<ColumnMetaData> columns = new ArrayList<>();
-        try {
-
-            final DBConfig dbConfig = getDbConfig();
-            dbConfig.vistDbName((config, ip, dbname) -> {
-                visitConnection(config, ip, dbname, config.getUserName(), config.getPassword(), (conn) -> {
-                    DatabaseMetaData metaData1 = null;
-                    ResultSet primaryKeys = null;
-                    ResultSet columns1 = null;
-                    try {
-                        metaData1 = conn.getMetaData();
-                        primaryKeys = metaData1.getPrimaryKeys(null, null, table);
-                        columns1 = metaData1.getColumns(null, null, table, null);
-                        Set<String> pkCols = Sets.newHashSet();
-                        while (primaryKeys.next()) {
-                            // $NON-NLS-1$
-                            String columnName = primaryKeys.getString("COLUMN_NAME");
-                            pkCols.add(columnName);
-                        }
-                        int i = 0;
-                        String colName = null;
-                        while (columns1.next()) {
-                            columns.add(new ColumnMetaData((i++), (colName = columns1.getString("COLUMN_NAME"))
-                                    , columns1.getInt("DATA_TYPE"), pkCols.contains(colName)));
-                        }
-
-                    } finally {
-                        closeResultSet(columns1);
-                        closeResultSet(primaryKeys);
-                    }
-                });
-                return true;
-            });
-            return columns;
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    @Override
+//    public List<ColumnMetaData> getTableMetadata(final String table) {
+//        if (StringUtils.isBlank(table)) {
+//            throw new IllegalArgumentException("param table can not be null");
+//        }
+//        List<ColumnMetaData> columns = new ArrayList<>();
+//        try {
+//
+//            final DBConfig dbConfig = getDbConfig();
+//            dbConfig.vistDbName((config, ip, dbname) -> {
+//                visitConnection(config, ip, dbname, config.getUserName(), config.getPassword(), (conn) -> {
+//                    DatabaseMetaData metaData1 = null;
+//                    ResultSet primaryKeys = null;
+//                    ResultSet columns1 = null;
+//                    try {
+//                        metaData1 = conn.getMetaData();
+//                        primaryKeys = metaData1.getPrimaryKeys(null, null, table);
+//                        columns1 = metaData1.getColumns(null, null, table, null);
+//                        Set<String> pkCols = Sets.newHashSet();
+//                        while (primaryKeys.next()) {
+//                            // $NON-NLS-1$
+//                            String columnName = primaryKeys.getString("COLUMN_NAME");
+//                            pkCols.add(columnName);
+//                        }
+//                        int i = 0;
+//                        String colName = null;
+//                        while (columns1.next()) {
+//                            columns.add(new ColumnMetaData((i++), (colName = columns1.getString("COLUMN_NAME"))
+//                                    , columns1.getInt("DATA_TYPE"), pkCols.contains(colName)));
+//                        }
+//
+//                    } finally {
+//                        closeResultSet(columns1);
+//                        closeResultSet(primaryKeys);
+//                    }
+//                });
+//                return true;
+//            });
+//            return columns;
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
 
     private void closeResultSet(Connection rs) {
@@ -404,61 +401,61 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
         }
     }
 
-    private void closeResultSet(ResultSet rs) {
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                // ignore
-                ;
-            }
-        }
-    }
+//    private void closeResultSet(ResultSet rs) {
+//        if (rs != null) {
+//            try {
+//                rs.close();
+//            } catch (SQLException e) {
+//                // ignore
+//                ;
+//            }
+//        }
+//    }
 
-    @Override
-    public List<String> getTablesInDB() {
-        try {
-            final List<String> tabs = new ArrayList<>();
+//    @Override
+//    public List<String> getTablesInDB() {
+//        try {
+//            final List<String> tabs = new ArrayList<>();
+//
+//            final DBConfig dbConfig = getDbConfig();
+//
+//            dbConfig.vistDbName((config, ip, databaseName) -> {
+//                visitConnection(config, ip, databaseName, config.getUserName(), config.getPassword(), (conn) -> {
+//                    Statement statement = null;
+//                    ResultSet resultSet = null;
+//                    try {
+//                        statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+//                        statement.execute("show tables");
+//                        resultSet = statement.getResultSet();
+//                        while (resultSet.next()) {
+//                            tabs.add(resultSet.getString(1));
+//                        }
+//                    } finally {
+//                        if (resultSet != null) {
+//                            resultSet.close();
+//                        }
+//                        if (statement != null) {
+//                            statement.close();
+//                        }
+//                    }
+//                });
+//                return true;
+//            });
+//            return tabs;
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-            final DBConfig dbConfig = getDbConfig();
-
-            dbConfig.vistDbName((config, ip, databaseName) -> {
-                visitConnection(config, ip, databaseName, config.getUserName(), config.getPassword(), (conn) -> {
-                    Statement statement = null;
-                    ResultSet resultSet = null;
-                    try {
-                        statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                        statement.execute("show tables");
-                        resultSet = statement.getResultSet();
-                        while (resultSet.next()) {
-                            tabs.add(resultSet.getString(1));
-                        }
-                    } finally {
-                        if (resultSet != null) {
-                            resultSet.close();
-                        }
-                        if (statement != null) {
-                            statement.close();
-                        }
-                    }
-                });
-                return true;
-            });
-            return tabs;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private DBConfig getDbConfig() {
-        final DBConfig dbConfig = new DBConfig();
-        dbConfig.setName(this.dbName);
-        dbConfig.setPassword(this.password);
-        dbConfig.setUserName(this.userName);
-        dbConfig.setPort(this.port);
-        dbConfig.setDbEnum(DBConfigParser.parseDBEnum(dbName, this.nodeDesc));
-        return dbConfig;
-    }
+//    private DBConfig getDbConfig() {
+//        final DBConfig dbConfig = new DBConfig();
+//        dbConfig.setName(this.dbName);
+//        dbConfig.setPassword(this.password);
+//        dbConfig.setUserName(this.userName);
+//        dbConfig.setPort(this.port);
+//        dbConfig.setDbEnum(DBConfigParser.parseDBEnum(dbName, this.nodeDesc));
+//        return dbConfig;
+//    }
 
 //    @Override
 //    public String getName() {
@@ -469,74 +466,70 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
 //    }
 
 
-    private void visitConnection(DBConfig db, String ip, String dbName, String username, String password, IConnProcessor p) throws Exception {
-        if (db == null) {
-            throw new IllegalStateException("param db can not be null");
-        }
-        if (StringUtils.isEmpty(ip)) {
-            throw new IllegalArgumentException("param ip can not be null");
-        }
-        if (StringUtils.isEmpty(dbName)) {
-            throw new IllegalArgumentException("param dbName can not be null");
-        }
-        if (StringUtils.isEmpty(username)) {
-            throw new IllegalArgumentException("param username can not be null");
-        }
-//        if (StringUtils.isEmpty(password)) {
-//            throw new IllegalArgumentException("param password can not be null");
+//    private void visitConnection(DBConfig db, String ip, String dbName, String username, String password, IConnProcessor p) throws Exception {
+//        if (db == null) {
+//            throw new IllegalStateException("param db can not be null");
 //        }
-        if (p == null) {
-            throw new IllegalArgumentException("param IConnProcessor can not be null");
-        }
-        Connection conn = null;
-        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
-        if (StringUtils.isNotEmpty(this.encode)) {
-            jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
-        }
-        if (StringUtils.isNotEmpty(this.extraParams)) {
-            jdbcUrl = jdbcUrl + "&" + this.extraParams;
-        }
-        try {
-            validateConnection(jdbcUrl, db, username, password, p);
-        } catch (Exception e) {
-            //MethodHandles.lookup().lookupClass()
-            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
-        }
-    }
+//        if (StringUtils.isEmpty(ip)) {
+//            throw new IllegalArgumentException("param ip can not be null");
+//        }
+//        if (StringUtils.isEmpty(dbName)) {
+//            throw new IllegalArgumentException("param dbName can not be null");
+//        }
+//        if (StringUtils.isEmpty(username)) {
+//            throw new IllegalArgumentException("param username can not be null");
+//        }
+////        if (StringUtils.isEmpty(password)) {
+////            throw new IllegalArgumentException("param password can not be null");
+////        }
+//        if (p == null) {
+//            throw new IllegalArgumentException("param IConnProcessor can not be null");
+//        }
+//        Connection conn = null;
+//        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
+//        if (StringUtils.isNotEmpty(this.encode)) {
+//            jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
+//        }
+//        if (StringUtils.isNotEmpty(this.extraParams)) {
+//            jdbcUrl = jdbcUrl + "&" + this.extraParams;
+//        }
+//        try {
+//            validateConnection(jdbcUrl, db, username, password, p);
+//        } catch (Exception e) {
+//            //MethodHandles.lookup().lookupClass()
+//            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
+//        }
+//    }
 
-    private static void validateConnection(String jdbcUrl, DBConfig db, String username, String password, IConnProcessor p) {
-        Connection conn = null;
-        try {
-            conn = getConnection(jdbcUrl, username, password);
-            p.vist(conn);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (Throwable e) {
-                }
-            }
-        }
-    }
+//    private static void validateConnection(String jdbcUrl, DBConfig db, String username, String password, IConnProcessor p) {
+//        Connection conn = null;
+//        try {
+//            conn = getConnection(jdbcUrl, username, password);
+//            p.vist(conn);
+//        } catch (Exception e) {
+//            throw new IllegalStateException(e);
+//        } finally {
+//            if (conn != null) {
+//                try {
+//                    conn.close();
+//                } catch (Throwable e) {
+//                }
+//            }
+//        }
+//    }
 
-    private static Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-        // 密码可以为空
-        return DriverManager.getConnection(jdbcUrl, username, StringUtils.trimToNull(password));
-    }
-
-    public interface IConnProcessor {
-        public void vist(Connection conn) throws SQLException;
-    }
+//    private static Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+//        // 密码可以为空
+//        return DriverManager.getConnection(jdbcUrl, username, StringUtils.trimToNull(password));
+//    }
 
 
-    @TISExtension
-    public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {
-        @Override
-        protected String getDataSourceName() {
-            return DS_TYPE_MYSQL;
-        }
+    // @TISExtension
+    public static abstract class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {
+//        @Override
+//        protected String getDataSourceName() {
+//            return DS_TYPE_MYSQL_V5;
+//        }
 
         @Override
         public boolean supportFacade() {
@@ -545,24 +538,24 @@ public class MySQLDataSourceFactory extends DataSourceFactory implements IFacade
 
         @Override
         public List<String> facadeSourceTypes() {
-            return Collections.singletonList(DS_TYPE_MYSQL);
+            return Lists.newArrayList(DS_TYPE_MYSQL_V5);
         }
 
-        @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
-            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-
-            try {
-                List<String> tables = mysqlDS.instance.getTablesInDB();
-                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-            } catch (Exception e) {
-                msgHandler.addErrorMessage(context, e.getMessage());
-                return false;
-            }
-
-            return true;
-        }
+//        @Override
+//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//
+//            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//
+//            try {
+//                List<String> tables = mysqlDS.instance.getTablesInDB();
+//                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
+//            } catch (Exception e) {
+//                msgHandler.addErrorMessage(context, e.getMessage());
+//                return false;
+//            }
+//
+//            return true;
+//        }
     }
 
 }

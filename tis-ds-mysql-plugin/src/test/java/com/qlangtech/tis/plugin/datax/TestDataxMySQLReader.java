@@ -27,6 +27,8 @@ import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
@@ -60,6 +62,17 @@ public class TestDataxMySQLReader extends BasicTest {
             , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
             , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
     );
+
+    public void testDescriptorsJSONGenerate() {
+        DataxMySQLReader esWriter = new DataxMySQLReader();
+        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
+        //System.out.println(descJson.getDescriptorsJSON().toJSONString());
+
+        JsonUtil.assertJSONEqual(DataxMySQLReader.class, "mysql-datax-reader-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
+    }
 
     public void testGetPluginFormPropertyTypes() {
         DataxMySQLReader mySQLReader = new DataxMySQLReader();

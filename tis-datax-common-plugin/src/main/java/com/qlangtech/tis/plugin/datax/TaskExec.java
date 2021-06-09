@@ -43,8 +43,10 @@ public class TaskExec {
                 Executors.defaultThreadFactory());
     }
 
-    static IRemoteJobTrigger getiRemoteJobTrigger(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName, PluginManager pluginManager) {
-        final com.alibaba.datax.core.util.container.JarLoader uberClassLoader = new com.alibaba.datax.core.util.container.JarLoader(new String[]{"."}) {
+    static IRemoteJobTrigger getiRemoteJobTrigger(IJoinTaskContext taskContext, RpcServiceReference statusRpc
+            , IDataxProcessor dataxProcessor, String dataXfileName, PluginManager pluginManager) {
+        final com.alibaba.datax.core.util.container.JarLoader uberClassLoader
+                = new com.alibaba.datax.core.util.container.JarLoader(new String[]{"."}) {
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
 
@@ -74,7 +76,7 @@ public class TaskExec {
 //            System.out.println("********************bbbbbbbbbbbbbbbbbbbb:" + e.getMessage());
 //        }
 
-        com.qlangtech.tis.datax.DataxExecutor dataxExecutor = new com.qlangtech.tis.datax.DataxExecutor(statusRpc, uberClassLoader);
+        com.qlangtech.tis.datax.DataxExecutor dataxExecutor = new com.qlangtech.tis.datax.DataxExecutor(statusRpc);
 
         File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -85,7 +87,7 @@ public class TaskExec {
                 dataXExecutor.submit(() -> {
                     try {
                         dataxExecutor.startWork(taskContext.getIndexName()
-                                , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath());
+                                , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath(), uberClassLoader);
                         success.set(true);
                     } catch (Throwable e) {
                         logger.error(jobPath.getAbsolutePath(), e);

@@ -1,0 +1,10 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory\")"
+  },
+  "template": {
+    "label": "配置模版",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXTiDBReader.getDftTemplate()",
+    "rows": 18
+  }
+}

@@ -13,7 +13,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.offline.module.action;
+package com.qlangtech.tis.util;
 
 import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.manage.common.Option;
@@ -25,7 +25,7 @@ import java.util.List;
  * @author: baisui 百岁
  * @create: 2021-04-09 12:18
  **/
-public class OfflineDatasourceAction {
+public class PluginItems {
 
     public static final String DB_NAME = "baisuiMySQL";
 

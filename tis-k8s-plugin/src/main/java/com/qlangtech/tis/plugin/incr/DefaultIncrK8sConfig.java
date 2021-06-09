@@ -15,7 +15,7 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.coredefine.module.action.IIncrSync;
+import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.PluginStore;
@@ -54,10 +54,10 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
 //        return (ParamsConfig) ParamsConfig.getItem(this.k8sName, IK8sContext.class);
 //    }
 
-    private IIncrSync incrSync;
+    private IRCController incrSync;
 
     @Override
-    public IIncrSync getIncrSync() {
+    public IRCController getIncrSync() {
         if (incrSync != null) {
             return this.incrSync;
         }

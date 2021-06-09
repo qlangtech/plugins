@@ -66,7 +66,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
-        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory();
+        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory(){};
 
         mysqlDs.dbName = dbWriterName;
         mysqlDs.port = 3306;

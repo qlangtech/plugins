@@ -16,13 +16,16 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.HorizontalpodAutoscaler;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
+import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -32,23 +35,25 @@ import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
 import io.kubernetes.client.openapi.apis.AutoscalingV2beta1Api;
 import io.kubernetes.client.openapi.models.*;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -60,7 +65,6 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
     public static final String KEY_FIELD_NAME = "k8sImage";
 
-    private static final String K8S_INSTANCE_NAME = "datax-worker";
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sImage;
@@ -80,6 +84,87 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     // private transient CoreV1Api k8sV1Api;
     private transient ApiClient apiClient;
     private transient K8SController k8SController;
+
+    public static String getDefaultZookeeperAddress() {
+        return Config.getZKHost();
+    }
+
+    @Override
+    public RcHpaStatus getHpaStatus() {
+
+        try {
+            AutoscalingV1Api hpaApi = new AutoscalingV1Api(this.getK8SApi());
+            K8sImage k8SImage = this.getK8SImage();
+            //  String name, String namespace, String pretty
+            V1HorizontalPodAutoscaler autoscaler = hpaApi.readNamespacedHorizontalPodAutoscalerStatus(
+                    this.getHpaName(), k8SImage.getNamespace(), K8SController.resultPrettyShow);
+
+            V1HorizontalPodAutoscalerSpec spec = autoscaler.getSpec();
+            RcHpaStatus.HpaAutoscalerSpec autoscalerSpec = new RcHpaStatus.HpaAutoscalerSpec();
+            autoscalerSpec.setMaxReplicas(spec.getMaxReplicas());
+            autoscalerSpec.setMinReplicas(spec.getMinReplicas());
+            autoscalerSpec.setTargetCPUUtilizationPercentage(spec.getTargetCPUUtilizationPercentage());
+
+            V1HorizontalPodAutoscalerStatus status = autoscaler.getStatus();
+            RcHpaStatus.HpaAutoscalerStatus autoscalerStatus = new RcHpaStatus.HpaAutoscalerStatus();
+            autoscalerStatus.setCurrentCPUUtilizationPercentage(status.getCurrentCPUUtilizationPercentage());
+            autoscalerStatus.setCurrentReplicas(status.getCurrentReplicas());
+            autoscalerStatus.setDesiredReplicas(status.getDesiredReplicas());
+            if (status.getLastScaleTime() != null) {
+                autoscalerStatus.setLastScaleTime(status.getLastScaleTime().getMillis());
+            }
+
+            V1ObjectMeta metadata = autoscaler.getMetadata();
+            Objects.requireNonNull(metadata, "hpa:" + this.getHpaName() + "relevant metadata can not be null");
+
+            Map<String, String> annotations = metadata.getAnnotations();
+
+//            [{
+//                "type": "AbleToScale",
+//                        "status": "True",
+//                        "lastTransitionTime": "2021-06-07T03:52:46Z",
+//                        "reason": "ReadyForNewScale",
+//                        "message": "recommended		size matches current size "
+//            }, {
+//                "type ": "ScalingActive ",
+//                        "status ": "True ",
+//                        "lastTransitionTime": "2021 - 06 - 08 T00: 08: 17 Z ",
+//                        "reason ": "ValidMetricFound ",
+//                        "message ": "the	HPA was able to successfully calculate a replica count from cpu resource utilization(percentage of request)"
+//            }, {
+//                "type ": "ScalingLimited ",
+//                        "status ": "True ",
+//                        "lastTransitionTime ": "2021 - 06 - 08 T00: 12: 19 Z ",
+//                        "reason ": "TooFewReplicas ",
+//                        "message ": "The		desired replica count is less than the minimum replica count "
+//            }]
+
+            List<RcHpaStatus.HpaConditionEvent> conditions = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/conditions"), RcHpaStatus.HpaConditionEvent.class);
+//            JSONObject condition = null;
+//            for (int i = 0; i < conditions.size(); i++) {
+//                condition = conditions.getJSONObject(i);
+//                condition.get
+//            }
+//            [{
+//                "type": "Resource",
+//                 "resource": {
+//                    "name": "cpu",
+//                    "currentAverageUtilization": 0,
+//                    "currentAverageValue": "1m"
+//                }
+//            }]
+            List<RcHpaStatus.HpaMetrics> currentMetrics = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/current-metrics"), RcHpaStatus.HpaMetrics.class);
+
+            RcHpaStatus hpaStatus = new RcHpaStatus(conditions, currentMetrics);
+            hpaStatus.setAutoscalerStatus(autoscalerStatus);
+            hpaStatus.setAutoscalerSpec(autoscalerSpec);
+
+
+            return hpaStatus;
+        } catch (ApiException e) {
+            throw new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
+        }
+    }
 
     @Override
     public void remove() {
@@ -131,15 +216,23 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     }
 
     @Override
+    public void relaunch(String podName) {
+        if (StringUtils.isEmpty(podName)) {
+            throw new IllegalArgumentException("param podName can not be null");
+        }
+        getK8SController().relaunch(K8S_INSTANCE_NAME, podName);
+    }
+
+    @Override
     public RcDeployment getRCDeployment() {
         // ApiClient api = getK8SApi();//, K8sImage config, String tisInstanceName
         // return K8sIncrSync.getK8SDeploymentMeta(new CoreV1Api(getK8SApi()), this.getK8SImage(), K8S_INSTANCE_NAME);
-        return getK8SController().getK8SDeploymentMeta(K8S_INSTANCE_NAME);
+        return getK8SController().getRCDeployment(K8S_INSTANCE_NAME);
     }
 
     @Override
     public WatchPodLog listPodAndWatchLog(String podName, ILogListener listener) {
-        return null;
+        return getK8SController().listPodAndWatchLog(K8S_INSTANCE_NAME, podName, listener);
     }
 
     @Override
@@ -153,8 +246,6 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 //            CuratorFrameworkFactory.Builder curatorBuilder = CuratorFrameworkFactory.builder();
 //            curatorBuilder.retryPolicy(retryPolicy);
             // this.client = curatorBuilder.connectString(this.zkAddress).build();
-
-
 
 
             K8sImage k8sImage = this.getK8SImage();
@@ -208,7 +299,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         spec.setMaxReplicas(hap.getMaxPod());
         spec.setMinReplicas(hap.getMinPod());
         objectReference = new V2beta1CrossVersionObjectReference();
-        objectReference.setApiVersion("extensions/v1beta1");
+        objectReference.setApiVersion(K8SController.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
         objectReference.setName(K8S_INSTANCE_NAME);
         spec.setScaleTargetRef(objectReference);
@@ -300,6 +391,12 @@ public class K8SDataXJobWorker extends DataXJobWorker {
                 msgHandler.addFieldError(context, fieldName, "不符合规范:" + zkhost_pattern);
                 return false;
             }
+            return true;
+        }
+
+        @Override
+        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
             return true;
         }
 

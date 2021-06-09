@@ -50,8 +50,6 @@
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>datax-common</artifactId>
-            <version>${alibaba.datax.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

@@ -16,7 +16,7 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.coredefine.module.action.IIncrSync;
+import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
@@ -43,7 +43,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     public void testCreateIncrDeployment() throws Exception {
 
-        IIncrSync incr = incrFactory.getIncrSync();
+        IRCController incr = incrFactory.getIncrSync();
         assertNotNull(incr);
         assertFalse(s4totalpay + " shall have not deploy incr instance in k8s", incr.getRCDeployment(s4totalpay) != null);
 

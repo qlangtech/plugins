@@ -38,6 +38,11 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-datax-common-plugin</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
@@ -48,19 +53,19 @@
             <scope>provided</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-datax-common-plugin</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-datax-common-plugin</artifactId>-->
+        <!--        </dependency>-->
 
 
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.30</version>
-        </dependency>
-
+        <!--
+                <dependency>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                    <version>5.1.30</version>
+                </dependency>
+        -->
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>mysqlreader</artifactId>
@@ -92,6 +97,13 @@
                     <artifactId>plugin-unstructured-storage-util</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>[5.1.30,)</version>
+            <scope>provided</scope>
         </dependency>
 
 

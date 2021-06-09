@@ -53,7 +53,12 @@
         <module>tis-datax-mongodb-plugin</module>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-ftp-plugin</module>
-<!--        <module>tis-datax-hdfs-plugin</module>-->
+        <module>tis-datax-sqlserver-plugin</module>
+        <module>tis-datax-cassandra-plugin</module>
+        <module>tis-datax-oracle-plugin</module>
+        <module>tis-ds-mysql-v5-plugin</module>
+        <module>tis-ds-mysql-v8-plugin</module>
+
     </modules>
 
     <properties>
@@ -133,6 +138,13 @@
                 <artifactId>tis-datax-test-common</artifactId>
                 <scope>test</scope>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.datax</groupId>
+                <artifactId>datax-common</artifactId>
+                <version>${alibaba.datax.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>

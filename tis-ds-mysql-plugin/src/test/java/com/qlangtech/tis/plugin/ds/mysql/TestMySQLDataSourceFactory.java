@@ -72,7 +72,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
     }
 
     public void testDataDumpers() throws Exception {
-        MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory();
+        MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory(){};
         dataSourceFactory.dbName = "employees";
         dataSourceFactory.password = null;
         dataSourceFactory.userName = "root";

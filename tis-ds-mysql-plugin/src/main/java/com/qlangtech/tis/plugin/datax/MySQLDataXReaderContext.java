@@ -15,44 +15,47 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.IDataxReaderContext;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-20 17:42
  **/
-public class MySQLDataXReaderContext extends MySQLDataxContext implements IDataxReaderContext {
-    private final String name;
-    private final String sourceTableName;
-    private String where;
+public class MySQLDataXReaderContext extends RdbmsReaderContext {
 
-    public boolean isContainWhere() {
-        return StringUtils.isNotBlank(this.where);
+    private final MySQLDataxContext mysqlContext;
+
+    public MySQLDataXReaderContext(String name, String sourceTableName, MySQLDataxContext mysqlContext) {
+        super(name, sourceTableName);
+        this.mysqlContext = mysqlContext;
     }
 
-    public String getWhere() {
-        return where;
+    public String getTabName() {
+        return mysqlContext.getTabName();
     }
 
-    public void setWhere(String where) {
-        this.where = where;
+    public String getPassword() {
+        return mysqlContext.getPassword();
     }
 
-    @Override
-    public String getTaskName() {
-        return this.name;
+    public String getUsername() {
+        return mysqlContext.getUsername();
     }
 
-    @Override
-    public String getSourceEntityName() {
-        return this.sourceTableName;
+    public String getJdbcUrl() {
+        return mysqlContext.getJdbcUrl();
     }
-
-    public MySQLDataXReaderContext(String name, String sourceTableName) {
-        this.name = name;
-        this.sourceTableName = sourceTableName;
-    }
+//    public boolean isContainWhere() {
+//        return StringUtils.isNotBlank(this.where);
+//    }
+//
+//    public String getWhere() {
+//        return where;
+//    }
+//
+//    public void setWhere(String where) {
+//        this.where = where;
+//    }
 
 
 }

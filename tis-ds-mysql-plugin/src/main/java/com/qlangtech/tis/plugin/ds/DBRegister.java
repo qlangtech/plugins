@@ -13,9 +13,7 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.ds.mysql;
-
-import com.qlangtech.tis.plugin.ds.DBConfig;
+package com.qlangtech.tis.plugin.ds;
 
 /**
  * @author: baisui 百岁

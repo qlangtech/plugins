@@ -14,22 +14,15 @@
  */
 package com.qlangtech.tis.plugin.incr;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.IIncrSync;
-import com.qlangtech.tis.coredefine.module.action.RcDeployment;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
-import com.qlangtech.tis.pubhook.common.RunEnvironment;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -40,9 +33,10 @@ import java.util.List;
  * @create: 2020-04-12 11:12
  * @date 2020/04/13
  */
-public class K8sIncrSync extends K8SController implements IIncrSync {
+public class K8sIncrSync extends K8SController //implements IRCController
+{
 
-    private static final Logger logger = LoggerFactory.getLogger(K8sIncrSync.class);
+    // private static final Logger logger = LoggerFactory.getLogger(K8sIncrSync.class);
 
     // private static final String resultPrettyShow = "true";
 
@@ -256,15 +250,15 @@ public class K8sIncrSync extends K8SController implements IIncrSync {
 
     }
 
-    /**
-     * 取得RC实体对象，有即证明已经完成发布流程
-     *
-     * @return
-     */
-    @Override
-    public RcDeployment getRCDeployment(String collection) {
-        return getK8SDeploymentMeta(collection);
-    }
+//    /**
+//     * 取得RC实体对象，有即证明已经完成发布流程
+//     *
+//     * @return
+//     */
+//    @Override
+//    public RcDeployment getRCDeployment(String collection) {
+//        return getK8SDeploymentMeta(collection);
+//    }
 
 //    public static RcDeployment getRcDeployment(CoreV1Api api, K8sImage config, String tisInstanceName) {
 //        Objects.requireNonNull(api, "param api can not be null");

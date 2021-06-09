@@ -209,6 +209,10 @@ public class TisDataXHiveWriter extends Writer {
             public JobPropInitializeException(String message, Throwable cause) {
                 super(message, cause);
             }
+
+            public JobPropInitializeException(String message) {
+                super(message);
+            }
         }
 
 
@@ -381,17 +385,9 @@ public class TisDataXHiveWriter extends Writer {
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
         DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
         if (!(dataxWriter instanceof BasicFSWriter)) {
-            throw new IllegalStateException("datax Writer must be type of 'DataXHiveWriter',but now is:" + dataxWriter.getClass());
+            throw new Job.JobPropInitializeException("datax Writer must be type of 'BasicFSWriter',but now is:" + dataxWriter.getClass());
         }
         return (BasicFSWriter) dataxWriter;
     }
 
-//    public static DataXHiveWriter getHiveWriterPlugin(Configuration pluginJobConf) {
-//        String dataxName = pluginJobConf.getString(DataxUtils.DATAX_NAME);
-//        DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
-//        if (!(dataxWriter instanceof DataXHiveWriter)) {
-//            throw new IllegalStateException("datax Writer must be type of 'DataXHiveWriter',but now is:" + dataxWriter.getClass());
-//        }
-//        return (DataXHiveWriter) dataxWriter;
-//    }
 }

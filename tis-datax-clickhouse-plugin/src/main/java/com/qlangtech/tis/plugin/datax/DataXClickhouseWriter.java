@@ -15,20 +15,24 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.PropertyPlaceholderHelper;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
+import org.apache.commons.lang.StringUtils;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -37,33 +41,71 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-16 21:48
  **/
-public class DataXClickhouseWriter extends DataxWriter {
+public class DataXClickhouseWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware {
 
-    public static final String DATAX_NAME = "Clickhouse";
+    public static final String DATAX_NAME = "ClickHouse";
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String jdbcUrl;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String username;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String password;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String table;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String column;
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String dbName;
+
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
     public String preSql;
     @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
     public String postSql;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-    public String batchSize;
+    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer batchSize;
+
+    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer batchByteSize;
+
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String writeMode;
+
+//    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public Boolean autoCreateTable;
+
 
     @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
+    public String dataXName;
+
+    @Override
+    public void setKey(KeyedPluginStore.Key key) {
+        this.dataXName = key.keyVal.getVal();
+    }
+
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
+        if (!tableMap.isPresent()) {
+            throw new IllegalArgumentException("tableMap shall be present");
+        }
+        IDataxProcessor.TableMap tmapper = tableMap.get();
+        ClickHouseDataSourceFactory ds = getDataSourceFactory();
+
+        ClickHouseWriterContext context = new ClickHouseWriterContext();
+        context.setBatchByteSize(this.batchByteSize);
+        context.setBatchSize(this.batchSize);
+        context.setJdbcUrl(ds.jdbcUrl);
+        context.setUsername(ds.username);
+        context.setPassword(ds.password);
+        context.setTable(tmapper.getTo());
+        context.setWriteMode(this.writeMode);
+        PropertyPlaceholderHelper helper = new PropertyPlaceholderHelper("${", "}");
+        Map<String, String> params = new HashMap<>();
+        params.put("table", tmapper.getTo());
+        PropertyPlaceholderHelper.PlaceholderResolver resolver = (key) -> {
+            return params.get(key);
+        };
+        if (StringUtils.isNotEmpty(this.preSql)) {
+            context.setPreSql(helper.replacePlaceholders(this.preSql, resolver));
+        }
+
+        if (StringUtils.isNotEmpty(this.postSql)) {
+            context.setPostSql(helper.replacePlaceholders(this.postSql, resolver));
+        }
+        context.setCols(IDataxProcessor.TabCols.create(tableMap.get()));
+        return context;
     }
 
     @Override
@@ -72,11 +114,16 @@ public class DataXClickhouseWriter extends DataxWriter {
     }
 
 
-
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(
                 DataXClickhouseWriter.class, "DataXClickhouseWriter-tpl.json");
     }
+
+    public ClickHouseDataSourceFactory getDataSourceFactory() {
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        return dsStore.getDataSource();
+    }
+
 
     @TISExtension()
     public static class DefaultDescriptor extends DataxWriter.BaseDataxWriterDescriptor {

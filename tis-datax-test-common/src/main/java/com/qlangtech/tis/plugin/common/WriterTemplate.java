@@ -23,10 +23,7 @@ import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
-import com.qlangtech.tis.datax.DataxExecutor;
-import com.qlangtech.tis.datax.IDataxGlobalCfg;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -98,7 +95,7 @@ public class WriterTemplate {
      * @param dataxWriter
      * @throws IllegalAccessException
      */
-    public static void realExecuteDump(final String writerJson, DataxWriter dataxWriter) throws IllegalAccessException {
+    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
         DataxExecutor.initializeClassLoader(
                 Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxWriter.getDataxMeta().getName()), uberClassLoader);

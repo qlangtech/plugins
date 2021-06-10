@@ -28,16 +28,9 @@
     "placeholder": "set session sql_mode='ANSI'"
   },
   "dbName": {
-    "label": "数据库名",
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")",
-    "creator": {
-      "routerLink": "/offline/ds",
-      "label": "数据源管理"
-    }
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")"
   },
   "template": {
-    "label": "配置模版",
     "dftVal": "com.qlangtech.tis.plugin.datax.DataxMySQLWriter.getDftTemplate()",
-    "rows": 18
   }
 }

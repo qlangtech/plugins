@@ -41,6 +41,11 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugin</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -63,6 +68,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
 
     </dependencies>
 

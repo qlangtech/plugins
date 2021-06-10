@@ -36,10 +36,12 @@ public class AliyunEndpoint extends ParamsConfig implements IAliyunToken {
     @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
     public String endpoint;
 
-    @FormField(ordinal = 2, validate = {Validator.require})
+    // 可以为空
+    @FormField(ordinal = 2, validate = {})
     public String accessKeyId;
 
-    @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {Validator.require})
+    // 可以为空
+    @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {})
     public String accessKeySecret;
 
     @Override

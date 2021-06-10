@@ -184,7 +184,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         @Override
         public int getRowSize() {
             int[] count = new int[1];
-            validateConnection(jdbcUrl, null, userName, password, (connection) -> {
+
+            validateConnection(jdbcUrl, userName, password, (conn) -> {
                 Statement statement = null;
                 ResultSet result = null;
                 try {

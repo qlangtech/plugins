@@ -1,0 +1,38 @@
+{
+  "name": "elasticsearchwriter",
+  "parameter": {
+    "accessId": "xxxxxxxxxxx",
+    "accessKey": "accessKeykkkkkkkkkkkkkk",
+    "alias": "application2",
+    "aliasMode": "append",
+    "batchSize": 9999,
+    "cleanup": true,
+    "column": [
+      {
+        "name": "app_id",
+        "type": "int"
+      },
+      {
+        "name": "project_name",
+        "type": "string"
+      }
+    ],
+    "compression": true,
+    "discovery": true,
+    "dynamic": true,
+    "endpoint": "http://oss-cn-beijing.aliyuncs.com",
+    "ignoreParseError": true,
+    "index": "application",
+    "multiThread": "true",
+    "settings": {
+      "index": {
+        "number_of_replicas": 0,
+        "number_of_shards": 1
+      }
+    },
+    "splitter": ",",
+    "timeout": 6666,
+    "trySize": 22,
+    "type": "specific_type"
+  }
+}

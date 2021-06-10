@@ -1,0 +1,28 @@
+{
+  "name":"clickhousewriter",
+  "parameter":{
+    "batchByteSize":3456,
+    "batchSize":9527,
+    "column":[
+      "`appid`",
+      "`projectname`"
+    ],
+    "connection":[
+      {
+        "jdbcUrl":"jdbc:clickhouse://192.168.28.200:8123/tis",
+        "table":[
+          "application"
+        ]
+      }
+    ],
+    "password":"123123",
+    "postSql":[
+      "drop table application"
+    ],
+    "preSql":[
+      "drop table application"
+    ],
+    "username":"root",
+    "writeMode":"insert"
+  }
+}

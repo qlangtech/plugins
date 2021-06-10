@@ -13,31 +13,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.datax.common;
+package com.alibaba.datax.plugin.writer.clickhousewriter;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.qlangtech.tis.offline.DataxUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-06-05 11:53
+ * @create: 2021-06-10 09:10
  **/
-public class TabCols {
-    private final List<String> cols;
+public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickhousewriter.ClickhouseWriter {
 
-    public TabCols(List<String> cols) {
-        this.cols = cols;
+    public static class Job extends ClickhouseWriter.Job {
+        @Override
+        public void prepare() {
+            super.prepare();
+           // this.originalConfig.getString(DataxUtils.DATAX_NAME);
+        }
     }
 
-    public String getColsQuotes() {
-        return getColumnWithLink("\"`", "`\"");
-    }
+    public static class Task extends ClickhouseWriter.Task {
 
-    public String getCols() {
-        return getColumnWithLink("`", "`");
-    }
-
-    private String getColumnWithLink(String left, String right) {
-        return this.cols.stream().map(r -> (left + r + right)).collect(Collectors.joining(","));
     }
 }

@@ -1,21 +1,19 @@
 {
     "name": "clickhousewriter",
     "parameter": {
-        "username": "username",
-        "password": "password",
-        "column": ["col1", "col2", "col3"],
+        "username": "${writer.username}",
+        "password": "${writer.password}",
+        "column": [${writer.cols.colsQuotes}],
         "connection": [
             {
-                "jdbcUrl": "jdbc:clickhouse://<host>:<port>[/<database>]",
-                "table": ["table1", "table2"]
+                "jdbcUrl": "${writer.jdbcUrl}",
+                "table": ["${writer.table}"]
             }
         ],
-        "preSql": [],
-        "postSql": [],
-
-        "batchSize": 65536,
-        "batchByteSize": 134217728,
-        "dryRun": false,
-        "writeMode": "insert"
+        "preSql": ["${writer.preSql}"],
+        "postSql": ["${writer.postSql}"],
+        "batchSize": ${writer.batchSize},
+        "batchByteSize": ${writer.batchByteSize},
+        "writeMode": "${writer.writeMode}"
     }
 }

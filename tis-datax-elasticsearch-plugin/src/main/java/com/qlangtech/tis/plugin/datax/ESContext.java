@@ -15,8 +15,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -24,13 +27,32 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class ESContext implements IDataxContext {
     private final DataXElasticsearchWriter writer;
+    private final IAliyunToken token;
 
     public ESContext(DataXElasticsearchWriter writer) {
         this.writer = writer;
+        this.token = writer.getToken();
+        Objects.requireNonNull(this.token, "token can not be null");
     }
 
     public String getEndpoint() {
-        return this.writer.endpoint;
+        return token.getEndpoint();
+    }
+
+    //public boolean isContainUserName() {
+//        return StringUtils.isNotEmpty(token.getAccessKeyId());
+//    }
+
+    //    public boolean isContainPassword() {
+//        return StringUtils.isNotEmpty(token.getAccessKeySecret());
+//    }
+    // 当用户没有填写认证信息的时候需要有一个占位符，不然提交请求时会报错
+    public String getUserName() {
+        return StringUtils.defaultIfBlank(token.getAccessKeyId(), "default");
+    }
+
+    public String getPassword() {
+        return StringUtils.defaultIfBlank(token.getAccessKeySecret(), "******");
     }
 
     public String getIndex() {
@@ -45,7 +67,7 @@ public class ESContext implements IDataxContext {
         return this.writer.column;
     }
 
-    public String getCleanup() {
+    public Boolean getCleanup() {
         return this.writer.cleanup;
     }
 
@@ -138,7 +160,7 @@ public class ESContext implements IDataxContext {
     }
 
     public boolean isContainCleanup() {
-        return StringUtils.isNotBlank(this.writer.cleanup);
+        return this.writer.cleanup != null;
     }
 
     public boolean isContainDiscovery() {

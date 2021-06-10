@@ -6,10 +6,22 @@
     "help": "Elasticsearch中的index名"
   },
   "type": {
-    "help": "Elasticsearch中index的type名"
+    "help": "Elasticsearch中index的type名",
+    "placeholder": "default"
   },
   "cleanup": {
-    "help": "是否删除原表"
+    "help": "是否删除原表",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
   },
   "batchSize": {
     "help": "每次批量数据的条数",
@@ -66,6 +78,7 @@
     ]
   },
   "ignoreWriteError": {
+    "label": "忽略错误",
     "help": "忽略写入错误，不重试，继续写入",
     "dftVal": false,
     "enum": [
@@ -122,14 +135,16 @@
     ]
   },
   "settings": {
-    "help": "创建index时候的settings, 与elasticsearch官方相同"
+    "help": "创建index时候的settings, 与elasticsearch官方相同",
+    "dftVal": "{\"index\" :{\"number_of_shards\": 1, \"number_of_replicas\": 0}}"
   },
   "splitter": {
     "help": "如果插入数据是array，就使用指定分隔符",
     "dftVal": ","
   },
   "column": {
-    "help": "elasticsearch所支持的字段类型，样例中包含了全部"
+    "help": "elasticsearch所支持的字段类型，样例中包含了全部",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter.getDftColumn()"
   },
   "dynamic": {
     "help": "不使用datax的mappings，使用es自己的自动mappings",

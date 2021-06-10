@@ -24,14 +24,12 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.common.TabCols;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -95,7 +93,7 @@ public class DataxMySQLWriter extends DataxWriter {
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = new TabCols(tm.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+            context.cols = IDataxProcessor.TabCols.create(tm);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;

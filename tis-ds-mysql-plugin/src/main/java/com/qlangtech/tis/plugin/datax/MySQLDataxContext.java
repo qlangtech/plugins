@@ -15,14 +15,14 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.plugin.datax.common.TabCols;
+import com.qlangtech.tis.datax.IDataxProcessor;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-08 11:06
  **/
 public class MySQLDataxContext {
-    public TabCols cols;
+    public IDataxProcessor.TabCols cols;
     String tabName;
     String password;
     String username;

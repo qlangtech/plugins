@@ -1,0 +1,11 @@
+{
+  "jdbcUrl": {
+    "dftVal": "jdbc:clickhouse://<host>:8123[/<database>]"
+  },
+  "username": {
+    "lable": "用户名"
+  },
+  "password": {
+    "lable": "密码"
+  }
+}

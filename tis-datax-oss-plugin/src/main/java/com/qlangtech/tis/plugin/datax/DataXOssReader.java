@@ -142,13 +142,14 @@ public class DataXOssReader extends DataxReader {
         @Override
         @JSONField(serialize = false)
         public String getName() {
-            throw new UnsupportedOperationException();
+            return "oss"; // throw new UnsupportedOperationException();
         }
 
         @Override
         @JSONField(serialize = false)
         public String getWhere() {
-            throw new UnsupportedOperationException();
+            return StringUtils.EMPTY;
+            // throw new UnsupportedOperationException();
         }
 
         @Override

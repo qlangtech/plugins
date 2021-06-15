@@ -47,7 +47,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         EasyMock.replay(dataxReader);
         DataXElasticsearchWriter esWriter = new DataXElasticsearchWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
-        descJson.getDescriptorsJSON().toJSONString();
+//        descJson.getDescriptorsJSON().toJSONString();
 
         JsonUtil.assertJSONEqual(DataXElasticsearchWriter.class, "es-datax-writer-descriptor.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {

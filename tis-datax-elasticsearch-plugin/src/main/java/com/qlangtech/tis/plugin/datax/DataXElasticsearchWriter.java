@@ -16,15 +16,18 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
 import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -32,20 +35,26 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.runtime.module.misc.VisualType;
+import com.qlangtech.tis.solrdao.ISchema;
+import com.qlangtech.tis.solrdao.ISchemaField;
+import com.qlangtech.tis.solrdao.SchemaMetaContent;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext {
+public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext, ISearchEngineTypeTransfer {
     private static final String DATAX_NAME = "Elasticsearch";
     private static final String FIELD_ENDPOINT = "endpoint";
+
+    public static final String KEY_COLUMN = "column";
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String endpoint;
@@ -55,8 +64,8 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @FormField(ordinal = 16, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
     public String type;
 
-    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String column;
+//    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+//    public String column;
 
     @FormField(ordinal = 20, type = FormFieldType.ENUM, validate = {})
     public Boolean cleanup;
@@ -101,38 +110,209 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         return IAliyunToken.getToken(this.endpoint);
     }
 
+
+    public static VisualType ES_TYPE_TEXT
+            = new VisualType(StringUtils.lowerCase(ESFieldType.TEXT.name()), true);
+
+    @Override
+    public SchemaMetaContent initSchemaMetaContent(ISelectedTab tab) {
+
+        SchemaMetaContent metaContent = new SchemaMetaContent();
+        ESSchema schema = new ESSchema();
+        metaContent.parseResult = schema;
+        ESField field = null;
+        for (ISelectedTab.ColMeta m : tab.getCols()) {
+            field = new ESField();
+            field.setName(m.getName());
+            field.setStored(true);
+            field.setIndexed(true);
+            field.setType(this.mapSearchEngineType(m.getType()));
+
+            schema.fields.add(field);
+        }
+        byte[] schemaContent = null;
+        metaContent.content = schemaContent;
+        return metaContent;
+    }
+
+    @Override
+    public ISchema projectionFromExpertModel(JSONObject body) {
+        Objects.requireNonNull(body, "request body can not be null");
+        final String content = body.getString("content");
+        if (StringUtils.isBlank(content)) {
+            throw new IllegalStateException("content can not be null");
+        }
+        ESSchema schema = new ESSchema();
+        JSONObject field = null;
+        ESField esField = null;
+        JSONArray fields = JSON.parseArray(content);
+        for (int i = 0; i < fields.size(); i++) {
+            field = fields.getJSONObject(i);
+            esField = new ESField();
+
+            esField.setName(field.getString(ISchemaField.KEY_NAME));
+
+
+            final String type = field.getString(ISchemaField.KEY_TYPE);
+            VisualType visualType = parseVisualType(type);
+            esField.setType(visualType);
+            if (visualType.isSplit()) {
+                esField.setTokenizerType(StringUtils.equalsIgnoreCase(EsTokenizerType.NULL.getKey(), type)
+                        ? EsTokenizerType.NULL.getKey() : field.getString(ISchemaField.KEY_ANALYZER));
+            }
+            esField.setIndexed(field.getBooleanValue(ISchemaField.KEY_INDEX));
+            esField.setMltiValued(field.getBooleanValue(ISchemaField.KEY_ARRAY));
+            esField.setDocValue(field.getBooleanValue(ISchemaField.KEY_DOC_VALUES));
+            esField.setStored(field.getBooleanValue(ISchemaField.KEY_STORE));
+
+            schema.fields.add(esField);
+        }
+
+
+        return schema;
+    }
+
+    /**
+     * 小白模式转专家模式，正好与方法projectionFromExpertModel相反
+     *
+     * @param schema
+     * @param expertSchema
+     * @return
+     */
+    @Override
+    public JSONObject mergeFromStupidModel(ISchema schema, JSONObject expertSchema) {
+        JSONArray mergeTarget = expertSchema.getJSONArray(KEY_COLUMN);
+        Objects.requireNonNull(mergeTarget, "mergeTarget can not be null");
+        JSONObject f = null;
+        Map<String, JSONObject> mergeFields = Maps.newHashMap();
+        for (int i = 0; i < mergeTarget.size(); i++) {
+            f = mergeTarget.getJSONObject(i);
+            mergeFields.put(f.getString("name"), f);
+        }
+
+        JSONArray jFields = new com.alibaba.fastjson.JSONArray();
+
+        for (ISchemaField field : schema.getSchemaFields()) {
+            if (StringUtils.isBlank(field.getName())) {
+                throw new IllegalStateException("field name can not be null");
+            }
+            f = mergeFields.get(field.getName());
+            if (f == null) {
+                f = new JSONObject();
+                f.put(ISchemaField.KEY_NAME, field.getName());
+            }
+
+            VisualType type = EsTokenizerType.visualTypeMap.get(field.getTisFieldTypeName());
+            if (type.isSplit()) {
+                if (StringUtils.isEmpty(field.getTokenizerType())) {
+                    throw new IllegalStateException("field:" + field.getName() + " relevant type is tokenizer but has not set analyzer");
+                }
+                if (StringUtils.endsWithIgnoreCase(field.getTokenizerType(), EsTokenizerType.NULL.getKey())) {
+                    f.put(ISchemaField.KEY_TYPE, EsTokenizerType.NULL.getKey());
+                } else {
+                    f.put(ISchemaField.KEY_TYPE, type.getType());
+                    f.put(ISchemaField.KEY_ANALYZER, field.getTokenizerType());
+                }
+            }
+
+            // TODO 还不确定array 是否对应multiValue的语义
+            f.put(ISchemaField.KEY_ARRAY, field.isMultiValue());
+            f.put(ISchemaField.KEY_DOC_VALUES, field.isDocValue());
+            f.put(ISchemaField.KEY_INDEX, field.isIndexed());
+            f.put(ISchemaField.KEY_STORE, field.isStored());
+
+            jFields.add(f);
+        }
+
+        expertSchema.put(KEY_COLUMN, jFields);
+        return expertSchema;
+    }
+
+
+    private VisualType parseVisualType(String key) {
+        if (StringUtils.isBlank(key)) {
+            throw new IllegalArgumentException("param key can not not be null");
+        }
+        if (StringUtils.equalsIgnoreCase(EsTokenizerType.NULL.getKey(), key)) {
+            return ES_TYPE_TEXT;
+        }
+        for (Map.Entry<String, VisualType> entry : EsTokenizerType.visualTypeMap.entrySet()) {
+            if (key.equals(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+
+        for (EsTokenizerType tType : EsTokenizerType.values()) {
+            if (StringUtils.equals(tType.getKey(), key)) {
+                return ES_TYPE_TEXT;
+            }
+        }
+
+        return null;
+    }
+
+    private static final Map<ISelectedTab.DataXReaderColType, VisualType> dataXTypeMapper;
+
+    static {
+        ImmutableMap.Builder<ISelectedTab.DataXReaderColType, VisualType> builder = ImmutableMap.builder();
+        builder.put(ISelectedTab.DataXReaderColType.Long, createInitType(ESFieldType.LONG));
+        builder.put(ISelectedTab.DataXReaderColType.INT, createInitType(ESFieldType.INTEGER));
+        builder.put(ISelectedTab.DataXReaderColType.Double, createInitType(ESFieldType.DOUBLE));
+        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.STRING));
+        builder.put(ISelectedTab.DataXReaderColType.Boolean, createInitType(ESFieldType.BOOLEAN));
+        builder.put(ISelectedTab.DataXReaderColType.Date, createInitType(ESFieldType.DATE));
+        builder.put(ISelectedTab.DataXReaderColType.Bytes, createInitType(ESFieldType.BINARY));
+        dataXTypeMapper = builder.build();
+    }
+
+
+    private VisualType mapSearchEngineType(ISelectedTab.DataXReaderColType type) {
+
+        VisualType esType = dataXTypeMapper.get(type);
+        if (esType == null) {
+            throw new IllegalStateException("illegal type:" + type);
+        }
+
+        return esType;
+    }
+
+    private static VisualType createInitType(ESFieldType esType) {
+        return new VisualType(StringUtils.lowerCase(esType.name()), false);
+    }
+
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(
                 DataXElasticsearchWriter.class, "DataXElasticsearchWriter-tpl.json");
     }
 
-    public static String getDftColumn() {
-        JSONArray cols = new JSONArray();
-        JSONObject col = null;
-        DataxReader reader = DataxWriter.dataReaderThreadlocal.get();
-        // Objects.requireNonNull(reader, "reader plugin can not be null");
-        if (reader == null) {
-            return "[]";
-        }
-        try {
-            List<ISelectedTab> selectedTabs = reader.getSelectedTabs();
-            Optional<ISelectedTab> first = selectedTabs.stream().findFirst();
-            if (!first.isPresent()) {
-                throw new IllegalStateException("can not find any selectedTabs");
-            }
 
-            for (ISelectedTab.ColMeta colMeta : first.get().getCols()) {
-                col = new JSONObject();
-                col.put("name", colMeta.getName());
-                col.put("type", colMeta.getType().getLiteria());
-                cols.add(col);
-            }
-
-            return JsonUtil.toString(cols);
-        } finally {
-            DataxWriter.dataReaderThreadlocal.remove();
-        }
-    }
+//    public static String getDftColumn() {
+//        JSONArray cols = new JSONArray();
+//        JSONObject col = null;
+//        DataxReader reader = DataxWriter.dataReaderThreadlocal.get();
+//        // Objects.requireNonNull(reader, "reader plugin can not be null");
+//        if (reader == null) {
+//            return "[]";
+//        }
+//        try {
+//            List<ISelectedTab> selectedTabs = reader.getSelectedTabs();
+//            Optional<ISelectedTab> first = selectedTabs.stream().findFirst();
+//            if (!first.isPresent()) {
+//                throw new IllegalStateException("can not find any selectedTabs");
+//            }
+//
+//            for (ISelectedTab.ColMeta colMeta : first.get().getCols()) {
+//                col = new JSONObject();
+//                col.put("name", colMeta.getName());
+//                col.put("type", colMeta.getType().getLiteria());
+//                cols.add(col);
+//            }
+//
+//            return JsonUtil.toString(cols);
+//        } finally {
+//            DataxWriter.dataReaderThreadlocal.remove();
+//        }
+//    }
 
     @Override
     public String getTemplate() {

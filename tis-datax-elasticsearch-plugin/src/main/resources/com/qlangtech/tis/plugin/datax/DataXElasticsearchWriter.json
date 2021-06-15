@@ -142,10 +142,6 @@
     "help": "如果插入数据是array，就使用指定分隔符",
     "dftVal": ","
   },
-  "column": {
-    "help": "elasticsearch所支持的字段类型，样例中包含了全部",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter.getDftColumn()"
-  },
   "dynamic": {
     "help": "不使用datax的mappings，使用es自己的自动mappings",
     "dftVal": false,

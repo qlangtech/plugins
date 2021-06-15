@@ -37,7 +37,7 @@ public class OSSReaderContext implements IDataxReaderContext {
 
     @Override
     public String getSourceEntityName() {
-        throw new UnsupportedOperationException();
+        return "oss";
     }
 
     public OSSReaderContext(DataXOssReader reader) {

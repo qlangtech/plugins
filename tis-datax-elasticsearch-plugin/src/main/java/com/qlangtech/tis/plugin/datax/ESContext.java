@@ -63,9 +63,9 @@ public class ESContext implements IDataxContext {
         return this.writer.type;
     }
 
-    public String getColumn() {
-        return this.writer.column;
-    }
+//    public String getColumn() {
+//        return this.writer.column;
+//    }
 
     public Boolean getCleanup() {
         return this.writer.cleanup;
@@ -127,9 +127,6 @@ public class ESContext implements IDataxContext {
         return StringUtils.isNotBlank(this.writer.settings);
     }
 
-    public boolean isContainColumn() {
-        return StringUtils.isNotBlank(this.writer.column);
-    }
 
     public boolean isContainAliasMode() {
         return StringUtils.isNotBlank(this.writer.aliasMode);

@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.plugin.ds.tidb;
 
@@ -31,11 +31,12 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -107,6 +108,11 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             }
         };
         return new DataDumpers(splitCount, dumpers);
+    }
+
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        throw new UnsupportedOperationException();
     }
 
 
@@ -306,7 +312,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
 
     @TISExtension
-    public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {
+    public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor<TiKVDataSourceFactory> {
 
         @Override
         protected String getDataSourceName() {
@@ -323,12 +329,10 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             return Collections.singletonList(DS_TYPE_MYSQL);
         }
 
-        @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
+        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, TiKVDataSourceFactory sourceFactory) {
             try {
-                ParseDescribable<DataSourceFactory> tikv = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-                DataSourceFactory sourceFactory = tikv.instance;
+//                ParseDescribable<DataSourceFactory> tikv = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//                DataSourceFactory sourceFactory = tikv.instance;
                 List<String> tables = sourceFactory.getTablesInDB();
                 if (tables.size() < 1) {
                     msgHandler.addErrorMessage(context, "TiKV库" + sourceFactory.identityValue() + "中的没有数据表");

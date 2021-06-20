@@ -15,23 +15,27 @@
 
 package com.qlangtech.tis.plugin.datax.common;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.ESTableAlias;
+import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.Memoizer;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -218,5 +222,45 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
     public final List<ColumnMetaData> getTableMetadata(String table) {
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTableMetadata(table);
+    }
+
+
+    public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor implements FormFieldType.IMultiSelectValidator, SubForm.ISubFormItemValidate {
+        public BasicDataXRdbmsReaderDescriptor() {
+            super();
+        }
+
+        @Override
+        public final boolean isRdbms() {
+            return true;
+        }
+
+        @Override
+        public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context
+                , SuFormProperties props, IPropertyType.SubFormFilter filter, Map<String, JSONObject> formData) {
+
+            Integer maxReaderTabCount = Integer.MAX_VALUE;
+            try {
+                maxReaderTabCount = Integer.parseInt(filter.uploadPluginMeta.getExtraParam(ESTableAlias.MAX_READER_TABLE_SELECT_COUNT));
+            } catch (Throwable e) {
+
+            }
+
+            if (formData.size() > maxReaderTabCount) {
+                msgHandler.addErrorMessage(context, "导入表不能超过" + maxReaderTabCount + "张");
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter
+                , Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
+
+            return true;
+        }
+
+
     }
 }

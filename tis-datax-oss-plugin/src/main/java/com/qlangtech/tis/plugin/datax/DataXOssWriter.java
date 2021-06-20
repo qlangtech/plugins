@@ -125,7 +125,7 @@ public class DataXOssWriter extends DataxWriter {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return DataXOssReader.verifyFormOSSRelative(msgHandler, context, postFormVals);
         }
 

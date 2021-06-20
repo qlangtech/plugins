@@ -15,8 +15,11 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
@@ -32,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory implements IFacadeDataSource {
 
-    //private static final String DS_TYPE_MYSQL = "MySQL";
     protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
     protected static final String DS_TYPE_MYSQL_V8 = DS_TYPE_MYSQL + "-V8";
 
@@ -542,21 +544,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return Lists.newArrayList(DS_TYPE_MYSQL_V5);
         }
 
-//        @Override
-//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-//
-//            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-//
-//            try {
-//                List<String> tables = mysqlDS.instance.getTablesInDB();
-//                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-//            } catch (Exception e) {
-//                msgHandler.addErrorMessage(context, e.getMessage());
-//                return false;
-//            }
-//
-//            return true;
-//        }
+
     }
 
 }

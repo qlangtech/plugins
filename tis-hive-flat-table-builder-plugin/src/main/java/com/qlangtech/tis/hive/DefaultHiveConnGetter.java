@@ -67,7 +67,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals);
             //return super.validate(msgHandler, context, postFormVals);
         }

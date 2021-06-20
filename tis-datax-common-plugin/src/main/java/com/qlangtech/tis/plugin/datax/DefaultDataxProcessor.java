@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.io.File;
@@ -74,6 +75,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
         Objects.requireNonNull(globalCfg, "dataX Global config can not be null");
         return globalCfg;
     }
+
 
 
     @TISExtension()

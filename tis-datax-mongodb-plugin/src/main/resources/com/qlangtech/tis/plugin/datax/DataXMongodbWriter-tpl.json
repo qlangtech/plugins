@@ -1,15 +1,16 @@
 {
     "name": "mongodbwriter",
     "parameter": {
-        "address": [],
-        "userName": "",
-        "userPassword": "",
-        "dbName": "",
-        "collectionName": "",
-        "column": [],
-        "upsertInfo": {
-            "isUpsert": "",
-            "upsertKey": ""
-        }
+        "address": [${writer.serverAddress}],
+#if($writer.containCredential)
+        "userName": "${writer.userName}",
+        "userPassword": "${writer.password}",
+#end
+        "dbName": "${writer.dbName}",
+        "collectionName": "${writer.collectionName}",
+        "column": ${writer.column},
+#if($writer.containUpsertInfo)
+        "upsertInfo": ${writer.upsertInfo}
+#end
     }
 }

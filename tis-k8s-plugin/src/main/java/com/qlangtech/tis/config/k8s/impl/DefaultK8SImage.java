@@ -90,7 +90,7 @@ public class DefaultK8SImage extends K8sImage {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             ParseDescribable<K8sImage> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
             K8sImage k8sCfg = k8s.instance;

@@ -15,8 +15,12 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -32,11 +36,22 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
+    }
+
     @TISExtension
     public static class V5Descriptor extends DefaultDescriptor {
         @Override
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL_V5 ;
         }
+
+//        @Override
+//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            return super.validate(msgHandler, context, postFormVals);
+//        }
     }
 }

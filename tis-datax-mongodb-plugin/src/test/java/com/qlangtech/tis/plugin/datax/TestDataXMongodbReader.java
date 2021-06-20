@@ -15,7 +15,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
 import java.util.Optional;
@@ -34,4 +39,55 @@ public class TestDataXMongodbReader extends TestCase {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXMongodbReader.class);
         assertTrue(extraProps.isPresent());
     }
+
+    public void testDescriptorsJSONGenerate() {
+        DataXMongodbReader reader = new DataXMongodbReader();
+        DescriptorsJSON descJson = new DescriptorsJSON(reader.getDescriptor());
+
+        JsonUtil.assertJSONEqual(DataXMongodbReader.class, "mongdodb-datax-reader-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
+
+    }
+
+    public void testTemplateGenerate() throws Exception {
+        String dataXName = "testDataXName";
+        MangoDBDataSourceFactory dsFactory = getDataSourceFactory();
+
+
+        DataXMongodbReader reader = new DataXMongodbReader() {
+            @Override
+            public MangoDBDataSourceFactory getDsFactory() {
+                return dsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXMongodbReader.class;
+            }
+        };
+        reader.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
+        reader.query = "this is my query";
+        reader.collectionName = "employee";
+        reader.template = DataXMongodbReader.getDftTemplate();
+
+
+        ReaderTemplate.validateDataXReader("mongodb-datax-reader-assert.json", dataXName, reader);
+
+        reader.query = null;
+        dsFactory.password = null;
+        ReaderTemplate.validateDataXReader("mongodb-datax-reader-assert-without-option.json", dataXName, reader);
+    }
+
+    public static MangoDBDataSourceFactory getDataSourceFactory() {
+        MangoDBDataSourceFactory dsFactory = new MangoDBDataSourceFactory();
+        dsFactory.dbName = "order1";
+        dsFactory.address = "192.168.28.200:27017;192.168.28.201:27017";
+        dsFactory.password = "123456";
+        dsFactory.username = "root";
+        return dsFactory;
+    }
+
+
 }

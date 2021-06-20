@@ -15,8 +15,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -27,9 +25,6 @@ import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-
-import java.util.List;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/mysqlreader/doc/mysqlreader.md
@@ -63,20 +58,11 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends DataxReader.BaseDataxReaderDescriptor implements FormFieldType.IMultiSelectValidator {
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor {
         public DefaultDescriptor() {
             super();
         }
 
-        @Override
-        public boolean isRdbms() {
-            return true;
-        }
-
-        @Override
-        public boolean validate(IFieldErrorHandler msgHandler, Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
-            return true;
-        }
 
         @Override
         public String getDisplayName() {

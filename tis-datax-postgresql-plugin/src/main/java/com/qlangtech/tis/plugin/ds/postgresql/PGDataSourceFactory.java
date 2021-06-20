@@ -15,7 +15,6 @@
 
 package com.qlangtech.tis.plugin.ds.postgresql;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -24,13 +23,14 @@ import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -52,6 +52,10 @@ public class PGDataSourceFactory extends DataSourceFactory {
     @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
+    }
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
@@ -76,21 +80,21 @@ public class PGDataSourceFactory extends DataSourceFactory {
             return Collections.emptyList();
         }
 
-        @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
-            ParseDescribable<DataSourceFactory> pgDataSource = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-
-            try {
-                List<String> tables = pgDataSource.instance.getTablesInDB();
-                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-            } catch (Exception e) {
-                msgHandler.addErrorMessage(context, e.getMessage());
-                return false;
-            }
-
-            return true;
-        }
+//        @Override
+//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//
+//            ParseDescribable<DataSourceFactory> pgDataSource = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//
+//            try {
+//                List<String> tables = pgDataSource.instance.getTablesInDB();
+//                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
+//            } catch (Exception e) {
+//                msgHandler.addErrorMessage(context, e.getMessage());
+//                return false;
+//            }
+//
+//            return true;
+//        }
     }
 
 }

@@ -54,7 +54,7 @@ public class ESField extends BasicSchemaField {
 
         VisualType esType = this.getType();
         String type = esType.type;
-        EsTokenizerType tokenizerType = EsTokenizerType.parse(type);
+        EsTokenizerType tokenizerType = EsTokenizerType.parse(this.getTokenizerType());
         if (tokenizerType == null) {
             // 非分词字段
             if (esType.isSplit()) {

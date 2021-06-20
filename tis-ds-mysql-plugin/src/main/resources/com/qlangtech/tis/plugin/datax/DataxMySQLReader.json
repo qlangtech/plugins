@@ -1,6 +1,6 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")"
   },
   "template": {
     "label": "配置模版",

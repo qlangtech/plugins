@@ -16,6 +16,11 @@
 package com.qlangtech.tis.plugin.ds.mangodb;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -24,11 +29,14 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TISTable;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,8 +46,34 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     private static final String DS_TYPE_MONGO_DB = "MongoDB";
 
-    @FormField(identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
+
+    @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    public String address;
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    public String dbName;
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String username;
+    @FormField(ordinal = 4, type = FormFieldType.PASSWORD, validate = {})
+    public String password;
+
+    public String getDbName() {
+        return this.dbName;
+    }
+
+    public boolean isContainCredential() {
+        return StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password);
+    }
+
+    public String getUserName() {
+        return this.username;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
@@ -48,12 +82,73 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public List<String> getTablesInDB() {
-        return null;
+        MongoClient mongoClient = null;
+        try {
+            mongoClient = createMongoClient();
+            MongoDatabase database = mongoClient.getDatabase(this.dbName);
+            return Lists.newArrayList(database.listCollectionNames());
+        } finally {
+            try {
+                mongoClient.close();
+            } catch (Throwable e) {
+            }
+        }
     }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(String table) {
-        return null;
+//        MongoClient mongoClient = null;
+//        try {
+//            mongoClient = createMongoClient();
+//            MongoDatabase database = mongoClient.getDatabase(this.dbName);
+//            MongoCollection collection = database.getCollection(table);
+//            //collection.getReadConcern()
+//            //  collection.find().map()
+//        } finally {
+//            try {
+//                mongoClient.close();
+//            } catch (Throwable e) {
+//            }
+//        }
+        throw new UnsupportedOperationException();
+    }
+
+    private MongoClient createMongoClient() {
+        MongoClient mongoClient = null;
+        List<String> addressList = getAddressList(this.address); //conf.getList(KeyConstant.MONGO_ADDRESS);
+        // try {
+        if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
+            MongoCredential credential = MongoCredential.createCredential(this.username, this.dbName, password.toCharArray());
+            mongoClient = new MongoClient(parseServerAddress(addressList), Arrays.asList(credential));
+        } else {
+            mongoClient = new MongoClient(parseServerAddress(addressList));
+        }
+        // mongoClient.close();
+        return mongoClient;
+    }
+
+
+
+    public static List<String> getAddressList(String address) {
+        return Lists.newArrayList(StringUtils.split(address, ";"));
+    }
+
+
+    private static List<ServerAddress> parseServerAddress(List<String> rawAddressList) {
+        List<ServerAddress> addressList = new ArrayList<ServerAddress>();
+        for (String address : rawAddressList) {
+            String[] tempAddress = StringUtils.split(address, ":");// .split(":");
+            ServerAddress sa = new ServerAddress(tempAddress[0], Integer.valueOf(tempAddress[1]));
+            addressList.add(sa);
+        }
+        return addressList;
+    }
+
+
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        //  return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
+        throw new UnsupportedOperationException("getConnection is not support");
     }
 
     @TISExtension
@@ -68,20 +163,26 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
             return false;
         }
 
-//        @Override
-//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-//
-//            ParseDescribable<DataSourceFactory> mysqlDS = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-//
-//            try {
-//                List<String> tables = mysqlDS.instance.getTablesInDB();
-//                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-//            } catch (Exception e) {
-//                msgHandler.addErrorMessage(context, e.getMessage());
-//                return false;
-//            }
-//
-//            return true;
-//        }
+        public boolean validateAddress(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            try {
+                List<String> addressList = getAddressList(value);
+                for (String address : addressList) {
+                    if (!Validator.host.validate(msgHandler, context, fieldName, address)) {
+                        return false;
+                    }
+                }
+
+                List<ServerAddress> serverAddresses = parseServerAddress(addressList);
+                if (serverAddresses.size() < 1) {
+                    msgHandler.addFieldError(context, fieldName, "请填写");
+                    return false;
+                }
+            } catch (Throwable e) {
+                msgHandler.addFieldError(context, fieldName, "格式有误");
+                return false;
+            }
+            return true;
+        }
+
     }
 }

@@ -15,15 +15,25 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;
 
@@ -32,30 +42,20 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  **/
 public class DataXMongodbWriter extends DataxWriter {
-    private static final String DATAX_NAME = "Mongodb";
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
-    public String address;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
-    public String userName;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-    public String userPassword;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
+    private static final String KEY_FIELD_UPSERT_INFO = "upsertInfo";
+    private static final String KEY_FIELD_COLUMN = "column";
+
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String dbName;
+
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String collectionName;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String column;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-    public String name;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-    public String type;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-    public String splitter;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+
+    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
     public String upsertInfo;
-    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
-    public String isUpsert;
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
-    public String upsertKey;
 
     @FormField(ordinal = 11, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
@@ -64,6 +64,10 @@ public class DataXMongodbWriter extends DataxWriter {
         return IOUtils.loadResourceFromClasspath(DataXMongodbWriter.class, "DataXMongodbWriter-tpl.json");
     }
 
+    public MangoDBDataSourceFactory getDsFactory() {
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        return (MangoDBDataSourceFactory) dsStore.getPlugin();
+    }
 
     @Override
     public String getTemplate() {
@@ -72,7 +76,8 @@ public class DataXMongodbWriter extends DataxWriter {
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
+        MongoDBWriterContext context = new MongoDBWriterContext(this);
+        return context;
     }
 
 
@@ -82,14 +87,63 @@ public class DataXMongodbWriter extends DataxWriter {
             super();
         }
 
+        public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return DataXMongodbReader.validateColumnContent(msgHandler, context, fieldName, value);
+        }
+
         @Override
-        public boolean isRdbms() {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            JSONArray cols = JSON.parseArray(postFormVals.getField(KEY_FIELD_COLUMN));
+            JSONObject col = null;
+            try {
+                String upsertinfo = postFormVals.getField(KEY_FIELD_UPSERT_INFO);
+                JSONObject info = JSON.parseObject(upsertinfo);
+                // isUpsert":true,"upsertKey
+                Boolean isUpsert = info.getBoolean("isUpsert");
+                if (isUpsert == null && isUpsert) {
+                    String upsertKey = info.getString("upsertKey");
+                    if (StringUtils.isEmpty(upsertinfo)) {
+                        msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, "属性'upsertKey'必须填写");
+                        return false;
+                    }
+                    boolean findField = false;
+                    for (int i = 0; i < cols.size(); i++) {
+                        col = cols.getJSONObject(i);
+                        if (StringUtils.equals(upsertKey, col.getString("name"))) {
+                            findField = true;
+                        }
+                    }
+
+                    if (!findField) {
+                        msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO
+                                , "属性'upsertKey':" + upsertinfo + "在" + KEY_FIELD_COLUMN + "没有找到");
+                        return false;
+                    }
+
+                }
+            } catch (Throwable e) {
+                msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, e.getMessage());
+                return false;
+            }
+
             return true;
         }
 
         @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return verify(msgHandler, context, postFormVals);
+        }
+
+
+        @Override
+        public boolean isRdbms() {
+            return false;
+        }
+
+        @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return DataXMongodbReader.DATAX_NAME;
         }
     }
 }

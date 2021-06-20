@@ -29,6 +29,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -53,6 +54,8 @@ import java.util.Optional;
 public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext, ISearchEngineTypeTransfer {
     private static final String DATAX_NAME = "Elasticsearch";
     private static final String FIELD_ENDPOINT = "endpoint";
+    public static VisualType ES_TYPE_TEXT
+            = new VisualType(StringUtils.lowerCase(ESFieldType.TEXT.name()), true);
 
     public static final String KEY_COLUMN = "column";
 
@@ -111,9 +114,6 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
 
-    public static VisualType ES_TYPE_TEXT
-            = new VisualType(StringUtils.lowerCase(ESFieldType.TEXT.name()), true);
-
     @Override
     public SchemaMetaContent initSchemaMetaContent(ISelectedTab tab) {
 
@@ -145,7 +145,9 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         ESSchema schema = new ESSchema();
         JSONObject field = null;
         ESField esField = null;
-        JSONArray fields = JSON.parseArray(content);
+        JSONObject b = JSON.parseObject(content);
+
+        JSONArray fields = b.getJSONArray(KEY_COLUMN);
         for (int i = 0; i < fields.size(); i++) {
             field = fields.getJSONObject(i);
             esField = new ESField();
@@ -209,10 +211,14 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
                 }
                 if (StringUtils.endsWithIgnoreCase(field.getTokenizerType(), EsTokenizerType.NULL.getKey())) {
                     f.put(ISchemaField.KEY_TYPE, EsTokenizerType.NULL.getKey());
+                    f.remove(ISchemaField.KEY_ANALYZER);
                 } else {
                     f.put(ISchemaField.KEY_TYPE, type.getType());
                     f.put(ISchemaField.KEY_ANALYZER, field.getTokenizerType());
                 }
+            } else {
+                f.put(ISchemaField.KEY_TYPE, type.getType());
+                f.remove(ISchemaField.KEY_ANALYZER);
             }
 
             // TODO 还不确定array 是否对应multiValue的语义
@@ -258,7 +264,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         builder.put(ISelectedTab.DataXReaderColType.Long, createInitType(ESFieldType.LONG));
         builder.put(ISelectedTab.DataXReaderColType.INT, createInitType(ESFieldType.INTEGER));
         builder.put(ISelectedTab.DataXReaderColType.Double, createInitType(ESFieldType.DOUBLE));
-        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.STRING));
+        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.STRING, true));
         builder.put(ISelectedTab.DataXReaderColType.Boolean, createInitType(ESFieldType.BOOLEAN));
         builder.put(ISelectedTab.DataXReaderColType.Date, createInitType(ESFieldType.DATE));
         builder.put(ISelectedTab.DataXReaderColType.Bytes, createInitType(ESFieldType.BINARY));
@@ -277,7 +283,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     private static VisualType createInitType(ESFieldType esType) {
-        return new VisualType(StringUtils.lowerCase(esType.name()), false);
+        return createInitType(esType, false);
+    }
+
+    private static VisualType createInitType(ESFieldType esType, boolean split) {
+        return new VisualType(StringUtils.lowerCase(esType.name()), split);
     }
 
     public static String getDftTemplate() {
@@ -322,7 +332,15 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return new ESContext(this);
+
+        if (!tableMap.isPresent()) {
+            throw new IllegalStateException("tableMap must be present");
+        }
+        IDataxProcessor.TableMap mapper = tableMap.get();
+        if (!(mapper instanceof ESTableAlias)) {
+            throw new IllegalStateException("mapper instance must be type of " + ESTableAlias.class.getSimpleName());
+        }
+        return new ESContext(this, (ESTableAlias) mapper);
     }
 
 

@@ -16,6 +16,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
@@ -30,8 +31,11 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import org.easymock.EasyMock;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.Iterator;
@@ -72,6 +76,17 @@ public class TestDataxMySQLReader extends BasicTest {
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
+
+
+        UploadPluginMeta pluginMeta
+                = UploadPluginMeta.parse("dataxReader:require,targetDescriptorName_MySQL,subFormFieldName_selectedTabs,dataxName_baisuitestTestcase");
+
+        JSONObject subFormDescriptorsJSON = descJson.getDescriptorsJSON(pluginMeta.getSubFormFilter());
+
+        JsonUtil.assertJSONEqual(DataxMySQLReader.class, "mysql-datax-reader-selected-tabs-subform-descriptor.json"
+                , subFormDescriptorsJSON, (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
     }
 
     public void testGetPluginFormPropertyTypes() {
@@ -85,6 +100,11 @@ public class TestDataxMySQLReader extends BasicTest {
 
     public void testGetSubTasks() {
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
+            @Override
+            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+               throw new UnsupportedOperationException();
+            }
+
             @Override
             public List<ColumnMetaData> getTableMetadata(String table) {
                 switch (table) {
@@ -211,6 +231,11 @@ public class TestDataxMySQLReader extends BasicTest {
 
 
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
+            @Override
+            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+               throw new UnsupportedOperationException();
+            }
+
             @Override
             public DataDumpers getDataDumpers(TISTable table) {
                 return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());

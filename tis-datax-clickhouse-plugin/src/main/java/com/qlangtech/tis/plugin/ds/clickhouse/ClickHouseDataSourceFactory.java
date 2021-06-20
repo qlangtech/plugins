@@ -16,7 +16,6 @@
 package com.qlangtech.tis.plugin.ds.clickhouse;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.plugin.rdbms.util.DataBaseType;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -27,9 +26,11 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -40,15 +41,19 @@ import java.util.regex.Pattern;
  * @create: 2021-06-09 14:38
  **/
 public class ClickHouseDataSourceFactory extends DataSourceFactory {
+
+    private static final String JDBC_DRIVER = "ru.yandex.clickhouse.ClickHouseDriver";
+    private static final Logger logger = LoggerFactory.getLogger(ClickHouseDataSourceFactory.class);
+
     static {
         try {
-            Class.forName(DataBaseType.ClickHouse.getDriverClassName());
+            Class.forName(JDBC_DRIVER);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static final String DS_TYPE_CLICK_HOUSE = "ClickHouse";
+    public static final String DS_TYPE_CLICK_HOUSE = "ClickHouse";
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
@@ -69,15 +74,34 @@ public class ClickHouseDataSourceFactory extends DataSourceFactory {
 
         List<String> tables = Lists.newArrayList();
         validateConnection(this.jdbcUrl, this.username, password, (conn) -> {
-            try (Statement statement = conn.createStatement()) {
-                try (ResultSet result = statement.executeQuery("show tables")) {
-                    while (result.next()) {
-                        tables.add(result.getString(1));
-                    }
+
+            DatabaseMetaData metaData = conn.getMetaData();
+
+            ResultSet tablesResult = metaData.getTables(conn.getCatalog(), null, null, new String[]{"TABLE"});
+
+            while (tablesResult.next()) {
+                //System.out.println(tablesResult.getString(2) + "," + tablesResult.getString(3));
+                if (!"default".equalsIgnoreCase(tablesResult.getString(2))) {
+                    continue;
                 }
+                tables.add(tablesResult.getString(3));
             }
+
+//            try (Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+//                try (ResultSet result = statement.executeQuery("show tables")) {
+//                    while (result.next()) {
+//                        tables.add(result.getString(1));
+//                    }
+//                }
+//            }
         });
         return tables;
+    }
+
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        // return super.getConnection(jdbcUrl, username, password);
+        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
     }
 
     @Override
@@ -114,21 +138,26 @@ public class ClickHouseDataSourceFactory extends DataSourceFactory {
             return true;
         }
 
-
-        @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
-            ParseDescribable<DataSourceFactory> ds = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-
-            try {
-                List<String> tables = ds.instance.getTablesInDB();
-                // msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-            } catch (Exception e) {
-                msgHandler.addErrorMessage(context, e.getMessage());
-                return false;
-            }
-
-            return true;
-        }
+//        @Override
+//        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, DataSourceFactory dsFactory) {
+//            return super.validateDSFactory(msgHandler, context, dsFactory);
+//        }
+//
+//        @Override
+//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//
+//            ParseDescribable<DataSourceFactory> ds = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//
+//            try {
+//                List<String> tables = ds.instance.getTablesInDB();
+//                // msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
+//            } catch (Exception e) {
+//                logger.warn(e.getMessage(), e);
+//                msgHandler.addErrorMessage(context, e.getMessage());
+//                return false;
+//            }
+//
+//            return true;
+//        }
     }
 }

@@ -1,6 +1,6 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"TiDB\")"
   },
   "template": {
     "label": "配置模版",

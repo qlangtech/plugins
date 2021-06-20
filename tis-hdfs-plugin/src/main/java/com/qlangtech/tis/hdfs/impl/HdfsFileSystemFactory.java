@@ -178,7 +178,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ParseDescribable<FileSystemFactory> fs = null;
             try {
                 fs = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());

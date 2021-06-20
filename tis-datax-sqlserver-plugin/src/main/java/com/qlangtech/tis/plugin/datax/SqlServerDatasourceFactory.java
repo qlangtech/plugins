@@ -21,6 +21,9 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-07 09:47
@@ -40,6 +43,10 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
         return jdbcUrl;
     }
 
+    @Override
+    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+        return null;
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {

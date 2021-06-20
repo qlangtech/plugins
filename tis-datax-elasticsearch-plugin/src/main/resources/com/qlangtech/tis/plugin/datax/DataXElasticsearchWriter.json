@@ -107,18 +107,7 @@
     ]
   },
   "alias": {
-    "help": "数据导入完成后写入别名",
-    "dftVal": false,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
+    "help": "数据导入完成后写入别名"
   },
   "aliasMode": {
     "help": "数据导入完成后增加别名的模式，append(增加模式), exclusive(只留这一个)",

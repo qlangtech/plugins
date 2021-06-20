@@ -395,7 +395,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             return true;
         }

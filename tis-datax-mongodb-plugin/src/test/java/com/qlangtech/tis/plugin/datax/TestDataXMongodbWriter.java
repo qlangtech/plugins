@@ -15,7 +15,13 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
 import java.util.Optional;
@@ -33,5 +39,45 @@ public class TestDataXMongodbWriter extends TestCase {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXMongodbWriter.class);
         assertTrue(extraProps.isPresent());
+    }
+
+    public void testDescriptorsJSONGenerate() {
+        DataXMongodbWriter writer = new DataXMongodbWriter();
+        DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
+
+        JsonUtil.assertJSONEqual(DataXMongodbWriter.class, "mongdodb-datax-writer-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
+    }
+
+    public void testTemplateGenerate() throws Exception {
+        MangoDBDataSourceFactory dsFactory = TestDataXMongodbReader.getDataSourceFactory();
+        DataXMongodbWriter writer = new DataXMongodbWriter() {
+            @Override
+            public MangoDBDataSourceFactory getDsFactory() {
+                return dsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXMongodbWriter.class;
+            }
+        };
+        writer.collectionName = "employee";
+        writer.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
+        writer.template = DataXMongodbWriter.getDftTemplate();
+        writer.dbName = "order1";
+        writer.upsertInfo = "{\"isUpsert\":true,\"upsertKey\":\"user_id\"}";
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        WriterTemplate.valiateCfgGenerate(
+                "mongodb-datax-writer-assert.json", writer, tableMap);
+
+        dsFactory.username = null;
+        dsFactory.password = null;
+        writer.upsertInfo = null;
+
+        WriterTemplate.valiateCfgGenerate(
+                "mongodb-datax-writer-assert-without-option.json", writer, tableMap);
     }
 }

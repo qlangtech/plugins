@@ -106,6 +106,10 @@
         "type":2
       }
     ],
+    "extractProps":{
+      "rdbms":true,
+      "supportMultiTable":true
+    },
     "displayName":"ClickHouse",
     "extendPoint":"com.qlangtech.tis.datax.impl.DataxWriter",
     "impl":"com.qlangtech.tis.plugin.datax.DataXClickhouseWriter",

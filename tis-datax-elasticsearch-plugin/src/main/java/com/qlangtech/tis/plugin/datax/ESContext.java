@@ -15,8 +15,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.impl.ESTableAlias;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
@@ -28,11 +31,13 @@ import java.util.Objects;
 public class ESContext implements IDataxContext {
     private final DataXElasticsearchWriter writer;
     private final IAliyunToken token;
+    private final ESTableAlias mapper;
 
-    public ESContext(DataXElasticsearchWriter writer) {
+    public ESContext(DataXElasticsearchWriter writer, ESTableAlias mapper) {
         this.writer = writer;
         this.token = writer.getToken();
         Objects.requireNonNull(this.token, "token can not be null");
+        this.mapper = mapper;
     }
 
     public String getEndpoint() {
@@ -63,9 +68,12 @@ public class ESContext implements IDataxContext {
         return this.writer.type;
     }
 
-//    public String getColumn() {
-//        return this.writer.column;
-//    }
+    public String getColumn() {
+        JSONObject schema = this.mapper.getSchema();
+        JSONArray cols = schema.getJSONArray(DataXElasticsearchWriter.KEY_COLUMN);
+        Objects.requireNonNull(cols, "prop cols of mapper can not be null");
+        return cols.toJSONString();
+    }
 
     public Boolean getCleanup() {
         return this.writer.cleanup;

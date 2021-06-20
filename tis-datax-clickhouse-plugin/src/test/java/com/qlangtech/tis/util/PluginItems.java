@@ -35,7 +35,7 @@ public class PluginItems {
     public static final String DB_NAME = "clickhouseDB";
 
     public static List<Option> getExistDbs(String extendClass) {
-        String expectExtendClass = ClickHouseDataSourceFactory.class.getName();
+        String expectExtendClass = ClickHouseDataSourceFactory.DS_TYPE_CLICK_HOUSE;
         if (!expectExtendClass.equals(extendClass)) {
             Assert.fail("param:" + extendClass + " must equal with:" + expectExtendClass);
         }

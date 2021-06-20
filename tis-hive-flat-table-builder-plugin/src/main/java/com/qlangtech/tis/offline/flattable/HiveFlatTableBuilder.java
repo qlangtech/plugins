@@ -152,7 +152,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return validateHiveAvailable(msgHandler, context, postFormVals);
         }
     }

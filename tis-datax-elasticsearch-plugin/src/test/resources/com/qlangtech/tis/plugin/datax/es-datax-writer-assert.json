@@ -9,12 +9,20 @@
     "cleanup": true,
     "column": [
       {
+        "array": false,
         "name": "app_id",
-        "type": "int"
+        "index": true,
+        "store": true,
+        "type": "long",
+        "doc_values": false
       },
       {
+        "array": false,
         "name": "project_name",
-        "type": "string"
+        "index": true,
+        "store": true,
+        "type": "string",
+        "doc_values": false
       }
     ],
     "compression": true,

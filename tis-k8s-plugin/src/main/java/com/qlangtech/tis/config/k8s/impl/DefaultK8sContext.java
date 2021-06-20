@@ -99,7 +99,7 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             //return super.validate(msgHandler, context, postFormVals);
             ParseDescribable<ParamsConfig> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
             DefaultK8sContext k8sCfg = (DefaultK8sContext) k8s.instance;

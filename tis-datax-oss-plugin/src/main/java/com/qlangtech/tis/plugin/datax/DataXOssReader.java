@@ -290,7 +290,7 @@ public class DataXOssReader extends DataxReader {
         }
 
         @Override
-        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             //  return super.validate(msgHandler, context, postFormVals);
             return verifyFormOSSRelative(msgHandler, context, postFormVals);
         }

@@ -30,31 +30,22 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
  * @create: 2021-04-07 15:30
  **/
 public class DataXCassandraReader extends BasicDataXRdbmsReader {
-    private static final String DATAX_NAME = "Cassandra";
+    public static final String DATAX_NAME = "Cassandra";
 
-    //    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String host;
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String port;
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String username;
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String password;
-//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String useSSL;
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String keyspace;
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    //    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String table;
 //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String column;
 //    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String where;
-    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {})
     public Boolean allowFiltering;
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
     public String consistancyLevel;
 
+    protected boolean isFilterUnexistCol() {
+        return false;
+    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXCassandraReader.class, "DataXCassandraReader-tpl.json");
@@ -63,8 +54,7 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader {
     @Override
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab
             , IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab.getName());
-
+        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab, this);
         return readerContext;
     }
 

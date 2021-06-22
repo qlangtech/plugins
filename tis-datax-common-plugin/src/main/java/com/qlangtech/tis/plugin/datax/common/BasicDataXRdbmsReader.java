@@ -154,19 +154,26 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
 //                dataxContext.setPassword(dsFactory.getPassword());
                 dataxContext.setWhere(tab.getWhere());
 
-                Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-                if (tab.isAllCols()) {
-                    dataxContext.setCols(tableMetadata.keySet().stream().collect(Collectors.toList()));
-                } else {
+                if (isFilterUnexistCol()) {
+                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
+//                if (tab.isAllCols()) {
+//                    dataxContext.setCols(tableMetadata.keySet().stream().collect(Collectors.toList()));
+//                } else {
                     dataxContext.setCols(tab.cols.stream().filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
 //                    dataxContext.cols = tableMetadata.values().stream().filter((col) -> {
 //                        return tab.containCol(col.getKey());
 //                    }).map((t) -> t.getValue()).collect(Collectors.toList());
+                    // }
+                }else{
+                    dataxContext.setCols(tab.cols);
                 }
-
                 return dataxContext;
             }
         };
+    }
+
+    protected boolean isFilterUnexistCol() {
+        return true;
     }
 
     protected abstract RdbmsReaderContext createDataXReaderContext(
@@ -213,9 +220,9 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
         return plugin.getTablesInDB();
     }
 
-    protected DataSourceFactory getDataSourceFactory() {
+    public <DS extends DataSourceFactory> DS getDataSourceFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return dsStore.getPlugin();
+        return (DS) dsStore.getPlugin();
     }
 
     @Override

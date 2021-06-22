@@ -102,7 +102,7 @@ public class TestDataxMySQLReader extends BasicTest {
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
             @Override
             protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-               throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -136,7 +136,7 @@ public class TestDataxMySQLReader extends BasicTest {
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
             @Override
-            protected DataSourceFactory getDataSourceFactory() {
+            public DataSourceFactory getDataSourceFactory() {
                 return mysqlDs;
             }
         };
@@ -233,7 +233,7 @@ public class TestDataxMySQLReader extends BasicTest {
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
             @Override
             protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-               throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -248,7 +248,7 @@ public class TestDataxMySQLReader extends BasicTest {
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
             @Override
-            protected DataSourceFactory getDataSourceFactory() {
+            public DataSourceFactory getDataSourceFactory() {
                 return mysqlDataSource;
             }
 

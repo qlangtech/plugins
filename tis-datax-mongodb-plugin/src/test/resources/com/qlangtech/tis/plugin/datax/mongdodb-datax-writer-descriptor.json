@@ -60,7 +60,7 @@
       {
         "describable": false,
         "eprops": {
-          "dftVal": "{\n    \"name\": \"mongodbwriter\",\n    \"parameter\": {\n        \"address\": [],\n        \"userName\": \"\",\n        \"userPassword\": \"\",\n        \"dbName\": \"\",\n        \"collectionName\": \"\",\n        \"column\": [],\n        \"upsertInfo\": {\n            \"isUpsert\": \"\",\n            \"upsertKey\": \"\"\n        }\n    }\n}",
+          "dftVal": "{\n    \"name\": \"mongodbwriter\",\n    \"parameter\": {\n        \"address\": [${writer.serverAddress}],\n#if($writer.containCredential)\n        \"userName\": \"${writer.userName}\",\n        \"userPassword\": \"${writer.password}\",\n#end\n        \"dbName\": \"${writer.dbName}\",\n        \"collectionName\": \"${writer.collectionName}\",\n        \"column\": ${writer.column},\n#if($writer.containUpsertInfo)\n        \"upsertInfo\": ${writer.upsertInfo}\n#end\n    }\n}",
           "label": "配置模版",
           "rows": 18
         },

@@ -1,15 +1,32 @@
 {
     "name": "cassandrareader",
     "parameter": {
-        "username": "",
-        "password": "",
-        "host": "",
-        "port": "",
-        "useSSL": false,
-        "keyspace": "",
-        "table": "",
+#if($reader.containUsername)
+        "username": "${reader.username}",
+#end
+#if($reader.containPassword)
+        "password": "${reader.password}",
+#end
+        "host": "${reader.host}",
+        "port": ${reader.port},
+#if($reader.supportUseSSL)
+        "useSSL": ${reader.useSSL},
+#end
+        "keyspace": "${reader.keyspace}",
+        "table": "${reader.table}",
+#if($reader.containWhere)
+ "where": "${reader.where}",
+#end
+#if($reader.containConsistancyLevel)
+        "consistancyLevel": "${reader.consistancyLevel}",
+#end
+        #if($reader.containAllowFiltering)
+        "allowFiltering": ${reader.allowFiltering},
+        #end
         "column": [
-            "c1","c2","c3"
+#foreach($c in $reader.column)
+    "${c.name}",
+#end
         ]
     }
 }

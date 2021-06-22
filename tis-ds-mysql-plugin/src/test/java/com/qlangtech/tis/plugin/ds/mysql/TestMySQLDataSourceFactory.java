@@ -28,6 +28,8 @@ import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -72,7 +74,12 @@ public class TestMySQLDataSourceFactory extends TestCase {
     }
 
     public void testDataDumpers() throws Exception {
-        MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory(){};
+        MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory(){
+            @Override
+            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+                throw new UnsupportedOperationException();
+            }
+        };
         dataSourceFactory.dbName = "employees";
         dataSourceFactory.password = null;
         dataSourceFactory.userName = "root";

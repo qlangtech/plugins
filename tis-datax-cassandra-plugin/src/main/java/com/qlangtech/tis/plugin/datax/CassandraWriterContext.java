@@ -16,8 +16,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import org.apache.commons.lang.StringUtils;
 
@@ -26,50 +27,17 @@ import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-06-06 15:18
+ * @create: 2021-06-21 18:18
  **/
-public class CassandraReaderContext extends RdbmsReaderContext {
-    private final DataXCassandraReader reader;
+public class CassandraWriterContext implements IDataxContext {
+    private final DataXCassandraWriter writer;
+    private final IDataxProcessor.TableMap tabMapper;
     private final CassandraDatasourceFactory dsFactory;
-    private final SelectedTab tab;
 
-    public CassandraReaderContext(String jobName, SelectedTab tab, DataXCassandraReader reader) {
-        super(jobName, tab.getName());
-        this.tab = tab;
-        this.reader = reader;
-        this.dsFactory = reader.getDataSourceFactory();
-    }
-
-    public boolean isContainAllowFiltering() {
-        return this.reader.allowFiltering != null;
-    }
-
-    public boolean isAllowFiltering() {
-        return this.reader.allowFiltering;
-    }
-
-    public boolean isContainConsistancyLevel() {
-        return StringUtils.isNotEmpty(this.reader.consistancyLevel);
-    }
-
-    public String getConsistancyLevel() {
-        return this.reader.consistancyLevel;
-    }
-
-    public String getTable() {
-        return this.tab.getName();
-    }
-
-    public boolean isContainWhere() {
-        return StringUtils.isNotEmpty(this.tab.where);
-    }
-
-    public String getWhere() {
-        return this.tab.where;
-    }
-
-    public List<ISelectedTab.ColMeta> getColumn() {
-        return this.tab.getCols();
+    public CassandraWriterContext(DataXCassandraWriter writer, IDataxProcessor.TableMap tabMapper) {
+        this.writer = writer;
+        this.tabMapper = tabMapper;
+        this.dsFactory = writer.getDataSourceFactory();
     }
 
     public String getKeyspace() {
@@ -82,6 +50,14 @@ public class CassandraReaderContext extends RdbmsReaderContext {
 
     public boolean isUseSSL() {
         return this.dsFactory.useSSL;
+    }
+
+    public String getTable() {
+        return this.tabMapper.getTo();
+    }
+
+    public List<ISelectedTab.ColMeta> getColumn() {
+        return this.tabMapper.getSourceCols();
     }
 
     public String getHost() {
@@ -106,5 +82,38 @@ public class CassandraReaderContext extends RdbmsReaderContext {
 
     public String getPassword() {
         return this.dsFactory.password;
+    }
+
+    public boolean isContainConnectionsPerHost() {
+        return this.writer.connectionsPerHost != null && this.writer.connectionsPerHost > 0;
+    }
+
+    public int getConnectionsPerHost() {
+        return this.writer.connectionsPerHost;
+    }
+
+    public boolean isContainMaxPendingPerConnection() {
+        return this.writer.maxPendingPerConnection != null && this.writer.maxPendingPerConnection > 0;
+    }
+
+    public int getMaxPendingPerConnection() {
+
+        return this.writer.maxPendingPerConnection;
+    }
+
+    public boolean isContainConsistancyLevel() {
+        return StringUtils.isNotBlank(this.writer.consistancyLevel);
+    }
+
+    public String getConsistancyLevel() {
+        return this.writer.consistancyLevel;
+    }
+
+    public boolean isContainBatchSize() {
+        return this.writer.batchSize != null && this.writer.batchSize > 0;
+    }
+
+    public int getBatchSize() {
+        return this.writer.batchSize;
     }
 }

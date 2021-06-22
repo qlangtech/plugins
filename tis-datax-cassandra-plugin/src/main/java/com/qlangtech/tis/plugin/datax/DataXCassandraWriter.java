@@ -15,6 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -23,6 +24,9 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 
 import java.util.Optional;
 
@@ -31,9 +35,12 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  **/
 public class DataXCassandraWriter extends DataxWriter {
-    private static final String DATAX_NAME = "Cassandra";
+    //private static final String DATAX_NAME = "Cassandra";
 
-//    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String dbName;
+
+    //    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String host;
 //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String port;
@@ -43,20 +50,20 @@ public class DataXCassandraWriter extends DataxWriter {
 //    public String password;
 //    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String useSSL;
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String connectionsPerHost;
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String maxPendingPerConnection;
-//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer connectionsPerHost;
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer maxPendingPerConnection;
+    //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String keyspace;
 //    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String table;
 //    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String column;
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
     public String consistancyLevel;
-    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, validate = {})
-    public String batchSize;
+    @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer batchSize;
 
     @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
@@ -76,9 +83,12 @@ public class DataXCassandraWriter extends DataxWriter {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
+        return new CassandraWriterContext(this, tableMap.get());
+    }
 
-        return null;
-        // throw new RuntimeException("dbName:" + dbName + " relevant DS is empty");
+    public  CassandraDatasourceFactory getDataSourceFactory() {
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        return (CassandraDatasourceFactory) dsStore.getPlugin();
     }
 
 
@@ -95,7 +105,7 @@ public class DataXCassandraWriter extends DataxWriter {
 
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return DataXCassandraReader.DATAX_NAME;
         }
     }
 }

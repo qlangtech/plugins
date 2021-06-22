@@ -1,40 +1,65 @@
 {
-  "host": {
-    "help": "描述：Cassandra连接点的域名或ip，多个node之间用逗号分隔。 "
-  },
-  "port": {
-    "help": "描述：Cassandra端口。 "
-  },
-  "username": {
-    "help": "描述：数据源的用户名 "
-  },
-  "password": {
-    "help": "描述：数据源指定用户名的密码 "
-  },
-  "useSSL": {
-    "help": "描述：是否使用SSL连接。"
-  },
-  "keyspace": {
-    "help": "描述：需要同步的表所在的keyspace。"
-  },
-  "table": {
-    "help": "描述：所选取的需要同步的表。"
-  },
-  "column": {
-    "help": "描述：所配置的表中需要同步的列集合。"
-  },
-  "where": {
-    "help": "描述：数据筛选条件的cql表达式，例如:"
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Cassandra\")"
   },
   "allowFiltering": {
-    "help": "描述：是否在服务端过滤数据。参考cassandra文档中ALLOW FILTERING关键字的相关描述。"
+    "help": "描述：是否在服务端过滤数据。参考cassandra文档中ALLOW FILTERING关键字的相关描述。",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
   },
   "consistancyLevel": {
-    "help": "描述：数据一致性级别。可选ONE|QUORUM|LOCAL_QUORUM|EACH_QUORUM|ALL|ANY|TWO|THREE|LOCAL_ONE"
+    "label": "一致性级别",
+    "help": "描述：数据一致性级别。可选ONE|QUORUM|LOCAL_QUORUM|EACH_QUORUM|ALL|ANY|TWO|THREE|LOCAL_ONE",
+    "dftVal": "LOCAL_QUORUM",
+    "enum": [
+      {
+        "label": "ONE",
+        "val": "ONE"
+      },
+      {
+        "label": "QUORUM",
+        "val": "QUORUM"
+      },
+      {
+        "label": "LOCAL_QUORUM",
+        "val": "LOCAL_QUORUM"
+      },
+      {
+        "label": "EACH_QUORUM",
+        "val": "EACH_QUORUM"
+      },
+      {
+        "label": "ALL",
+        "val": "ALL"
+      },
+      {
+        "label": "ANY",
+        "val": "ANY"
+      },
+      {
+        "label": "TWO",
+        "val": "TWO"
+      },
+      {
+        "label": "THREE",
+        "val": "THREE"
+      },
+      {
+        "label": "LOCAL_ONE",
+        "val": "LOCAL_ONE"
+      }
+    ]
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXCassandraReader.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXCassandraReader.getDftTemplate()"
   }
 }

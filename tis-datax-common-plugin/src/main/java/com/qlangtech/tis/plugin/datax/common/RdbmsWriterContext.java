@@ -13,18 +13,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.datax;
+package com.qlangtech.tis.plugin.datax.common;
 
-import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-06-06 14:59
+ * @create: 2021-06-23 12:44
  **/
-public class SqlServerReaderContext extends RdbmsReaderContext<DataXSqlserverReader, DataSourceFactory> {
-    public SqlServerReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXSqlserverReader reader) {
-        super(jobName, sourceTableName, dumper, reader);
+public class RdbmsWriterContext<READER extends BasicDataXRdbmsReader>
+        extends BasicRdbmsContext<READER, BasicDataSourceFactory> implements IDataxContext {
+
+    public RdbmsWriterContext(READER reader, BasicDataSourceFactory dsFactory) {
+        super(reader, dsFactory);
     }
+
+
 }

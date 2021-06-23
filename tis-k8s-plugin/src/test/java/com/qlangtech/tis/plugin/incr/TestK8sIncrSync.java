@@ -15,7 +15,7 @@
 
 package com.qlangtech.tis.plugin.incr;
 
-import com.qlangtech.tis.coredefine.module.action.IIncrSync;
+import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.manage.common.Config;
 import junit.framework.TestCase;
@@ -28,20 +28,20 @@ public class TestK8sIncrSync extends TestCase {
 
 
     public void testGetRCDeployment() {
-        IIncrSync incrSync = TestDefaultIncrK8sConfig.getIncrSync();
+        IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
         RcDeployment rcDeployment = incrSync.getRCDeployment(TestDefaultIncrK8sConfig.totalpay);
         assertNotNull(rcDeployment);
     }
 
 
     public void testDeleteDeployment() throws Exception {
-        IIncrSync incrSync = TestDefaultIncrK8sConfig.getIncrSync();
+        IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
 
         incrSync.removeInstance(Config.S4TOTALPAY);
     }
 
     public void testLaunchIncrProcess() throws Exception {
-        IIncrSync incrSync = TestDefaultIncrK8sConfig.getIncrSync();
+        IRCController incrSync = TestDefaultIncrK8sConfig.getIncrSync();
 
         incrSync.relaunch(Config.S4TOTALPAY);
 

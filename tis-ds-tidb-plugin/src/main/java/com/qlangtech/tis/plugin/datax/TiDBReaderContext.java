@@ -16,13 +16,14 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 20:30
  **/
 public class TiDBReaderContext extends RdbmsReaderContext {
-    public TiDBReaderContext(String jobName, String sourceTableName) {
-        super(jobName, sourceTableName);
+    public TiDBReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXTiDBReader reader) {
+        super(jobName, sourceTableName, dumper, reader);
     }
 }

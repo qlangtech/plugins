@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import java.util.Optional;
 
 /**
+ * @see com.alibaba.datax.plugin.writer.cassandrawriter.CassandraWriter
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/

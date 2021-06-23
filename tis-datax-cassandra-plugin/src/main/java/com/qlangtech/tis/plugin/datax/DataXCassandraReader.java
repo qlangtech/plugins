@@ -22,14 +22,15 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.reader.cassandrareader.CassandraReader
  **/
-public class DataXCassandraReader extends BasicDataXRdbmsReader {
+public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasourceFactory> {
     public static final String DATAX_NAME = "Cassandra";
 
     //    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -53,8 +54,8 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader {
 
     @Override
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab
-            , IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab, this);
+            , IDataSourceDumper dumper) {
+        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab, dumper ,this);
         return readerContext;
     }
 

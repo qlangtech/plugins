@@ -15,53 +15,58 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
 
 import java.util.Optional;
 
 /**
+ * @see com.alibaba.datax.plugin.writer.postgresqlwriter.PostgresqlWriter
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXPostgresqlWriter extends DataxWriter {
-    private static final String DATAX_NAME = "Postgresql";
+public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter {
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String jdbcUrl;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String username;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String password;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String table;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String column;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-    public String preSql;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-    public String postSql;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-    public String batchSize;
 
-    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String template;
+
+//    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String jdbcUrl;
+//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String username;
+//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String password;
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String table;
+//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String column;
+//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String preSql;
+//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String postSql;
+//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String batchSize;
+//
+//    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+//    public String template;
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class ,"DataXPostgresqlWriter-tpl.json");
     }
 
-
-    @Override
-    public String getTemplate() {
-        return this.template;
+    public DataSourceFactory getDataSourceFactory() {
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        return dsStore.getPlugin();
     }
 
     @Override
@@ -83,7 +88,7 @@ public class DataXPostgresqlWriter extends DataxWriter {
 
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return DataXPostgresqlReader.PG_NAME;
         }
     }
 }

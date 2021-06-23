@@ -145,11 +145,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
 
-    @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-        //  return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
-        throw new UnsupportedOperationException("getConnection is not support");
-    }
 
     @TISExtension
     public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {

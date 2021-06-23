@@ -16,17 +16,6 @@
       }
     ]
   },
-  "batchSize": {
-    "dftVal": 1000
-  },
-  "preSql": {
-    "placeholder": "delete from tabXX"
-  },
-  "postSql": {
-  },
-  "session": {
-    "placeholder": "set session sql_mode='ANSI'"
-  },
   "dbName": {
     "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")"
   },

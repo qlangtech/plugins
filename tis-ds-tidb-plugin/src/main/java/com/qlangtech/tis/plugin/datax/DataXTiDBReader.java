@@ -19,23 +19,24 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:00
  **/
-public class DataXTiDBReader extends BasicDataXRdbmsReader {
+public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory> {
 
     public static final String DATAX_NAME = "TiDB";
 
     @Override
     protected RdbmsReaderContext createDataXReaderContext(
-            String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-        TiDBReaderContext readerContext = new TiDBReaderContext(jobName, tab.getName());
+            String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+        TiDBReaderContext readerContext = new TiDBReaderContext(jobName, tab.getName(), dumper, this);
         return readerContext;
     }
+
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXTiDBReader.class, "tidb-reader-tpl.json");

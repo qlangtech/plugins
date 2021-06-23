@@ -23,16 +23,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,6 +61,7 @@ public class ClickHouseDataSourceFactory extends DataSourceFactory {
     @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
+
     @Override
     public String identityValue() {
         return this.name;
@@ -73,7 +71,7 @@ public class ClickHouseDataSourceFactory extends DataSourceFactory {
     public List<String> getTablesInDB() {
 
         List<String> tables = Lists.newArrayList();
-        validateConnection(this.jdbcUrl, this.username, password, (conn) -> {
+        validateConnection(this.jdbcUrl, (conn) -> {
 
             DatabaseMetaData metaData = conn.getMetaData();
 
@@ -99,14 +97,14 @@ public class ClickHouseDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+    public Connection getConnection(String jdbcUrl) throws SQLException {
         // return super.getConnection(jdbcUrl, username, password);
         return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
     }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(String table) {
-        return parseTableColMeta(table, this.username, this.password, this.jdbcUrl);
+        return parseTableColMeta(table, this.jdbcUrl);
     }
 
     @TISExtension

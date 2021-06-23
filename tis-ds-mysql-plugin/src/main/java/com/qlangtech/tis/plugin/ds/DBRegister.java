@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.ds;
@@ -31,7 +31,7 @@ public abstract class DBRegister {
         this.dbConfig = dbConfig;
     }
 
-    protected abstract void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password);
+    protected abstract void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl);
 
     /**
      * 读取多个数据源中的一个一般是用于读取数据源Meta信息用
@@ -50,7 +50,7 @@ public abstract class DBRegister {
     private void setApplicationContext(boolean resolveHostIp, boolean facade) {
         this.dbConfig.vistDbURL(resolveHostIp, (dbName, jdbcUrl) -> {
             final String dbDefinitionId = (facade ? DBRegister.this.dbName : dbName);
-            createDefinition(dbDefinitionId, "com.mysql.jdbc.Driver", jdbcUrl, dbConfig.getUserName(), dbConfig.getPassword());
+            createDefinition(dbDefinitionId, "com.mysql.jdbc.Driver", jdbcUrl);
         }, facade);
     }
 }

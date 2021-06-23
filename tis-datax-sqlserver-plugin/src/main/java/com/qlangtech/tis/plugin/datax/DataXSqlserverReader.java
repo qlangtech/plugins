@@ -22,7 +22,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 
 /**
@@ -58,10 +57,11 @@ public class DataXSqlserverReader extends BasicDataXRdbmsReader {
     }
 
     @Override
-    protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-        SqlServerReaderContext readerContext = new SqlServerReaderContext(jobName, tab.getName());
+    protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+        SqlServerReaderContext readerContext = new SqlServerReaderContext(jobName, tab.getName(), dumper, this);
         return readerContext;
     }
+
 
     @TISExtension()
     public static class DefaultDescriptor extends DataxReader.BaseDataxReaderDescriptor {

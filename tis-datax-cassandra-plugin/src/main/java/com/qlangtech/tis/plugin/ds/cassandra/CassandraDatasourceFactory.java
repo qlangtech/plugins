@@ -25,7 +25,10 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataDumpers;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -33,7 +36,6 @@ import java.net.Inet4Address;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -56,27 +58,30 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String nodeDesc;
 
-    // 数据库名称
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String dbName;
-
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String userName;
-
-    @FormField(ordinal = 4, type = FormFieldType.PASSWORD, validate = {})
-    public String password;
-
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public int port;
 
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    public String userName;
+
+    @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {})
+    public String password;
+
+    // 数据库名称
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String dbName;
+
+
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.identity})
     public Boolean useSSL;
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
-        List<IDataSourceDumper> dumper = Collections.singletonList(new CassandraDumper(table));
-        DataDumpers dumpers = new DataDumpers(1, dumper.iterator());
-        return dumpers;
+        List<String> jdbcUrls = Lists.newArrayList();
+        for (String host : this.getHosts()) {
+            jdbcUrls.add(host);
+        }
+        return DataDumpers.create(jdbcUrls, table);
     }
 
     @Override
@@ -188,7 +193,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
 
     @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+    public Connection getConnection(String jdbcUrl) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

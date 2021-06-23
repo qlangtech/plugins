@@ -15,9 +15,7 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
@@ -38,8 +36,8 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
     }
 
     @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(username), StringUtils.trimToNull(password));
+    public Connection getConnection(String jdbcUrl) throws SQLException {
+        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
     }
 
     @TISExtension

@@ -100,7 +100,8 @@
         "eprops":{
           "dftVal":"{\n    \"name\": \"cassandrareader\",\n    \"parameter\": {\n#if($reader.containUsername)\n        \"username\": \"${reader.username}\",\n#end\n#if($reader.containPassword)\n        \"password\": \"${reader.password}\",\n#end\n        \"host\": \"${reader.host}\",\n        \"port\": ${reader.port},\n#if($reader.supportUseSSL)\n        \"useSSL\": ${reader.useSSL},\n#end\n        \"keyspace\": \"${reader.keyspace}\",\n        \"table\": \"${reader.table}\",\n#if($reader.containWhere)\n \"where\": \"${reader.where}\",\n#end\n#if($reader.containConsistancyLevel)\n        \"consistancyLevel\": \"${reader.consistancyLevel}\",\n#end\n        #if($reader.containAllowFiltering)\n        \"allowFiltering\": ${reader.allowFiltering},\n        #end\n        \"column\": [\n#foreach($c in $reader.column)\n    \"${c.name}\",\n#end\n        ]\n    }\n}",
           "label":"配置模版",
-          "rows":18
+          "rows":18,
+          "help":"无特殊情况请不要修改模版内容，避免不必要的错误"
         },
         "key":"template",
         "ord":99,

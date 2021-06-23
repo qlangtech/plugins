@@ -22,34 +22,34 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.reader.postgresqlreader.PostgresqlReader
  **/
-public class DataXPostgresqlReader extends BasicDataXRdbmsReader {
-    private static final String DATAX_NAME = "Postgresql";
+public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFactory> {
+    public static final String PG_NAME = "PostgreSQL";
 
-    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String table;
 //    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String column;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean splitPk;
     //    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String where;
 //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String querySql;
     @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    public String fetchSize;
+    public Integer fetchSize;
+
 
     @Override
-    protected RdbmsReaderContext createDataXReaderContext(
-            String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-        PostgresReaderContext readerContext = new PostgresReaderContext(jobName, tab.getName());
-
+    protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+        PostgresReaderContext readerContext = new PostgresReaderContext(jobName, tab.getName(), dumper, this);
         return readerContext;
     }
 
@@ -62,19 +62,14 @@ public class DataXPostgresqlReader extends BasicDataXRdbmsReader {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor {
         public DefaultDescriptor() {
             super();
         }
 
         @Override
-        public boolean isRdbms() {
-            return true;
-        }
-
-        @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return PG_NAME;
         }
     }
 }

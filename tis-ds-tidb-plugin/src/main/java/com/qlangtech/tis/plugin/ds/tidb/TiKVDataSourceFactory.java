@@ -110,10 +110,8 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return new DataDumpers(splitCount, dumpers);
     }
 
-    @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
+
+
 
 
     public TiDAGRequest getTiDAGRequest(List<ColumnMetaData> reflectCols, TiSession session, TiTableInfo tiTable) {

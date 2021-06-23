@@ -16,6 +16,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
@@ -46,5 +49,44 @@ public class TestDataXPostgresqlReader extends TestCase {
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
+    }
+
+    public void testTemplateGenerate() throws Exception {
+
+        PGDataSourceFactory dsFactory = new PGDataSourceFactory();
+        dsFactory.dbName = "order1";
+        dsFactory.password = "123455*^";
+        dsFactory.userName = "admin";
+        dsFactory.port = 5432;
+        dsFactory.encode = "utf8";
+        dsFactory.extraParams = "aa=bb&cc=xxx";
+        dsFactory.nodeDesc = "192.168.28.201";
+
+        DataXPostgresqlReader reader = new DataXPostgresqlReader() {
+            @Override
+            public PGDataSourceFactory getDataSourceFactory() {
+                return dsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXPostgresqlReader.class;
+            }
+        };
+        reader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
+        reader.fetchSize = 333;
+        reader.splitPk = true;
+        reader.template = DataXPostgresqlReader.getDftTemplate();
+
+        String dataXName = "dataxName";
+
+        ReaderTemplate.validateDataXReader("postgres-datax-reader-assert.json", dataXName, reader);
+
+
+        reader.fetchSize = null;
+        reader.splitPk = null;
+
+        ReaderTemplate.validateDataXReader("postgres-datax-reader-assert-without-option.json", dataXName, reader);
+
     }
 }

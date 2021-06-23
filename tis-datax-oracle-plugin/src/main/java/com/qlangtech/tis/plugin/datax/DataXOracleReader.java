@@ -57,7 +57,7 @@ public class DataXOracleReader extends BasicDataXRdbmsReader {
 
     @Override
     protected RdbmsReaderContext createDataXReaderContext(
-            String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory) {
+            String jobName, SelectedTab tab, IDataSourceDumper dumper) {
         return null;
     }
 

@@ -32,8 +32,11 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Memoizer;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,8 +47,9 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader extends DataxReader {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader {
 
+    private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
@@ -70,10 +74,14 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
             return this.selectedTabs.stream().map((tab) -> {
                 Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
                 ColumnMetaData colMeta = null;
+                if (colsMeta.size() < 1) {
+                    throw new IllegalStateException("table:" + tab.getName() + " relevant cols meta can not be null");
+                }
                 for (ISelectedTab.ColMeta col : tab.getCols()) {
                     colMeta = colsMeta.get(col.getName());
                     if (colMeta == null) {
-                        throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData'");
+                        throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData',exist Keys:["
+                                + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                     }
                     col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType()));
                 }
@@ -84,11 +92,13 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
         }
     }
 
+    protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
+
 
     @Override
     public final Iterator<IDataxReaderContext> getSubTasks() {
         Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
-        DataSourceFactory dsFactory = this.getDataSourceFactory();
+        DS dsFactory = this.getDataSourceFactory();
 
         Memoizer<String, Map<String, ColumnMetaData>> tabColsMap = getTabsMeta();
 
@@ -145,7 +155,7 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
                 IDataSourceDumper dumper = dumperIterator.next();
                 SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
 
-                RdbmsReaderContext dataxContext = createDataXReaderContext(tab.getName() + "_" + taskIndex.getAndIncrement(), tab, dumper, dsFactory);
+                RdbmsReaderContext dataxContext = createDataXReaderContext(tab.getName() + "_" + taskIndex.getAndIncrement(), tab, dumper);
 
 //                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(
 //                        tab.getName() + "_" + taskIndex.getAndIncrement(), tab.getName());
@@ -164,7 +174,7 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
 //                        return tab.containCol(col.getKey());
 //                    }).map((t) -> t.getValue()).collect(Collectors.toList());
                     // }
-                }else{
+                } else {
                     dataxContext.setCols(tab.cols);
                 }
                 return dataxContext;
@@ -173,22 +183,9 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
     }
 
     protected boolean isFilterUnexistCol() {
-        return true;
+        return false;
     }
 
-    protected abstract RdbmsReaderContext createDataXReaderContext(
-            String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory);
-
-//        MySQLDataSourceFactory myDsFactory = (MySQLDataSourceFactory) dsFactory;
-//        MySQLDataxContext mysqlContext = new MySQLDataxContext();
-//        MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(jobName, tab.getName(), mysqlContext);
-//
-//        mysqlContext.setJdbcUrl(dumper.getDbHost());
-//        mysqlContext.setUsername(myDsFactory.getUserName());
-//        mysqlContext.setPassword(myDsFactory.getPassword());
-//
-//        return dataxContext;
-//    }
 
     private Memoizer<String, Map<String, ColumnMetaData>> getTabsMeta() {
         return new Memoizer<String, Map<String, ColumnMetaData>>() {
@@ -220,7 +217,7 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
         return plugin.getTablesInDB();
     }
 
-    public <DS extends DataSourceFactory> DS getDataSourceFactory() {
+    public DS getDataSourceFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return (DS) dsStore.getPlugin();
     }
@@ -232,7 +229,8 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
     }
 
 
-    public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor implements FormFieldType.IMultiSelectValidator, SubForm.ISubFormItemValidate {
+    public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor
+            implements FormFieldType.IMultiSelectValidator, SubForm.ISubFormItemValidate {
         public BasicDataXRdbmsReaderDescriptor() {
             super();
         }
@@ -255,6 +253,21 @@ public abstract class BasicDataXRdbmsReader extends DataxReader {
 
             if (formData.size() > maxReaderTabCount) {
                 msgHandler.addErrorMessage(context, "导入表不能超过" + maxReaderTabCount + "张");
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            try {
+                ParseDescribable<DataxReader> readerDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+                BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) readerDescribable.instance;
+                rdbmsReader.getTablesInDB();
+            } catch (Throwable e) {
+                msgHandler.addErrorMessage(context, "数据源连接不正常," + e.getMessage());
                 return false;
             }
 

@@ -17,15 +17,19 @@ package com.qlangtech.tis.plugin.common;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
 import java.io.IOException;
+import java.sql.Types;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,6 +37,7 @@ import java.util.Optional;
  * @create: 2021-05-23 17:06
  **/
 public class ReaderTemplate {
+
     public static void validateDataXReader(String assertFileName, String dataXName, DataxReader dataxReader) throws IOException {
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
 
@@ -89,4 +94,5 @@ public class ReaderTemplate {
         JSONObject reader = JSON.parseObject(readerCfg);
         Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
     }
+
 }

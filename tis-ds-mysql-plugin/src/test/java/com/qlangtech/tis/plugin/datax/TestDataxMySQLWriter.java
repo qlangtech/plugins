@@ -38,6 +38,8 @@ import com.qlangtech.tis.util.IPluginContext;
 import org.easymock.EasyMock;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -66,7 +68,12 @@ public class TestDataxMySQLWriter extends BasicTest {
         IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
-        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory(){};
+        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory(){
+            @Override
+            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+                return null;
+            }
+        };
 
         mysqlDs.dbName = dbWriterName;
         mysqlDs.port = 3306;
@@ -123,7 +130,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
         assertNotNull(subTaskCtx);
 
-        MySQLDataxContext mySQLDataxContext = (MySQLDataxContext) subTaskCtx;
+        RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;
         assertEquals("\"`col1`\",\"`col2`\",\"`col3`\"", mySQLDataxContext.getColsQuotes());
         assertEquals(mysqlJdbcUrl, mySQLDataxContext.getJdbcUrl());
         assertEquals("123456", mySQLDataxContext.getPassword());

@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import org.apache.commons.lang.StringUtils;
 
@@ -28,16 +29,13 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 15:18
  **/
-public class CassandraReaderContext extends RdbmsReaderContext {
-    private final DataXCassandraReader reader;
-    private final CassandraDatasourceFactory dsFactory;
+public class CassandraReaderContext extends RdbmsReaderContext<DataXCassandraReader, CassandraDatasourceFactory> {
+
     private final SelectedTab tab;
 
-    public CassandraReaderContext(String jobName, SelectedTab tab, DataXCassandraReader reader) {
-        super(jobName, tab.getName());
+    public CassandraReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper, DataXCassandraReader reader) {
+        super(jobName, tab.getName(), dumper, reader);
         this.tab = tab;
-        this.reader = reader;
-        this.dsFactory = reader.getDataSourceFactory();
     }
 
     public boolean isContainAllowFiltering() {

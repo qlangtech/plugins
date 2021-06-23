@@ -15,11 +15,8 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
-import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.ds.*;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
@@ -79,15 +76,15 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName(Driver.class.getName());
         ds.setUrl(jdbcUrls.stream().findFirst().get());
-        ds.setUsername(dbConfig.getUserName());
-        ds.setPassword(dbConfig.getPassword());
+        ds.setUsername(this.userName);
+        ds.setPassword(this.password);
         ds.setValidationQuery("select 1");
         return new FacadeDataSource(dbConfig, ds);
     }
 
     @Override
-    protected String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
+    public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
+        String jdbcUrl = "jdbc:mysql://" + ip + ":" + this.port + "/" + dbName + "?useUnicode=yes";
         if (StringUtils.isNotEmpty(this.encode)) {
             jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
         }
@@ -121,30 +118,6 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         return new DataDumpers(length, dsIt);
     }
 
-    protected List<String> getJdbcUrls() {
-        final DBConfig dbLinkMetaData = this.getDbConfig();
-        List<String> jdbcUrls = Lists.newArrayList();
-        final DBRegister dbRegister
-                = new DBRegister(dbLinkMetaData.getName(), dbLinkMetaData) {
-            @Override
-            protected void createDefinition(String dbDefinitionId, String driverClassName, String jdbcUrl, String userName, String password) {
-                jdbcUrls.add(jdbcUrl);
-//                BasicDataSource ds = new BasicDataSource();
-//                ds.setDriverClassName(driverClassName);
-//                ds.setUrl(jdbcUrl);
-//                ds.setUsername(userName);
-//                ds.setPassword(password);
-//                ds.setValidationQuery("select 1");
-//                synchronized (dbNames) {
-//                    dsMap.put(dbDefinitionId, ds);
-//                    dbCount.incrementAndGet();
-//                    dbNames.append(dbDefinitionId).append(";");
-//                }
-            }
-        };
-        dbRegister.visitAll();
-        return jdbcUrls;
-    }
 
     public String getUserName() {
         return this.userName;
@@ -187,7 +160,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         public int getRowSize() {
             int[] count = new int[1];
 
-            validateConnection(jdbcUrl, userName, password, (conn) -> {
+            validateConnection(jdbcUrl, (conn) -> {
                 Statement statement = null;
                 ResultSet result = null;
                 try {
@@ -247,7 +220,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 throw new IllegalStateException("executeSql can not be null");
             }
             try {
-                this.connection = getConnection(jdbcUrl, userName, password);
+                this.connection = getConnection(jdbcUrl);
                 this.statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);
                 ResultSetMetaData metaData = resultSet.getMetaData();

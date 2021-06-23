@@ -15,7 +15,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
 import java.util.Optional;
@@ -33,5 +37,30 @@ public class TestDataXPostgresqlWriter extends TestCase {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXPostgresqlWriter.class);
         assertTrue(extraProps.isPresent());
+    }
+
+    public void testDescriptorsJSONGenerate() {
+        DataXPostgresqlWriter esWriter = new DataXPostgresqlWriter();
+        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
+
+        JsonUtil.assertJSONEqual(DataXPostgresqlReader.class
+                , "postgres-datax-writer-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    assertEquals(m, e, a);
+                });
+    }
+
+    public void testTemplateGenerate() throws Exception {
+
+        DataXPostgresqlWriter dataXWriter = new DataXPostgresqlWriter() {
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXPostgresqlWriter.class;
+            }
+        };
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+
+        WriterTemplate.valiateCfgGenerate("postgres-datax-writer-assert.json", dataXWriter, tableMap);
     }
 }

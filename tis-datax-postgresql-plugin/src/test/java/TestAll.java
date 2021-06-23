@@ -14,6 +14,7 @@
  */
 import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlReader;
 import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlWriter;
+import com.qlangtech.tis.plugin.ds.postgresql.TestPGDataSourceFactory;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.Test;
@@ -26,6 +27,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXPostgresqlReader.class);
         suite.addTestSuite(TestDataXPostgresqlWriter.class);
+        suite.addTestSuite(TestPGDataSourceFactory.class);
         return suite;
     }
 }

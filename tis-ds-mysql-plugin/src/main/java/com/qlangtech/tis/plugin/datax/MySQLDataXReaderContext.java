@@ -22,29 +22,30 @@ import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
  * @create: 2021-04-20 17:42
  **/
 public class MySQLDataXReaderContext extends RdbmsReaderContext {
+    private final RdbmsDataxContext rdbmsContext;
 
-    private final MySQLDataxContext mysqlContext;
-
-    public MySQLDataXReaderContext(String name, String sourceTableName, MySQLDataxContext mysqlContext) {
-        super(name, sourceTableName);
-        this.mysqlContext = mysqlContext;
+    public MySQLDataXReaderContext(String name, String sourceTableName, RdbmsDataxContext mysqlContext) {
+        super(name, sourceTableName, null ,null);
+        this.rdbmsContext = mysqlContext;
     }
 
     public String getTabName() {
-        return mysqlContext.getTabName();
+        return rdbmsContext.getTabName();
     }
 
     public String getPassword() {
-        return mysqlContext.getPassword();
+        return rdbmsContext.getPassword();
     }
 
     public String getUsername() {
-        return mysqlContext.getUsername();
+        return rdbmsContext.getUsername();
     }
 
     public String getJdbcUrl() {
-        return mysqlContext.getJdbcUrl();
+        return rdbmsContext.getJdbcUrl();
     }
+
+
 //    public boolean isContainWhere() {
 //        return StringUtils.isNotBlank(this.where);
 //    }

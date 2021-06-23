@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
@@ -35,9 +36,8 @@ import java.util.Optional;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataxMySQLWriter extends DataxWriter {
+public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     private static final String DATAX_NAME = "MySQL";
-    public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
@@ -45,30 +45,25 @@ public class DataxMySQLWriter extends DataxWriter {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
 
-    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {})
-    public String preSql;
+//    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {})
+//    public String preSql;
+//
+//    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
+//    public String postSql;
+//
+//    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
+//    public String session;
+//
+//    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+//    public Integer batchSize;
 
-    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
-    public String postSql;
-
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
-    public String session;
-
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-    public Integer batchSize;
-
-    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String template;
+//    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+//    public String template;
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
     }
 
-
-    @Override
-    public String getTemplate() {
-        return this.template;
-    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
@@ -107,7 +102,7 @@ public class DataxMySQLWriter extends DataxWriter {
     }
 
 
-    public static class MySQLWriterContext extends MySQLDataxContext implements IDataxContext {
+    public static class MySQLWriterContext extends RdbmsDataxContext implements IDataxContext {
 
         private String dbName;
         private String writeMode;
@@ -153,10 +148,10 @@ public class DataxMySQLWriter extends DataxWriter {
         }
     }
 
-    private DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return dsStore.getPlugin();
-    }
+//    private DataSourceFactory getDataSourceFactory() {
+//        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+//        return dsStore.getPlugin();
+//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {

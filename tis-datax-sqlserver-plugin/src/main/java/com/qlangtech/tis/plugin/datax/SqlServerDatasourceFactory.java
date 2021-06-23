@@ -32,8 +32,8 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
 
     @Override
-    protected String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
+    public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
+        String jdbcUrl = "jdbc:mysql://" + ip + ":" + this.port + "/" + dbName + "?useUnicode=yes";
         if (StringUtils.isNotEmpty(this.encode)) {
             jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
         }
@@ -44,7 +44,7 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+    public Connection getConnection(String jdbcUrl) throws SQLException {
         return null;
     }
 

@@ -21,7 +21,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
  * @author: baisui 百岁
  * @create: 2021-04-08 11:06
  **/
-public class MySQLDataxContext {
+public class RdbmsDataxContext {
     public IDataxProcessor.TabCols cols;
     String tabName;
     String password;

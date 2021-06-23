@@ -22,7 +22,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 
@@ -32,7 +31,7 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataxMySQLReader extends BasicDataXRdbmsReader {
+public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFactory> {
     private static final String DATAX_NAME = "MySQL";
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
@@ -44,17 +43,13 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader {
     }
 
     protected RdbmsReaderContext createDataXReaderContext(
-            String jobName, SelectedTab tab, IDataSourceDumper dumper, DataSourceFactory dsFactory) {
-
-        MySQLDataSourceFactory myDsFactory = (MySQLDataSourceFactory) dsFactory;
-        MySQLDataxContext mysqlContext = new MySQLDataxContext();
-        MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(jobName, tab.getName(), mysqlContext);
-
-        mysqlContext.setJdbcUrl(dumper.getDbHost());
-        mysqlContext.setUsername(myDsFactory.getUserName());
-        mysqlContext.setPassword(myDsFactory.getPassword());
-
-        return dataxContext;
+            String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+        MySQLDataSourceFactory dsFactory = this.getDataSourceFactory();
+        RdbmsDataxContext rdbms = new RdbmsDataxContext();
+        rdbms.setJdbcUrl(dumper.getDbHost());
+        rdbms.setUsername(dsFactory.getUserName());
+        rdbms.setPassword(dsFactory.getPassword());
+        return new MySQLDataXReaderContext(jobName, tab.getName(), rdbms);
     }
 
     @TISExtension()

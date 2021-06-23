@@ -1,0 +1,101 @@
+{
+  "com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter": {
+    "attrs": [
+      {
+        "describable": false,
+        "key": "jdbcUrl",
+        "ord": 0,
+        "pk": false,
+        "required": true,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "key": "username",
+        "ord": 1,
+        "pk": false,
+        "required": true,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "key": "password",
+        "ord": 2,
+        "pk": false,
+        "required": true,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "key": "table",
+        "ord": 3,
+        "pk": false,
+        "required": true,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "key": "column",
+        "ord": 4,
+        "pk": false,
+        "required": true,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "eprops": {
+          "help": "描述：写入数据到目的表前，会先执行这里的标准语句。如果 Sql 中有你需要操作到的表名称，请使用 "
+        },
+        "key": "preSql",
+        "ord": 5,
+        "pk": false,
+        "required": false,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "eprops": {
+          "help": "描述：写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ） "
+        },
+        "key": "postSql",
+        "ord": 6,
+        "pk": false,
+        "required": false,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "eprops": {
+          "help": "描述：一次性批量提交的记录数大小，该值可以极大减少DataX与PostgreSql的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"
+        },
+        "key": "batchSize",
+        "ord": 7,
+        "pk": false,
+        "required": false,
+        "type": 1
+      },
+      {
+        "describable": false,
+        "eprops": {
+          "dftVal": "{\n    \"name\": \"postgresqlwriter\",\n    \"parameter\": {\n        \"username\": \"\",\n        \"password\": \"\",\n        \"column\": [],\n        \"preSql\": [],\n        \"connection\": [\n            {\n                \"jdbcUrl\": \"\",\n                \"table\": []\n            }\n        ],\n        \"preSql\": [],\n        \"postSql\": []\n    }\n}",
+          "help": "无特殊情况请不要修改模版内容，避免不必要的错误",
+          "label": "配置模版",
+          "rows": 18
+        },
+        "key": "template",
+        "ord": 8,
+        "pk": false,
+        "required": true,
+        "type": 2
+      }
+    ],
+    "displayName": "PostgreSQL",
+    "extendPoint": "com.qlangtech.tis.datax.impl.DataxWriter",
+    "extractProps": {
+      "rdbms": true,
+      "supportMultiTable": true
+    },
+    "impl": "com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter",
+    "veriflable": false
+  }
+}

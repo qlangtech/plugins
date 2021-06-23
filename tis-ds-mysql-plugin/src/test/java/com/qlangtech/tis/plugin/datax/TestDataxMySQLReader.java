@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -36,7 +37,6 @@ import org.easymock.EasyMock;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -51,21 +51,6 @@ public class TestDataxMySQLReader extends BasicTest {
     public static String dbName = "baisuitestdb";
     String userName = "root";
     String password = "123456";
-    static final String tabNameOrderDetail = "orderdetail";
-    List<ColumnMetaData> tabColsMetaOrderDetail
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
-            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
-            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
-            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
-    );
-
-    static final String tabNameTotalpayinfo = "totalpayinfo";
-    List<ColumnMetaData> tabColsMetaTotalpayinfo
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
-            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
-            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
-            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
-    );
 
     public void testDescriptorsJSONGenerate() {
         DataxMySQLReader esWriter = new DataxMySQLReader();
@@ -108,10 +93,10 @@ public class TestDataxMySQLReader extends BasicTest {
             @Override
             public List<ColumnMetaData> getTableMetadata(String table) {
                 switch (table) {
-                    case tabNameOrderDetail:
-                        return tabColsMetaOrderDetail;
-                    case tabNameTotalpayinfo:
-                        return tabColsMetaTotalpayinfo;
+                    case TestSelectedTabs.tabNameOrderDetail:
+                        return TestSelectedTabs.tabColsMetaOrderDetail;
+                    case TestSelectedTabs.tabNameTotalpayinfo:
+                        return TestSelectedTabs.tabColsMetaTotalpayinfo;
                     default:
                         throw new IllegalArgumentException("table:" + table);
                 }
@@ -136,23 +121,12 @@ public class TestDataxMySQLReader extends BasicTest {
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
             @Override
-            public DataSourceFactory getDataSourceFactory() {
+            public MySQLDataSourceFactory getDataSourceFactory() {
                 return mysqlDs;
             }
         };
 
-        List<SelectedTab> selectedTabs = Lists.newArrayList();
-        SelectedTab selectedTab = new SelectedTab();
-        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3"));
-        selectedTab.setWhere("delete = 0");
-        selectedTab.name = tabNameOrderDetail;
-        selectedTabs.add(selectedTab);
-
-        selectedTab = new SelectedTab();
-        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3", "col4"));
-        selectedTab.setWhere("delete = 0");
-        selectedTab.name = tabNameTotalpayinfo;
-        selectedTabs.add(selectedTab);
+        List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs();
 
         mySQLReader.setSelectedTabs(selectedTabs);
         List<SelectedTab> selectedTabs2 = mySQLReader.getSelectedTabs();
@@ -220,14 +194,14 @@ public class TestDataxMySQLReader extends BasicTest {
         MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
         EasyMock.expect(mysqlDataSource.getPassword()).andReturn(password).anyTimes();
         EasyMock.expect(mysqlDataSource.getUserName()).andReturn(userName).anyTimes();
-        IDataSourceDumper dataDumper = EasyMock.createMock(tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
+        IDataSourceDumper dataDumper = EasyMock.createMock(TestSelectedTabs.tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
         EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).times(2);
 // int index, String key, int type, boolean pk
         TISTable targetTable = new TISTable();
-        targetTable.setTableName(tabNameOrderDetail);
+        targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getTableMetadata(tabNameOrderDetail))
-                .andReturn(tabColsMetaOrderDetail).anyTimes();
+        EasyMock.expect(mysqlDataSource.getTableMetadata(TestSelectedTabs.tabNameOrderDetail))
+                .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
 
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
@@ -248,7 +222,7 @@ public class TestDataxMySQLReader extends BasicTest {
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
             @Override
-            public DataSourceFactory getDataSourceFactory() {
+            public MySQLDataSourceFactory getDataSourceFactory() {
                 return mysqlDataSource;
             }
 
@@ -263,7 +237,7 @@ public class TestDataxMySQLReader extends BasicTest {
         SelectedTab selectedTab = new SelectedTab();
         selectedTab.setCols(Lists.newArrayList("col2", "col1", "col3"));
         selectedTab.setWhere("delete = 0");
-        selectedTab.name = tabNameOrderDetail;
+        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
         mySQLReader.setSelectedTabs(Collections.singletonList(selectedTab));
         //校验证列和 where条件都设置的情况
         // valiateReaderCfgGenerate("mysql-datax-reader-assert.json", processor, mySQLReader);
@@ -272,7 +246,7 @@ public class TestDataxMySQLReader extends BasicTest {
 
         selectedTab = new SelectedTab();
         selectedTab.setCols(Collections.emptyList());
-        selectedTab.name = tabNameOrderDetail;
+        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
         mySQLReader.setSelectedTabs(Collections.singletonList(selectedTab));
 //        valiateReaderCfgGenerate("mysql-datax-reader-asser-without-option-val.json"
 //                , processor, mySQLReader);

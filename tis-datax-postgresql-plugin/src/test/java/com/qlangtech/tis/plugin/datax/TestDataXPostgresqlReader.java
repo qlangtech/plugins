@@ -53,14 +53,7 @@ public class TestDataXPostgresqlReader extends TestCase {
 
     public void testTemplateGenerate() throws Exception {
 
-        PGDataSourceFactory dsFactory = new PGDataSourceFactory();
-        dsFactory.dbName = "order1";
-        dsFactory.password = "123455*^";
-        dsFactory.userName = "admin";
-        dsFactory.port = 5432;
-        dsFactory.encode = "utf8";
-        dsFactory.extraParams = "aa=bb&cc=xxx";
-        dsFactory.nodeDesc = "192.168.28.201";
+        PGDataSourceFactory dsFactory = createDataSource();
 
         DataXPostgresqlReader reader = new DataXPostgresqlReader() {
             @Override
@@ -88,5 +81,17 @@ public class TestDataXPostgresqlReader extends TestCase {
 
         ReaderTemplate.validateDataXReader("postgres-datax-reader-assert-without-option.json", dataXName, reader);
 
+    }
+
+    public static PGDataSourceFactory createDataSource() {
+        PGDataSourceFactory dsFactory = new PGDataSourceFactory();
+        dsFactory.dbName = "order1";
+        dsFactory.password = "123455*^";
+        dsFactory.userName = "admin";
+        dsFactory.port = 5432;
+        dsFactory.encode = "utf8";
+        dsFactory.extraParams = "aa=bb&cc=xxx";
+        dsFactory.nodeDesc = "192.168.28.201";
+        return dsFactory;
     }
 }

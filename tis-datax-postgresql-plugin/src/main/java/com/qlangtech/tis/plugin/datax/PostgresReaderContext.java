@@ -25,6 +25,8 @@ import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
  **/
 public class PostgresReaderContext extends RdbmsReaderContext<DataXPostgresqlReader, PGDataSourceFactory> {
 
+    public static final String colEscapeChar = "\\\"";
+
     public PostgresReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXPostgresqlReader reader) {
         super(jobName, sourceTableName, dumper, reader);
     }
@@ -38,22 +40,22 @@ public class PostgresReaderContext extends RdbmsReaderContext<DataXPostgresqlRea
     }
 
     public boolean isContainSplitPk() {
-        return this.reader.splitPk != null;
+        return this.plugin.splitPk != null;
     }
 
     public boolean isSplitPk() {
-        return this.reader.splitPk;
+        return this.plugin.splitPk;
     }
 
     public boolean isContainFetchSize() {
-        return this.reader.fetchSize != null;
+        return this.plugin.fetchSize != null;
     }
 
     public int getFetchSize() {
-        return this.reader.fetchSize;
+        return this.plugin.fetchSize;
     }
 
     protected String colEscapeChar() {
-        return "\\\"";
+        return colEscapeChar;
     }
 }

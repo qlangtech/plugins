@@ -12,11 +12,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 import com.qlangtech.tis.plugin.datax.TestDataXOracleReader;
-import com.qlangtech.tis.plugin.datax.TestDataXOracleWriter;
+import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.framework.Test;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-09 09:22
@@ -25,7 +26,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXOracleReader.class);
-        suite.addTestSuite(TestDataXOracleWriter.class);
+        //suite.addTestSuite(TestDataXOracleWriter.class);
         return suite;
     }
 }

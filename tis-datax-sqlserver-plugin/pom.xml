@@ -38,10 +38,22 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis.plugin</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-common</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>9.2.1.jre8</version>
+        </dependency>
+
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>sqlserverreader</artifactId>
@@ -58,11 +70,11 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>sqljdbc4</artifactId>
-            <version>4.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.microsoft.sqlserver</groupId>-->
+<!--            <artifactId>sqljdbc4</artifactId>-->
+<!--            <version>4.0</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.alibaba.datax</groupId>
@@ -84,6 +96,7 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
+
 
     </dependencies>
 

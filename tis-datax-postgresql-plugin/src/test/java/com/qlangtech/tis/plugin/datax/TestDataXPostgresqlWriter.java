@@ -18,6 +18,8 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
@@ -52,15 +54,35 @@ public class TestDataXPostgresqlWriter extends TestCase {
 
     public void testTemplateGenerate() throws Exception {
 
+        PGDataSourceFactory ds = TestDataXPostgresqlReader.createDataSource();
         DataXPostgresqlWriter dataXWriter = new DataXPostgresqlWriter() {
+            @Override
+            public PGDataSourceFactory getDataSourceFactory() {
+                return ds;
+            }
 
             @Override
             public Class<?> getOwnerClass() {
                 return DataXPostgresqlWriter.class;
             }
         };
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
 
-        WriterTemplate.valiateCfgGenerate("postgres-datax-writer-assert.json", dataXWriter, tableMap);
+        dataXWriter.template = DataXPostgresqlWriter.getDftTemplate();
+
+        dataXWriter.dbName = "order2";
+        dataXWriter.postSql = "drop table @table";
+        dataXWriter.preSql = "drop table @table";
+        dataXWriter.batchSize = 967;
+        //dataXWriter.session =""
+
+        Optional<IDataxProcessor.TableMap> tableMapper = TestSelectedTabs.createTableMapper();
+
+        WriterTemplate.valiateCfgGenerate("postgres-datax-writer-assert.json", dataXWriter, tableMapper.get());
+
+        dataXWriter.postSql = null;
+        dataXWriter.preSql = null;
+        dataXWriter.batchSize = null;
+
+        WriterTemplate.valiateCfgGenerate("postgres-datax-writer-assert-without-option.json", dataXWriter, tableMapper.get());
     }
 }

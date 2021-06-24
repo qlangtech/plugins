@@ -1,14 +1,25 @@
 {
     "name": "oraclereader",
     "parameter": {
-        "username": "",
-        "password": "",
-        "column": [],
-        "connection": [
-            {
-                "table": [],
-                "jdbcUrl": []
-            }
-        ]
-    }
+        #if($reader.containPassword)
+        "password": "${reader.password}",
+        #end
+        "username": "${reader.userName}",
+        #if($reader.containSplitPk)
+          "splitPk": ${reader.splitPk},
+        #end
+        #if($reader.containFetchSize)
+            "fetchSize": ${reader.fetchSize},
+        #end
+    "connection": [
+    {
+        "jdbcUrl": [
+        "${reader.jdbcUrl}"
+    ],
+    "querySql": [
+        "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
+    ]
+   }
+ ]
+}
 }

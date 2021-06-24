@@ -15,29 +15,21 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 
 import java.util.Optional;
 
 /**
- * @see com.alibaba.datax.plugin.writer.postgresqlwriter.PostgresqlWriter
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.writer.postgresqlwriter.PostgresqlWriter
  **/
-public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter {
-
+public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFactory> {
 
 
 //    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -61,29 +53,22 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter {
 //    public String template;
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class ,"DataXPostgresqlWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");
     }
 
-    public DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return dsStore.getPlugin();
-    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
+        PostgreWriterContext writerContext = new PostgreWriterContext(this, tableMap.get());
+
+        return writerContext;
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor {
         public DefaultDescriptor() {
             super();
-        }
-
-        @Override
-        public boolean isRdbms() {
-            return true;
         }
 
         @Override

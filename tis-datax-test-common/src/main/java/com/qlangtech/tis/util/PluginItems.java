@@ -35,6 +35,8 @@ public class PluginItems {
     public static final String DB_CASSANDRA_NAME = "cassandraDB";
 
     public static final String DB_POSTGRE_SQL = "PostgreSQLDB";
+    public static final String DB_SQL_Server = "SqlServerDB";
+    public static final String DB_SQL_ORACLE = "OracleDB";
 
 
     public static List<Option> getExistDbs(String... extendClass) {
@@ -82,6 +84,20 @@ public class PluginItems {
         for (String sourceType : extendClass) {
             if ("PostgreSQL".equals(sourceType)) {
                 return Collections.singletonList(new Option(DB_POSTGRE_SQL, DB_POSTGRE_SQL));
+                //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
+            }
+        }
+
+        for (String sourceType : extendClass) {
+            if ("SqlServer".equals(sourceType)) {
+                return Collections.singletonList(new Option(DB_SQL_Server, DB_SQL_Server));
+                //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
+            }
+        }
+
+        for (String sourceType : extendClass) {
+            if ("Oracle".equals(sourceType)) {
+                return Collections.singletonList(new Option(DB_SQL_ORACLE, DB_SQL_ORACLE));
                 //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
             }
         }

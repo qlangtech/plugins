@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Optional;
 
 /**
+ * @see com.alibaba.datax.plugin.writer.mysqlwriter.MysqlWriter
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
@@ -154,14 +155,9 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor {
         public DefaultDescriptor() {
             super();
-        }
-
-        @Override
-        public boolean isRdbms() {
-            return true;
         }
 
         @Override

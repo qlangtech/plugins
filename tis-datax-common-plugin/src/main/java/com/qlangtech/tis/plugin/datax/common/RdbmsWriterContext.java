@@ -16,18 +16,80 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-23 12:44
  **/
-public class RdbmsWriterContext<READER extends BasicDataXRdbmsReader>
-        extends BasicRdbmsContext<READER, BasicDataSourceFactory> implements IDataxContext {
+public abstract class RdbmsWriterContext<WRITER extends BasicDataXRdbmsWriter, DS extends BasicDataSourceFactory>
+        extends BasicRdbmsContext<WRITER, DS> implements IDataxContext {
+    private final String tableName;
 
-    public RdbmsWriterContext(READER reader, BasicDataSourceFactory dsFactory) {
-        super(reader, dsFactory);
+    public RdbmsWriterContext(WRITER writer, IDataxProcessor.TableMap tabMapper) {
+        super(writer, (DS) writer.getDataSourceFactory());
+        this.tableName = tabMapper.getTo();
+        this.setCols(tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+    }
+
+    public String getTableName() {
+        return this.tableName;
+    }
+
+    public boolean isContainPreSql() {
+        return StringUtils.isNotBlank(this.plugin.preSql);
+    }
+
+    public boolean isContainPostSql() {
+        return StringUtils.isNotBlank(this.plugin.postSql);
+    }
+
+    public String getPreSql() {
+        return this.plugin.preSql;
+    }
+
+    public String getPostSql() {
+        return this.plugin.postSql;
+    }
+
+    public boolean isContainSession() {
+        return StringUtils.isNotEmpty(this.plugin.session);
+    }
+
+    public String getSession() {
+        return this.plugin.session;
+    }
+
+    public boolean isContainBatchSize() {
+        return this.plugin.batchSize != null;
+    }
+
+    public int getBatchSize() {
+        return this.plugin.batchSize;
+    }
+
+
+    public String getUserName() {
+        return this.dsFactory.getUserName();
+    }
+
+    public String getPassword() {
+        return this.dsFactory.getPassword();
+    }
+
+    public String getJdbcUrl() {
+        List<String> jdbcUrls = this.dsFactory.getJdbcUrls();
+        Optional<String> firstURL = jdbcUrls.stream().findFirst();
+        if (!firstURL.isPresent()) {
+            throw new IllegalStateException("can not find jdbc url");
+        }
+        return firstURL.get();
     }
 
 

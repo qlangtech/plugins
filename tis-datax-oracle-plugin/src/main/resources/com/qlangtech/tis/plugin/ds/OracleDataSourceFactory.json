@@ -1,0 +1,18 @@
+{
+  "dbName": {
+    "label": "SID",
+    "dftVal": "xe"
+  },
+  "encode": {
+    "disable": true
+  },
+  "extraParams": {
+    "disable": true
+  },
+  "userName": {
+    "dftVal": "system"
+  },
+  "nodeDesc": {
+    "label": "服务节点"
+  }
+}

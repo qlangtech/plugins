@@ -14,6 +14,7 @@
  */
 import com.qlangtech.tis.plugin.datax.TestDataXSqlserverReader;
 import com.qlangtech.tis.plugin.datax.TestDataXSqlserverWriter;
+import com.qlangtech.tis.plugin.ds.sqlserver.TestSqlServerDatasourceFactory;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.Test;
@@ -26,6 +27,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXSqlserverReader.class);
         suite.addTestSuite(TestDataXSqlserverWriter.class);
+        suite.addTestSuite(TestSqlServerDatasourceFactory.class);
         return suite;
     }
 }

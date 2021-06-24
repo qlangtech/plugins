@@ -39,19 +39,19 @@ public class CassandraReaderContext extends RdbmsReaderContext<DataXCassandraRea
     }
 
     public boolean isContainAllowFiltering() {
-        return this.reader.allowFiltering != null;
+        return this.plugin.allowFiltering != null;
     }
 
     public boolean isAllowFiltering() {
-        return this.reader.allowFiltering;
+        return this.plugin.allowFiltering;
     }
 
     public boolean isContainConsistancyLevel() {
-        return StringUtils.isNotEmpty(this.reader.consistancyLevel);
+        return StringUtils.isNotEmpty(this.plugin.consistancyLevel);
     }
 
     public String getConsistancyLevel() {
-        return this.reader.consistancyLevel;
+        return this.plugin.consistancyLevel;
     }
 
     public String getTable() {

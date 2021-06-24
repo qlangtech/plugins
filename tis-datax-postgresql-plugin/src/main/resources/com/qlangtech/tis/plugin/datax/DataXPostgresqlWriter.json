@@ -13,5 +13,8 @@
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter.getDftTemplate()"
+  },
+  "session": {
+    "disable": true
   }
 }

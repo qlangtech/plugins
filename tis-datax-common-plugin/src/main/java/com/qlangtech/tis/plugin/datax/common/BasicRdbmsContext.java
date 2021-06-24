@@ -17,16 +17,42 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-23 12:36
  **/
-public abstract class BasicRdbmsContext<READER extends BasicDataXRdbmsReader, DS extends DataSourceFactory> {
-    protected final READER reader;
+public abstract class BasicRdbmsContext<PLUGIN, DS extends DataSourceFactory> {
+    protected final PLUGIN plugin;
     protected final DS dsFactory;
 
-    public BasicRdbmsContext(READER reader, DS dsFactory) {
-        this.reader = reader;
+    private List<String> cols = new ArrayList<>();
+
+    public BasicRdbmsContext(PLUGIN plugin, DS dsFactory) {
+        this.plugin = plugin;
         this.dsFactory = dsFactory;
+    }
+
+    public void setCols(List<String> cols) {
+        this.cols = cols;
+    }
+
+    public String getColsQuotes() {
+        return getColumnWithLink("\"" + colEscapeChar(), colEscapeChar() + "\"");
+    }
+
+    public String getCols() {
+        return getColumnWithLink(String.valueOf(colEscapeChar()), String.valueOf(colEscapeChar()));
+    }
+
+    protected String colEscapeChar() {
+        return "`";
+    }
+
+    private String getColumnWithLink(String left, String right) {
+        return this.cols.stream().map(r -> (left + r + right)).collect(Collectors.joining(","));
     }
 }

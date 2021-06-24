@@ -30,12 +30,13 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
  *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.reader.mysqlreader.MysqlReader
  **/
 public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFactory> {
     private static final String DATAX_NAME = "MySQL";
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-    public boolean splitPk;
+    public Boolean splitPk;
 
 
     public static String getDftTemplate() {

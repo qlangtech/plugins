@@ -16,15 +16,50 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
+
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 14:59
  **/
-public class SqlServerReaderContext extends RdbmsReaderContext<DataXSqlserverReader, DataSourceFactory> {
+public class SqlServerReaderContext extends RdbmsReaderContext<DataXSqlserverReader, SqlServerDatasourceFactory> {
     public SqlServerReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXSqlserverReader reader) {
         super(jobName, sourceTableName, dumper, reader);
+    }
+
+    @Override
+    protected String colEscapeChar() {
+        return SqlServerWriterContext.EscapeChar;
+    }
+
+    public String getUserName() {
+        return dsFactory.getUserName();
+    }
+
+    public String getPassword() {
+        return dsFactory.getPassword();
+    }
+
+    public boolean isContainSplitPk() {
+        return this.plugin.splitPk != null;
+    }
+
+    public boolean isSplitPk() {
+        return this.plugin.splitPk;
+    }
+
+    public boolean isContainFetchSize() {
+        return this.plugin.fetchSize != null;
+    }
+
+    public int getFetchSize() {
+        return this.plugin.fetchSize;
+    }
+
+    public static void main(String[] args) {
+
+
     }
 }

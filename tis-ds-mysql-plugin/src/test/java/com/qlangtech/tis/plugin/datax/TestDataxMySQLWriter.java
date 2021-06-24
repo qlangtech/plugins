@@ -16,12 +16,10 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
@@ -29,6 +27,7 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -42,7 +41,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -68,9 +66,9 @@ public class TestDataxMySQLWriter extends BasicTest {
         IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
-        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory(){
+        MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
             @Override
-            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+            public Connection getConnection(String jdbcUrl) throws SQLException {
                 return null;
             }
         };
@@ -118,15 +116,15 @@ public class TestDataxMySQLWriter extends BasicTest {
     }
 
     private void validateConfigGenerate(String assertFileName, DataxMySQLWriter mySQLWriter) throws IOException {
-        IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
-        tm.setFrom("orderinfo");
-        tm.setTo("orderinfo_new");
-        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-            ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
-            meta.setName(c);
-            return meta;
-        }).collect(Collectors.toList()));
-        Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);
+//        IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
+//        tm.setFrom("orderinfo");
+//        tm.setTo("orderinfo_new");
+//        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
+//            ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
+//            meta.setName(c);
+//            return meta;
+//        }).collect(Collectors.toList()));
+        Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
         IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
         assertNotNull(subTaskCtx);
 
@@ -152,7 +150,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
         };
 
-        String cfgResult = dataProcessor.generateDataxConfig(null, Optional.of(tm));
+        String cfgResult = dataProcessor.generateDataxConfig(null, tableMap);
 
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             assertEquals(m, e, a);

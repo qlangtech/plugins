@@ -16,11 +16,15 @@
 package com.qlangtech.tis.plugin.datax.test;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 测试用的mock对象
@@ -64,5 +68,18 @@ public class TestSelectedTabs {
             selectedTabs.add(selectedTab);
         }
         return selectedTabs;
+    }
+
+    public static Optional<IDataxProcessor.TableMap> createTableMapper() {
+        IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
+        tm.setFrom("orderinfo");
+        tm.setTo("orderinfo_new");
+        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
+            ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
+            meta.setName(c);
+            return meta;
+        }).collect(Collectors.toList()));
+        Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);
+        return tableMap;
     }
 }

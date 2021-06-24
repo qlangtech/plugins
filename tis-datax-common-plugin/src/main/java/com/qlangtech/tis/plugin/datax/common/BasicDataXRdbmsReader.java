@@ -228,6 +228,10 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return plugin.getTableMetadata(table);
     }
 
+    @Override
+    protected Class<BasicDataXRdbmsReaderDescriptor> getExpectDescClass() {
+        return BasicDataXRdbmsReaderDescriptor.class;
+    }
 
     public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor
             implements FormFieldType.IMultiSelectValidator, SubForm.ISubFormItemValidate {
@@ -237,6 +241,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
         @Override
         public final boolean isRdbms() {
+            return true;
+        }
+
+        public boolean validateFetchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int fetchSize = Integer.parseInt(value);
+            if (fetchSize > 2048) {
+                msgHandler.addFieldError(context, fieldName, "不能大于2048,以免进程OOM");
+                return false;
+            }
             return true;
         }
 

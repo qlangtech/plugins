@@ -8,7 +8,12 @@
             "label":"数据源管理",
             "routerLink":"/offline/ds"
           },
-          "enum":[],
+          "enum":[
+            {
+              "label":"PostgreSQLDB",
+              "val":"PostgreSQLDB"
+            }
+          ],
           "label":"数据库名"
         },
         "key":"dbName",
@@ -55,7 +60,8 @@
         "eprops":{
           "help":"无特殊情况请不要修改模版内容，避免不必要的错误",
           "label":"配置模版",
-          "rows":18
+          "rows":18,
+          "dftVal":"{\n    \"name\": \"postgresqlreader\",\n    \"parameter\": {\n        \"connection\": [\n            {\n                \"jdbcUrl\": [\n                    \"${reader.jdbcUrl}\"\n                ],\n                \"querySql\": [\n                    \"SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end\"\n                ]\n            }\n        ],\n#if($reader.containSplitPk)\n        \"splitPk\": ${reader.splitPk},\n#end\n#if($reader.containFetchSize)\n        \"fetchSize\": ${reader.fetchSize},\n#end\n        \"password\": \"${reader.password}\",\n        \"username\": \"${reader.userName}\"\n    }\n}"
         },
         "key":"template",
         "ord":99,

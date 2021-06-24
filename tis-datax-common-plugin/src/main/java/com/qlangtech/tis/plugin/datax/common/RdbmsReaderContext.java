@@ -33,7 +33,7 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     private final String name;
     private final String sourceTableName;
     private String where;
-    private List<String> cols = new ArrayList<>();
+
 
     private final IDataSourceDumper dumper;
 
@@ -73,25 +73,7 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
         return this.sourceTableName;
     }
 
-    public void setCols(List<String> cols) {
-        this.cols = cols;
-    }
 
-    public String getColsQuotes() {
-        return getColumnWithLink("\"" + colEscapeChar(), colEscapeChar() + "\"");
-    }
-
-    public String getCols() {
-        return getColumnWithLink(String.valueOf(colEscapeChar()), String.valueOf(colEscapeChar()));
-    }
-
-    protected String colEscapeChar() {
-        return "`";
-    }
-
-    private String getColumnWithLink(String left, String right) {
-        return this.cols.stream().map(r -> (left + r + right)).collect(Collectors.joining(","));
-    }
 
 
 }

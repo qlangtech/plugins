@@ -3,8 +3,8 @@ create table instancedetail
     instance_id          varchar(32)    default ''     not null,
     order_id             varchar(32)    default ''     not null,
     batch_msg            varchar(255)   default ''     null ,
-    "type"                int    default 0      not null ,
-    ext                  text                          not null ,
+    "type"               int            default 0      not null ,
+    ext                  VARCHAR2(500)                          not null ,
     waitinginstance_id   varchar(32)    default ''     null,
     kind                 smallint       default 1      not null ,
     parent_id            varchar(32)    default ''     null,
@@ -31,9 +31,9 @@ create table instancedetail
     is_ratio             smallint       default 0      null,
     entity_id            varchar(32)    default ''     not null,
     is_valid             smallint       default 1      not null,
-    create_time          bigint         default 0      null,
-    op_time              bigint         default 0      null,
-    last_ver             bigint         default 0      not null,
+    create_time          number         default 0      null,
+    op_time              number         default 0      null,
+    last_ver             number         default 0      not null,
     load_time            int            default 0      not null ,
     modify_time          int            default 0      not null ,
     draw_status          int        default 0      not null,
@@ -59,5 +59,5 @@ create table instancedetail
     addition_price       decimal(18, 2) default 0.00   not null,
     has_addition         int        default 0      not null,
     seat_id              varchar(32)    default ''     null,
-    CONSTRAINT production UNIQUE(instance_id)
+    CONSTRAINT production primary key(instance_id)
 )

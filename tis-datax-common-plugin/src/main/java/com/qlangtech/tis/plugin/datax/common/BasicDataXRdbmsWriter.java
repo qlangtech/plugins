@@ -15,14 +15,17 @@
 
 package com.qlangtech.tis.plugin.datax.common;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -55,8 +58,34 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     protected DS getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        return getDs(this.dbName);
+    }
+
+    private static <DS> DS getDs(String dbName) {
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
         return (DS) dsStore.getPlugin();
+    }
+
+
+    @Override
+    protected Class<RdbmsWriterDescriptor> getExpectDescClass() {
+        return RdbmsWriterDescriptor.class;
+    }
+
+    protected static abstract class RdbmsWriterDescriptor extends BaseDataxWriterDescriptor {
+        @Override
+        public final boolean isRdbms() {
+            return true;
+        }
+
+        public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {
+            BasicDataSourceFactory ds = getDs(dbName);
+            if (ds.getJdbcUrls().size() > 1) {
+                msgHandler.addFieldError(context, fieldName, "不支持分库数据源，目前无法指定数据路由规则，请选择单库数据源");
+                return false;
+            }
+            return true;
+        }
     }
 
 }

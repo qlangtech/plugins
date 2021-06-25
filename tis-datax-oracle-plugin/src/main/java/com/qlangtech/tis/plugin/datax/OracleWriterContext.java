@@ -33,6 +33,6 @@ public class OracleWriterContext extends RdbmsWriterContext<DataXOracleWriter, O
 
     @Override
     protected String colEscapeChar() {
-        return "\\\"";
+        return StringUtils.EMPTY;
     }
 }

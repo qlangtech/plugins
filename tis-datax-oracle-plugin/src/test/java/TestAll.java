@@ -14,6 +14,7 @@
  */
 
 import com.qlangtech.tis.plugin.datax.TestDataXOracleReader;
+import com.qlangtech.tis.plugin.datax.TestDataXOracleWriter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -26,7 +27,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXOracleReader.class);
-        //suite.addTestSuite(TestDataXOracleWriter.class);
+        suite.addTestSuite(TestDataXOracleWriter.class);
         return suite;
     }
 }

@@ -2,9 +2,9 @@
   "name":"oraclewriter",
   "parameter":{
     "column":[
-      "\"col1\"",
-      "\"col2\"",
-      "\"col3\""
+      "col1",
+      "col2",
+      "col3"
     ],
     "connection":[
       {

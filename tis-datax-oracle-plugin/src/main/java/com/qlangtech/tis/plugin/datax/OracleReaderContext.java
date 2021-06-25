@@ -76,6 +76,6 @@ public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, O
 
     @Override
     protected String colEscapeChar() {
-        return "\\\"";
+        return StringUtils.EMPTY;
     }
 }

@@ -3,13 +3,9 @@
   "parameter":{
     "batchSize":1235,
     "column":[
-      "\"col1\"",
-      "\"col2\"",
-      "\"col3\""
-    ],
-    "session":[
-      "alter session set nls_date_format = 'dd.mm.yyyy hh24:mi:ss';",
-      "alter session set NLS_LANG = 'AMERICAN';"
+      "col1",
+      "col2",
+      "col3"
     ],
     "connection":[
       {
@@ -25,6 +21,10 @@
     ],
     "preSql":[
       "drop table @table"
+    ],
+    "session":[
+      "alter session set nls_date_format = 'dd.mm.yyyy hh24:mi:ss';",
+      "alter session set NLS_LANG = 'AMERICAN';"
     ],
     "username":"system"
   }

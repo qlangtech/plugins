@@ -46,7 +46,7 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
 //    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String column;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
     public Boolean splitPk;
 
     @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {})
@@ -75,22 +75,7 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
         }
 
         public boolean validateSession(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-
-            try {
-                JSONArray cfgs = JSON.parseArray(value);
-                for (int i = 0; i < cfgs.size(); i++) {
-                    Object o = cfgs.get(i);
-                    if (!(o instanceof String)) {
-                        msgHandler.addFieldError(context, fieldName, "第" + (i + 1) + "个属性必须为'String'类型");
-                        return false;
-                    }
-                }
-            } catch (Exception e) {
-                msgHandler.addFieldError(context, fieldName, "JsonArray 格式有误");
-                return false;
-            }
-
-            return true;
+            return DataXOracleReader.validateSession(msgHandler, context, fieldName, value);
         }
 
         @Override
@@ -98,5 +83,23 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
             return OracleDataSourceFactory.ORACLE;
         }
 
+    }
+
+    protected static boolean validateSession(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        try {
+            JSONArray cfgs = JSON.parseArray(value);
+            for (int i = 0; i < cfgs.size(); i++) {
+                Object o = cfgs.get(i);
+                if (!(o instanceof String)) {
+                    msgHandler.addFieldError(context, fieldName, "第" + (i + 1) + "个属性必须为'String'类型");
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            msgHandler.addFieldError(context, fieldName, "JsonArray 格式有误");
+            return false;
+        }
+
+        return true;
     }
 }

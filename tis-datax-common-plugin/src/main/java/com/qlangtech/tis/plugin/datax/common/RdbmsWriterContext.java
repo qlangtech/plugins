@@ -62,7 +62,7 @@ public abstract class RdbmsWriterContext<WRITER extends BasicDataXRdbmsWriter, D
         return StringUtils.isNotEmpty(this.plugin.session);
     }
 
-    public String getSession() {
+    public final String getSession() {
         return this.plugin.session;
     }
 

@@ -246,6 +246,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
         public boolean validateFetchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             int fetchSize = Integer.parseInt(value);
+            if (fetchSize < 1) {
+                msgHandler.addFieldError(context, fieldName, "不能小于1");
+            }
             if (fetchSize > 2048) {
                 msgHandler.addFieldError(context, fieldName, "不能大于2048,以免进程OOM");
                 return false;

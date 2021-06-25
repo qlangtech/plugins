@@ -43,22 +43,8 @@ public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxReaderDescriptor //implements FormFieldType.IMultiSelectValidator
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor //implements FormFieldType.IMultiSelectValidator
     {
-        public DefaultDescriptor() {
-            super();
-        }
-
-        @Override
-        public boolean isRdbms() {
-            return true;
-        }
-
-//        @Override
-//        public boolean validate(IFieldErrorHandler msgHandler, Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
-//            return true;
-//        }
-
         @Override
         public String getDisplayName() {
             return DATAX_NAME;

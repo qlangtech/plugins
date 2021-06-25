@@ -3,6 +3,9 @@
     "label": "SID",
     "dftVal": "xe"
   },
+  "port": {
+    "dftVal": 1521
+  },
   "encode": {
     "disable": true
   },

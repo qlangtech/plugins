@@ -34,6 +34,14 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     public static final String ORACLE = "Oracle";
 
+    static {
+        try {
+            Class.forName("oracle.jdbc.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public String identityValue() {
         return this.name;
@@ -56,6 +64,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     protected Connection getConnection(String jdbcUrl) throws SQLException {
+
         return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
     }
 

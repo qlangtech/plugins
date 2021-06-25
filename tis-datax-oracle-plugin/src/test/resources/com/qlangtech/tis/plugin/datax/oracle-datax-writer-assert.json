@@ -1,0 +1,31 @@
+{
+  "name":"oraclewriter",
+  "parameter":{
+    "batchSize":1235,
+    "column":[
+      "\"col1\"",
+      "\"col2\"",
+      "\"col3\""
+    ],
+    "session":[
+      "alter session set nls_date_format = 'dd.mm.yyyy hh24:mi:ss';",
+      "alter session set NLS_LANG = 'AMERICAN';"
+    ],
+    "connection":[
+      {
+        "jdbcUrl":"jdbc:oracle:thin:@192.168.28.201:1521:xe",
+        "table":[
+          "orderinfo_new"
+        ]
+      }
+    ],
+    "password":"oracle",
+    "postSql":[
+      "drop table @table"
+    ],
+    "preSql":[
+      "drop table @table"
+    ],
+    "username":"system"
+  }
+}

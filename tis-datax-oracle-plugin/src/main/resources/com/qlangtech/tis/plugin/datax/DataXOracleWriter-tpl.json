@@ -1,14 +1,25 @@
 {
     "name": "oraclewriter",
     "parameter": {
-        "username": "",
-        "password": "",
-        "column": [],
-        "preSql": [],
+        "username": "${writer.userName}",
+        "password": "${writer.password}",
+        "column": [${writer.colsQuotes}],
+#if($writer.containSession)
+        "session": $writer.session,
+#end
+#if($writer.containBatchSize)
+        "batchSize": $writer.batchSize,
+#end
+        #if($writer.containPreSql)
+        "preSql": ["$writer.preSql"],
+        #end
+        #if($writer.containPostSql)
+        "postSql": ["$writer.postSql"],
+        #end
         "connection": [
             {
-                "jdbcUrl": "",
-                "table": []
+                "jdbcUrl": "$writer.jdbcUrl",
+                "table": ["$writer.tableName"]
             }
         ]
     }

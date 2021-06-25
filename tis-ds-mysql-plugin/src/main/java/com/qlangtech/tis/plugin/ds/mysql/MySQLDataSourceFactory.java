@@ -501,23 +501,15 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
 
     // @TISExtension
-    public static abstract class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {
-//        @Override
-//        protected String getDataSourceName() {
-//            return DS_TYPE_MYSQL_V5;
-//        }
-
+    public static abstract class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
         @Override
         public boolean supportFacade() {
             return true;
         }
-
         @Override
         public List<String> facadeSourceTypes() {
             return Lists.newArrayList(DS_TYPE_MYSQL_V5);
         }
-
-
     }
 
 }

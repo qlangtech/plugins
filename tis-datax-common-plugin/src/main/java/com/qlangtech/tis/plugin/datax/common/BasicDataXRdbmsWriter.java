@@ -78,6 +78,20 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             return true;
         }
 
+        public boolean validateBatchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
+            int batchSize = Integer.parseInt(val);
+            if (batchSize < 1) {
+                msgHandler.addFieldError(context, fieldName, "必须大于0");
+                return false;
+            }
+            int maxVal = 1024;
+            if (batchSize > 1024) {
+                msgHandler.addFieldError(context, fieldName, "不能大于" + maxVal);
+                return false;
+            }
+            return true;
+        }
+
         public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {
             BasicDataSourceFactory ds = getDs(dbName);
             if (ds.getJdbcUrls().size() > 1) {

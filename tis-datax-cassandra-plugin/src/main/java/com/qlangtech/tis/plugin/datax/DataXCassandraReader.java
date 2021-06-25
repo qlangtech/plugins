@@ -15,7 +15,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -55,22 +54,13 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasou
     @Override
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab
             , IDataSourceDumper dumper) {
-        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab, dumper ,this);
+        CassandraReaderContext readerContext = new CassandraReaderContext(jobName, tab, dumper, this);
         return readerContext;
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends DataxReader.BaseDataxReaderDescriptor {
-        @Override
-        public boolean isRdbms() {
-            return true;
-        }
-
-        public DefaultDescriptor() {
-            super();
-        }
-
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor {
         @Override
         public String getDisplayName() {
             return DATAX_NAME;

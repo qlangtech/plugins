@@ -225,7 +225,8 @@ public class BindHiveTableTool {
             }
             //hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(pt string,pmod string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' LINES " + "TERMINATED BY '\\n' NULL DEFINED AS '' STORED AS TEXTFILE ");
             hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-            hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='" + this.fsFormat.getLineDelimiter() + "','field.delim'='" + this.fsFormat.getFieldDelimiter() + "')");
+           // hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='" + this.fsFormat.getLineDelimiter() + "','field.delim'='" + this.fsFormat.getFieldDelimiter() + "')");
+            hiveSQl.append(this.fsFormat.getRowFormat());
             hiveSQl.append("STORED AS " + this.fsFormat.getFileType().getType());
             sqlCommandTailAppend.append(hiveSQl);
             logger.info(hiveSQl.toString());

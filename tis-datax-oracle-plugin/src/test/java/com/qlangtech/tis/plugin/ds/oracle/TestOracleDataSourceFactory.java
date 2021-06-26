@@ -54,7 +54,7 @@ public class TestOracleDataSourceFactory extends TestCase {
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
         assertTrue(tablesInDB.size() > 1);
-        tablesInDB.forEach((tab) -> System.out.println(tab));
+       // tablesInDB.forEach((tab) -> System.out.println(tab));
         List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("instancedetail"));
 
         assertTrue(cols.size() > 0);

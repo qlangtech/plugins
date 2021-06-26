@@ -21,6 +21,9 @@ package com.qlangtech.tis.hive;
  **/
 public class HdfsFormat {
 
+    static final String KEY_LINE_DELIM = "lineDelim";
+    static final String KEY_FIELD_DELIM = "fieldDelim";
+
     public static final HdfsFormat DEFAULT_FORMAT = new HdfsFormat("\t", HdfsFileType.TEXTFILE);
 
     private String fieldDelimiter;
@@ -44,11 +47,15 @@ public class HdfsFormat {
     }
 
     public char getLineDelimiter() {
-        return lineDelimiter;
+        return this.lineDelimiter;
     }
 
     public HdfsFileType getFileType() {
         return fileType;
+    }
+
+    public String getRowFormat() {
+        return this.fileType.getRowFormat(this);
     }
 
     public void setFileType(HdfsFileType fileType) {

@@ -22,9 +22,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -61,6 +59,20 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 //    public List<ColumnMetaData> getTableMetadata(final String table) {
 //        return getTableMetadata(StringUtils.upperCase(table));
 //    }
+
+
+    @Override
+    protected int getDataType(ResultSet cols) throws SQLException {
+        int type = super.getDataType(cols);
+        // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
+        if (type == Types.DECIMAL) {
+            int decimalDigits = cols.getInt("decimal_digits");
+            if (decimalDigits < 1) {
+                return Types.INTEGER;
+            }
+        }
+        return type;
+    }
 
     @Override
     protected Connection getConnection(String jdbcUrl) throws SQLException {

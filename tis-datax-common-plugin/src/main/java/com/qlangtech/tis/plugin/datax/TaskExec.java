@@ -19,10 +19,13 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
+import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.concurrent.*;
@@ -86,6 +89,8 @@ public class TaskExec {
             public void submitJob() {
                 dataXExecutor.submit(() -> {
                     try {
+                        MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
+                        MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
                         dataxExecutor.startWork(taskContext.getIndexName()
                                 , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath(), uberClassLoader);
                         success.set(true);

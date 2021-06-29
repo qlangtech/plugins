@@ -2,6 +2,7 @@
   "parameter": {
     "fileName": "customer_order_relation",
     "ptRetainNum": 2,
+    "ptFormat":"yyyyMMdd",
     "hiveTableName": "customer_order_relation",
     "column": [
       {

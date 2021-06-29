@@ -6,6 +6,7 @@
     "hiveTableName":"$writer.tableName",
     "dataxName" : "$writer.dataXName",
     "ptRetainNum": $writer.partitionRetainNum,
+    "ptFormat": "$writer.partitionFormat",
     "column": [
       #foreach($c in $writer.cols)
        {"name":"$c.name","type":"$c.type"},

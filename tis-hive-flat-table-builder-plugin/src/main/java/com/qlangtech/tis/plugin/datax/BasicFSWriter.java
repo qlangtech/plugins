@@ -39,9 +39,9 @@ import java.util.stream.Collectors;
  **/
 public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware {
 
-    @FormField(ordinal = 3, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fileType;
 
 
@@ -49,13 +49,13 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 //    public String fileName;
     //    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String column;
-    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String fieldDelimiter;
-    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
     public String compress;
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {})
     public String encoding;
 
 

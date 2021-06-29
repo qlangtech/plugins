@@ -41,6 +41,9 @@ public class DataXHiveWriter extends BasicFSWriter {
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
+    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String partitionFormat;
+
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
@@ -81,6 +84,10 @@ public class DataXHiveWriter extends BasicFSWriter {
 
         public Integer getPartitionRetainNum() {
             return partitionRetainNum;
+        }
+
+        public String getPartitionFormat() {
+            return partitionFormat;
         }
     }
 

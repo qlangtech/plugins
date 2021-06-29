@@ -81,12 +81,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             TiTableInfo tiTable = c.getTable(db, table.getTableName());
             tabRef.set(new TiTableInfoWrapper(tiTable));
             TiDAGRequest dagRequest = getTiDAGRequest(reflectCols, session, tiTable);
-
-            // Snapshot snapshot = session.createSnapshot(dagRequest.getStartTs());
             List<Long> prunedPhysicalIds = dagRequest.getPrunedPhysicalIds();
-            List<TiPartition> partitions = null;
-            // Iterator<TiChunk> iterator = null;
-
             return prunedPhysicalIds.stream().flatMap((prunedPhysicalId)
                     -> createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId)).stream())
                     .collect(Collectors.toList());

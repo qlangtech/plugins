@@ -115,6 +115,8 @@ public class TisDataXHiveWriter extends Writer {
         protected Path tabDumpParentPath;
         private Integer ptRetainNum;
 
+
+
         @Override
         public void init() {
             try {
@@ -180,7 +182,8 @@ public class TisDataXHiveWriter extends Writer {
             this.writerPlugin = getHdfsWriterPlugin(this.cfg);
             try {
                 if (this.tabDumpParentPath == null) {
-                    SimpleDateFormat timeFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+                    SimpleDateFormat timeFormat = new SimpleDateFormat(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
                     this.dumpTimeStamp = timeFormat.format(new Date());
                     this.dumpTable = this.createDumpTable();
                     this.tabDumpParentPath = new Path(this.writerPlugin.getFs().getFileSystem().getRootDir(), getHdfsSubPath());

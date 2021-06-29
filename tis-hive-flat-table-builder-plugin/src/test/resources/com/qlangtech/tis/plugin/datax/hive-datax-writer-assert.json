@@ -4,6 +4,7 @@
     "encoding": "utf-8",
     "compress": "gzip",
     "ptRetainNum": 2,
+    "ptFormat": "yyyyMMdd",
     "dataxName": "mysql2hive",
     "fileType": "text",
     "fileName": "customer_order_relation",

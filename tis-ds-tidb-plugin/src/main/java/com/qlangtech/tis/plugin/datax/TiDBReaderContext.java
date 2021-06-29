@@ -17,13 +17,34 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 20:30
  **/
-public class TiDBReaderContext extends RdbmsReaderContext {
+public class TiDBReaderContext extends RdbmsReaderContext<DataXTiDBReader, TiKVDataSourceFactory> {
     public TiDBReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXTiDBReader reader) {
         super(jobName, sourceTableName, dumper, reader);
+    }
+
+
+
+    public boolean getDatetimeFormat() {
+        return this.dsFactory.datetimeFormat;
+    }
+
+    public String getPdAddrs() {
+        return this.dsFactory.pdAddrs;
+    }
+
+    public String getDbName() {
+        return this.dsFactory.dbName;
+    }
+
+    @Override
+    protected String colEscapeChar() {
+        return StringUtils.EMPTY;
     }
 }

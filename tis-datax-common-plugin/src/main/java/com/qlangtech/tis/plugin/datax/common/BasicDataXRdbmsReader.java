@@ -140,6 +140,10 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                     DataDumpers dataDumpers = null;
                     TISTable tisTab = new TISTable();
                     tisTab.setTableName(tab.getName());
+                    int[] index = {0};
+                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
+                        return new ColumnMetaData(index[0]++, c.getName(), -999, false);
+                    }).collect(Collectors.toList()));
 
                     dataDumpers = dsFactory.getDataDumpers(tisTab);
                     dumperIt = dataDumpers.dumpers;

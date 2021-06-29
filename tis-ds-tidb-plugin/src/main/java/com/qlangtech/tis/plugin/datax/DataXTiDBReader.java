@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 
 /**
+ * @see com.qlangtech.tis.plugin.datax.TiKVReader
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:00
  **/
@@ -36,6 +37,8 @@ public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory
         TiDBReaderContext readerContext = new TiDBReaderContext(jobName, tab.getName(), dumper, this);
         return readerContext;
     }
+
+
 
 
     public static String getDftTemplate() {

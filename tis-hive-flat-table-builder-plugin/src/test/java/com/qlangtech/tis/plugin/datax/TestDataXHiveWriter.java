@@ -69,6 +69,7 @@ public class TestDataXHiveWriter extends BasicTest {
         hiveWriter.encoding = "utf-8";
         hiveWriter.template = DataXHiveWriter.getDftTemplate();
         hiveWriter.partitionRetainNum = 2;
+        hiveWriter.partitionFormat = "yyyyMMdd";
 
 
         IDataxProcessor.TableMap tableMap = TestDataXHdfsWriter.createCustomer_order_relationTableMap();

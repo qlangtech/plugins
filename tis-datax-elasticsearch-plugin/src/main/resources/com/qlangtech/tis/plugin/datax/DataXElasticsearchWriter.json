@@ -1,6 +1,10 @@
 {
   "endpoint": {
-    "help": "ElasticSearch的连接地址"
+    "help": "ElasticSearch的连接地址",
+    "creator": {
+      "routerLink": "/base/basecfg",
+      "label": "管理"
+    }
   },
   "index": {
     "help": "Elasticsearch中的index名"

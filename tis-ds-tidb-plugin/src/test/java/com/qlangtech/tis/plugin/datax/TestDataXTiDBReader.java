@@ -16,9 +16,12 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.tidb.GetColsMeta;
+import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 import com.qlangtech.tis.plugin.test.BasicTest;
-import com.qlangtech.tis.trigger.util.JsonUtil;
-import com.qlangtech.tis.util.DescriptorsJSON;
 
 import java.util.Optional;
 
@@ -38,12 +41,27 @@ public class TestDataXTiDBReader extends BasicTest {
     }
 
     public void testDescriptorsJSONGenerate() {
-        DataXTiDBReader esWriter = new DataXTiDBReader();
-        DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
+        PluginDesc.testDescGenerate(DataXTiDBReader.class, "tidb-datax-reader-descriptor.json");
+    }
 
-        JsonUtil.assertJSONEqual(DataXTiDBReader.class, "tidb-datax-reader-descriptor.json"
-                , descJson.getDescriptorsJSON(), (m, e, a) -> {
-                    assertEquals(m, e, a);
-                });
+    public void testTemplateGenerate() throws Exception {
+
+        final String dataXName = "dataXName";
+        GetColsMeta getColsMeta = new GetColsMeta().invoke();
+        final TiKVDataSourceFactory dsFactory = getColsMeta.getDataSourceFactory();
+        DataXTiDBReader dataxReader = new DataXTiDBReader() {
+            @Override
+            public TiKVDataSourceFactory getDataSourceFactory() {
+                return dsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXTiDBReader.class;
+            }
+        };
+        dataxReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
+
+        ReaderTemplate.validateDataXReader("tidb-datax-reader-template-assert.json", dataXName, dataxReader);
     }
 }

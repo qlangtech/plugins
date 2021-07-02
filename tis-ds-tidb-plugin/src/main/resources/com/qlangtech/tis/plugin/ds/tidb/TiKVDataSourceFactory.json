@@ -1,4 +1,8 @@
 {
+  "name": {
+    "label": "实例ID",
+    "help": "数据源实例名称，请起一个有意义的名称"
+  },
   "pdAddrs": {
     "label": "PD地址",
     "placeholder": "192.168.28.201:2379"
@@ -9,6 +13,7 @@
   },
   "datetimeFormat": {
     "label": "时间格式化",
+    "disable": true,
     "dftVal": true,
     "enum": [
       {

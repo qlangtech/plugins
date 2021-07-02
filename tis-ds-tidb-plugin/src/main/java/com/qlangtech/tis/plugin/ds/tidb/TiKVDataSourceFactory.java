@@ -35,6 +35,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,11 +51,44 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
     private transient static final Logger logger = LoggerFactory.getLogger(TiKVDataSourceFactory.class);
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String name;
+
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
     public String pdAddrs;
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(identity = false, ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String dbName;
+
+    static {
+//        public class TiSession implements AutoCloseable {
+//            private static final Logger logger = LoggerFactory.getLogger(com.pingcap.tikv.TiSession.class);
+//            private static final Map<String, com.pingcap.tikv.TiSession> sessionCachedMap = new HashMap<>();
+
+        try {
+            Field sessionCachedMap = TiSession.class.getDeclaredField("sessionCachedMap");//.getDeclaredField();
+            sessionCachedMap.setAccessible(true);
+
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(sessionCachedMap, sessionCachedMap.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+
+            sessionCachedMap.set(null, new HashMap<String, com.pingcap.tikv.TiSession>() {
+                @Override
+                public boolean containsKey(Object key) {
+                    // 将缓存作用废掉
+                    return false;
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
 
     /**
      * 是否要对date或者timestamp进行格式化
@@ -314,7 +348,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
         @Override
         protected String getDataSourceName() {
-            return "TiKV";
+            return "TiDB";
         }
 
         @Override
@@ -337,7 +371,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                     return false;
                 }
             } catch (Exception e) {
-                msgHandler.addErrorMessage(context, e.getMessage());
+                msgHandler.addErrorMessage(context, "请检查配置是否正确,错误:" + e.getMessage());
                 logger.warn(e.getMessage(), e);
                 // throw new RuntimeException(e);
                 return false;

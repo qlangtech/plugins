@@ -18,7 +18,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -30,44 +29,45 @@ import java.util.Optional;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.writer.ftpwriter.FtpWriter
  **/
 public class DataXFtpWriter extends DataxWriter {
-    private static final String DATAX_NAME = "FTP";
+    //private static final String DATAX_NAME = "FTP";
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String protocol;
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String host;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-    public String port;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
-    public String timeout;
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer port;
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer timeout;
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String username;
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String password;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String fileName;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+//    public String fileName;
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
     public String fieldDelimiter;
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
-    public String compress;
-    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, validate = {})
+    //    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String compress;
+    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
     public String encoding;
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
     public String nullFormat;
     @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
     public String dateFormat;
-    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 14, type = FormFieldType.ENUM, validate = {})
     public String fileFormat;
-    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
     public String suffix;
-    @FormField(ordinal = 16, type = FormFieldType.INPUTTEXT, validate = {})
-    public String header;
+    @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {})
+    public Boolean header;
 
     @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
@@ -84,7 +84,8 @@ public class DataXFtpWriter extends DataxWriter {
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        return null;
+        DataXFtpWriterContext writerContext = new DataXFtpWriterContext(this, tableMap.get());
+        return writerContext;
     }
 
 
@@ -101,7 +102,7 @@ public class DataXFtpWriter extends DataxWriter {
 
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return DataXFtpReader.DATAX_NAME;
         }
     }
 }

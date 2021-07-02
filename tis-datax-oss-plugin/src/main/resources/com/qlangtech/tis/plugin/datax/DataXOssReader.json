@@ -73,8 +73,6 @@
     "rows": 8
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXOssReader.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXOssReader.getDftTemplate()"
   }
 }

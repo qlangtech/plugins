@@ -85,10 +85,10 @@ public class TestDataxMySQLReader extends BasicTest {
 
     public void testGetSubTasks() {
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
-            @Override
-            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-                throw new UnsupportedOperationException();
-            }
+//            @Override
+//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+//                throw new UnsupportedOperationException();
+//            }
 
             @Override
             public List<ColumnMetaData> getTableMetadata(String table) {
@@ -205,10 +205,10 @@ public class TestDataxMySQLReader extends BasicTest {
 
 
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
-            @Override
-            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-                throw new UnsupportedOperationException();
-            }
+//            @Override
+//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+//                throw new UnsupportedOperationException();
+//            }
 
             @Override
             public DataDumpers getDataDumpers(TISTable table) {

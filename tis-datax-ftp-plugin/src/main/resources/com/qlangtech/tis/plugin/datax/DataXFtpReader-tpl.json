@@ -1,19 +1,39 @@
 {
     "name": "ftpreader",
     "parameter": {
-        "host": "",
-        "protocol": "sftp",
-        "port":"",
-        "username": "",
-        "password": "",
-        "path": [],
-        "column": [
-            {
-                "index": 0,
-                "type": ""
-            }
-        ],
-        "fieldDelimiter": ",",
-        "encoding": "UTF-8"
+        "protocol": "${reader.protocol}"
+,"host": "${reader.host}"
+    #if($reader.containPort)
+,"port": ${reader.port}
+#end
+#if($reader.containTimeout)
+,"timeout": ${reader.timeout}
+#end
+#if($reader.containConnectPattern)
+,"connectPattern": "${reader.connectPattern}"
+#end
+,"username": "${reader.username}"
+,"password": "${reader.password}"
+,"path": "${reader.path}"
+,"column": [${reader.column}]
+,"fieldDelimiter": "${reader.fieldDelimiter}"
+#if($reader.containCompress)
+,"compress": "${reader.compress}"
+#end
+#if($reader.containEncoding)
+,"encoding": "${reader.encoding}"
+#end
+#if($reader.containSkipHeader)
+,"skipHeader": ${reader.skipHeader}
+#end
+#if($reader.containNullFormat)
+,"nullFormat": "${reader.nullFormat}"
+#end
+#if($reader.containMaxTraversalLevel)
+,"maxTraversalLevel": "${reader.maxTraversalLevel}"
+#end
+#if($reader.containCsvReaderConfig)
+,"csvReaderConfig": ${reader.csvReaderConfig}
+#end
     }
 }

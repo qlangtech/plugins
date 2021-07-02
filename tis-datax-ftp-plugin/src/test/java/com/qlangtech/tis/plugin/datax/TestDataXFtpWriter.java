@@ -15,7 +15,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import junit.framework.TestCase;
 
 import java.util.Optional;
@@ -34,4 +38,55 @@ public class TestDataXFtpWriter extends TestCase {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXFtpWriter.class);
         assertTrue(extraProps.isPresent());
     }
+
+    public void testDescGenerate() {
+
+        PluginDesc.testDescGenerate(DataXFtpWriter.class, "ftp-datax-writer-descriptor.json");
+    }
+
+    public void testTempateGenerate() throws Exception {
+
+        //    ContextDesc.descBuild(DataXFtpWriter.class, false);
+
+        DataXFtpWriter dataXWriter = new DataXFtpWriter();
+        dataXWriter.template = DataXFtpWriter.getDftTemplate();
+        dataXWriter.protocol = "ftp";
+        dataXWriter.host = "192.168.28.201";
+        dataXWriter.port = 21;
+        dataXWriter.timeout = 33333;
+        dataXWriter.username = "test";
+        dataXWriter.password = "test";
+        dataXWriter.path = "/tmp/data/";
+       // dataXWriter.fileName = "yixiao";
+        dataXWriter.writeMode = "truncate";
+        dataXWriter.fieldDelimiter = ",";
+        dataXWriter.encoding = "utf-8";
+        dataXWriter.nullFormat = "\\\\N";
+        dataXWriter.fileFormat = "text";
+        dataXWriter.suffix = "xxxx";
+        dataXWriter.header = true;
+
+        IDataxProcessor.TableMap tableMap = TestSelectedTabs.createTableMapper().get();
+
+        WriterTemplate.valiateCfgGenerate("ftp-datax-writer-assert.json", dataXWriter, tableMap);
+
+
+        dataXWriter.port = null;
+        dataXWriter.timeout = null;
+        dataXWriter.fieldDelimiter = null;
+        dataXWriter.encoding = null;
+        dataXWriter.nullFormat = null;
+        dataXWriter.dateFormat = null;
+        dataXWriter.fileFormat = null;
+        dataXWriter.suffix = null;
+        dataXWriter.header = false;
+
+        WriterTemplate.valiateCfgGenerate("ftp-datax-writer-assert-without-option-val.json", dataXWriter, tableMap);
+    }
+
+
+//    public void testRealDump() throws Exception {
+//        DataXFtpWriter dataXWriter = new DataXFtpWriter();
+//        WriterTemplate.realExecuteDump("ftp-datax-writer.json", dataXWriter);
+//    }
 }

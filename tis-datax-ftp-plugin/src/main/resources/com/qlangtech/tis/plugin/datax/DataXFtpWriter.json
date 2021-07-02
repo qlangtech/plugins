@@ -1,15 +1,26 @@
 {
   "protocol": {
-    "help": "描述：ftp服务器协议，目前支持传输协议有ftp和sftp。 "
+    "help": "描述：ftp服务器协议，目前支持传输协议有ftp和sftp。 ",
+    "enum": [
+      {
+        "val": "ftp",
+        "label": "FTP"
+      },
+      {
+        "val": "sftp",
+        "label": "SFTP"
+      }
+    ]
   },
   "host": {
-    "help": "描述：ftp服务器地址。 "
+    "help": "描述：ftp服务器地址。 ",
+    "placeholder": "127.0.0.1"
   },
   "port": {
-    "help": "描述：ftp服务器端口。 "
+    "help": "ftp服务器端口。若传输协议是sftp协议，默认值是22；若传输协议是标准ftp协议，默认值是21 "
   },
   "timeout": {
-    "help": "描述：连接ftp服务器连接超时时间，单位毫秒。 "
+    "help": "描述：连接ftp服务器连接超时时间，单位毫秒。默认值：60000（1分钟） "
   },
   "username": {
     "help": "描述：ftp服务器访问用户名。 "
@@ -24,35 +35,72 @@
     "help": "描述：FtpWriter写入的文件名，该文件名会添加随机的后缀作为每个线程写入实际文件名。 "
   },
   "writeMode": {
-    "help": "描述：FtpWriter写入前数据清理处理模式： "
+    "help": "描述：FtpWriter写入前数据清理处理模式： truncate，写入前清理目录下一fileName前缀的所有文件。\nappend，写入前不做任何处理，DataX FtpWriter直接使用filename写入，并保证文件名不冲突。\nnonConflict，如果目录下有fileName前缀的文件，直接报错。",
+    "enum": [
+      {
+        "val": "truncate",
+        "label": "Truncate"
+      },
+      {
+        "val": "append",
+        "label": "Append"
+      },
+      {
+        "val": "nonConflict",
+        "label": "NonConflict"
+      }
+    ]
   },
   "fieldDelimiter": {
-    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符"
+    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符 默认值：,"
   },
   "compress": {
-    "help": "描述：文本压缩类型，暂时不支持。 "
+    "help": "描述：文本压缩类型，暂时不支持。 ",
+    "disable": true
   },
   "encoding": {
-    "help": "描述：读取文件的编码配置。"
+    "help": "描述：读取文件的编码配置。",
+    "dftVal": "utf-8",
+    "enum": "com.qlangtech.tis.manage.common.TisUTF8.allSupported()"
   },
   "nullFormat": {
-    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。"
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。例如如果用户配置: nullFormat=\"\\N\"，那么如果源头数据是\"\\N\"，DataX视作null字段。"
   },
   "dateFormat": {
     "help": "描述：日期类型的数据序列化到文件中时的格式，例如 \"dateFormat\": \"yyyy-MM-dd\"。"
   },
   "fileFormat": {
-    "help": "描述：文件写出的格式，包括csv (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号。text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。"
+    "help": "描述：文件写出的格式，包括csv (http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC) 和text两种，csv是严格的csv格式，如果待写数据包括列分隔符，则会按照csv的转义语法转义，转义符号为双引号。text格式是用列分隔符简单分割待写数据，对于待写数据包括列分隔符情况下不做转义。",
+    "helpUrl": "http://zh.wikipedia.org/wiki/%E9%80%97%E5%8F%B7%E5%88%86%E9%9A%94%E5%80%BC",
+    "enum": [
+      {
+        "val": "csv",
+        "label": "CSV"
+      },
+      {
+        "val": "text",
+        "label": "TEXT"
+      }
+    ]
   },
   "suffix": {
     "help": "描述：最后输出文件的后缀，当前支持 \".text\"以及\".csv\""
   },
   "header": {
-    "help": "描述：txt写出时的表头，示例['id', 'name', 'age']。"
+    "help": "描述：txt写出时的表头，是否在文件头将key写入",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXFtpWriter.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXFtpWriter.getDftTemplate()"
   }
 }

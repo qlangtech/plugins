@@ -1,24 +1,39 @@
 {
     "name": "ftpwriter",
     "parameter": {
-        "name": "ftpwriter",
-        "parameter": {
-            "protocol": "",
-            "host": "",
-            "port": "",
-            "username": "",
-            "password": "",
-            "timeout": "",
-            "connectPattern": "",
-            "path": "",
-            "fileName": "",
-            "writeMode": "",
-            "fieldDelimiter": "",
-            "encoding": "",
-            "nullFormat": "",
-            "dateFormat": "",
-            "fileFormat": "",
-            "header": []
-        }
+        "host": "${writer.host}"
+        #if($writer.containPort)
+    ,"port": ${writer.port}
+#end
+#if($writer.containTimeout)
+,"timeout": ${writer.timeout}
+#end
+,"username": "${writer.username}"
+,"password": "${writer.password}"
+,"path": "${writer.path}"
+,"fileName": "${writer.fileName}"
+,"writeMode": "${writer.writeMode}"
+#if($writer.containFieldDelimiter)
+,"fieldDelimiter": "${writer.fieldDelimiter}"
+#end
+#if($writer.containEncoding)
+,"encoding": "${writer.encoding}"
+#end
+#if($writer.containNullFormat)
+,"nullFormat": "${writer.nullFormat}"
+#end
+#if($writer.containDateFormat)
+,"dateFormat": "${writer.dateFormat}"
+#end
+#if($writer.containFileFormat)
+,"fileFormat": "${writer.fileFormat}"
+#end
+#if($writer.containSuffix)
+,"suffix": "${writer.suffix}"
+#end
+#if($writer.containHeader)
+,"header": [${writer.header}]
+#end
+,"protocol": "${writer.protocol}"
     }
 }

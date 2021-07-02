@@ -17,17 +17,12 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.annotation.JSONField;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.Bucket;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -49,7 +44,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -114,9 +108,9 @@ public class DataXOssReader extends DataxReader {
     }
 
     @Override
-    public List<DataXReaderTabMeta> getSelectedTabs() {
+    public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
-        ParseOSSColsResult parseOSSColsResult = DefaultDescriptor.parseOSSCols(new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
+        ParseColsResult parseOSSColsResult = ParseColsResult.parseColsCfg(new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
         if (!parseOSSColsResult.success) {
             throw new IllegalStateException("parseOSSColsResult must be success");
         }
@@ -132,70 +126,6 @@ public class DataXOssReader extends DataxReader {
 
     public IAliyunToken getOSSConfig() {
         return IAliyunToken.getToken(this.endpoint);
-    }
-
-
-    public static class DataXReaderTabMeta implements ISelectedTab {
-        private boolean allCols = false;
-        private final List<DataXColMeta> cols = Lists.newArrayList();
-
-        @Override
-        @JSONField(serialize = false)
-        public String getName() {
-            return "oss"; // throw new UnsupportedOperationException();
-        }
-
-        @Override
-        @JSONField(serialize = false)
-        public String getWhere() {
-            return StringUtils.EMPTY;
-            // throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public boolean isAllCols() {
-            return this.allCols;
-        }
-
-        @Override
-        public List<ColMeta> getCols() {
-            if (isAllCols()) {
-                return Collections.emptyList();
-            }
-            return cols.stream().map((c) -> {
-                ColMeta cmeta = new ColMeta();
-                cmeta.setName(null);
-                cmeta.setType(c.parseType);
-                return cmeta;
-            }).collect(Collectors.toList());
-        }
-    }
-
-    private static class DataXColMeta {
-        private final ISelectedTab.DataXReaderColType parseType;
-
-        // index和value两个属性为2选1
-        private int index;
-        private String value;
-
-        public DataXColMeta(ISelectedTab.DataXReaderColType parseType) {
-            this.parseType = parseType;
-        }
-    }
-
-    private static class ParseOSSColsResult {
-        private DataXReaderTabMeta tabMeta;
-        private boolean success;
-
-        public ParseOSSColsResult ok() {
-            this.success = true;
-            return this;
-        }
-
-        public ParseOSSColsResult faild() {
-            this.success = false;
-            return this;
-        }
     }
 
 
@@ -218,67 +148,7 @@ public class DataXOssReader extends DataxReader {
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
-            return parseOSSCols(msgHandler, context, fieldName, value).success;
-        }
-
-        private static ParseOSSColsResult parseOSSCols(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            ParseOSSColsResult parseOSSColsResult = new ParseOSSColsResult();
-
-            DataXReaderTabMeta tabMeta = new DataXReaderTabMeta();
-            parseOSSColsResult.tabMeta = tabMeta;
-            DataXColMeta colMeta = null;
-            try {
-                JSONArray cols = JSONArray.parseArray(value);
-                if (cols.size() < 1) {
-                    msgHandler.addFieldError(context, fieldName, "请填写读取字段列表内容");
-                    return parseOSSColsResult;
-                }
-                Object firstElement = null;
-                if (cols.size() == 1 && (firstElement = cols.get(0)) != null && "*".equals(String.valueOf(firstElement))) {
-                    tabMeta.allCols = true;
-                    return parseOSSColsResult.ok();
-                }
-                JSONObject col = null;
-                String type = null;
-                ISelectedTab.DataXReaderColType parseType = null;
-                Integer index = null;
-                String appValue = null;
-                for (int i = 0; i < cols.size(); i++) {
-                    col = cols.getJSONObject(i);
-                    type = col.getString("type");
-                    if (StringUtils.isEmpty(type)) {
-                        msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type不能为空");
-                        return parseOSSColsResult.faild();
-                    }
-                    parseType = ISelectedTab.DataXReaderColType.parse(type);
-                    if (parseType == null) {
-                        msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type必须为:" + ISelectedTab.DataXReaderColType.toDesc() + "中之一");
-                        return parseOSSColsResult.faild();
-                    }
-
-                    colMeta = new DataXColMeta(parseType);
-                    tabMeta.cols.add(colMeta);
-                    index = col.getInteger("index");
-                    appValue = col.getString("value");
-
-                    if (index == null && appValue == null) {
-                        msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，index/value必须选择其一");
-                        return parseOSSColsResult.faild();
-                    }
-                    if (index != null) {
-                        colMeta.index = index;
-                    }
-                    if (appValue != null) {
-                        colMeta.value = appValue;
-                    }
-                }
-            } catch (Exception e) {
-                logger.error(value, e);
-                msgHandler.addFieldError(context, fieldName, "请检查内容格式是否有误:" + e.getMessage());
-                return parseOSSColsResult.faild();
-            }
-
-            return parseOSSColsResult.ok();
+            return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
         }
 
         public boolean validateBucket(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

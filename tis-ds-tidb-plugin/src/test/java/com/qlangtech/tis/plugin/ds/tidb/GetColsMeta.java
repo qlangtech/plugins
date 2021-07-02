@@ -43,8 +43,8 @@ public class GetColsMeta {
     public GetColsMeta invoke(boolean datetimeFormat) {
         dataSourceFactory = new TiKVDataSourceFactory();
         dataSourceFactory.dbName = TestTiKVDataSourceFactory.DB_NAME;
-        dataSourceFactory.pdAddrs = "192.168.28.202:2379";
-        dataSourceFactory.datetimeFormat = datetimeFormat;
+        dataSourceFactory.pdAddrs = "192.168.28.201:2399";
+        //dataSourceFactory.datetimeFormat = datetimeFormat;
 //        employeesCols = dataSourceFactory.getTableMetadata(TestTiKVDataSourceFactory.TABLE_NAME);
 //        TestCase.assertNotNull(employeesCols);
 //        TestCase.assertEquals(6, employeesCols.size());

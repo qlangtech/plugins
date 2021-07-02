@@ -1,6 +1,6 @@
 {
-  "name": "tidbreader",
-  "class": "com.qlangtech.tis.plugin.datax.TiKVReader",
+  "name": "tikvreader",
+  "class": "com.qlangtech.tis.plugin.datax.TisDataXTiDBReader",
   "description": "",
   "developer": "TIS"
 }

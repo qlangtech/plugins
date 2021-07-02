@@ -18,8 +18,8 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
-import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.tidb.GetColsMeta;
+import com.qlangtech.tis.plugin.ds.tidb.TestTiKVDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 import com.qlangtech.tis.plugin.test.BasicTest;
 
@@ -60,8 +60,17 @@ public class TestDataXTiDBReader extends BasicTest {
                 return DataXTiDBReader.class;
             }
         };
-        dataxReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
+
+        dataxReader.template = DataXTiDBReader.getDftTemplate();
+
+        dataxReader.setSelectedTabs(TestTiKVDataSourceFactory.createTabOfEmployees());
 
         ReaderTemplate.validateDataXReader("tidb-datax-reader-template-assert.json", dataXName, dataxReader);
+    }
+
+
+    public void testRealDump() throws Exception {
+        DataXTiDBReader dataxReader = new DataXTiDBReader();
+        ReaderTemplate.realExecute("tidb-datax-reader-template-assert.json", dataxReader);
     }
 }

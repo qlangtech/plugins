@@ -142,7 +142,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                     tisTab.setTableName(tab.getName());
                     int[] index = {0};
                     tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
-                        return new ColumnMetaData(index[0]++, c.getName(), -999, false);
+                        return createColumnMetaData(index, c.getName());
                     }).collect(Collectors.toList()));
 
                     dataDumpers = dsFactory.getDataDumpers(tisTab);
@@ -184,6 +184,10 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                 return dataxContext;
             }
         };
+    }
+
+    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
+        return new ColumnMetaData(index[0]++, colName, -999, false);
     }
 
     protected boolean isFilterUnexistCol() {

@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.ds.tidb;
@@ -48,14 +48,15 @@ public class DateUtils {
         System.out.println(timestampFormat.get().format(new Date()));
     }
 
-    public static String formatTimestamp(long baseOffset) {
+    public static long formatTimestamp(long baseOffset) {
         Calendar instance = Calendar.getInstance();
         instance.setTime(base);
         instance.add(Calendar.MILLISECOND, (int) baseOffset);
-        return timestampFormat.get().format(instance.getTime());
+        //return timestampFormat.get().format(instance.getTime());
+        return instance.getTimeInMillis();
     }
 
-    public static String formatDate(long baseOffset) {
+    public static long formatDate(long baseOffset) {
 //        +--------+------------+------------+-----------+--------+------------+
 //        | emp_no | birth_date | first_name | last_name | gender | hire_date  |
 //        +--------+------------+------------+-----------+--------+------------+
@@ -70,7 +71,9 @@ public class DateUtils {
         instance.setTime(base);
         instance.add(Calendar.DATE, (int) baseOffset);
         //  System.out.println(instance.getTime());
-        return dateFormat.get().format(instance.getTime());
+        // return dateFormat.get().format(instance.getTime());
+
+        return instance.getTimeInMillis();
     }
 
 }

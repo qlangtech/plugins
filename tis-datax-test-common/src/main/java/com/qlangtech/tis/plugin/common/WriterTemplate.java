@@ -110,6 +110,14 @@ public class WriterTemplate {
         Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
                 , "container.json", true, (input) -> {
                     Configuration cfg = Configuration.from(input);
+
+//                    "streamreader": {
+//                        "class": "com.alibaba.datax.plugin.reader.streamreader.StreamReader"
+//                    }
+
+                    cfg.set("plugin.reader.streamreader.class"
+                            , "com.alibaba.datax.plugin.reader.streamreader.StreamReader");
+
                     cfg.set("plugin.writer." + dataxWriter.getDataxMeta().getName() + ".class"
                             , dataxWriter.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].writer" //

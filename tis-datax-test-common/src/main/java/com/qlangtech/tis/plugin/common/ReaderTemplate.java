@@ -15,21 +15,25 @@
 
 package com.qlangtech.tis.plugin.common;
 
+import com.alibaba.datax.common.element.ColumnCast;
+import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.core.job.JobContainer;
+import com.alibaba.datax.core.util.container.JarLoader;
+import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
 import java.io.IOException;
-import java.sql.Types;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -93,6 +97,64 @@ public class ReaderTemplate {
         });
         JSONObject reader = JSON.parseObject(readerCfg);
         Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
+    }
+
+
+    /**
+     * dataXWriter执行
+     *
+     * @param readerJson
+     * @param dataxReader
+     * @throws IllegalAccessException
+     */
+    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+//        DataxExecutor.initializeClassLoader(
+//                Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxReader.getDataxMeta().getName()), uberClassLoader);
+
+
+        DataxExecutor.initializeClassLoader(
+                Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
+
+//        Map<String, JarLoader> jarLoaderCenter = (Map<String, JarLoader>) jarLoaderCenterField.get(null);
+//        jarLoaderCenter.clear();
+//
+//
+//        jarLoaderCenter.put("plugin.reader.streamreader", uberClassLoader);
+//        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
+
+        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
+                , "container.json", true, (input) -> {
+                    Configuration cfg = Configuration.from(input);
+
+
+                    cfg.set("plugin.writer.streamwriter.class"
+                            , "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
+
+                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class"
+                            , dataxReader.getDataxMeta().getImplClass());
+                    cfg.set("job.content[0].reader" //
+                            , IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
+                                return Configuration.from(writerJsonInput);
+                            }));
+                    cfg.set("job.content[0].writer", Configuration.from("{\n" +
+                            "    \"name\": \"streamwriter\",\n" +
+                            "    \"parameter\": {\n" +
+                            "        \"print\": true\n" +
+                            "    }\n" +
+                            "}"));
+
+                    return cfg;
+                });
+
+
+        // 绑定column转换信息
+        ColumnCast.bind(allConf);
+        LoadUtil.bind(allConf);
+
+        JobContainer container = new JobContainer(allConf);
+
+        container.start();
     }
 
 }

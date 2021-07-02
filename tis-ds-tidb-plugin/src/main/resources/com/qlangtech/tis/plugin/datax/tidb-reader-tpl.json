@@ -4,11 +4,10 @@
     "connection": [
       {
         "pdAddrs": "${reader.pdAddrs}",
-        "dbName": "${reader.dbName}",
-        "datetimeFormat": ${reader.datetimeFormat}
+        "dbName": "${reader.dbName}"
       }
     ],
-    "column": [${reader.colsQuotes}]
+    "column": [${reader.colsQuotes}],
     "table": "${reader.sourceEntityName}"
   }
 }

@@ -35,8 +35,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -61,13 +59,12 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     /**
      * 是否要对date或者timestamp进行格式化
      */
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-    public boolean datetimeFormat;
+    //@FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    public final boolean datetimeFormat = false;
 
-    @Override
-    public DataDumpers getDataDumpers(TISTable table) {
 
-        // target cols
+    public DataDumpers getDataDumpers(TISTable table, Optional<Long> regionId) {
+// target cols
         final List<ColumnMetaData> reflectCols = table.getReflectCols();
         if (CollectionUtils.isEmpty(reflectCols)) {
             throw new IllegalStateException("param reflectCols can not be null");
@@ -79,13 +76,13 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         final List<TiPartition> parts = this.openTiDB((session, c, db) -> {
 
             TiTableInfo tiTable = c.getTable(db, table.getTableName());
+            Objects.requireNonNull(tiTable, "table:" + table.getTableName() + " can not find relevant table in TiDB");
             tabRef.set(new TiTableInfoWrapper(tiTable));
             TiDAGRequest dagRequest = getTiDAGRequest(reflectCols, session, tiTable);
             List<Long> prunedPhysicalIds = dagRequest.getPrunedPhysicalIds();
             return prunedPhysicalIds.stream().flatMap((prunedPhysicalId)
-                    -> createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId)).stream())
+                    -> createPartitions(prunedPhysicalId, session, dagRequest.copyReqWithPhysicalId(prunedPhysicalId), regionId).stream())
                     .collect(Collectors.toList());
-
         });
 
         int[] index = new int[1];
@@ -105,8 +102,10 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return new DataDumpers(splitCount, dumpers);
     }
 
-
-
+    @Override
+    public DataDumpers getDataDumpers(TISTable table) {
+        return getDataDumpers(table, Optional.empty());
+    }
 
 
     public TiDAGRequest getTiDAGRequest(List<ColumnMetaData> reflectCols, TiSession session, TiTableInfo tiTable) {
@@ -118,7 +117,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                 .build(TiDAGRequest.PushDownType.NORMAL);
     }
 
-    public List<TiPartition> createPartitions(Long physicalId, TiSession session, TiDAGRequest dagRequest) {
+    public List<TiPartition> createPartitions(Long physicalId, TiSession session, TiDAGRequest dagRequest, Optional<Long> regionId) {
 
         final List<TiPartition> partitions = Lists.newArrayList();
 
@@ -129,6 +128,10 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         Map<String, List<RangeSplitter.RegionTask>> hostTasksMap = Maps.newHashMap();
         List<RangeSplitter.RegionTask> tasks = null;
         for (RangeSplitter.RegionTask task : keyWithRegionTasks) {
+            if (regionId.isPresent() && regionId.get() != task.getRegion().getId()) {
+                // 在task中需要对region进行过滤，每一个task执行一个region的dump任务
+                continue;
+            }
             tasks = hostTasksMap.get(task.getHost());
             if (tasks == null) {
                 tasks = Lists.newArrayList();
@@ -212,10 +215,12 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                 return Types.INTEGER;
             case TypeTimestamp:
             case TypeDatetime:
-                return datetimeFormat ? Types.TIMESTAMP : Types.BIGINT;
+                //return datetimeFormat ? Types.TIMESTAMP : Types.BIGINT;
+                return Types.TIMESTAMP;
             case TypeDate:
             case TypeNewDate:
-                return datetimeFormat ? Types.DATE : Types.INTEGER;
+                // return datetimeFormat ? Types.DATE : Types.INTEGER;
+                return Types.DATE;
             case TypeDuration:
             case TypeYear:
             case TypeBit:

@@ -1,21 +1,23 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.ds.tidb;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
@@ -46,6 +48,15 @@ public class TestTiKVDataSourceFactory extends TestCase {
 
         validateColumnMeta(true);
         validateColumnMeta(false);
+    }
+
+    public static List<SelectedTab> createTabOfEmployees() {
+        List<SelectedTab> selectedTabs = Lists.newArrayList();
+        SelectedTab selectedTab = new SelectedTab();
+        selectedTab.setCols(Lists.newArrayList(COL_EMP_NO, COL_BIRTH_DATE, COL_FIRST_NAME, COL_LAST_NAME, COL_GENDER, COL_HIRE_DATE));
+        selectedTab.name = TABLE_NAME;
+        selectedTabs.add(selectedTab);
+        return selectedTabs;
     }
 
     private void validateColumnMeta(boolean datetimeFormat) {

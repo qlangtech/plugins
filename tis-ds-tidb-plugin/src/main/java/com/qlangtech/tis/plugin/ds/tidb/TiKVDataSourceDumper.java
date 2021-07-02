@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.plugin.ds.tidb;
 
@@ -36,7 +36,7 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
     private final TiTableInfoWrapper tab;
 
     private final TiKVDataSourceFactory dsFactory;
-    private final TiPartition partition;
+    public final TiPartition partition;
     private final List<ColumnMetaData> targetCols;
 
     private TiSession tiSession;
@@ -118,15 +118,18 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
                         // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-date
 
                         row.put(columnMetaData.getKey()
-                                , dsFactory.datetimeFormat
-                                        ? DateUtils.formatDate(column.getLong(rowIndex))
-                                        : String.valueOf(column.getLong(rowIndex)));
+                                ,
+//                                       dsFactory.datetimeFormat
+//                                        ? DateUtils.formatDate(column.getLong(rowIndex))
+//                                        :
+                                String.valueOf(column.getLong(rowIndex)));
 
                     } else if (colType == MySQLType.TypeTimestamp || colType == MySQLType.TypeDatetime) {
                         row.put(columnMetaData.getKey(),
-                                dsFactory.datetimeFormat
-                                        ? DateUtils.formatTimestamp(column.getLong(rowIndex))
-                                        : String.valueOf(column.getLong(rowIndex)));
+//                                dsFactory.datetimeFormat
+//                                        ? DateUtils.formatTimestamp(column.getLong(rowIndex))
+//                                        :
+                                String.valueOf(column.getLong(rowIndex)));
                     } else {
                         row.put(columnMetaData.getKey(), column.getUTF8String(rowIndex));
                     }

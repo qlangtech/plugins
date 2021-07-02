@@ -1,1 +1,20 @@
-{}
+{
+  "name":"tikvreader",
+  "parameter":{
+    "column":[
+      "emp_no",
+      "birth_date",
+      "first_name",
+      "last_name",
+      "gender",
+      "hire_date"
+    ],
+    "connection":[
+      {
+        "dbName":"employees",
+        "pdAddrs":"192.168.28.201:2399"
+      }
+    ],
+    "table":"employees"
+  }
+}

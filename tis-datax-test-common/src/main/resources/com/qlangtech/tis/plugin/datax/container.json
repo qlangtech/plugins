@@ -47,9 +47,6 @@
   },
   "plugin": {
     "reader": {
-      "streamreader": {
-        "class": "com.alibaba.datax.plugin.reader.streamreader.StreamReader"
-      }
     },
     "writer": {
     }

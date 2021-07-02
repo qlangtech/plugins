@@ -56,6 +56,11 @@
             <artifactId>streamreader</artifactId>
             <version>${alibaba.datax.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>streamwriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
 
 
 

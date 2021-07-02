@@ -36,6 +36,8 @@
     </scm>
 
     <dependencies>
+
+
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>datax-common</artifactId>

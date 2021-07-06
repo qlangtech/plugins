@@ -291,7 +291,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                 BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) readerDescribable.instance;
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
-                msgHandler.addErrorMessage(context, "数据源连接不正常," + e.getMessage());
+                // msgHandler.addErrorMessage(context, );
+                msgHandler.addFieldError(context, BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME, "数据源连接不正常," + e.getMessage());
                 return false;
             }
 

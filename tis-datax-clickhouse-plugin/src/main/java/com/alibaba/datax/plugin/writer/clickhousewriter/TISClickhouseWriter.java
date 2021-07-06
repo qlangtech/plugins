@@ -15,9 +15,9 @@
 
 package com.alibaba.datax.plugin.writer.clickhousewriter;
 
-import com.qlangtech.tis.offline.DataxUtils;
-
 /**
+ * 这个扩展是想实现Clickhouse的自动建表
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-10 09:10
  **/
@@ -27,7 +27,7 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
         @Override
         public void prepare() {
             super.prepare();
-           // this.originalConfig.getString(DataxUtils.DATAX_NAME);
+            // this.originalConfig.getString(DataxUtils.DATAX_NAME);
         }
     }
 

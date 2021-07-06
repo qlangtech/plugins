@@ -17,6 +17,7 @@
   },
   "globalCfg": {
     "label": "全局配置",
+    "dftVal": "datax-global-config",
     "creator": {
       "routerLink": "/base/basecfg",
       "label": "配置"

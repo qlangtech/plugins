@@ -28,6 +28,7 @@
     <artifactId>tis-aliyun-hdfs-plugin</artifactId>
     <packaging>tpi</packaging>
 
+
     <name>tis-aliyun-hdfs-plugin</name>
     <url>http://maven.apache.org</url>
 

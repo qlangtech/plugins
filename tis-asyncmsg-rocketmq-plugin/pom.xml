@@ -33,7 +33,6 @@
     <properties>
         <rocketmq.version>4.7.1</rocketmq.version>
     </properties>
-
     <scm>
         <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>

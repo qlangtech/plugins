@@ -30,6 +30,7 @@
         <url>https://github.com/qlangtech/plugins/tree/master/tis-datax-cassandra-plugin</url>
         <tag>HEAD</tag>
     </scm>
+
     <artifactId>tis-datax-cassandra-plugin</artifactId>
     <packaging>tpi</packaging>
     <dependencies>

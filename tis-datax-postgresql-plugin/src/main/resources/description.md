@@ -1,4 +1,4 @@
-* 分装PostgreSQL作为数据源的DataSource插件，可以向TIS导入PostgreSQL中的数据表作后续分析处理
+* 封装PostgreSQL作为数据源的DataSource插件，可以向TIS导入PostgreSQL中的数据表作后续分析处理
 * PostgresqlReader
   
   实现了Alibaba DataXReader从PostgreSQL读取数据。在底层实现上，PostgresqlReader通过JDBC连接远程PostgreSQL数据库，并执行相应的sql语句将数据从PostgreSQL库中SELECT出来[详细](https://github.com/alibaba/DataX/blob/master/postgresqlreader/doc/postgresqlreader.md)

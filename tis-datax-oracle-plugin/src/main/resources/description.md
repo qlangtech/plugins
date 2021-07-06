@@ -1,4 +1,4 @@
-* 分装Oracle作为数据源的DataSource插件，可以向TIS导入Oracle中的数据表作后续分析处理
+* 封装Oracle作为数据源的DataSource插件，可以向TIS导入Oracle中的数据表作后续分析处理
 * OracleReader
   
   实现了alibaba DataXReader从Oracle读取数据。在底层实现上，OracleReader通过JDBC连接远程Oracle数据库，并执行相应的sql语句将数据从Oracle库中SELECT出来。[详细](https://github.com/alibaba/DataX/blob/master/oraclereader/doc/oraclereader.md)

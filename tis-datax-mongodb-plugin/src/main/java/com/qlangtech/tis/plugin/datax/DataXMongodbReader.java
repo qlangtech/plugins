@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 /**
  * https://gitee.com/mirrors/DataX/blob/master/mongodbreader/doc/mongodbreader.md
- *
+ * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/

@@ -1,83 +1,85 @@
 {
-  "com.qlangtech.tis.plugin.datax.DataXMongodbWriter": {
-    "attrs": [
+  "com.qlangtech.tis.plugin.datax.DataXMongodbWriter":{
+    "attrs":[
       {
-        "describable": false,
-        "eprops": {
-          "creator": {
-            "label": "数据源管理",
-            "routerLink": "/offline/ds"
+        "describable":false,
+        "eprops":{
+          "creator":{
+            "label":"数据源管理",
+            "routerLink":"/offline/ds"
           },
-          "enum": [
+          "enum":[
             {
-              "label": "teatMongoDB",
-              "val": "teatMongoDB"
+              "label":"teatMongoDB",
+              "val":"teatMongoDB"
             }
           ],
-          "label": "数据库名"
+          "label":"数据库名"
         },
-        "key": "dbName",
-        "ord": 0,
-        "pk": false,
-        "required": true,
-        "type": 5
+        "key":"dbName",
+        "ord":0,
+        "pk":false,
+        "required":true,
+        "type":5
       },
       {
-        "describable": false,
-        "eprops": {
-          "help": "MonogoDB的集合名。【必填】"
+        "describable":false,
+        "eprops":{
+          "dftVal":"orderdetail",
+          "help":"MonogoDB的集合名。【必填】"
         },
-        "key": "collectionName",
-        "ord": 3,
-        "pk": false,
-        "required": true,
-        "type": 1
+        "key":"collectionName",
+        "ord":3,
+        "pk":false,
+        "required":true,
+        "type":1
       },
       {
-        "describable": false,
-        "eprops": {
-          "dftVal": "[{\"name\":\"user_id\",\"type\":\"string\"},{\"name\":\"user_name\",\"type\":\"array\",\"splitter\":\",\"}]",
-          "help": "【必填】MongoDB的文档列名。是JSONArray结构类型，内部的JSONObject的元祖需要具有，'name'，'type'(可选以下\"int\", \"long\", \"double\", \"string\", \"array\", \"date\", \"boolean\", \"bytes\")，'splitter'(因为MongoDB支持数组类型，但是Datax框架本身不支持数组类型，所以mongoDB读出来的数组类型要通过这个分隔符合并成字符串)"
+        "describable":false,
+        "eprops":{
+          "dftVal":"[\n\t{\n\t\t\"name\":\"col1\",\n\t\t\"type\":\"string\"\n\t},\n\t{\n\t\t\"name\":\"col2\",\n\t\t\"type\":\"string\"\n\t},\n\t{\n\t\t\"name\":\"col3\",\n\t\t\"type\":\"string\"\n\t}\n]",
+          "help":"【必填】MongoDB的文档列名。是JSONArray结构类型，内部的JSONObject的元祖需要具有，'name'，'type'(可选以下\"int\", \"long\", \"double\", \"string\", \"array\", \"date\", \"boolean\", \"bytes\")，'splitter'(因为MongoDB支持数组类型，但是Datax框架本身不支持数组类型，所以mongoDB读出来的数组类型要通过这个分隔符合并成字符串)",
+          "rows":15
         },
-        "key": "column",
-        "ord": 4,
-        "pk": false,
-        "required": true,
-        "type": 2
+        "key":"column",
+        "ord":4,
+        "pk":false,
+        "required":true,
+        "type":2
       },
       {
-        "describable": false,
-        "eprops": {
-          "dftVal": "{\"isUpsert\":true,\"upsertKey\":\"unique_id\"}",
-          "help": "指定了传输数据时更新的信息。填写JSONObject格式，需要有两个属性'isUpsert'(当设置为true时，表示针对相同的upsertKey做更新操作),'upsertKey'(upsertKey指定了没行记录的业务主键。用来做更新时使用)【选填】"
+        "describable":false,
+        "eprops":{
+          "help":"指定了传输数据时更新的信息。填写JSONObject格式，需要有两个属性'isUpsert'(当设置为true时，表示针对相同的upsertKey做更新操作),'upsertKey'(upsertKey指定了没行记录的业务主键。用来做更新时使用)【选填】,例子：{\"isUpsert\":true,\"upsertKey\":\"unique_id\"},"
         },
-        "key": "upsertInfo",
-        "ord": 8,
-        "pk": false,
-        "required": false,
-        "type": 2
+        "key":"upsertInfo",
+        "ord":8,
+        "pk":false,
+        "required":false,
+        "type":2
       },
       {
-        "describable": false,
-        "eprops": {
-          "dftVal": "{\n    \"name\": \"mongodbwriter\",\n    \"parameter\": {\n        \"address\": [${writer.serverAddress}],\n#if($writer.containCredential)\n        \"userName\": \"${writer.userName}\",\n        \"userPassword\": \"${writer.password}\",\n#end\n        \"dbName\": \"${writer.dbName}\",\n        \"collectionName\": \"${writer.collectionName}\",\n        \"column\": ${writer.column},\n#if($writer.containUpsertInfo)\n        \"upsertInfo\": ${writer.upsertInfo}\n#end\n    }\n}",
-          "label": "配置模版",
-          "rows": 18
+        "describable":false,
+        "eprops":{
+          "dftVal":"{\n    \"name\": \"mongodbwriter\",\n    \"parameter\": {\n        \"address\": [${writer.serverAddress}],\n#if($writer.containCredential)\n        \"userName\": \"${writer.userName}\",\n        \"userPassword\": \"${writer.password}\",\n#end\n        \"dbName\": \"${writer.dbName}\",\n        \"collectionName\": \"${writer.collectionName}\",\n        \"column\": ${writer.column},\n#if($writer.containUpsertInfo)\n        \"upsertInfo\": ${writer.upsertInfo}\n#end\n    }\n}",
+          "help":"无特殊情况请不要修改模版内容，避免不必要的错误",
+          "label":"配置模版",
+          "rows":18
         },
-        "key": "template",
-        "ord": 11,
-        "pk": false,
-        "required": true,
-        "type": 2
+        "key":"template",
+        "ord":11,
+        "pk":false,
+        "required":true,
+        "type":2
       }
     ],
-    "displayName": "MongoDB",
-    "extendPoint": "com.qlangtech.tis.datax.impl.DataxWriter",
-    "extractProps": {
-      "rdbms": false,
-      "supportMultiTable": true
+    "displayName":"MongoDB",
+    "extendPoint":"com.qlangtech.tis.datax.impl.DataxWriter",
+    "extractProps":{
+      "rdbms":false,
+      "supportMultiTable":false
     },
-    "impl": "com.qlangtech.tis.plugin.datax.DataXMongodbWriter",
-    "veriflable": false
+    "impl":"com.qlangtech.tis.plugin.datax.DataXMongodbWriter",
+    "veriflable":true
   }
 }

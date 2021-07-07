@@ -75,7 +75,7 @@ public class WriterTemplate {
             }
         };
 
-        String writerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.of(tableMap));
+        String writerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.ofNullable(tableMap));
         Assert.assertNotNull(writerCfg);
         System.out.println(writerCfg);
         JsonUtil.assertJSONEqual(dataXWriter.getClass(), assertFileName, writerCfg, (message, expected, actual) -> {

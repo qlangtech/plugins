@@ -1,1 +1,1 @@
-* 封装了Apache Solr中各扩展点的实现（FieldType等）
+* 封装了Apache Solr中各扩展点实现（FieldType等）

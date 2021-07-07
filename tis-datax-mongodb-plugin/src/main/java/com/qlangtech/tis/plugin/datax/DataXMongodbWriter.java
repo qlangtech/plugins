@@ -22,6 +22,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -33,15 +35,17 @@ import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXMongodbWriter extends DataxWriter {
+public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.INullTableMapCreator {
 
     private static final String KEY_FIELD_UPSERT_INFO = "upsertInfo";
     private static final String KEY_FIELD_COLUMN = "column";
@@ -69,6 +73,51 @@ public class DataXMongodbWriter extends DataxWriter {
         return (MangoDBDataSourceFactory) dsStore.getPlugin();
     }
 
+    /**
+     * 取得默认的列内容
+     *
+     * @return
+     */
+    public static String getDftColumn() {
+//[{"name":"user_id","type":"string"},{"name":"user_name","type":"array","splitter":","}]
+
+        JSONArray fields = new JSONArray();
+
+        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
+        if (dataReader == null) {
+            return "[]";
+        }
+
+        List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+        for (ISelectedTab tab : selectedTabs) {
+            tab.getCols().forEach((col) -> {
+                JSONObject field = new JSONObject();
+                field.put("name", col.getName());
+                field.put("type", col.getType().getLiteria());
+                fields.add(field);
+            });
+
+            break;
+        }
+
+        return JsonUtil.toString(fields);
+    }
+
+    public static String getDftCollectionName() {
+        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
+        if (dataReader == null) {
+            return StringUtils.EMPTY;
+        }
+
+        List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+        for (ISelectedTab tab : selectedTabs) {
+            return tab.getName();
+        }
+
+        return StringUtils.EMPTY;
+    }
+
+
     @Override
     public String getTemplate() {
         return this.template;
@@ -76,6 +125,9 @@ public class DataXMongodbWriter extends DataxWriter {
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+        if (tableMap.isPresent()) {
+            throw new IllegalStateException("tableMap must not be present");
+        }
         MongoDBWriterContext context = new MongoDBWriterContext(this);
         return context;
     }
@@ -135,6 +187,10 @@ public class DataXMongodbWriter extends DataxWriter {
             return verify(msgHandler, context, postFormVals);
         }
 
+        @Override
+        public boolean isSupportMultiTable() {
+            return false;
+        }
 
         @Override
         public boolean isRdbms() {

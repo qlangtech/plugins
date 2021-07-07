@@ -47,7 +47,8 @@
       {
         "describable": false,
         "eprops": {
-          "dftVal": "{\n  \"name\": \"mysqlreader\",\n  \"parameter\": {\n  \"connection\": [\n    {\n      \"jdbcUrl\": [\"${reader.jdbcUrl}\"],\n      \"querySql\": [\"SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end\"]\n    }\n  ],\n  \"password\": \"${reader.password}\",\n  \"username\": \"${reader.username}\"}\n}",
+          "dftVal":"{\n  \"name\": \"mysqlreader\",\n  \"parameter\": {\n    \"connection\": [\n      {\n        \"jdbcUrl\": [\n          \"${reader.jdbcUrl}\"\n        ],\n        \"querySql\": [\n          \"SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end\"\n        ]\n      }\n    ],\n    \"password\": \"${reader.password}\",\n    \"username\": \"${reader.username}\"\n  }\n}",
+          "help":"无特殊情况请不要修改模版内容，避免不必要的错误",
           "label": "配置模版",
           "rows": 18
         },

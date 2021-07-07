@@ -244,10 +244,11 @@ public class TestDataxMySQLReader extends BasicTest {
 
         ReaderTemplate.validateDataXReader("mysql-datax-reader-assert.json", dataXName, mySQLReader);
 
-        selectedTab = new SelectedTab();
-        selectedTab.setCols(Collections.emptyList());
-        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
-        mySQLReader.setSelectedTabs(Collections.singletonList(selectedTab));
+//        selectedTab = new SelectedTab();
+//        selectedTab.setCols(Collections.emptyList());
+//        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
+
+        mySQLReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
 //        valiateReaderCfgGenerate("mysql-datax-reader-asser-without-option-val.json"
 //                , processor, mySQLReader);
 

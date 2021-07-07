@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -58,6 +59,9 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     protected DS getDataSourceFactory() {
+        if (StringUtils.isBlank(this.dbName)) {
+            throw new IllegalStateException("prop dbName can not be null");
+        }
         return getDs(this.dbName);
     }
 

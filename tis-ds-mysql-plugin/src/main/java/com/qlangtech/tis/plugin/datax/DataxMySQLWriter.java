@@ -40,8 +40,8 @@ import java.util.Optional;
 public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     private static final String DATAX_NAME = "MySQL";
 
-    @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String dbName;
+//    @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String dbName;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;

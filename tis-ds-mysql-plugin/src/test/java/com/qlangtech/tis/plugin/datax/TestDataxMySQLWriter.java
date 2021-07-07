@@ -20,6 +20,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
@@ -138,9 +139,12 @@ public class TestDataxMySQLWriter extends BasicTest {
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
 
+        IDataxReader dataxReader = EasyMock.mock("dataxReader", IDataxReader.class);
+
+        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
         EasyMock.expect(processor.getWriter(null)).andReturn(mySQLWriter);
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
-        EasyMock.replay(processor, dataxGlobalCfg);
+        EasyMock.replay(processor, dataxGlobalCfg, dataxReader);
 
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
@@ -155,7 +159,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             assertEquals(m, e, a);
         });
-        EasyMock.verify(processor, dataxGlobalCfg);
+        EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
     }
 
 

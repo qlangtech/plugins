@@ -75,10 +75,10 @@ public class TestMySQLDataSourceFactory extends TestCase {
 
     public void testDataDumpers() throws Exception {
         MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory(){
-            @Override
-            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-                throw new UnsupportedOperationException();
-            }
+//            @Override
+//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+//                throw new UnsupportedOperationException();
+//            }
         };
         dataSourceFactory.dbName = "employees";
         dataSourceFactory.password = null;

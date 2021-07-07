@@ -150,30 +150,34 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
             JSONObject col = null;
             try {
                 String upsertinfo = postFormVals.getField(KEY_FIELD_UPSERT_INFO);
-                JSONObject info = JSON.parseObject(upsertinfo);
-                // isUpsert":true,"upsertKey
-                Boolean isUpsert = info.getBoolean("isUpsert");
-                if (isUpsert == null && isUpsert) {
-                    String upsertKey = info.getString("upsertKey");
-                    if (StringUtils.isEmpty(upsertinfo)) {
-                        msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, "属性'upsertKey'必须填写");
-                        return false;
-                    }
-                    boolean findField = false;
-                    for (int i = 0; i < cols.size(); i++) {
-                        col = cols.getJSONObject(i);
-                        if (StringUtils.equals(upsertKey, col.getString("name"))) {
-                            findField = true;
+                if (StringUtils.isNotBlank(upsertinfo)) {
+
+                    JSONObject info = JSON.parseObject(upsertinfo);
+                    // isUpsert":true,"upsertKey
+                    Boolean isUpsert = info.getBoolean("isUpsert");
+                    if (isUpsert == null && isUpsert) {
+                        String upsertKey = info.getString("upsertKey");
+                        if (StringUtils.isEmpty(upsertinfo)) {
+                            msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, "属性'upsertKey'必须填写");
+                            return false;
+                        }
+                        boolean findField = false;
+                        for (int i = 0; i < cols.size(); i++) {
+                            col = cols.getJSONObject(i);
+                            if (StringUtils.equals(upsertKey, col.getString("name"))) {
+                                findField = true;
+                            }
+                        }
+
+                        if (!findField) {
+                            msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO
+                                    , "属性'upsertKey':" + upsertinfo + "在" + KEY_FIELD_COLUMN + "没有找到");
+                            return false;
                         }
                     }
-
-                    if (!findField) {
-                        msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO
-                                , "属性'upsertKey':" + upsertinfo + "在" + KEY_FIELD_COLUMN + "没有找到");
-                        return false;
-                    }
-
                 }
+
+
             } catch (Throwable e) {
                 msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, e.getMessage());
                 return false;

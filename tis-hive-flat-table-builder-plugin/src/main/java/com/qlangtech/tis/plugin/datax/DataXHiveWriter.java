@@ -41,7 +41,8 @@ public class DataXHiveWriter extends BasicFSWriter {
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
@@ -52,10 +53,13 @@ public class DataXHiveWriter extends BasicFSWriter {
         return this.template;
     }
 
+    public MREngine getEngineType() {
+        return MREngine.HIVE;
+    }
 
     @Override
     protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
-        return new HiveDataXContext(tableMap, this.dataXName);
+        return new HiveDataXContext("tishivewriter", tableMap, this.dataXName);
     }
 
 
@@ -78,8 +82,15 @@ public class DataXHiveWriter extends BasicFSWriter {
 
     public class HiveDataXContext extends FSDataXContext {
 
-        public HiveDataXContext(IDataxProcessor.TableMap tabMap, String dataXName) {
+        private final String dataxPluginName;
+
+        public HiveDataXContext(String dataxPluginName, IDataxProcessor.TableMap tabMap, String dataXName) {
             super(tabMap, dataXName);
+            this.dataxPluginName = dataxPluginName;
+        }
+
+        public String getDataxPluginName() {
+            return this.dataxPluginName;
         }
 
         public Integer getPartitionRetainNum() {

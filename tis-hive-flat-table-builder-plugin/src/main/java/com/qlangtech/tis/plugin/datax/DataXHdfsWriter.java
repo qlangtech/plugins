@@ -33,6 +33,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
  *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter
  **/
 public class DataXHdfsWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hdfs";
@@ -42,6 +43,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
+
     @Override
     public String getTemplate() {
         return this.template;

@@ -19,6 +19,7 @@ import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class HiveRemoveHistoryDataTask {
     private static final String pt = IDumpTable.PARTITION_PT;
 
     private final ITISFileSystem fileSystem;
+    private final MREngine mrEngine;
 
     public static void main(String[] arg) {
 //        List<PathInfo> timestampList = new ArrayList<PathInfo>();
@@ -58,9 +60,10 @@ public class HiveRemoveHistoryDataTask {
 //        }
     }
 
-    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory) {
+    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory, MREngine mrEngine) {
         super();
         this.fileSystem = fsFactory;
+        this.mrEngine = mrEngine;
     }
 
     /**
@@ -233,7 +236,7 @@ public class HiveRemoveHistoryDataTask {
         List<FSHistoryFileUtils.PathInfo> deletePts = Lists.newArrayList();
         try {
             // 判断表是否存在
-            if (!BindHiveTableTool.HiveTableBuilder.isTableExists(conn, table)) {
+            if (!BindHiveTableTool.HiveTableBuilder.isTableExists(this.mrEngine, conn, table)) {
                 logger.info(table + " is not exist");
                 return Collections.emptyList();
             }

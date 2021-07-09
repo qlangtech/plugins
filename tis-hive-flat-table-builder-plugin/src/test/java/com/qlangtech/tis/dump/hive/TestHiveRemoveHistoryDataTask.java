@@ -18,6 +18,7 @@ package com.qlangtech.tis.dump.hive;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -109,7 +110,7 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
         //hiveConn.close();
         EasyMock.replay(fileSystem, hiveConn, showDBStatment, resultSet, showTabsStatement, tabsResult, showPartitionsStatement, showPartitionsResult, dropPtStatement1, dropPtStatement2);
         List<FSHistoryFileUtils.PathInfo> deletePts =
-                (new HiveRemoveHistoryDataTask(fileSystem)).dropHistoryHiveTable(tabOrder, hiveConn, partitionRetainNum);
+                (new HiveRemoveHistoryDataTask(fileSystem, MREngine.HIVE)).dropHistoryHiveTable(tabOrder, hiveConn, partitionRetainNum);
 
         assertEquals(2, deletePts.size());
         deletePts.forEach((pt) -> {

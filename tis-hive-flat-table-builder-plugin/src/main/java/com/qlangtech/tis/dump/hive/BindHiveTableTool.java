@@ -26,6 +26,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
@@ -59,7 +60,8 @@ public class BindHiveTableTool {
 
     // private static final Logger logger = LoggerFactory
     // .getLogger(BindHiveTableTool.class);
-    public static void bindHiveTables(ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables, String timestamp, ITaskContext context) {
+    public static void bindHiveTables(MREngine engine, ITISFileSystem fileSystem, Map<EntityName
+            , Callable<HiveBindConfig>> hiveTables, String timestamp, ITaskContext context) {
         Objects.nonNull(fileSystem);
         // Objects.nonNull(userName);
         Objects.nonNull(timestamp);
@@ -68,7 +70,7 @@ public class BindHiveTableTool {
             HiveTableBuilder hiveTableBuilder = new HiveTableBuilder(timestamp);
 
             hiveTableBuilder.setFileSystem(fileSystem);
-            hiveTableBuilder.bindHiveTables(fileSystem, hiveTables, context);
+            hiveTableBuilder.bindHiveTables(engine, hiveTables, context);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -151,22 +153,22 @@ public class BindHiveTableTool {
             this.fsFormat = fsFileFormat;
         }
 
-        /**
-         * @param
-         * @return
-         * @throws Exception
-         */
-        public static List<String> getExistTables(Connection conn) throws Exception {
-            final List<String> tables = new ArrayList<>();
-            HiveDBUtils.query(conn, "show tables", new HiveDBUtils.ResultProcess() {
-                @Override
-                public boolean callback(ResultSet result) throws Exception {
-                    tables.add(result.getString(1));
-                    return true;
-                }
-            });
-            return tables;
-        }
+//        /**
+//         * @param
+//         * @return
+//         * @throws Exception
+//         */
+//        public static List<String> getExistTables(Connection conn) throws Exception {
+//            final List<String> tables = new ArrayList<>();
+//            HiveDBUtils.query(conn, "show tables", new HiveDBUtils.ResultProcess() {
+//                @Override
+//                public boolean callback(ResultSet result) throws Exception {
+//                    tables.add(result.getString(1));
+//                    return true;
+//                }
+//            });
+//            return tables;
+//        }
 
         /**
          * @param
@@ -225,7 +227,7 @@ public class BindHiveTableTool {
             }
             //hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(pt string,pmod string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' LINES " + "TERMINATED BY '\\n' NULL DEFINED AS '' STORED AS TEXTFILE ");
             hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-           // hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='" + this.fsFormat.getLineDelimiter() + "','field.delim'='" + this.fsFormat.getFieldDelimiter() + "')");
+            // hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='" + this.fsFormat.getLineDelimiter() + "','field.delim'='" + this.fsFormat.getFieldDelimiter() + "')");
             hiveSQl.append(this.fsFormat.getRowFormat());
             hiveSQl.append("STORED AS " + this.fsFormat.getFileType().getType());
             sqlCommandTailAppend.append(hiveSQl);
@@ -240,7 +242,7 @@ public class BindHiveTableTool {
          * @param hiveTables
          * @throws Exception
          */
-        public void bindHiveTables(ITISFileSystem fileSystem, Map<EntityName, Callable<HiveBindConfig>> hiveTables, ITaskContext context) throws Exception {
+        public void bindHiveTables(MREngine engine, Map<EntityName, Callable<HiveBindConfig>> hiveTables, ITaskContext context) throws Exception {
             Connection conn = null;
             try {
                 EntityName hiveTable = null;
@@ -248,7 +250,8 @@ public class BindHiveTableTool {
                 for (Map.Entry<EntityName, Callable<HiveBindConfig>> entry : hiveTables.entrySet()) {
                     // String hivePath = hiveTable.getNameWithPath();
                     hiveTable = entry.getKey();
-                    final List<String> tables = getExistTables(conn, hiveTable.getDbName());
+
+                    final List<String> tables = engine.getTabs(conn, hiveTable);// getExistTables(conn, hiveTable.getDbName());
                     HiveBindConfig columns = entry.getValue().call();// getColumns(hiveTable, timestamp);
                     if (tables.contains(hiveTable.getTableName())) {
                         if (!isTableSame(conn, columns.colsMeta, hiveTable)) {
@@ -340,21 +343,23 @@ public class BindHiveTableTool {
          * @return
          * @throws Exception
          */
-        public static boolean isTableExists(Connection connection, EntityName dumpTable) throws Exception {
+        public static boolean isTableExists(MREngine mrEngine, Connection connection, EntityName dumpTable) throws Exception {
             // 判断表是否存在
             if (!isDBExists(connection, dumpTable.getDbName())) {
                 // DB都不存在，table肯定就不存在啦
                 logger.debug("dumpTable'DB is not exist:{}", dumpTable);
                 return false;
             }
-            final List<String> tables = new ArrayList<>();
+            final List<String> tables = mrEngine.getTabs(connection, dumpTable);// new ArrayList<>();
+            // SPARK:
             //        +-----------+---------------+--------------+--+
             //        | database  |   tableName   | isTemporary  |
             //        +-----------+---------------+--------------+--+
             //        | order     | totalpayinfo  | false        |
             //        +-----------+---------------+--------------+--+
-            HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName()
-                    , result -> tables.add(result.getString(2)));
+            // Hive
+//            HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName()
+//                    , result -> tables.add(result.getString(2)));
             boolean contain = tables.contains(dumpTable.getTableName());
             if (!contain) {
                 logger.debug("table:{} is not exist in[{}]", dumpTable.getTableName()

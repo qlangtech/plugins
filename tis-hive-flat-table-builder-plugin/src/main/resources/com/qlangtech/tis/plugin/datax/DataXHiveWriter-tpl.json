@@ -1,5 +1,5 @@
 {
-  "name": "tishivewriter",
+  "name": "${writer.dataxPluginName}",
   "parameter": {
     "fileType": "$writer.fileType",
     "fileName": "$writer.tableName",

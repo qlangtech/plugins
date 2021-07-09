@@ -34,6 +34,7 @@ import com.qlangtech.tis.offline.TableDumpFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -82,6 +83,8 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER)
     public int runjdwpPort;
 
+    private MREngine engine = MREngine.HIVE;
+
 
     @Override
     public int getMaxHeapMemory() {
@@ -122,7 +125,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     private HiveRemoveHistoryDataTask getHiveRemoveHistoryDataTask() {
         if (removeHistoryDataTask == null) {
-            this.removeHistoryDataTask = new HiveRemoveHistoryDataTask(getFs());
+            this.removeHistoryDataTask = new HiveRemoveHistoryDataTask(getFs(), MREngine.HIVE);
         }
         return removeHistoryDataTask;
     }
@@ -154,7 +157,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
     @Override
     public void bindTables(Set<EntityName> hiveTables, final String timestamp, ITaskContext context) {
-        BindHiveTableTool.bindHiveTables(this.getFs()
+        BindHiveTableTool.bindHiveTables(engine, this.getFs()
                 , hiveTables.stream().collect(Collectors.toMap((e) -> e, (e) -> {
                     return new Callable<BindHiveTableTool.HiveBindConfig>() {
                         @Override

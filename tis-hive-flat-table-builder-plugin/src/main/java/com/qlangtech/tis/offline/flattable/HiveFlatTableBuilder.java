@@ -29,8 +29,10 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.fullbuild.taskflow.hive.HiveTaskFactory;
+import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.FlatTableBuilder;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -44,6 +46,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Optional;
 
 /*
  * HIVE 宽表构建task
@@ -66,8 +69,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
             hiveAddress;
 
     @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
-    public String // "jdbc:hive2://10.1.5.68:10000/tis";
-            dbName;
+    public String dbName;
 
     @FormField(ordinal = 3, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
     public String fsName;
@@ -161,9 +163,20 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
         String dbName = postFormVals.getField(KEY_DB_NAME);
 
+        boolean useUserToken = Boolean.parseBoolean(postFormVals.getField(DefaultHiveConnGetter.KEY_USE_USERTOKEN));
+        HiveDBUtils.UserToken userToken = null;
+        if (useUserToken) {
+            userToken = new HiveDBUtils.UserToken(
+                    postFormVals.getField(DefaultHiveConnGetter.KEY_USER_NAME), postFormVals.getField(DefaultHiveConnGetter.KEY_PASSWORD));
+            if (StringUtils.isBlank(userToken.userName)) {
+                msgHandler.addFieldError(context, DefaultHiveConnGetter.KEY_USER_NAME, ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
+                return false;
+            }
+        }
+
         Connection conn = null;
         try {
-            conn = HiveDBUtils.getInstance(hiveAddress, dbName).createConnection();
+            conn = HiveDBUtils.getInstance(hiveAddress, dbName, Optional.ofNullable(userToken)).createConnection();
         } catch (Throwable e) {
             Throwable[] throwables = ExceptionUtils.getThrowables(e);
             for (Throwable t : throwables) {

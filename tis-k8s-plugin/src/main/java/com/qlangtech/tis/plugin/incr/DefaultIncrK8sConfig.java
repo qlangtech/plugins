@@ -36,7 +36,7 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(identity = false, ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sImage;
 
 //    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})

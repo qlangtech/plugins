@@ -36,8 +36,6 @@
     "disable": true
   },
   "template": {
-    "label": "配置模版",
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXHiveWriter.getDftTemplate()",
-    "rows": 18
   }
 }

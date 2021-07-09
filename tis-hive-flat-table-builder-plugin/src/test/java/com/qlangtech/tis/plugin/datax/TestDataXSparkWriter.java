@@ -20,7 +20,9 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -34,26 +36,26 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-27 15:17
  **/
-public class TestDataXHiveWriter extends BasicTest {
+public class TestDataXSparkWriter extends BasicTest {
 
     public void testGetDftTemplate() {
-        String dftTemplate = DataXHiveWriter.getDftTemplate();
+        String dftTemplate = DataXSparkWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
     public void testPluginExtraPropsLoad() throws Exception {
-        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXHiveWriter.class);
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXSparkWriter.class);
         assertTrue(extraProps.isPresent());
     }
 
     public void testDescriptorsJSONGenerate() {
-        DataXHiveWriter writer = new DataXHiveWriter();
+        DataXSparkWriter writer = new DataXSparkWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
 
         JSONObject desc = descJson.getDescriptorsJSON();
         System.out.println(JsonUtil.toString(desc));
 
-        JsonUtil.assertJSONEqual(TestDataXHiveWriter.class, "desc-json/datax-writer-hive.json", desc, (m, e, a) -> {
+        JsonUtil.assertJSONEqual(TestDataXSparkWriter.class, "desc-json/datax-writer-spark.json", desc, (m, e, a) -> {
             assertEquals(m, e, a);
         });
     }
@@ -63,7 +65,7 @@ public class TestDataXHiveWriter extends BasicTest {
     public void testConfigGenerate() throws Exception {
 
 
-        DataXHiveWriter hiveWriter = new DataXHiveWriter();
+        DataXSparkWriter hiveWriter = new DataXSparkWriter();
         hiveWriter.dataXName = mysql2hiveDataXName;
         hiveWriter.fsName = "hdfs1";
         hiveWriter.fileType = "text";
@@ -71,34 +73,42 @@ public class TestDataXHiveWriter extends BasicTest {
         hiveWriter.fieldDelimiter = "\t";
         hiveWriter.compress = "gzip";
         hiveWriter.encoding = "utf-8";
-        hiveWriter.template = DataXHiveWriter.getDftTemplate();
+        hiveWriter.template = DataXSparkWriter.getDftTemplate();
         hiveWriter.partitionRetainNum = 2;
-        hiveWriter.partitionFormat = "yyyyMMdd";
+        hiveWriter.partitionFormat = "yyyyMMddHHmmss";
 
 
         IDataxProcessor.TableMap tableMap = TestDataXHdfsWriter.createCustomer_order_relationTableMap();
 
 
-        WriterTemplate.valiateCfgGenerate("hive-datax-writer-assert.json", hiveWriter, tableMap);
+        WriterTemplate.valiateCfgGenerate("spark-datax-writer-assert.json", hiveWriter, tableMap);
 
 
         hiveWriter.compress = null;
         hiveWriter.encoding = null;
 
-        WriterTemplate.valiateCfgGenerate("hive-datax-writer-assert-without-option-val.json", hiveWriter, tableMap);
+        WriterTemplate.valiateCfgGenerate("spark-datax-writer-assert-without-option-val.json", hiveWriter, tableMap);
 
     }
 
 
     public void testDataDump() throws Exception {
 
+        //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hiveDataXName);
+
         HdfsFileSystemFactory hdfsFileSystemFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
+
+        ITISFileSystem fileSystem = hdfsFileSystemFactory.getFileSystem();
+
 
         final DefaultHiveConnGetter hiveConnGetter = new DefaultHiveConnGetter();
         hiveConnGetter.dbName = "tis";
         hiveConnGetter.hiveAddress = "192.168.28.200:10000";
 
-        final DataXHiveWriter dataxWriter = new DataXHiveWriter() {
+//        HdfsPath historicalPath = new HdfsPath(hdfsFileSystemFactory.rootDir + "/" + hiveConnGetter.dbName + "/customer_order_relation");
+//        fileSystem.delete(historicalPath, true);
+
+        final DataXSparkWriter dataxWriter = new DataXSparkWriter() {
 
             @Override
             public IHiveConnGetter getHiveConnGetter() {
@@ -112,16 +122,16 @@ public class TestDataXHiveWriter extends BasicTest {
 
             @Override
             public Class<?> getOwnerClass() {
-                return DataXHiveWriter.class;
+                return DataXSparkWriter.class;
             }
         };
 
         DataxWriter.dataxWriterGetter = (name) -> {
-            assertEquals("mysql2hive", name);
+            assertEquals(mysql2hiveDataXName, name);
             return dataxWriter;
         };
 
-        WriterTemplate.realExecuteDump("hive-datax-writer-assert-without-option-val.json", dataxWriter);
+        WriterTemplate.realExecuteDump("spark-datax-writer-assert-without-option-val.json", dataxWriter);
     }
 
 

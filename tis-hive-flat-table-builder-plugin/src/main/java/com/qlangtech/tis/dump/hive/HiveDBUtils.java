@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.dump.hive;
 
@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -68,23 +69,38 @@ public class HiveDBUtils {
 
     private static HiveDBUtils hiveHelper;
 
+
     public static HiveDBUtils getInstance(String hiveHost, String defaultDbName) {
+        return getInstance(hiveHost, defaultDbName, Optional.empty());
+    }
+
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
-                    hiveHelper = new HiveDBUtils(hiveHost, defaultDbName);
+                    hiveHelper = new HiveDBUtils(hiveHost, defaultDbName, userToken);
                 }
             }
         }
         return hiveHelper;
     }
 
-    private HiveDBUtils(String hiveHost, String defaultDbName) {
-        this.hiveDatasource = createDatasource(hiveHost, defaultDbName);
+    public static class UserToken {
+        public final String userName;
+        public final String password;
+
+        public UserToken(String userName, String password) {
+            this.userName = userName;
+            this.password = password;
+        }
+    }
+
+    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
+        this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -102,6 +118,11 @@ public class HiveDBUtils {
         hiveDatasource.setRemoveAbandoned(true);
         hiveDatasource.setLogAbandoned(true);
         hiveDatasource.setRemoveAbandonedTimeout(300 * 30);
+        if (userToken.isPresent()) {
+            UserToken ut = userToken.get();
+            hiveDatasource.setUsername(ut.userName);
+            hiveDatasource.setPassword(ut.password);
+        }
         // 测试空闲的连接是否有效
         hiveDatasource.setTestWhileIdle(true);
         if (StringUtils.isBlank(hiveHost)) {

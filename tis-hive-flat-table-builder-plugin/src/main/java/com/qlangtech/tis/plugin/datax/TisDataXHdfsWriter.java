@@ -18,11 +18,11 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.spi.Writer;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
-import com.qlangtech.tis.hive.HiveColumn;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import org.apache.hadoop.fs.Path;
 
-import java.util.List;
+import java.io.IOException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,60 +34,42 @@ public class TisDataXHdfsWriter extends Writer {
 
     // private static final Logger logger = LoggerFactory.getLogger(TisDataXHdfsWriter.class);
 
-    public static class Job extends TisDataXHiveWriter.Job {
-        //        @Override
-//        protected DataXHdfsWriter getWriterPlugin() {
-//            return super.getWriterPlugin();
+    public static class Job extends BasicHdfsWriterJob<DataXHdfsWriter> {
+
+//        protected int getPtRetainNum() {
+//            return -1;
 //        }
+
 //        @Override
-//        public void init() {
-//            super.init();
-//        }
-//
-//        public void prepare() {
-//            super.prepare();
+//        protected EntityName createDumpTable() {
+//            return null;
 //        }
 //
 //        @Override
-//        public void post() {
-//            super.post();
+//        protected void initializeHiveTable(List<HiveColumn> cols) {
+//            // super.initializeHiveTable(cols);
 //        }
-        protected int getPtRetainNum() {
-            return -1;
-        }
+//
+//        @Override
+//        protected void bindHiveTables() {
+//            // super.bindHiveTables();
+//        }
+
+        //        protected Path getPmodPath() {
+//            return this.tabDumpParentPath;
+//        }
+//
 
         @Override
-        protected EntityName createDumpTable() {
-            return null;
-        }
-
-        @Override
-        protected void initializeHiveTable(List<HiveColumn> cols) {
-            // super.initializeHiveTable(cols);
-        }
-
-        @Override
-        protected void bindHiveTables() {
-            // super.bindHiveTables();
-        }
-
-        protected Path getPmodPath() {
+        protected Path createPath() throws IOException {
+            ITISFileSystem fs = this.getWriterPlugin().getFs().getFileSystem();
+            this.tabDumpParentPath = new Path(fs.getRootDir()
+                    , this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE));
+            HdfsPath p = new HdfsPath(this.tabDumpParentPath);
+            if (!fs.exists(p)) {
+                fs.mkdirs(p);
+            }
             return this.tabDumpParentPath;
-        }
-
-        protected String getHdfsSubPath() {
-            return this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE);
-//            String jobPathProp = null;
-//            try {
-//                ;
-//                jobPathProp = this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE);
-//            } catch (IllegalAccessException e) {
-//                throw new RuntimeException(e);
-//            }
-//            if (StringUtils.isBlank(jobPathProp)) {
-//                throw new IllegalStateException("prop job path can not be null");
-//            }
-//            return jobPathProp;
         }
     }
 

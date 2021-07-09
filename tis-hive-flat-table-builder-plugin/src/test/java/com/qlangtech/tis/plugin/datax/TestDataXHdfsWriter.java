@@ -20,9 +20,15 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fs.TISFSDataOutputStream;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
+import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -91,18 +97,68 @@ public class TestDataXHdfsWriter extends BasicTest {
         WriterTemplate.valiateCfgGenerate("hdfs-datax-writer-assert-without-option-val.json", hdfsWriter, tableMap);
     }
 
-    public void testDataDump() throws Exception {
+    //@Test
+    public void dataDump() throws Exception {
 
-        final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hdfsDataXName);
+        //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hdfsDataXName);
 
-        DataXHdfsWriter hdfsWriter = (DataXHdfsWriter) dataxWriter;
 
-        ITISFileSystem fileSystem = hdfsWriter.getFs().getFileSystem();
-        IPath path = fileSystem.getPath(fileSystem.getPath(fileSystem.getRootDir()), hdfsRelativePath);
-        System.out.println("clear path:" + path);
-        fileSystem.delete(path, true);
+        HdfsFileSystemFactory fsFactory = getHdfsFileSystemFactory();
+        ITISFileSystem fileSystem = fsFactory.getFileSystem();
+//        assertNotNull("fileSystem can not be null", fileSystem);
 
-        WriterTemplate.realExecuteDump("hdfs-datax-writer-assert-without-option-val.json", dataxWriter);
+//        new Path(fsFactory.rootDir
+//                , this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE));
+//
+//        fileSystem.getPath("");
+
+        HdfsPath p = new HdfsPath(fsFactory.rootDir + "/tis/order");
+
+
+        HdfsPath subWriterPath = new HdfsPath(p, "test");
+
+        try (TISFSDataOutputStream outputStream = fileSystem.create(subWriterPath, true)) {
+            org.apache.commons.io.IOUtils.write(IOUtils.loadResourceFromClasspath(DataXHdfsWriter.class
+                    , "hdfs-datax-writer-assert-without-option-val.json"), outputStream, TisUTF8.get());
+        }
+        System.out.println("write file success");
+
+        List<IPathInfo> iPathInfos = fileSystem.listChildren(p);
+        for (IPathInfo child : iPathInfos) {
+            fileSystem.delete(child.getPath(), true);
+        }
+
+        final DataXHdfsWriter hdfsWriter = new DataXHdfsWriter() {
+            @Override
+            public FileSystemFactory getFs() {
+                return fsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXHdfsWriter.class;
+            }
+        };
+
+
+        DataxWriter.dataxWriterGetter = (name) -> {
+            assertEquals("mysql2hdfs", name);
+            return hdfsWriter;
+        };
+
+//        IPath path = fileSystem.getPath(fileSystem.getPath(fileSystem.getRootDir()), hdfsRelativePath);
+//        System.out.println("clear path:" + path);
+//        fileSystem.delete(path, true);
+//
+        WriterTemplate.realExecuteDump("hdfs-datax-writer-assert-without-option-val.json", hdfsWriter);
+    }
+
+    public static HdfsFileSystemFactory getHdfsFileSystemFactory() {
+        HdfsFileSystemFactory fsFactory = new HdfsFileSystemFactory();
+        fsFactory.setHdfsAddress("hdfs://daily-cdh201");
+        fsFactory.setHdfsSiteContent(IOUtils.loadResourceFromClasspath(DataXHdfsWriter.class, "hdfs/hdfsSiteContent.xml"));
+        fsFactory.rootDir = "/user/admin";
+        return fsFactory;
     }
 
     public static IDataxProcessor.TableMap createCustomer_order_relationTableMap() {

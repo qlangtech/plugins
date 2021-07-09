@@ -1,27 +1,27 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
 import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.center.IParamContext;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.er.ERRules;
 import org.antlr.runtime.tree.Tree;
@@ -54,8 +54,8 @@ public class UnionHiveTask extends JoinHiveTask {
     private static final Logger logger = LoggerFactory.getLogger(UnionHiveTask.class);
 
     public UnionHiveTask(SqlTaskNodeMeta nodeMeta, boolean isFinalNode, ERRules erRules
-            , JoinTaskStatus joinTaskStatus, ITISFileSystem fileSystem, IFs2Table fs2Table) {
-        super(nodeMeta, isFinalNode, erRules, joinTaskStatus, fileSystem, fs2Table);
+            , JoinTaskStatus joinTaskStatus, ITISFileSystem fileSystem, IFs2Table fs2Table, MREngine mrEngine) {
+        super(nodeMeta, isFinalNode, erRules, joinTaskStatus, fileSystem, fs2Table, mrEngine);
     }
 
     // public UnionHiveTask(JoinTaskStatus joinTaskStatus) {

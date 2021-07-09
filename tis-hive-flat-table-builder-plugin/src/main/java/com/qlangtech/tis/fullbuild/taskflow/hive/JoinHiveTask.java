@@ -26,6 +26,7 @@ import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -53,13 +54,15 @@ public class JoinHiveTask extends HiveTask {
     private final ITISFileSystem fileSystem;
 
     private final IFs2Table fs2Table;
+    private final MREngine mrEngine;
 
     public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
-            , ITISFileSystem fileSystem, IFs2Table fs2Table) {
+            , ITISFileSystem fileSystem, IFs2Table fs2Table, MREngine mrEngine) {
         super(nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;
         Objects.nonNull(fs2Table);
         this.fs2Table = fs2Table;
+        this.mrEngine = mrEngine;
     }
 
 
@@ -91,7 +94,8 @@ public class JoinHiveTask extends HiveTask {
             }
             ITISFileSystem fs = fileSystem;
             IPath parent = fs.getPath(path);
-            initializeHiveTable(this.fileSystem, parent, HdfsFormat.DEFAULT_FORMAT, insertParser.getCols(), insertParser.getColsExcludePartitionCols(), conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
+            initializeHiveTable(this.fileSystem, parent, mrEngine, HdfsFormat.DEFAULT_FORMAT, insertParser.getCols()
+                    , insertParser.getColsExcludePartitionCols(), conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -107,13 +111,13 @@ public class JoinHiveTask extends HiveTask {
      * @param partitionRetainNum       保留多少个分区
      * @throws Exception
      */
-    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, HdfsFormat fsFormat
+    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, MREngine mrEngine, HdfsFormat fsFormat
             , List<HiveColumn> cols, List<HiveColumn> colsExcludePartitionCols
             , Connection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
         if (partitionRetainNum == null || partitionRetainNum < 1) {
             throw new IllegalArgumentException("illegal param partitionRetainNum ");
         }
-        if (BindHiveTableTool.HiveTableBuilder.isTableExists(conn, dumpTable)) {
+        if (BindHiveTableTool.HiveTableBuilder.isTableExists(mrEngine, conn, dumpTable)) {
             if (BindHiveTableTool.HiveTableBuilder.isTableSame(conn, cols, dumpTable)) {
                 log.info("Start clean up history file '{}'", dumpTable);
 
@@ -121,7 +125,7 @@ public class JoinHiveTask extends HiveTask {
                 //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
                 // 清理hive数据
                 List<FSHistoryFileUtils.PathInfo> deletePts =
-                        (new HiveRemoveHistoryDataTask(fileSystem)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
+                        (new HiveRemoveHistoryDataTask(fileSystem,mrEngine)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
                 // 清理Hdfs数据
                 FSHistoryFileUtils.deleteOldHdfsfile(fileSystem, parentPath, deletePts, 0);
                 //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);

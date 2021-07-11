@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"TiDB\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"TiDB\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "TiDB"
+        }
+      ]
+    }
   },
   "template": {
     "label": "配置模版",

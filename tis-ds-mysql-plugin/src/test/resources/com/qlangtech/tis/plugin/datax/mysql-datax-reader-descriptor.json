@@ -4,9 +4,21 @@
       {
         "describable": false,
         "eprops": {
-          "creator": {
-            "label": "数据源管理",
-            "routerLink": "/offline/ds"
+          "creator":{
+            "label":"配置",
+            "plugin":[
+              {
+                "descName":"MySQL-V5",
+                "extraParam":"type_detailed,update_false",
+                "hetero":"datasource"
+              },
+              {
+                "descName":"MySQL-V8",
+                "extraParam":"type_detailed,update_false",
+                "hetero":"datasource"
+              }
+            ],
+            "routerLink":"/offline/ds"
           },
           "enum": [
             {

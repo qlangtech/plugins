@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MongoDB\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MongoDB\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "MongoDB"
+        }
+      ]
+    }
   },
   "collectionName": {
     "help": "MonogoDB的集合名。【必填】",

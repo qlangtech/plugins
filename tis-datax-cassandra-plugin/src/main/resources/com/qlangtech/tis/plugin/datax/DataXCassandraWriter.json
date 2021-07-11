@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Cassandra\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Cassandra\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "Cassandra"
+        }
+      ]
+    }
   },
   "connectionsPerHost": {
     "help": "描述：客户端连接池配置：与服务器每个节点建多少个连接。默认值：8"

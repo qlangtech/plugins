@@ -19,7 +19,14 @@
     "label": "全局配置",
     "dftVal": "datax-global-config",
     "creator": {
-      "routerLink": "/base/basecfg",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "DataX-global",
+          "extraParam": "append_true"
+        }
+      ],
+      "routerLink": "/base/basecfg/global",
       "label": "配置"
     }
   }

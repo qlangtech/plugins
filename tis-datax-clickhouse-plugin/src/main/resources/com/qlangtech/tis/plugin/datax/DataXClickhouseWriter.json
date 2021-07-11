@@ -38,7 +38,14 @@
     ]
   },
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"ClickHouse\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"ClickHouse\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "ClickHouse"
+        }
+      ]
+    }
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXClickhouseWriter.getDftTemplate()"

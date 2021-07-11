@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"SqlServer\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"SqlServer\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "SqlServer"
+        }
+      ]
+    }
   },
   "session": {
     "disable": true

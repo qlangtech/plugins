@@ -3,7 +3,11 @@
     "label": "数据库名",
     "creator": {
       "routerLink": "/offline/ds",
-      "label": "数据源管理"
+      "label": "配置",
+      "plugin-parent": {
+        "hetero": "datasource",
+        "extraParam": "type_detailed,update_false,disableBizStore_true"
+      }
     }
   },
   "splitPk": {

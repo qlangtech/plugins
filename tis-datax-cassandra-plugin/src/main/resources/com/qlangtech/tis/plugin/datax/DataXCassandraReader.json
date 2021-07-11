@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Cassandra\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Cassandra\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "Cassandra"
+        }
+      ]
+    }
   },
   "allowFiltering": {
     "help": "描述：是否在服务端过滤数据。参考cassandra文档中ALLOW FILTERING关键字的相关描述。",

@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"PostgreSQL\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"PostgreSQL\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "PostgreSQL"
+        }
+      ]
+    }
   },
   "preSql": {
     "help": "描述：写入数据到目的表前，会先执行这里的标准语句。如果 Sql 中有你需要操作到的表名称，请使用 "

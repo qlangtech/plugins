@@ -1,6 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Oracle\")"
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Oracle\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "Oracle"
+        }
+      ]
+    }
   },
   "splitPk": {
     "help": "描述：OracleReader进行数据抽取时，如果指定splitPk，表示用户希望使用splitPk代表的字段进行数据分片，DataX因此会启动并发任务进行数据同步，这样可以大大提供数据同步的效能。"

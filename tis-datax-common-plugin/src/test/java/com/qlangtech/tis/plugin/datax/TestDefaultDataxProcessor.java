@@ -20,6 +20,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -33,6 +34,11 @@ import java.util.Map;
  * @create: 2021-05-03 23:15
  **/
 public class TestDefaultDataxProcessor extends BasicTest {
+
+    public void testDescGenerate() {
+
+        PluginDesc.testDescGenerate(DefaultDataxProcessor.class, "default-datax-processor-descriptor.json");
+    }
 
     public void testSaveProcess() {
         final String appName = "test" + RandomStringUtils.randomAlphanumeric(2);

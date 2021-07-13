@@ -2,8 +2,15 @@
   "fsName": {
     "help": "描述：Hadoop hdfs文件系统namenode节点地址。格式：hdfs://ip:端口；例如：hdfs://127.0.0.1:9000",
     "creator": {
-      "routerLink": "/base/basecfg",
-      "label": "FS管理"
+      "routerLink": "/base/basecfg/offline",
+      "label": "FS管理",
+      "plugin": [
+        {
+          "hetero": "fs",
+          "extraParam": "append_true",
+          "descName": "HDFS"
+        }
+      ]
     }
   },
   "fileType": {
@@ -61,9 +68,6 @@
         "label": "SNAPPY"
       }
     ]
-  },
-  "hadoopConfig": {
-    "help": "描述：hadoopConfig里可以配置与Hadoop相关的一些高级参数，比如HA的配置。"
   },
   "encoding": {
     "help": "描述：写文件的编码配置。",

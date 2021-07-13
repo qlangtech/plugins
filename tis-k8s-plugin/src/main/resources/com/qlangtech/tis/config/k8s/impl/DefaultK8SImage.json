@@ -2,6 +2,19 @@
   "name": {
     "label": "名称"
   },
+  "k8sCfg": {
+    "creator": {
+      "routerLink": "/base/basecfg/global",
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "k8s",
+          "extraParam": "append_true"
+        }
+      ]
+    }
+  },
   "imagePath": {
     "label": "镜像地址",
     "placeholder": "registry.cn-hangzhou.aliyuncs.com/tis/tis-incr:latest"

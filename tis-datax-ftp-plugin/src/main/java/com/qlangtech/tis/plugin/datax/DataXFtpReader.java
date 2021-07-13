@@ -17,9 +17,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
@@ -27,6 +24,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +32,6 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author: baisui 百岁
@@ -120,32 +117,7 @@ public class DataXFtpReader extends DataxReader {
         }
 
         public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            try {
-                JSONObject cfg = JSON.parseObject(value);
-                Set<String> avalibleKeys = Sets.newHashSet();
-                avalibleKeys.add("caseSensitive");
-                avalibleKeys.add("textQualifier");
-                avalibleKeys.add("trimWhitespace");
-                avalibleKeys.add("useTextQualifier");
-                avalibleKeys.add("delimiter");
-                avalibleKeys.add("recordDelimiter");
-                avalibleKeys.add("comment");
-                avalibleKeys.add("useComments");
-                avalibleKeys.add("escapeMode");
-                avalibleKeys.add("safetySwitch");
-                avalibleKeys.add("skipEmptyRecords");
-                avalibleKeys.add("captureRawRecord");
-                for (String key : cfg.keySet()) {
-                    if (!avalibleKeys.contains(key)) {
-                        msgHandler.addFieldError(context, fieldName, "key'" + key + "'是不可接受的");
-                        return false;
-                    }
-                }
-            } catch (Throwable e) {
-                msgHandler.addFieldError(context, fieldName, e.getMessage());
-                return false;
-            }
-            return true;
+            return PluginFieldValidators.validateCsvReaderConfig(msgHandler, context, fieldName, value);
         }
 
 

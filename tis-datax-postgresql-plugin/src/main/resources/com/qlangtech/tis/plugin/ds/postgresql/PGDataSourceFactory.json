@@ -1,5 +1,8 @@
 {
   "name": {
     "helpUrl": "https://jdbc.postgresql.org/documentation/80/connect.html"
+  },
+  "port": {
+    "dftVal": 5432
   }
 }

@@ -2,8 +2,15 @@
   "endpoint": {
     "help": "ElasticSearch的连接地址",
     "creator": {
-      "routerLink": "/base/basecfg",
-      "label": "管理"
+      "routerLink": "/base/basecfg/global",
+      "label": "管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "Aliyun-Endpoint",
+          "extraParam": "append_true"
+        }
+      ]
     }
   },
   "index": {

@@ -43,7 +43,7 @@ public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFac
 //    public String where;
 //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String querySql;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {})
     public Integer fetchSize;
 
 

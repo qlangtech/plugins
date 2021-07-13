@@ -15,63 +15,88 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.citrus.turbine.impl.DefaultContext;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.offline.flattable.HiveFlatTableBuilder;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.qlangtech.tis.plugin.datax.TisDataXHdfsReader
  **/
-public class DataXHdfsReader extends DataxReader {
-    private static final String DATAX_NAME = "Hdfs";
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPluginKeyAware {
+    // private static final String DATAX_NAME = "Hdfs";
+
+    @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String fsName;
+
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String defaultFS;
+    //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String defaultFS;
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fileType;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String column;
 
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
     public String fieldDelimiter;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
     public String encoding;
 
     @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
     public String nullFormat;
 
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-    public String haveKerberos;
+//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String haveKerberos;
+//
+//    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String kerberosKeytabFilePath;
+//
+//    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String kerberosPrincipal;
 
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    public String kerberosKeytabFilePath;
-
-    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
-    public String kerberosPrincipal;
-
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
     public String compress;
 
-    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, validate = {})
-    public String hadoopConfig;
+//    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String hadoopConfig;
 
-    @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, validate = {})
     public String csvReaderConfig;
 
     @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
+
+    public String dataXName;
+
+    @Override
+    public void setKey(KeyedPluginStore.Key key) {
+        this.dataXName = key.keyVal.getVal();
+    }
+
+    private HdfsFileSystemFactory fileSystem;
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHdfsReader.class, "DataXHdfsReader-tpl.json");
@@ -82,15 +107,41 @@ public class DataXHdfsReader extends DataxReader {
         return false;
     }
 
+
     @Override
-    public <T extends ISelectedTab> List<T> getSelectedTabs() {
-        return null;
+    public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
+        DefaultContext context = new DefaultContext();
+        ParseColsResult parseOSSColsResult = ParseColsResult.parseColsCfg(new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
+        if (!parseOSSColsResult.success) {
+            throw new IllegalStateException("parseOSSColsResult must be success");
+        }
+        return Collections.singletonList(parseOSSColsResult.tabMeta);
+
+    }
+
+    private static class MockFieldErrorHandler implements IFieldErrorHandler {
+        @Override
+        public void addFieldError(Context context, String fieldName, String msg, Object... params) {
+        }
+
+        @Override
+        public boolean validateBizLogic(BizLogic logicType, Context context, String fieldName, String value) {
+            return false;
+        }
     }
 
     @Override
     public Iterator<IDataxReaderContext> getSubTasks() {
+        IDataxReaderContext readerContext = new HdfsReaderContext(this);
+        return Collections.singleton(readerContext).iterator();
+    }
 
-        return null;
+    public HdfsFileSystemFactory getFs() {
+        if (fileSystem == null) {
+            this.fileSystem = (HdfsFileSystemFactory) FileSystemFactory.getFsFactory(fsName);
+        }
+        Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
+        return fileSystem;
     }
 
 
@@ -99,27 +150,19 @@ public class DataXHdfsReader extends DataxReader {
         return template;
     }
 
-    // public void setSelectedTabs(List<SelectedTab> selectedTabs) {
-    //     this.selectedTabs = selectedTabs;
-    // }
+//    @Override
+//    public List<String> getTablesInDB() {
+//        throw new UnsupportedOperationException();
+//    }
 
-    @Override
-    public List<String> getTablesInDB() {
-//        DataSourceFactory plugin = getDataSourceFactory();
-//        return plugin.getTablesInDB();
-        return null;
-    }
-
-
-    @Override
-    public List<ColumnMetaData> getTableMetadata(String table) {
-        return null;
-    }
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
+            this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
+                    , () -> TIS.getPluginStore(FileSystemFactory.class)
+                            .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
         }
 
         @Override
@@ -127,9 +170,18 @@ public class DataXHdfsReader extends DataxReader {
             return false;
         }
 
+        public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
+        }
+
+
+        public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return PluginFieldValidators.validateCsvReaderConfig(msgHandler, context, fieldName, value);
+        }
+
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return DataXHdfsWriter.DATAX_NAME;
         }
     }
 }

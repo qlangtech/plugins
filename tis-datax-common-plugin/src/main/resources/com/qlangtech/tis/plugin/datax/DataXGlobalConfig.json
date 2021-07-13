@@ -16,6 +16,8 @@
   "template": {
     "label": "配置模版",
     "rows": 18,
-    "dftVal": "com.qlangtech.tis.datax.IDataxGlobalCfg.getDefaultTemplate()"
+    "dftVal": "com.qlangtech.tis.datax.IDataxGlobalCfg.getDefaultTemplate()",
+    "style": "codemirror",
+    "mode": "text/velocity"
   }
 }

@@ -8,6 +8,8 @@
   },
   "kubeConfigContent": {
     "label": "Yaml配置内容",
-    "rows": 10
+    "rows": 10,
+    "style": "codemirror",
+    "mode": "text/yaml"
   }
 }

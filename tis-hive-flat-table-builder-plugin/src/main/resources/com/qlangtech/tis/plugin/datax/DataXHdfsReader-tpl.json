@@ -1,11 +1,25 @@
 {
-    "name": "hdfsreader",
+    "name": "tishdfsreader",
     "parameter": {
-        "path": "",
-        "defaultFS": "",
-        "column": [],
-        "fileType": "orc",
-        "encoding": "UTF-8",
-        "fieldDelimiter": ","
-    }
+        ,"defaultFS": "${reader.defaultFS}"
+        ,"path": "${reader.path}"
+        ,"fileType": "${reader.fileType}"
+#if($reader.containFieldDelimiter)
+        ,"fieldDelimiter": "${reader.fieldDelimiter}"
+#end
+#if($reader.containEncoding)
+        ,"encoding": "${reader.encoding}"
+#end
+#if($reader.containNullFormat)
+        ,"nullFormat": "${reader.nullFormat}"
+#end
+#if($reader.containCompress)
+       ,"compress": "${reader.compress}"
+#end
+#if($reader.containCsvReaderConfig)
+       ,"csvReaderConfig": ${reader.csvReaderConfig}
+#end
+       ,"column": ${reader.column},
+       ,"dataxName" : "${reader.dataXName}"
+}
 }

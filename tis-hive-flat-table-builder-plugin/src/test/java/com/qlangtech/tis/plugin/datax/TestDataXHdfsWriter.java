@@ -98,7 +98,7 @@ public class TestDataXHdfsWriter extends BasicTest {
     }
 
     //@Test
-    public void dataDump() throws Exception {
+    public void testdataDump() throws Exception {
 
         //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hdfsDataXName);
 

@@ -28,6 +28,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.util.stream.Collectors;
+
 /**
  * https://github.com/alibaba/DataX/blob/master/hdfswriter/doc/hdfswriter.md
  *
@@ -36,7 +38,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
  * @see com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter
  **/
 public class DataXHdfsWriter extends BasicFSWriter {
-    private static final String DATAX_NAME = "Hdfs";
+    public static final String DATAX_NAME = "Hdfs";
 
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
@@ -74,8 +76,11 @@ public class DataXHdfsWriter extends BasicFSWriter {
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+//            this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
+//                    , () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
             this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
-                    , () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+                    , () -> TIS.getPluginStore(FileSystemFactory.class)
+                            .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
         }
 
         public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

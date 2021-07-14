@@ -15,7 +15,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.core.util.container.JarLoader;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TISJarLoader;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
@@ -28,10 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.File;
-import java.net.URL;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -49,27 +49,27 @@ public class TaskExec {
 
     static IRemoteJobTrigger getiRemoteJobTrigger(IJoinTaskContext taskContext, RpcServiceReference statusRpc
             , IDataxProcessor dataxProcessor, String dataXfileName, PluginManager pluginManager) {
-        final com.alibaba.datax.core.util.container.JarLoader uberClassLoader
-                = new com.alibaba.datax.core.util.container.JarLoader(new String[]{"."}) {
-            public URL getResource(String name) {
-                URL url = pluginManager.uberClassLoader.getResource(name);
-                if (url == null) {
-                    return super.getResource(name);
-                }
-                return url;
-            }
-
-            @Override
-            protected Class<?> findClass(String name) throws ClassNotFoundException {
-                try {
-                    PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
-                    return classLoader.findClass(name);
-                } catch (Throwable e) {
-                    throw new RuntimeException("className:" + name + ",scan the plugins:"
-                            + pluginManager.activePlugins.stream().map((p) -> p.getDisplayName()).collect(Collectors.joining(",")), e);
-                }
-            }
-        };
+        final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
+//        {
+//            public URL getResource(String name) {
+//                URL url = pluginManager.uberClassLoader.getResource(name);
+//                if (url == null) {
+//                    return super.getResource(name);
+//                }
+//                return url;
+//            }
+//
+//            @Override
+//            protected Class<?> findClass(String name) throws ClassNotFoundException {
+//                try {
+//                    PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
+//                    return classLoader.findClass(name);
+//                } catch (Throwable e) {
+//                    throw new RuntimeException("className:" + name + ",scan the plugins:"
+//                            + pluginManager.activePlugins.stream().map((p) -> p.getDisplayName()).collect(Collectors.joining(",")), e);
+//                }
+//            }
+//        };
 
 //        try {
 //            System.out.println("aaaaaaaaaaaaaaaaaaaaaaa:" +

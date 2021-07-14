@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.File;
+import java.net.URL;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -50,9 +51,16 @@ public class TaskExec {
             , IDataxProcessor dataxProcessor, String dataXfileName, PluginManager pluginManager) {
         final com.alibaba.datax.core.util.container.JarLoader uberClassLoader
                 = new com.alibaba.datax.core.util.container.JarLoader(new String[]{"."}) {
+            public URL getResource(String name) {
+                URL url = pluginManager.uberClassLoader.getResource(name);
+                if (url == null) {
+                    return super.getResource(name);
+                }
+                return url;
+            }
+
             @Override
             protected Class<?> findClass(String name) throws ClassNotFoundException {
-
                 try {
                     PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
                     return classLoader.findClass(name);

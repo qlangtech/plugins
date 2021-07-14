@@ -61,10 +61,10 @@
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>datax-common</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>plugin-unstructured-storage-util</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.alibaba.datax</groupId>-->
+<!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 

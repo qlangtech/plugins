@@ -37,18 +37,6 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>plugin-unstructured-storage-util</artifactId>
-            <version>${alibaba.datax.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.hadoop</groupId>
-                    <artifactId>hadoop-common</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>

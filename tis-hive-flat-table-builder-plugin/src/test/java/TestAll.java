@@ -16,6 +16,7 @@
 import com.qlangtech.tis.dump.hive.TestHiveDBUtils;
 import com.qlangtech.tis.dump.hive.TestHiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.TestYarnTableDumpFactory;
+import com.qlangtech.tis.hdfs.impl.TestHdfsFileSystemFactory;
 import com.qlangtech.tis.hive.TestDefaultHiveConnGetter;
 import com.qlangtech.tis.hive.TestHiveInsertFromSelectParser;
 import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
@@ -33,6 +34,7 @@ public class TestAll extends TestCase {
 
     public static Test suite() {
         TestSuite suite = new TestSuite();
+        suite.addTestSuite(TestHdfsFileSystemFactory.class);
         suite.addTestSuite(TestDefaultHiveConnGetter.class);
         suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
         suite.addTestSuite(TestDataXHdfsReader.class);

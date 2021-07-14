@@ -27,8 +27,6 @@
     "help": "描述：ODPS的tunnelserver地址，线上地址为 http://dt.odps.aliyun.com  "
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXOdpsWriter.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXOdpsWriter.getDftTemplate()"
   }
 }

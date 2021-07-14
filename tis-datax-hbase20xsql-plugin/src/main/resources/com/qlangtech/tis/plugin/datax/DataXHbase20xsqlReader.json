@@ -27,8 +27,6 @@
     "help": "描述：支持指定多个查询语句，但查询列类型和数目必须保持一致，用户可根据实际情况手动输入表查询语句或多表联合查询语句，设置该参数后，除queryserverAddress参数必须设置外，其余参数将失去作用或可不设置。"
   },
   "template": {
-    "label": "配置模版",
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXHbase20xsqlReader.getDftTemplate()",
-    "rows": 18
   }
 }

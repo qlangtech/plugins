@@ -47,10 +47,10 @@ import java.util.stream.Collectors;
 public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPluginKeyAware {
     // private static final String DATAX_NAME = "Hdfs";
 
-    @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
     //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String defaultFS;

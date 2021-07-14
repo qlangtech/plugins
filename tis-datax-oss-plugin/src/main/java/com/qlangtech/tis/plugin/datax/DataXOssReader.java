@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.aliyun.AliyunEndpoint;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -145,6 +146,9 @@ public class DataXOssReader extends DataxReader {
             return validateFileDelimiter(msgHandler, context, fieldName, value);
         }
 
+        public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return PluginFieldValidators.validateCsvReaderConfig(msgHandler, context, fieldName, value);
+        }
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 

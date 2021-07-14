@@ -9,8 +9,6 @@
     "help": "描述：填写需要从phoenix表中读取的列名集合，使用JSON的数组描述字段信息，空值表示读取所有列。"
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHbase11xsqlReader.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHbase11xsqlReader.getDftTemplate()"
   }
 }

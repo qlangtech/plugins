@@ -24,8 +24,6 @@
     "help": "描述：一次性批量提交的记录数大小，该值可以极大减少DataX与RDBMS的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXRdbmsWriter.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXRdbmsWriter.getDftTemplate()"
   }
 }

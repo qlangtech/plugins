@@ -157,8 +157,6 @@
     ]
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter.getDftTemplate()"
   }
 }

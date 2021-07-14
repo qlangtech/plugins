@@ -15,8 +15,6 @@
     "help": "描述：要写入的hbase字段。index：指定该列对应reader端column的索引，从0开始；name：指定hbase表中的列，必须为 列族:列名 的格式；type：指定写入数据类型，用于转换HBase byte[]。配置格式如下："
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHbase11xWriter.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHbase11xWriter.getDftTemplate()"
   }
 }

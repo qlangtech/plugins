@@ -23,8 +23,6 @@
     "help": "MongoDB的额外查询条件。【选填】"
   },
   "template": {
-    "label": "配置模版",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbReader.getDftTemplate()",
-    "rows": 18
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbReader.getDftTemplate()"
   }
 }

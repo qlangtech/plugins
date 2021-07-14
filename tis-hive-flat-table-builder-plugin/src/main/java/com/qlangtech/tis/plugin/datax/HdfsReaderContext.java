@@ -39,12 +39,12 @@ public class HdfsReaderContext implements IDataxReaderContext {
 
     @Override
     public String getTaskName() {
-        return null;
+        return reader.dataXName;
     }
 
     @Override
     public String getSourceEntityName() {
-        return null;
+        return reader.dataXName;
     }
 
     public String getDefaultFS() {

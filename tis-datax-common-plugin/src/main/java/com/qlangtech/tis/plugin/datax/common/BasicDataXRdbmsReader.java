@@ -71,7 +71,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
         try {
             Memoizer<String, Map<String, ColumnMetaData>> tabsMeta = getTabsMeta();
-            return this.selectedTabs.stream().map((tab) -> {
+            return (this.selectedTabs == null) ? Collections.emptyList() : this.selectedTabs.stream().map((tab) -> {
                 Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
                 ColumnMetaData colMeta = null;
                 if (colsMeta.size() < 1) {

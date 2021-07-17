@@ -15,6 +15,7 @@
 package com.qlangtech.tis.config.k8s.impl;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.Descriptor;
@@ -22,16 +23,25 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.k8s.HostAlias;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Namespace;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * k8s image 插件
@@ -43,6 +53,9 @@ import java.util.Optional;
 public class DefaultK8SImage extends K8sImage {
 
     public static final String KEY_FIELD_NAME = "k8sCfg";
+
+    private static final Yaml yaml = new Yaml();
+
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
@@ -56,6 +69,42 @@ public class DefaultK8SImage extends K8sImage {
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
+
+    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
+    public String hostAliases;
+
+    @Override
+    public List<HostAlias> getHostAliases() {
+        return parseHostAliases((err) -> {
+            throw new IllegalStateException(err);
+        }, this.hostAliases);
+    }
+
+    private static List<HostAlias> parseHostAliases(IErrorFieldMsgHandler errorFieldMsgHandler, String val) {
+        if (StringUtils.isBlank(val)) {
+            return Collections.emptyList();
+        }
+        HostAlias host = null;
+        List<HostAlias> result = Lists.newArrayList();
+        List<Map<String, Object>> hostAliaes = yaml.load(val);
+        int tupleIndex = 0;
+        for (Map<String, Object> hostAlia : hostAliaes) {
+            host = new HostAlias();
+            host.setIp((String) hostAlia.get("ip"));
+            host.setHostnames((List<String>) hostAlia.get("hostnames"));
+            if (StringUtils.isBlank(host.getIp())) {
+                errorFieldMsgHandler.addErr("第" + tupleIndex + "个配置'ip'属性必须填写");
+                return result;
+            }
+            if (CollectionUtils.isEmpty(host.getHostnames())) {
+                errorFieldMsgHandler.addErr("第" + tupleIndex + "个配置'hostnames'属性必须填写");
+                return result;
+            }
+            result.add(host);
+            tupleIndex++;
+        }
+        return result;
+    }
 
     @Override
     public String getK8SName() {
@@ -77,9 +126,10 @@ public class DefaultK8SImage extends K8sImage {
         return this.name;
     }
 
-    //    public ParamsConfig getK8SContext() {
-//        return (ParamsConfig)ParamsConfig.getItem(this.k8sCfg, IK8sContext.class);
-//    }
+    interface IErrorFieldMsgHandler {
+        void addErr(String msg);
+    }
+
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<K8sImage> {
         private static final Logger logger = LoggerFactory.getLogger(DescriptorImpl.class);
@@ -87,6 +137,34 @@ public class DefaultK8SImage extends K8sImage {
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IK8sContext.class));
+        }
+
+        public boolean validateHostAliases(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            try {
+                AtomicBoolean hasErr = new AtomicBoolean();
+                parseHostAliases((err) -> {
+                    msgHandler.addFieldError(context, fieldName, err);
+                    hasErr.set(true);
+                }, value);
+
+                if (hasErr.get()) {
+                    return false;
+                }
+
+//                Iterable<Object> hostAliases = yaml.loadAll(value);
+//                for (Object h : hostAliases) {
+//                    System.out.println(h);
+//                }
+
+//                for (HostAlias ha : hostAliases) {
+//                    System.out.println(ha.getIp());
+//                }
+            } catch (Throwable e) {
+                logger.error(e.getMessage(), e);
+                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                return false;
+            }
+            return true;
         }
 
         @Override

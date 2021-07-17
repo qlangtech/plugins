@@ -37,6 +37,8 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +48,7 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  **/
 public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.INullTableMapCreator {
-
+    private static final Logger logger = LoggerFactory.getLogger(DataXMongodbWriter.class);
     private static final String KEY_FIELD_UPSERT_INFO = "upsertInfo";
     private static final String KEY_FIELD_COLUMN = "column";
 
@@ -109,9 +111,13 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
             return StringUtils.EMPTY;
         }
 
-        List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
-        for (ISelectedTab tab : selectedTabs) {
-            return tab.getName();
+        try {
+            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+            for (ISelectedTab tab : selectedTabs) {
+                return tab.getName();
+            }
+        } catch (Throwable e) {
+            logger.warn(dataReader.getDescriptor().getDisplayName(), e);
         }
 
         return StringUtils.EMPTY;

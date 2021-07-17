@@ -277,7 +277,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
         } catch (ApiException e) {
             logger.error(e.getResponseBody(), e);
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getResponseBody(),e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

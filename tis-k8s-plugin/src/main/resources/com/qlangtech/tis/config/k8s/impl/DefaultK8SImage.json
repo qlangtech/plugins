@@ -15,6 +15,11 @@
       ]
     }
   },
+  "hostAliases": {
+    "style": "codemirror",
+    "mode": "text/yaml",
+    "rows": 6
+  },
   "imagePath": {
     "label": "镜像地址",
     "placeholder": "registry.cn-hangzhou.aliyuncs.com/tis/tis-incr:latest"

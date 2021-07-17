@@ -20,7 +20,6 @@
     "mode": "application/ld+json"
   },
   "query": {
-    "help": "MongoDB的额外查询条件。【选填】"
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbReader.getDftTemplate()"

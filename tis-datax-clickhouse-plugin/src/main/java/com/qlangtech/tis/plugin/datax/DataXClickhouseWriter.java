@@ -40,6 +40,7 @@ import java.util.Optional;
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-16 21:48
+ * @see com.alibaba.datax.plugin.writer.clickhousewriter.TISClickhouseWriter
  **/
 public class DataXClickhouseWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware {
 

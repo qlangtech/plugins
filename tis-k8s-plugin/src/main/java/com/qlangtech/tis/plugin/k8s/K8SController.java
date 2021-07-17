@@ -31,6 +31,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import okhttp3.Call;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -173,6 +174,8 @@ public class K8SController implements IRCController {
         V1Container c = new V1Container();
         c.setName(name);
 
+        Objects.requireNonNull(config, "K8sImage can not be null");
+
         c.setImage(config.getImagePath());
         List<V1ContainerPort> ports = Lists.newArrayList();
         V1ContainerPort port = new V1ContainerPort();
@@ -199,6 +202,21 @@ public class K8SController implements IRCController {
         if (containers.size() < 1) {
             throw new IllegalStateException("containers size can not small than 1");
         }
+
+        List<HostAlias> hostAliases = config.getHostAliases();
+        if (CollectionUtils.isNotEmpty(hostAliases)) {
+            List<V1HostAlias> setHostAliases = Lists.newArrayList();
+            V1HostAlias v1host = null;
+            for (HostAlias ha : hostAliases) {
+                v1host = new V1HostAlias();
+                v1host.setIp(ha.getIp());
+                v1host.setHostnames(ha.getHostnames());
+                setHostAliases.add(v1host);
+            }
+            podSpec.setHostAliases(setHostAliases);
+        }
+
+
         podSpec.setContainers(containers);
         templateSpec.setSpec(podSpec);
         spec.setTemplate(templateSpec);

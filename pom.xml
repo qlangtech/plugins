@@ -34,7 +34,7 @@
     <inceptionYear>2020</inceptionYear>
     <modules>
         <module>tis-spark-hive-server-extends</module>
-<!--        <module>tis-hdfs-plugin</module>-->
+        <!--        <module>tis-hdfs-plugin</module>-->
         <module>tis-asyncmsg-rocketmq-plugin</module>
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-k8s-plugin</module>
@@ -200,6 +200,14 @@
                             hadoop-yarn-server-resourcemanager
                         </artifactId>
                         <groupId>org.apache.hadoop</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <artifactId>zookeeper</artifactId>
+                        <groupId>org.apache.zookeeper</groupId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.derby</groupId>
+                        <artifactId>derby</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

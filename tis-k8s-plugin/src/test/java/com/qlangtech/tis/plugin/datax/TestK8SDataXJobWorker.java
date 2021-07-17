@@ -15,12 +15,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.coredefine.module.action.RcDeployment;
-import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import com.qlangtech.tis.plugin.PluginStore;
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import junit.framework.TestCase;
 
 import java.util.regex.Matcher;
@@ -50,7 +47,7 @@ public class TestK8SDataXJobWorker extends TestCase {
         matcher = K8SDataXJobWorker.zkhost_pattern.matcher("192.168.28.200");
         assertFalse(matcher.matches());
 
-         matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/tis/cloude");
+        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/tis/cloude");
         assertTrue(matcher.matches());
 
         matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/0tis");
@@ -66,13 +63,17 @@ public class TestK8SDataXJobWorker extends TestCase {
         assertFalse(matcher.matches());
     }
 
+    public void testDescGenerate() {
 
-    public void testGetRCDeployment() {
-        PluginStore<DataXJobWorker> jobWorkerStore = TIS.getPluginStore(DataXJobWorker.class);
-        DataXJobWorker dataxJobWorker = jobWorkerStore.getPlugin();
-        assertNotNull(dataxJobWorker);
-
-        RcDeployment rcMeta = dataxJobWorker.getRCDeployment();
-        assertNotNull(rcMeta);
+        PluginDesc.testDescGenerate(K8SDataXJobWorker.class, "k8s-datax-job-worker-descriptor.json");
     }
+
+//    public void testGetRCDeployment() {
+//        PluginStore<DataXJobWorker> jobWorkerStore = TIS.getPluginStore(DataXJobWorker.class);
+//        DataXJobWorker dataxJobWorker = jobWorkerStore.getPlugin();
+//        assertNotNull(dataxJobWorker);
+//
+//        RcDeployment rcMeta = dataxJobWorker.getRCDeployment();
+//        assertNotNull(rcMeta);
+//    }
 }

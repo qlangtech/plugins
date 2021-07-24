@@ -81,19 +81,39 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         public final boolean isRdbms() {
             return true;
         }
+        /**
+         * 是否支持自动创建
+         *
+         * @return
+         */
+        public boolean isSupportTabCreate() {
+            return !this.isRdbms();
+        }
 
+        /**
+         *
+         * @param msgHandler
+         * @param context
+         * @param fieldName
+         * @param val
+         * @return
+         */
         public boolean validateBatchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
             int batchSize = Integer.parseInt(val);
             if (batchSize < 1) {
                 msgHandler.addFieldError(context, fieldName, "必须大于0");
                 return false;
             }
-            int maxVal = 1024;
-            if (batchSize > 1024) {
+            int maxVal = getMaxBatchSize();
+            if (batchSize > maxVal) {
                 msgHandler.addFieldError(context, fieldName, "不能大于" + maxVal);
                 return false;
             }
             return true;
+        }
+
+        protected int getMaxBatchSize() {
+            return 2024;
         }
 
         public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String dbName) {

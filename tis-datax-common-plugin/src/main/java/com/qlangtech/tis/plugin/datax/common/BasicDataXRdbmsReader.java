@@ -83,6 +83,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                         throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData',exist Keys:["
                                 + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                     }
+                    col.setPk(colMeta.isPk());
                     col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType()));
                 }
                 return tab;

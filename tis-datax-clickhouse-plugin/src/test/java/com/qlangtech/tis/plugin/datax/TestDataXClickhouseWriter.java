@@ -44,9 +44,9 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 
     public void testConfigGenerate() throws Exception {
         ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();
-        dsFactory.jdbcUrl = "jdbc:clickhouse://192.168.28.200:8123/tis";
-        dsFactory.password = "123123";
-        dsFactory.username = "root";
+        dsFactory.nodeDesc = "192.168.28.200";
+        dsFactory.password = "123456";
+        dsFactory.userName = "default";
         dsFactory.name = "tisdb";
         IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
         tableMap.setFrom("application");

@@ -1,11 +1,18 @@
 {
-  "jdbcUrl": {
-    "dftVal": "jdbc:clickhouse://<host>:8123[/<database>]"
+  "encode": {
+    "disable": true
   },
-  "username": {
-    "lable": "用户名"
+  "extraParams": {
+    "disable": true
   },
-  "password": {
-    "lable": "密码"
+  "nodeDesc": {
+    "placeholder": "127.0.0.1",
+    "rows": 2
+  },
+  "port": {
+    "dftVal": 8123
+  },
+  "userName": {
+    "dftVal": "default"
   }
 }

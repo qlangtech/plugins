@@ -31,6 +31,7 @@ import java.sql.Connection;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-23 14:48
+ * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
 public class DataXHiveWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hive";

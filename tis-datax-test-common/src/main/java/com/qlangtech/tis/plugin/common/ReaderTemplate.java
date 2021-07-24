@@ -61,14 +61,14 @@ public class ReaderTemplate {
 //            System.out.println("nullFormat:" + jsonObject.getJSONObject("parameter").getString("nullFormat"));
 //        }
 
-        valiateReaderCfgGenerate(assertFileName, processor, dataxReader, dataXName);
+        valiateReaderCfgGenerate(assertFileName, processor, dataxReader, dataxWriter, dataXName);
 
 
         EasyMock.verify(processor, dataxGlobalCfg, dataxWriter, dataxContext);
     }
 
     private static void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor
-            , DataxReader dataXReader, String dataXName) throws IOException {
+            , DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
 
 
         IDataxReaderContext dataxReaderContext = null;
@@ -89,7 +89,7 @@ public class ReaderTemplate {
             }
         };
 
-        String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
+        String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());
         TestCase.assertNotNull(readerCfg);
         System.out.println(readerCfg);
         com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {

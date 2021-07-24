@@ -17,8 +17,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -61,8 +60,12 @@ public class ClickHouseWriterContext implements IDataxContext {
         this.cols = cols;
     }
 
+    public boolean isContainPassword() {
+        return StringUtils.isNotEmpty(this.password);
+    }
+
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     public void setPassword(String password) {

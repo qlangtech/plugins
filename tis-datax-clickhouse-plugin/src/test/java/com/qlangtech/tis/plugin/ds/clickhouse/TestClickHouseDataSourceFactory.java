@@ -15,6 +15,7 @@
 
 package com.qlangtech.tis.plugin.ds.clickhouse;
 
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -25,14 +26,22 @@ import java.util.List;
  **/
 public class TestClickHouseDataSourceFactory extends TestCase {
 
+    public void testDescGenerate() {
+
+        PluginDesc.testDescGenerate(ClickHouseDataSourceFactory.class, "ClickHouseDataSourceFactory-desc.json");
+    }
+
     public void testGetTablesInDB() {
         ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();
-        dsFactory.jdbcUrl = "jdbc:clickhouse://192.168.28.201:8123/tis";
+        dsFactory.nodeDesc = "192.168.28.201";
+        dsFactory.port = 8123;
+        dsFactory.dbName = "tis";
         dsFactory.name = "tis-clickhouse";
+        dsFactory.userName = "default";
+        dsFactory.password = "123456";
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
         assertTrue(tablesInDB.size() > 0);
-
     }
 
 }

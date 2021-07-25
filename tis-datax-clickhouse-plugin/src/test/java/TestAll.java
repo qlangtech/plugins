@@ -13,6 +13,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 import com.qlangtech.tis.plugin.datax.TestDataXClickhouseWriter;
+import com.qlangtech.tis.plugin.ds.clickhouse.TestClickHouseDataSourceFactory;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.Test;
@@ -24,6 +25,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXClickhouseWriter.class);
+        suite.addTestSuite(TestClickHouseDataSourceFactory.class);
         return suite;
     }
 }

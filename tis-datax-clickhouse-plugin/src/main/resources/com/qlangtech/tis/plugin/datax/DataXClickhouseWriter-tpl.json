@@ -10,10 +10,21 @@
                 "table": ["${writer.table}"]
             }
         ],
+#if($writer.containPreSql)
         "preSql": ["${writer.preSql}"],
+#end
+#if($writer.containPostSql)
         "postSql": ["${writer.postSql}"],
+#end
+#if($writer.containBatchSize)
         "batchSize": ${writer.batchSize},
+#end
+#if($writer.containBatchByteSize)
         "batchByteSize": ${writer.batchByteSize},
+#end
+#if($writer.containWriteMode)
         "writeMode": "${writer.writeMode}"
+#end
+        ,"dataxName" : "${writer.dataXName}"
     }
 }

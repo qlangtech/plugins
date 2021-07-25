@@ -28,7 +28,6 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -98,8 +97,10 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
         script.append(")\n");
         script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
-        Objects.requireNonNull(pk, "pk can not be null");
-        script.append(" ORDER BY `").append(pk.getName()).append("`\n");
+        // Objects.requireNonNull(pk, "pk can not be null");
+        if (pk != null) {
+            script.append(" ORDER BY `").append(pk.getName()).append("`\n");
+        }
         script.append(" SETTINGS index_granularity = 8192");
 //        CREATE TABLE tis.customer_order_relation
 //                (
@@ -155,6 +156,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         ClickHouseDataSourceFactory ds = this.getDataSourceFactory();
 
         ClickHouseWriterContext context = new ClickHouseWriterContext();
+        context.setDataXName(this.dataXName);
         context.setBatchByteSize(this.batchByteSize);
         context.setBatchSize(this.batchSize);
         for (String jdbcUrl : ds.getJdbcUrls()) {

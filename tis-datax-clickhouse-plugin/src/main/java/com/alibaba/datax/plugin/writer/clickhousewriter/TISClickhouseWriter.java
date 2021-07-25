@@ -15,6 +15,7 @@
 
 package com.alibaba.datax.plugin.writer.clickhousewriter;
 
+import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.rdbms.util.DBUtil;
 import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
@@ -46,17 +47,30 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
     private static final Logger logger = LoggerFactory.getLogger(TISClickhouseWriter.class);
 
     public static class Job extends ClickhouseWriter.Job {
+
         @Override
-        public void prepare() {
-            String dataXName = this.originalConfig.getNecessaryValue(DataxUtils.DATAX_NAME, ClickhouseWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
-            DataXClickhouseWriter dataXWriter = (DataXClickhouseWriter) DataxWriter.getPluginStore(null, dataXName).getPlugin();
+        public void init() {
+            Configuration cfg = super.getPluginJobConf();
+            // 判断表是否存在，如果不存在则创建表
+            initWriterTable(cfg);
+            super.init();
+        }
+
+//        @Override
+//        public void prepare() {
+//            super.prepare();
+//        }
+
+        private static void initWriterTable(Configuration cfg) {
+            String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, ClickhouseWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
+            DataXClickhouseWriter dataXWriter = (DataXClickhouseWriter) DataxWriter.load(null, dataXName);
 
 
-            Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
+            Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
             boolean autoCreateTable = dataXWriter.autoCreateTable;
             if (autoCreateTable) {
                 DataxProcessor processor = DataxProcessor.load(null, dataXName);
-                String tableName = originalConfig.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", ClickhouseWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
+                String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", ClickhouseWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
                 File createDDL = new File(processor.getDataxCreateDDLDir(null), tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
                 if (!createDDL.exists()) {
                     throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
@@ -86,7 +100,6 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
                     throw new RuntimeException(e);
                 }
             }
-            super.prepare();
         }
     }
 

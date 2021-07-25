@@ -63,11 +63,11 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     protected void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
         DatabaseMetaData metaData = conn.getMetaData();
 
-        ResultSet tablesResult = metaData.getTables(conn.getCatalog(), null, null, new String[]{"TABLE"});
+        ResultSet tablesResult = metaData.getTables(null, this.dbName, null, new String[]{"TABLE"});
 
         while (tablesResult.next()) {
-            //System.out.println(tablesResult.getString(2) + "," + tablesResult.getString(3));
-            if (!"default".equalsIgnoreCase(tablesResult.getString(2))) {
+            // System.out.println(tablesResult.getString(2) + "," + tablesResult.getString(3));
+            if (!StringUtils.equals(this.dbName, tablesResult.getString(2))) {
                 continue;
             }
             tabs.add(tablesResult.getString(3));

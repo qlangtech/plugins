@@ -33,8 +33,26 @@ public class ClickHouseWriterContext implements IDataxContext {
     private Integer batchByteSize;
     private String writeMode;
 
+    private String dataXName;
+
     private String preSql;
     private String postSql;
+
+    public String getDataXName() {
+        return dataXName;
+    }
+
+    public void setDataXName(String dataXName) {
+        this.dataXName = dataXName;
+    }
+
+    public boolean isContainPreSql() {
+        return StringUtils.isNotEmpty(this.preSql);
+    }
+
+    public boolean isContainPostSql() {
+        return StringUtils.isNotEmpty(this.postSql);
+    }
 
     public String getPreSql() {
         return preSql;
@@ -96,6 +114,14 @@ public class ClickHouseWriterContext implements IDataxContext {
         this.jdbcUrl = jdbcUrl;
     }
 
+    public boolean isContainBatchSize() {
+        return this.batchSize != null;
+    }
+
+    public boolean isContainBatchByteSize() {
+        return this.batchByteSize != null;
+    }
+
     public Integer getBatchSize() {
         return batchSize;
     }
@@ -118,5 +144,9 @@ public class ClickHouseWriterContext implements IDataxContext {
 
     public void setWriteMode(String writeMode) {
         this.writeMode = writeMode;
+    }
+
+    public boolean isContainWriteMode() {
+        return StringUtils.isNotEmpty(this.writeMode);
     }
 }

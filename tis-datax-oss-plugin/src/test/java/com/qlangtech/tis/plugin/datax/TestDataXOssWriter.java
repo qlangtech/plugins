@@ -109,7 +109,9 @@ public class TestDataXOssWriter extends BasicTest {
             }
         };
 
-        String readerCfg = dataProcessor.generateDataxConfig(mockReaderContext, Optional.empty());
+        DataXOssReader ossReader = new DataXOssReader();
+
+        String readerCfg = dataProcessor.generateDataxConfig(mockReaderContext, ossWriter, ossReader, Optional.empty());
         assertNotNull(readerCfg);
         System.out.println(readerCfg);
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {

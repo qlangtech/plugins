@@ -59,11 +59,11 @@ public class WriterTemplate {
 
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
-        EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
+        //EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
 
         IDataxReader dataXReader = EasyMock.createMock("dataXReader", IDataxReader.class);
 
-        EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
+        //EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
 
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         EasyMock.replay(processor, dataxGlobalCfg, dataXReader);

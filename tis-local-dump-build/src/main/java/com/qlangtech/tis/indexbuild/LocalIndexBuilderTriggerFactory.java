@@ -73,7 +73,6 @@ public class LocalIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory 
         };
 
     }
-
     /**
      * 执行索引触发任务
      *

@@ -34,7 +34,9 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -86,7 +88,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     private transient K8SController k8SController;
 
     public static String getDefaultZookeeperAddress() {
-        return Config.getZKHost();
+        return processDefaultHost(Config.getZKHost());
     }
 
     @Override
@@ -162,7 +164,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
             return hpaStatus;
         } catch (ApiException e) {
-            throw new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
+            // throw new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
+            throw K8sExceptionUtils.convert(e);
         }
     }
 
@@ -188,7 +191,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
             }
         } catch (ApiException e) {
-            throw new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
+            throw K8sExceptionUtils.convert("code:" + e.getCode(), e); //new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
         }
         File launchToken = this.getServerLaunchTokenFile();
         FileUtils.deleteQuietly(launchToken);
@@ -260,6 +263,11 @@ public class K8SDataXJobWorker extends DataXJobWorker {
                     // return "-D" + DataxUtils.DATAX_QUEUE_ZK_PATH + "=" + getZkQueuePath() + " -D" + DataxUtils.DATAX_ZK_ADDRESS + "=" + getZookeeperAddress();
                     return getZookeeperAddress() + " " + getZkQueuePath();
                 }
+
+                @Override
+                protected String processHost(String address) {
+                    return processDefaultHost(address);
+                }
             };
             //  K8sImage config, CoreV1Api api, String name, ReplicasSpec incrSpec, List< V1EnvVar > envs
             // CoreV1Api k8sV1Api = new CoreV1Api(k8sClient);
@@ -277,10 +285,14 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
         } catch (ApiException e) {
             logger.error(e.getResponseBody(), e);
-            throw new RuntimeException(e.getResponseBody(),e);
+            throw K8sExceptionUtils.convert(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String processDefaultHost(String address) {
+        return StringUtils.replace(address, NetUtils.LOCAL_HOST_VALUE, NetUtils.getHost());
     }
 
     private void createHorizontalpodAutoscaler(K8sImage k8sImage, HorizontalpodAutoscaler hap) throws Exception {
@@ -328,7 +340,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
             logger.error("Reason: " + e.getResponseBody());
             logger.error("Response headers: " + e.getResponseHeaders());
             // e.printStackTrace();
-            throw e;
+            // throw e;
+            throw K8sExceptionUtils.convert("code:" + e.getCode(), e);
         }
 
     }

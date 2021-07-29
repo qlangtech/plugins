@@ -14,7 +14,8 @@
     }
   },
   "index": {
-    "help": "Elasticsearch中的index名"
+    "help": "Elasticsearch中的index名",
+    "dftVal": "com.qlangtech.tis.plugin.datax.SelectedTab.getDftTabName():uncache_true"
   },
   "type": {
     "help": "Elasticsearch中index的type名",

@@ -17,9 +17,13 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +33,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-08 13:29
  **/
 public class SelectedTab implements ISelectedTab {
+    private static final Logger logger = LoggerFactory.getLogger(SelectedTab.class);
     // 表名称
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String name;
@@ -47,6 +52,29 @@ public class SelectedTab implements ISelectedTab {
     }
 
     public SelectedTab() {
+    }
+
+    /**
+     * 取得默认的表名称
+     *
+     * @return
+     */
+    public static String getDftTabName() {
+        DataxReader dataXReader = DataxReader.getThreadBingDataXReader();
+        if (dataXReader == null) {
+            return StringUtils.EMPTY;
+        }
+
+        try {
+            List<ISelectedTab> selectedTabs = dataXReader.getSelectedTabs();
+            for (ISelectedTab tab : selectedTabs) {
+                return tab.getName();
+            }
+        } catch (Throwable e) {
+            logger.warn(dataXReader.getDescriptor().getDisplayName() + e.getMessage());
+        }
+
+        return StringUtils.EMPTY;
     }
 
     public String getWhere() {

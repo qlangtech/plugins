@@ -86,7 +86,8 @@ public class K8SController implements IRCController {
 
             }
         } catch (ApiException e) {
-            throw new RuntimeException(collection, e);
+            // throw new RuntimeException(collection, e);
+            throw K8sExceptionUtils.convert(collection, e);
         }
 
     }
@@ -126,8 +127,9 @@ public class K8SController implements IRCController {
 //                logger.warn(indexName + e.getMessage());
 //                return;
 //            } else {
-            throw new RuntimeException(indexName + "\n" + e.getResponseBody(), e);
+            throw K8sExceptionUtils.convert(indexName, e); //RuntimeException(indexName + "\n" + e.getResponseBody(), e);
             //}
+
         }
 
 
@@ -366,7 +368,7 @@ public class K8SController implements IRCController {
                 logger.warn("can not get collection rc deployment:" + tisInstanceName);
                 return null;
             } else {
-                throw new RuntimeException("code:" + e.getCode() + "\n" + e.getResponseBody(), e);
+                throw K8sExceptionUtils.convert("code:" + e.getCode(), e); //new RuntimeException("code:" + e.getCode() + "\n" + e.getResponseBody(), e);
             }
         }
         return rcDeployment;

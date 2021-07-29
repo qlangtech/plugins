@@ -11,7 +11,7 @@
   },
   "collectionName": {
     "help": "MonogoDB的集合名。【必填】",
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbWriter.getDftCollectionName():uncache_true"
+    "dftVal": "com.qlangtech.tis.plugin.datax.SelectedTab.getDftTabName():uncache_true"
   },
   "column": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXMongodbWriter.getDftColumn():uncache_true",

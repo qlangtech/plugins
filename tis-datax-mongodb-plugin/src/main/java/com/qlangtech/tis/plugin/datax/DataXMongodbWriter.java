@@ -105,23 +105,23 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
         return JsonUtil.toString(fields);
     }
 
-    public static String getDftCollectionName() {
-        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
-        if (dataReader == null) {
-            return StringUtils.EMPTY;
-        }
-
-        try {
-            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
-            for (ISelectedTab tab : selectedTabs) {
-                return tab.getName();
-            }
-        } catch (Throwable e) {
-            logger.warn(dataReader.getDescriptor().getDisplayName(), e);
-        }
-
-        return StringUtils.EMPTY;
-    }
+//    public static String getDftCollectionName() {
+//        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
+//        if (dataReader == null) {
+//            return StringUtils.EMPTY;
+//        }
+//
+//        try {
+//            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+//            for (ISelectedTab tab : selectedTabs) {
+//                return tab.getName();
+//            }
+//        } catch (Throwable e) {
+//            logger.warn(dataReader.getDescriptor().getDisplayName(), e);
+//        }
+//
+//        return StringUtils.EMPTY;
+//    }
 
 
     @Override

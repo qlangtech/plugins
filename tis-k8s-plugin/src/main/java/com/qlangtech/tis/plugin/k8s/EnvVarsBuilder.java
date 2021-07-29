@@ -63,21 +63,25 @@ public abstract class EnvVarsBuilder {
 
         var = new V1EnvVar();
         var.setName(Config.KEY_ZK_HOST);
-        var.setValue(Config.getZKHost());
+        var.setValue(processHost(Config.getZKHost()));
         envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_ASSEMBLE_HOST);
-        var.setValue(Config.getAssembleHost());
+        var.setValue(processHost(Config.getAssembleHost()));
         envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_TIS_HOST);
-        var.setValue(Config.getTisHost());
+        var.setValue(processHost(Config.getTisHost()));
         envVars.add(var);
 
         return envVars;
 
+    }
+
+    protected String processHost(String address) {
+        return address;
     }
 
 //    public abstract String getAppOptions(String indexName, long timestamp) {

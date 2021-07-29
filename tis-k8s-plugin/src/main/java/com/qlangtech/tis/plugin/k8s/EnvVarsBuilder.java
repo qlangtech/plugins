@@ -38,7 +38,7 @@ public abstract class EnvVarsBuilder {
         List<V1EnvVar> envVars = Lists.newArrayList();
         V1EnvVar var = new V1EnvVar();
         var.setName("JVM_PROPERTY");
-        var.setValue("-Ddata.dir=" + Config.getDataDir().getAbsolutePath() + " -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true " + getExtraSysProps());
+        var.setValue("-Ddata.dir=" + getDataDir() + " -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true " + getExtraSysProps());
         envVars.add(var);
 
         RunEnvironment runtime = RunEnvironment.getSysRuntime();
@@ -78,6 +78,11 @@ public abstract class EnvVarsBuilder {
 
         return envVars;
 
+    }
+
+    protected String getDataDir() {
+        return Config.DEFAULT_DATA_DIR;
+        // return Config.getDataDir().getAbsolutePath();
     }
 
     protected String processHost(String address) {

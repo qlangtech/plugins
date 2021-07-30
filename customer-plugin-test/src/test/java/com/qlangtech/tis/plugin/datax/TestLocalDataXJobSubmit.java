@@ -58,7 +58,7 @@ public class TestLocalDataXJobSubmit extends BaiscPluginTest {
         File cfgDir = new File(Config.getMetaCfgDir(), TIS.KEY_TIS_PLUGIN_CONFIG + "/ap/" + dataXName + "/" + DataxProcessor.DATAX_CFG_DIR_NAME);
         assertTrue("cfgDir.exists:" + cfgDir.getAbsolutePath(), cfgDir.exists());
 
-        EasyMock.expect(dataxProcessor.getDataxCfgDir()).andReturn(cfgDir);
+        EasyMock.expect(dataxProcessor.getDataxCfgDir(null)).andReturn(cfgDir);
         String dataXfileName = "customer_order_relation_0.json";
 
 //        IJoinTaskContext taskContext

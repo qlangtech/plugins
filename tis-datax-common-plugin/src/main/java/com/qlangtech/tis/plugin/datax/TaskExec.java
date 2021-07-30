@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.io.File;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -89,7 +88,7 @@ public class TaskExec {
 
         com.qlangtech.tis.datax.DataxExecutor dataxExecutor = new com.qlangtech.tis.datax.DataxExecutor(statusRpc);
 
-        File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
+        // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteJobTrigger() {
@@ -100,10 +99,10 @@ public class TaskExec {
                         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
                         MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
                         dataxExecutor.startWork(taskContext.getIndexName()
-                                , taskContext.getTaskId(), dataXfileName, jobPath.getAbsolutePath(), uberClassLoader);
+                                , taskContext.getTaskId(), dataXfileName, dataxProcessor, uberClassLoader);
                         success.set(true);
                     } catch (Throwable e) {
-                        logger.error(jobPath.getAbsolutePath(), e);
+                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
                         success.set(false);
                         throw new RuntimeException(e);
                     } finally {

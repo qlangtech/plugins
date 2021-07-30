@@ -81,8 +81,8 @@ public abstract class EnvVarsBuilder {
     }
 
     protected final String getDataDir() {
-        //return Config.DEFAULT_DATA_DIR;
-        return Config.getDataDir().getAbsolutePath();
+        return Config.DEFAULT_DATA_DIR;
+        //return Config.getDataDir().getAbsolutePath();
     }
 
     protected String processHost(String address) {

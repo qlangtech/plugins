@@ -51,7 +51,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
 
         DistributedQueue<CuratorTaskMessage> distributedQueue = getCuratorDistributedQueue();
-        File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
+       // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         return new AsynRemoteJobTrigger(dataXfileName) {
             @Override
             public void submitJob() {
@@ -60,7 +60,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                     msg.setDataXName(taskContext.getIndexName());
                     msg.setJobId(taskContext.getTaskId());
                     msg.setJobName(dataXfileName);
-                    msg.setJobPath(jobPath.getAbsolutePath());
+                    //msg.setJobPath(jobPath.getAbsolutePath());
                     distributedQueue.put(msg);
                 } catch (Exception e) {
                     throw new RuntimeException(e);

@@ -54,7 +54,7 @@ public class TestTotalpayProducter extends BasicProducer {
 
     static {
         client = new OSSClientBuilder().build("http://oss-cn-hangzhou.aliyuncs.com"
-                , "LTAICjPfS8Y2fDkN", "0xkKmOFLLbvrbM6gknWbbw2EDSabdR");
+                , "", "");
     }
 
     public void testProduce() throws Exception {

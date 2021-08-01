@@ -52,7 +52,7 @@ public class ReaderTemplate {
         IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
         EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
 
-        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
+        //  EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
 
         EasyMock.replay(processor, dataxGlobalCfg, dataxWriter, dataxContext);
 

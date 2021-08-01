@@ -51,7 +51,7 @@ public class DataXFtpReader extends DataxReader {
     public String connectPattern;
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String username;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.PASSWORD, validate = {Validator.require})
     public String password;
     @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;

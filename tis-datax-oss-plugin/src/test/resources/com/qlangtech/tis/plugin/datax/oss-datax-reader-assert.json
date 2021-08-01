@@ -1,10 +1,10 @@
 {
   "parameter":{
-    "accessId":"LTAICjPfS8Y2fDkN",
+    "accessId":"123456",
     "bucket":"testBucket",
     "endpoint":"http://oss-cn-beijing.aliyuncs.com",
     "nullFormat":"\\N",
-    "accessKey":"0xkKmOFLLbvrbM6gknWbbw2EDSabdR",
+    "accessKey":"123456",
     "compress":"zip",
     "column":[
       {

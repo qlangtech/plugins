@@ -6,10 +6,10 @@
     "maxFileSize":"300",
     "encoding":"utf-8",
     "fieldDelimiter":"\t",
-    "accessId":"LTAICjPfS8Y2fDkN",
+    "accessId":"123456",
     "bucket":"testBucket",
     "endpoint":"http://oss-cn-beijing.aliyuncs.com",
-    "accessKey":"0xkKmOFLLbvrbM6gknWbbw2EDSabdR",
+    "accessKey":"123456",
     "header":[
       "name",
       "age",

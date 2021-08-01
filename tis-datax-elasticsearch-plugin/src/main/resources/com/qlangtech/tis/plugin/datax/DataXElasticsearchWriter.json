@@ -137,7 +137,9 @@
   },
   "settings": {
     "help": "创建index时候的settings, 与elasticsearch官方相同",
-    "dftVal": "{\"index\" :{\"number_of_shards\": 1, \"number_of_replicas\": 0}}"
+    "dftVal": "{\"index\" :{\"number_of_shards\": 1, \"number_of_replicas\": 0}}",
+    "style": "codemirror",
+    "mode": "application/ld+json"
   },
   "splitter": {
     "help": "如果插入数据是array，就使用指定分隔符",

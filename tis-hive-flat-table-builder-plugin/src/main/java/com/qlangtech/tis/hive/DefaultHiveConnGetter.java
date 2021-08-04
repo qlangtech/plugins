@@ -46,6 +46,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     @FormField(ordinal = 0, validate = {Validator.require, Validator.identity}, identity = true)
     public String name;
 
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
+
     @FormField(ordinal = 1, validate = {Validator.require, Validator.host})
     public String // "192.168.28.200:10000";
             hiveAddress;

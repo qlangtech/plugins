@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
 
@@ -42,6 +43,8 @@ public class DataXHiveWriter extends BasicFSWriter {
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    public String tabPrefix;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
@@ -88,6 +91,11 @@ public class DataXHiveWriter extends BasicFSWriter {
         public HiveDataXContext(String dataxPluginName, IDataxProcessor.TableMap tabMap, String dataXName) {
             super(tabMap, dataXName);
             this.dataxPluginName = dataxPluginName;
+        }
+
+        @Override
+        public String getTableName() {
+            return StringUtils.trimToEmpty(tabPrefix) + super.getTableName();
         }
 
         public String getDataxPluginName() {

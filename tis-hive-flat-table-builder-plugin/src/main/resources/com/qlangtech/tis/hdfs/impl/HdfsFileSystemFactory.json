@@ -1,4 +1,11 @@
 {
+  "rootDir": {
+    "placeholder": "/user/admin",
+    "help": "系统会将源数据导入到该子目录下，用户需要保证该子目录有读/写权限"
+  },
+  "hdfsAddress": {
+    "dftVal": "hdfs://daily-cdh"
+  },
   "hdfsSiteContent": {
     "rows": 20,
     "style": "codemirror",

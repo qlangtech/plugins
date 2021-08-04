@@ -7,8 +7,8 @@
     "ptFormat": "yyyyMMdd",
     "dataxName": "mysql2hive",
     "fileType": "text",
-    "fileName": "customer_order_relation",
-    "hiveTableName": "customer_order_relation",
+    "fileName": "ods_customer_order_relation",
+    "hiveTableName": "ods_customer_order_relation",
     "writeMode": "nonConflict",
     "column": [
       {

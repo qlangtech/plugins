@@ -56,7 +56,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
     public String hdfsAddress;
 
-    @FormField(ordinal = 2, validate = {Validator.require})
+    @FormField(ordinal = 2, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
 
     @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})

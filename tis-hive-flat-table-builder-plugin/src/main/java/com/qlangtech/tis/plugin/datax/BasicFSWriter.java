@@ -138,7 +138,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return this.dataxName;
         }
 
-        public final String getTableName() {
+        public String getTableName() {
             String tabName = this.tabMap.getTo();
             if (StringUtils.isBlank(tabName)) {
                 throw new IllegalStateException("tabName of tabMap can not be null ,tabMap:" + tabMap);

@@ -5,6 +5,9 @@
       "label": "数据源管理"
     }
   },
+  "tabPrefix": {
+    "dftVal": "ods_"
+  },
   "partitionRetainNum": {
     "label": "分区保留数",
     "help": "每进行一次DataX导入在Hive表中会生成一个新的分区，现在系统分区名称为'pt'格式为开始导入数据的时间戳"
@@ -36,6 +39,6 @@
     "disable": true
   },
   "template": {
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHiveWriter.getDftTemplate()",
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXHiveWriter.getDftTemplate()"
   }
 }

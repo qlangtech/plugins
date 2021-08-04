@@ -1,0 +1,105 @@
+## hdfsSiteContent
+
+配置实例,实现了HDFS HA高可用方案：
+
+[hdfs-site.xml参数详解](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <property>
+    <name>dfs.nameservices</name>
+    <value>daily-cdh</value>
+  </property>
+  <property>
+    <name>dfs.client.failover.proxy.provider.daily-cdh</name>
+  <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>
+  <property>
+    <name>dfs.ha.automatic-failover.enabled.daily-cdh</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>dfs.ha.namenodes.daily-cdh</name>
+    <value>namenode228,namenode295</value>
+  </property>
+  <property>
+    <name>dfs.namenode.rpc-address.daily-cdh.namenode228</name>
+    <value>192.168.28.200:9000</value>
+  </property>
+  <property>
+    <name>dfs.namenode.servicerpc-address.daily-cdh.namenode228</name>
+    <value>192.168.28.200:8022</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-address.daily-cdh.namenode228</name>
+    <value>192.168.28.200:50070</value>
+  </property>
+  <property>
+    <name>dfs.namenode.https-address.daily-cdh.namenode228</name>
+    <value>192.168.28.200:50470</value>
+  </property>
+  <property>
+    <name>dfs.namenode.rpc-address.daily-cdh.namenode295</name>
+    <value>192.168.28.200:9000</value>
+  </property>
+  <property>
+    <name>dfs.namenode.servicerpc-address.daily-cdh.namenode295</name>
+    <value>192.168.28.200:8022</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-address.daily-cdh.namenode295</name>
+    <value>192.168.28.200:50070</value>
+  </property>
+  <property>
+    <name>dfs.namenode.https-address.daily-cdh.namenode295</name>
+    <value>192.168.28.200:50470</value>
+  </property>
+  <property>
+    <name>dfs.replication</name>
+    <value>2</value>
+  </property>
+  <property>
+    <name>dfs.blocksize</name>
+    <value>134217728</value>
+  </property>
+  <property>
+    <name>dfs.client.use.datanode.hostname</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>fs.permissions.umask-mode</name>
+    <value>022</value>
+  </property>
+  <property>
+    <name>dfs.namenode.acls.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.client.use.legacy.blockreader</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.client.read.shortcircuit</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.domain.socket.path</name>
+    <value>/var/run/hdfs-sockets/dn</value>
+  </property>
+  <property>
+    <name>dfs.client.read.shortcircuit.skip.checksum</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.client.domain.socket.data.traffic</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>dfs.datanode.hdfs-blocks-metadata.enabled</name>
+    <value>true</value>
+  </property>
+</configuration>
+
+```
+

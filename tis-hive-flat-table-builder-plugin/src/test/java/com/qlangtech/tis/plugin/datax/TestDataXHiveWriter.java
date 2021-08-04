@@ -67,6 +67,7 @@ public class TestDataXHiveWriter extends BasicTest {
         hiveWriter.dataXName = mysql2hiveDataXName;
         hiveWriter.fsName = "hdfs1";
         hiveWriter.fileType = "text";
+        hiveWriter.tabPrefix = "ods_";
         hiveWriter.writeMode = "nonConflict";
         hiveWriter.fieldDelimiter = "\t";
         hiveWriter.compress = "gzip";

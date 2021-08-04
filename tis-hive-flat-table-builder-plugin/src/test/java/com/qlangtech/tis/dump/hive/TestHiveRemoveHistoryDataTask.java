@@ -60,7 +60,7 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
         EasyMock.expect(hiveConn.createStatement()).andReturn(showTabsStatement);
         ResultSet tabsResult = EasyMock.createMock("tabsResult", ResultSet.class);
         EasyMock.expect(tabsResult.next()).andReturn(true);
-        EasyMock.expect(tabsResult.getString(2)).andReturn(tabName);
+        EasyMock.expect(tabsResult.getString(1)).andReturn(tabName);
         EasyMock.expect(tabsResult.next()).andReturn(false);
         tabsResult.close();
         EasyMock.expect(showTabsStatement.executeQuery("show tables in testdb")).andReturn(tabsResult);

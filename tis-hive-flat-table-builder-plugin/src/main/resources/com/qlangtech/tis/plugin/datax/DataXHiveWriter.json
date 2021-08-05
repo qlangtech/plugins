@@ -2,7 +2,14 @@
   "hiveConn": {
     "creator": {
       "routerLink": "/base/basecfg",
-      "label": "数据源管理"
+      "label": "数据源管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "extraParam": "append_true",
+          "descName": "HiveConn"
+        }
+      ]
     }
   },
   "tabPrefix": {

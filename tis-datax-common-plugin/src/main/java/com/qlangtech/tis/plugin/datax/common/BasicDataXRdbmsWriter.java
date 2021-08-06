@@ -50,6 +50,9 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer batchSize;
 
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+    public boolean autoCreateTable;
+
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 

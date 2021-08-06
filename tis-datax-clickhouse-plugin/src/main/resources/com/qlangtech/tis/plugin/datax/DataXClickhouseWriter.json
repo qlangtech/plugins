@@ -1,17 +1,6 @@
 {
   "autoCreateTable": {
-    "label": "自动建表",
-    "dftVal": false,
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
+    "disable": false
   },
   "session": {
     "disable": true

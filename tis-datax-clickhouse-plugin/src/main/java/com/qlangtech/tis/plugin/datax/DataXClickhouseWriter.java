@@ -57,8 +57,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
 
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
-    public boolean autoCreateTable;
+
 
 
 //    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})

@@ -18,7 +18,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -110,40 +109,40 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             return null;
         }
 
-        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-        if (threadBingDataXReader instanceof DataxMySQLReader) {
-            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-
-            dsFactory.
-
-
-        } else {
-
-        }
-
-        StringBuffer script = new StringBuffer();
-        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
-        script.append("(\n");
-        // ISelectedTab.ColMeta pk = null;
-        int maxColNameLength = 0;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-            int m = StringUtils.length(col.getName());
-            if (m > maxColNameLength) {
-                maxColNameLength = m;
-            }
-        }
-        maxColNameLength += 4;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-            if (pk == null && col.isPk()) {
-                pk = col;
-            }
-            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
-                    .append(convert2MySQLType(col.getType())).append(",").append("\n");
-        }
-        // script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
-        script.append(")\n");
-        script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
+//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
+//        if (threadBingDataXReader instanceof DataxMySQLReader) {
+//            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
+//            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+//
+//           // dsFactory.
+//
+//
+//        } else {
+//
+//        }
+//
+//        StringBuffer script = new StringBuffer();
+//        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
+//        script.append("(\n");
+//        // ISelectedTab.ColMeta pk = null;
+//        int maxColNameLength = 0;
+//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//            int m = StringUtils.length(col.getName());
+//            if (m > maxColNameLength) {
+//                maxColNameLength = m;
+//            }
+//        }
+//        maxColNameLength += 4;
+//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//            if (pk == null && col.isPk()) {
+//                pk = col;
+//            }
+//            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
+//                    .append(convert2MySQLType(col.getType())).append(",").append("\n");
+//        }
+//        // script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
+//        script.append(")\n");
+//        script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
         // Objects.requireNonNull(pk, "pk can not be null");
 
 
@@ -160,7 +159,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 //        ENGINE = CollapsingMergeTree(__cc_ck_sign)
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
-        return script;
+        //return script;
+        return null;
     }
 
     private String convert2MySQLType(ISelectedTab.DataXReaderColType dataxType) {
@@ -242,7 +242,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
         @Override
         public boolean isSupportTabCreate() {
-            return true;
+            return false;
         }
 
         @Override

@@ -60,7 +60,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
         return this.name;
     }
 
-    protected void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
         DatabaseMetaData metaData = conn.getMetaData();
 
         ResultSet tablesResult = metaData.getTables(null, this.dbName, null, new String[]{"TABLE"});

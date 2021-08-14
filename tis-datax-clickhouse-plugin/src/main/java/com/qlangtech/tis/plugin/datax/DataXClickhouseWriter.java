@@ -58,8 +58,6 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     public String writeMode;
 
 
-
-
 //    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String template;
 
@@ -70,37 +68,73 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         if (!this.autoCreateTable) {
             return null;
         }
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+                script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
+            }
 
+            @Override
+            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+                script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
+                // Objects.requireNonNull(pk, "pk can not be null");
+                if (pk != null) {
+                    script.append(" ORDER BY `").append(pk.getName()).append("`\n");
+                }
+                script.append(" SETTINGS index_granularity = 8192");
+            }
+
+            @Override
+            protected String convertType(ISelectedTab.ColMeta col) {
+                switch (col.getType()) {
+                    case Long:
+                        return "Int64";
+                    case INT:
+                        return "Int32";
+                    case Double:
+                        return "Float64";
+                    case Date:
+                        return "Date";
+                    case STRING:
+                    case Boolean:
+                    case Bytes:
+                    default:
+                        return "String";
+                }
+
+            }
+        };
+        return createTableSqlBuilder.build();
         // List<ColumnMetaData> tableMetadata = this.getDataSourceFactory().getTableMetadata(tableMapper.getTo());
         //Set<String> pks = tableMetadata.stream().filter((t) -> t.isPk()).map((t) -> t.getName()).collect(Collectors.toSet());
 
-        StringBuffer script = new StringBuffer();
-        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
-        script.append("(\n");
-        ISelectedTab.ColMeta pk = null;
-        int maxColNameLength = 0;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-            int m = StringUtils.length(col.getName());
-            if (m > maxColNameLength) {
-                maxColNameLength = m;
-            }
-        }
-        maxColNameLength += 4;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-            if (pk == null && col.isPk()) {
-                pk = col;
-            }
-            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
-                    .append(convert2ClickhouseType(col.getType())).append(",").append("\n");
-        }
-        script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
-        script.append(")\n");
-        script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
-        // Objects.requireNonNull(pk, "pk can not be null");
-        if (pk != null) {
-            script.append(" ORDER BY `").append(pk.getName()).append("`\n");
-        }
-        script.append(" SETTINGS index_granularity = 8192");
+//        StringBuffer script = new StringBuffer();
+//        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
+//        script.append("(\n");
+//        ISelectedTab.ColMeta pk = null;
+//        int maxColNameLength = 0;
+//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//            int m = StringUtils.length(col.getName());
+//            if (m > maxColNameLength) {
+//                maxColNameLength = m;
+//            }
+//        }
+//        maxColNameLength += 4;
+//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//            if (pk == null && col.isPk()) {
+//                pk = col;
+//            }
+//            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
+//                    .append(convert2ClickhouseType(col.getType())).append(",").append("\n");
+//        }
+//        script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
+//        script.append(")\n");
+//        script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
+//        // Objects.requireNonNull(pk, "pk can not be null");
+//        if (pk != null) {
+//            script.append(" ORDER BY `").append(pk.getName()).append("`\n");
+//        }
+//        script.append(" SETTINGS index_granularity = 8192");
 //        CREATE TABLE tis.customer_order_relation
 //                (
 //                        `customerregister_id` String,
@@ -114,27 +148,9 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //        ENGINE = CollapsingMergeTree(__cc_ck_sign)
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
-        return script;
+        //     return script;
     }
 
-    private String convert2ClickhouseType(ISelectedTab.DataXReaderColType dataxType) {
-        switch (dataxType) {
-            case Long:
-                return "Int64";
-            case INT:
-                return "Int32";
-            case Double:
-                return "Float64";
-            case Date:
-                return "Date";
-            case STRING:
-            case Boolean:
-            case Bytes:
-            default:
-                return "String";
-        }
-
-    }
 
     @Override
     public void setKey(KeyedPluginStore.Key key) {

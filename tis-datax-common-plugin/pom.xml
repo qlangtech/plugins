@@ -54,8 +54,6 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-dag</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
 
 

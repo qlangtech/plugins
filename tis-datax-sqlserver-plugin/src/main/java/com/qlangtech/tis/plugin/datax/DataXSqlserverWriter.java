@@ -17,11 +17,9 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
@@ -34,25 +32,69 @@ import java.util.Optional;
  **/
 public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasourceFactory> {
 
-
-
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXSqlserverWriter.class, "DataXSqlserverWriter-tpl.json");
     }
-
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
-
         SqlServerWriterContext writerContext = new SqlServerWriterContext(this, tableMap.get());
-
-
         return writerContext;
     }
 
+
+    @Override
+    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+        if (!this.autoCreateTable) {
+            return null;
+        }
+
+        // https://www.cnblogs.com/mingfei200169/articles/427591.html
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected String convertType(ISelectedTab.ColMeta col) {
+                //https://www.cnblogs.com/liberty777/p/10748570.html
+                StringBuffer createSql = new StringBuffer(getSqlServerType(col));
+                if (col.isPk()) {
+                    createSql.append(" primary key ");
+                }
+                return createSql.toString();
+            }
+
+            private String getSqlServerType(ISelectedTab.ColMeta col) {
+                switch (col.getType()) {
+                    case Long:
+                        return "bigint";
+                    case INT:
+                        return "int";
+                    case Double:
+                        return "decimal(8,4)";
+                    case Date:
+                        return "datetime";
+                    case STRING:
+                    case Boolean:
+                    case Bytes:
+                    default:
+                        return "varchar(100)";
+                }
+            }
+
+            @Override
+            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+
+            }
+
+            @Override
+            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+
+            }
+        };
+
+        return createTableSqlBuilder.build();
+    }
 
     @TISExtension()
     public static class DefaultDescriptor extends RdbmsWriterDescriptor {

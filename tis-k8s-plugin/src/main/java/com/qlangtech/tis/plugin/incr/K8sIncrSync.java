@@ -17,6 +17,7 @@ package com.qlangtech.tis.plugin.incr;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -129,7 +130,11 @@ public class K8sIncrSync extends K8SController //implements IRCController
         if (timestamp < 1) {
             throw new IllegalArgumentException("argument timestamp can not small than 1");
         }
-        createReplicationController(indexName, incrSpec, this.addEnvVars(indexName, timestamp));
+        try {
+            createReplicationController(indexName, incrSpec, this.addEnvVars(indexName, timestamp));
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert(e);
+        }
     }
 
 //    /**

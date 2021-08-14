@@ -16,25 +16,9 @@
 package com.alibaba.datax.plugin.writer.clickhousewriter;
 
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.plugin.rdbms.util.DBUtil;
-import com.alibaba.datax.plugin.rdbms.writer.Constant;
-import com.alibaba.datax.plugin.rdbms.writer.Key;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.datax.DataXClickhouseWriter;
-import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
-import org.apache.commons.io.FileUtils;
+import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * 这个扩展是想实现Clickhouse的自动建表
@@ -52,7 +36,11 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
         public void init() {
             Configuration cfg = super.getPluginJobConf();
             // 判断表是否存在，如果不存在则创建表
-            initWriterTable(cfg);
+            try {
+                RdbmsWriter.initWriterTable(cfg);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             super.init();
         }
 
@@ -61,46 +49,6 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
 //            super.prepare();
 //        }
 
-        private static void initWriterTable(Configuration cfg) {
-            String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, ClickhouseWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
-            DataXClickhouseWriter dataXWriter = (DataXClickhouseWriter) DataxWriter.load(null, dataXName);
-
-
-            Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
-            boolean autoCreateTable = dataXWriter.autoCreateTable;
-            if (autoCreateTable) {
-                DataxProcessor processor = DataxProcessor.load(null, dataXName);
-                String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", ClickhouseWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
-                File createDDL = new File(processor.getDataxCreateDDLDir(null), tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
-                if (!createDDL.exists()) {
-                    throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
-                }
-
-                ClickHouseDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
-                try {
-                    List<String> tables = dsFactory.getTablesInDB();
-                    // 先判断表是否存在
-                    if (!tables.contains(tableName)) {
-                        // 表不存在
-                        Connection conn = null;
-                        Statement statement = null;
-                        try {
-                            conn = dsFactory.getConnection(dsFactory.getJdbcUrl());
-                            statement = conn.createStatement();
-                            String script = FileUtils.readFileToString(createDDL, TisUTF8.get());
-                            logger.info("create table:{}\n   script:{}", tableName, script);
-                            statement.execute(script);
-                        } finally {
-                            DBUtil.closeDBResources(null, statement, conn);
-                        }
-
-                    }
-
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
     }
 
     public static class Task extends ClickhouseWriter.Task {

@@ -67,7 +67,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet result = null;
         try {
@@ -90,7 +90,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected Connection getConnection(String jdbcUrl) throws SQLException {
+    public Connection getConnection(String jdbcUrl) throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {

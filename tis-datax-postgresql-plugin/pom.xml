@@ -86,6 +86,10 @@
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-datax-common-rdbms-plugin</artifactId>
+        </dependency>
 
     </dependencies>
 

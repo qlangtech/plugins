@@ -32,7 +32,11 @@ public class K8sExceptionUtils {
     public static TisException convert(String msg, ApiException e) {
 
         V1Status v1Status = JSON.parseObject(e.getResponseBody(), V1Status.class);
-        String errMsg = msg == null ? v1Status.getMessage() : msg + ":" + v1Status.getMessage();
+        String errMsg = msg;
+        if (v1Status != null) {
+            errMsg = (msg == null) ? v1Status.getMessage() : msg + ":" + v1Status.getMessage();
+        }
+
         return new TisException(errMsg, e);
     }
 }

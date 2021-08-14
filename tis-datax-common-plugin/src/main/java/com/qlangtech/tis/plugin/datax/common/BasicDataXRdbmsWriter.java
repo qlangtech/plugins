@@ -61,7 +61,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return this.template;
     }
 
-    protected DS getDataSourceFactory() {
+    public DS getDataSourceFactory() {
         if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");
         }

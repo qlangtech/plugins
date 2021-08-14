@@ -16,6 +16,10 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.facebook.presto.sql.SqlFormatter;
+import com.facebook.presto.sql.parser.ParsingOptions;
+import com.facebook.presto.sql.parser.SqlParser;
+import com.facebook.presto.sql.tree.Expression;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
@@ -25,6 +29,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
@@ -41,6 +46,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -154,7 +160,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
         };
 
-        String cfgResult = dataProcessor.generateDataxConfig(null, tableMap);
+        String cfgResult = dataProcessor.generateDataxConfig(null, mySQLWriter, dataxReader, tableMap);
 
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             assertEquals(m, e, a);
@@ -172,5 +178,14 @@ public class TestDataxMySQLWriter extends BasicTest {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
         assertTrue(extraProps.isPresent());
     }
+
+//    public void testCreateDDLParser() {
+//
+//        SqlParser sqlParser = new SqlParser();
+//        String createSql = IOUtils.loadResourceFromClasspath(TestDataxMySQLWriter.class, "sql/create-instancedetail.sql");
+//        Expression statement = sqlParser.createExpression(createSql, new ParsingOptions());
+//        Objects.requireNonNull(statement, "statement can not be null");
+//        System.out.println(   SqlFormatter.formatSql(statement, Optional.empty()) );
+//    }
 
 }

@@ -97,7 +97,6 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-dag</artifactId>
-            <version>2.3.0</version>
             <scope>test</scope>
         </dependency>
 

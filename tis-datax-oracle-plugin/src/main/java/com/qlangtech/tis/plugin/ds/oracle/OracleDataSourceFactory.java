@@ -75,8 +75,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected Connection getConnection(String jdbcUrl) throws SQLException {
-
+    public Connection getConnection(String jdbcUrl) throws SQLException {
         return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
     }
 

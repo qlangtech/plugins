@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -31,36 +32,21 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
- * @see com.alibaba.datax.plugin.writer.mysqlwriter.MysqlWriter
+ * @see com.alibaba.datax.plugin.writer.mysqlwriter.TISMysqlWriter
  **/
 public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     private static final String DATAX_NAME = "MySQL";
 
-//    @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String dbName;
-
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
-
-//    @FormField(ordinal = 2, type = FormFieldType.TEXTAREA, validate = {})
-//    public String preSql;
-//
-//    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {})
-//    public String postSql;
-//
-//    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
-//    public String session;
-//
-//    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-//    public Integer batchSize;
-
-//    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String template;
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
@@ -108,78 +94,57 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         if (!this.autoCreateTable) {
             return null;
         }
-
-//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-//        if (threadBingDataXReader instanceof DataxMySQLReader) {
-//            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-//            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-//
-//           // dsFactory.
-//
-//
-//        } else {
-//
-//        }
-//
-//        StringBuffer script = new StringBuffer();
-//        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
-//        script.append("(\n");
-//        // ISelectedTab.ColMeta pk = null;
-//        int maxColNameLength = 0;
-//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-//            int m = StringUtils.length(col.getName());
-//            if (m > maxColNameLength) {
-//                maxColNameLength = m;
-//            }
-//        }
-//        maxColNameLength += 4;
-//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-//            if (pk == null && col.isPk()) {
-//                pk = col;
-//            }
-//            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
-//                    .append(convert2MySQLType(col.getType())).append(",").append("\n");
-//        }
-//        // script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
-//        script.append(")\n");
-//        script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
-        // Objects.requireNonNull(pk, "pk can not be null");
-
-
-//        CREATE TABLE tis.customer_order_relation
-//                (
-//                        `customerregister_id` String,
-//                        `waitingorder_id` String,
-//                        `worker_id` String,
-//                        `kind` Int8,
-//                        `create_time` Int64,
-//                        `last_ver` Int8,
-//                        `__cc_ck_sign` Int8 DEFAULT 1
-//                )
-//        ENGINE = CollapsingMergeTree(__cc_ck_sign)
-//        ORDER BY customerregister_id
-//        SETTINGS index_granularity = 8192
-        //return script;
-        return null;
-    }
-
-    private String convert2MySQLType(ISelectedTab.DataXReaderColType dataxType) {
-        switch (dataxType) {
-            case Long:
-                return "bigint";
-            case INT:
-                return "Int32";
-            case Double:
-                return "Float64";
-            case Date:
-                return "Date";
-            case STRING:
-            case Boolean:
-            case Bytes:
-            default:
-                return "String";
+        StringBuffer script = new StringBuffer();
+        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
+        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
+        if (threadBingDataXReader instanceof DataxMySQLReader) {
+            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
+            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+            dsFactory.visitFirstConnection((conn) -> {
+                Statement statement = conn.createStatement();
+                ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom());
+                if (!resultSet.next()) {
+                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+                }
+                String ddl = resultSet.getString(2);
+                script.append(ddl);
+            });
+            return script;
         }
 
+
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+                if (pk != null) {
+                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
+                }
+            }
+
+            @Override
+            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+                script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
+            }
+
+            protected String convertType(ISelectedTab.ColMeta col) {
+                switch (col.getType()) {
+                    case Long:
+                        return "bigint(20)";
+                    case INT:
+                        return "int(11)";
+                    case Double:
+                        return "decimal(18,2)";
+                    case Date:
+                        return "date";
+                    case STRING:
+                    case Boolean:
+                    case Bytes:
+                    default:
+                        return "varchar(50)";
+                }
+            }
+        };
+        return createTableSqlBuilder.build();
     }
 
 

@@ -1,22 +1,24 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.async.message.client.consumer;
 
 import com.qlangtech.async.message.client.to.impl.AsyncMsgRM;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.realtime.utils.NetUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.*;
 import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
@@ -25,7 +27,6 @@ import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.util.List;
 
 import static com.qlangtech.async.message.client.util.MD5Util.stringIsEmpty;
@@ -88,7 +89,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             // Assert.isTrue(consumerGroup.startsWith("c_") && consumerGroup.contains(topic), "消费者不符合规范！consumerGroup:" + consumerGroup + ",topic:" + topic);
             // 广播模式采用动态消费组的方式
             if (messageModel.equals(MessageModel.BROADCASTING)) {
-                consumerGroup = consumerGroup + InetAddress.getLocalHost().getHostAddress().replace(".", "_");
+                consumerGroup = consumerGroup + StringUtils.replace(NetUtils.getHost(), ".", "_");// InetAddress.getLocalHost().getHostAddress().replace(".", "_");
             }
             if (// MessageConfig.checkUnPublishEnv() &&
                     suspend)

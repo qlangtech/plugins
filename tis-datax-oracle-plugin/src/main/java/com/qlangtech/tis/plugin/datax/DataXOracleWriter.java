@@ -29,7 +29,7 @@ import java.util.Optional;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
- * @see com.alibaba.datax.plugin.writer.oraclewriter.OracleWriter
+ * @see com.alibaba.datax.plugin.writer.oraclewriter.TISOracleWriter
  **/
 public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFactory> {
 
@@ -47,12 +47,22 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         return writerContext;
     }
 
+    @Override
+    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+        if (!this.autoCreateTable) {
+            return null;
+        }
+        StringBuffer createDDL = new StringBuffer();
+        return createDDL;
+    }
+
     @TISExtension()
     public static class DefaultDescriptor extends RdbmsWriterDescriptor {
         @Override
         public String getDisplayName() {
             return OracleDataSourceFactory.ORACLE;
         }
+
         public boolean validateSession(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return DataXOracleReader.validateSession(msgHandler, context, fieldName, value);
         }

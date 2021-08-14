@@ -40,6 +40,8 @@
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
         <module>customer-plugin-test</module>
+        <module>tis-datax-common-plugin</module>
+        <module>tis-datax-common-rdbms-plugin</module>
         <module>tis-ds-tidb-plugin</module>
         <module>tis-ds-mysql-plugin</module>
         <module>tis-kafka-plugin</module>
@@ -51,7 +53,6 @@
         <module>tis-datax-clickhouse-plugin</module>
         <module>tis-datax-postgresql-plugin</module>
         <module>tis-datax-mongodb-plugin</module>
-        <module>tis-datax-common-plugin</module>
         <module>tis-datax-ftp-plugin</module>
         <module>tis-datax-sqlserver-plugin</module>
         <module>tis-datax-cassandra-plugin</module>
@@ -133,6 +134,14 @@
     <dependencyManagement>
         <dependencies>
 
+
+
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-dag</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>com.alibaba.datax</groupId>
                 <artifactId>plugin-unstructured-storage-util</artifactId>
@@ -162,6 +171,12 @@
             <dependency>
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>tis-datax-common-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-datax-common-rdbms-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

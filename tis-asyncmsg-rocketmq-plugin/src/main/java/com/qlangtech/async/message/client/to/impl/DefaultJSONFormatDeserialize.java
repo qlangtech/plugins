@@ -36,8 +36,6 @@ public class DefaultJSONFormatDeserialize extends AbstractAsyncMsgDeserialize {
         }
     };
 
-    // @FormField(require = true)
-    // public String testProp;
     @Override
     public final DTO deserialize(byte[] content) throws IOException {
         return com.alibaba.fastjson.JSONObject.parseObject(content, 0, content.length, utf8CharsetDecoder.get(), DTO.class);

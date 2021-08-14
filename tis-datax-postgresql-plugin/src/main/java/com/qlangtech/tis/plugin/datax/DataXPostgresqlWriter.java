@@ -56,6 +56,15 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");
     }
 
+    @Override
+    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+        if (!this.autoCreateTable) {
+            return null;
+        }
+        StringBuffer createDDL = new StringBuffer();
+
+        return createDDL;
+    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {

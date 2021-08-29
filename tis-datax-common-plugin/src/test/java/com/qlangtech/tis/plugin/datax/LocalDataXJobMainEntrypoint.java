@@ -29,6 +29,15 @@ public class LocalDataXJobMainEntrypoint {
             throw new AssertionError("4 != args.length");
         }
 
+        if (Boolean.parseBoolean(System.getProperty("env_props"))) {
+            throw new IllegalStateException("env_props must be false");
+        }
+
+        //  CenterResource.notFetchFromCenterRepository()
+        if (!Boolean.parseBoolean(System.getProperty("notFetchFromCenterRepository"))) {
+            throw new IllegalStateException("must be notFetchFromCenterRepository");
+        }
+
         assertEquals(String.valueOf(TestLocalDataXJobSubmit.TaskId), args[0]);
         assertEquals(TestLocalDataXJobSubmit.dataXfileName, args[1]);// = "customer_order_relation_0.json";
         assertEquals(TestLocalDataXJobSubmit.dataXName, args[2]);//= "baisuitestTestcase";

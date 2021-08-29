@@ -63,7 +63,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             if (!webStartDir.exists()) {
                 throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getPath());
             }
-            String[] logbackJars = webStartDir.list((dir, name) -> StringUtils.startsWith(name, "logback-"));
+            String[] logbackJars = webStartDir.list((dir, name) -> StringUtils.startsWith(name, "logback-") || StringUtils.startsWith(name, "jcl-over-slf4j"));
             this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" +
                     Arrays.stream(logbackJars).map((jarName) -> (new File(webStartDir, jarName)).getPath()).collect(Collectors.joining(":"));
         }

@@ -33,6 +33,8 @@ public class LocalDataXJobMainEntrypoint {
         assertEquals(TestLocalDataXJobSubmit.dataXfileName, args[1]);// = "customer_order_relation_0.json";
         assertEquals(TestLocalDataXJobSubmit.dataXName, args[2]);//= "baisuitestTestcase";
         assertEquals(TestLocalDataXJobSubmit.statusCollectorHost, args[3]);// = "127.0.0.1:3489";
+
+        assertEquals(TaskExec.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(TaskExec.SYSTEM_KEY_LOGBACK_PATH_KEY));
     }
 
     private static void assertEquals(String expect, String actual) {

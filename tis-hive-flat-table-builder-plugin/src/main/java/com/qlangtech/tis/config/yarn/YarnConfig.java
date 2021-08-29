@@ -40,12 +40,13 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
     public String schedulerAddress;
 
     @Override
+    public String identityValue() {
+        return this.name;
+    }
+
+    @Override
     public YarnConfiguration createConfigInstance() {
         Thread.currentThread().setContextClassLoader(Hadoop020RemoteJobTriggerFactory.class.getClassLoader());
-//        YarnClient yarnClient = YarnClient.createYarnClient();
-//        yarnClient.init(getYarnConfig());
-//        yarnClient.start();
-//        return yarnClient;
         return getYarnConfig();
     }
 
@@ -53,16 +54,9 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
         YarnConfiguration conf = new YarnConfiguration();
         conf.set(YarnConfiguration.RM_ADDRESS, rmAddress);
         conf.set(YarnConfiguration.RM_SCHEDULER_ADDRESS, schedulerAddress);
-//        conf.set(YarnConfiguration.RM_ADMIN_ADDRESS, rmAddress);
-//        conf.set(YarnConfiguration.RM_SCHEDULER_ADDRESS, rmAddress);
-
         return conf;
     }
 
-//    @Override
-//    public String getName() {
-//        return this.name;
-//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {

@@ -39,21 +39,6 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sImage;
 
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String namespace;
-//
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
-//            imagePath;
-
-//    public String getName() {
-//        return this.k8sName;
-//    }
-
-    //  public ParamsConfig getK8SContext() {
-//        return (ParamsConfig) ParamsConfig.getItem(this.k8sName, IK8sContext.class);
-//    }
-
     private IRCController incrSync;
 
     @Override
@@ -70,8 +55,6 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
 
         public DescriptorImpl() {
             super();
-            //this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IK8sContext.class));
-
             this.registerSelectOptions(KEY_FIELD_NAME, () -> {
                 PluginStore<K8sImage> images = TIS.getPluginStore(K8sImage.class);
                 return images.getPlugins();

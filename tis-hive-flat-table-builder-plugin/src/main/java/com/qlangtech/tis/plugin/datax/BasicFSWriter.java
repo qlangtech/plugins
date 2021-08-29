@@ -44,11 +44,6 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fileType;
 
-
-    //    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String fileName;
-    //    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String column;
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
     @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {Validator.require})

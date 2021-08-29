@@ -15,20 +15,21 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.core.util.container.JarLoader;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.TISJarLoader;
-import com.qlangtech.tis.extension.PluginManager;
+import com.qlangtech.tis.datax.CuratorTaskMessage;
+import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.order.center.IParamContext;
-import com.tis.hadoop.rpc.RpcServiceReference;
+import com.qlangtech.tis.solrj.util.ZkUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.io.File;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -46,49 +47,9 @@ public class TaskExec {
                 Executors.defaultThreadFactory());
     }
 
-    static IRemoteJobTrigger getiRemoteJobTrigger(IJoinTaskContext taskContext, RpcServiceReference statusRpc
-            , IDataxProcessor dataxProcessor, String dataXfileName, PluginManager pluginManager) {
-        final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
-//        {
-//            public URL getResource(String name) {
-//                URL url = pluginManager.uberClassLoader.getResource(name);
-//                if (url == null) {
-//                    return super.getResource(name);
-//                }
-//                return url;
-//            }
-//
-//            @Override
-//            protected Class<?> findClass(String name) throws ClassNotFoundException {
-//                try {
-//                    PluginManager.UberClassLoader classLoader = pluginManager.uberClassLoader;
-//                    return classLoader.findClass(name);
-//                } catch (Throwable e) {
-//                    throw new RuntimeException("className:" + name + ",scan the plugins:"
-//                            + pluginManager.activePlugins.stream().map((p) -> p.getDisplayName()).collect(Collectors.joining(",")), e);
-//                }
-//            }
-//        };
+    static IRemoteJobTrigger getRemoteJobTrigger(IJoinTaskContext taskContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
+        // final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
 
-//        try {
-//            System.out.println("aaaaaaaaaaaaaaaaaaaaaaa:" +
-//                    uberClassLoader.loadClass("com.alibaba.datax.common.spi.Reader$Job"));
-//        } catch (Exception e) {
-//            System.out.println("********************aaaaaaaaaaaaaaaaaaaaaaa:" + e.getMessage());
-//        }
-//
-//        try {
-//            System.out.println("xxxxxxxxxxxxxxxxxxxxxx:"
-//                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader"));
-//            System.out.println("bbbbbbbbbbbbbbbbbbbbbbb:"
-//                    + this.getClass().getClassLoader().loadClass("com.alibaba.datax.common.spi.Reader$Job"));
-//        } catch (Exception e) {
-//            System.out.println("********************bbbbbbbbbbbbbbbbbbbb:" + e.getMessage());
-//        }
-
-        com.qlangtech.tis.datax.DataxExecutor dataxExecutor = new com.qlangtech.tis.datax.DataxExecutor(statusRpc);
-
-        // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteJobTrigger() {
@@ -98,10 +59,38 @@ public class TaskExec {
                     try {
                         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
                         MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
-                        dataxExecutor.startWork(taskContext.getIndexName()
-                                , taskContext.getTaskId(), dataXfileName, dataxProcessor, uberClassLoader);
+
+                        DataXJobSingleProcessorExecutor jobConsumer = new DataXJobSingleProcessorExecutor() {
+                            @Override
+                            protected String getClasspath() {
+                                return localDataXJobSubmit.getClasspath();
+                            }
+
+                            @Override
+                            protected String getIncrStateCollectAddress() {
+                                return ZkUtils.getFirstChildValue(
+                                        ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
+                            }
+
+                            @Override
+                            protected String getMainClassName() {
+                                return localDataXJobSubmit.getMainClassName();
+                            }
+
+                            @Override
+                            protected File getWorkingDirectory() {
+                                return localDataXJobSubmit.getWorkingDirectory();
+                            }
+                        };
+
+                        CuratorTaskMessage dataXJob = new CuratorTaskMessage();
+                        dataXJob.setJobId(taskContext.getTaskId());
+                        dataXJob.setJobName(dataXfileName);
+                        dataXJob.setDataXName(taskContext.getIndexName());
+                        jobConsumer.consumeMessage(dataXJob);
                         success.set(true);
                     } catch (Throwable e) {
+                        //  e.printStackTrace();
                         logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
                         success.set(false);
                         throw new RuntimeException(e);

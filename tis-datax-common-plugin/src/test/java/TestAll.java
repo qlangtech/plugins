@@ -16,6 +16,7 @@
 import com.qlangtech.tis.plugin.datax.TestDataXGlobalConfig;
 import com.qlangtech.tis.plugin.datax.TestDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.TestDefaultDataxProcessor;
+import com.qlangtech.tis.plugin.datax.TestLocalDataXJobSubmit;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -29,6 +30,7 @@ public class TestAll {
         suite.addTestSuite(TestDataXGlobalConfig.class);
         suite.addTestSuite(TestDataXJobSubmit.class);
         suite.addTestSuite(TestDefaultDataxProcessor.class);
+        suite.addTestSuite(TestLocalDataXJobSubmit.class);
         return suite;
     }
 

@@ -13,20 +13,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.qlangtech.tis.plugin.incr.TestDefaultIncrK8sConfig;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+package com.qlangtech.tis.plugin.datax;
 
 /**
- * @author: baisui 百岁
- * @create: 2020-08-11 11:10
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2021-08-29 14:53
  **/
-public class TestAll extends TestCase {
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestDefaultIncrK8sConfig.class);
-        return suite;
+public class LocalDataXJobMainEntrypointThrowException {
+    public static void main(String[] args) {
+        throw new RuntimeException("throw an  LocalDataXJobMainEntrypointThrowException");
     }
 }

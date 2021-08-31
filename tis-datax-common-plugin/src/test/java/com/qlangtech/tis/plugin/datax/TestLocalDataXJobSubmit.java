@@ -81,21 +81,11 @@ public class TestLocalDataXJobSubmit extends TestCase {
         String zkSubPath = "nodes0000000020";
         EasyMock.expect(zkClient.getChildren(
                 ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, null, true))
-                .andReturn(Collections.singletonList(zkSubPath)).times(2);
+                .andReturn(Collections.singletonList(zkSubPath)).times(3);
         EasyMock.expect(zkClient.getData(EasyMock.eq(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath), EasyMock.isNull(), EasyMock.anyObject(Stat.class), EasyMock.eq(true)))
-                .andReturn(statusCollectorHost.getBytes(TisUTF8.get())).times(2);
+                .andReturn(statusCollectorHost.getBytes(TisUTF8.get())).times(3);
 
         EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();
-
-
-        // File cfgDir = new File(Config.getMetaCfgDir(), TIS.KEY_TIS_PLUGIN_CONFIG + "/ap/" + dataXName + "/" + DataxProcessor.DATAX_CFG_DIR_NAME);
-        // Assert.assertTrue("cfgDir.exists:" + cfgDir.getAbsolutePath(), cfgDir.exists());
-
-        // EasyMock.expect(dataxProcessor.getDataxCfgDir(null)).andReturn(cfgDir);
-
-
-//        IJoinTaskContext taskContext
-//            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName
 
         EasyMock.replay(taskContext, dataxProcessor, zkClient);
         IRemoteJobTrigger dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
@@ -108,15 +98,32 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         running = getRunningStatus(dataXJob);
         assertFalse("shall faild", running.isSuccess());
+        assertTrue("shall complete", running.isComplete());
 
+        jobSubmit.setMainClassName(LocalDataXJobMainEntrypointCancellable.class.getName());
+        dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
+        running = getRunningStatus(dataXJob, false);
+        Thread.sleep(2000);
+        dataXJob.cancel();
+        int i = 0;
+
+        while (i++ < 3 && !(running = dataXJob.getRunningStatus()).isComplete()) {
+            Thread.sleep(1000);
+        }
+        assertFalse("shall faild", running.isSuccess());
+        assertTrue("shall complete", running.isComplete());
 
         EasyMock.verify(taskContext, dataxProcessor, zkClient);
     }
 
     protected RunningStatus getRunningStatus(IRemoteJobTrigger dataXJob) {
+        return this.getRunningStatus(dataXJob, true);
+    }
+
+    protected RunningStatus getRunningStatus(IRemoteJobTrigger dataXJob, boolean waitting) {
         dataXJob.submitJob();
         RunningStatus running = null;
-        while ((running = dataXJob.getRunningStatus()) != null) {
+        while ((running = dataXJob.getRunningStatus()) != null && waitting) {
             if (running.isComplete()) {
                 break;
             }

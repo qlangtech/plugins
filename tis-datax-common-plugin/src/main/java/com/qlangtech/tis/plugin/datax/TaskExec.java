@@ -54,6 +54,8 @@ public class TaskExec {
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteJobTrigger() {
+            DataXJobSingleProcessorExecutor jobConsumer;
+
             @Override
             public void submitJob() {
                 dataXExecutor.submit(() -> {
@@ -61,7 +63,7 @@ public class TaskExec {
                         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
                         MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
 
-                        DataXJobSingleProcessorExecutor jobConsumer = new DataXJobSingleProcessorExecutor() {
+                        jobConsumer = new DataXJobSingleProcessorExecutor() {
                             @Override
                             protected String getClasspath() {
                                 return localDataXJobSubmit.getClasspath();
@@ -110,6 +112,17 @@ public class TaskExec {
                     } finally {
                         complete.set(true);
                     }
+                });
+            }
+
+            @Override
+            public void cancel() {
+                if (jobConsumer == null) {
+                    return;
+                }
+                jobConsumer.runningTask.forEach((taskId, watchdog) -> {
+                    watchdog.destroyProcess();
+                    logger.info("taskId:{} relevant task has been canceled", taskId);
                 });
             }
 

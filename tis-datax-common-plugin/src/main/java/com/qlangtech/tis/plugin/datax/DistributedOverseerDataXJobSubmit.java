@@ -60,7 +60,6 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                     msg.setDataXName(taskContext.getIndexName());
                     msg.setJobId(taskContext.getTaskId());
                     msg.setJobName(dataXfileName);
-                    //msg.setJobPath(jobPath.getAbsolutePath());
                     distributedQueue.put(msg);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -70,6 +69,11 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
             @Override
             public RunningStatus getRunningStatus() {
                 return RunningStatus.SUCCESS;
+            }
+
+            @Override
+            public void cancel() {
+
             }
         };
     }

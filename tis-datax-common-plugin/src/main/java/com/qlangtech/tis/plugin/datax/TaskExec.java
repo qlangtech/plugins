@@ -40,8 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
     private static final ExecutorService dataXExecutor = newFixedThreadPool(10);// Executors.newCachedThreadPool();
-    public static final String SYSTEM_KEY_LOGBACK_PATH_KEY = "logback.configurationFile";
-    public static final String SYSTEM_KEY_LOGBACK_PATH_VALUE = "logback-assemble.xml";
+
 
     public static ExecutorService newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
@@ -76,8 +75,8 @@ public class TaskExec {
                             @Override
                             protected String[] getExtraJavaSystemPrams() {
                                 return new String[]{
-                                        "-D" + SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + SYSTEM_KEY_LOGBACK_PATH_VALUE
-                                        , "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
+                                        // "-D" + SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + SYSTEM_KEY_LOGBACK_PATH_VALUE
+                                        "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
                             }
 
                             @Override

@@ -15,6 +15,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-08-29 13:49
@@ -43,7 +45,7 @@ public class LocalDataXJobMainEntrypoint {
         assertEquals(TestLocalDataXJobSubmit.dataXName, args[2]);//= "baisuitestTestcase";
         assertEquals(TestLocalDataXJobSubmit.statusCollectorHost, args[3]);// = "127.0.0.1:3489";
 
-        assertEquals(TaskExec.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(TaskExec.SYSTEM_KEY_LOGBACK_PATH_KEY));
+        assertEquals(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_KEY));
     }
 
     private static void assertEquals(String expect, String actual) {

@@ -55,6 +55,7 @@ public class TaskExec {
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteJobTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
+            boolean hasCanceled;
 
             @Override
             public void submitJob() {
@@ -106,9 +107,13 @@ public class TaskExec {
                         success.set(true);
                     } catch (Throwable e) {
                         //  e.printStackTrace();
-                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
                         success.set(false);
-                        throw new RuntimeException(e);
+                        if (this.hasCanceled) {
+                            logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
+                        } else {
+                            logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
+                            throw new RuntimeException(e);
+                        }
                     } finally {
                         complete.set(true);
                     }
@@ -124,6 +129,7 @@ public class TaskExec {
                     watchdog.destroyProcess();
                     logger.info("taskId:{} relevant task has been canceled", taskId);
                 });
+                this.hasCanceled = true;
             }
 
             @Override

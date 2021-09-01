@@ -24,12 +24,11 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.AsynRemoteJobTrigger;
+import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.queue.DistributedQueue;
-
-import java.io.File;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,7 +50,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
 
         DistributedQueue<CuratorTaskMessage> distributedQueue = getCuratorDistributedQueue();
-       // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
+        // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         return new AsynRemoteJobTrigger(dataXfileName) {
             @Override
             public void submitJob() {
@@ -73,7 +72,8 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
             @Override
             public void cancel() {
-
+                IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
+                pipelineController.stop(IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName());
             }
         };
     }

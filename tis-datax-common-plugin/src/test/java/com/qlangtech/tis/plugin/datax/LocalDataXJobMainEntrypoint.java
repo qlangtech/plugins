@@ -27,8 +27,8 @@ public class LocalDataXJobMainEntrypoint {
     public static void main(String[] args) {
         executeCount++;
         //System.out.println("===============hello" + args[0] + "\n" + args[1] + "\n" + args[2] + "\n" + args[3]);
-        if (4 != args.length) {
-            throw new AssertionError("4 != args.length");
+        if (5 != args.length) {
+            throw new AssertionError("5 != args.length");
         }
 
         if (Boolean.parseBoolean(System.getProperty("env_props"))) {
@@ -44,6 +44,7 @@ public class LocalDataXJobMainEntrypoint {
         assertEquals(TestLocalDataXJobSubmit.dataXfileName, args[1]);// = "customer_order_relation_0.json";
         assertEquals(TestLocalDataXJobSubmit.dataXName, args[2]);//= "baisuitestTestcase";
         assertEquals(TestLocalDataXJobSubmit.statusCollectorHost, args[3]);// = "127.0.0.1:3489";
+        assertEquals("local", args[4]);
 
         assertEquals(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_KEY));
     }

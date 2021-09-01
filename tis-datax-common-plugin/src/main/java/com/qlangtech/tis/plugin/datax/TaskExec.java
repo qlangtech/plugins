@@ -17,6 +17,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
@@ -65,6 +66,11 @@ public class TaskExec {
                         MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
 
                         jobConsumer = new DataXJobSingleProcessorExecutor() {
+                            @Override
+                            protected DataXJobSubmit.InstanceType getExecMode() {
+                                return DataXJobSubmit.InstanceType.LOCAL;
+                            }
+
                             @Override
                             protected String getClasspath() {
                                 return localDataXJobSubmit.getClasspath();

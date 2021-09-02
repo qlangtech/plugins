@@ -15,6 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -100,5 +101,10 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     public void setClasspath(String classpath) {
         this.classpath = classpath;
+    }
+
+    @Override
+    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, String dataXfileName) {
+        return super.getDataXJobDTO(taskContext, dataXfileName);
     }
 }

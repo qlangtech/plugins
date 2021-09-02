@@ -15,7 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.CuratorTaskMessage;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobConsumer;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -48,18 +48,17 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public IRemoteJobTrigger createDataXJob(IJoinTaskContext taskContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
-
-        DistributedQueue<CuratorTaskMessage> distributedQueue = getCuratorDistributedQueue();
+        IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
+        DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();
         // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         return new AsynRemoteJobTrigger(dataXfileName) {
             @Override
             public void submitJob() {
                 try {
-                    CuratorTaskMessage msg = new CuratorTaskMessage();
-                    msg.setDataXName(taskContext.getIndexName());
-                    msg.setJobId(taskContext.getTaskId());
-                    msg.setJobName(dataXfileName);
+                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, dataXfileName);
                     distributedQueue.put(msg);
+                    pipelineController.registerAppSubExecNodeMetrixStatus(
+                            IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), dataXfileName);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -72,16 +71,17 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
             @Override
             public void cancel() {
-                IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
-                pipelineController.stop(IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName());
+                pipelineController.stop(
+                        IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName());
             }
         };
     }
 
-    private CuratorFramework curatorClient = null;
-    private DistributedQueue<CuratorTaskMessage> curatorDistributedQueue = null;
 
-    private DistributedQueue<CuratorTaskMessage> getCuratorDistributedQueue() {
+    private CuratorFramework curatorClient = null;
+    private DistributedQueue<CuratorDataXTaskMessage> curatorDistributedQueue = null;
+
+    private DistributedQueue<CuratorDataXTaskMessage> getCuratorDistributedQueue() {
         synchronized (this) {
             if (curatorClient != null && !curatorClient.getZookeeperClient().isConnected()) {
                 curatorClient.close();

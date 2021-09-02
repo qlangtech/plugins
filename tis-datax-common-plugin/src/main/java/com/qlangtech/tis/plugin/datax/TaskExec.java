@@ -15,7 +15,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.CuratorTaskMessage;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -105,10 +105,12 @@ public class TaskExec {
                             }
                         };
 
-                        CuratorTaskMessage dataXJob = new CuratorTaskMessage();
-                        dataXJob.setJobId(taskContext.getTaskId());
-                        dataXJob.setJobName(dataXfileName);
-                        dataXJob.setDataXName(taskContext.getIndexName());
+                        CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+
+//                        new CuratorDataXTaskMessage();
+//                        dataXJob.setJobId(taskContext.getTaskId());
+//                        dataXJob.setJobName(dataXfileName);
+//                        dataXJob.setDataXName(taskContext.getIndexName());
                         jobConsumer.consumeMessage(dataXJob);
                         success.set(true);
                     } catch (Throwable e) {

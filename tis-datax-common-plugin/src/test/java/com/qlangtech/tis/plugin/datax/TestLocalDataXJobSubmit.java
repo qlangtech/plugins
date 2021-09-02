@@ -16,11 +16,15 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.TisZkClient;
+import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
+import com.qlangtech.tis.fullbuild.phasestatus.PhaseStatusCollection;
+import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -75,6 +79,15 @@ public class TestLocalDataXJobSubmit extends TestCase {
         IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
         EasyMock.expect(taskContext.getIndexName()).andReturn(dataXName).anyTimes();
         EasyMock.expect(taskContext.getTaskId()).andReturn(TaskId).anyTimes();
+
+        int preSuccessTaskId = 99;
+        PhaseStatusCollection preSuccessTask = new PhaseStatusCollection(preSuccessTaskId, new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump));
+        DumpPhaseStatus preDumpStatus = new DumpPhaseStatus(preSuccessTaskId);
+        DumpPhaseStatus.TableDumpStatus tableDumpStatus = preDumpStatus.getTable(dataXfileName);
+        tableDumpStatus.setAllRows(LocalDataXJobMainEntrypoint.testAllRows);
+
+        preSuccessTask.setDumpPhase(preDumpStatus);
+        EasyMock.expect(taskContext.loadPhaseStatusFromLatest(dataXName)).andReturn(preSuccessTask).times(3);
 
         TisZkClient zkClient = EasyMock.createMock("TisZkClient", TisZkClient.class);
 

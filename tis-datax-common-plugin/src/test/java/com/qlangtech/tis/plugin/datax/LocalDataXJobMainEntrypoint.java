@@ -22,13 +22,16 @@ import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
  * @create: 2021-08-29 13:49
  **/
 public class LocalDataXJobMainEntrypoint {
+
+    public static final int testAllRows = 98765;
+
     static int executeCount = 0;
 
     public static void main(String[] args) {
         executeCount++;
         //System.out.println("===============hello" + args[0] + "\n" + args[1] + "\n" + args[2] + "\n" + args[3]);
-        if (5 != args.length) {
-            throw new AssertionError("5 != args.length");
+        if (6 != args.length) {
+            throw new AssertionError("6 != args.length");
         }
 
         if (Boolean.parseBoolean(System.getProperty("env_props"))) {
@@ -45,6 +48,7 @@ public class LocalDataXJobMainEntrypoint {
         assertEquals(TestLocalDataXJobSubmit.dataXName, args[2]);//= "baisuitestTestcase";
         assertEquals(TestLocalDataXJobSubmit.statusCollectorHost, args[3]);// = "127.0.0.1:3489";
         assertEquals("local", args[4]);
+        assertEquals(String.valueOf(testAllRows), args[5]);
 
         assertEquals(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(DataXJobSingleProcessorExecutor.SYSTEM_KEY_LOGBACK_PATH_KEY));
     }

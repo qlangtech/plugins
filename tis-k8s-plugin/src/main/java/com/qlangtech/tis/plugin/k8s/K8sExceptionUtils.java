@@ -19,6 +19,7 @@ import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.lang.TisException;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1Status;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,13 +31,11 @@ public class K8sExceptionUtils {
     }
 
     public static TisException convert(String msg, ApiException e) {
-
         V1Status v1Status = JSON.parseObject(e.getResponseBody(), V1Status.class);
         String errMsg = msg;
         if (v1Status != null) {
             errMsg = (msg == null) ? v1Status.getMessage() : msg + ":" + v1Status.getMessage();
         }
-
-        return new TisException(errMsg, e);
+        return new TisException(StringUtils.defaultIfEmpty(errMsg, e.getMessage()), e);
     }
 }

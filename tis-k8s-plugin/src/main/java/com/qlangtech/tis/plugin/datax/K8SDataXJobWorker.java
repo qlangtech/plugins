@@ -22,6 +22,7 @@ import com.qlangtech.tis.config.k8s.HorizontalpodAutoscaler;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -262,6 +263,11 @@ public class K8SDataXJobWorker extends DataXJobWorker {
                 public String getAppOptions() {
                     // return "-D" + DataxUtils.DATAX_QUEUE_ZK_PATH + "=" + getZkQueuePath() + " -D" + DataxUtils.DATAX_ZK_ADDRESS + "=" + getZookeeperAddress();
                     return getZookeeperAddress() + " " + getZkQueuePath();
+                }
+
+                @Override
+                public String getExtraSysProps() {
+                    return "-D" + CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_VALUE;
                 }
 
                 @Override

@@ -18,13 +18,11 @@ package com.qlangtech.tis.plugin.datax.common;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -32,7 +30,7 @@ import org.apache.commons.lang.StringUtils;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-23 12:07
  **/
-public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter {
+public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -56,11 +54,19 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
+    public String dataXName;
+
+    @Override
+    public void setKey(KeyedPluginStore.Key key) {
+        this.dataXName = key.keyVal.getVal();
+    }
+
     @Override
     public final String getTemplate() {
         return this.template;
     }
 
+    @Override
     public DS getDataSourceFactory() {
         if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");
@@ -84,6 +90,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         public final boolean isRdbms() {
             return true;
         }
+
         /**
          * 是否支持自动创建
          *
@@ -94,7 +101,6 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
 
         /**
-         *
          * @param msgHandler
          * @param context
          * @param fieldName

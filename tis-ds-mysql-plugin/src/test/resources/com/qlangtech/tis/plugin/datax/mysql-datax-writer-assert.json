@@ -1,11 +1,17 @@
 {
   "name": "mysqlwriter",
   "parameter": {
-    "column": ["`col1`","`col2`","`col3`"],
-    "connection":[
+    "column": [
+      "`col1`",
+      "`col2`",
+      "`col3`"
+    ],
+    "connection": [
       {
-        "jdbcUrl":"jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8",
-        "table": ["orderinfo_new"]
+        "jdbcUrl": "jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8",
+        "table": [
+          "orderinfo_new"
+        ]
       }
     ],
     "preSql": [
@@ -16,8 +22,11 @@
     ],
     "batchSize": 1001,
     "password": "123456",
-    "session": ["set session sql_mode='ANSI'"],
+    "session": [
+      "set session sql_mode='ANSI'"
+    ],
     "username": "root",
-    "writeMode": "replace"
+    "writeMode": "replace",
+    "dataxName": ""
   }
 }

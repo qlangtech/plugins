@@ -46,7 +46,7 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
     protected RdbmsReaderContext createDataXReaderContext(
             String jobName, SelectedTab tab, IDataSourceDumper dumper) {
         MySQLDataSourceFactory dsFactory = this.getDataSourceFactory();
-        RdbmsDataxContext rdbms = new RdbmsDataxContext();
+        RdbmsDataxContext rdbms = new RdbmsDataxContext(this.dataXName);
         rdbms.setJdbcUrl(dumper.getDbHost());
         rdbms.setUsername(dsFactory.getUserName());
         rdbms.setPassword(dsFactory.getPassword());

@@ -29,6 +29,10 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
         this.rdbmsContext = mysqlContext;
     }
 
+    public String getDataXName() {
+        return rdbmsContext.getDataXName();
+    }
+
     public String getTabName() {
         return rdbmsContext.getTabName();
     }

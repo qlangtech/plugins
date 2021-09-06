@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -61,6 +62,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     public List<SelectedTab> selectedTabs;
 
     private transient boolean colTypeSetted;
+    public String dataXName;
 
     @Override
     public final List<SelectedTab> getSelectedTabs() {
@@ -95,6 +97,13 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
 
+
+
+
+    @Override
+    public void setKey(KeyedPluginStore.Key key) {
+        this.dataXName = key.keyVal.getVal();
+    }
 
     @Override
     public final Iterator<IDataxReaderContext> getSubTasks() {
@@ -226,6 +235,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return plugin.getTablesInDB();
     }
 
+    @Override
     public DS getDataSourceFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return (DS) dsStore.getPlugin();

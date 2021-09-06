@@ -69,7 +69,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         if (dataDumpers.splitCount > 1) {
             throw new IllegalStateException("dbSplit can not max than 1");
         }
-        MySQLWriterContext context = new MySQLWriterContext();
+        MySQLWriterContext context = new MySQLWriterContext(this.dataXName);
         if (dataDumpers.dumpers.hasNext()) {
             IDataSourceDumper next = dataDumpers.dumpers.next();
             context.jdbcUrl = next.getDbHost();
@@ -150,6 +150,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
     public static class MySQLWriterContext extends RdbmsDataxContext implements IDataxContext {
 
+        public MySQLWriterContext(String dataXName) {
+            super(dataXName);
+        }
+
         private String dbName;
         private String writeMode;
         private String preSql;
@@ -194,10 +198,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         }
     }
 
-//    private DataSourceFactory getDataSourceFactory() {
-//        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-//        return dsStore.getPlugin();
-//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends RdbmsWriterDescriptor {

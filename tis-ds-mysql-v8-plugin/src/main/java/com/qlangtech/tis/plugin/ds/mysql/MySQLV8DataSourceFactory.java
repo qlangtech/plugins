@@ -21,23 +21,39 @@ import org.apache.commons.lang.StringUtils;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-08 21:47
  **/
 public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
+    //    static {
+//        try {
+//            Class.forName("com.mysql.cj.jdbc.Driver");
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+    private static final com.mysql.cj.jdbc.Driver mysql8Driver;
+
     static {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (Exception e) {
+            mysql8Driver = new com.mysql.cj.jdbc.Driver();
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
+
     @Override
     public Connection getConnection(String jdbcUrl) throws SQLException {
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+        Properties props = new Properties();
+        props.put("user", StringUtils.trimToNull(this.userName));
+        props.put("password", StringUtils.trimToNull(password));
+        // 为了避开与Mysql5的连接冲突，需要直接从driver中创建connection对象
+        return mysql8Driver.connect(jdbcUrl, props);
+       //  return DriverManager.getConnection(jdbcUrl, , );
     }
 
     @TISExtension

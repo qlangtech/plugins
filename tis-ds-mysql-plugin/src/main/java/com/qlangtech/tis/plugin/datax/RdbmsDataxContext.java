@@ -16,21 +16,30 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-08 11:06
  **/
 public class RdbmsDataxContext {
+    private final String dataXName;
     public IDataxProcessor.TabCols cols;
     String tabName;
     String password;
     String username;
     String jdbcUrl;
-    //  getColsQuotes
-//    public MySQLDataxContext(String name, String sourceTableName) {
-//        super(name, sourceTableName);
-//    }
+
+    public RdbmsDataxContext(String dataXName) {
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalArgumentException("param dataXName:" + dataXName + " can not be null");
+        }
+        this.dataXName = dataXName;
+    }
+
+    public String getDataXName() {
+        return this.dataXName;
+    }
 
     public String getColsQuotes() {
         return cols.getColsQuotes();

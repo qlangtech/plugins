@@ -51,6 +51,7 @@ public class TestDataxMySQLReader extends BasicTest {
     public static String dbName = "baisuitestdb";
     String userName = "root";
     String password = "123456";
+    final String dataXName = "dataXName";
 
     public void testDescriptorsJSONGenerate() {
         DataxMySQLReader esWriter = new DataxMySQLReader();
@@ -125,7 +126,7 @@ public class TestDataxMySQLReader extends BasicTest {
                 return mysqlDs;
             }
         };
-
+        mySQLReader.dataXName = this.dataXName;
         List<SelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs();
 
         mySQLReader.setSelectedTabs(selectedTabs);
@@ -164,7 +165,7 @@ public class TestDataxMySQLReader extends BasicTest {
     }
 
     public void testTempateGenerate() throws Exception {
-        final String dataXName = "dataXName";
+
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
 
@@ -231,7 +232,7 @@ public class TestDataxMySQLReader extends BasicTest {
                 return DataxMySQLReader.class;
             }
         };
-
+        mySQLReader.dataXName = dataXName;
         mySQLReader.template = DataxMySQLReader.getDftTemplate();
 
         SelectedTab selectedTab = new SelectedTab();

@@ -22,6 +22,7 @@
   #if($writer.containSession)  "session": ["$writer.session"],
 #end
     "username": "$writer.username",
-    "writeMode": "$writer.writeMode"
+    "writeMode": "$writer.writeMode",
+    "dataxName": "${reader.dataXName}"
   }
 }

@@ -11,6 +11,7 @@
         ]
       }
     ],
+    "dataxName": "${reader.dataXName}",
     "password": "${reader.password}",
     "username": "${reader.username}"
   }

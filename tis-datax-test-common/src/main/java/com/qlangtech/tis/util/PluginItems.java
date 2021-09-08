@@ -38,6 +38,8 @@ public class PluginItems {
     public static final String DB_SQL_Server = "SqlServerDB";
     public static final String DB_SQL_ORACLE = "OracleDB";
 
+    public static final String DB_SQL_DORIS = "DorisDB1";
+
 
     public static List<Option> getExistDbs(String... extendClass) {
 
@@ -97,6 +99,13 @@ public class PluginItems {
 
         for (String sourceType : extendClass) {
             if ("Oracle".equals(sourceType)) {
+                return Collections.singletonList(new Option(DB_SQL_DORIS, DB_SQL_DORIS));
+                //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
+            }
+        }
+
+        for (String sourceType : extendClass) {
+            if ("Doris".equals(sourceType)) {
                 return Collections.singletonList(new Option(DB_SQL_ORACLE, DB_SQL_ORACLE));
                 //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
             }

@@ -80,7 +80,7 @@ public abstract class RdbmsWriterContext<WRITER extends BasicDataXRdbmsWriter, D
     }
 
     public String getPassword() {
-        return this.dsFactory.getPassword();
+        return StringUtils.trimToEmpty(this.dsFactory.getPassword());
     }
 
     public String getJdbcUrl() {

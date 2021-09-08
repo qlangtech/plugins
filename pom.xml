@@ -59,6 +59,7 @@
         <module>tis-datax-oracle-plugin</module>
         <module>tis-ds-mysql-v5-plugin</module>
         <module>tis-ds-mysql-v8-plugin</module>
+        <module>tis-datax-doris-plugin</module>
 
     </modules>
 

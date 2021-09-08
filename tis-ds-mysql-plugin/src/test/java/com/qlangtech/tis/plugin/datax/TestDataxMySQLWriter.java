@@ -57,13 +57,15 @@ public class TestDataxMySQLWriter extends BasicTest {
     public static String mysqlJdbcUrl = "jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8";
     public static String dbWriterName = "baisuitestWriterdb";
 
+    public static String dataXName ="testDataXName";
+
     public void testFieldCount() throws Exception {
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
         Descriptor<DataxWriter> descriptor = mySQLWriter.getDescriptor();
         PluginFormProperties pluginFormPropertyTypes = descriptor.getPluginFormPropertyTypes();
 
         assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
-        assertEquals(7, pluginFormPropertyTypes.getKVTuples().size());
+        assertEquals(8, pluginFormPropertyTypes.getKVTuples().size());
 
     }
 
@@ -96,6 +98,7 @@ public class TestDataxMySQLWriter extends BasicTest {
 
 
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
+        mySQLWriter.dataXName = dataXName;
         mySQLWriter.writeMode = "replace";
         mySQLWriter.dbName = dbWriterName;
         mySQLWriter.template = DataxMySQLWriter.getDftTemplate();

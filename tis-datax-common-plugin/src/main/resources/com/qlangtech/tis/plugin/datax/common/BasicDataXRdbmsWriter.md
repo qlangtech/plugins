@@ -5,4 +5,4 @@
 ## postSql
  写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ）
 ## session
-  DataX在获取Mysql连接时，执行session指定的SQL语句，修改当前connection session属性
+  DataX在获取Mysql连接时，执行session指定的SQL语句，修改当前connection session属性 

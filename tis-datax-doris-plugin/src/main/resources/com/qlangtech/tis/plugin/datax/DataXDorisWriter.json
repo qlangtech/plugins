@@ -1,0 +1,32 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Doris\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "Doris"
+        }
+      ]
+    }
+  },
+  "session": {
+    "disable": true
+  },
+  "loadProps": {
+    "style": "codemirror",
+    "mode": "application/ld+json",
+    "rows": 4
+  },
+  "maxBatchRows": {
+  },
+  "batchSize": {
+    "label": "maxBatchSize",
+    "dftVal": 104857600
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXDorisWriter.getDftTemplate()"
+  },
+  "autoCreateTable": {
+    "disable": false
+  }
+}

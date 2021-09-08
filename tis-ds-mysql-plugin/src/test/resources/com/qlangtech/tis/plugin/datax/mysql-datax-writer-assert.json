@@ -27,6 +27,6 @@
     ],
     "username": "root",
     "writeMode": "replace",
-    "dataxName": ""
+    "dataxName":"testDataXName"
   }
 }

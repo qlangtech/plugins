@@ -26,6 +26,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.flattable.HiveFlatTableBuilder;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -37,6 +38,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +53,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String path;
     //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String defaultFS;
@@ -158,6 +161,8 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
+        private static final Pattern PATTERN_HDFS_RELATIVE_PATH = Pattern.compile("([\\w\\d\\.\\-_=]+/)*([\\w\\d\\.\\-_=]+|(\\*))");
+
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME_FS_NAME
@@ -172,6 +177,17 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
+        }
+
+        public boolean validatePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            Matcher matcher = PATTERN_HDFS_RELATIVE_PATH.matcher(value);
+            if (!matcher.matches()) {
+                msgHandler.addFieldError(context, fieldName, ValidatorCommons.MSG_RELATIVE_PATH_ERROR + ":" + PATTERN_HDFS_RELATIVE_PATH);
+                return false;
+            }
+
+            return true;
         }
 
 

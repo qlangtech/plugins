@@ -13,7 +13,6 @@
     }
   },
   "path": {
-    "help": "描述：要读取的文件路径，如果要读取多个文件，可以使用正则表达式\"*\"，注意这里可以支持填写多个路径",
     "placeholder": "order/orderfile"
   },
   "fileType": {
@@ -43,7 +42,6 @@
     "help": "描述：文件的类型，目前只支持用户配置为\"text\"、\"orc\"、\"rc\"、\"seq\"、\"csv\" "
   },
   "column": {
-    "help": "描述：读取字段列表，type指定源数据的类型，index指定当前列来自于文本第几列(以0开始)，value指定当前类型为常量，不从源头文件读取数据，而是根据value值自动生成对应的列 ",
     "style": "codemirror",
     "mode": "application/ld+json",
     "rows": 6,

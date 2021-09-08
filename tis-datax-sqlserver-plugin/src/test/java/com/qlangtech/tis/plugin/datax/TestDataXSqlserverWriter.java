@@ -51,8 +51,13 @@ public class TestDataXSqlserverWriter extends TestCase {
         SqlServerDatasourceFactory dsFactory = getSqlServerDSFactory();
 
         DataXSqlserverWriter writer = new DataXSqlserverWriter() {
+//            @Override
+//            protected SqlServerDatasourceFactory getDataSourceFactory() {
+//                return dsFactory;
+//            }
+
             @Override
-            protected SqlServerDatasourceFactory getDataSourceFactory() {
+            public SqlServerDatasourceFactory getDataSourceFactory() {
                 return dsFactory;
             }
 

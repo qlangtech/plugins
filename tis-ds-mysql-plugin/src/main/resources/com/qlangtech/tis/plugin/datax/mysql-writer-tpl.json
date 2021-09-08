@@ -23,6 +23,6 @@
 #end
     "username": "$writer.username",
     "writeMode": "$writer.writeMode",
-    "dataxName": "${reader.dataXName}"
+    "dataxName": "${writer.dataXName}"
   }
 }

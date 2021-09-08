@@ -67,6 +67,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         table.setTableName(tm.getTo());
         DataDumpers dataDumpers = dsFactory.getDataDumpers(table);
         if (dataDumpers.splitCount > 1) {
+            // 写入库还支持多组路由的方式分发，只能向一个目标库中写入
             throw new IllegalStateException("dbSplit can not max than 1");
         }
         MySQLWriterContext context = new MySQLWriterContext(this.dataXName);

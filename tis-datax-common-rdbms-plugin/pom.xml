@@ -34,7 +34,6 @@
             <groupId>com.alibaba.datax</groupId>
             <artifactId>plugin-rdbms-util</artifactId>
             <version>${alibaba.datax.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

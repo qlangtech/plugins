@@ -38,10 +38,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--            <artifactId>logback-classic</artifactId>-->
+<!--        </dependency>-->
         <!--        <dependency>-->
         <!--            <groupId>com.alibaba.datax</groupId>-->
         <!--            <artifactId>plugin-rdbms-util</artifactId>-->
@@ -85,11 +85,11 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>plugin-rdbms-util</artifactId>
-            <version>${alibaba.datax.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>plugin-rdbms-util</artifactId>-->
+<!--            <version>${alibaba.datax.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>

@@ -29,7 +29,9 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -81,15 +83,38 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
-            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
 //                if (pk != null) {
 //                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 //                }
             }
 
+//            CREATE TABLE customer_order_relation
+//                    (     `customerregister_id`   VARCHAR(150),     `waitingorder_id`       VARCHAR(150),     `kind`                  BIGINT,     `create_time`           BIGINT,     `last_ver`              BIGINT )
+//            ENGINE=olap
+//            DISTRIBUTED BY HASH(customerregister_id)
+//            BUCKETS 10
+//            PROPERTIES("replication_num" = "1");
+
             @Override
-            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+            protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {
                 script.append(" ENGINE=olap").append("\n");
+                script.append("DISTRIBUTED BY HASH(");
+                if (pks.size() > 0) {
+                    script.append(pks.stream().map((pk) -> pk.getName()).collect(Collectors.joining(",")));
+                } else {
+                    List<ISelectedTab.ColMeta> cols = this.getCols();
+                    Optional<ISelectedTab.ColMeta> firstCol = cols.stream().findFirst();
+                    if (firstCol.isPresent()) {
+                        script.append(firstCol.get().getName());
+                    } else {
+                        throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
+                    }
+                }
+                script.append(")\n");
+                script.append("BUCKETS 10\n");
+                script.append("PROPERTIES(\"replication_num\" = \"1\")");
+                //script.append("DISTRIBUTED BY HASH(customerregister_id)");
             }
 
             protected String convertType(ISelectedTab.ColMeta col) {
@@ -122,6 +147,11 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
         @Override
         protected int getMaxBatchSize() {
             return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public boolean isSupportTabCreate() {
+            return true;
         }
 
         public boolean validateLoadProps(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

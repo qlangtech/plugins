@@ -28,7 +28,9 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/clickhousewriter/src/main/resources/plugin_job_template.json
@@ -70,16 +72,15 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         }
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
-            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
                 script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
             }
 
             @Override
-            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+            protected void appendTabMeta(List<ISelectedTab.ColMeta> pk) {
                 script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
-                // Objects.requireNonNull(pk, "pk can not be null");
                 if (pk != null) {
-                    script.append(" ORDER BY `").append(pk.getName()).append("`\n");
+                    script.append(" ORDER BY ").append(pk.stream().map((p) -> "`" + p.getName() + "`").collect(Collectors.joining(","))).append("\n");
                 }
                 script.append(" SETTINGS index_granularity = 8192");
             }

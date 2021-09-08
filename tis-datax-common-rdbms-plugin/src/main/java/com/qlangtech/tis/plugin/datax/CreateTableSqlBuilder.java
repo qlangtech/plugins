@@ -15,9 +15,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,36 +37,43 @@ public abstract class CreateTableSqlBuilder {
 
     protected abstract String convertType(ISelectedTab.ColMeta col);
 
-    protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+    protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
     }
 
-    protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+    protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {
     }
 
     public StringBuffer build() {
 
-        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
+        script.append("CREATE TABLE ").append(getCreateTableName()).append("\n");
         script.append("(\n");
-        ISelectedTab.ColMeta pk = null;
+        List<ISelectedTab.ColMeta> pks = Lists.newArrayList();
         int maxColNameLength = 0;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+        for (ISelectedTab.ColMeta col : this.getCols()) {
             int m = StringUtils.length(col.getName());
             if (m > maxColNameLength) {
                 maxColNameLength = m;
             }
         }
         maxColNameLength += 4;
-        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
-            if (pk == null && col.isPk()) {
-                pk = col;
+        final int colSize = getCols().size();
+        int colIndex = 0;
+        for (ISelectedTab.ColMeta col : getCols()) {
+            if (col.isPk()) {
+                pks.add(col);
             }
             script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
-                    .append(convertType(col)).append(",").append("\n");
+                    .append(convertType(col));
+            if (++colIndex < colSize) {
+                script.append(",");
+            }
+            script.append("\n");
         }
+
         // script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
-        this.appendExtraColDef(pk);
+        this.appendExtraColDef(pks);
         script.append(")\n");
-        this.appendTabMeta(pk);
+        this.appendTabMeta(pks);
 //            script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
 //            // Objects.requireNonNull(pk, "pk can not be null");
 //            if (pk != null) {
@@ -84,5 +94,13 @@ public abstract class CreateTableSqlBuilder {
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
         return script;
+    }
+
+    protected String getCreateTableName() {
+        return tableMapper.getTo();
+    }
+
+    protected List<ISelectedTab.ColMeta> getCols() {
+        return tableMapper.getSourceCols();
     }
 }

@@ -23,6 +23,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -51,7 +52,6 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         if (!this.autoCreateTable) {
             return null;
         }
-
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
@@ -83,12 +83,12 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             @Override
-            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
+            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pk) {
 
             }
 
             @Override
-            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+            protected void appendTabMeta(List<ISelectedTab.ColMeta> pk) {
 
             }
         };

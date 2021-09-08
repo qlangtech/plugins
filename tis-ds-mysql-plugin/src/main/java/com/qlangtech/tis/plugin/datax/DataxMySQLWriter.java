@@ -34,8 +34,10 @@ import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -116,14 +118,15 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
-            protected void appendExtraColDef(ISelectedTab.ColMeta pk) {
-                if (pk != null) {
-                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
+            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
+                if (!pks.isEmpty()) {
+                    script.append("  PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
+                            .collect(Collectors.joining(","))).append(")").append("\n");
                 }
             }
 
             @Override
-            protected void appendTabMeta(ISelectedTab.ColMeta pk) {
+            protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {
                 script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
             }
 

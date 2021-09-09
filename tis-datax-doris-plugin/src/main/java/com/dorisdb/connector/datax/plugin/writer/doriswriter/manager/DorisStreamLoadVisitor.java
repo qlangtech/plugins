@@ -48,7 +48,7 @@ public class DorisStreamLoadVisitor {
                 .append("/_stream_load")
                 .toString();
         LOG.debug(String.format("Start to join batch data: rows[%d] bytes[%d] label[%s].", flushData.getRows().size(), flushData.getBytes(), flushData.getLabel()));
-        Map<String, Object> loadResult = doHttpPut(loadUrl, flushData.getLabel(), joinRows(flushData.getRows(), flushData.getBytes().intValue()));
+        Map<String, Object> loadResult = doHttpPut(loadUrl, flushData.getLabel(), joinRows(flushData.getRows(), flushData.buffer));
         final String keyStatus = "Status";
         if (null == loadResult || !loadResult.containsKey(keyStatus)) {
             throw new IOException("Unable to flush data to doris: unknown result status.");
@@ -90,7 +90,7 @@ public class DorisStreamLoadVisitor {
 //        }
     }
 
-    private byte[] joinRows(List<String> rows, int totalBytes) {
+    private byte[] joinRows(List<byte[]> rows, WriterBuffer buffer) {
         if (DorisWriterOptions.StreamLoadFormat.CSV.equals(writerOptions.getStreamLoadFormat())) {
             Map<String, Object> props = writerOptions.getLoadProps();
 
@@ -98,38 +98,36 @@ public class DorisStreamLoadVisitor {
                     ((String) props.get("row_delimiter")), "\n")
                     .getBytes(StandardCharsets.UTF_8);
 
-            int capacity = totalBytes + rows.size() * lineDelimiter.length;
-            ByteBuffer bos = ByteBuffer.allocate(totalBytes + rows.size() * lineDelimiter.length);
+            int capacity = buffer.size + buffer.rowCount * lineDelimiter.length;
+            ByteBuffer bos = ByteBuffer.allocate(capacity);
             int rowIndex = 0;
-            String currRow = null;
+
             long acc = 0;
-            byte[] tmp = null;
+
             try {
-                for (String row : rows) {
+                for (byte[] row : rows) {
                     rowIndex++;
-                    currRow = row;
-                    tmp = row.getBytes(StandardCharsets.UTF_8);
-                    acc += tmp.length;
+                    acc += row.length;
                     acc += lineDelimiter.length;
-                    bos.put(tmp);
+                    bos.put(row);
                     bos.put(lineDelimiter);
                 }
             } catch (Throwable e) {
-                throw new RuntimeException("capacity:" + capacity + ",acc:" + acc + ",rowSize:" + rows.size() + ",rowIndex:" + rowIndex + ",currRow:" + currRow, e);
+                throw new RuntimeException("capacity:" + capacity + ",acc:" + acc + ",rowSize:" + rows.size() + ",rowIndex:" + rowIndex, e);
             }
             return bos.array();
         }
 
         if (DorisWriterOptions.StreamLoadFormat.JSON.equals(writerOptions.getStreamLoadFormat())) {
-            ByteBuffer bos = ByteBuffer.allocate(totalBytes + (rows.isEmpty() ? 2 : rows.size() + 1));
+            ByteBuffer bos = ByteBuffer.allocate((int) buffer.size + (rows.isEmpty() ? 2 : rows.size() + 1));
             bos.put("[".getBytes(StandardCharsets.UTF_8));
             byte[] jsonDelimiter = ",".getBytes(StandardCharsets.UTF_8);
             boolean isFirstElement = true;
-            for (String row : rows) {
+            for (byte[] row : rows) {
                 if (!isFirstElement) {
                     bos.put(jsonDelimiter);
                 }
-                bos.put(row.getBytes(StandardCharsets.UTF_8));
+                bos.put(row);
                 isFirstElement = false;
             }
             bos.put("]".getBytes(StandardCharsets.UTF_8));

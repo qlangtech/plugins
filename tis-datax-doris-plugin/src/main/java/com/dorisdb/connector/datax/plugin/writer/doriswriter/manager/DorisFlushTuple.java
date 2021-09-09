@@ -3,18 +3,26 @@ package com.dorisdb.connector.datax.plugin.writer.doriswriter.manager;
 import java.util.List;
 
 public class DorisFlushTuple {
-    
-    private String label;
-    private final Long bytes;
-    private List<String> rows;
 
-    public DorisFlushTuple(String label, Long bytes, List<String> rows) {
+    private String label;
+    public final WriterBuffer buffer;
+
+    public DorisFlushTuple(String label, WriterBuffer buffer) {
         this.label = label;
-        this.bytes = bytes;
-        this.rows = rows;
+
+        this.buffer = buffer;
     }
 
-    public String getLabel() { return label; }
-    public Long getBytes() { return bytes; }
-    public List<String> getRows() { return rows; }
+    public String getLabel() {
+        return label;
+    }
+
+
+    public List<byte[]> getRows() {
+        return buffer.buffer;
+    }
+
+    public long getBytes() {
+        return buffer.size;
+    }
 }

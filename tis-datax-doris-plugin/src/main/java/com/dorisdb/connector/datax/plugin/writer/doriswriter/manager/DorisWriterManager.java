@@ -6,12 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class DorisWriterManager {
 
@@ -20,9 +16,9 @@ public class DorisWriterManager {
     private final DorisStreamLoadVisitor dorisStreamLoadVisitor;
     private final DorisWriterOptions writerOptions;
 
-    private final List<String> buffer = new ArrayList<>();
-    private final AtomicInteger batchCount = new AtomicInteger();
-    private final AtomicLong batchSize = new AtomicLong();
+    private WriterBuffer buffer = new WriterBuffer();
+
+    // private final AtomicLong batchSize = new AtomicLong();
     private volatile boolean closed = false;
     private volatile Exception flushException;
     private final LinkedBlockingDeque<DorisFlushTuple> flushQueue;
@@ -36,13 +32,14 @@ public class DorisWriterManager {
 
     public final synchronized void writeRecord(String record) throws IOException {
         checkFlushException();
+
         try {
-            buffer.add(record);
-            batchCount.incrementAndGet();
-            batchSize.addAndGet(record.getBytes().length);
-            if (batchCount.get() >= writerOptions.getBatchRows() || batchSize.get() >= writerOptions.getBatchSize()) {
+            buffer.addRow(record);
+
+            // batchSize.addAndGet(record.getBytes().length);
+            if (buffer.rowCount >= writerOptions.getBatchRows() || buffer.size >= writerOptions.getBatchSize()) {
                 String label = createBatchLabel();
-                LOG.debug(String.format("Doris buffer Sinking triggered: rows[%d] label[%s].", batchCount.get(), label));
+                LOG.debug(String.format("Doris buffer Sinking triggered: rows[%d] label[%s].", buffer.rowCount, label));
                 flush(label, false);
             }
         } catch (Exception e) {
@@ -52,20 +49,18 @@ public class DorisWriterManager {
 
     public synchronized void flush(String label, boolean waitUtilDone) throws Exception {
         checkFlushException();
-        if (batchCount.get() == 0) {
+        if (buffer.rowCount == 0) {
             if (waitUtilDone) {
                 waitAsyncFlushingDone();
             }
             return;
         }
-        flushQueue.put(new DorisFlushTuple(label, batchSize.get(), new ArrayList<>(buffer)));
+        flushQueue.put(new DorisFlushTuple(label, buffer));
         if (waitUtilDone) {
             // wait the last flush
             waitAsyncFlushingDone();
         }
-        buffer.clear();
-        batchCount.set(0);
-        batchSize.set(0);
+        buffer = new WriterBuffer();
     }
 
     public synchronized void close() {
@@ -73,7 +68,7 @@ public class DorisWriterManager {
             closed = true;
             try {
                 String label = createBatchLabel();
-                if (batchCount.get() > 0) LOG.debug(String.format("Doris Sink is about to close: label[%s].", label));
+                if (buffer.rowCount > 0) LOG.debug(String.format("Doris Sink is about to close: label[%s].", label));
                 flush(label, true);
             } catch (Exception e) {
                 throw new RuntimeException("Writing records to Doris failed.", e);
@@ -106,7 +101,7 @@ public class DorisWriterManager {
     private void waitAsyncFlushingDone() throws InterruptedException {
         // wait previous flushings
         for (int i = 0; i <= writerOptions.getFlushQueueLength(); i++) {
-            flushQueue.put(new DorisFlushTuple("", 0l, null));
+            flushQueue.put(new DorisFlushTuple("", null));
         }
     }
 
@@ -142,4 +137,5 @@ public class DorisWriterManager {
             throw new RuntimeException("Writing records to Doris failed.", flushException);
         }
     }
+
 }

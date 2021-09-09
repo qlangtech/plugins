@@ -12,6 +12,7 @@ import com.dorisdb.connector.datax.plugin.writer.doriswriter.manager.DorisWriter
 import com.dorisdb.connector.datax.plugin.writer.doriswriter.row.DorisISerializer;
 import com.dorisdb.connector.datax.plugin.writer.doriswriter.row.DorisSerializerFactory;
 import com.dorisdb.connector.datax.plugin.writer.doriswriter.util.DorisWriterUtil;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DorisWriter extends Writer {
@@ -36,11 +38,14 @@ public class DorisWriter extends Writer {
         public void init() {
             try {
                 this.originalConfig = super.getPluginJobConf();
-                // 执行初始化建标操作
-                RdbmsWriter.initWriterTable(originalConfig);
-                this.dsFactoryGetter = DBUtil.getReaderDataSourceFactoryGetter(this.originalConfig);
                 options = new DorisWriterOptions(super.getPluginJobConf());
                 options.doPretreatment();
+                // 执行初始化建标操作
+                String dataXName = this.originalConfig.getString(DataxUtils.DATAX_NAME);
+                String tableName = options.getTable();
+                List<String> jdbcUrls = Collections.singletonList(options.getJdbcUrl());
+                RdbmsWriter.initWriterTable(dataXName, tableName, jdbcUrls);
+                this.dsFactoryGetter = DBUtil.getReaderDataSourceFactoryGetter(this.originalConfig);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

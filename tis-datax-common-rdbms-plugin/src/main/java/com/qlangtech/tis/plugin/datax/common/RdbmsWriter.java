@@ -42,14 +42,46 @@ import java.util.Objects;
 public class RdbmsWriter {
     private static final Logger logger = LoggerFactory.getLogger(RdbmsWriter.class);
 
+
     /**
-     * 初始化表RDBMS的表，如果表不存在就创建表
+     * 适用于这种类型的配置
+     * "connection":[
+     * {
+     * "jdbcUrl":"jdbc:clickhouse://192.168.28.201:8123/tis",
+     * "table":[
+     * "instancedetail"
+     * ]
+     * }
+     * ],
      *
      * @param cfg
      * @throws Exception
      */
     public static void initWriterTable(Configuration cfg) throws Exception {
         String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, RdbmsWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
+
+        String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
+        List<String> jdbcUrls = Lists.newArrayList();
+        List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
+        for (int i = 0, len = connections.size(); i < len; i++) {
+            Configuration connConf = Configuration.from(String.valueOf(connections.get(i)));
+            String jdbcUrl = connConf.getString(Key.JDBC_URL);
+            jdbcUrls.add(jdbcUrl);
+        }
+
+
+        initWriterTable(dataXName, tableName, jdbcUrls);
+    }
+
+
+    /**
+     * 初始化表RDBMS的表，如果表不存在就创建表
+     *
+     * @param
+     * @throws Exception
+     */
+    public static void initWriterTable(String dataXName, String tableName, List<String> jdbcUrls) throws Exception {
+
         BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
                 = (BasicDataXRdbmsWriter<BasicDataSourceFactory>) DataxWriter.load(null, dataXName);
 
@@ -57,18 +89,18 @@ public class RdbmsWriter {
         boolean autoCreateTable = dataXWriter.autoCreateTable;
         if (autoCreateTable) {
             DataxProcessor processor = DataxProcessor.load(null, dataXName);
-            String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
+
             File createDDL = new File(processor.getDataxCreateDDLDir(null), tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             if (!createDDL.exists()) {
                 throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
             }
 
             BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
-            List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
+            //List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
             String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-            for (int i = 0, len = connections.size(); i < len; i++) {
-                Configuration connConf = Configuration.from(String.valueOf(connections.get(i)));
-                String jdbcUrl = connConf.getString(Key.JDBC_URL);
+//            for (int i = 0, len = connections.size(); i < len; i++) {
+//                Configuration connConf = Configuration.from(String.valueOf(connections.get(i)));
+            for (String jdbcUrl : jdbcUrls) {
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
                     List<String> tabs = Lists.newArrayList();
                     dsFactory.refectTableInDB(tabs, conn);
@@ -79,9 +111,12 @@ public class RdbmsWriter {
                             logger.info("create table:{}\n   script:{}", tableName, createScript);
                             statement.execute(createScript);
                         }
+                    } else {
+                        logger.info("table:{} already exist ,skip the create table step", tableName);
                     }
                 }
             }
         }
     }
+}
 }

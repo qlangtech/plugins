@@ -133,7 +133,7 @@ public class DorisWriterOptions implements Serializable {
     private void validateRequired() {
        final String[] requiredOptionKeys = new String[]{
             KEY_USERNAME,
-            KEY_PASSWORD,
+            //KEY_PASSWORD,
             KEY_DATABASE,
             KEY_TABLE,
             KEY_COLUMN,

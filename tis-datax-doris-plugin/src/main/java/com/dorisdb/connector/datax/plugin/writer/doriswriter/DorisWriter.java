@@ -60,11 +60,12 @@ public class DorisWriter extends Writer {
 
         @Override
         public void prepare() {
-            String username = options.getUsername();
-            String password = options.getPassword();
-            String jdbcUrl = options.getJdbcUrl();
+
             List<String> renderedPreSqls = DorisWriterUtil.renderPreOrPostSqls(options.getPreSqlList(), options.getTable());
             if (null != renderedPreSqls && !renderedPreSqls.isEmpty()) {
+                String username = options.getUsername();
+                String password = options.getPassword();
+                String jdbcUrl = options.getJdbcUrl();
                 try (Connection conn = DBUtil.getConnection(this.dsFactoryGetter, jdbcUrl, username, password)) {
                     LOG.info("Begin to execute preSqls:[{}]. context info:{}.", String.join(";", renderedPreSqls), jdbcUrl);
                     DorisWriterUtil.executeSqls(conn, renderedPreSqls);
@@ -86,11 +87,12 @@ public class DorisWriter extends Writer {
 
         @Override
         public void post() {
-            String username = options.getUsername();
-            String password = options.getPassword();
-            String jdbcUrl = options.getJdbcUrl();
+
             List<String> renderedPostSqls = DorisWriterUtil.renderPreOrPostSqls(options.getPostSqlList(), options.getTable());
             if (null != renderedPostSqls && !renderedPostSqls.isEmpty()) {
+                String username = options.getUsername();
+                String password = options.getPassword();
+                String jdbcUrl = options.getJdbcUrl();
                 try (Connection conn = DBUtil.getConnection(this.dsFactoryGetter, jdbcUrl, username, password)) {
                     LOG.info("Begin to execute preSqls:[{}]. context info:{}.", String.join(";", renderedPostSqls), jdbcUrl);
                     DorisWriterUtil.executeSqls(conn, renderedPostSqls);

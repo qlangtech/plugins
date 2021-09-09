@@ -42,7 +42,7 @@ public class DorisWriterManager {
             batchSize.addAndGet(record.getBytes().length);
             if (batchCount.get() >= writerOptions.getBatchRows() || batchSize.get() >= writerOptions.getBatchSize()) {
                 String label = createBatchLabel();
-                LOG.debug(String.format("Doris buffer Sinking triggered: rows[%d] label[%s].", batchCount, label));
+                LOG.debug(String.format("Doris buffer Sinking triggered: rows[%d] label[%s].", batchCount.get(), label));
                 flush(label, false);
             }
         } catch (Exception e) {

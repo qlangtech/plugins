@@ -28,10 +28,10 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -42,13 +42,23 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     public static final String NAME_DORIS = "Doris";
     public static final String FIELD_KEY_NODEDESC = "nodeDesc";
 
+    private static final com.mysql.jdbc.Driver mysql5Driver;
+
+    static {
+        try {
+            mysql5Driver = new com.mysql.jdbc.Driver();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         StringBuffer jdbcUrl = new StringBuffer();
-        jdbcUrl.append("jdbc:mysql://").append(ip).append(":").append(this.port).append("/");
+        jdbcUrl.append("jdbc:mysql://").append(ip).append(":").append(this.port).append("/").append(dbName);
         return jdbcUrl.toString();
     }
 
@@ -60,7 +70,12 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
     @Override
     public Connection getConnection(String jdbcUrl) throws SQLException {
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
+
+        Properties props = new Properties();
+        props.put("user", StringUtils.trimToEmpty(this.userName));
+        props.put("password", StringUtils.trimToEmpty(password));
+        return mysql5Driver.connect(jdbcUrl, props);
+        // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
     }
 
     @Override

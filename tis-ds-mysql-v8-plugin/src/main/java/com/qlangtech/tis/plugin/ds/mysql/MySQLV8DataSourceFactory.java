@@ -50,7 +50,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
     public Connection getConnection(String jdbcUrl) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToNull(this.userName));
-        props.put("password", StringUtils.trimToNull(password));
+        props.put("password", StringUtils.trimToEmpty(password));
         // 为了避开与Mysql5的连接冲突，需要直接从driver中创建connection对象
         return mysql8Driver.connect(jdbcUrl, props);
        //  return DriverManager.getConnection(jdbcUrl, , );

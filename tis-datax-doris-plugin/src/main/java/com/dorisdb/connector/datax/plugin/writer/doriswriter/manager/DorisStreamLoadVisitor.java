@@ -98,10 +98,19 @@ public class DorisStreamLoadVisitor {
                     ((String) props.get("row_delimiter")), "\n")
                     .getBytes(StandardCharsets.UTF_8);
 
+            int capacity = totalBytes + rows.size() * lineDelimiter.length;
             ByteBuffer bos = ByteBuffer.allocate(totalBytes + rows.size() * lineDelimiter.length);
-            for (String row : rows) {
-                bos.put(row.getBytes(StandardCharsets.UTF_8));
-                bos.put(lineDelimiter);
+            int rowIndex = 0;
+            String currRow = null;
+            try {
+                for (String row : rows) {
+                    rowIndex++;
+                    currRow = row;
+                    bos.put(row.getBytes(StandardCharsets.UTF_8));
+                    bos.put(lineDelimiter);
+                }
+            } catch (Throwable e) {
+                throw new RuntimeException("capacity:" + capacity + ",rowSize:" + rows.size() + ",rowIndex:" + rowIndex + ",currRow:" + currRow, e);
             }
             return bos.array();
         }

@@ -1,11 +1,11 @@
 package com.dorisdb.connector.datax.plugin.writer.doriswriter;
 
-import java.io.Serializable;
-
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.rdbms.util.DBUtilErrorCode;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +20,7 @@ public class DorisWriterOptions implements Serializable {
     private static final long BATCH_BYTES = 90 * MEGA_BYTES_SCALE;
 
     private static final String KEY_LOAD_PROPS_FORMAT = "format";
+
     public enum StreamLoadFormat {
         CSV, JSON;
     }
@@ -48,7 +49,7 @@ public class DorisWriterOptions implements Serializable {
         validateRequired();
         validateStreamLoadUrl();
     }
-    
+
     public String getJdbcUrl() {
         return options.getString(KEY_JDBC_URL);
     }
@@ -86,7 +87,8 @@ public class DorisWriterOptions implements Serializable {
     }
 
     public Map<String, Object> getLoadProps() {
-        return options.getMap(KEY_LOAD_PROPS);
+        Map<String, Object> props = options.getMap(KEY_LOAD_PROPS);
+        return props == null ? Collections.emptyMap() : props;
     }
 
     public int getMaxRetries() {
@@ -102,7 +104,7 @@ public class DorisWriterOptions implements Serializable {
         Long size = options.getLong(KEY_MAX_BATCH_SIZE);
         return null == size ? BATCH_BYTES : size;
     }
-    
+
     public int getFlushQueueLength() {
         Integer len = options.getInt(KEY_FLUSH_QUEUE_LENGTH);
         return null == len ? 1 : len;
@@ -113,8 +115,8 @@ public class DorisWriterOptions implements Serializable {
         if (null == loadProps) {
             return StreamLoadFormat.CSV;
         }
-        if (loadProps.containsKey(KEY_LOAD_PROPS_FORMAT) 
-            && StreamLoadFormat.JSON.name().equalsIgnoreCase(String.valueOf(loadProps.get(KEY_LOAD_PROPS_FORMAT)))) {
+        if (loadProps.containsKey(KEY_LOAD_PROPS_FORMAT)
+                && StreamLoadFormat.JSON.name().equalsIgnoreCase(String.valueOf(loadProps.get(KEY_LOAD_PROPS_FORMAT)))) {
             return StreamLoadFormat.JSON;
         }
         return StreamLoadFormat.CSV;
@@ -125,19 +127,19 @@ public class DorisWriterOptions implements Serializable {
         for (String host : urlList) {
             if (host.split(":").length < 2) {
                 throw DataXException.asDataXException(DBUtilErrorCode.CONF_ERROR,
-                    "loadUrl的格式不正确，请输入 `fe_ip:fe_http_ip;fe_ip:fe_http_ip`。");
+                        "loadUrl的格式不正确，请输入 `fe_ip:fe_http_ip;fe_ip:fe_http_ip`。");
             }
         }
     }
 
     private void validateRequired() {
-       final String[] requiredOptionKeys = new String[]{
-            KEY_USERNAME,
-            //KEY_PASSWORD,
-            KEY_DATABASE,
-            KEY_TABLE,
-            KEY_COLUMN,
-            KEY_LOAD_URL
+        final String[] requiredOptionKeys = new String[]{
+                KEY_USERNAME,
+                //KEY_PASSWORD,
+                KEY_DATABASE,
+                KEY_TABLE,
+                KEY_COLUMN,
+                KEY_LOAD_URL
         };
         for (String optionKey : requiredOptionKeys) {
             options.getNecessaryValue(optionKey, DBUtilErrorCode.REQUIRED_VALUE);

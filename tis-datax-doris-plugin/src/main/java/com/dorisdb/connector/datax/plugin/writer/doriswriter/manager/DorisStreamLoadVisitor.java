@@ -96,7 +96,11 @@ public class DorisStreamLoadVisitor {
     private byte[] joinRows(List<String> rows, int totalBytes) {
         if (DorisWriterOptions.StreamLoadFormat.CSV.equals(writerOptions.getStreamLoadFormat())) {
             Map<String, Object> props = writerOptions.getLoadProps();
-            byte[] lineDelimiter = DorisDelimiterParser.parse(String.valueOf(props.get("row_delimiter")), "\n").getBytes(StandardCharsets.UTF_8);
+
+            byte[] lineDelimiter = DorisDelimiterParser.parse(
+                    String.valueOf(props.get("row_delimiter")), "\n")
+                    .getBytes(StandardCharsets.UTF_8);
+
             ByteBuffer bos = ByteBuffer.allocate(totalBytes + rows.size() * lineDelimiter.length);
             for (String row : rows) {
                 bos.put(row.getBytes(StandardCharsets.UTF_8));

@@ -102,15 +102,20 @@ public class DorisStreamLoadVisitor {
             ByteBuffer bos = ByteBuffer.allocate(totalBytes + rows.size() * lineDelimiter.length);
             int rowIndex = 0;
             String currRow = null;
+            long acc = 0;
+            byte[] tmp = null;
             try {
                 for (String row : rows) {
                     rowIndex++;
                     currRow = row;
-                    bos.put(row.getBytes(StandardCharsets.UTF_8));
+                    tmp = row.getBytes(StandardCharsets.UTF_8);
+                    acc += tmp.length;
+                    acc += lineDelimiter.length;
+                    bos.put(tmp);
                     bos.put(lineDelimiter);
                 }
             } catch (Throwable e) {
-                throw new RuntimeException("capacity:" + capacity + ",rowSize:" + rows.size() + ",rowIndex:" + rowIndex + ",currRow:" + currRow, e);
+                throw new RuntimeException("capacity:" + capacity + ",acc:" + acc + ",rowSize:" + rows.size() + ",rowIndex:" + rowIndex + ",currRow:" + currRow, e);
             }
             return bos.array();
         }

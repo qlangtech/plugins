@@ -1,5 +1,7 @@
 package com.dorisdb.connector.datax.plugin.writer.doriswriter.manager;
 
+import com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriterOptions;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,20 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
-
-import com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriterOptions;
-import com.google.common.base.Strings;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class DorisWriterManager {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(DorisWriterManager.class);
 
     private final DorisStreamLoadVisitor dorisStreamLoadVisitor;
     private final DorisWriterOptions writerOptions;
 
     private final List<String> buffer = new ArrayList<>();
-    private int batchCount = 0;
-    private long batchSize = 0;
+    private final AtomicInteger batchCount = new AtomicInteger();
+    private final AtomicLong batchSize = new AtomicLong();
     private volatile boolean closed = false;
     private volatile Exception flushException;
     private final LinkedBlockingDeque<DorisFlushTuple> flushQueue;
@@ -29,7 +30,7 @@ public class DorisWriterManager {
     public DorisWriterManager(DorisWriterOptions writerOptions) {
         this.writerOptions = writerOptions;
         this.dorisStreamLoadVisitor = new DorisStreamLoadVisitor(writerOptions);
-        flushQueue = new LinkedBlockingDeque<>(writerOptions.getFlushQueueLength()); 
+        flushQueue = new LinkedBlockingDeque<>(writerOptions.getFlushQueueLength());
         this.startAsyncFlushing();
     }
 
@@ -37,9 +38,9 @@ public class DorisWriterManager {
         checkFlushException();
         try {
             buffer.add(record);
-            batchCount++;
-            batchSize += record.getBytes().length;
-            if (batchCount >= writerOptions.getBatchRows() || batchSize >= writerOptions.getBatchSize()) {
+            batchCount.incrementAndGet();
+            batchSize.addAndGet(record.getBytes().length);
+            if (batchCount.get() >= writerOptions.getBatchRows() || batchSize.get() >= writerOptions.getBatchSize()) {
                 String label = createBatchLabel();
                 LOG.debug(String.format("Doris buffer Sinking triggered: rows[%d] label[%s].", batchCount, label));
                 flush(label, false);
@@ -51,28 +52,28 @@ public class DorisWriterManager {
 
     public synchronized void flush(String label, boolean waitUtilDone) throws Exception {
         checkFlushException();
-        if (batchCount == 0) {
+        if (batchCount.get() == 0) {
             if (waitUtilDone) {
                 waitAsyncFlushingDone();
             }
             return;
         }
-        flushQueue.put(new DorisFlushTuple(label, batchSize,  new ArrayList<>(buffer)));
+        flushQueue.put(new DorisFlushTuple(label, batchSize.get(), new ArrayList<>(buffer)));
         if (waitUtilDone) {
             // wait the last flush
             waitAsyncFlushingDone();
         }
         buffer.clear();
-        batchCount = 0;
-        batchSize = 0;
+        batchCount.set(0);
+        batchSize.set(0);
     }
-    
+
     public synchronized void close() {
         if (!closed) {
-            closed = true;            
+            closed = true;
             try {
                 String label = createBatchLabel();
-                if (batchCount > 0) LOG.debug(String.format("Doris Sink is about to close: label[%s].", label));
+                if (batchCount.get() > 0) LOG.debug(String.format("Doris Sink is about to close: label[%s].", label));
                 flush(label, true);
             } catch (Exception e) {
                 throw new RuntimeException("Writing records to Doris failed.", e);
@@ -87,16 +88,16 @@ public class DorisWriterManager {
 
     private void startAsyncFlushing() {
         // start flush thread
-        Thread flushThread = new Thread(new Runnable(){
+        Thread flushThread = new Thread(new Runnable() {
             public void run() {
-                while(true) {
+                while (true) {
                     try {
                         asyncFlush();
                     } catch (Exception e) {
                         flushException = e;
                     }
                 }
-            }   
+            }
         });
         flushThread.setDaemon(true);
         flushThread.start();

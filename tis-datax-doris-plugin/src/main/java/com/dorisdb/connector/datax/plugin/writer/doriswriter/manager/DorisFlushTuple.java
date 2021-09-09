@@ -5,7 +5,7 @@ import java.util.List;
 public class DorisFlushTuple {
     
     private String label;
-    private Long bytes;
+    private final Long bytes;
     private List<String> rows;
 
     public DorisFlushTuple(String label, Long bytes, List<String> rows) {

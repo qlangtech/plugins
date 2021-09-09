@@ -45,7 +45,7 @@ public class DorisWriter extends Writer {
                 String tableName = options.getTable();
                 List<String> jdbcUrls = Collections.singletonList(options.getJdbcUrl());
                 RdbmsWriter.initWriterTable(dataXName, tableName, jdbcUrls);
-                this.dsFactoryGetter = DBUtil.getReaderDataSourceFactoryGetter(this.originalConfig);
+                this.dsFactoryGetter = DBUtil.getWriterDataSourceFactoryGetter(this.originalConfig);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

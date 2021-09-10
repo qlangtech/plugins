@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
@@ -47,6 +48,12 @@ public class TestDataXDorisWriter extends TestCase {
 //        ContextDesc.descBuild(DataXDorisWriter.class, false);
 //    }
 
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        CenterResource.setNotFetchFromCenterRepository();
+    }
 
     private static final String DataXName = "test1dataXname";
 

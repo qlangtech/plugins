@@ -9,7 +9,6 @@ public class DorisFlushTuple {
 
     public DorisFlushTuple(String label, WriterBuffer buffer) {
         this.label = label;
-
         this.buffer = buffer;
     }
 

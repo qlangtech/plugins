@@ -31,6 +31,19 @@
   从FtpReader内部生成`alibaba`的字符串字段作为当前字段
 
   >> 对于用户指定Column信息，type必须填写，index/value必须选择其一
+  
+  例子:
+  ```json5
+  [
+   { "index": 0,   "type": "long"  },
+   { "index": 1,   "type": "boolean" },
+   { "index": 2,   "type": "double" },
+   { "index": 3,   "type": "string" },
+   { "index": 4,   "type": "date",  "format": "yyyy.MM.dd" },
+   { "type": "string", "value": "alibaba"  //从FtpReader内部生成alibaba的字符串字段作为当前字段 
+   }
+  ]
+  ```
 
 ## connectPattern
 

@@ -32,7 +32,7 @@ public class WriterBuffer {
     public synchronized void addRow(String row) {
         byte[] content = row.getBytes(TisUTF8.get());
         this.size += content.length;
-        this.rowCount += rowCount;
+        this.rowCount++;
         buffer.add(content);
     }
 

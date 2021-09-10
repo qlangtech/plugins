@@ -56,7 +56,10 @@ public class DorisStreamLoadVisitor {
         LOG.debug(new StringBuilder("StreamLoad response:\n").append(JSON.toJSONString(loadResult)).toString());
         if (loadResult.get(keyStatus).equals("Fail")) {
             throw new IOException(
-                    new StringBuilder("Failed to flush data to doris.\n").append(JSON.toJSONString(loadResult)).toString()
+                    new StringBuilder("Failed to flush data to doris table:")
+                            .append(writerOptions.getDatabase()).append(".")
+                            .append(writerOptions.getTable()).append(".\n")
+                            .append(JSON.toJSONString(loadResult)).toString()
             );
         }
     }

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class DorisFlushTuple {
 
-    private String label;
+    private final String label;
     public final WriterBuffer buffer;
 
     public DorisFlushTuple(String label, WriterBuffer buffer) {
@@ -13,7 +13,7 @@ public class DorisFlushTuple {
     }
 
     public String getLabel() {
-        return label;
+        return this.label;
     }
 
 

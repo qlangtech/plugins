@@ -21,6 +21,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +68,9 @@ public class SelectedTab implements ISelectedTab {
 
         try {
             List<ISelectedTab> selectedTabs = dataXReader.getSelectedTabs();
+            if(CollectionUtils.isEmpty(selectedTabs)){
+                return StringUtils.EMPTY;
+            }
             for (ISelectedTab tab : selectedTabs) {
                 return tab.getName();
             }

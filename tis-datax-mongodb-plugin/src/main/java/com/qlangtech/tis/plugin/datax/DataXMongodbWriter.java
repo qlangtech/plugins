@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +92,9 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
         }
 
         List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+        if (CollectionUtils.isEmpty(selectedTabs)) {
+            return "[]";
+        }
         for (ISelectedTab tab : selectedTabs) {
             tab.getCols().forEach((col) -> {
                 JSONObject field = new JSONObject();

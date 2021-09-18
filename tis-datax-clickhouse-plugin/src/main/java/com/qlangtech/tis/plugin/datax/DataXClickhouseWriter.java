@@ -73,7 +73,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
             protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
-                script.append("    `__cc_ck_sign` Int8 DEFAULT 1").append("\n");
+                script.append("   ,`__cc_ck_sign` Int8 DEFAULT 1").append("\n");
             }
 
             @Override

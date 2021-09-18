@@ -77,6 +77,7 @@ public class TestSelectedTabs {
         tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
             ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
             meta.setName(c);
+            meta.setType(ISelectedTab.DataXReaderColType.STRING);
             return meta;
         }).collect(Collectors.toList()));
         Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);

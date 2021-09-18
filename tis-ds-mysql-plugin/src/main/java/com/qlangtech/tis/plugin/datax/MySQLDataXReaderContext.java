@@ -16,6 +16,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: baisui 百岁
@@ -25,7 +26,7 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
     private final RdbmsDataxContext rdbmsContext;
 
     public MySQLDataXReaderContext(String name, String sourceTableName, RdbmsDataxContext mysqlContext) {
-        super(name, sourceTableName, null ,null);
+        super(name, sourceTableName, null, null);
         this.rdbmsContext = mysqlContext;
     }
 
@@ -46,6 +47,9 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
     }
 
     public String getJdbcUrl() {
+        if (StringUtils.isEmpty(rdbmsContext.getJdbcUrl())) {
+            throw new NullPointerException("rdbmsContext.getJdbcUrl() can not be empty");
+        }
         return rdbmsContext.getJdbcUrl();
     }
 

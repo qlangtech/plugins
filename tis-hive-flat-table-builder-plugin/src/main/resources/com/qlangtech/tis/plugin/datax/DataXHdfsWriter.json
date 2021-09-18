@@ -1,6 +1,5 @@
 {
   "path": {
-    "help": "描述：存储到Hadoop hdfs文件系统的相对路径信息，HdfsWriter会根据并发配置在Path目录下写入多个文件。为与hive表关联，请填写hive表在hdfs上的存储路径。例：Hive上设置的数据仓库的存储路径为：/user/hive/warehouse/ ，已建立数据库：test，表：hello；则对应的存储路径为：/user/hive/warehouse/test.db/hello  "
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXHdfsWriter.getDftTemplate()"

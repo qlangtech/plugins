@@ -253,4 +253,31 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
             FileUtils.forceDelete(createDDLFile);
         }
     }
+
+    public void testGenerateCreateDDL() {
+
+        ClickHouseTest dataXWriter = createDataXWriter();
+
+        StringBuffer createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
+        assertNull(createDDL);
+
+        dataXWriter.writer.autoCreateTable = true;
+        createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
+        assertNotNull(createDDL);
+
+        assertEquals("CREATE TABLE customer_order_relation\n" +
+                "(\n" +
+                "    `customerregister_id`   String,\n" +
+                "    `waitingorder_id`       String,\n" +
+                "    `kind`                  Int32,\n" +
+                "    `create_time`           Int64,\n" +
+                "    `last_ver`              Int32\n" +
+                "   ,`__cc_ck_sign` Int8 DEFAULT 1\n" +
+                ")\n" +
+                " ENGINE = CollapsingMergeTree(__cc_ck_sign)\n" +
+                " ORDER BY \n" +
+                " SETTINGS index_granularity = 8192", String.valueOf(createDDL));
+
+        System.out.println(createDDL);
+    }
 }

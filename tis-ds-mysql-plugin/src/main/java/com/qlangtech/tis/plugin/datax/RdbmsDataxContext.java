@@ -54,6 +54,9 @@ public class RdbmsDataxContext {
     }
 
     public void setJdbcUrl(String jdbcUrl) {
+        if (StringUtils.isEmpty(jdbcUrl)) {
+            throw new IllegalArgumentException("param jdbcUrl can not be empty");
+        }
         this.jdbcUrl = jdbcUrl;
     }
 
@@ -70,6 +73,7 @@ public class RdbmsDataxContext {
     }
 
     public String getJdbcUrl() {
+
         return jdbcUrl;
     }
 }

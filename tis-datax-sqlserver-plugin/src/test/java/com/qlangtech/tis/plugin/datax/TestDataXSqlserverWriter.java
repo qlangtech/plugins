@@ -48,8 +48,17 @@ public class TestDataXSqlserverWriter extends TestCase {
     public void testTemplateGenerate() throws Exception {
 
 
-        SqlServerDatasourceFactory dsFactory = getSqlServerDSFactory();
 
+
+        DataXSqlserverWriter writer = getDataXSqlserverWriter();
+
+        Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
+
+        WriterTemplate.valiateCfgGenerate("sqlserver-datax-writer-assert.json", writer, tableMap.get());
+    }
+
+    protected DataXSqlserverWriter getDataXSqlserverWriter() {
+        SqlServerDatasourceFactory dsFactory = getSqlServerDSFactory();
         DataXSqlserverWriter writer = new DataXSqlserverWriter() {
 //            @Override
 //            protected SqlServerDatasourceFactory getDataSourceFactory() {
@@ -71,10 +80,28 @@ public class TestDataXSqlserverWriter extends TestCase {
         writer.postSql = "drop table @table";
         writer.preSql = "drop table @table";
         writer.dbName = "testdb";
+        return writer;
+    }
 
+    public void testGenerateCreateDDL() {
+
+        DataXSqlserverWriter writer = getDataXSqlserverWriter();
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
+        StringBuffer createDDL = writer.generateCreateDDL(tableMap.get());
+        assertNull(createDDL);
 
-        WriterTemplate.valiateCfgGenerate("sqlserver-datax-writer-assert.json", writer, tableMap.get());
+        writer.autoCreateTable = true;
+        createDDL = writer.generateCreateDDL(tableMap.get());
+        assertNotNull(createDDL);
+
+        assertEquals("CREATE TABLE orderinfo_new\n" +
+                "(\n" +
+                "    `col1`   varchar(100),\n" +
+                "    `col2`   varchar(100),\n" +
+                "    `col3`   varchar(100)\n" +
+                ")\n", String.valueOf(createDDL));
+
+        System.out.println(createDDL);
     }
 
     public static SqlServerDatasourceFactory getSqlServerDSFactory() {

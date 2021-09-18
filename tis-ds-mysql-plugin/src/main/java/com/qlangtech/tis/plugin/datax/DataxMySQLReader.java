@@ -43,6 +43,7 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-reader-tpl.json");
     }
 
+    @Override
     protected RdbmsReaderContext createDataXReaderContext(
             String jobName, SelectedTab tab, IDataSourceDumper dumper) {
         MySQLDataSourceFactory dsFactory = this.getDataSourceFactory();

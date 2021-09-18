@@ -33,7 +33,6 @@
     "help": "描述：写入数据的字段，不支持对部分列写入。为与hive中表关联，需要指定表中所有字段名和字段类型，其中：name指定字段名，type指定字段类型。 "
   },
   "writeMode": {
-    "help": "描述：hdfswriter写入前数据清理处理模式：append，写入前不做任何处理，DataX hdfswriter直接使用filename写入，并保证文件名不冲突，nonConflict：如果目录下有fileName前缀的文件，直接报错 ",
     "enum": [
       {
         "val": "append",

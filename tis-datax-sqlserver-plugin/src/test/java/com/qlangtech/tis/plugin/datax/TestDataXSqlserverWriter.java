@@ -96,9 +96,9 @@ public class TestDataXSqlserverWriter extends TestCase {
 
         assertEquals("CREATE TABLE orderinfo_new\n" +
                 "(\n" +
-                "    `col1`   varchar(100),\n" +
-                "    `col2`   varchar(100),\n" +
-                "    `col3`   varchar(100)\n" +
+                "    \"col1\"   varchar(100),\n" +
+                "    \"col2\"   varchar(100),\n" +
+                "    \"col3\"   varchar(100)\n" +
                 ")\n", String.valueOf(createDDL));
 
         System.out.println(createDDL);

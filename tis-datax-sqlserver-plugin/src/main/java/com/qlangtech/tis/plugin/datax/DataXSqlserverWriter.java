@@ -83,6 +83,11 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             @Override
+            protected char colEscapeChar() {
+                return '\"';
+            }
+
+            @Override
             protected void appendExtraColDef(List<ISelectedTab.ColMeta> pk) {
 
             }

@@ -62,7 +62,7 @@ public abstract class CreateTableSqlBuilder {
             if (col.isPk()) {
                 pks.add(col);
             }
-            script.append("    `").append(String.format("%-" + (maxColNameLength) + "s", col.getName() + "`"))
+            script.append("    ").append(colEscapeChar()).append(String.format("%-" + (maxColNameLength) + "s", col.getName() + colEscapeChar()))
                     .append(convertType(col));
             if (++colIndex < colSize) {
                 script.append(",");
@@ -94,6 +94,11 @@ public abstract class CreateTableSqlBuilder {
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
         return script;
+    }
+
+
+    protected char colEscapeChar() {
+        return '`';
     }
 
     protected String getCreateTableName() {

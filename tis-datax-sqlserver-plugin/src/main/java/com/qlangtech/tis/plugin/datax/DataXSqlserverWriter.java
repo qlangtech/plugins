@@ -102,6 +102,10 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             super();
         }
 
+        @Override
+        public boolean isSupportTabCreate() {
+            return true;
+        }
 
         @Override
         public String getDisplayName() {

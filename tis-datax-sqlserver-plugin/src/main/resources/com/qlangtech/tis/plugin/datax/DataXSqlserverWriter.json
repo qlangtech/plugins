@@ -14,5 +14,8 @@
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXSqlserverWriter.getDftTemplate()"
+  },
+  "autoCreateTable": {
+    "disable": false
   }
 }

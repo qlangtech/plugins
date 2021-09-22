@@ -30,9 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -64,13 +62,15 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             if (!webStartDir.exists()) {
                 throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getPath());
             }
-            String[] logbackJars = webStartDir.list(
-                    (dir, name) -> StringUtils.startsWith(name, "logback-")
-                            || StringUtils.startsWith(name, "jcl-over-slf4j")
-                            || StringUtils.startsWith(name, "slf4j-api"));
+//            String[] logbackJars = webStartDir.list(
+//                    (dir, name) -> StringUtils.startsWith(name, "logback-")
+//                            || StringUtils.startsWith(name, "jcl-over-slf4j")
+//                            || StringUtils.startsWith(name, "slf4j-api"));
 
-            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" +
-                    Arrays.stream(logbackJars).map((jarName) -> (new File(webStartDir, jarName)).getPath()).collect(Collectors.joining(":"));
+//            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" +
+//                    Arrays.stream(logbackJars).map((jarName) -> (new File(webStartDir, jarName)).getPath()).collect(Collectors.joining(":"));
+
+            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
         }
         logger.info("dataX Job:{},classpath:{},workingDir:{}", dataXfileName, this.classpath, workingDirectory.getPath());
 

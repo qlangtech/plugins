@@ -211,7 +211,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
         @Override
         public boolean isSupportTabCreate() {
-            return false;
+            return true;
         }
 
         @Override

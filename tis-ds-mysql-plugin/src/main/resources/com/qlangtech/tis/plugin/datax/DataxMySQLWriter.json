@@ -16,6 +16,9 @@
       }
     ]
   },
+  "autoCreateTable": {
+    "disable": false
+  },
   "dbName": {
     "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")",
     "creator": {

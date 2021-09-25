@@ -36,6 +36,7 @@
 
     <dependencies>
 
+
         <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>

@@ -203,14 +203,16 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             MessageExt msg = msgs.get(0);
             AsyncMsgRM asyncMsgRM = new AsyncMsgRM(msg, deserialize);
             // ActiveSpan activeSpan = buildSpan(msg);
-            boolean ret = consumerHandle.consume(asyncMsgRM);
-            if (!ret) {
-                logger.error("consume MQ failed,msgID:" + msg.getMsgId());
-            } else {
-                logger.debug("consume MQ,msg:" + msg.toString() + ",handle result:success.");
-            }
+            consumerHandle.consume(asyncMsgRM);
+//            boolean ret = consumerHandle.consume(asyncMsgRM);
+//            if (!ret) {
+//                logger.error("consume MQ failed,msgID:" + msg.getMsgId());
+//            } else {
+//                logger.debug("consume MQ,msg:" + msg.toString() + ",handle result:success.");
+//            }
             // }
-            return ret ? ConsumeConcurrentlyStatus.CONSUME_SUCCESS : ConsumeConcurrentlyStatus.RECONSUME_LATER;
+            //return ret ? ConsumeConcurrentlyStatus.CONSUME_SUCCESS : ConsumeConcurrentlyStatus.RECONSUME_LATER;
+            return null;
         }
     }
 
@@ -221,12 +223,16 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             MessageExt msg = msgs.get(0);
             AsyncMsgRM asyncMsgRM = new AsyncMsgRM(msg, deserialize);
             // ActiveSpan activeSpan = buildSpan(msg);
-            boolean ret = consumerHandle.consume(asyncMsgRM);
-            if (!ret) {
-                logger.error("consume MQ failed,msgID:" + msg.getMsgId());
-            }
-            // }
-            return ret ? ConsumeOrderlyStatus.SUCCESS : ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
+
+            consumerHandle.consume(asyncMsgRM);
+            return null;
+
+//            boolean ret = consumerHandle.consume(asyncMsgRM);
+//            if (!ret) {
+//                logger.error("consume MQ failed,msgID:" + msg.getMsgId());
+//            }
+//            // }
+//            return ret ? ConsumeOrderlyStatus.SUCCESS : ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
         }
     }
 }

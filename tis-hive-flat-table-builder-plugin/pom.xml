@@ -47,6 +47,11 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -86,11 +91,11 @@
             <artifactId>datax-common</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-hdfs-plugin</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-hdfs-plugin</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.alibaba.datax</groupId>
@@ -101,10 +106,10 @@
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>datax-common</artifactId>
                 </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>com.alibaba.datax</groupId>-->
-<!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
-<!--                </exclusion>-->
+                <!--                <exclusion>-->
+                <!--                    <groupId>com.alibaba.datax</groupId>-->
+                <!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
+                <!--                </exclusion>-->
                 <exclusion>
                     <groupId>org.apache.hive</groupId>
                     <artifactId>hive-serde</artifactId>
@@ -192,17 +197,17 @@
         </dependency>
 
         <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-yarn-client</artifactId>
-    </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-common</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-mapreduce-client-core</artifactId>-->
-<!--        </dependency>-->
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-yarn-client</artifactId>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.hadoop</groupId>-->
+        <!--            <artifactId>hadoop-common</artifactId>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.hadoop</groupId>-->
+        <!--            <artifactId>hadoop-mapreduce-client-core</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>

@@ -1,27 +1,24 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.async.message.client.kafka;
 
-import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import junit.framework.TestCase;
-
-import java.io.IOException;
 
 /**
  * @author: baisui 百岁
@@ -39,7 +36,8 @@ public class TestKafkaMQListener extends TestCase {
 
         IMQListener imqListener = listenerFactory.create();
         imqListener.setConsumerHandle(new MockConsumer());
-        imqListener.start();
+        // BasicDataSourceFactory dataSource, List<ISelectedTab > tabs, ISink sink
+        //imqListener.start();
 
         Thread.sleep(99999999);
 
@@ -52,13 +50,18 @@ public class TestKafkaMQListener extends TestCase {
         }
 
         @Override
-        public boolean consume(AsyncMsg asyncMsg) {
-            try {
-                System.out.println(JSON.toJSONString(asyncMsg.getContent()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return true;
+        public void consume(AsyncMsg asyncMsg) throws Exception {
+
         }
+
+        //        @Override
+//        public boolean consume(AsyncMsg asyncMsg) {
+//            try {
+//                System.out.println(JSON.toJSONString(asyncMsg.getContent()));
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            return true;
+//        }
     }
 }

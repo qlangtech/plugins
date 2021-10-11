@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.async.message.client.kafka;
@@ -23,6 +23,9 @@ import com.pingcap.ticdc.cdc.value.TicdcEventDDL;
 import com.pingcap.ticdc.cdc.value.TicdcEventResolve;
 import com.pingcap.ticdc.cdc.value.TicdcEventRowChange;
 import com.qlangtech.tis.async.message.client.consumer.*;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -31,6 +34,7 @@ import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -60,6 +64,11 @@ public class KafkaMQListener implements IMQListener {
 
     }
 
+    @Override
+    public void start(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+
+    }
+
 
     private KafkaConsumer<byte[], byte[]> createConsumer() {
         Properties configs = initConfig();
@@ -78,18 +87,14 @@ public class KafkaMQListener implements IMQListener {
 
     }
 
-    @Override
-    public void setConsumerHandle(IConsumerHandle consumer) {
-        this.consumerHandle = consumer;
-    }
 
     @Override
     public IConsumerHandle getConsumerHandle() {
         return this.consumerHandle;
     }
 
-    @Override
-    public void start() throws MQConsumeException {
+
+    public void start() throws Exception {
         KafkaConsumer<byte[], byte[]> consumer = this.createConsumer();
 
         TicdcEventFilter filter = new TicdcEventFilter();
@@ -103,7 +108,11 @@ public class KafkaMQListener implements IMQListener {
             while (true) {
                 ConsumerRecords<byte[], byte[]> records = consumer.poll(CONSUMER_POLL_TIME_OUT);
                 records.forEach((record) -> {
-                    parseKafkaMessage(filter, new KafkaMessage(record.key(), record.value()));
+                    try {
+                        parseKafkaMessage(filter, new KafkaMessage(record.key(), record.value()));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 });
             }
         }, "msg_consume_thread");
@@ -112,7 +121,7 @@ public class KafkaMQListener implements IMQListener {
 
     }
 
-    private void parseKafkaMessage(TicdcEventFilter filter, KafkaMessage kafkaMessage) {
+    private void parseKafkaMessage(TicdcEventFilter filter, KafkaMessage kafkaMessage) throws Exception {
         TicdcEventDecoder ticdcEventDecoder = new TicdcEventDecoder(kafkaMessage);
         while (ticdcEventDecoder.hasNext()) {
             TicdcEventData data = ticdcEventDecoder.next();
@@ -121,7 +130,7 @@ public class KafkaMQListener implements IMQListener {
                         data.getTicdcEventValue().getKafkaPartition(), data.getTicdcEventKey().getTs());
                 if (ok) {
                     if (this.focusTags.contains(data.getTicdcEventKey().getTbl())) {
-                        this.consumerHandle.consume(convert(data));
+                        this.consumerHandle.consume(convert(data), null);
                     }
                 } else {
                     // ignore duplicated messages

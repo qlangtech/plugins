@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.async.message.client.to.impl;
 
@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Set;
 
 /*
  *
@@ -37,7 +38,7 @@ public class AsyncMsgRM implements AsyncMsg {
 
     private MessageExt messageExt;
 
-    private final IAsyncMsgDeserialize deserialize;
+    private final IAsyncMsgDeserialize<DTO> deserialize;
 
     public AsyncMsgRM(MessageExt messageExt, IAsyncMsgDeserialize deserialize) {
         this.messageExt = messageExt;
@@ -46,6 +47,12 @@ public class AsyncMsgRM implements AsyncMsg {
         }
         this.deserialize = deserialize;
     }
+
+    @Override
+    public Object getSource() throws IOException {
+        return null;
+    }
+
 
     /**
      * 取消息体，已经反序列化
@@ -61,6 +68,11 @@ public class AsyncMsgRM implements AsyncMsg {
     }
 
     @Override
+    public Set<String> getFocusTabs() {
+        return null;
+    }
+
+    @Override
     public String getTopic() {
         return messageExt.getTopic();
     }
@@ -70,7 +82,7 @@ public class AsyncMsgRM implements AsyncMsg {
         return messageExt.getTags();
     }
 
-   // @Override
+    // @Override
     public String getKey() {
         return messageExt.getKeys();
     }
@@ -90,7 +102,7 @@ public class AsyncMsgRM implements AsyncMsg {
      *
      * @return
      */
-  //  @Override
+    //  @Override
     public int getReconsumeTimes() {
         return messageExt.getReconsumeTimes();
     }
@@ -100,12 +112,12 @@ public class AsyncMsgRM implements AsyncMsg {
      *
      * @return
      */
-  //  @Override
+    //  @Override
     public long getStartDeliverTime() {
         return messageExt.getBornTimestamp();
     }
 
-  //  @Override
+    //  @Override
     public String getOriginMsgID() {
         return MsgUtils.getOriginMsgId(messageExt);
     }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--~
+  ~ Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
+  ~ <p>
+  ~   This program is free software: you can use, redistribute, and/or modify
+  ~   it under the terms of the GNU Affero General Public License, version 3
+  ~   or later ("AGPL"), as published by the Free Software Foundation.
+  ~ <p>
+  ~  This program is distributed in the hope that it will be useful, but WITHOUT
+  ~  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~   FITNESS FOR A PARTICULAR PURPOSE.
+  ~ <p>
+  ~  You should have received a copy of the GNU Affero General Public License
+  ~  along with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.qlangtech.tis</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
+        <version>3.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>tis-datax</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>tis-datax-common-plugin</module>
+        <module>tis-datax-common-rdbms-plugin</module>
+        <module>tis-datax-test-common</module>
+
+        <module>tis-datax-oss-plugin</module>
+        <module>tis-datax-elasticsearch-plugin</module>
+        <module>tis-datax-clickhouse-plugin</module>
+        <module>tis-datax-postgresql-plugin</module>
+        <module>tis-datax-mongodb-plugin</module>
+        <module>tis-datax-ftp-plugin</module>
+        <module>tis-datax-sqlserver-plugin</module>
+        <module>tis-datax-cassandra-plugin</module>
+        <module>tis-datax-oracle-plugin</module>
+        <module>tis-datax-doris-plugin</module>
+        <module>tis-ds-tidb-plugin</module>
+        <module>tis-hive-flat-table-builder-plugin</module>
+        <module>tis-ds-mysql-plugin</module>
+        <module>tis-ds-mysql-v5-plugin</module>
+        <module>tis-ds-mysql-v8-plugin</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>com.alibaba.datax</groupId>
+                <artifactId>plugin-unstructured-storage-util</artifactId>
+                <version>${alibaba.datax.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-common</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugin</groupId>
+                <artifactId>tis-datax-test-common</artifactId>
+                <scope>test</scope>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.datax</groupId>
+                <artifactId>datax-common</artifactId>
+                <version>${alibaba.datax.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-datax-common-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-datax-common-rdbms-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+
+    </dependencyManagement>
+
+
+</project>

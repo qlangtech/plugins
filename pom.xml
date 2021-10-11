@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis-solr-parent</artifactId>
-        <version>2.3.0</version>
+        <version>3.0.0</version>
     </parent>
     <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-plugin-parent</artifactId>
@@ -33,33 +33,27 @@
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
     <modules>
-        <module>tis-spark-hive-server-extends</module>
+<!--        <module>tis-spark-hive-server-extends</module>-->
         <!--        <module>tis-hdfs-plugin</module>-->
+
+        <module>tis-datax</module>
+        <module>tis-incr</module>
+
         <module>tis-asyncmsg-rocketmq-plugin</module>
-        <module>tis-hive-flat-table-builder-plugin</module>
+
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
         <module>customer-plugin-test</module>
-        <module>tis-datax-common-plugin</module>
-        <module>tis-datax-common-rdbms-plugin</module>
-        <module>tis-ds-tidb-plugin</module>
-        <module>tis-ds-mysql-plugin</module>
+
+
+
+
         <module>tis-kafka-plugin</module>
         <module>tis-solr-plugin</module>
         <module>tis-local-dump-build</module>
-        <module>tis-datax-test-common</module>
-        <module>tis-datax-oss-plugin</module>
-        <module>tis-datax-elasticsearch-plugin</module>
-        <module>tis-datax-clickhouse-plugin</module>
-        <module>tis-datax-postgresql-plugin</module>
-        <module>tis-datax-mongodb-plugin</module>
-        <module>tis-datax-ftp-plugin</module>
-        <module>tis-datax-sqlserver-plugin</module>
-        <module>tis-datax-cassandra-plugin</module>
-        <module>tis-datax-oracle-plugin</module>
-        <module>tis-ds-mysql-v5-plugin</module>
-        <module>tis-ds-mysql-v8-plugin</module>
-        <module>tis-datax-doris-plugin</module>
+
+
+
 
     </modules>
 
@@ -134,51 +128,11 @@
 
     <dependencyManagement>
         <dependencies>
-
-
-
             <dependency>
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>tis-dag</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba.datax</groupId>
-                <artifactId>plugin-unstructured-storage-util</artifactId>
-                <version>${alibaba.datax.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-common</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>com.qlangtech.tis.plugin</groupId>
-                <artifactId>tis-datax-test-common</artifactId>
-                <scope>test</scope>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.alibaba.datax</groupId>
-                <artifactId>datax-common</artifactId>
-                <version>${alibaba.datax.version}</version>
-                <scope>provided</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.qlangtech.tis</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.qlangtech.tis</groupId>
-                <artifactId>tis-datax-common-rdbms-plugin</artifactId>
-                <version>${project.version}</version>
             </dependency>
 
             <dependency>

@@ -1,0 +1,18 @@
+{
+  "startupOptions": {
+    "enum": [
+      {
+        "val": "initial",
+        "label": "Initial"
+      },
+      {
+        "val": "earliest",
+        "label": "Earliest"
+      },
+      {
+        "val": "latest",
+        "label": "Latest"
+      }
+    ]
+  }
+}

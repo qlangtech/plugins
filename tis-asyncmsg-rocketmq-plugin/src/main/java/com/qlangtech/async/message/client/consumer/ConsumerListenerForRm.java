@@ -17,6 +17,9 @@ package com.qlangtech.async.message.client.consumer;
 import com.qlangtech.async.message.client.to.impl.AsyncMsgRM;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -76,10 +79,20 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
         this.deserialize = deserialize;
     }
 
+    @Override
+    public void start(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+
+    }
+
+//    @Override
+//    public void start(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs) throws MQConsumeException {
+//
+//    }
+
     /**
      * 启动，需要在bean中初始化
      */
-    @Override
+    // @Override
     public void start() throws MQConsumeException {
         try {
             /**
@@ -200,10 +213,11 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
 
         @Override
         public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-            MessageExt msg = msgs.get(0);
-            AsyncMsgRM asyncMsgRM = new AsyncMsgRM(msg, deserialize);
+            throw new UnsupportedOperationException();
+            //MessageExt msg = msgs.get(0);
+            //AsyncMsgRM asyncMsgRM = new AsyncMsgRM(msg, deserialize);
             // ActiveSpan activeSpan = buildSpan(msg);
-            consumerHandle.consume(asyncMsgRM);
+            //  consumerHandle.consume(asyncMsgRM);
 //            boolean ret = consumerHandle.consume(asyncMsgRM);
 //            if (!ret) {
 //                logger.error("consume MQ failed,msgID:" + msg.getMsgId());
@@ -212,7 +226,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
 //            }
             // }
             //return ret ? ConsumeConcurrentlyStatus.CONSUME_SUCCESS : ConsumeConcurrentlyStatus.RECONSUME_LATER;
-            return null;
+            // return null;
         }
     }
 
@@ -220,11 +234,12 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
 
         @Override
         public ConsumeOrderlyStatus consumeMessage(List<MessageExt> msgs, ConsumeOrderlyContext context) {
+
             MessageExt msg = msgs.get(0);
             AsyncMsgRM asyncMsgRM = new AsyncMsgRM(msg, deserialize);
             // ActiveSpan activeSpan = buildSpan(msg);
 
-            consumerHandle.consume(asyncMsgRM);
+            //  consumerHandle.consume(asyncMsgRM);
             return null;
 
 //            boolean ret = consumerHandle.consume(asyncMsgRM);

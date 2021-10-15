@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DBConfigGetter;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
 import org.apache.commons.compress.utils.Lists;
@@ -59,8 +60,9 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
     }
 
 
+
     @Override
-    public void start(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(DBConfigGetter dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             // dataSource.getDescriptor().getDisplayName();
             SourceChannel sourceChannel = new SourceChannel(getMySqlSourceFunction(dataSource, tabs));
@@ -75,9 +77,10 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
 
 
     //https://ververica.github.io/flink-cdc-connectors/master/
-    private List<SourceFunction<DTO>> getMySqlSourceFunction(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs) {
+    private List<SourceFunction<DTO>> getMySqlSourceFunction(DBConfigGetter dataSource, List<ISelectedTab> tabs) {
 
         try {
+            BasicDataSourceFactory dsFactory = dataSource.getBasicDataSource();
             List<SourceFunction<DTO>> sourceFuncs = Lists.newArrayList();
             DBConfig dbConfig = dataSource.getDbConfig();
             Map<String, List<String>> ip2dbs = Maps.newHashMap();
@@ -107,11 +110,11 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
                 debeziumProperties.put("snapshot.locking.mode", "none");// do not use lock
                 sourceFuncs.add(MySqlSource.<DTO>builder()
                         .hostname(entry.getKey())
-                        .port(dataSource.port)
+                        .port(dsFactory.port)
                         .databaseList(entry.getValue().toArray(new String[entry.getValue().size()])) // monitor all tables under inventory database
                         .tableList(tbs.toArray(new String[tbs.size()]))
-                        .username(dataSource.getUserName())
-                        .password(dataSource.getPassword())
+                        .username(dsFactory.getUserName())
+                        .password(dsFactory.getPassword())
                         .startupOptions(sourceFactory.getStartupOptions())
                         .debeziumProperties(debeziumProperties)
                         //.deserializer(new JsonStringDebeziumDeserializationSchema()) // converts SourceRecord to JSON String

@@ -25,12 +25,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <artifactId>tis-flink-client</artifactId>
+    <artifactId>tis-realtime-flink-launch</artifactId>
+
     <dependencies>
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-sql-parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
         </dependency>
     </dependencies>
 

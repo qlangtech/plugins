@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, DBConfigGetter, KeyedPluginStore.IPluginKeyAware {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -98,11 +98,19 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
 
 
-
-
     @Override
     public void setKey(KeyedPluginStore.Key key) {
         this.dataXName = key.keyVal.getVal();
+    }
+
+    @Override
+    public DBConfig getDbConfig() {
+        return getBasicDataSource().getDbConfig();
+    }
+
+    @Override
+    public BasicDataSourceFactory getBasicDataSource() {
+        return (BasicDataSourceFactory) getDataSourceFactory();
     }
 
     @Override
@@ -214,7 +222,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                 Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
 
                 return datasource.getTableMetadata(tab)
-                        .stream().collect(Collectors.toMap((m) -> m.getKey(), (m) -> m));
+                        .stream().collect(
+                                Collectors.toMap(
+                                        (m) -> m.getKey()
+                                        , (m) -> m
+                                        , (c1, c2) -> c1));
             }
         };
     }

@@ -27,14 +27,16 @@ import org.apache.flink.streaming.api.functions.sink.{PrintSinkFunction, SinkFun
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-28 16:10
  **/
-class TISFlinkSourceHandle extends BasicFlinkSourceHandle  {
+class TISFlinkSourceHandle extends BasicFlinkSourceHandle {
   /**
    * 处理各个表对应的数据流
    *
    * @param
    */
   override protected def processTableStream(streamMap: util.Map[String, DataStream[DTO]], sinkFunction: SinkFunction[DTO]): Unit = {
-    val waitinginstanceinfoStream = streamMap.get("waitinginstanceinfo")
+    // val waitinginstanceinfoStream = streamMap.get("waitinginstanceinfo")
+
+    val waitinginstanceinfoStream = streamMap.get("instancedetail")
 
     //        stream = stream.keyBy((d) -> d.getAfter().get("waitinginstance_id"))
     //                .window(EventTimeSessionWindows.withGap(Time.seconds(5)))
@@ -44,7 +46,7 @@ class TISFlinkSourceHandle extends BasicFlinkSourceHandle  {
     //                });
 
 
-    waitinginstanceinfoStream.addSink(sinkFunction)
+    waitinginstanceinfoStream.addSink(sinkFunction).setParallelism(1)
     waitinginstanceinfoStream.addSink(new PrintSinkFunction[DTO])
 
   }

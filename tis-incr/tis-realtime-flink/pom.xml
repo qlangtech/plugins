@@ -25,9 +25,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qlangtech.tis</groupId>
+    <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-realtime-flink</artifactId>
-    <packaging>jar</packaging>
+    <packaging>tpi</packaging>
 
     <properties>
 
@@ -37,33 +37,30 @@
     <dependencies>
 
         <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.objenesis</groupId>
+                    <artifactId>objenesis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
         </dependency>
-
-
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-dependency</artifactId>
         </dependency>
 
         <!-- scala start -->
@@ -87,8 +84,7 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-dag</artifactId>
-            <version>3.0.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- scala end -->
 

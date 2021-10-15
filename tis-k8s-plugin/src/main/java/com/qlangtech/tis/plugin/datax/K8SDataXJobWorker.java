@@ -319,7 +319,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         objectReference = new V2beta1CrossVersionObjectReference();
         objectReference.setApiVersion(K8SController.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
-        objectReference.setName(K8S_INSTANCE_NAME);
+        objectReference.setName(K8S_INSTANCE_NAME.getK8SResName());
         spec.setScaleTargetRef(objectReference);
 
         V2beta1MetricSpec monitorResource = new V2beta1MetricSpec();

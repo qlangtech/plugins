@@ -13,16 +13,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.test;
-
-import junit.framework.TestCase;
+package com.qlangtech.tis.realtime;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-10-11 11:24
+ * @create: 2021-10-15 13:39
  **/
-public class TestTISFlinkCDCMysqlSourceFunction extends TestCase {
-    public void testBinlogMonitor() throws Exception {
-        //   TISFlinkCDCMysqlSourceFunction.main(new String[]{});
-    }
+public interface FlinkSourceHandleSetter {
+    public void setTableStreamHandle(BasicFlinkSourceHandle tableStreamHandle);
 }

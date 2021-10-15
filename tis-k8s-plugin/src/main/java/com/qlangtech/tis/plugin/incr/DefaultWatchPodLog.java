@@ -1,21 +1,22 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 package com.qlangtech.tis.plugin.incr;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -60,13 +61,13 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     private final CoreV1Api api;
 
-    private final String indexName;
+    private final TargetResName indexName;
     private final String podName;
 
-  //  private final DefaultIncrK8sConfig config;
+    //  private final DefaultIncrK8sConfig config;
     private final K8sImage config;
 
-    public DefaultWatchPodLog(String indexName, String podName, ApiClient client, CoreV1Api api, final K8sImage config) {
+    public DefaultWatchPodLog(TargetResName indexName, String podName, ApiClient client, CoreV1Api api, final K8sImage config) {
         this.indexName = indexName;
         if (StringUtils.isBlank(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
@@ -102,7 +103,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     //private final ReentrantLock lock = new ReentrantLock();
 
-   public void startProcess() {
+    public void startProcess() {
         if (this.lock.compareAndSet(false, true)) {
             // try {
             logger.info("has gain the watch lock " + this.indexName);
@@ -157,12 +158,12 @@ public class DefaultWatchPodLog extends WatchPodLog {
      * @param podName
      * @return 是否是正常退出
      */
-    private boolean monitorPodLog(String indexName, String namespace, String podName) {
+    private boolean monitorPodLog(TargetResName indexName, String namespace, String podName) {
         try {
             PodLogs logs = new PodLogs(this.client);
             // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
             // 显示200行
-            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName, null, 200, false);
+            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName.getK8SResName(), null, 200, false);
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             ExecuteState event = null;
             boolean allConnectionDie = false;
@@ -194,8 +195,8 @@ public class DefaultWatchPodLog extends WatchPodLog {
      * @param event
      * @return 是否所有的监听者都死了？
      */
-    private boolean sendMsg(String indexName, ExecuteState event) throws IOException {
-        event.setServiceName(indexName);
+    private boolean sendMsg(TargetResName indexName, ExecuteState event) throws IOException {
+        event.setServiceName(indexName.getName());
         // event.setLogType(LogType.INCR_DEPLOY_STATUS_CHANGE);
         boolean allConnectionDie = true;
         synchronized (this) {

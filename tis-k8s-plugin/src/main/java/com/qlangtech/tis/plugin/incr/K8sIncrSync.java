@@ -15,6 +15,7 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
@@ -90,7 +91,7 @@ public class K8sIncrSync extends K8SController //implements IRCController
     }
 
     @Override
-    public void removeInstance(String indexName) {
+    public void removeInstance(TargetResName indexName) {
         super.removeInstance(indexName);
 //        if (StringUtils.isBlank(indexName)) {
 //            throw new IllegalArgumentException("param indexName can not be null");
@@ -126,7 +127,8 @@ public class K8sIncrSync extends K8SController //implements IRCController
         // this.api.deleteNamespacedReplicationControllerCall()
     }
 
-    public void deploy(String indexName, ReplicasSpec incrSpec, final long timestamp) throws Exception {
+    @Override
+    public void deploy(TargetResName indexName, ReplicasSpec incrSpec, final long timestamp) throws Exception {
         if (timestamp < 1) {
             throw new IllegalArgumentException("argument timestamp can not small than 1");
         }
@@ -200,12 +202,12 @@ public class K8sIncrSync extends K8SController //implements IRCController
 //        api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
 //    }
 
-    private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {
+    private List<V1EnvVar> addEnvVars(TargetResName indexName, long timestamp) {
 
         EnvVarsBuilder varsBuilder = new EnvVarsBuilder("tis-incr") {
             @Override
             public String getAppOptions() {
-                return indexName + " " + timestamp;
+                return indexName.getName() + " " + timestamp;
             }
         };
         return varsBuilder.build();

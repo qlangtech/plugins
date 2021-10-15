@@ -32,8 +32,22 @@
         <module>tis-flink-cdc-plugin</module>
         <module>tis-elasticsearch7-sink-plugin</module>
         <module>tis-starrocks-sink-plugin</module>
-        <module>tis-flink-client</module>
+        <module>tis-realtime-flink-launch</module>
+        <module>tis-flink-dependency</module>
+        <!--        <module>tis-flink-client</module>-->
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-flink-dependency</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+
+
+    </dependencyManagement>
 
 
 </project>

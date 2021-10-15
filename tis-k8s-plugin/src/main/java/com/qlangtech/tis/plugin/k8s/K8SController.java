@@ -22,6 +22,7 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.Specification;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.trigger.jst.ILogListener;
@@ -65,7 +66,7 @@ public class K8SController implements IRCController {
 
 
     @Override
-    public final void relaunch(String collection, String... targetPod) {
+    public final void relaunch(TargetResName collection, String... targetPod) {
 
         //String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
         try {
@@ -87,21 +88,21 @@ public class K8SController implements IRCController {
             }
         } catch (ApiException e) {
             // throw new RuntimeException(collection, e);
-            throw K8sExceptionUtils.convert(collection, e);
+            throw K8sExceptionUtils.convert(collection.getK8SResName(), e);
         }
 
     }
 
-    private static List<V1Pod> getRCPods(CoreV1Api api, K8sImage config, String collection) throws ApiException {
+    private static List<V1Pod> getRCPods(CoreV1Api api, K8sImage config, TargetResName collection) throws ApiException {
 
         V1PodList v1PodList = api.listNamespacedPod(config.getNamespace(), null, null
-                , null, null, "app=" + collection, 100, null, 600, false);
+                , null, null, "app=" + collection.getK8SResName(), 100, null, 600, false);
         return v1PodList.getItems();
     }
 
 
-    public void removeInstance(String indexName) {
-        if (StringUtils.isBlank(indexName)) {
+    public void removeInstance(TargetResName indexName) {
+        if (indexName == null) {
             throw new IllegalArgumentException("param indexName can not be null");
         }
         if (this.config == null || StringUtils.isBlank(this.config.getNamespace())) {
@@ -115,7 +116,7 @@ public class K8SController implements IRCController {
         try {
             // this.api.deleteNamespacedReplicationControllerCall()
             Call call = this.api.deleteNamespacedReplicationControllerCall(
-                    indexName, this.config.getNamespace(), resultPrettyShow, null, null, true, null, null, null);
+                    indexName.getK8SResName(), this.config.getNamespace(), resultPrettyShow, null, null, true, null, null, null);
             client.execute(call, null);
 
             this.relaunch(indexName);
@@ -127,7 +128,7 @@ public class K8SController implements IRCController {
 //                logger.warn(indexName + e.getMessage());
 //                return;
 //            } else {
-            throw K8sExceptionUtils.convert(indexName, e); //RuntimeException(indexName + "\n" + e.getResponseBody(), e);
+            throw K8sExceptionUtils.convert(indexName.getK8SResName(), e); //RuntimeException(indexName + "\n" + e.getResponseBody(), e);
             //}
 
         }
@@ -146,7 +147,7 @@ public class K8SController implements IRCController {
     public static final String REPLICATION_CONTROLLER_VERSION = "v1";
 
     @Override
-    public void deploy(String collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
+    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
     }
 
@@ -160,21 +161,21 @@ public class K8SController implements IRCController {
      * @param envs
      * @throws ApiException
      */
-    public void createReplicationController(String name, ReplicasSpec replicasSpec, List<V1EnvVar> envs) throws ApiException {
+    public void createReplicationController(TargetResName name, ReplicasSpec replicasSpec, List<V1EnvVar> envs) throws ApiException {
         V1ReplicationController rc = new V1ReplicationController();
         V1ReplicationControllerSpec spec = new V1ReplicationControllerSpec();
         spec.setReplicas(replicasSpec.getReplicaCount());
         V1PodTemplateSpec templateSpec = new V1PodTemplateSpec();
         V1ObjectMeta meta = new V1ObjectMeta();
-        meta.setName(name);
+        meta.setName(name.getK8SResName());
         Map<String, String> labes = Maps.newHashMap();
-        labes.put("app", name);
+        labes.put("app", name.getK8SResName());
         meta.setLabels(labes);
         templateSpec.setMetadata(meta);
         V1PodSpec podSpec = new V1PodSpec();
         List<V1Container> containers = Lists.newArrayList();
         V1Container c = new V1Container();
-        c.setName(name);
+        c.setName(name.getK8SResName());
 
         Objects.requireNonNull(config, "K8sImage can not be null");
 
@@ -225,7 +226,7 @@ public class K8SController implements IRCController {
         rc.setSpec(spec);
         rc.setApiVersion(REPLICATION_CONTROLLER_VERSION);
         meta = new V1ObjectMeta();
-        meta.setName(name);
+        meta.setName(name.getK8SResName());
         rc.setMetadata(meta);
 
         api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
@@ -288,14 +289,14 @@ public class K8SController implements IRCController {
 //    }
 
     @Override
-    public RcDeployment getRCDeployment(String tisInstanceName) {
+    public RcDeployment getRCDeployment(TargetResName tisInstanceName) {
 
         Objects.requireNonNull(api, "param api can not be null");
         Objects.requireNonNull(config, "param config can not be null");
         RcDeployment rcDeployment = null;
         try {
             V1ReplicationController rc = api.readNamespacedReplicationController(
-                    tisInstanceName, config.getNamespace(), resultPrettyShow, null, null);
+                    tisInstanceName.getK8SResName(), config.getNamespace(), resultPrettyShow, null, null);
             if (rc == null) {
                 return null;
             }
@@ -395,7 +396,7 @@ public class K8SController implements IRCController {
     /**
      * 列表pod，并且显示日志
      */
-    public final WatchPodLog listPodAndWatchLog(String indexName, String podName, ILogListener listener) {
+    public final WatchPodLog listPodAndWatchLog(TargetResName indexName, String podName, ILogListener listener) {
         DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, podName, client, api, config);
         podlog.addListener(listener);
         podlog.startProcess();

@@ -13,42 +13,16 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.test;
+package com.qlangtech.plugins.incr.flink;
 
-import com.qlangtech.tis.datax.ISelectedTab;
-
-import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-09-28 12:52
+ * @create: 2021-10-11 11:24
  **/
-public class TestSelectedTab implements ISelectedTab {
-    private final String tabName;
-    private final List<ColMeta> cols;
-
-    public TestSelectedTab(String tabName, List<ColMeta> cols) {
-        this.tabName = tabName;
-        this.cols = cols;
-    }
-
-    @Override
-    public String getName() {
-        return this.tabName;
-    }
-
-    @Override
-    public String getWhere() {
-        return null;
-    }
-
-    @Override
-    public boolean isAllCols() {
-        return false;
-    }
-
-    @Override
-    public List<ColMeta> getCols() {
-        return cols;
+public class TestTISFlinkCDCMysqlSourceFunction extends TestCase {
+    public void testBinlogMonitor() throws Exception {
+        //   TISFlinkCDCMysqlSourceFunction.main(new String[]{});
     }
 }

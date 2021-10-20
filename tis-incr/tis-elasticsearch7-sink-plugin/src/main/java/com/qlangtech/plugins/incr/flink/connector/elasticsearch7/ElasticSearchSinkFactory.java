@@ -15,6 +15,7 @@
 
 package com.qlangtech.plugins.incr.flink.connector.elasticsearch7;
 
+
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
@@ -34,8 +35,7 @@ import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureH
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
-//import org.apache.flink.types.Row;
-import org.apache.http.HttpHost;
+import com.qlangtech.org.apache.http.HttpHost;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
@@ -45,6 +45,9 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+
+//import org.apache.flink.types.Row;
+//import org.apache.http.HttpHost;
 
 //import com.qlangtech.tis.realtime.transfer.DTO;
 

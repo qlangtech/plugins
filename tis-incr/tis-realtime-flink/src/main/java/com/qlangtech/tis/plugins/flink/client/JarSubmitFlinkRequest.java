@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugins.flink.client;
@@ -19,18 +19,10 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 
-
-/**
- * @author congbai
- * @date 04/06/2018
- */
 public class JarSubmitFlinkRequest {
     private String jobName;
     private List<URL> userClassPaths;
-
     // private Resource resource;
-
-
     public List<URL> getUserClassPaths() {
         return userClassPaths;
     }
@@ -51,7 +43,7 @@ public class JarSubmitFlinkRequest {
     /**
      * 是否需要cache 下载好的jar包
      */
-    private boolean cache;
+    // private boolean cache;
 
     private String dependency;
 
@@ -65,13 +57,13 @@ public class JarSubmitFlinkRequest {
 
     private Boolean allowNonRestoredState;
 
-    public boolean isCache() {
-        return cache;
-    }
-
-    public void setCache(boolean cache) {
-        this.cache = cache;
-    }
+//    public boolean isCache() {
+//        return cache;
+//    }
+//
+//    public void setCache(boolean cache) {
+//        this.cache = cache;
+//    }
 
     public String getDependency() {
         return dependency;

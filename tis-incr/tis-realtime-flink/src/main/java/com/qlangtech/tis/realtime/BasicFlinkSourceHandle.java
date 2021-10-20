@@ -35,6 +35,7 @@ import org.apache.flink.util.OutputTag;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 //import org.apache.flink.types.Row;
@@ -120,10 +121,12 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Sou
         }
     }
 
+    AtomicInteger index = new AtomicInteger();
+
     private SingleOutputStreamOperator<DTO> getSourceStream(
             StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputTag, SourceFunction<DTO> sourceFunc) {
         return env.addSource(sourceFunc)
-                .name("rocketmq-source")
+                .name("rocketmq-source-" + index.incrementAndGet())
                 .setParallelism(1)
                 .process(new ProcessFunction<DTO, DTO>() {
                     @Override

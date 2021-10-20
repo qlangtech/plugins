@@ -23,7 +23,7 @@ public class Test {
     public static void main(String[] args) throws Exception {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        Enumeration<URL> resources = classLoader.getResources("org/apache/kafka/connect/json/JsonSerializer.class");
+        Enumeration<URL> resources = classLoader.getResources("org/apache/http/HttpHost.class");
         URL u = null;
 
         while (resources.hasMoreElements()) {
@@ -31,12 +31,12 @@ public class Test {
             System.out.println(u.toString());
         }
 
-        System.out.println("================================================");
-        resources = classLoader.getResources("com/fasterxml/jackson/core/JsonGenerator.class");
-        while (resources.hasMoreElements()) {
-            u = resources.nextElement();
-            System.out.println(u.toString());
-        }
+//        System.out.println("================================================");
+//        resources = classLoader.getResources("com/fasterxml/jackson/core/JsonGenerator.class");
+//        while (resources.hasMoreElements()) {
+//            u = resources.nextElement();
+//            System.out.println(u.toString());
+//        }
 
     }
 }

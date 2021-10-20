@@ -30,10 +30,13 @@
     <modules>
         <module>tis-realtime-flink</module>
         <module>tis-flink-cdc-plugin</module>
+        <module>tis-elasticsearch7-sink</module>
         <module>tis-elasticsearch7-sink-plugin</module>
         <module>tis-starrocks-sink-plugin</module>
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
+        <module>tis-flink-extends</module>
+
         <!--        <module>tis-flink-client</module>-->
     </modules>
 

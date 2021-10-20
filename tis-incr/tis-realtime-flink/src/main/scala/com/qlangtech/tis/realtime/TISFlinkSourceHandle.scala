@@ -46,8 +46,8 @@ class TISFlinkSourceHandle extends BasicFlinkSourceHandle {
     //                });
 
 
-    waitinginstanceinfoStream.addSink(sinkFunction).setParallelism(1)
-    waitinginstanceinfoStream.addSink(new PrintSinkFunction[DTO])
+    waitinginstanceinfoStream.addSink(sinkFunction).setParallelism(1).name("elasticserach")
+    waitinginstanceinfoStream.addSink(new PrintSinkFunction[DTO]).name("sinkPrint")
 
   }
 }

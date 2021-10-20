@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--~
+  ~ Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
+  ~ <p>
+  ~   This program is free software: you can use, redistribute, and/or modify
+  ~   it under the terms of the GNU Affero General Public License, version 3
+  ~   or later ("AGPL"), as published by the Free Software Foundation.
+  ~ <p>
+  ~  This program is distributed in the hope that it will be useful, but WITHOUT
+  ~  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~   FITNESS FOR A PARTICULAR PURPOSE.
+  ~ <p>
+  ~  You should have received a copy of the GNU Affero General Public License
+  ~  along with this program. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>tis-incr</artifactId>
+        <groupId>com.qlangtech.tis</groupId>
+        <version>3.0.0</version>
+        <relativePath>../</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.qlangtech.tis</groupId>
+    <artifactId>tis-flink-extends</artifactId>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-plugin</artifactId>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.zookeeper</groupId>
+                    <artifactId>zookeeper</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-builder-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-dependency</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Build uber jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <!--                            <shadedClassifierName>jackofall</shadedClassifierName>-->
+                            <finalName>${project.artifactId}-dist-${project.version}</finalName>
+                            <!--                        <filters>-->
+                            <!--                            &lt;!&ndash; Globally exclude log4j.properties from our JAR files. &ndash;&gt;-->
+                            <!--                            <filter>-->
+                            <!--                                <artifact>*</artifact>-->
+                            <!--                                <excludes>-->
+                            <!--                                    <exclude>org/apache/flink/runtime/util/bash/BashJavaUtils.class</exclude>-->
+                            <!--                                </excludes>-->
+                            <!--                            </filter>-->
+                            <!--                        </filters>-->
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>log4j:log4j</exclude>
+                                    <!-- Bundled separately so that users can easily switch between ZK 3.4/3.5-->
+                                    <exclude>org.slf4j:slf4j-api</exclude>
+                                    <exclude>org.codehaus.groovy:groovy-all</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <!--                        <transformers>-->
+                            <!--                            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">-->
+                            <!--                                <resource>reference.conf</resource>-->
+                            <!--                            </transformer>-->
+                            <!--                        </transformers>-->
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+
+</project>

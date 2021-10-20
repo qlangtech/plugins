@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugins.flink.client;
@@ -40,16 +40,19 @@ import java.util.function.Consumer;
 public class FlinkClient {
 
     private static final Logger logger = LoggerFactory.getLogger(FlinkClient.class);
-    private JarLoader jarLoader;
+    // private JarLoader jarLoader;
 
-    public void setJarLoader(JarLoader jarLoader) {
-        this.jarLoader = jarLoader;
-    }
+//    public void setJarLoader(JarLoader jarLoader) {
+//        this.jarLoader = jarLoader;
+//    }
 
     public void submitJar(ClusterClient clusterClient, JarSubmitFlinkRequest request, Consumer<SubmitFlinkResponse> consumer) throws Exception {
         logger.trace("start submit jar request,entryClass:{}", request.getEntryClass());
         try {
-            File jarFile = jarLoader.downLoad(request.getDependency(), request.isCache());
+            File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
+            if (!jarFile.exists()) {
+                throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
+            }
             List<String> programArgs = JarArgUtil.tokenizeArguments(request.getProgramArgs());
 
             PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
@@ -81,14 +84,9 @@ public class FlinkClient {
 //                    programArgs.toArray(new String[programArgs.size()]));
             // final ClassLoader classLoader = program.getUserCodeClassLoader();
             //  Optimizer optimizer = new Optimizer(new DataStatistics(), new DefaultCostEstimator(), new Configuration());
-
-
             JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, new Configuration(), request.getParallelism(), false);
-
-
             //FlinkPlan plan = ClusterClient.getOptimizedPlan(optimizer, program, request.getParallelism());
             // Savepoint restore settings
-
             // set up the execution environment
             // List<URL> jarFiles = FileUtil.createPath(jarFile);
             // CompletableFuture.supplyAsync(() -> {

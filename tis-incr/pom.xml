@@ -28,6 +28,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
         <module>tis-flink-cdc-plugin</module>
         <module>tis-elasticsearch7-sink</module>

@@ -24,49 +24,71 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tis-scala-compiler-dependencies</artifactId>
+    <artifactId>tis-scala-compiler</artifactId>
+    <name>tis-scala-compiler</name>
+    <packaging>jar</packaging>
 
-    <build>
-        <finalName>${project.name}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>com.qlangtech.tis</groupId>
-                <artifactId>tisasm-maven-plugin</artifactId>
-                <configuration>
-                    <descriptor>./assembly.xml</descriptor>
-                    <outputDirectory>./</outputDirectory>
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <tarLongFileMode>posix</tarLongFileMode>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <!--
+        <scala.version>2.12.4</scala.version>
+        -->
+    </properties>
 
 
     <dependencies>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-ibatis</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-plugin</artifactId>
+            <artifactId>tis-dag</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-common</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-reflect</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-sql-parser</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>ibator</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
+
+
 </project>

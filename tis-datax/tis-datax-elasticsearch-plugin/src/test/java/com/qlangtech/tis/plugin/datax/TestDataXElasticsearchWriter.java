@@ -148,12 +148,12 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         EasyMock.verify(dataxReader);
     }
 
-//    public void testRealDump() throws Exception {
-//
-//        DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
-//
-//        WriterTemplate.realExecuteDump("es-datax-writer-real-dump.json", dataXWriter);
-//    }
+    public void testRealDump() throws Exception {
+
+        DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
+
+        WriterTemplate.realExecuteDump("es-datax-writer-real-dump.json", dataXWriter);
+    }
 
     public void testMergeFromStupidModel() {
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();

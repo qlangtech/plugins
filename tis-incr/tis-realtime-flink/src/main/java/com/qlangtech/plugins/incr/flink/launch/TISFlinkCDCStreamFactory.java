@@ -17,6 +17,11 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -24,9 +29,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
-import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
-import com.qlangtech.tis.realtime.TISFlinkSourceHandle;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.flink.client.program.rest.RestClusterClient;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -36,30 +40,42 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     public static final String NAME_FLINK_CDC = "Flink-CDC";
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
+    public String name = NAME_FLINK_CDC;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
-    public String jobManagerAddress;
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String flinkCluster;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
-    public String clusterId;
+//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
+//    public String jobManagerAddress;
+//
+//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
+//    public String clusterId;
 
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer parallelism;
 
+    public RestClusterClient getFlinkCluster() {
+        FlinkCluster item = ParamsConfig.getItem(this.flinkCluster, FlinkCluster.class);
+        return item.createConfigInstance();
+    }
 
     @Override
     public IRCController getIncrSync() {
         FlinkTaskNodeController flinkTaskNodeController = new FlinkTaskNodeController(this);
-        flinkTaskNodeController.setTableStreamHandle(createTableStreamHandle());
+        //flinkTaskNodeController.setTableStreamHandle(createTableStreamHandle());
 
         return flinkTaskNodeController;
     }
 
-    private BasicFlinkSourceHandle createTableStreamHandle() {
-        return new TISFlinkSourceHandle();
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return new CompileAndPackage();
     }
+
+    // private BasicFlinkSourceHandle createTableStreamHandle() {
+    //   return new TISFlinkSourceHandle();
+    //}
 
     @Override
     public String identityValue() {
@@ -74,6 +90,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 //        }
         public DefaultDescriptor() {
             super();
+            this.registerSelectOptions("flinkCluster", () -> ParamsConfig.getItems(IFlinkCluster.class));
         }
 
         @Override

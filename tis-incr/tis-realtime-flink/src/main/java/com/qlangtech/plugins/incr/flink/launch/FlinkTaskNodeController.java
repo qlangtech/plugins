@@ -16,31 +16,34 @@
 package com.qlangtech.plugins.incr.flink.launch;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
-import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
-import com.qlangtech.tis.realtime.FlinkSourceHandleSetter;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.api.common.JobID;
+import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.JobManagerOptions;
-import org.apache.flink.configuration.RestOptions;
+import org.apache.flink.runtime.messages.Acknowledge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -50,102 +53,79 @@ import java.util.zip.CRC32;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-20 13:39
  **/
-public class FlinkTaskNodeController implements IRCController, FlinkSourceHandleSetter {
-
+public class FlinkTaskNodeController implements IRCController //, FlinkSourceHandleSetter
+{
+    private static final Logger logger = LoggerFactory.getLogger(FlinkTaskNodeController.class);
     private final TISFlinkCDCStreamFactory factory;
 
     public FlinkTaskNodeController(TISFlinkCDCStreamFactory factory) {
         this.factory = factory;
     }
 
+
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
-        String[] address = StringUtils.split(factory.jobManagerAddress, ":");
-        if (address.length != 2) {
-            throw new IllegalArgumentException("illegal jobManagerAddress:" + factory.jobManagerAddress);
-        }
-        Configuration configuration = new Configuration();
-        int port = Integer.parseInt(address[1]);
-        configuration.setString(JobManagerOptions.ADDRESS, address[0]);
-        configuration.setInteger(JobManagerOptions.PORT, port);
-        configuration.setInteger(RestOptions.PORT, port);
+        try (RestClusterClient restClient = factory.getFlinkCluster()) {
 
+            FlinkClient flinkClient = new FlinkClient();
 
-        //int port = 32440;
-//        int port = 8081;
-//        configuration.setString(JobManagerOptions.ADDRESS, "192.168.28.201");
-//        configuration.setInteger(JobManagerOptions.PORT, port);
-//        configuration.setInteger(RestOptions.PORT, port);
-        RestClusterClient restClient = new RestClusterClient<>(configuration, factory.clusterId);
-//        restClient.setPrintStatusDuringExecution(true);
-//        restClient.setDetached(true);
+            File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
 
-        FlinkClient flinkClient = new FlinkClient();
-        // JarLoader jarLoader = EasyMock.createMock("jarLoader", JarLoader.class);
+            File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
+            File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());
+            if (!streamJar.exists()) {
+                throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
+            }
 
-//        File streamJar = new File("/tmp/TopSpeedWindowing.jar");
+            JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
+            //request.setCache(true);
+            request.setDependency(streamJar.getAbsolutePath());
+            request.setParallelism(factory.parallelism);
+            request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
+            // List<URL> classPaths = Lists.newArrayList();
+            // classPaths.add((new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-flink-cdc-plugin/target/tis-flink-cdc-plugin/WEB-INF/lib")).toURL());
 
-        File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
-
-        File streamJar = new File(rootLibDir, "tis-incr/tis-realtime-flink-launch/target/tis-realtime-flink-launch.jar");
-        File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());
-        // assertTrue(, streamJar.exists());
-        if (!streamJar.exists()) {
-            throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
-        }
-
-        //EasyMock.expect(jarLoader.downLoad(EasyMock.anyString(), EasyMock.eq(true))).andReturn(streamUberJar);
-        //flinkClient.setJarLoader(jarLoader);
-
-        JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
-        //request.setCache(true);
-        request.setDependency(streamJar.getAbsolutePath());
-        request.setParallelism(factory.parallelism);
-        request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
-        // List<URL> classPaths = Lists.newArrayList();
-        // classPaths.add((new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-flink-cdc-plugin/target/tis-flink-cdc-plugin/WEB-INF/lib")).toURL());
-
-        SubModule[] subModules = new SubModule[]{
+            // SubModule[] subModules = new SubModule[]{
 //                $("tis-datax", "tis-datax-elasticsearch-plugin") //
 //                , $("tis-incr", "tis-elasticsearch7-sink-plugin") //
 //                , $("tis-incr", "tis-realtime-flink") //
 //                , $("tis-incr", "tis-flink-cdc-plugin") //
-                //        , $("tis-incr", "tis-realtime-flink-launch")
-        };
-        File subDir = null;
-        Set<String> addedFiles = Sets.newHashSet();
-        List<File> classpaths = Lists.newArrayList();
-        for (SubModule sub : subModules) {
-            subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/" + sub.module + "/WEB-INF/lib");
-            if (subDir.exists()) {
-                for (File f : subDir.listFiles()) {
-                    if (addedFiles.add(f.getName())) {
-                        classpaths.add(f);
-                    }
-                }
-                continue;
-            } else {
-                subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/dependency");
-                if (subDir.exists()) {
-                    for (File f : subDir.listFiles()) {
-                        if (addedFiles.add(f.getName())) {
-                            classpaths.add(f);
-                        }
-                    }
-                    continue;
-                }
-            }
-            throw new IllegalStateException("subModule is illegal:" + sub);
-        }
+            //        , $("tis-incr", "tis-realtime-flink-launch")
+            //};
+            File subDir = null;
+            // Set<String> addedFiles = Sets.newHashSet();
+            List<File> classpaths = Lists.newArrayList();
+//        for (SubModule sub : subModules) {
+//            subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/" + sub.module + "/WEB-INF/lib");
+//            if (subDir.exists()) {
+//                for (File f : subDir.listFiles()) {
+//                    if (addedFiles.add(f.getName())) {
+//                        classpaths.add(f);
+//                    }
+//                }
+//                continue;
+//            } else {
+//                subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/dependency");
+//                if (subDir.exists()) {
+//                    for (File f : subDir.listFiles()) {
+//                        if (addedFiles.add(f.getName())) {
+//                            classpaths.add(f);
+//                        }
+//                    }
+//                    continue;
+//                }
+//            }
+//            throw new IllegalStateException("subModule is illegal:" + sub);
+//        }
 
-        classpaths.forEach((f) -> {
-            System.out.println(f.getAbsolutePath());
-        });
-        System.out.println("==============================");
+//            classpaths.forEach((f) -> {
+//                System.out.println(f.getAbsolutePath());
+//            });
+//            System.out.println("==============================");
 
-        //     FileUtils.copyFile(streamJar, streamUberJar);
-        try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, true))) {
+            //     FileUtils.copyFile(streamJar, streamUberJar);
+            try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, true))) {
 
 
 //            try (JarInputStream jarFile = new JarInputStream(FileUtils.openInputStream(streamJar))) {
@@ -159,34 +139,34 @@ public class FlinkTaskNodeController implements IRCController, FlinkSourceHandle
 //                    jaroutput.closeEntry();
 //                }
 //            }
-            JarFile jarFile = new JarFile(streamJar);
-            jarFile.stream().forEach((f) -> {
-                try {
-                    jaroutput.putNextEntry(f);
-                    if (!f.isDirectory()) {
-                        try (InputStream content = jarFile.getInputStream(f)) {
-                            jaroutput.write(IOUtils.toByteArray(content));
+                JarFile jarFile = new JarFile(streamJar);
+                jarFile.stream().forEach((f) -> {
+                    try {
+                        jaroutput.putNextEntry(f);
+                        if (!f.isDirectory()) {
+                            try (InputStream content = jarFile.getInputStream(f)) {
+                                jaroutput.write(IOUtils.toByteArray(content));
+                            }
                         }
+                        jaroutput.closeEntry();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                    jaroutput.closeEntry();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+                });
 
-            JarEntry entry = new JarEntry("lib/");
-            entry.setTime(System.currentTimeMillis());
-            jaroutput.putNextEntry(entry);
-            jaroutput.closeEntry();
+                JarEntry entry = new JarEntry("lib/");
+                entry.setTime(System.currentTimeMillis());
+                jaroutput.putNextEntry(entry);
+                jaroutput.closeEntry();
 
-            classpaths.forEach(cp -> {
-                writeJarEntry(jaroutput, "lib/" + cp.getName(), cp);
-                try {
-                    FileUtils.copyFile(cp, new File(streamUberJar.getParentFile(), "lib/" + cp.getName()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                //  try {
+                classpaths.forEach(cp -> {
+                    writeJarEntry(jaroutput, "lib/" + cp.getName(), cp);
+                    try {
+                        FileUtils.copyFile(cp, new File(streamUberJar.getParentFile(), "lib/" + cp.getName()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    //  try {
 //                    //JarEntry entry = new JarEntry(p + "/");
 //                    entry.setTime(System.currentTimeMillis());
 //                    if (savedEntryPaths.add(entry.getName())) {
@@ -196,41 +176,84 @@ public class FlinkTaskNodeController implements IRCController, FlinkSourceHandle
 //                } catch (IOException e) {
 //                    throw new RuntimeException(e);
 //                }
+                });
+            }
+
+            JarFile jarFile = new JarFile(streamUberJar);
+            jarFile.stream().forEach((entry) -> {
+                System.out.println("-----" + entry.getName());
             });
+
+            request.setProgramArgs(collection.getName());
+            request.setDependency(streamUberJar.getAbsolutePath());
+
+            long start = System.currentTimeMillis();
+            JobID jobID = flinkClient.submitJar(restClient, request);
+
+            File incrJobFile = getIncrJobRecordFile(collection);
+            FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
         }
-
-        JarFile jarFile = new JarFile(streamUberJar);
-        jarFile.stream().forEach((entry) -> {
-            System.out.println("-----" + entry.getName());
-        });
-
-
-        request.setDependency(streamUberJar.getAbsolutePath());
-
-//        request.setUserClassPaths(classpaths.stream().map((f) -> {
-//            try {
-//                return f.toURL();
-//            } catch (MalformedURLException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }).collect(Collectors.toList()));
-
-        //   EasyMock.replay(jarLoader);
-        long start = System.currentTimeMillis();
-        //  System.out.println("start launch");
-        AtomicBoolean launchResult = new AtomicBoolean();
-        flinkClient.submitJar(restClient, request, (r) -> {
-            launchResult.set(r.isSuccess());
-        });
-
-        // assertTrue("launchResult must success", launchResult.get());
-
-        // EasyMock.verify(jarLoader);
-        if (!launchResult.get()) {
-            throw new IllegalStateException("deploy flink app falid:" + collection.getName());
-        }
-
     }
+
+    private File getIncrJobRecordFile(TargetResName collection) {
+        DataxProcessor processor = DataxProcessor.load(null, collection.getName());
+        // assertTrue("launchResult must success", launchResult.get());
+        // EasyMock.verify(jarLoader);
+        File dataXWorkDir = processor.getDataXWorkDir(null);
+        return new File(dataXWorkDir, "incrJob.log");
+    }
+
+    @Override
+    public RcDeployment getRCDeployment(TargetResName collection) {
+        RcDeployment rcDeployment = null;
+
+        JobID launchJobID = getLaunchJobID(collection);
+        if (launchJobID == null) return null;
+
+        try {
+            try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
+                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
+                JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
+                if (status == JobStatus.CANCELED || status == JobStatus.FINISHED) {
+                    return null;
+                }
+                rcDeployment = new RcDeployment();
+                return rcDeployment;
+            }
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1) {
+                return null;
+            }
+//            if (cause instanceof RestClientException) {
+//                //cause.getStackTrace()
+//                if (ExceptionUtils.indexOfType(cause, FlinkJobNotFoundException.class) > -1) {
+//                    logger.warn("flink JobId:" + launchJobID.toHexString() + " relevant job instant is not found on ServerSize");
+//                    return null;
+//                }
+//
+//            }
+            throw new RuntimeException(e);
+//            if (cause instanceof ) {
+//
+//            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JobID getLaunchJobID(TargetResName collection) {
+        try {
+            File incrJobFile = getIncrJobRecordFile(collection);
+            if (!incrJobFile.exists()) {
+                return null;
+            }
+            return JobID.fromHexString(FileUtils.readFileToString(incrJobFile, TisUTF8.get()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private static void writeJarEntry(JarOutputStream jarOutput, String entryPath, File jarFile) {
 
@@ -253,35 +276,48 @@ public class FlinkTaskNodeController implements IRCController, FlinkSourceHandle
         }
     }
 
-    private static SubModule $(String dir, String module) {
-        return new SubModule(dir, module);
-    }
-
-    private static class SubModule {
-        private final String dir;
-        private final String module;
-
-        public SubModule(String dir, String module) {
-            this.dir = dir;
-            this.module = module;
-        }
-
-        public String getFullModuleName() {
-            return dir + "/" + module;
-        }
-
-        @Override
-        public String toString() {
-            return "SubModule{" +
-                    "dir='" + dir + '\'' +
-                    ", module='" + module + '\'' +
-                    '}';
-        }
-    }
+//    private static SubModule $(String dir, String module) {
+//        return new SubModule(dir, module);
+//    }
+//
+//    private static class SubModule {
+//        private final String dir;
+//        private final String module;
+//
+//        public SubModule(String dir, String module) {
+//            this.dir = dir;
+//            this.module = module;
+//        }
+//
+//        public String getFullModuleName() {
+//            return dir + "/" + module;
+//        }
+//
+//        @Override
+//        public String toString() {
+//            return "SubModule{" +
+//                    "dir='" + dir + '\'' +
+//                    ", module='" + module + '\'' +
+//                    '}';
+//        }
+//    }
 
     @Override
     public void removeInstance(TargetResName collection) throws Exception {
-
+        try {
+            JobID launchJobID = getLaunchJobID(collection);
+            if (launchJobID == null) {
+                throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
+            }
+            try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
+                CompletableFuture<Acknowledge> result = restClient.cancel(launchJobID);
+                result.get(5, TimeUnit.SECONDS);
+                File incrJobFile = getIncrJobRecordFile(collection);
+                FileUtils.forceDelete(incrJobFile);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -289,18 +325,10 @@ public class FlinkTaskNodeController implements IRCController, FlinkSourceHandle
 
     }
 
-    @Override
-    public RcDeployment getRCDeployment(TargetResName collection) {
-        return null;
-    }
 
     @Override
     public WatchPodLog listPodAndWatchLog(TargetResName collection, String podName, ILogListener listener) {
         return null;
     }
 
-    @Override
-    public void setTableStreamHandle(BasicFlinkSourceHandle tableStreamHandle) {
-
-    }
 }

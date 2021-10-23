@@ -46,72 +46,73 @@ public class FlinkClient {
 //        this.jarLoader = jarLoader;
 //    }
 
-    public void submitJar(ClusterClient clusterClient, JarSubmitFlinkRequest request, Consumer<SubmitFlinkResponse> consumer) throws Exception {
+    public JobID submitJar(ClusterClient clusterClient, JarSubmitFlinkRequest request) throws Exception {
         logger.trace("start submit jar request,entryClass:{}", request.getEntryClass());
-        try {
-            File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
-            if (!jarFile.exists()) {
-                throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
-            }
-            List<String> programArgs = JarArgUtil.tokenizeArguments(request.getProgramArgs());
+        // try {
+        File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
+        if (!jarFile.exists()) {
+            throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
+        }
+        List<String> programArgs = JarArgUtil.tokenizeArguments(request.getProgramArgs());
 
-            PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
-            programBuilder.setEntryPointClassName(request.getEntryClass());
-            programBuilder.setJarFile(jarFile);
+        PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
+        programBuilder.setEntryPointClassName(request.getEntryClass());
+        programBuilder.setJarFile(jarFile);
 
-            if (CollectionUtils.isNotEmpty(request.getUserClassPaths())) {
-                programBuilder.setUserClassPaths(request.getUserClassPaths());
-            }
+        if (CollectionUtils.isNotEmpty(request.getUserClassPaths())) {
+            programBuilder.setUserClassPaths(request.getUserClassPaths());
+        }
 
-            if (programArgs.size() > 0) {
-                programBuilder.setArguments(programArgs.toArray(new String[programArgs.size()]));
-            }
+        if (programArgs.size() > 0) {
+            programBuilder.setArguments(programArgs.toArray(new String[programArgs.size()]));
+        }
 
-            final SavepointRestoreSettings savepointSettings;
-            String savepointPath = request.getSavepointPath();
-            if (StringUtils.isNotEmpty(savepointPath)) {
-                Boolean allowNonRestoredOpt = request.getAllowNonRestoredState();
-                boolean allowNonRestoredState = allowNonRestoredOpt != null && allowNonRestoredOpt.booleanValue();
-                savepointSettings = SavepointRestoreSettings.forPath(savepointPath, allowNonRestoredState);
-            } else {
-                savepointSettings = SavepointRestoreSettings.none();
-            }
+        final SavepointRestoreSettings savepointSettings;
+        String savepointPath = request.getSavepointPath();
+        if (StringUtils.isNotEmpty(savepointPath)) {
+            Boolean allowNonRestoredOpt = request.getAllowNonRestoredState();
+            boolean allowNonRestoredState = allowNonRestoredOpt != null && allowNonRestoredOpt.booleanValue();
+            savepointSettings = SavepointRestoreSettings.forPath(savepointPath, allowNonRestoredState);
+        } else {
+            savepointSettings = SavepointRestoreSettings.none();
+        }
 
-            programBuilder.setSavepointRestoreSettings(savepointSettings);
-            //programBuilder.setSavepointRestoreSettings();
-            PackagedProgram program = programBuilder.build();
+        programBuilder.setSavepointRestoreSettings(savepointSettings);
+        //programBuilder.setSavepointRestoreSettings();
+        PackagedProgram program = programBuilder.build();
 //            PackagedProgram program = new PackagedProgram(jarFile, request.getEntryClass(),
 //                    programArgs.toArray(new String[programArgs.size()]));
-            // final ClassLoader classLoader = program.getUserCodeClassLoader();
-            //  Optimizer optimizer = new Optimizer(new DataStatistics(), new DefaultCostEstimator(), new Configuration());
-            JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, new Configuration(), request.getParallelism(), false);
-            //FlinkPlan plan = ClusterClient.getOptimizedPlan(optimizer, program, request.getParallelism());
-            // Savepoint restore settings
-            // set up the execution environment
-            // List<URL> jarFiles = FileUtil.createPath(jarFile);
-            // CompletableFuture.supplyAsync(() -> {
-            try {
+        // final ClassLoader classLoader = program.getUserCodeClassLoader();
+        //  Optimizer optimizer = new Optimizer(new DataStatistics(), new DefaultCostEstimator(), new Configuration());
+        JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, new Configuration(), request.getParallelism(), false);
+        //FlinkPlan plan = ClusterClient.getOptimizedPlan(optimizer, program, request.getParallelism());
+        // Savepoint restore settings
+        // set up the execution environment
+        // List<URL> jarFiles = FileUtil.createPath(jarFile);
+        // CompletableFuture.supplyAsync(() -> {
+        try {
 
-                CompletableFuture<JobID> submissionResult = clusterClient.submitJob(jobGraph);
-                JobID jobId = submissionResult.get();
+            CompletableFuture<JobID> submissionResult = clusterClient.submitJob(jobGraph);
+            JobID jobId = submissionResult.get();
 //                    JobSubmissionResult submissionResult
 //                            = clusterClient.run(plan, jarFiles, Collections.emptyList(), classLoader, savepointSettings);
-                logger.trace(" submit jar request sucess,jobId:{}", submissionResult.get());
-                consumer.accept(new SubmitFlinkResponse(true, String.valueOf(jobId)));
-
-            } catch (Exception e) {
-                String term = e.getMessage() == null ? "." : (": " + e.getMessage());
-                logger.error(" submit sql request fail", e);
-                // return new SubmitFlinkResponse(term);
-                consumer.accept(new SubmitFlinkResponse(term));
-            }
-            //}).thenAccept(consumer::accept);
-
-        } catch (Throwable e) {
-//            String term = e.getMessage() == null ? "." : (": " + e.getMessage());
-//            logger.error(" submit jar request fail", e);
+            //logger.trace(" submit jar request sucess,jobId:{}", submissionResult.get());
+            //consumer.accept(new SubmitFlinkResponse(true, String.valueOf(jobId)));
+            return jobId;
+        } catch (Exception e) {
+           // String term = e.getMessage() == null ? "." : (": " + e.getMessage());
+            logger.error(" submit sql request fail", e);
+            // return new SubmitFlinkResponse(term);
+            // consumer.accept(new SubmitFlinkResponse(term));
             throw new RuntimeException(e);
         }
+        //}).thenAccept(consumer::accept);
+
+        //  } catch (Throwable e) {
+//            String term = e.getMessage() == null ? "." : (": " + e.getMessage());
+//            logger.error(" submit jar request fail", e);
+        //    throw new RuntimeException(e);
+        //}
     }
 
 }

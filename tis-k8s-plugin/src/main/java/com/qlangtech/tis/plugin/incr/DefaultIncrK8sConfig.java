@@ -15,6 +15,7 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -48,6 +49,11 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
         }
         this.incrSync = new K8sIncrSync(TIS.getPluginStore(K8sImage.class).find(k8sImage));
         return this.incrSync;
+    }
+
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        throw new UnsupportedOperationException();
     }
 
     @TISExtension()

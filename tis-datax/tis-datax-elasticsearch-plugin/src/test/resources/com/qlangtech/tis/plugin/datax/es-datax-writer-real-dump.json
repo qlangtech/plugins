@@ -42,7 +42,6 @@
     },
     "splitter": ",",
     "timeout": 666666,
-    "trySize": 22,
-    "type": "default"
+    "trySize": 22
   }
 }

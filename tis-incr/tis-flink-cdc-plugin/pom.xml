@@ -88,7 +88,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -106,8 +106,7 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
-            <version>3.0.0</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

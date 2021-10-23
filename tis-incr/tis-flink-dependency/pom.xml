@@ -56,7 +56,8 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-core</artifactId>
+            <!--NEED TO FIX-->
+            <artifactId>flink-core-test</artifactId>
             <version>${flink.version}</version>
             <!--            <scope>provided</scope>-->
         </dependency>

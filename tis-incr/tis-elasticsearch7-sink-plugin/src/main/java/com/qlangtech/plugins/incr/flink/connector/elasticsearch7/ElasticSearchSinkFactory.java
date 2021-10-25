@@ -16,6 +16,9 @@
 package com.qlangtech.plugins.incr.flink.connector.elasticsearch7;
 
 
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
+import com.alibaba.fastjson.JSONArray;
+import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
@@ -35,7 +38,6 @@ import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureH
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
-import com.qlangtech.org.apache.http.HttpHost;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
@@ -72,6 +74,10 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
     @Override
     public SinkFunction<DTO> createSinkFunction(IDataxProcessor dataxProcessor) {
 
+        DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
+        Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
+        IAliyunToken token = dataXWriter.getToken();
+
         ESTableAlias esSchema = null;
         for (Map.Entry<String, IDataxProcessor.TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
             IDataxProcessor.TableAlias value = e.getValue();
@@ -91,9 +97,36 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
             throw new IllegalStateException("has not set PK col");
         }
 
-        DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
+        /********************************************************
+         * 初始化索引Schema
+         *******************************************************/
+        JSONArray schemaCols = esSchema.getSchemaCols();
+        ESClient esClient = new ESClient();
+        esClient.createClient(token.getEndpoint(),
+                token.getAccessKeyId(),
+                token.getAccessKeySecret(),
+                false,
+                300000,
+                false,
+                false);
+        try {
+            esClient.createIndex(dataXWriter.getIndexName()
+                    , dataXWriter.type
+                    , esClient.genMappings(schemaCols, dataXWriter.type, (columnList) -> {
+                    }), dataXWriter.settings, false);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                esClient.closeJestClient();
+            } catch (Throwable e) {
 
-        IAliyunToken token = dataXWriter.getToken();
+            }
+        }
+        //if (!) {
+        // throw new IllegalStateException("create index or mapping failed indexName:" + dataXWriter.getIndexName());
+        //}
+
 
 //        Map<String, String> config = new HashMap<>();
 //        config.put("cluster.name", "my-cluster-name");

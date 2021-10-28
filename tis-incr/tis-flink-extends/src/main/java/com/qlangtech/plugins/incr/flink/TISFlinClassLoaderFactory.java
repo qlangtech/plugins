@@ -16,6 +16,7 @@
 package com.qlangtech.plugins.incr.flink;
 
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.PluginManager;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
 import org.apache.flink.runtime.execution.librarycache.FlinkUserCodeClassLoaders;
@@ -23,34 +24,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
-/**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-10-16 17:51
- **/
+
 public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
-    private static final Logger logger = LoggerFactory.getLogger(TISFlinClassLoaderFactory.class);
-
-    @Override
-    public BlobLibraryCacheManager.ClassLoaderFactory buildClientLoaderFactory(
-            FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
-            , String[] alwaysParentFirstPatterns
-            , @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
-
-//        ClassLoader parentClassLoader = TIS.get().getPluginManager().uberClassLoader;
-//
-//        return (libraryURLs) -> {
-//            return FlinkUserCodeClassLoaders.create(
-//                    classLoaderResolveOrder,
-//                    libraryURLs,
-//                    parentClassLoader,
-//                    alwaysParentFirstPatterns,
-//                    NOOP_EXCEPTION_HANDLER,
-//                    checkClassLoaderLeak);
-//        };
-        return null;
-    }
 
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildServerLoaderFactory(
@@ -59,10 +43,32 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
         return new BlobLibraryCacheManager.DefaultClassLoaderFactory(classLoaderResolveOrder
                 , alwaysParentFirstPatterns, exceptionHander, checkClassLoaderLeak) {
+
             @Override
-            protected ClassLoader getParentClassLoader() {
-                logger.info("start to create ParentClassLoader");
-                return TIS.get().getPluginManager().uberClassLoader;
+            public URLClassLoader createClassLoader(URL[] libraryURLs) {
+
+                try {
+                    PluginManager pluginManager = TIS.get().getPluginManager();
+                    if (libraryURLs.length != 1) {
+                        throw new IllegalStateException("length of libraryURLs must be 1 , but now is:" + libraryURLs.length);
+                    }
+                    for (URL lib : libraryURLs) {
+                        try (JarInputStream jarReader = new JarInputStream(lib.openStream())) {
+                            Manifest manifest = jarReader.getManifest();
+                            Attributes pluginInventory = manifest.getAttributes("plugin_inventory");
+                            if (pluginInventory == null) {
+                                throw new IllegalStateException("plugin inventory can not be empty in lib:" + lib);
+                            }
+                            for (Map.Entry<Object, Object> pluginDesc : pluginInventory.entrySet()) {
+                                pluginManager.dynamicLoadPlugin(String.valueOf(pluginDesc.getKey()));
+                            }
+                        }
+                    }
+                    return new TISChildFirstClassLoader(pluginManager.uberClassLoader, libraryURLs, this.getParentClassLoader()
+                            , this.alwaysParentFirstPatterns, this.classLoadingExceptionHandler);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
     }

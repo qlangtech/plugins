@@ -20,7 +20,7 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis</groupId>
-        <version>3.0.0</version>
+        <version>3.1.0</version>
         <relativePath>../</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -51,6 +51,16 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-dependency</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-sql-parser</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <scope>compile</scope>
         </dependency>
 
     </dependencies>

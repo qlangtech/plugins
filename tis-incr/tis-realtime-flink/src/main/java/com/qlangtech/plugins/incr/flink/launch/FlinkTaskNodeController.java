@@ -16,9 +16,10 @@
 package com.qlangtech.plugins.incr.flink.launch;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
+import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
-import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -34,6 +35,7 @@ import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.runtime.messages.Acknowledge;
+import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +67,8 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
 
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
-
+        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
         try (RestClusterClient restClient = factory.getFlinkCluster()) {
 
             FlinkClient flinkClient = new FlinkClient();
@@ -192,6 +195,8 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
 
             File incrJobFile = getIncrJobRecordFile(collection);
             FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
+        } finally {
+            Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
     }
 
@@ -204,20 +209,27 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
     }
 
     @Override
-    public RcDeployment getRCDeployment(TargetResName collection) {
-        RcDeployment rcDeployment = null;
+    public IDeploymentDetail getRCDeployment(TargetResName collection) {
+        ExtendFlinkJobDeploymentDetails rcDeployment = null;
 
         JobID launchJobID = getLaunchJobID(collection);
-        if (launchJobID == null) return null;
+        if (launchJobID == null) {
+            return null;
+        }
 
         try {
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
                 JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
-                if (status == JobStatus.CANCELED || status == JobStatus.FINISHED) {
+//                if (status == JobStatus.CANCELED || status == JobStatus.FINISHED) {
+//                    return null;
+//                }
+                if (status == null) {
                     return null;
                 }
-                rcDeployment = new RcDeployment();
+                CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
+                JobDetailsInfo jobDetailsInfo = jobDetails.get(5, TimeUnit.SECONDS);
+                rcDeployment = new ExtendFlinkJobDeploymentDetails(factory.getClusterCfg(), jobDetailsInfo);
                 return rcDeployment;
             }
         } catch (ExecutionException e) {
@@ -310,8 +322,13 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
                 throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
             }
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
-                CompletableFuture<Acknowledge> result = restClient.cancel(launchJobID);
-                result.get(5, TimeUnit.SECONDS);
+                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
+                JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
+                if (s != null && !s.isTerminalState()) {
+                    //job 任务没有终止，立即停止
+                    CompletableFuture<Acknowledge> result = restClient.cancel(launchJobID);
+                    result.get(5, TimeUnit.SECONDS);
+                }
                 File incrJobFile = getIncrJobRecordFile(collection);
                 FileUtils.forceDelete(incrJobFile);
             }

@@ -16,7 +16,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESInitialization;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -139,6 +141,51 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         metaContent.content = schemaContent;
         return metaContent;
     }
+
+    /**
+     * 当增量开始执行前，先需要初始化一下索引实例
+     *
+     * @param esSchema
+     */
+    public void initialIndex(ESTableAlias esSchema) {
+        if (esSchema == null) {
+            throw new IllegalArgumentException("param esSchema can not be null");
+        }
+        IAliyunToken token = this.getToken();
+        /********************************************************
+         * 初始化索引Schema
+         *******************************************************/
+        JSONArray schemaCols = esSchema.getSchemaCols();
+        ESClient esClient = new ESClient(ESInitialization.create(token.getEndpoint(),
+                token.getAccessKeyId(),
+                token.getAccessKeySecret(),
+                false,
+                300000,
+                false,
+                false));
+//        esClient.createClient(token.getEndpoint(),
+//                token.getAccessKeyId(),
+//                token.getAccessKeySecret(),
+//                false,
+//                300000,
+//                false,
+//                false);
+        try {
+            esClient.createIndex(this.getIndexName()
+                    , this.type
+                    , esClient.genMappings(schemaCols, this.type, (columnList) -> {
+                    }), this.settings, false);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                esClient.closeJestClient();
+            } catch (Throwable e) {
+
+            }
+        }
+    }
+
 
     @Override
     public ISchema projectionFromExpertModel(IDataxProcessor.TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
@@ -275,7 +322,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             }
         }
 
-        return null;
+        return ES_TYPE_TEXT;
     }
 
     private static final Map<ISelectedTab.DataXReaderColType, VisualType> dataXTypeMapper;
@@ -285,7 +332,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         builder.put(ISelectedTab.DataXReaderColType.Long, createInitType(ESFieldType.LONG));
         builder.put(ISelectedTab.DataXReaderColType.INT, createInitType(ESFieldType.INTEGER));
         builder.put(ISelectedTab.DataXReaderColType.Double, createInitType(ESFieldType.DOUBLE));
-        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.STRING, true));
+        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.KEYWORD));
         builder.put(ISelectedTab.DataXReaderColType.Boolean, createInitType(ESFieldType.BOOLEAN));
         builder.put(ISelectedTab.DataXReaderColType.Date, createInitType(ESFieldType.DATE));
         builder.put(ISelectedTab.DataXReaderColType.Bytes, createInitType(ESFieldType.BINARY));

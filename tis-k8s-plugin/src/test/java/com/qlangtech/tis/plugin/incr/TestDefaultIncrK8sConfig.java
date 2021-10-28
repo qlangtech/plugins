@@ -17,6 +17,7 @@ package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import junit.framework.TestCase;
@@ -45,7 +46,7 @@ public class TestDefaultIncrK8sConfig extends TestCase {
 
         assertNotNull(incrSync);
         final AtomicInteger msgReceiveCount = new AtomicInteger();
-        incrSync.listPodAndWatchLog(totalpay, podName, new ILogListener() {
+        incrSync.listPodAndWatchLog(new TargetResName(totalpay), podName, new ILogListener() {
             @Override
             public void sendMsg2Client(Object biz) throws IOException {
 

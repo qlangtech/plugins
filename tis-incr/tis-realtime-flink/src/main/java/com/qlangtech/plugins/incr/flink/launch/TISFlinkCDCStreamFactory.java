@@ -56,8 +56,12 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     public Integer parallelism;
 
     public RestClusterClient getFlinkCluster() {
-        FlinkCluster item = ParamsConfig.getItem(this.flinkCluster, FlinkCluster.class);
+        FlinkCluster item = getClusterCfg();
         return item.createConfigInstance();
+    }
+
+    FlinkCluster getClusterCfg() {
+        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.class);
     }
 
     @Override

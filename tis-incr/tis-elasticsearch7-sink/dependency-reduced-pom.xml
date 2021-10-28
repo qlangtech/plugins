@@ -3,7 +3,7 @@
   <parent>
     <artifactId>tis-incr</artifactId>
     <groupId>com.qlangtech.tis</groupId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.qlangtech.tis.plugins</groupId>
@@ -50,7 +50,7 @@
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
-      <version>3.0.0</version>
+      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

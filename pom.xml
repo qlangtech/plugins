@@ -21,12 +21,12 @@
 
     <parent>
         <groupId>com.qlangtech.tis</groupId>
-        <artifactId>tis-solr-parent</artifactId>
-        <version>3.0.0</version>
+        <artifactId>tis</artifactId>
+        <version>3.1.0</version>
     </parent>
     <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-plugin-parent</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <packaging>pom</packaging>
 
     <name>TIS Plugin Parent POM</name>

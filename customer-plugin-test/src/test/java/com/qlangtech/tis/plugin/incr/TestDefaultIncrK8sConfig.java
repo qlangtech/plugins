@@ -17,8 +17,9 @@ package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
-import com.qlangtech.tis.coredefine.module.action.RcDeployment;
 import com.qlangtech.tis.coredefine.module.action.Specification;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
 import com.qlangtech.tis.plugin.PluginStore;
 
@@ -45,7 +46,8 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
         IRCController incr = incrFactory.getIncrSync();
         assertNotNull(incr);
-        assertFalse(s4totalpay + " shall have not deploy incr instance in k8s", incr.getRCDeployment(s4totalpay) != null);
+        assertFalse(s4totalpay + " shall have not deploy incr instance in k8s"
+                , incr.getRCDeployment(new TargetResName(s4totalpay)) != null);
 
         RcDeployment incrSpec = new RcDeployment();
         incrSpec.setCpuLimit(Specification.parse("1"));
@@ -57,7 +59,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
         long timestamp = 20190820171040l;
 
         try {
-            incr.deploy(s4totalpay, incrSpec, timestamp);
+            incr.deploy(new TargetResName(s4totalpay), incrSpec, timestamp);
         } catch (Exception e) {
             throw e;
         }
@@ -67,7 +69,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
 
     public void testDeleteIncrDeployment() throws Exception {
         try {
-            incrFactory.getIncrSync().removeInstance(s4totalpay);
+            incrFactory.getIncrSync().removeInstance(new TargetResName(s4totalpay));
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

@@ -13,7 +13,7 @@
       "name":"bbb",
       "index":true,
       "store":true,
-      "type":"string",
+      "type":"text",
       "doc_values":true
     }
   ]

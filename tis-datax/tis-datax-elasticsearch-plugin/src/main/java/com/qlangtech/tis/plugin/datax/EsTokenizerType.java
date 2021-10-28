@@ -24,12 +24,15 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Map;
 
 /**
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-12 16:43
  **/
 public enum EsTokenizerType implements ISearchEngineTokenizerType {
 
-    NULL(StringUtils.lowerCase(ESFieldType.STRING.name()), "无分词"),
+    //NULL(StringUtils.lowerCase(ESFieldType.STRING.name()), "无分词"),
+    NULL("text", "无分词"),
     STANDARD("standard", "Standard"),
     SIMPLE("simple", "Simple"),
     WHITESPACE("whitespace", "Whitespace"),
@@ -45,10 +48,10 @@ public enum EsTokenizerType implements ISearchEngineTokenizerType {
         String typeName = null;
         VisualType type = null;
         for (ESFieldType t : com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType.values()) {
-            if (t == ESFieldType.STRING) {
-                // 作为tokener的一个类型
-                continue;
-            }
+//            if (t == ESFieldType.STRING) {
+//                // 作为tokener的一个类型
+//                continue;
+//            }
             typeName = StringUtils.lowerCase(t.name());
             if (t == getTokenizerType()) {
                 type = new VisualType(typeName, true) {

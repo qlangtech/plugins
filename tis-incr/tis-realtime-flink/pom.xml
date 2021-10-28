@@ -21,7 +21,7 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis</groupId>
-        <version>3.0.0</version>
+        <version>3.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -35,6 +35,31 @@
 
 
     <dependencies>
+        <!--只需要包里面的:com.qlangtech.plugins.incr.flink.TISFlinkCDCStart-->
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-flink-extends</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-builder-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-sql-parser</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-dag</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-scala-compiler</artifactId>

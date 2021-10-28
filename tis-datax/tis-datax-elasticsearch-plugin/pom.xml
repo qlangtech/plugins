@@ -20,7 +20,7 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.0.0</version>
+        <version>3.1.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -35,6 +35,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugin</groupId>
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
@@ -44,6 +50,7 @@
             <artifactId>tis-common</artifactId>
             <scope>provided</scope>
         </dependency>
+
 
         <dependency>
             <groupId>com.alibaba.datax</groupId>
@@ -63,14 +70,7 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
-            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
 </project>

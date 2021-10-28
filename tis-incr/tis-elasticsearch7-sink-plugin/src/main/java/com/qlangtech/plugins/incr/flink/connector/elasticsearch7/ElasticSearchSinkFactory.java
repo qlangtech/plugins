@@ -100,29 +100,30 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
         /********************************************************
          * 初始化索引Schema
          *******************************************************/
-        JSONArray schemaCols = esSchema.getSchemaCols();
-        ESClient esClient = new ESClient();
-        esClient.createClient(token.getEndpoint(),
-                token.getAccessKeyId(),
-                token.getAccessKeySecret(),
-                false,
-                300000,
-                false,
-                false);
-        try {
-            esClient.createIndex(dataXWriter.getIndexName()
-                    , dataXWriter.type
-                    , esClient.genMappings(schemaCols, dataXWriter.type, (columnList) -> {
-                    }), dataXWriter.settings, false);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                esClient.closeJestClient();
-            } catch (Throwable e) {
-
-            }
-        }
+        dataXWriter.initialIndex(esSchema);
+//        JSONArray schemaCols = esSchema.getSchemaCols();
+//        ESClient esClient = new ESClient();
+//        esClient.createClient(token.getEndpoint(),
+//                token.getAccessKeyId(),
+//                token.getAccessKeySecret(),
+//                false,
+//                300000,
+//                false,
+//                false);
+//        try {
+//            esClient.createIndex(dataXWriter.getIndexName()
+//                    , dataXWriter.type
+//                    , esClient.genMappings(schemaCols, dataXWriter.type, (columnList) -> {
+//                    }), dataXWriter.settings, false);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            try {
+//                esClient.closeJestClient();
+//            } catch (Throwable e) {
+//
+//            }
+//        }
         //if (!) {
         // throw new IllegalStateException("create index or mapping failed indexName:" + dataXWriter.getIndexName());
         //}

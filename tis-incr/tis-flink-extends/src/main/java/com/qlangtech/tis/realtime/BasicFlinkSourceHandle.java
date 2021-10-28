@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.realtime;
@@ -26,10 +26,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -95,46 +93,28 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Sou
      */
     protected abstract void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFunction<DTO> sinkFunction);
 
-    protected static class DTOStream implements Serializable {
-        private final OutputTag<DTO> outputTag;
-        private transient DataStream<DTO> stream;
-
-        public DTOStream(OutputTag<DTO> outputTag) {
-            this.outputTag = outputTag;
-        }
-
-        public DataStream<DTO> getStream() {
-            return this.stream;
-        }
-
-        private void addStream(SingleOutputStreamOperator<DTO> mainStream) {
-            if (stream == null) {
-                stream = mainStream.getSideOutput(outputTag);
-            } else {
-                stream = stream.union(mainStream.getSideOutput(outputTag));
-            }
-        }
-    }
-
     AtomicInteger index = new AtomicInteger();
 
     private SingleOutputStreamOperator<DTO> getSourceStream(
-            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputTag, SourceFunction<DTO> sourceFunc) {
+            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputStream, SourceFunction<DTO> sourceFunc) {
+
+
         return env.addSource(sourceFunc)
                 .name("source-" + index.incrementAndGet())
                 .setParallelism(1)
-                .process(new ProcessFunction<DTO, DTO>() {
-                    @Override
-                    public void processElement(DTO in, Context ctx, Collector<DTO> out) throws Exception {
-                        //side_output: https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/side_output.html
-                        final String tabName = in.getTableName();// String.valueOf(in.getAfter().get(DTOTypeInfo.KEY_FIELD_TABLE_NAME));
-                        DTOStream outputTag = tab2OutputTag.get(tabName);
-                        if (outputTag == null) {
-                            throw new IllegalStateException("target table:" + tabName + " can not find relevant in tab2OutputTag");
-                        }
-                        ctx.output(outputTag.outputTag, in);
-                    }
-                });
+                .process(new SourceProcessFunction(tab2OutputStream.entrySet().stream().collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue().outputTag))));
+//                .process(new ProcessFunction<DTO, DTO>() {
+//                    @Override
+//                    public void processElement(DTO in, Context ctx, Collector<DTO> out) throws Exception {
+//                        //side_output: https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/side_output.html
+//                        final String tabName = in.getTableName();// String.valueOf(in.getAfter().get(DTOTypeInfo.KEY_FIELD_TABLE_NAME));
+//                        DTOStream outputTag = tab2OutputTag.get(tabName);
+//                        if (outputTag == null) {
+//                            throw new IllegalStateException("target table:" + tabName + " can not find relevant in tab2OutputTag");
+//                        }
+//                        ctx.output(outputTag.outputTag, in);
+//                    }
+//                });
     }
 
 

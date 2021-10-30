@@ -60,10 +60,14 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
             super();
         }
 
-
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.MySQL;
         }
     }
 }

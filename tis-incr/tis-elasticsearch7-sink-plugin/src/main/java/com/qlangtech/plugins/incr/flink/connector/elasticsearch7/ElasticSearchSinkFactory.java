@@ -16,10 +16,9 @@
 package com.qlangtech.plugins.incr.flink.connector.elasticsearch7;
 
 
-import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
-import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
@@ -218,6 +217,10 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
         @Override
         public String getDisplayName() {
             return DISPLAY_NAME_FLINK_CDC_SINK;
+        }
+        @Override
+        protected IDataXPluginMeta.EndType getTargetType() {
+            return IDataXPluginMeta.EndType.ElasticSearch;
         }
     }
 }

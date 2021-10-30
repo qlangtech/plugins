@@ -18,6 +18,7 @@ package com.qlangtech.async.message.client.consumer;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -26,6 +27,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.admin.ConsumeStats;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
+
+import java.util.Optional;
 
 /**
  * 基于rockmq的消息监听器，插件实现
@@ -134,11 +137,16 @@ public class RocketMQListenerFactory extends MQListenerFactory {
     }
 
     @TISExtension(ordinal = 0)
-    public static class DefaultDescriptor extends Descriptor<MQListenerFactory> {
+    public static class DefaultDescriptor extends BaseDescriptor {
 
         @Override
         public String getDisplayName() {
             return "RocketMq";
+        }
+
+        @Override
+        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+            return Optional.empty();
         }
 
         // private static final Pattern spec_pattern = Pattern.compile("[\\da-z_]+");

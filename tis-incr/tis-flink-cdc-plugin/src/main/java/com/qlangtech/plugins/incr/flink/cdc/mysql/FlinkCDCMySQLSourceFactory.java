@@ -18,7 +18,7 @@ package com.qlangtech.plugins.incr.flink.cdc.mysql;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -67,10 +68,15 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<MQListenerFactory> {
+    public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {
             return "Flink-CDC-MySQL";
+        }
+
+        @Override
+        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+            return Optional.of(IDataXPluginMeta.EndType.MySQL);
         }
     }
 }

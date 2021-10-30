@@ -17,11 +17,14 @@ package com.qlangtech.async.message.client.kafka;
 
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+
+import java.util.Optional;
 
 /**
  * @author: baisui 百岁
@@ -65,10 +68,14 @@ public class TiKVKafkaMQListenerFactory extends MQListenerFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<MQListenerFactory> {
+    public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {
             return "TiCDC-Kafka";
+        }
+        @Override
+        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+            return Optional.empty();
         }
     }
 }

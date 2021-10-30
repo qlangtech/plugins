@@ -419,6 +419,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IAliyunToken.class));
         }
 
+        @Override
+        protected EndType getEndType() {
+            return EndType.ElasticSearch;
+        }
+
         public boolean validateSplitter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             String splitter = StringEscapeUtils.unescapeJava(value);
             if (StringUtils.length(splitter) != 1) {

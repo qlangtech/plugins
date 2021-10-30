@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.plugins.incr.flink;
@@ -31,6 +31,7 @@ import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.sql.parser.stream.generate.MergeData;
 import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,14 @@ import java.util.Objects;
  **/
 public class TISFlinkCDCStart {
     // static final String dataxName = "mysql_elastic";
+    public static final String TIS_APP_NAME = "tis_app_name";
     private static final Logger logger = LoggerFactory.getLogger(TISFlinkCDCStart.class);
+
+    public static String convertCfgPropertyKey(String key, boolean serialize) {
+        return serialize ?
+                StringUtils.replace(key, ".", "_")
+                : StringUtils.replace(key, "_", ".");
+    }
 
     public static void main(String[] args) throws Exception {
 

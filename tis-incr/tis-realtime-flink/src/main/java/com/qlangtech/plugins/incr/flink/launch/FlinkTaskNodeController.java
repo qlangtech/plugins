@@ -15,13 +15,14 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
-import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
@@ -42,21 +43,18 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
+import java.util.jar.*;
 import java.util.zip.CRC32;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-20 13:39
  **/
-public class FlinkTaskNodeController implements IRCController //, FlinkSourceHandleSetter
-{
+public class FlinkTaskNodeController implements IRCController {
     private static final Logger logger = LoggerFactory.getLogger(FlinkTaskNodeController.class);
     private final TISFlinkCDCStreamFactory factory;
 
@@ -85,7 +83,8 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
             //request.setCache(true);
             request.setDependency(streamJar.getAbsolutePath());
             request.setParallelism(factory.parallelism);
-            request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
+            // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
+            request.setEntryClass(TISFlinkCDCStart.class.getName());
             // List<URL> classPaths = Lists.newArrayList();
             // classPaths.add((new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-flink-cdc-plugin/target/tis-flink-cdc-plugin/WEB-INF/lib")).toURL());
 
@@ -98,7 +97,7 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
             //};
             File subDir = null;
             // Set<String> addedFiles = Sets.newHashSet();
-            List<File> classpaths = Lists.newArrayList();
+            // List<File> classpaths = Lists.newArrayList();
 //        for (SubModule sub : subModules) {
 //            subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/" + sub.module + "/WEB-INF/lib");
 //            if (subDir.exists()) {
@@ -127,21 +126,24 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
 //            });
 //            System.out.println("==============================");
 
-            //     FileUtils.copyFile(streamJar, streamUberJar);
-            try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, true))) {
+            Manifest manifest = new Manifest();
+            Map<String, Attributes> entries = manifest.getEntries();
+            Attributes attrs = new Attributes();
+            attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
+            // 传递App名称
+            entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
 
+            final Attributes cfgAttrs = new Attributes();
+            // 传递Config变量
+            Config.getInstance().visitKeyValPair((e) -> {
+                cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
+            });
+            entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
 
-//            try (JarInputStream jarFile = new JarInputStream(FileUtils.openInputStream(streamJar))) {
-//                JarEntry entry = null;
-//                while ((entry = jarFile.getNextJarEntry()) != null) {
-//                    jaroutput.putNextEntry(entry);
-//                    if(!entry.isDirectory()){
-//                        jarFile.read()
-//                        jaroutput.write(entry.getSize());
-//                    }
-//                    jaroutput.closeEntry();
-//                }
-//            }
+            //FileUtils.copyFile(streamJar, streamUberJar);
+            // 删除一下以确保每次文件是更新的，以免出现诡异的问题
+            // FileUtils.deleteQuietly(streamUberJar);
+            try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, false), manifest)) {
                 JarFile jarFile = new JarFile(streamJar);
                 jarFile.stream().forEach((f) -> {
                     try {
@@ -157,29 +159,24 @@ public class FlinkTaskNodeController implements IRCController //, FlinkSourceHan
                     }
                 });
 
-                JarEntry entry = new JarEntry("lib/");
+//                JarEntry entry = new JarEntry("lib/");
+//                entry.setTime(System.currentTimeMillis());
+//                jaroutput.putNextEntry(entry);
+//                jaroutput.closeEntry();
+
+                JarEntry entry = new JarEntry("META-INF/");
                 entry.setTime(System.currentTimeMillis());
                 jaroutput.putNextEntry(entry);
                 jaroutput.closeEntry();
 
-                classpaths.forEach(cp -> {
-                    writeJarEntry(jaroutput, "lib/" + cp.getName(), cp);
-                    try {
-                        FileUtils.copyFile(cp, new File(streamUberJar.getParentFile(), "lib/" + cp.getName()));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    //  try {
-//                    //JarEntry entry = new JarEntry(p + "/");
-//                    entry.setTime(System.currentTimeMillis());
-//                    if (savedEntryPaths.add(entry.getName())) {
-//                        jaroutput.putNextEntry(entry);
-//                        jaroutput.closeEntry();
+//                classpaths.forEach(cp -> {
+//                    writeJarEntry(jaroutput, "lib/" + cp.getName(), cp);
+//                    try {
+//                        FileUtils.copyFile(cp, new File(streamUberJar.getParentFile(), "lib/" + cp.getName()));
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
 //                    }
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-                });
+//                });
             }
 
             JarFile jarFile = new JarFile(streamUberJar);

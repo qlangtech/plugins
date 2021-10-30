@@ -59,6 +59,7 @@ public class FlinkClient {
         programBuilder.setEntryPointClassName(request.getEntryClass());
         programBuilder.setJarFile(jarFile);
 
+
         if (CollectionUtils.isNotEmpty(request.getUserClassPaths())) {
             programBuilder.setUserClassPaths(request.getUserClassPaths());
         }

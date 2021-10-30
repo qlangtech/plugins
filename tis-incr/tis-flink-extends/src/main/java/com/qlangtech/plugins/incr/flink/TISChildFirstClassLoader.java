@@ -77,6 +77,11 @@ public class TISChildFirstClassLoader extends FlinkUserCodeClassLoader {
 
         if (urlClassLoaderResource != null) {
             return urlClassLoaderResource;
+        } else {
+            urlClassLoaderResource = this.findResource(name);
+            if (urlClassLoaderResource != null) {
+                return urlClassLoaderResource;
+            }
         }
 
         // delegate to super
@@ -89,6 +94,12 @@ public class TISChildFirstClassLoader extends FlinkUserCodeClassLoader {
         Enumeration<URL> urlClassLoaderResources = uberClassloader.getResources(name); //findResources(name);
 
         final List<URL> result = new ArrayList<>();
+
+        while (urlClassLoaderResources.hasMoreElements()) {
+            result.add(urlClassLoaderResources.nextElement());
+        }
+
+        urlClassLoaderResources = this.findResources(name);
 
         while (urlClassLoaderResources.hasMoreElements()) {
             result.add(urlClassLoaderResources.nextElement());

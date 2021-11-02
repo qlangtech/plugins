@@ -63,24 +63,6 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
         if (!this.autoCreateTable) {
             return null;
         }
-        //StringBuffer script = new StringBuffer();
-//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-//        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-//        if (threadBingDataXReader instanceof DataxMySQLReader) {
-//            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-//            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-//            dsFactory.visitFirstConnection((conn) -> {
-//                Statement statement = conn.createStatement();
-//                ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom());
-//                if (!resultSet.next()) {
-//                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
-//                }
-//                String ddl = resultSet.getString(2);
-//                script.append(ddl);
-//            });
-//            return script;
-//        }
-
         // https://doris.apache.org/master/zh-CN/sql-reference/sql-statements/Data%20Definition/CREATE%20TABLE.html#create-table
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
@@ -90,13 +72,6 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
 //                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 //                }
             }
-
-//            CREATE TABLE customer_order_relation
-//                    (     `customerregister_id`   VARCHAR(150),     `waitingorder_id`       VARCHAR(150),     `kind`                  BIGINT,     `create_time`           BIGINT,     `last_ver`              BIGINT )
-//            ENGINE=olap
-//            DISTRIBUTED BY HASH(customerregister_id)
-//            BUCKETS 10
-//            PROPERTIES("replication_num" = "1");
 
             @Override
             protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {

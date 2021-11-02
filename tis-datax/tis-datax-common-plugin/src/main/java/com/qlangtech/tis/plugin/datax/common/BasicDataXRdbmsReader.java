@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, DBConfigGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -103,15 +103,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         this.dataXName = key.keyVal.getVal();
     }
 
-    @Override
-    public DBConfig getDbConfig() {
-        return getBasicDataSource().getDbConfig();
-    }
-
-    @Override
-    public BasicDataSourceFactory getBasicDataSource() {
-        return (BasicDataSourceFactory) getDataSourceFactory();
-    }
+//    @Override
+//    public DBConfig getDbConfig() {
+//        return getBasicDataSource().getDbConfig();
+//    }
+//
+//    @Override
+//    public BasicDataSourceFactory getBasicDataSource() {
+//        return (BasicDataSourceFactory) getDataSourceFactory();
+//    }
 
     @Override
     public final Iterator<IDataxReaderContext> getSubTasks() {

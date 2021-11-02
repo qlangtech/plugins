@@ -26,17 +26,25 @@
 
     <artifactId>tis-incr</artifactId>
     <packaging>pom</packaging>
+    <properties>
+<!--        <flink.cdc.version>2.0.2</flink.cdc.version>-->
+        <flink.cdc.version>2.1-SNAPSHOT</flink.cdc.version>
+
+
+    </properties>
 
     <modules>
         <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
-        <module>tis-flink-cdc-plugin</module>
-        <module>tis-elasticsearch7-sink</module>
-        <module>tis-elasticsearch7-sink-plugin</module>
-        <module>tis-starrocks-sink-plugin</module>
+        <module>tis-flink-cdc-mysql-plugin</module>
+        <module>tis-sink-elasticsearch7</module>
+        <module>tis-sink-elasticsearch7-plugin</module>
+        <module>tis-sink-starrocks-plugin</module>
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>
+        <module>tis-flink-cdc-postgresql-plugin</module>
+        <module>tis-flink-cdc-mongdb-plugin</module>
 
         <!--        <module>tis-flink-client</module>-->
     </modules>

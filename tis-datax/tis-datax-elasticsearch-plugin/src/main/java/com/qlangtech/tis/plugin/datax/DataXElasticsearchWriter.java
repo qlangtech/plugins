@@ -163,13 +163,6 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
                 300000,
                 false,
                 false));
-//        esClient.createClient(token.getEndpoint(),
-//                token.getAccessKeyId(),
-//                token.getAccessKeySecret(),
-//                false,
-//                300000,
-//                false,
-//                false);
         try {
             esClient.createIndex(this.getIndexName()
                     , this.type

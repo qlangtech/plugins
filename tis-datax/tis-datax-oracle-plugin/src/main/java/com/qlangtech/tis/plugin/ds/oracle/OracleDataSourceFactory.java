@@ -55,11 +55,6 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         return "SELECT (TABLE_NAME) FROM user_tables";
     }
 
-//    @Override
-//    public List<ColumnMetaData> getTableMetadata(final String table) {
-//        return getTableMetadata(StringUtils.upperCase(table));
-//    }
-
 
     @Override
     protected int getDataType(ResultSet cols) throws SQLException {

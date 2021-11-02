@@ -33,7 +33,7 @@
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
     <modules>
-<!--        <module>tis-spark-hive-server-extends</module>-->
+        <!--        <module>tis-spark-hive-server-extends</module>-->
         <!--        <module>tis-hdfs-plugin</module>-->
 
         <module>tis-datax</module>
@@ -46,13 +46,9 @@
         <module>customer-plugin-test</module>
 
 
-
-
         <module>tis-kafka-plugin</module>
         <module>tis-solr-plugin</module>
         <module>tis-local-dump-build</module>
-
-
 
 
     </modules>
@@ -440,6 +436,12 @@
                 <artifactId>tis-base-test</artifactId>
                 <version>${tis.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-datax-mongodb-plugin</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
         </dependencies>

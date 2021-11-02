@@ -47,9 +47,10 @@ import java.util.stream.Collectors;
 
 /**
  * https://gitee.com/mirrors/DataX/blob/master/mongodbreader/doc/mongodbreader.md
- * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
+ *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
  **/
 public class DataXMongodbReader extends DataxReader {
 
@@ -61,18 +62,10 @@ public class DataXMongodbReader extends DataxReader {
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
-    //    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String address;
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String userName;
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String userPassword;
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String collectionName;
     @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String column;
-    //    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String name;
 
     @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
     public String query;
@@ -80,7 +73,9 @@ public class DataXMongodbReader extends DataxReader {
     @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
-
+    /**
+     * end implements: DBConfigGetter
+     */
     public MangoDBDataSourceFactory getDsFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return (MangoDBDataSourceFactory) dsStore.getPlugin();
@@ -130,6 +125,7 @@ public class DataXMongodbReader extends DataxReader {
                 throw new IllegalStateException("illegal type:" + type);
         }
     }
+
 
     public static class ColCfg {
         private String name;

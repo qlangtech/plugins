@@ -46,6 +46,12 @@
             <artifactId>flink-connector-postgres-cdc</artifactId>
             <version>${flink.cdc.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-datax-common-plugin</artifactId>
+            <version>3.1.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 

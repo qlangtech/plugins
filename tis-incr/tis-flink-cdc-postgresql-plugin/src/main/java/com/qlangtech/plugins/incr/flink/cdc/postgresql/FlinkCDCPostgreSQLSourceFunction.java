@@ -22,8 +22,10 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.DBConfigGetter;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -36,6 +38,7 @@ import java.util.List;
 
 /**
  * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:17
  **/
@@ -55,10 +58,10 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener {
     }
 
     @Override
-    public void start(DBConfigGetter dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-
-            SourceChannel sourceChannel = new SourceChannel(SourceChannel.getSourceFunction(dataSource, tabs
+            BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
+            SourceChannel sourceChannel = new SourceChannel(SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory(), tabs
                     , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
                         SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
                                 .hostname(dbHost)

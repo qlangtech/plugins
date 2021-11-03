@@ -24,7 +24,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.plugin.ds.DBConfigGetter;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
@@ -122,12 +121,12 @@ public class TISFlinkCDCStart {
         IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
 
         DataxReader reader = (DataxReader) dataXProcess.getReader(null);
-        if (reader == null || !(reader instanceof DBConfigGetter)) {
+        if (reader == null) {
             throw new IllegalStateException("dataXReader is illegal");
         }
-        DBConfigGetter rdbmsReader = (DBConfigGetter) reader;
+        //  DBConfigGetter rdbmsReader = (DBConfigGetter) reader;
 
         List<ISelectedTab> tabs = reader.getSelectedTabs();
-        mq.start(rdbmsReader, tabs, dataXProcess);
+        mq.start(reader, tabs, dataXProcess);
     }
 }

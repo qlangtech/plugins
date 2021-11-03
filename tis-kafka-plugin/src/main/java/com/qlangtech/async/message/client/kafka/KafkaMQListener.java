@@ -24,8 +24,8 @@ import com.pingcap.ticdc.cdc.value.TicdcEventResolve;
 import com.pingcap.ticdc.cdc.value.TicdcEventRowChange;
 import com.qlangtech.tis.async.message.client.consumer.*;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.DBConfigGetter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -65,7 +65,7 @@ public class KafkaMQListener implements IMQListener {
     }
 
     @Override
-    public void start(DBConfigGetter rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(IDataxReader rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
 
     }
 

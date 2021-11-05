@@ -69,6 +69,16 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
 //    }
 
     @Override
+    public String getKubeConfigContent() {
+        return kubeConfigContent;
+    }
+
+    @Override
+    public String getKubeBasePath() {
+        return kubeBasePath;
+    }
+
+    @Override
     public ApiClient createConfigInstance() {
 
         ApiClient client = null;

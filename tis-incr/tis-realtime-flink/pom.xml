@@ -101,6 +101,12 @@
             <artifactId>tis-flink-dependency</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-kubernetes_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
         <!-- scala start -->
         <dependency>
             <groupId>org.scala-lang</groupId>

@@ -24,7 +24,6 @@ import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -66,11 +65,6 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);
 
-    public static final String KEY_FIELD_NAME = "k8sImage";
-
-
-    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-    public String k8sImage;
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String zkAddress;
@@ -356,18 +350,11 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         return K8S_INSTANCE_NAME + "-hpa";
     }
 
-
     @Override
     public String getZookeeperAddress() {
         return this.zkAddress;
     }
 
-    @Override
-    public K8sImage getK8SImage() {
-        K8sImage k8sImage = TIS.getPluginStore(K8sImage.class).find(this.k8sImage);
-        Objects.requireNonNull(k8sImage, "k8sImage:" + this.k8sImage + " can not be null");
-        return k8sImage;
-    }
 
     @Override
     public boolean inService() {
@@ -385,14 +372,10 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     public static final Pattern zk_path_pattern = Pattern.compile("(/[\\da-z]{1,})+");
 
     @TISExtension()
-    public static class DescriptorImpl extends Descriptor<DataXJobWorker> {
+    public static class DescriptorImpl extends BasicDescriptor {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME, () -> {
-                PluginStore<K8sImage> images = TIS.getPluginStore(K8sImage.class);
-                return images.getPlugins();
-            });
         }
 
         public boolean validateZkQueuePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

@@ -295,38 +295,16 @@ public class K8SController implements IRCController {
         Objects.requireNonNull(config, "param config can not be null");
         RcDeployment rcDeployment = null;
         try {
+
             V1ReplicationController rc = api.readNamespacedReplicationController(
                     tisInstanceName.getK8SResName(), config.getNamespace(), resultPrettyShow, null, null);
             if (rc == null) {
                 return null;
             }
             rcDeployment = new RcDeployment();
-            rcDeployment.setReplicaCount(rc.getSpec().getReplicas());
-
-            for (V1Container container : rc.getSpec().getTemplate().getSpec().getContainers()) {
-                Objects.requireNonNull(container, "container can not be null");
-                if (container.getEnv() != null) {
-                    for (V1EnvVar env : container.getEnv()) {
-                        rcDeployment.addEnv(env.getName(), env.getValue());
-                    }
-                }
-                rcDeployment.setDockerImage(container.getImage());
-
-                V1ResourceRequirements resources = container.getResources();
-                String cpu = "cpu";
-                String memory = "memory";
-                Map<String, Quantity> requests = resources.getRequests();
-                Map<String, Quantity> limits = resources.getLimits();
-
-                rcDeployment.setMemoryLimit(Specification.parse(limits.get(memory).toSuffixedString()));
-                rcDeployment.setMemoryRequest(Specification.parse(requests.get(memory).toSuffixedString()));
-                rcDeployment.setCpuLimit(Specification.parse(limits.get(cpu).toSuffixedString()));
-                rcDeployment.setCpuRequest(Specification.parse(requests.get(cpu).toSuffixedString()));
-                break;
-            }
+            fillSpecInfo(rcDeployment, rc.getSpec().getReplicas(), rc.getSpec().getTemplate());
 
             V1ReplicationControllerStatus status = rc.getStatus();
-
             RcDeployment.ReplicationControllerStatus rControlStatus = new RcDeployment.ReplicationControllerStatus();
             rControlStatus.setAvailableReplicas(status.getAvailableReplicas());
             rControlStatus.setFullyLabeledReplicas(status.getFullyLabeledReplicas());
@@ -336,43 +314,74 @@ public class K8SController implements IRCController {
 
             rcDeployment.setStatus(rControlStatus);
 
-            DateTime creationTimestamp = rc.getMetadata().getCreationTimestamp();
-            rcDeployment.setCreationTimestamp(creationTimestamp.getMillis());
+            fillCreateTimestamp(rcDeployment, rc.getMetadata());
 
 
-            List<V1Pod> rcPods = getRCPods(api, config, tisInstanceName);
-
-            //Call call = api.listNamespacedPodCall(this.config.namespace, null, null, null, null, "app=" + collection, 100, null, 600, true, null);
-//            Watch<V1Pod> podWatch = Watch.createWatch(client, call, new TypeToken<Watch.Response<V1Pod>>() {
-//            }.getType());
-            V1PodStatus podStatus = null;
-            RcDeployment.PodStatus pods;
-            V1ObjectMeta metadata = null;
-
-            for (V1Pod item : rcPods) {
-                metadata = item.getMetadata();
-                pods = new RcDeployment.PodStatus();
-                pods.setName(metadata.getName());
-                podStatus = item.getStatus();
-                int restartCount = 0;
-                for (V1ContainerStatus cstat : podStatus.getContainerStatuses()) {
-                    restartCount += cstat.getRestartCount();
-                }
-                pods.setRestartCount(restartCount);
-                pods.setPhase(podStatus.getPhase());
-                pods.setStartTime(podStatus.getStartTime().getMillis());
-                rcDeployment.addPod(pods);
-            }
+            fillPods(this.api, this.config, rcDeployment, tisInstanceName);
 
         } catch (ApiException e) {
             if (e.getCode() == 404) {
-                logger.warn("can not get collection rc deployment:" + tisInstanceName);
+                logger.warn("can not get collection rc deployment:" + tisInstanceName.getK8SResName());
                 return null;
             } else {
                 throw K8sExceptionUtils.convert("code:" + e.getCode(), e); //new RuntimeException("code:" + e.getCode() + "\n" + e.getResponseBody(), e);
             }
         }
         return rcDeployment;
+    }
+
+    public static void fillPods(CoreV1Api api, K8sImage config, RcDeployment rcDeployment, TargetResName tisInstanceName) throws ApiException {
+        List<V1Pod> rcPods = getRCPods(api, config, tisInstanceName);
+
+        V1PodStatus podStatus = null;
+        RcDeployment.PodStatus pods;
+        V1ObjectMeta metadata = null;
+
+        for (V1Pod item : rcPods) {
+            metadata = item.getMetadata();
+            pods = new RcDeployment.PodStatus();
+            pods.setName(metadata.getName());
+            podStatus = item.getStatus();
+            int restartCount = 0;
+            for (V1ContainerStatus cstat : podStatus.getContainerStatuses()) {
+                restartCount += cstat.getRestartCount();
+            }
+            pods.setRestartCount(restartCount);
+            pods.setPhase(podStatus.getPhase());
+            pods.setStartTime(podStatus.getStartTime().getMillis());
+            rcDeployment.addPod(pods);
+        }
+    }
+
+    public static void fillCreateTimestamp(RcDeployment rcDeployment, V1ObjectMeta meta) {
+        DateTime creationTimestamp = meta.getCreationTimestamp();
+        rcDeployment.setCreationTimestamp(creationTimestamp.getMillis());
+    }
+
+    public static void fillSpecInfo(RcDeployment rcDeployment, int replicasCount, V1PodTemplateSpec spec) {
+        rcDeployment.setReplicaCount(replicasCount);
+
+        for (V1Container container : spec.getSpec().getContainers()) {
+            Objects.requireNonNull(container, "container can not be null");
+            if (container.getEnv() != null) {
+                for (V1EnvVar env : container.getEnv()) {
+                    rcDeployment.addEnv(env.getName(), env.getValue());
+                }
+            }
+            rcDeployment.setDockerImage(container.getImage());
+
+            V1ResourceRequirements resources = container.getResources();
+            String cpu = "cpu";
+            String memory = "memory";
+            Map<String, Quantity> requests = resources.getRequests();
+            Map<String, Quantity> limits = resources.getLimits();
+
+            rcDeployment.setMemoryLimit(Specification.parse(limits.get(memory).toSuffixedString()));
+            rcDeployment.setMemoryRequest(Specification.parse(requests.get(memory).toSuffixedString()));
+            rcDeployment.setCpuLimit(Specification.parse(limits.get(cpu).toSuffixedString()));
+            rcDeployment.setCpuRequest(Specification.parse(requests.get(cpu).toSuffixedString()));
+            break;
+        }
     }
 
 //    /**
@@ -397,7 +406,17 @@ public class K8SController implements IRCController {
      * 列表pod，并且显示日志
      */
     public final WatchPodLog listPodAndWatchLog(TargetResName indexName, String podName, ILogListener listener) {
-        DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, podName, client, api, config);
+        return listPodAndWatchLog(client, config, indexName.getK8SResName(), indexName, podName, listener);
+//        DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, podName, client, api, config);
+//        podlog.addListener(listener);
+//        podlog.startProcess();
+//        return podlog;
+    }
+
+
+    public static WatchPodLog listPodAndWatchLog(ApiClient client, final K8sImage config
+            , String containerId, TargetResName indexName, String podName, ILogListener listener) {
+        DefaultWatchPodLog podlog = new DefaultWatchPodLog(containerId, indexName, podName, client, config);
         podlog.addListener(listener);
         podlog.startProcess();
         return podlog;

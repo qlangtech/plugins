@@ -1,16 +1,6 @@
 {
-  "k8sImage": {
-    "creator": {
-      "routerLink": "/base/basecfg/global",
-      "label": "配置",
-      "plugin": [
-        {
-          "hetero": "k8s-images",
-          "extraParam": "append_true",
-          "descName": "image"
-        }
-      ]
-    }
+  "name": {
+    "help": "实例名称，请起一个有意义的名称方便后期识别"
   },
   "zkAddress": {
     "placeholder": "127.0.0.1:2181/tis",

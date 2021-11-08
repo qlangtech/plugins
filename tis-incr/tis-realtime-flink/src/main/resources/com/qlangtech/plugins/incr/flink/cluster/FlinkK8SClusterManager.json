@@ -1,3 +1,11 @@
 {
-
+  "clusterId": {
+    "placeholder": "my-first-cluster"
+  },
+  "jmMemory": {
+    "dftVal": "1600"
+  },
+  "tmMemory": {
+    "dftVal": "1728"
+  }
 }

@@ -18,13 +18,14 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.coredefine.module.action.LoopQueue;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import com.qlangtech.tis.trigger.socket.LogType;
 import io.kubernetes.client.PodLogs;
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
@@ -59,21 +60,30 @@ public class DefaultWatchPodLog extends WatchPodLog {
 
     private final ApiClient client;
 
-    private final CoreV1Api api;
+    // private final CoreV1Api api;
 
     private final TargetResName indexName;
+    private final String containerId;
     private final String podName;
 
     //  private final DefaultIncrK8sConfig config;
     private final K8sImage config;
 
-    public DefaultWatchPodLog(TargetResName indexName, String podName, ApiClient client, CoreV1Api api, final K8sImage config) {
+    public DefaultWatchPodLog(TargetResName indexName, String podName, ApiClient client, final K8sImage config) {
+        this(indexName.getK8SResName(), indexName, podName, client, config);
+    }
+
+
+    public DefaultWatchPodLog(String containerId, TargetResName indexName, String podName, ApiClient client, final K8sImage config) {
         this.indexName = indexName;
+        this.containerId = containerId;
         if (StringUtils.isBlank(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
         }
+        if (StringUtils.isBlank(containerId)) {
+            throw new IllegalArgumentException("param containerId can not be null");
+        }
         this.podName = podName;
-        this.api = api;
         this.client = client;
         this.config = config;
     }
@@ -130,7 +140,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
                     monitorPodLog(indexName, this.config.getNamespace(), this.podName);
                     //}
                 } catch (Throwable e) {
-                    logger.error("monitor " + this.indexName + " incr_log", e);
+                    logger.error("monitor " + this.indexName.getK8SResName() + " incr_log", e);
                     throw new RuntimeException(e);
                 } finally {
                     // countdown.countDown();
@@ -163,7 +173,8 @@ public class DefaultWatchPodLog extends WatchPodLog {
             PodLogs logs = new PodLogs(this.client);
             // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
             // 显示200行
-            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, indexName.getK8SResName(), null, 200, false);
+            //
+            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, this.containerId, null, 200, false);
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             ExecuteState event = null;
             boolean allConnectionDie = false;
@@ -172,6 +183,8 @@ public class DefaultWatchPodLog extends WatchPodLog {
                 // 如果所有的监听者都死了，这里也就不用继续监听日志了
                 allConnectionDie = sendMsg(indexName, event);
             }
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert("indexName:" + indexName + ",namespace:" + namespace + ",podName:" + podName, e);
         } catch (Throwable e) {
             if (ExceptionUtils.indexOfThrowable(e, SocketTimeoutException.class) > -1) {
                 // 连接超时需要向客户端发一个信号告诉它连接失效了，以便再次重连

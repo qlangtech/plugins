@@ -17,17 +17,15 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.HorizontalpodAutoscaler;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -45,14 +43,14 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
 import io.kubernetes.client.openapi.apis.AutoscalingV2beta1Api;
 import io.kubernetes.client.openapi.models.*;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,16 +63,23 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);
 
+    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String name;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String zkAddress;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String zkQueuePath;
 
     @Override
     public String getZkQueuePath() {
         return this.zkQueuePath;
+    }
+
+    @Override
+    public String identityValue() {
+        return this.name;
     }
 
     // private transient CuratorFramework client;
@@ -136,7 +141,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 //                        "message ": "The		desired replica count is less than the minimum replica count "
 //            }]
 
-            List<RcHpaStatus.HpaConditionEvent> conditions = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/conditions"), RcHpaStatus.HpaConditionEvent.class);
+            List<RcHpaStatus.HpaConditionEvent> conditions
+                    = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/conditions"), RcHpaStatus.HpaConditionEvent.class);
 //            JSONObject condition = null;
 //            for (int i = 0; i < conditions.size(); i++) {
 //                condition = conditions.getJSONObject(i);
@@ -150,7 +156,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 //                    "currentAverageValue": "1m"
 //                }
 //            }]
-            List<RcHpaStatus.HpaMetrics> currentMetrics = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/current-metrics"), RcHpaStatus.HpaMetrics.class);
+            List<RcHpaStatus.HpaMetrics> currentMetrics
+                    = JSON.parseArray(annotations.get("autoscaling.alpha.kubernetes.io/current-metrics"), RcHpaStatus.HpaMetrics.class);
 
             RcHpaStatus hpaStatus = new RcHpaStatus(conditions, currentMetrics);
             hpaStatus.setAutoscalerStatus(autoscalerStatus);
@@ -168,7 +175,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     public void remove() {
         K8SController k8SController = getK8SController();
         //  ApiClient k8SApi = getK8SApi();
-        k8SController.removeInstance(K8S_INSTANCE_NAME);
+        k8SController.removeInstance(K8S_DATAX_INSTANCE_NAME);
         try {
             if (supportHPA()) {
                 K8sImage k8SImage = this.getK8SImage();
@@ -188,9 +195,9 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         } catch (ApiException e) {
             throw K8sExceptionUtils.convert("code:" + e.getCode(), e); //new RuntimeException("code:" + e.getCode() + ",reason:" + e.getResponseBody(), e);
         }
-        File launchToken = this.getServerLaunchTokenFile();
-        FileUtils.deleteQuietly(launchToken);
+        this.deleteLaunchToken();
     }
+
 
     private K8SController getK8SController() {
         if (k8SController == null) {
@@ -210,7 +217,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
     @Override
     public void relaunch() {
-        getK8SController().relaunch(K8S_INSTANCE_NAME);
+        getK8SController().relaunch(K8S_DATAX_INSTANCE_NAME);
     }
 
     @Override
@@ -218,19 +225,19 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         if (StringUtils.isEmpty(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
         }
-        getK8SController().relaunch(K8S_INSTANCE_NAME, podName);
+        getK8SController().relaunch(K8S_DATAX_INSTANCE_NAME, podName);
     }
 
     @Override
     public RcDeployment getRCDeployment() {
         // ApiClient api = getK8SApi();//, K8sImage config, String tisInstanceName
         // return K8sIncrSync.getK8SDeploymentMeta(new CoreV1Api(getK8SApi()), this.getK8SImage(), K8S_INSTANCE_NAME);
-        return getK8SController().getRCDeployment(K8S_INSTANCE_NAME);
+        return getK8SController().getRCDeployment(K8S_DATAX_INSTANCE_NAME);
     }
 
     @Override
     public WatchPodLog listPodAndWatchLog(String podName, ILogListener listener) {
-        return getK8SController().listPodAndWatchLog(K8S_INSTANCE_NAME, podName, listener);
+        return getK8SController().listPodAndWatchLog(K8S_DATAX_INSTANCE_NAME, podName, listener);
     }
 
     @Override
@@ -272,16 +279,14 @@ public class K8SDataXJobWorker extends DataXJobWorker {
             //  K8sImage config, CoreV1Api api, String name, ReplicasSpec incrSpec, List< V1EnvVar > envs
             // CoreV1Api k8sV1Api = new CoreV1Api(k8sClient);
             //  K8sImage k8sImage = this.getK8SImage();
-            this.getK8SController().createReplicationController(K8S_INSTANCE_NAME, replicasSpec, varsBuilder.build());
+            this.getK8SController().createReplicationController(K8S_DATAX_INSTANCE_NAME, replicasSpec, varsBuilder.build());
 
             if (supportHPA()) {
                 HorizontalpodAutoscaler hap = this.getHpa();
                 createHorizontalpodAutoscaler(k8sImage, hap);
             }
 
-            File launchToken = this.getServerLaunchTokenFile();
-            SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            FileUtils.write(launchToken, timeFormat.format(new Date()), TisUTF8.get());
+            writeLaunchToken();
 
         } catch (ApiException e) {
             logger.error(e.getResponseBody(), e);
@@ -290,6 +295,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
             throw new RuntimeException(e);
         }
     }
+
 
     private static String processDefaultHost(String address) {
         return StringUtils.replace(address, NetUtils.LOCAL_HOST_VALUE, NetUtils.getHost());
@@ -313,7 +319,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         objectReference = new V2beta1CrossVersionObjectReference();
         objectReference.setApiVersion(K8SController.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
-        objectReference.setName(K8S_INSTANCE_NAME.getK8SResName());
+        objectReference.setName(K8S_DATAX_INSTANCE_NAME.getK8SResName());
         spec.setScaleTargetRef(objectReference);
 
         V2beta1MetricSpec monitorResource = new V2beta1MetricSpec();
@@ -347,7 +353,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     }
 
     private String getHpaName() {
-        return K8S_INSTANCE_NAME + "-hpa";
+        return K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
     }
 
     @Override
@@ -355,18 +361,6 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         return this.zkAddress;
     }
 
-
-    @Override
-    public boolean inService() {
-        File launchToken = this.getServerLaunchTokenFile();
-        return launchToken.exists();
-    }
-
-    private File getServerLaunchTokenFile() {
-        PluginStore<DataXJobWorker> worderStore = TIS.getPluginStore(DataXJobWorker.class);
-        File target = worderStore.getTargetFile();
-        return new File(target.getParentFile(), (target.getName() + ".launch_token"));
-    }
 
     public static final Pattern zkhost_pattern = Pattern.compile("[\\da-z]{1}[\\da-z.]+:\\d+(/[\\da-z_\\-]{1,})*");
     public static final Pattern zk_path_pattern = Pattern.compile("(/[\\da-z]{1,})+");
@@ -394,6 +388,11 @@ public class K8SDataXJobWorker extends DataXJobWorker {
                 return false;
             }
             return true;
+        }
+
+        @Override
+        protected TargetResName getWorkerType() {
+            return DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
         }
 
         @Override

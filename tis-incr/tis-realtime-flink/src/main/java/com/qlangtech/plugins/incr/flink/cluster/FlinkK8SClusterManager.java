@@ -65,7 +65,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
 
-    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
 
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
@@ -79,10 +79,6 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
 //        return name;
 //    }
 
-    @Override
-    public String identityValue() {
-        return this.clusterId;
-    }
 
     @Override
     public void launchService() {

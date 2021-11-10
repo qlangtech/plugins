@@ -26,7 +26,6 @@
           "extraParam": "append_true"
         }
       ],
-      "routerLink": "/base/basecfg/global",
       "label": "配置"
     }
   }

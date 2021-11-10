@@ -1,9 +1,9 @@
 {
-  "name": {
+  "parallelism": {
+    "dftVal": "1"
   },
   "flinkCluster": {
     "creator": {
-      "routerLink": "/base/basecfg/global",
       "label": "配置",
       "plugin": [
         {

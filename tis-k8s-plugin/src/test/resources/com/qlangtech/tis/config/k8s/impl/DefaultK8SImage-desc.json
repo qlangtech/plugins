@@ -23,8 +23,7 @@
                 "extraParam": "append_true",
                 "hetero": "params-cfg"
               }
-            ],
-            "routerLink": "/base/basecfg/global"
+            ]
           }
         },
         "key": "k8sCfg",

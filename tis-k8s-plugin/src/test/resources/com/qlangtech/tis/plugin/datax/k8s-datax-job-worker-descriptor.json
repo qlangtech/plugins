@@ -12,8 +12,7 @@
                 "extraParam": "append_true",
                 "hetero": "k8s-images"
               }
-            ],
-            "routerLink": "/base/basecfg/global"
+            ]
           }
         },
         "key": "k8sImage",

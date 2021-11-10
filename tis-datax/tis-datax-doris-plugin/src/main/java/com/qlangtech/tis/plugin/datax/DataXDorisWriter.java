@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 /**
  * reference: https://github.com/DorisDB/DataX/blob/master/doriswriter/doc/doriswriter.md
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 09:39
  * @see com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter
@@ -139,6 +140,11 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
                 msgHandler.addFieldError(context, fieldName, e.getMessage());
                 return false;
             }
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.Doris;
         }
 
         @Override

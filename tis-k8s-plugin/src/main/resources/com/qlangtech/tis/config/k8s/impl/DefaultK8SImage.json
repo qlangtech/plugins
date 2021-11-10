@@ -4,7 +4,6 @@
   },
   "k8sCfg": {
     "creator": {
-      "routerLink": "/base/basecfg/global",
       "label": "配置",
       "plugin": [
         {

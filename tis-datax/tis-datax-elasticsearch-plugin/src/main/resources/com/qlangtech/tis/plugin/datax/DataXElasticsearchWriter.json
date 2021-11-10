@@ -2,7 +2,6 @@
   "endpoint": {
     "help": "ElasticSearch的连接地址",
     "creator": {
-      "routerLink": "/base/basecfg/global",
       "label": "管理",
       "plugin": [
         {

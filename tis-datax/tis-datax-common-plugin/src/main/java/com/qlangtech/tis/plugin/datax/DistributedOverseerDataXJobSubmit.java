@@ -89,7 +89,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                 curatorDistributedQueue = null;
             }
             if (curatorDistributedQueue == null) {
-                DataXJobWorker dataxJobWorker = DataXJobWorker.getDataxJobWorker();
+                DataXJobWorker dataxJobWorker = DataXJobWorker.getJobWorker(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
                 if (curatorClient == null) {
                     this.curatorClient = DataXJobConsumer.getCuratorFramework(dataxJobWorker.getZookeeperAddress());
                 }

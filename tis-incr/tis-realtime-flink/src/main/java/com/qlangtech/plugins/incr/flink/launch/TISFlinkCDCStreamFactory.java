@@ -40,8 +40,8 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     public static final String NAME_FLINK_CDC = "Flink-CDC";
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
-    public String name = NAME_FLINK_CDC;
+//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
+//    public String name = NAME_FLINK_CDC;
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String flinkCluster;
@@ -80,11 +80,11 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     // private BasicFlinkSourceHandle createTableStreamHandle() {
     //   return new TISFlinkSourceHandle();
     //}
-
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
+//
+//    @Override
+//    public String identityValue() {
+//        return this.name;
+//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<IncrStreamFactory> {

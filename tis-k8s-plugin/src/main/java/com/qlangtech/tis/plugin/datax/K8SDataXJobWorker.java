@@ -63,8 +63,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);
 
-    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+//    @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String name;
 
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String zkAddress;
@@ -77,10 +77,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         return this.zkQueuePath;
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
+
 
     // private transient CuratorFramework client;
     // private transient CoreV1Api k8sV1Api;

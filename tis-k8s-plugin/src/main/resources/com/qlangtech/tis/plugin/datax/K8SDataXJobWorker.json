@@ -1,7 +1,4 @@
 {
-  "name": {
-    "help": "实例名称，请起一个有意义的名称方便后期识别"
-  },
   "zkAddress": {
     "placeholder": "127.0.0.1:2181/tis",
     "help": "执行器利用基于Zookeeper的分布式队列来向K8S集群中分发DataX任务",

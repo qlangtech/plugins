@@ -15,7 +15,7 @@
 
 package com.qlangtech.plugins.incr.flink;
 
-import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.util.List;
 

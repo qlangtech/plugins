@@ -38,14 +38,6 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-doris-plugin</artifactId>
-            <version>3.1.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-doris-plugin</artifactId>
-            <version>3.1.0</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 

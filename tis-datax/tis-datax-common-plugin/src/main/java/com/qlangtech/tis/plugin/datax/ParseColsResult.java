@@ -20,7 +20,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public class ParseColsResult {
             }
             JSONObject col = null;
             String type = null;
-            ISelectedTab.DataXReaderColType parseType = null;
+            ColumnMetaData.DataType parseType = null;
             Integer index = null;
             String appValue = null;
             for (int i = 0; i < cols.size(); i++) {
@@ -112,13 +113,13 @@ public class ParseColsResult {
     }
 
     static class DataXColMeta {
-        public final ISelectedTab.DataXReaderColType parseType;
+        public final ColumnMetaData.DataType parseType;
 
         // index和value两个属性为2选1
         private int index;
         private String value;
 
-        public DataXColMeta(ISelectedTab.DataXReaderColType parseType) {
+        public DataXColMeta(ColumnMetaData.DataType parseType) {
             this.parseType = parseType;
         }
     }
@@ -146,7 +147,7 @@ public class ParseColsResult {
         }
 
         @Override
-        public List<ColMeta> getCols() {
+        public List<ISelectedTab.ColMeta> getCols() {
             if (isAllCols()) {
                 return Collections.emptyList();
             }

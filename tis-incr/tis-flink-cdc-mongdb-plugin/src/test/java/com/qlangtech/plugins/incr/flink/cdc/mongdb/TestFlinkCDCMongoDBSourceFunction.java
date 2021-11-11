@@ -17,7 +17,7 @@ package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.test.TISEasyMock;
 import junit.framework.TestCase;

@@ -91,13 +91,15 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
         processSession((session) -> {
             ColumnMetaData cmeta = null;
             ResultSet resultSet = session.execute(
-                    "SELECT column_name,type FROM system_schema.columns WHERE keyspace_name = '" + this.dbName + "' AND table_name = '" + table + "'");
+                    "SELECT column_name,type FROM system_schema.columns WHERE keyspace_name = '"
+                            + this.dbName + "' AND table_name = '" + table + "'");
             Iterator<Row> rows = resultSet.iterator();
             Row row = null;
             while (rows.hasNext()) {
                 row = rows.next();
                 //int index, String key, int type, boolean pk
-                cmeta = new ColumnMetaData(index.getAndIncrement(), row.getString(0), convertType(row.getString(1)), false);
+                cmeta = new ColumnMetaData(index.getAndIncrement(), row.getString(0)
+                        , new ColumnMetaData.DataType(convertType(row.getString(1))), false);
                 // tables.add(row.getString(0));
                 colsMeta.add(cmeta);
             }

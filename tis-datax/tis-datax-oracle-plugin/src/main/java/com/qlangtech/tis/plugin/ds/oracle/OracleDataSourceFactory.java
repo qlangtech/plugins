@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.ds.oracle;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -57,13 +58,13 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    protected int getDataType(ResultSet cols) throws SQLException {
-        int type = super.getDataType(cols);
+    protected ColumnMetaData.DataType getDataType(ResultSet cols) throws SQLException {
+        ColumnMetaData.DataType type = super.getDataType(cols);
         // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
-        if (type == Types.DECIMAL) {
+        if (type.type == Types.DECIMAL) {
             int decimalDigits = cols.getInt("decimal_digits");
             if (decimalDigits < 1) {
-                return Types.INTEGER;
+                return new ColumnMetaData.DataType(Types.INTEGER);
             }
         }
         return type;

@@ -17,7 +17,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -25,15 +24,14 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.DataDumpers;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
-import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -130,23 +128,69 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
             }
 
+            //            @Override
+//            protected String convertType(ISelectedTab.ColMeta col) {
+//                switch (col.getType()) {
+//                    case Long:
+//                        return "bigint(20)";
+//                    case INT:
+//                        return "int(11)";
+//                    case Double:
+//                        return "decimal(18,2)";
+//                    case Date:
+//                        return "date";
+//                    case STRING:
+//                    case Boolean:
+//                    case Bytes:
+//                    default:
+//                        return "varchar(50)";
+//                }
+//            }
+
+            /**
+             * https://www.runoob.com/mysql/mysql-data-types.html
+             * @param col
+             * @return
+             */
+            @Override
             protected String convertType(ISelectedTab.ColMeta col) {
-                switch (col.getType()) {
-                    case Long:
-                        return "bigint(20)";
-                    case INT:
+                ColumnMetaData.DataType type = col.getType();
+                switch (type.type) {
+                    case Types.BIT:
+                    case Types.BOOLEAN:
+                    case Types.TINYINT:
+                        return "TINYINT";
+                    case Types.SMALLINT:
+                        return "SMALLINT";
+                    case Types.INTEGER:
                         return "int(11)";
-                    case Double:
-                        return "decimal(18,2)";
-                    case Date:
-                        return "date";
-                    case STRING:
-                    case Boolean:
-                    case Bytes:
+                    case Types.BIGINT:
+                        return "BIGINT(20)";
+                    case Types.FLOAT:
+                        return "FLOAT";
+                    case Types.DOUBLE:
+                        return "DOUBLE";
+                    case Types.DECIMAL:
+                        return "DECIMAL";
+                    case Types.DATE:
+                        return "DATE";
+                    case Types.TIME:
+                        return "TIME";
+                    case Types.TIMESTAMP:
+                        return "TIMESTAMP";
+                    case Types.BLOB:
+                    case Types.BINARY:
+                    case Types.LONGVARBINARY:
+                    case Types.VARBINARY:
+                        return "BLOB";
+                    case Types.VARCHAR:
+                        return "VARCHAR(" + type.columnSize + ")";
                     default:
-                        return "varchar(50)";
+                        return "TINYTEXT";
                 }
             }
+
+
         };
         return createTableSqlBuilder.build();
     }

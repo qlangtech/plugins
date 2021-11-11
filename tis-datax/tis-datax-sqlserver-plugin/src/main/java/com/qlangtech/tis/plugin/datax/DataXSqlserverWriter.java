@@ -17,12 +17,14 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,20 +67,32 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             private String getSqlServerType(ISelectedTab.ColMeta col) {
-                switch (col.getType()) {
-                    case Long:
-                        return "bigint";
-                    case INT:
+                ColumnMetaData.DataType type = col.getType();
+                switch (type.type) {
+                    case Types.INTEGER:
+                    case Types.TINYINT:
+                    case Types.SMALLINT:
                         return "int";
-                    case Double:
+                    case Types.BIGINT:
+                        return "bigint";
+                    case Types.FLOAT:
+                    case Types.DOUBLE:
+                    case Types.DECIMAL:
                         return "decimal(8,4)";
-                    case Date:
+                    case Types.DATE:
+                    case Types.TIME:
+                    case Types.TIMESTAMP:
                         return "datetime";
-                    case STRING:
-                    case Boolean:
-                    case Bytes:
+                    case Types.BIT:
+                    case Types.BOOLEAN:
+                        return "bit";
+                    case Types.BLOB:
+                    case Types.BINARY:
+                    case Types.LONGVARBINARY:
+                    case Types.VARBINARY:
+                        return "varbinary(" + type.columnSize + ")";
                     default:
-                        return "varchar(100)";
+                        return "varchar(" + type.columnSize + ")";
                 }
             }
 

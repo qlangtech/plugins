@@ -19,7 +19,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.IPropertyType;
@@ -86,7 +85,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                                 + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                     }
                     col.setPk(colMeta.isPk());
-                    col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType()));
+                   // col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType().type));
+
+                    col.setType(colMeta.getType());
                 }
                 return tab;
             }).collect(Collectors.toList());
@@ -205,7 +206,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-        return new ColumnMetaData(index[0]++, colName, -999, false);
+        return new ColumnMetaData(index[0]++, colName, new ColumnMetaData.DataType(-999), false);
     }
 
     protected boolean isFilterUnexistCol() {

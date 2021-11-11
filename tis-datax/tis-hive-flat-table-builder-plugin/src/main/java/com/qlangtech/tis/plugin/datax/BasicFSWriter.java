@@ -18,7 +18,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -26,6 +25,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -81,9 +81,9 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
 
-    protected static SupportHiveDataType convert2HiveType(ISelectedTab.DataXReaderColType type) {
+    protected static SupportHiveDataType convert2HiveType(ColumnMetaData.DataType type) {
         Objects.requireNonNull(type, "param type can not be null");
-        switch (type) {
+        switch (type.collapse()) {
             case Long:
                 return SupportHiveDataType.BIGINT;
             case Double:

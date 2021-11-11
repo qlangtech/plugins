@@ -17,9 +17,9 @@ package com.qlangtech.tis.plugin.datax.test;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.sql.Types;
 import java.util.List;
@@ -36,16 +36,17 @@ public class TestSelectedTabs {
     public static final String tabNameOrderDetail = "orderdetail";
     public static final String tabNameTotalpayinfo = "totalpayinfo";
     public static List<ColumnMetaData> tabColsMetaOrderDetail
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
-            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
-            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
-            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
+            = Lists.newArrayList(
+            new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true),
+            new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false)
     );
     public static List<ColumnMetaData> tabColsMetaTotalpayinfo
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", Types.VARCHAR, true)
-            , new ColumnMetaData(1, "col2", Types.VARCHAR, false)
-            , new ColumnMetaData(2, "col3", Types.VARCHAR, false)
-            , new ColumnMetaData(3, "col4", Types.VARCHAR, false)
+            = Lists.newArrayList(new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true)
+            , new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false)
     );
 
     public static List<SelectedTab> createSelectedTabs() {
@@ -77,7 +78,7 @@ public class TestSelectedTabs {
         tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
             ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
             meta.setName(c);
-            meta.setType(ISelectedTab.DataXReaderColType.STRING);
+            meta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
             return meta;
         }).collect(Collectors.toList()));
         Optional<IDataxProcessor.TableMap> tableMap = Optional.of(tm);

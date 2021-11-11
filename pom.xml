@@ -125,6 +125,8 @@
     <dependencyManagement>
         <dependencies>
 
+
+
             <dependency>
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>tis-dag</artifactId>
@@ -442,6 +444,12 @@
             <dependency>
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>tis-datax-mongodb-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-doris-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

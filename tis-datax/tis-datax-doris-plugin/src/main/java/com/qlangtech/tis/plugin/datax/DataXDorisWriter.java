@@ -19,13 +19,14 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
@@ -95,23 +96,79 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
                 //script.append("DISTRIBUTED BY HASH(customerregister_id)");
             }
 
+            @Override
             protected String convertType(ISelectedTab.ColMeta col) {
-                switch (col.getType()) {
-                    case Long:
+                ColumnMetaData.DataType type = col.getType();
+                return type.accept(new ColumnMetaData.TypeVisitor<String>() {
+                    @Override
+                    public String longType(ColumnMetaData.DataType type) {
                         return "BIGINT";
-                    case INT:
-                        return "INT";
-                    case Double:
+                    }
+
+                    @Override
+                    public String doubleType(ColumnMetaData.DataType type) {
                         return "DOUBLE";
-                    case Date:
+                    }
+
+                    @Override
+                    public String dateType(ColumnMetaData.DataType type) {
                         return "DATE";
-                    case STRING:
-                    case Boolean:
-                    case Bytes:
-                    default:
-                        return "VARCHAR(150)";
-                }
+                    }
+
+                    @Override
+                    public String timestampType(ColumnMetaData.DataType type) {
+                        return "DATETIME";
+                    }
+
+                    @Override
+                    public String bitType(ColumnMetaData.DataType type) {
+                        return "bit";
+                    }
+
+                    @Override
+                    public String blobType(ColumnMetaData.DataType type) {
+                        return "BITMAP";
+                    }
+
+                    @Override
+                    public String varcharType(ColumnMetaData.DataType type) {
+                        return "VARCHAR(" + type.columnSize + ")";
+                    }
+
+                    @Override
+                    public String intType(ColumnMetaData.DataType type) {
+                        return "INT";
+                    }
+
+                    @Override
+                    public String floatType(ColumnMetaData.DataType type) {
+                        return "FLOAT";
+                    }
+
+                    @Override
+                    public String decimalType(ColumnMetaData.DataType type) {
+                        return "DECIMAL";
+                    }
+                });
             }
+
+//            protected String convertType(ISelectedTab.ColMeta col) {
+//                switch (col.getType()) {
+//                    case Long:
+//                        return "BIGINT";
+//                    case INT:
+//                        return "INT";
+//                    case Double:
+//                        return "DOUBLE";
+//                    case Date:
+//                        return "DATE";
+//                    case STRING:
+//                    case Boolean:
+//                    case Bytes:
+//                    default:
+//                        return "VARCHAR(150)";
+//                }
+//            }
         };
         return createTableSqlBuilder.build();
     }

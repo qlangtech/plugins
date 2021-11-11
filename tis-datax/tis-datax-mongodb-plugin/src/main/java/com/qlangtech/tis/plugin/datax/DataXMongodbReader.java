@@ -22,7 +22,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -30,7 +29,9 @@ import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -102,25 +103,25 @@ public class DataXMongodbReader extends DataxReader {
         return Collections.singletonList(tab);
     }
 
-    private ISelectedTab.DataXReaderColType convertType(String type) {
+    private ColumnMetaData.DataType convertType(String type) {
         if (!acceptTypes.contains(type)) {
             throw new IllegalArgumentException("illegal type:" + type);
         }
         switch (type) {
             case "int":
             case "long":
-                return ISelectedTab.DataXReaderColType.Long;
+                return ISelectedTab.DataXReaderColType.Long.dataType;
             case "double":
-                return ISelectedTab.DataXReaderColType.Double;
+                return ISelectedTab.DataXReaderColType.Double.dataType;
             case "string":
             case "array":
-                return ISelectedTab.DataXReaderColType.STRING;
+                return ISelectedTab.DataXReaderColType.STRING.dataType;
             case "date":
-                return ISelectedTab.DataXReaderColType.Date;
+                return ISelectedTab.DataXReaderColType.Date.dataType;
             case "boolean":
-                return ISelectedTab.DataXReaderColType.Boolean;
+                return ISelectedTab.DataXReaderColType.Boolean.dataType;
             case "bytes":
-                return ISelectedTab.DataXReaderColType.Bytes;
+                return ISelectedTab.DataXReaderColType.Bytes.dataType;
             default:
                 throw new IllegalStateException("illegal type:" + type);
         }

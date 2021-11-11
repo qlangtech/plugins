@@ -17,7 +17,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -25,9 +24,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -87,23 +89,56 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
             @Override
             protected String convertType(ISelectedTab.ColMeta col) {
-                switch (col.getType()) {
-                    case Long:
-                        return "Int64";
-                    case INT:
+                ColumnMetaData.DataType type = col.getType();
+                switch (type.type) {
+                    case Types.INTEGER:
+                    case Types.TINYINT:
+                    case Types.SMALLINT:
                         return "Int32";
-                    case Double:
+                    case Types.BIGINT:
+                        return "Int64";
+                    case Types.FLOAT:
+                        return "Float32";
+                    case Types.DOUBLE:
+                    case Types.DECIMAL:
                         return "Float64";
-                    case Date:
+                    case Types.DATE:
                         return "Date";
-                    case STRING:
-                    case Boolean:
-                    case Bytes:
+                    case Types.TIME:
+                    case Types.TIMESTAMP:
+                        return "DateTime";
+                    case Types.BIT:
+                    case Types.BOOLEAN:
+                        return "UInt8";
+                    case Types.BLOB:
+                    case Types.BINARY:
+                    case Types.LONGVARBINARY:
+                    case Types.VARBINARY:
                     default:
                         return "String";
                 }
-
             }
+
+
+//            @Override
+//            protected String convertType(ISelectedTab.ColMeta col) {
+//                switch (col.getType()) {
+//                    case Long:
+//                        return "Int64";
+//                    case INT:
+//                        return "Int32";
+//                    case Double:
+//                        return "Float64";
+//                    case Date:
+//                        return "Date";
+//                    case STRING:
+//                    case Boolean:
+//                    case Bytes:
+//                    default:
+//                        return "String";
+//                }
+//
+//            }
         };
         return createTableSqlBuilder.build();
         // List<ColumnMetaData> tableMetadata = this.getDataSourceFactory().getTableMetadata(tableMapper.getTo());

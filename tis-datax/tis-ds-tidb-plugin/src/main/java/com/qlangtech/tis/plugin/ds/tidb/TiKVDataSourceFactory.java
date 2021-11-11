@@ -221,7 +221,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             }
             return table1.getColumns().stream().map((col) -> {
                 // ref: com.pingcap.tikv.types.MySQLType
-                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), map2JdbcType(col.getType()), col.isPrimaryKey());
+                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), new ColumnMetaData.DataType(map2JdbcType(col.getType())), col.isPrimaryKey());
                 cmd.setSchemaFieldType(typeMap(col.getType()));
                 return cmd;
             }).collect(Collectors.toList());

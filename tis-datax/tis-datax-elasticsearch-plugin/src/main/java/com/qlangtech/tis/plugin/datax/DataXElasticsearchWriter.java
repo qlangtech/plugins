@@ -29,7 +29,6 @@ import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
@@ -37,6 +36,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.VisualType;
 import com.qlangtech.tis.solrdao.ISchema;
@@ -131,7 +131,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             field.setName(m.getName());
             field.setStored(true);
             field.setIndexed(true);
-            field.setType(this.mapSearchEngineType(m.getType()));
+            field.setType(this.mapSearchEngineType(m.getType().collapse()));
 //            field.setSharedKey();
 //            field.setUniqueKey();
 

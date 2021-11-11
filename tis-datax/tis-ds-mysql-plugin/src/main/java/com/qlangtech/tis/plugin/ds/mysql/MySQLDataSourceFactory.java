@@ -205,7 +205,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             List<ColumnMetaData> result = new ArrayList<>();
             try {
                 for (int i = 1; i <= columCount; i++) {
-                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), metaData.getColumnType(i), false));
+                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new ColumnMetaData.DataType(metaData.getColumnType(i)), false));
                 }
                 return result;
             } catch (SQLException e) {
@@ -280,7 +280,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return null;
         }
 
-        if (colMeta.getType() == Types.VARCHAR || colMeta.getType() == Types.BLOB) {
+        if (colMeta.getType().type == Types.VARCHAR || colMeta.getType().type == Types.BLOB) {
             return filter(value);
         } else {
             return value;
@@ -506,6 +506,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         public boolean supportFacade() {
             return true;
         }
+
         @Override
         public List<String> facadeSourceTypes() {
             return Lists.newArrayList(DS_TYPE_MYSQL_V5);

@@ -16,9 +16,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import org.apache.commons.lang.StringUtils;
 

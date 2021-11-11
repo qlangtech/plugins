@@ -165,7 +165,7 @@ public class TisDataXTiDBReader extends Reader {
         private Column createCol(ColumnMetaData m, String val) {
 
             DateColumn d = null;
-            switch (m.getType()) {
+            switch (m.getType().type) {
                 case Types.TINYINT:
                 case Types.INTEGER:
                 case Types.BIGINT:

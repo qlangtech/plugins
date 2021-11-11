@@ -22,7 +22,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
@@ -31,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -99,7 +99,7 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
             tab.getCols().forEach((col) -> {
                 JSONObject field = new JSONObject();
                 field.put("name", col.getName());
-                field.put("type", col.getType().getLiteria());
+                field.put("type", col.getType().collapse().getLiteria());
                 fields.add(field);
             });
 

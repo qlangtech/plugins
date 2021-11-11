@@ -16,11 +16,11 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public class SelectedTab implements ISelectedTab {
 
         try {
             List<ISelectedTab> selectedTabs = dataXReader.getSelectedTabs();
-            if(CollectionUtils.isEmpty(selectedTabs)){
+            if (CollectionUtils.isEmpty(selectedTabs)) {
                 return StringUtils.EMPTY;
             }
             for (ISelectedTab tab : selectedTabs) {
@@ -98,7 +98,7 @@ public class SelectedTab implements ISelectedTab {
         return this.cols.isEmpty();
     }
 
-    public List<ColMeta> getCols() {
+    public List<ISelectedTab.ColMeta> getCols() {
         if (shadowCols == null) {
             shadowCols = this.cols.stream().map((c) -> {
                 ColMeta colMeta = new ColMeta();

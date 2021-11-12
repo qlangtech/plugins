@@ -13,23 +13,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.plugins.incr.flink.connector.elasticsearch7;
-
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.starrocks.TestStarRocksSinkFactory;
+import junit.framework.Test;
 import junit.framework.TestCase;
-
-import java.util.List;
+import junit.framework.TestSuite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-09-29 16:55
+ * @create: 2021-11-12 16:05
  **/
-public class TestElasticSearchSinkFactory extends TestCase {
-    public void testLoadDescriptorLoad() {
-        List<Descriptor<TISSinkFactory>> descriptors = TISSinkFactory.sinkFactory.descriptors();
-        assertEquals(1, descriptors.size());
+public class TestAll extends TestCase {
 
-        assertEquals(ElasticSearchSinkFactory.DISPLAY_NAME_FLINK_CDC_SINK, descriptors.get(0).getDisplayName());
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite();
+        suite.addTestSuite(TestStarRocksSinkFactory.class);
+        return suite;
     }
 }

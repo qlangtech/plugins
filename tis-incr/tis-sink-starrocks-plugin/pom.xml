@@ -27,6 +27,7 @@
 
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-sink-starrocks-plugin</artifactId>
+    <packaging>tpi</packaging>
 
     <!--https://docs.starrocks.com/zh-cn/main/loading/Flink-connector-starrocks-->
     <dependencies>
@@ -39,6 +40,22 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-doris-plugin</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugin</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+
     </dependencies>
 
 

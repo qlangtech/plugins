@@ -64,12 +64,7 @@
                 </exclusions>
             </dependency>
 
-            <dependency>
-                <groupId>com.qlangtech.tis.plugin</groupId>
-                <artifactId>tis-datax-test-common</artifactId>
-                <scope>test</scope>
-                <version>${project.version}</version>
-            </dependency>
+
 
             <dependency>
                 <groupId>com.alibaba.datax</groupId>

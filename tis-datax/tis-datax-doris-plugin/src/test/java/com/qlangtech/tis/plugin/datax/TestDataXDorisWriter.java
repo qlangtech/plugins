@@ -17,7 +17,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -26,6 +25,7 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.TestDorisSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -74,7 +74,7 @@ public class TestDataXDorisWriter extends TestCase {
 
         for (ISelectedTab tab : selectedTabs) {
             for (ISelectedTab.ColMeta cm : tab.getCols()) {
-                cm.setType(ISelectedTab.DataXReaderColType.STRING);
+                cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
             }
         }
         //  EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
@@ -111,12 +111,12 @@ public class TestDataXDorisWriter extends TestCase {
         ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
         col.setPk(true);
         col.setName("user_id");
-        col.setType(ISelectedTab.DataXReaderColType.Long);
+        col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
         sourceCols.add(col);
 
         col = new ISelectedTab.ColMeta();
         col.setName("user_name");
-        col.setType(ISelectedTab.DataXReaderColType.STRING);
+        col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
         sourceCols.add(col);
 
         tableMap.setSourceCols(sourceCols);

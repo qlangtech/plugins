@@ -151,24 +151,6 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
                     }
                 });
             }
-
-//            protected String convertType(ISelectedTab.ColMeta col) {
-//                switch (col.getType()) {
-//                    case Long:
-//                        return "BIGINT";
-//                    case INT:
-//                        return "INT";
-//                    case Double:
-//                        return "DOUBLE";
-//                    case Date:
-//                        return "DATE";
-//                    case STRING:
-//                    case Boolean:
-//                    case Bytes:
-//                    default:
-//                        return "VARCHAR(150)";
-//                }
-//            }
         };
         return createTableSqlBuilder.build();
     }
@@ -201,7 +183,7 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
 
         @Override
         protected EndType getEndType() {
-            return EndType.Doris;
+            return EndType.StarRocks;
         }
 
         @Override

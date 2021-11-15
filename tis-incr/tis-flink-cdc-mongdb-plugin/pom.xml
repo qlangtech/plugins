@@ -52,6 +52,12 @@
             <version>${flink.cdc.version}</version>
         </dependency>
 
+        <!--        <dependency>-->
+        <!--            <groupId>com.ververica</groupId>-->
+        <!--            <artifactId>flink-connector-debezium</artifactId>-->
+        <!--            <version>${flink.cdc.version}</version>-->
+        <!--        </dependency>-->
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
@@ -82,6 +88,11 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-mongodb-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-cdc-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

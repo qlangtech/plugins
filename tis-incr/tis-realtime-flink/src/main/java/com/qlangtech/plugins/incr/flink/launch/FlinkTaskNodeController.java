@@ -62,6 +62,9 @@ public class FlinkTaskNodeController implements IRCController {
         this.factory = factory;
     }
 
+    public static void main(String[] args) {
+
+    }
 
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
@@ -78,7 +81,7 @@ public class FlinkTaskNodeController implements IRCController {
             if (!streamJar.exists()) {
                 throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
             }
-
+            logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
             //request.setCache(true);
             request.setDependency(streamJar.getAbsolutePath());

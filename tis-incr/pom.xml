@@ -36,13 +36,15 @@
     <modules>
         <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
-        <module>tis-flink-cdc-mysql-plugin</module>
+
         <module>tis-sink-elasticsearch7</module>
         <module>tis-sink-elasticsearch7-plugin</module>
         <module>tis-sink-starrocks-plugin</module>
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>
+        <module>tis-flink-cdc-common</module>
+        <module>tis-flink-cdc-mysql-plugin</module>
         <module>tis-flink-cdc-postgresql-plugin</module>
         <module>tis-flink-cdc-mongdb-plugin</module>
 

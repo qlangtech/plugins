@@ -36,7 +36,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.starrocks.connector.flink.StarRocksSink;
 import com.starrocks.connector.flink.table.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.BlockElement;
@@ -139,6 +138,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             throw new IllegalStateException("tableName.getFrom() can not be empty");
         }
         DataXDorisWriter dataXWriter = (DataXDorisWriter) dataxProcessor.getWriter(null);
+
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         DorisSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         IDataxReader reader = dataxProcessor.getReader(null);
@@ -146,17 +146,35 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         DBConfig dbConfig = dsFactory.getDbConfig();
         AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
         final IDataxProcessor.TableAlias tabName = tableName;
+        AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
+        final String targetTabName = tableName.getTo();
         dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
-            List<ISelectedTab> tabs = reader.getSelectedTabs();
-            Optional<ISelectedTab> selectedTab = tabs.stream().filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
-            if (!selectedTab.isPresent()) {
-                throw new IllegalStateException("target table:" + tabName.getFrom()
-                        + " can not find matched table in:["
-                        + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
+            try {
+                List<ISelectedTab> tabs = reader.getSelectedTabs();
+                Optional<ISelectedTab> selectedTab = tabs.stream().filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
+                if (!selectedTab.isPresent()) {
+                    throw new IllegalStateException("target table:" + tabName.getFrom()
+                            + " can not find matched table in:["
+                            + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
+                }
+                /**
+                 * 需要先初始化表starrocks目标库中的表
+                 */
+                dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
+
+                sinkFuncRef.set(createSinkFunction(dbName, selectedTab.get(), jdbcUrl, dsFactory));
+
+            } catch (Throwable e) {
+                exceptionLoader.set(new Object[]{jdbcUrl, e});
             }
-            sinkFuncRef.set(createSinkFunction(dbName, selectedTab.get(), jdbcUrl, dsFactory));
         });
+        if (exceptionLoader.get() != null) {
+            Object[] error = exceptionLoader.get();
+            throw new RuntimeException((String) error[0], (Throwable) error[1]);
+        }
         Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
+
+
         return sinkFuncRef.get();
     }
 

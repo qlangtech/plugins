@@ -60,7 +60,8 @@ public class RdbmsWriter {
     public static void initWriterTable(Configuration cfg) throws Exception {
         String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, RdbmsWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
 
-        String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]", RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
+        String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"
+                , RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);
         List<String> jdbcUrls = Lists.newArrayList();
         List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
         for (int i = 0, len = connections.size(); i < len; i++) {
@@ -90,7 +91,8 @@ public class RdbmsWriter {
         if (autoCreateTable) {
             DataxProcessor processor = DataxProcessor.load(null, dataXName);
 
-            File createDDL = new File(processor.getDataxCreateDDLDir(null), tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            File createDDL = new File(processor.getDataxCreateDDLDir(null)
+                    , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             if (!createDDL.exists()) {
                 throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
             }

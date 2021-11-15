@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
@@ -27,6 +27,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
 import junit.framework.TestCase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -61,6 +62,22 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
     }
 
     public void testStartRocksWrite() throws Exception {
+
+        /**
+         CREATE TABLE `totalpayinfo` (
+         `id` varchar(32) NULL COMMENT "",
+         `entity_id` varchar(10) NULL COMMENT "",
+         `num` int(11) NULL COMMENT "",
+         `create_time` bigint(20) NULL COMMENT ""
+         ) ENGINE=OLAP
+         UNIQUE KEY(`id`)
+         DISTRIBUTED BY HASH(`id`) BUCKETS 10
+         PROPERTIES (
+         "replication_num" = "1",
+         "in_memory" = "false",
+         "storage_format" = "DEFAULT"
+         );
+         * */
 
         String tableName = "totalpayinfo";
         String colEntityId = "entity_id";
@@ -117,6 +134,9 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
         StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
+        sinkFactory.columnSeparator = "\\x01";
+        sinkFactory.rowDelimiter = "\\x02";
+        sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
 
         Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
         IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
@@ -133,7 +153,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         after.put(colEntityId, "334556");
         after.put(colNum, "5");
         after.put(colId, "123dsf124325253dsf123");
-        after.put(colCreateTime, "20211112115959");
+        after.put(colCreateTime, "20211113115959");
         d.setAfter(after);
         env.fromElements(new DTO[]{d}).addSink(sinkFunction);
 

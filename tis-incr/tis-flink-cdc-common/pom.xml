@@ -18,45 +18,29 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
+        <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis</groupId>
-        <artifactId>tis-datax</artifactId>
         <version>3.1.0</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>tpi</packaging>
-    <artifactId>tis-datax-common-rdbms-plugin</artifactId>
 
+    <groupId>com.qlangtech.tis.plugins</groupId>
+    <artifactId>tis-flink-cdc-common</artifactId>
 
     <dependencies>
-
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>plugin-rdbms-util</artifactId>
-            <version>${alibaba.datax.version}</version>
+            <groupId>com.ververica</groupId>
+            <artifactId>flink-connector-debezium</artifactId>
+            <version>${flink.cdc.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-            <scope>compile</scope>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-core</artifactId>
+            <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-        </dependency>
-
 
     </dependencies>
 

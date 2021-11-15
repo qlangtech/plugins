@@ -72,9 +72,6 @@
         <!--            <version>${flink.cdc.version}</version>-->
         <!--        </dependency>-->
 
-
-
-
 <!--        <dependency>-->
 <!--            <groupId>com.ververica</groupId>-->
 <!--            <artifactId>flink-connector-debezium</artifactId>-->
@@ -108,6 +105,12 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-realtime-flink</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-cdc-common</artifactId>
             <version>${project.version}</version>
         </dependency>
 

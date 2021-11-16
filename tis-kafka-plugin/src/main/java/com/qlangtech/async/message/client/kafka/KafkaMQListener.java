@@ -23,6 +23,7 @@ import com.pingcap.ticdc.cdc.value.TicdcEventDDL;
 import com.pingcap.ticdc.cdc.value.TicdcEventResolve;
 import com.pingcap.ticdc.cdc.value.TicdcEventRowChange;
 import com.qlangtech.tis.async.message.client.consumer.*;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -65,7 +66,7 @@ public class KafkaMQListener implements IMQListener {
     }
 
     @Override
-    public void start(IDataxReader rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
 
     }
 
@@ -98,7 +99,7 @@ public class KafkaMQListener implements IMQListener {
         KafkaConsumer<byte[], byte[]> consumer = this.createConsumer();
 
         TicdcEventFilter filter = new TicdcEventFilter();
-        String[] tags = StringUtils.split(consumerHandle.getSubExpression(), "||");
+        String[] tags = null;//StringUtils.split(consumerHandle.getSubExpression(), "||");
         if (tags.length < 1) {
             throw new IllegalStateException("tags length can not small than 1");
         }
@@ -130,7 +131,7 @@ public class KafkaMQListener implements IMQListener {
                         data.getTicdcEventValue().getKafkaPartition(), data.getTicdcEventKey().getTs());
                 if (ok) {
                     if (this.focusTags.contains(data.getTicdcEventKey().getTbl())) {
-                        this.consumerHandle.consume(convert(data), null);
+                        this.consumerHandle.consume(null, convert(data), null);
                     }
                 } else {
                     // ignore duplicated messages

@@ -21,9 +21,9 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
@@ -127,6 +127,6 @@ public class TISFlinkCDCStart {
         //  DBConfigGetter rdbmsReader = (DBConfigGetter) reader;
 
         List<ISelectedTab> tabs = reader.getSelectedTabs();
-        mq.start(reader, tabs, dataXProcess);
+        mq.start(dataxName, reader, tabs, dataXProcess);
     }
 }

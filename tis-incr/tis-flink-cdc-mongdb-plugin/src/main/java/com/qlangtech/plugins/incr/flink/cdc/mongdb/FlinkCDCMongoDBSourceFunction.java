@@ -22,11 +22,13 @@ import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mongodb.MongoDBSource;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -47,7 +49,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
     }
 
     @Override
-    public void start(IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
 
         try {
 
@@ -55,7 +57,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
 
             MangoDBDataSourceFactory dsFactory = mongoReader.getDsFactory();
 
-            List<SourceFunction<DTO>> sourceFunctions = Lists.newArrayList();
+            List<ReaderSource> sourceFunctions = Lists.newArrayList();
 
             MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
                     .hosts(dsFactory.address)
@@ -115,13 +117,13 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
 //                    .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
 //                    .build();
 
-            sourceFunctions.add(source);
+            sourceFunctions.add(new ReaderSource(dsFactory.address + "_" + dsFactory.dbName + "_" + mongoReader.collectionName, source));
 
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(sourceChannel, dataXProcessor);
+            getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

@@ -21,11 +21,13 @@ import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
@@ -52,13 +54,14 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener {
         this.sourceFactory = sourceFactory;
     }
 
+
     @Override
     public IConsumerHandle getConsumerHandle() {
         return this.sourceFactory.getConsumerHander();
     }
 
     @Override
-    public void start(IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
             SourceChannel sourceChannel = new SourceChannel(SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory(), tabs
@@ -73,14 +76,12 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener {
                                 .password(dsFactory.password)
                                 .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
                                 .build();
-                        return sourceFunction;
+                        return new ReaderSource(dbHost + ":" + dsFactory.port, sourceFunction);
                     }));
-
-            // dataSource.getDescriptor().getDisplayName();
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(sourceChannel, dataXProcessor);
+            getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

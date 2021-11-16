@@ -55,6 +55,12 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadUrl;
 
+
+    public List<String> getLoadUrls() {
+        return DorisSourceFactory.getLoadUrls(this.loadUrl);
+    }
+
+
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         StringBuffer jdbcUrl = new StringBuffer();
@@ -101,7 +107,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         public boolean validateLoadUrl(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
             try {
-                List<String> loadUrls = JSONArray.parseArray(value, String.class);
+                List<String> loadUrls = getLoadUrls(value);
                 if (loadUrls.size() < 1) {
                     msgHandler.addFieldError(context, fieldName, "请填写至少一个loadUrl");
                     return false;
@@ -143,6 +149,10 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
             return valid;
         }
 
+    }
+
+    private static List<String> getLoadUrls(String value) {
+        return JSONArray.parseArray(value, String.class);
     }
 
 }

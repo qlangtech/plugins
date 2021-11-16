@@ -345,23 +345,11 @@ public class ScalaCompilerSupport {
      * @return
      */
     public static Set<String> getStreamScriptCompilerClasspath() {
-        // Set<String> classpath = new LinkedHashSet<>();
-        // new File("/Users/mozhenghua/j2ee_solution/project/tis-saturn2/tis-scala-compiler-dependencies/target/dependency");
-        //  File dependencies = new File(Config.getDataDir(), "libs/tis-scala-compiler-dependencies");
+
         File dependencies = new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-scala-compiler-dependencies/tis-scala-compiler-dependencies");
         if (!dependencies.exists() || dependencies.list().length < 1) {
             throw new IllegalStateException("dependencies list can not be null,path:" + dependencies.getAbsolutePath());
         }
-//        File jar = null;
-//        for (String child : dependencies.list()) {
-//            jar = new File(dependencies, child);
-//            if (!jar.exists()) {
-//                throw new IllegalStateException("file is not exist:" + jar.getAbsolutePath());
-//            }
-//            classpath.add(jar.getAbsolutePath());
-//        }
-        //logger.info("classpath:" + dependencies.getAbsolutePath() + ",childjar count:" + classpath.size());
-        // return classpath;
 
         File tisFlinkDependency = new File(Config.getDataDir(), "libs/plugins/tis-flink-dependency/WEB-INF/lib");
         if (!tisFlinkDependency.exists() || tisFlinkDependency.isFile()) {

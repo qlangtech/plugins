@@ -16,6 +16,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -81,11 +82,41 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     public Long sinkMaxRetries;
 
 
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public String columnSeparator;
 
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
     public String rowDelimiter;
+
+    public static List<Option> allColumnSeparator() {
+        return Collections.singletonList(new Option(Separator.x01.name(), Separator.x01.name()));
+    }
+
+    public static List<Option> allRowDelimiter() {
+        return Collections.singletonList(new Option(Separator.x02.name(), Separator.x02.name()));
+    }
+
+    private enum Separator {
+        x01("\\x01"),
+        x02("\\x02");
+
+        private String val;
+
+        private Separator(String val) {
+            this.val = val;
+        }
+
+        private static Separator parse(String name) {
+            for (Separator s : Separator.values()) {
+                if (s.name().equalsIgnoreCase(name)) {
+                    return s;
+                }
+            }
+            throw new IllegalStateException("illegal seperator name:" + name);
+        }
+
+    }
+
 
     public static List<Option> allSinkSemantic() {
         return Arrays.stream(StarRocksSinkSemantic.values())
@@ -115,71 +146,79 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         return StringUtils.EMPTY;
     }
 
-    public static void main(String[] args) {
-        ConfigOption jdbc_url = cfg("JDBC_URL");
-        System.out.println(jdbc_url.description());
-    }
-
 
     @Override
-    public SinkFunction<DTO> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
-        Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
-        if (tabAlias == null || tabAlias.isEmpty()) {
-            throw new IllegalStateException("has not set tables");
-        }
+        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFuncs = Maps.newHashMap();
         IDataxProcessor.TableAlias tableName = null;
-        for (Map.Entry<String, IDataxProcessor.TableAlias> entry : tabAlias.entrySet()) {
-            tableName = entry.getValue();
-            break;
-        }
-        Objects.requireNonNull(tableName, "tableName can not be null");
-        if (StringUtils.isEmpty(tableName.getFrom())) {
-            throw new IllegalStateException("tableName.getFrom() can not be empty");
-        }
+        // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
         DataXDorisWriter dataXWriter = (DataXDorisWriter) dataxProcessor.getWriter(null);
-
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
-        DorisSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         IDataxReader reader = dataxProcessor.getReader(null);
+        List<ISelectedTab> tabs = reader.getSelectedTabs();
 
+        DorisSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         DBConfig dbConfig = dsFactory.getDbConfig();
-        AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
-        final IDataxProcessor.TableAlias tabName = tableName;
-        AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
-        final String targetTabName = tableName.getTo();
-        dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
-            try {
-                List<ISelectedTab> tabs = reader.getSelectedTabs();
-                Optional<ISelectedTab> selectedTab = tabs.stream().filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
-                if (!selectedTab.isPresent()) {
-                    throw new IllegalStateException("target table:" + tabName.getFrom()
-                            + " can not find matched table in:["
-                            + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
-                }
-                /**
-                 * 需要先初始化表starrocks目标库中的表
-                 */
-                dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 
-                sinkFuncRef.set(createSinkFunction(dbName, selectedTab.get(), jdbcUrl, dsFactory));
+        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : dataxProcessor.getTabAlias().entrySet()) {
+            tableName = tabAliasEntry.getValue();
 
-            } catch (Throwable e) {
-                exceptionLoader.set(new Object[]{jdbcUrl, e});
+            Objects.requireNonNull(tableName, "tableName can not be null");
+            if (StringUtils.isEmpty(tableName.getFrom())) {
+                throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
-        });
-        if (exceptionLoader.get() != null) {
-            Object[] error = exceptionLoader.get();
-            throw new RuntimeException((String) error[0], (Throwable) error[1]);
+
+
+            AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
+            final IDataxProcessor.TableAlias tabName = tableName;
+            AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
+            final String targetTabName = tableName.getTo();
+            dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
+                try {
+                    Optional<ISelectedTab> selectedTab = tabs.stream()
+                            .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
+                    if (!selectedTab.isPresent()) {
+                        throw new IllegalStateException("target table:" + tabName.getFrom()
+                                + " can not find matched table in:["
+                                + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
+                    }
+                    /**
+                     * 需要先初始化表starrocks目标库中的表
+                     */
+                    dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
+
+                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab.get(), jdbcUrl, dsFactory));
+
+                } catch (Throwable e) {
+                    exceptionLoader.set(new Object[]{jdbcUrl, e});
+                }
+            });
+            if (exceptionLoader.get() != null) {
+                Object[] error = exceptionLoader.get();
+                throw new RuntimeException((String) error[0], (Throwable) error[1]);
+            }
+            Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
+            sinkFuncs.put(tableName, sinkFuncRef.get());
         }
-        Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
+//        if (tabAlias == null || tabAlias.isEmpty()) {
+//            throw new IllegalStateException("has not set tables");
+//        }
+//        IDataxProcessor.TableAlias tableName = null;
+//        for (Map.Entry<String, IDataxProcessor.TableAlias> entry : tabAlias.entrySet()) {
+//            tableName = entry.getValue();
+//            break;
+//        }
 
 
-        return sinkFuncRef.get();
+        if (sinkFuncs.size() < 1) {
+            throw new IllegalStateException("size of sinkFuncs can not be small than 1");
+        }
+        return sinkFuncs;
     }
 
     private SinkFunction<DTO> createSinkFunction(
-            String dbName, ISelectedTab tab, String jdbcUrl, DorisSourceFactory dsFactory) {
+            String dbName, final String targetTabName, ISelectedTab tab, String jdbcUrl, DorisSourceFactory dsFactory) {
 //import org.apache.flink.table.types.DataType;
         TableSchema.Builder schemaBuilder = TableSchema.builder();
         String[] fieldKeys = new String[tab.getCols().size()];
@@ -196,9 +235,12 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 // the table structure
                 schemaBuilder.build(),
                 // the sink options
-                createRocksSinkOptions(dbName, tab, jdbcUrl, dsFactory)
+                createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory)
                 // set the slots with streamRowData
                 , (slots, streamRowData) -> {
+                    if (streamRowData.getEventType() == DTO.EventType.DELETE) {
+                        return;
+                    }
                     for (int i = 0; i < fieldKeys.length; i++) {
                         slots[i] = streamRowData.getAfter().get(fieldKeys[i]);
                     }
@@ -206,14 +248,14 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         );
     }
 
-    private StarRocksSinkOptions createRocksSinkOptions(String dbName, ISelectedTab tab, String jdbcUrl, DorisSourceFactory dsFactory) {
+    private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl, DorisSourceFactory dsFactory) {
         StarRocksSinkOptions.Builder builder = StarRocksSinkOptions.builder()
                 .withProperty(JDBC_URL.key(), jdbcUrl)
-                .withProperty(LOAD_URL.key(), dsFactory.loadUrl)
-                .withProperty(TABLE_NAME.key(), tab.getName())
+                .withProperty(LOAD_URL.key(), dsFactory.getLoadUrls().stream().collect(Collectors.joining(";")))
+                .withProperty(TABLE_NAME.key(), targetTabName)
                 .withProperty(DATABASE_NAME.key(), dbName)
-                .withProperty(SINK_PROPERTIES_PREFIX + "column_separator", this.columnSeparator)
-                .withProperty(SINK_PROPERTIES_PREFIX + "row_delimiter", this.rowDelimiter)
+                .withProperty(SINK_PROPERTIES_PREFIX + "column_separator", Separator.parse(this.columnSeparator).val)
+                .withProperty(SINK_PROPERTIES_PREFIX + "row_delimiter", Separator.parse(this.rowDelimiter).val)
                 .withProperty(SINK_SEMANTIC.key(), StarRocksSinkSemantic.fromName(this.sinkSemantic).getName())
                 .withProperty(USERNAME.key(), dsFactory.getUserName());
 

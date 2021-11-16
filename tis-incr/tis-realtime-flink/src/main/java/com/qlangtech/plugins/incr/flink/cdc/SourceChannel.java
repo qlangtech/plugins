@@ -18,13 +18,12 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,23 +36,23 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:47
  **/
-public class SourceChannel implements AsyncMsg<List<SourceFunction<DTO>>> {
+public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
-    private final List<SourceFunction<DTO>> sourceFunction;
+    private final List<ReaderSource> sourceFunction;
     private final Set<String> focusTabs = Sets.newHashSet();
 
-    public SourceChannel(List<SourceFunction<DTO>> sourceFunction) {
+    public SourceChannel(List<ReaderSource> sourceFunction) {
         this.sourceFunction = sourceFunction;
     }
 
     //https://ververica.github.io/flink-cdc-connectors/master/
-    public static List<SourceFunction<DTO>> getSourceFunction(
-            BasicDataSourceFactory dsFactory, List<ISelectedTab> tabs, SourceFunctionCreator sourceFunctionCreator) {
+    public static List<ReaderSource> getSourceFunction(
+            BasicDataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
             // BasicDataSourceFactory dsFactory = dataSource.getBasicDataSource();
-            List<SourceFunction<DTO>> sourceFuncs = Lists.newArrayList();
+            List<ReaderSource> sourceFuncs = Lists.newArrayList();
             // DBConfig dbConfig = dataSource.getDbConfig();
             Map<String, List<String>> ip2dbs = Maps.newHashMap();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
@@ -88,12 +87,12 @@ public class SourceChannel implements AsyncMsg<List<SourceFunction<DTO>>> {
         }
     }
 
-    public interface SourceFunctionCreator {
-        SourceFunction<DTO> create(BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
+    public interface ReaderSourceCreator {
+        ReaderSource create(BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
     }
 
     @Override
-    public List<SourceFunction<DTO>> getSource() throws IOException {
+    public List<ReaderSource> getSource() throws IOException {
         return this.sourceFunction;
     }
 

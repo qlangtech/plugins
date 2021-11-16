@@ -148,7 +148,7 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
 
                     @Override
                     public String varcharType(ColumnMetaData.DataType type) {
-                        return "VARCHAR(" + type.columnSize + ")";
+                        return "VARCHAR(" + Math.min(type.columnSize, 65500) + ")";
                     }
 
                     @Override

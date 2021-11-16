@@ -84,6 +84,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.25</version>
+        </dependency>
+
 
 <!--        <dependency>-->
 <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->

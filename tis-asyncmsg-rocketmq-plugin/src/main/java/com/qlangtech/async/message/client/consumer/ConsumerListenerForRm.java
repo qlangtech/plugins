@@ -17,6 +17,7 @@ package com.qlangtech.async.message.client.consumer;
 import com.qlangtech.async.message.client.to.impl.AsyncMsgRM;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -80,15 +81,11 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
     }
 
     @Override
-    public void start(IDataxReader rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader rdbmsReader
+            , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
 
     }
 
-
-//    @Override
-//    public void start(BasicDataSourceFactory dataSource, List<ISelectedTab> tabs) throws MQConsumeException {
-//
-//    }
 
     /**
      * 启动，需要在bean中初始化
@@ -112,7 +109,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             consumer.setNamesrvAddr(namesrvAddr);
             consumer.setConsumeThreadMin(consumeThreadMin);
             // 订阅指定topic下tags
-            consumer.subscribe(topic, consumerHandle.getSubExpression());
+           // consumer.subscribe(topic, consumerHandle.getSubExpression());
             /**
              * Consumer第一次启动默认从队列尾部开始消费
              * 如果非第一次启动，那么按照上次消费的位置继续消费
@@ -131,8 +128,8 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
                     break;
             }
             consumer.start();
-            logger.info("ConsumerListenerForRm started!topic:" + topic + ",expression:" + consumerHandle.getSubExpression()
-                    + "  consumerGroup:" + consumerGroup + "   namesrvAddr:" + namesrvAddr);
+//            logger.info("ConsumerListenerForRm started!topic:" + topic + ",expression:" + consumerHandle.getSubExpression()
+//                    + "  consumerGroup:" + consumerGroup + "   namesrvAddr:" + namesrvAddr);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

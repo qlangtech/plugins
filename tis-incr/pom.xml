@@ -27,8 +27,10 @@
     <artifactId>tis-incr</artifactId>
     <packaging>pom</packaging>
     <properties>
-<!--        <flink.cdc.version>2.0.2</flink.cdc.version>-->
-        <flink.cdc.version>2.1-SNAPSHOT</flink.cdc.version>
+        <!--        -->
+
+        <!--        <flink.cdc.version>2.0.2</flink.cdc.version>-->
+        <flink.cdc.version>2.1.0</flink.cdc.version>
 
 
     </properties>
@@ -46,7 +48,7 @@
         <module>tis-flink-cdc-common</module>
         <module>tis-flink-cdc-mysql-plugin</module>
         <module>tis-flink-cdc-postgresql-plugin</module>
-        <module>tis-flink-cdc-mongdb-plugin</module>
+        <!--        <module>tis-flink-cdc-mongdb-plugin</module>-->
 
         <!--        <module>tis-flink-client</module>-->
     </modules>

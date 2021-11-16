@@ -25,11 +25,11 @@
     "dftVal": "com.qlangtech.tis.plugins.incr.flink.connector.starrocks.StarRocksSinkFactory.dft(\"sinkMaxRetries\")"
   },
   "columnSeparator": {
-    "dftVal": "\\\\x01",
+    "enum": "com.qlangtech.tis.plugins.incr.flink.connector.starrocks.StarRocksSinkFactory.allColumnSeparator()",
     "help": "数据列分割符"
   },
   "rowDelimiter": {
-    "dftVal": "\\\\x02",
+    "enum": "com.qlangtech.tis.plugins.incr.flink.connector.starrocks.StarRocksSinkFactory.allRowDelimiter()",
     "help": "数据行分割符"
   }
 }

@@ -21,15 +21,19 @@ import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //import org.apache.flink.types.Row;
 
@@ -54,50 +58,42 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
 
 
     @Override
-    public void start(IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader dataSource
+            , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-
 
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory(), tabs
+                    SourceChannel.getSourceFunction(
+                            (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory()
+                            , tabs
                             , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
-                                return MySqlSource.<DTO>builder()
-                                        .hostname(dbHost)
-                                        .port(dsFactory.port)
-                                        .databaseList(dbs.toArray(new String[dbs.size()])) // monitor all tables under inventory database
-                                        .tableList(tbs.toArray(new String[tbs.size()]))
-                                        .username(dsFactory.getUserName())
-                                        .password(dsFactory.getPassword())
-                                        .startupOptions(sourceFactory.getStartupOptions())
-                                        .debeziumProperties(debeziumProperties)
-                                        .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                                        .build();
+
+                                String[] databases = dbs.toArray(new String[dbs.size()]);
+
+                                return new ReaderSource(
+                                        dbHost + ":" + dsFactory.port + ":" + Arrays.stream(databases).collect(Collectors.joining("_")),
+                                        MySqlSource.<DTO>builder()
+                                                .hostname(dbHost)
+                                                .port(dsFactory.port)
+                                                .databaseList(databases) // monitor all tables under inventory database
+                                                .tableList(tbs.toArray(new String[tbs.size()]))
+                                                .username(dsFactory.getUserName())
+                                                .password(dsFactory.getPassword())
+                                                .startupOptions(sourceFactory.getStartupOptions())
+                                                .debeziumProperties(debeziumProperties)
+                                                .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+                                                .build()
+                                );
                             }));
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(sourceChannel, dataXProcessor);
+            getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
     }
-
-
-    //    private SourceFunction<DTO> createSourceFunction(
-//            BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties) {
-//        return MySqlSource.<DTO>builder()
-//                .hostname(dbHost)
-//                .port(dsFactory.port)
-//                .databaseList(dbs.toArray(new String[dbs.size()])) // monitor all tables under inventory database
-//                .tableList(tbs.toArray(new String[tbs.size()]))
-//                .username(dsFactory.getUserName())
-//                .password(dsFactory.getPassword())
-//                .startupOptions(sourceFactory.getStartupOptions())
-//                .debeziumProperties(debeziumProperties)
-//                .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-//                .build();
-//    }
 
 
     @Override

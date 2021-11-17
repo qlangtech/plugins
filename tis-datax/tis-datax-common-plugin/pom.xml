@@ -62,7 +62,7 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-executor</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
+<!--            <scope>provided</scope>-->
             <exclusions>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>

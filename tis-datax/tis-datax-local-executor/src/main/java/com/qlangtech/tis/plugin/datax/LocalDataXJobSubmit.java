@@ -74,7 +74,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 //            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" +
 //                    Arrays.stream(logbackJars).map((jarName) -> (new File(webStartDir, jarName)).getPath()).collect(Collectors.joining(":"));
 
-            this.classpath = localExecutorLibDir.getPath() + "/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
+            this.classpath = assebleDir.getPath() + "/lib/*:" + localExecutorLibDir.getPath() + "/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
         }
         logger.info("dataX Job:{},classpath:{},workingDir:{}", dataXfileName, this.classpath, workingDirectory.getPath());
 

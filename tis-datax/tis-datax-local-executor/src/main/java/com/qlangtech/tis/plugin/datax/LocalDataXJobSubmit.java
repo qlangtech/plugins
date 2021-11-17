@@ -55,12 +55,16 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
+            File localExecutorLibDir = new File(Config.getLibDir(), "/tis-datax-local-executor/WEB-INF/lib");
             File webStartDir = new File(Config.getTisHome(), TisSubModule.WEB_START.moduleName + "/lib");
+            if (!localExecutorLibDir.exists()) {
+                throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());
+            }
             if (!assebleDir.exists()) {
-                throw new IllegalStateException("target asseble dir is not exist:" + assebleDir.getPath());
+                throw new IllegalStateException("target asseble dir is not exist:" + assebleDir.getAbsolutePath());
             }
             if (!webStartDir.exists()) {
-                throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getPath());
+                throw new IllegalStateException("target " + TisSubModule.WEB_START.moduleName + "/lib dir is not exist:" + webStartDir.getAbsolutePath());
             }
 //            String[] logbackJars = webStartDir.list(
 //                    (dir, name) -> StringUtils.startsWith(name, "logback-")
@@ -70,7 +74,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 //            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" +
 //                    Arrays.stream(logbackJars).map((jarName) -> (new File(webStartDir, jarName)).getPath()).collect(Collectors.joining(":"));
 
-            this.classpath = assebleDir.getPath() + "/lib/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
+            this.classpath = localExecutorLibDir.getPath() + "/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
         }
         logger.info("dataX Job:{},classpath:{},workingDir:{}", dataXfileName, this.classpath, workingDirectory.getPath());
 

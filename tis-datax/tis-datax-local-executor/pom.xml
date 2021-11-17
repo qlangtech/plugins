@@ -18,51 +18,32 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis-datax</artifactId>
+        <groupId>com.qlangtech.tis</groupId>
         <version>3.1.0</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
-    <packaging>tpi</packaging>
     <modelVersion>4.0.0</modelVersion>
-    <scm>
-        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
-        <url>https://github.com/qlangtech/plugins/tree/master/tis-datax-common-plugin</url>
-        <tag>HEAD</tag>
-    </scm>
-    <artifactId>tis-datax-common-plugin</artifactId>
 
-
+    <groupId>com.qlangtech.tis.plugins</groupId>
+    <artifactId>tis-datax-local-executor</artifactId>
+    <packaging>tpi</packaging>
     <dependencies>
 
-
-        <dependency>
-            <groupId>com.qlangtech.tis.plugin</groupId>
-            <artifactId>tis-datax-test-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-plugin</artifactId>
-            <scope>provided</scope>
+            <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <scope>compile</scope>
         </dependency>
-
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-datax-executor</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>
@@ -78,16 +59,8 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-solrj-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-hadoop-rpc</artifactId>
-            <scope>test</scope>
-        </dependency>
+
     </dependencies>
+
 
 </project>

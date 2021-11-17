@@ -47,6 +47,7 @@
         <module>tis-ds-mysql-plugin</module>
         <module>tis-ds-mysql-v5-plugin</module>
         <module>tis-ds-mysql-v8-plugin</module>
+        <module>tis-datax-local-executor</module>
     </modules>
 
     <dependencyManagement>

@@ -17,6 +17,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
@@ -38,7 +39,7 @@ import java.util.Objects;
 @TISExtension()
 public class LocalDataXJobSubmit extends DataXJobSubmit {
 
-    private String mainClassName = "com.qlangtech.tis.datax.DataxExecutor";
+    private String mainClassName = DataxExecutor.class.getName();
     private File workingDirectory = new File(".");
     private String classpath;
 

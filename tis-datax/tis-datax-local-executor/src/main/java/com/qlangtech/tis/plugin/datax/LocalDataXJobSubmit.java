@@ -55,7 +55,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
-            File localExecutorLibDir = new File(Config.getLibDir(), "/tis-datax-local-executor/WEB-INF/lib");
+            File localExecutorLibDir = new File(Config.getLibDir(), "plugins/tis-datax-local-executor/WEB-INF/lib");
             File webStartDir = new File(Config.getTisHome(), TisSubModule.WEB_START.moduleName + "/lib");
             if (!localExecutorLibDir.exists()) {
                 throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());

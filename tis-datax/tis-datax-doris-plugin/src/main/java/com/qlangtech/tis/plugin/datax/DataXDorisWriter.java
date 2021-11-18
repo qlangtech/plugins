@@ -25,7 +25,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -66,7 +66,7 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
      * 需要先初始化表starrocks目标库中的表
      */
     public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        RdbmsWriter.initWriterTable(this.dataXName, targetTabName, jdbcUrls);
+        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
     }
 
     @Override

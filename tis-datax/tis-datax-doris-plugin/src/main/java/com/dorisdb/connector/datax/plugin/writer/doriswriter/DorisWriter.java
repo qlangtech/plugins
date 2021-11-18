@@ -13,7 +13,7 @@ import com.dorisdb.connector.datax.plugin.writer.doriswriter.row.DorisISerialize
 import com.dorisdb.connector.datax.plugin.writer.doriswriter.row.DorisSerializerFactory;
 import com.dorisdb.connector.datax.plugin.writer.doriswriter.util.DorisWriterUtil;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class DorisWriter extends Writer {
                 String dataXName = this.originalConfig.getString(DataxUtils.DATAX_NAME);
                 String tableName = options.getTable();
                 List<String> jdbcUrls = Collections.singletonList(options.getJdbcUrl());
-                RdbmsWriter.initWriterTable(dataXName, tableName, jdbcUrls);
+                InitWriterTable.process(dataXName, tableName, jdbcUrls);
                 this.dsFactoryGetter = DBUtil.getWriterDataSourceFactoryGetter(this.originalConfig);
             } catch (Exception e) {
                 throw new RuntimeException(e);

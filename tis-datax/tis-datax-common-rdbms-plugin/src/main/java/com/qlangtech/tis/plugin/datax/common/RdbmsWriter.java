@@ -19,21 +19,11 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.sql.Connection;
-import java.sql.Statement;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -70,54 +60,8 @@ public class RdbmsWriter {
             jdbcUrls.add(jdbcUrl);
         }
 
-
-        initWriterTable(dataXName, tableName, jdbcUrls);
+        InitWriterTable.process(dataXName, tableName, jdbcUrls);
     }
 
 
-    /**
-     * 初始化表RDBMS的表，如果表不存在就创建表
-     *
-     * @param
-     * @throws Exception
-     */
-    public static void initWriterTable(String dataXName, String tableName, List<String> jdbcUrls) throws Exception {
-
-        BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
-                = (BasicDataXRdbmsWriter<BasicDataSourceFactory>) DataxWriter.load(null, dataXName);
-
-        Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
-        boolean autoCreateTable = dataXWriter.autoCreateTable;
-        if (autoCreateTable) {
-            DataxProcessor processor = DataxProcessor.load(null, dataXName);
-
-            File createDDL = new File(processor.getDataxCreateDDLDir(null)
-                    , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
-            if (!createDDL.exists()) {
-                throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
-            }
-
-            BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
-            //List<Object> connections = cfg.getList(Constant.CONN_MARK, Object.class);
-            String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-//            for (int i = 0, len = connections.size(); i < len; i++) {
-//                Configuration connConf = Configuration.from(String.valueOf(connections.get(i)));
-            for (String jdbcUrl : jdbcUrls) {
-                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                    List<String> tabs = Lists.newArrayList();
-                    dsFactory.refectTableInDB(tabs, conn);
-
-                    if (!tabs.contains(tableName)) {
-                        // 表不存在
-                        try (Statement statement = conn.createStatement()) {
-                            logger.info("create table:{}\n   script:{}", tableName, createScript);
-                            statement.execute(createScript);
-                        }
-                    } else {
-                        logger.info("table:{} already exist ,skip the create table step", tableName);
-                    }
-                }
-            }
-        }
-    }
 }

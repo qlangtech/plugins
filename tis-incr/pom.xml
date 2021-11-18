@@ -48,6 +48,7 @@
         <module>tis-flink-cdc-common</module>
         <module>tis-flink-cdc-mysql-plugin</module>
         <module>tis-flink-cdc-postgresql-plugin</module>
+        <module>tis-sink-clickhouse-plugin</module>
         <!--        <module>tis-flink-cdc-mongdb-plugin</module>-->
 
         <!--        <module>tis-flink-client</module>-->

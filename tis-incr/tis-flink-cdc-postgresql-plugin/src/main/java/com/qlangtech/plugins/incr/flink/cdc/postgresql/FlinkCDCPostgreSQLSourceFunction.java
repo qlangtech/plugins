@@ -33,6 +33,7 @@ import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 //import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 //import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
@@ -61,23 +62,30 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener {
     }
 
     @Override
-    public void start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName dataxName, IDataxReader dataSource
+            , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
-            SourceChannel sourceChannel = new SourceChannel(SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory(), tabs
-                    , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
-                        SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
-                                .hostname(dbHost)
-                                .port(dsFactory.port)
-                                // .database(dbs.toArray( new String[dbs.size()])) // monitor postgres database
-                                // .schemaList("inventory")  // monitor inventory schema
-                                .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
-                                .username(dsFactory.userName)
-                                .password(dsFactory.password)
-                                .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                                .build();
-                        return new ReaderSource(dbHost + ":" + dsFactory.port, sourceFunction);
-                    }));
+            SourceChannel sourceChannel = new SourceChannel(
+                    SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory()
+                            , tabs
+                            , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
+                                return dbs.stream().map((dbname) -> {
+                                    SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
+                                            //.debeziumProperties()
+                                            .hostname(dbHost)
+                                            .port(dsFactory.port)
+                                            .database(dbname) // monitor postgres database
+                                            //.schemaList("inventory")  // monitor inventory schema
+                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            .username(dsFactory.userName)
+                                            .password(dsFactory.password)
+                                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+                                            .build();
+                                    return new ReaderSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
+                                }).collect(Collectors.toList());
+
+                            }));
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }

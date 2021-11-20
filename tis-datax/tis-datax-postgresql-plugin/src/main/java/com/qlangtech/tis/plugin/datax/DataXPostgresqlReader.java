@@ -33,7 +33,7 @@ import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFactory> {
     public static final String PG_NAME = "PostgreSQL";
 
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String table;
 //    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String column;
@@ -66,10 +66,13 @@ public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFac
         public DefaultDescriptor() {
             super();
         }
-
         @Override
         public String getDisplayName() {
             return PG_NAME;
+        }
+        @Override
+        protected EndType getEndType() {
+            return EndType.Postgres;
         }
     }
 }

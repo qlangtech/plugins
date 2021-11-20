@@ -99,7 +99,7 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
             tab.getCols().forEach((col) -> {
                 JSONObject field = new JSONObject();
                 field.put("name", col.getName());
-                field.put("type", col.getType().collapse().getLiteria());
+                field.put("type", col.getType().getCollapse().getLiteria());
                 fields.add(field);
             });
 

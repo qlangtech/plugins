@@ -70,12 +70,12 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {
-            return "Flink-CDC-MySQL";
+            return "Flink-CDC-Oracle";
         }
 
         @Override
         public Optional<IDataXPluginMeta.EndType> getTargetType() {
-            return Optional.of(IDataXPluginMeta.EndType.MySQL);
+            return Optional.of(IDataXPluginMeta.EndType.Oracle);
         }
     }
 }

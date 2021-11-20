@@ -175,10 +175,13 @@ public class DataXMongodbReader extends DataxReader {
             super();
         }
 
-
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-
             return validateColumnContent(msgHandler, context, fieldName, value);
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.MongoDB;
         }
 
         @Override

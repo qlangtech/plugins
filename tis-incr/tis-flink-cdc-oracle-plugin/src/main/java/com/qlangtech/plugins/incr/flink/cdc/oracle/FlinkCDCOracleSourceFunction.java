@@ -21,17 +21,20 @@ import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.oracle.OracleSource;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,31 +54,34 @@ public class FlinkCDCOracleSourceFunction implements IMQListener {
     }
 
     @Override
-    public void start(IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public void start(TargetResName channalName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
             DataSourceFactory dataSourceFactory = reader.getDataSourceFactory();
             SourceChannel sourceChannel = new SourceChannel(
                     SourceChannel.getSourceFunction((BasicDataSourceFactory) dataSourceFactory, tabs
                             , (f, dbHost, dbs, tbs, debeziumProperties) -> {
-                                SourceFunction<DTO> sourceFunction = OracleSource.<DTO>builder()
-                                        .hostname(dbHost)
-                                        .debeziumProperties(debeziumProperties)
-                                        .port(f.port)
-                                        .startupOptions(sourceFactory.getStartupOptions())
-                                        .database(f.dbName) // monitor XE database
-                                        .schemaList("") // monitor inventory schema
-                                        .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
-                                        .username(f.getUserName())
-                                        .password(f.getPassword())
-                                        .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                                        .build();
-                                return sourceFunction;
+                                return dbs.stream().map((databaseName) -> {
+                                    SourceFunction<DTO> sourceFunction = OracleSource.<DTO>builder()
+                                            .hostname(dbHost)
+                                            .debeziumProperties(debeziumProperties)
+                                            .port(f.port)
+                                            .startupOptions(sourceFactory.getStartupOptions())
+                                            .database(f.dbName) // monitor XE database
+                                            // .schemaList("") // monitor inventory schema
+                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            .username(f.getUserName())
+                                            .password(f.getPassword())
+                                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+                                            .build();
+                                    return new ReaderSource(dbHost + ":" + f.port + "_" + databaseName, sourceFunction);
+                                }).collect(Collectors.toList());
+
                             }));
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(sourceChannel, dataXProcessor);
+            getConsumerHandle().consume(channalName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

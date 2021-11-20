@@ -26,10 +26,12 @@
   },
   "columnSeparator": {
     "enum": "com.qlangtech.tis.plugins.incr.flink.connector.starrocks.StarRocksSinkFactory.allColumnSeparator()",
-    "help": "数据列分割符"
+    "help": "数据列分割符",
+    "dftVal": "x01"
   },
   "rowDelimiter": {
     "enum": "com.qlangtech.tis.plugins.incr.flink.connector.starrocks.StarRocksSinkFactory.allRowDelimiter()",
-    "help": "数据行分割符"
+    "help": "数据行分割符",
+    "dftVal": "x02"
   }
 }

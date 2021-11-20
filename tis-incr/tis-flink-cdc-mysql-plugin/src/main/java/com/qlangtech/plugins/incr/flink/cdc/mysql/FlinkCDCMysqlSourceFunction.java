@@ -31,7 +31,7 @@ import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,8 +71,8 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
 
                                 String[] databases = dbs.toArray(new String[dbs.size()]);
 
-                                return new ReaderSource(
-                                        dbHost + ":" + dsFactory.port + ":" + Arrays.stream(databases).collect(Collectors.joining("_")),
+                                return Collections.singletonList(new ReaderSource(
+                                        dbHost + ":" + dsFactory.port + ":" + dbs.stream().collect(Collectors.joining("_")),
                                         MySqlSource.<DTO>builder()
                                                 .hostname(dbHost)
                                                 .port(dsFactory.port)
@@ -83,7 +83,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
                                                 .startupOptions(sourceFactory.getStartupOptions())
                                                 .debeziumProperties(debeziumProperties)
                                                 .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                                                .build()
+                                                .build())
                                 );
                             }));
             for (ISelectedTab tab : tabs) {

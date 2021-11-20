@@ -35,8 +35,8 @@ import java.util.Optional;
 public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
     private transient IConsumerHandle consumerHandle;
 
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String startupOptions;
+//    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String startupOptions;
 
 //    StartupOptions getStartupOptions() {
 //        switch (startupOptions) {

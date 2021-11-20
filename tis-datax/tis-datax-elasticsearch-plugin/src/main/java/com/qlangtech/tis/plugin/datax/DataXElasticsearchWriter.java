@@ -131,7 +131,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             field.setName(m.getName());
             field.setStored(true);
             field.setIndexed(true);
-            field.setType(this.mapSearchEngineType(m.getType().collapse()));
+            field.setType(this.mapSearchEngineType(m.getType().getCollapse()));
 //            field.setSharedKey();
 //            field.setUniqueKey();
 

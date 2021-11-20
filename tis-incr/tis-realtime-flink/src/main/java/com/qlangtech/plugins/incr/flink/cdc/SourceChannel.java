@@ -51,9 +51,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
-            // BasicDataSourceFactory dsFactory = dataSource.getBasicDataSource();
             List<ReaderSource> sourceFuncs = Lists.newArrayList();
-            // DBConfig dbConfig = dataSource.getDbConfig();
             Map<String, List<String>> ip2dbs = Maps.newHashMap();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
             dbConfig.vistDbName((config, ip, dbName) -> {
@@ -77,7 +75,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
                 debeziumProperties.put("snapshot.locking.mode", "none");// do not use lock
                 String dbHost = entry.getKey();
                 List<String> dbs = entry.getValue();
-                sourceFuncs.add(sourceFunctionCreator.create(dsFactory, dbHost, dbs, tbs, debeziumProperties));
+                sourceFuncs.addAll(sourceFunctionCreator.create(dsFactory, dbHost, dbs, tbs, debeziumProperties));
             }
 
             return sourceFuncs;
@@ -88,7 +86,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public interface ReaderSourceCreator {
-        ReaderSource create(BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
+        List<ReaderSource> create(BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
     }
 
     @Override

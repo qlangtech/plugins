@@ -18,6 +18,7 @@ package com.qlangtech.tis.plugin.ds.doris;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -77,7 +78,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         try {
             return mysql5Driver.connect(jdbcUrl, props);
         } catch (SQLException e) {
-            throw new RuntimeException("jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
+            throw new TisException(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }
         // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
     }

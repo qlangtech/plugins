@@ -82,7 +82,10 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
         public String getDisplayName() {
             return OracleDataSourceFactory.ORACLE;
         }
-
+        @Override
+        protected EndType getEndType() {
+            return EndType.Oracle;
+        }
     }
 
     protected static boolean validateSession(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
@@ -102,4 +105,6 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
 
         return true;
     }
+
+
 }

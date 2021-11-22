@@ -11,5 +11,15 @@
   },
   "password": {
     "help": "MongoDB的密码。【选填】"
+  },
+  "userSource": {
+    "help": "保存用户的库",
+    "dftVal": "admin"
+  },
+  "authMechanism": {
+    "label": "授权机制",
+    "enum": "com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory.allAuthMechanism()",
+    "dftVal": "SCRAM-SHA-1",
+    "help": "the authentication mechanism"
   }
 }

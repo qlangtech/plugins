@@ -1,6 +1,6 @@
 ## connectionOptions
 
-The ampersand-separated connection options of MongoDB. eg: replicaSet=test&connectTimeoutMS=300000
+The ampersand-separated connection options of MongoDB. eg: `replicaSet=test&connectTimeoutMS=300000`
 
 Default: none
 
@@ -36,7 +36,7 @@ Whether details of failed operations should be written to the log file.
 
 Default: `true`
 
-## copyExistingMaxThreads"
+## copyExistingMaxThreads
 
 The number of threads to use when performing the data copy.
 

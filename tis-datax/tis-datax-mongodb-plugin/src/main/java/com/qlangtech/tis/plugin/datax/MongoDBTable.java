@@ -25,6 +25,11 @@ import java.util.List;
  **/
 public class MongoDBTable implements ISelectedTab {
     public List<ColMeta> cols;
+    private final String collectionName;
+
+    public MongoDBTable(String collectionName) {
+        this.collectionName = collectionName;
+    }
 
     @Override
     public List<ColMeta> getCols() {
@@ -33,7 +38,7 @@ public class MongoDBTable implements ISelectedTab {
 
     @Override
     public String getName() {
-        return DataXMongodbReader.DATAX_NAME;
+        return this.collectionName;
     }
 
     @Override

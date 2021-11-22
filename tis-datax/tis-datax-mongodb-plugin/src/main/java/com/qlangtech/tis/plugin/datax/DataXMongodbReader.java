@@ -90,7 +90,11 @@ public class DataXMongodbReader extends DataxReader {
 
     @Override
     public List<ISelectedTab> getSelectedTabs() {
-        MongoDBTable tab = new MongoDBTable();
+        if (StringUtils.isEmpty(this.collectionName)) {
+            throw new IllegalStateException("property collectionName can not be empty");
+        }
+        MongoDBTable tab = new MongoDBTable(this.collectionName);
+
 
         List<ColCfg> cols = JSON.parseArray(this.column, ColCfg.class);
         tab.cols = cols.stream().map((c) -> {

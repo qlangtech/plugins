@@ -17,11 +17,13 @@ package com.qlangtech.tis.plugin.ds.mangodb;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.mongodb.AuthenticationMechanism;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -32,11 +34,11 @@ import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -56,8 +58,15 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     public String dbName;
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String username;
-    @FormField(ordinal = 4, type = FormFieldType.PASSWORD, validate = {})
+
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String userSource;
+
+    @FormField(ordinal = 5, type = FormFieldType.PASSWORD, validate = {})
     public String password;
+
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String authMechanism;
 
     public String getDbName() {
         return this.dbName;
@@ -118,8 +127,29 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         List<String> addressList = getAddressList(this.address); //conf.getList(KeyConstant.MONGO_ADDRESS);
         // try {
         if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
-            MongoCredential credential = MongoCredential.createCredential(this.username, this.dbName, password.toCharArray());
-            mongoClient = new MongoClient(parseServerAddress(addressList), Arrays.asList(credential));
+            MongoCredential credential = null;
+            AuthenticationMechanism aMechanism = AuthenticationMechanism.fromMechanismName(this.authMechanism);
+            switch (aMechanism) {
+                case PLAIN:
+                    credential = MongoCredential.createPlainCredential(this.username, this.userSource, password.toCharArray());
+                    break;
+                case GSSAPI:
+                    credential = MongoCredential.createGSSAPICredential(this.username);
+                    break;
+                case MONGODB_CR:
+                    credential = MongoCredential.createMongoCRCredential(this.username, this.userSource, password.toCharArray());
+                    break;
+                case SCRAM_SHA_1:
+                    credential = MongoCredential.createScramSha1Credential(this.username, this.userSource, password.toCharArray());
+                    break;
+                case MONGODB_X509:
+                    credential = MongoCredential.createMongoX509Credential(this.username);
+                    break;
+                default:
+                    throw new IllegalStateException("illegal authMechanism:" + aMechanism);
+            }
+
+            mongoClient = new MongoClient(parseServerAddress(addressList), Collections.singletonList(credential));
         } else {
             mongoClient = new MongoClient(parseServerAddress(addressList));
         }
@@ -127,6 +157,11 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         return mongoClient;
     }
 
+    public static List<Option> allAuthMechanism() {
+        return Arrays.stream(AuthenticationMechanism.values())
+                .map((e) -> new Option(e.getMechanismName(), e.getMechanismName()))
+                .collect(Collectors.toList());
+    }
 
 
     public static List<String> getAddressList(String address) {
@@ -143,7 +178,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         }
         return addressList;
     }
-
 
 
     @TISExtension

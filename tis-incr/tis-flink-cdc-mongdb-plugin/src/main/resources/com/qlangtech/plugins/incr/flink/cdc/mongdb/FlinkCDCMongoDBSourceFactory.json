@@ -16,7 +16,8 @@
   "copyExistingPipeline": {
     "placeholder": "[{\"$match\": {\"closed\": \"false\"}}]",
     "style": "codemirror",
-    "mode": "application/ld+json"
+    "mode": "application/ld+json",
+    "rows": 4
   },
   "copyExisting": {
     "enum": [

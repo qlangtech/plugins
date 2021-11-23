@@ -30,6 +30,10 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
         this.writer = writer;
     }
 
+    public String getDataXName() {
+        return this.writer.dataXName;
+    }
+
     public String getCollectionName() {
         return this.writer.collectionName;
     }

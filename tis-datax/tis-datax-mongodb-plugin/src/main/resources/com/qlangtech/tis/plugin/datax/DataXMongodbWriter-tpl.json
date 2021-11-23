@@ -9,6 +9,7 @@
         "dbName": "${writer.dbName}",
         "collectionName": "${writer.collectionName}",
         "column": ${writer.column},
+        "dataxName" : "${writer.dataXName}",
 #if($writer.containUpsertInfo)
         "upsertInfo": ${writer.upsertInfo}
 #end

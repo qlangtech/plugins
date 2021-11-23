@@ -16,21 +16,20 @@
 import com.qlangtech.tis.plugin.datax.TestDataXGlobalConfig;
 import com.qlangtech.tis.plugin.datax.TestDataXJobSubmit;
 import com.qlangtech.tis.plugin.datax.TestDefaultDataxProcessor;
-import com.qlangtech.tis.plugin.datax.TestLocalDataXJobSubmit;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-21 11:31
  **/
-public class TestAll {
+public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXGlobalConfig.class);
         suite.addTestSuite(TestDataXJobSubmit.class);
         suite.addTestSuite(TestDefaultDataxProcessor.class);
-        suite.addTestSuite(TestLocalDataXJobSubmit.class);
         return suite;
     }
 

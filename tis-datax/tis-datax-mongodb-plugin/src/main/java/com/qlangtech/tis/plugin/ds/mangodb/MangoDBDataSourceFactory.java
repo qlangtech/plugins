@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,6 +75,24 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     public boolean isContainCredential() {
         return StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password);
+    }
+
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> iface) throws SQLException {
+        if (!isWrapperFor(iface)) {
+            throw new IllegalStateException(" is not wrapper for :" + iface.getName());
+        }
+        return (T) createMongoClient();
+    }
+
+    @Override
+    public boolean isWrapperFor(Class<?> iface) throws SQLException {
+        return iface == MongoClient.class;
     }
 
     public String getUserName() {
@@ -121,6 +140,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 //        }
         throw new UnsupportedOperationException();
     }
+
 
     private MongoClient createMongoClient() {
         MongoClient mongoClient = null;

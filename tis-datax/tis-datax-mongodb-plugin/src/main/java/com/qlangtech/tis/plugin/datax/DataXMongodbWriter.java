@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -48,7 +49,8 @@ import java.util.Optional;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.INullTableMapCreator {
+public class DataXMongodbWriter extends DataxWriter
+        implements IDataxProcessor.INullTableMapCreator, KeyedPluginStore.IPluginKeyAware {
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbWriter.class);
     private static final String KEY_FIELD_UPSERT_INFO = "upsertInfo";
     private static final String KEY_FIELD_COLUMN = "column";
@@ -67,6 +69,8 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
     @FormField(ordinal = 11, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
+    public String dataXName;
+
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXMongodbWriter.class, "DataXMongodbWriter-tpl.json");
     }
@@ -74,6 +78,12 @@ public class DataXMongodbWriter extends DataxWriter implements IDataxProcessor.I
     public MangoDBDataSourceFactory getDsFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return (MangoDBDataSourceFactory) dsStore.getPlugin();
+    }
+
+
+    @Override
+    public void setKey(KeyedPluginStore.Key key) {
+        this.dataXName = key.keyVal.getVal();
     }
 
     /**

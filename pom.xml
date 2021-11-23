@@ -54,7 +54,7 @@
     </modules>
 
     <properties>
-        <revision>2.3.0</revision>
+<!--        <revision>2.3.0</revision>-->
 
         <hadoop-version>2.6.5</hadoop-version>
         <!--

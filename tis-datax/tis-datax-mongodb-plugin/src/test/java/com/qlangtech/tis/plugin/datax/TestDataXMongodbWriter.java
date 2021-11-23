@@ -15,13 +15,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
@@ -54,7 +53,7 @@ public class TestDataXMongodbWriter extends TestCase {
 
         for (ISelectedTab tab : selectedTabs) {
             for (ISelectedTab.ColMeta cm : tab.getCols()) {
-                cm.setType(ISelectedTab.DataXReaderColType.STRING);
+                cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
             }
         }
         EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(4);
@@ -95,8 +94,9 @@ public class TestDataXMongodbWriter extends TestCase {
         writer.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
         writer.template = DataXMongodbWriter.getDftTemplate();
         writer.dbName = "order1";
+        writer.dataXName = "mongodb_doris";
         writer.upsertInfo = "{\"isUpsert\":true,\"upsertKey\":\"user_id\"}";
-       // IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        // IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
         WriterTemplate.valiateCfgGenerate(
                 "mongodb-datax-writer-assert.json", writer, null);
 

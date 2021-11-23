@@ -20,6 +20,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -60,6 +61,7 @@ public class TestDataXMongodbWriter extends TestCase {
         DataxReader.dataxReaderThreadLocal.set(dataxReader);
         EasyMock.replay(dataxReader);
         DataXMongodbWriter writer = new DataXMongodbWriter();
+        assertTrue(writer instanceof IDataSourceFactoryGetter);
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
 
         JsonUtil.assertJSONEqual(DataXMongodbWriter.class, "mongdodb-datax-writer-descriptor.json"

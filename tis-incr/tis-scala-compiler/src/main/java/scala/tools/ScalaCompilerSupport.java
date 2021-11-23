@@ -346,26 +346,28 @@ public class ScalaCompilerSupport {
      */
     public static Set<String> getStreamScriptCompilerClasspath() {
 
-        File dependencies = new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-scala-compiler-dependencies/tis-scala-compiler-dependencies");
-        if (!dependencies.exists() || dependencies.list().length < 1) {
-            throw new IllegalStateException("dependencies list can not be null,path:" + dependencies.getAbsolutePath());
-        }
 
         File tisFlinkDependency = new File(Config.getDataDir(), "libs/plugins/tis-flink-dependency/WEB-INF/lib");
         if (!tisFlinkDependency.exists() || tisFlinkDependency.isFile()) {
             throw new IllegalStateException("dir tisFlinkDependency is illegal:" + tisFlinkDependency.getAbsolutePath());
         }
 
-        File tisRealtimeFlink = new File(Config.getDataDir(), "libs/plugins/tis-realtime-flink/WEB-INF/lib");
+        File tisRealtimeFlinkRootDir = new File(Config.getDataDir(), "libs/plugins/tis-realtime-flink");
+
+        File tisRealtimeFlink = new File(tisRealtimeFlinkRootDir, "WEB-INF/lib");
         if (!tisRealtimeFlink.exists() || tisRealtimeFlink.isFile()) {
             throw new IllegalStateException("dir tisRealtimeFlink is illegal:" + tisRealtimeFlink.getAbsolutePath());
+        }
+
+        File scalaCompilerDependencies = new File(tisRealtimeFlinkRootDir, "tis-scala-compiler-dependencies");
+        if (!scalaCompilerDependencies.exists() || scalaCompilerDependencies.list().length < 1) {
+            throw new IllegalStateException("dependencies list can not be null,path:" + scalaCompilerDependencies.getAbsolutePath());
         }
 
         return Sets.newHashSet(
                 tisRealtimeFlink.getAbsolutePath() + "/*"
                 , tisFlinkDependency.getAbsolutePath() + "/*"
-                , dependencies.getAbsolutePath() + "/*");
-        // return Collections.singleton();
+                , scalaCompilerDependencies.getAbsolutePath() + "/*");
     }
 
     /**
@@ -500,7 +502,8 @@ public class ScalaCompilerSupport {
             for (File f : sourceRootDirs) {
                 hash.append(f.toString());
             }
-            return new LastCompilationInfo(new File(outputDir.getAbsolutePath() + "." + hash.toString().hashCode() + ".timestamp"), outputDir);
+            return new LastCompilationInfo(
+                    new File(outputDir.getAbsolutePath() + "." + hash.toString().hashCode() + ".timestamp"), outputDir);
         }
 
         private final File _lastCompileAtFile;

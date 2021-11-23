@@ -36,6 +36,8 @@
     </properties>
 
     <modules>
+
+
         <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
 

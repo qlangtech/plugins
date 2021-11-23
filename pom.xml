@@ -35,7 +35,7 @@
     <modules>
         <!--        <module>tis-spark-hive-server-extends</module>-->
         <!--        <module>tis-hdfs-plugin</module>-->
-
+        <module>tis-scala-compiler-dependencies</module>
         <module>tis-datax</module>
         <module>tis-incr</module>
 

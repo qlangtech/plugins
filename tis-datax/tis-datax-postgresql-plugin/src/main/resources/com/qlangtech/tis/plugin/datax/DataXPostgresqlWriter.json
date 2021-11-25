@@ -1,4 +1,7 @@
 {
+  "autoCreateTable": {
+    "disable": false
+  },
   "dbName": {
     "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"PostgreSQL\")",
     "creator": {
@@ -8,12 +11,6 @@
         }
       ]
     }
-  },
-  "preSql": {
-    "help": "描述：写入数据到目的表前，会先执行这里的标准语句。如果 Sql 中有你需要操作到的表名称，请使用 "
-  },
-  "postSql": {
-    "help": "描述：写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ） "
   },
   "batchSize": {
     "help": "描述：一次性批量提交的记录数大小，该值可以极大减少DataX与PostgreSql的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"

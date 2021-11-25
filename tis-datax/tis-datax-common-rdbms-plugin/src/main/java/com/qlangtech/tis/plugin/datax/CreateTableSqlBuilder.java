@@ -58,11 +58,13 @@ public abstract class CreateTableSqlBuilder {
         maxColNameLength += 4;
         final int colSize = getCols().size();
         int colIndex = 0;
+        String escapeChar = supportColEscapeChar() ? String.valueOf(colEscapeChar()) : StringUtils.EMPTY;
         for (ISelectedTab.ColMeta col : getCols()) {
             if (col.isPk()) {
                 pks.add(col);
             }
-            script.append("    ").append(colEscapeChar()).append(String.format("%-" + (maxColNameLength) + "s", col.getName() + colEscapeChar()))
+            script.append("    ").append(escapeChar)
+                    .append(String.format("%-" + (maxColNameLength) + "s", col.getName() + (escapeChar)))
                     .append(convertType(col));
             if (++colIndex < colSize) {
                 script.append(",");
@@ -99,6 +101,10 @@ public abstract class CreateTableSqlBuilder {
 
     protected char colEscapeChar() {
         return '`';
+    }
+
+    protected boolean supportColEscapeChar() {
+        return true;
     }
 
     protected String getCreateTableName() {

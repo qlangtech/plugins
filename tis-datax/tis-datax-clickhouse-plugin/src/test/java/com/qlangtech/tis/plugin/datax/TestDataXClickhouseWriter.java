@@ -171,27 +171,27 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
         cm = new ISelectedTab.ColMeta();
         cm.setName("customerregister_id");
-        cm.setType(ISelectedTab.DataXReaderColType.STRING);
+        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("waitingorder_id");
-        cm.setType(ISelectedTab.DataXReaderColType.STRING);
+        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("kind");
-        cm.setType(ISelectedTab.DataXReaderColType.INT);
+        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("create_time");
-        cm.setType(ISelectedTab.DataXReaderColType.Long);
+        cm.setType(ISelectedTab.DataXReaderColType.Long.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("last_ver");
-        cm.setType(ISelectedTab.DataXReaderColType.INT);
+        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
         tableMap.setSourceCols(cmetas);

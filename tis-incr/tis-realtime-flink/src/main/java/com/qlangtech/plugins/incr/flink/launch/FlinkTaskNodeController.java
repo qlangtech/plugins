@@ -28,6 +28,7 @@ import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -136,12 +137,7 @@ public class FlinkTaskNodeController implements IRCController {
             // 传递App名称
             entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
 
-            final Attributes cfgAttrs = new Attributes();
-            // 传递Config变量
-            Config.getInstance().visitKeyValPair((e) -> {
-                cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
-            });
-            entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
+            this.setCfgAttrs(entries);
 
             //FileUtils.copyFile(streamJar, streamUberJar);
             // 删除一下以确保每次文件是更新的，以免出现诡异的问题
@@ -198,6 +194,20 @@ public class FlinkTaskNodeController implements IRCController {
         } finally {
             Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
+    }
+
+    private void setCfgAttrs(Map<String, Attributes> entries) {
+        final Attributes cfgAttrs = new Attributes();
+        // 传递Config变量
+        Config.getInstance().visitKeyValPair((e) -> {
+            if (Config.KEY_TIS_HOST.equals(e.getKey())) {
+                // tishost为127.0.0.1会出错
+                return;
+            }
+            cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
+        });
+        cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
+        entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
     }
 
     private File getIncrJobRecordFile(TargetResName collection) {

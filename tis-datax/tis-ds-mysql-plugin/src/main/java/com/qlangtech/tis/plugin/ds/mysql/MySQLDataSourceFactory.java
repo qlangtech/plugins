@@ -16,6 +16,9 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
@@ -35,6 +38,12 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
     protected static final String DS_TYPE_MYSQL_V8 = DS_TYPE_MYSQL + "-V8";
 
+    //https://blog.csdn.net/Shadow_Light/article/details/100749537
+    /**
+     * 传输时数据压缩
+     */
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean useCompression;
 
 //    // 数据库名称
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -84,7 +93,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:mysql://" + ip + ":" + this.port + "/" + dbName + "?useUnicode=yes";
+        String jdbcUrl = "jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
+                + "?useUnicode=yes&useCursorFetch=true&useCompression=" + this.useCompression;
+
         if (StringUtils.isNotEmpty(this.encode)) {
             jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
         }

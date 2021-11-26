@@ -46,10 +46,5 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL_V5;
         }
-
-//        @Override
-//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-//            return super.validate(msgHandler, context, postFormVals);
-//        }
     }
 }

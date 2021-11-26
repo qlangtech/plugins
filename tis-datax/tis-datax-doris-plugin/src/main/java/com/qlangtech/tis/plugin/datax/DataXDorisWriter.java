@@ -138,7 +138,7 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
 
                     @Override
                     public String bitType(ColumnMetaData.DataType type) {
-                        return "bit";
+                        return "TINYINT";
                     }
 
                     @Override

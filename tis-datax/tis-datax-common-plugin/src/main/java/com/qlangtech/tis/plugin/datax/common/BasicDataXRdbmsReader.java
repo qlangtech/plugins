@@ -53,6 +53,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
+    @FormField(ordinal = 98, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer fetchSize;
+
     @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
@@ -62,6 +65,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     private transient boolean colTypeSetted;
     public String dataXName;
+
+    @Override
+    public Integer getRowFetchSize() {
+        return this.fetchSize;
+    }
 
     @Override
     public final List<SelectedTab> getSelectedTabs() {

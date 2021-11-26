@@ -26,7 +26,8 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 
 /**
- * https://github.com/alibaba/DataX/blob/master/mysqlreader/doc/mysqlreader.md
+ * https://github.com/alibaba/DataX/blob/master/mysqlreader/doc/mysqlreader.md <br>
+ * https://blog.csdn.net/Shadow_Light/article/details/100749537
  *
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30

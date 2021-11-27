@@ -5,7 +5,12 @@
 TIS平台中提交Flink任务之前，请先创建Flink Cluster，支持两种模式：
 
 1. Native Kubernetes: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/native_kubernetes/)
+
 2. Standalone: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/standalone/overview/)
+   
+   安装说明:
+      - 下载地址：
+   
 
 ## parallelism
 

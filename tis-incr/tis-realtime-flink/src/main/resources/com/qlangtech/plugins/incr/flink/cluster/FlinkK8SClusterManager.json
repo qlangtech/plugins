@@ -1,6 +1,6 @@
 {
   "clusterId": {
-    "placeholder": "my-first-cluster"
+    "dftVal": "tis-flink-cluster"
   },
   "jmMemory": {
     "dftVal": "1600"

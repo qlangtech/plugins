@@ -16,12 +16,14 @@
 package com.qlangtech.plugins.incr.flink.launch;
 
 import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
+import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
@@ -48,6 +50,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.jar.*;
 import java.util.zip.CRC32;
 
@@ -242,6 +245,10 @@ public class FlinkTaskNodeController implements IRCController {
                 rcDeployment = new ExtendFlinkJobDeploymentDetails(factory.getClusterCfg(), jobDetailsInfo);
                 return rcDeployment;
             }
+        } catch (TimeoutException e) {
+            FlinkCluster clusterCfg = this.factory.getClusterCfg();
+            throw new TisException("flinkClusterId:" + clusterCfg.getClusterId()
+                    + ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1) {

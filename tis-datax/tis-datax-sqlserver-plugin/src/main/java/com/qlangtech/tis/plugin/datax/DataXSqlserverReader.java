@@ -35,8 +35,8 @@ public class DataXSqlserverReader extends BasicDataXRdbmsReader<SqlServerDatasou
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
     public Boolean splitPk;
 
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    public Integer fetchSize;
+//    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+//    public Integer fetchSize;
 
 
     public static String getDftTemplate() {

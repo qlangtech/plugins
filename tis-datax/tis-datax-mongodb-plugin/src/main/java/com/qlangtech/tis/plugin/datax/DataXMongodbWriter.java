@@ -89,6 +89,11 @@ public class DataXMongodbWriter extends DataxWriter
         this.dataXName = key.keyVal.getVal();
     }
 
+    @Override
+    public Integer getRowFetchSize() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * 取得默认的列内容
      *

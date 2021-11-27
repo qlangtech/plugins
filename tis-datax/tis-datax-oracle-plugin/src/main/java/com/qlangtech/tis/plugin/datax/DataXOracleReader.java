@@ -49,8 +49,8 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
     @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
     public Boolean splitPk;
 
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {})
-    public Integer fetchSize;
+//    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {})
+//    public Integer fetchSize;
 
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
     public String session;

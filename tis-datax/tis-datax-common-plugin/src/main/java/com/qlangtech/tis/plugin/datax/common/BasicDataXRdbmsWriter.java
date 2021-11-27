@@ -58,6 +58,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     public String dataXName;
 
     @Override
+    public Integer getRowFetchSize() {
+        throw new UnsupportedOperationException("just support in DataX Reader");
+    }
+
+    @Override
     public void setKey(KeyedPluginStore.Key key) {
         this.dataXName = key.keyVal.getVal();
     }

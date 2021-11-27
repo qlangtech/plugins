@@ -56,20 +56,20 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
         throw new UnsupportedOperationException();
     }
 
-    @TISExtension()
-    public static class DescriptorImpl extends Descriptor<IncrStreamFactory> {
-
-        public DescriptorImpl() {
-            super();
-            this.registerSelectOptions(KEY_FIELD_NAME, () -> {
-                PluginStore<K8sImage> images = TIS.getPluginStore(K8sImage.class);
-                return images.getPlugins();
-            });
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "k8s-incr";
-        }
-    }
+//    @TISExtension()
+//    public static class DescriptorImpl extends Descriptor<IncrStreamFactory> {
+//
+//        public DescriptorImpl() {
+//            super();
+//            this.registerSelectOptions(KEY_FIELD_NAME, () -> {
+//                PluginStore<K8sImage> images = TIS.getPluginStore(K8sImage.class);
+//                return images.getPlugins();
+//            });
+//        }
+//
+//        @Override
+//        public String getDisplayName() {
+//            return "k8s-incr";
+//        }
+//    }
 }

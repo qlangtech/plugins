@@ -26,13 +26,14 @@
 
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-flink-cdc-common</artifactId>
+    <packaging>tpi</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.ververica</groupId>
             <artifactId>flink-connector-debezium</artifactId>
             <version>${flink.cdc.version}</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

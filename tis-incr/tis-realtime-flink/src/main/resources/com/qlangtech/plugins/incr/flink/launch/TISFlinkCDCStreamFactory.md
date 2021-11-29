@@ -5,12 +5,20 @@
 TIS平台中提交Flink任务之前，请先创建Flink Cluster，支持两种模式：
 
 1. Native Kubernetes: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/native_kubernetes/)
+   安装说明：
+      - 在本地局域网中安装k8s环境
+      - 在TIS中部署Flink-Cluster，[入口](/base/flink-cluster)
 
 2. Standalone: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/standalone/overview/)
    
    安装说明:
-      - 下载地址：
-   
+      - 下载地址：[http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.13.1-bin.tar.gz](http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.13.1-bin.tar.gz)
+      - 解压： tar xvf flink-tis-1.13.1-bin.tar.gz 
+      - 启动Flink-Cluster：
+         ```shell script
+          sh ./bin/start-cluster.sh
+         ```
+         
 
 ## parallelism
 

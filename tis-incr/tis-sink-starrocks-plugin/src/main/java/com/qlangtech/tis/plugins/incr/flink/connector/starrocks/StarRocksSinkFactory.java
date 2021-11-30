@@ -25,6 +25,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -153,7 +154,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFuncs = Maps.newHashMap();
         IDataxProcessor.TableAlias tableName = null;
         // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
-        DataXDorisWriter dataXWriter = (DataXDorisWriter) dataxProcessor.getWriter(null);
+        BasicDorisStarRocksWriter dataXWriter = (BasicDorisStarRocksWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();

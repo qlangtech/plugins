@@ -20,6 +20,7 @@ import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.tis.config.aliyun.IAliyunToken;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -156,7 +157,13 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
 
         sinkBuilder.setFailureHandler(new DefaultActionRequestFailureHandler());
 
-        return Collections.singletonMap(esSchema, sinkBuilder.build());
+        IDataxProcessor.TableAlias tableMapper = new IDataxProcessor.TableAlias();
+        tableMapper.setTo(dataXWriter.getIndexName());
+        IDataxReader reader = dataxProcessor.getReader(null);
+        for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
+            tableMapper.setFrom(selectedTab.getName());
+        }
+        return Collections.singletonMap(tableMapper, sinkBuilder.build());
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {
@@ -182,8 +189,6 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
         }
 
         private IndexRequest createIndexRequest(DTO element) {
-
-            //Set<String> fieldNames = element.getFieldNames(false);
             Map<String, Object> after = element.getAfter();
             Map<String, Object> json = new HashMap<>();
             Object val = null;

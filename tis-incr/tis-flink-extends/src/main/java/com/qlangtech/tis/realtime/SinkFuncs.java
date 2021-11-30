@@ -47,6 +47,7 @@ public class SinkFuncs {
             }
             boolean hasMatch = false;
             for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
+                entry.getKey();
                 if (originTableName.equals(entry.getKey().getFrom())) {
                     sourceStream.addSink(entry.getValue()).name(entry.getKey().getTo());
                     hasMatch = true;

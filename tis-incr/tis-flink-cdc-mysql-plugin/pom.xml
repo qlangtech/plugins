@@ -29,11 +29,7 @@
     <artifactId>tis-flink-cdc-mysql-plugin</artifactId>
     <packaging>tpi</packaging>
 
-
-
-
     <dependencies>
-
 
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -24,9 +24,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -71,7 +73,15 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
             }
         }
 
-        SinkFuncs sinkFunction = new SinkFuncs(this.getSinkFuncFactory().createSinkFunction(dataXProcessor));
+        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinks = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
+        sinks.forEach((tab, func) -> {
+            if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
+                throw new IllegalArgumentException("tab of "
+                        + this.getSinkFuncFactory().getDescriptor().getDisplayName() + ":" + tab + " is illegal");
+            }
+        });
+
+        SinkFuncs sinkFunction = new SinkFuncs(sinks);
 
         Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
         for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {

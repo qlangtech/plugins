@@ -18,7 +18,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.plugin.datax.DataXDorisWriter;
+import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;

@@ -13,24 +13,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.qlangtech.tis.plugin.datax.doris.TestDataXDorisWriter;
-import com.qlangtech.tis.plugin.datax.starrocks.TestDataXStarRocksWriter;
-import com.qlangtech.tis.plugin.ds.doris.TestDorisSourceFactory;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+package com.qlangtech.tis.plugin.datax.starrocks;
+
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
+import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-09-07 14:19
+ * @create: 2021-11-29 10:08
  **/
-public class TestAll extends TestCase {
+public class DataXStarRocksWriter extends BasicDorisStarRocksWriter {
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestDorisSourceFactory.class);
-        suite.addTestSuite(TestDataXDorisWriter.class);
-        suite.addTestSuite(TestDataXStarRocksWriter.class);
-        return suite;
+    @TISExtension()
+    public static class DefaultDescriptor extends BaseDescriptor {
+        @Override
+        public String getDisplayName() {
+            return StarRocksSourceFactory.DISPLAY_NAME;
+        }
     }
 }

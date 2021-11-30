@@ -1,14 +1,4 @@
 {
-  "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Doris\")",
-    "creator": {
-      "plugin": [
-        {
-          "descName": "Doris"
-        }
-      ]
-    }
-  },
   "session": {
     "disable": true
   },
@@ -24,7 +14,7 @@
     "dftVal": 104857600
   },
   "template": {
-    "dftVal": "com.qlangtech.tis.plugin.datax.DataXDorisWriter.getDftTemplate()"
+    "dftVal": "com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter.getDftTemplate()"
   },
   "autoCreateTable": {
     "disable": false

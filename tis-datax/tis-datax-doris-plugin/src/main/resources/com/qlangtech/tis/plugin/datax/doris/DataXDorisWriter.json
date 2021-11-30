@@ -1,0 +1,12 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"Doris\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "Doris"
+        }
+      ]
+    }
+  }
+}

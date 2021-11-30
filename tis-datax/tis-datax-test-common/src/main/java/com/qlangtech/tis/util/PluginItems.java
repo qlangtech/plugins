@@ -18,9 +18,11 @@ package com.qlangtech.tis.util;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.manage.common.Option;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -39,6 +41,7 @@ public class PluginItems {
     public static final String DB_SQL_ORACLE = "OracleDB";
 
     public static final String DB_SQL_DORIS = "DorisDB1";
+    public static final String DB_SQL_StarRocks = "StarRocksDB1";
 
 
     public static List<Option> getExistDbs(String... extendClass) {
@@ -111,6 +114,13 @@ public class PluginItems {
             }
         }
 
+        for (String sourceType : extendClass) {
+            if ("StarRocks".equals(sourceType)) {
+                return Collections.singletonList(new Option(DB_SQL_StarRocks, DB_SQL_StarRocks));
+                //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
+            }
+        }
+
 
 //        String expectExtendClass = com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory.class.getName();
 //        if (!expectExtendClass.equals(extendClass)) {
@@ -118,7 +128,7 @@ public class PluginItems {
 //        }
 
 
-        throw new IllegalStateException("param:" + extendClass.toString() + " must contain is illegal");
+        throw new IllegalStateException("param:" + Arrays.stream(extendClass).collect(Collectors.joining(",")) + " must contain is illegal");
     }
 
 

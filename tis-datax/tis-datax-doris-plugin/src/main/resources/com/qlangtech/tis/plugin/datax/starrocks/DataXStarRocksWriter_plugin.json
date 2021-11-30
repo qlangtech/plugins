@@ -1,0 +1,6 @@
+{
+  "name": "dorisWriter",
+  "class": "com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter",
+  "description": "",
+  "developer": "doris"
+}

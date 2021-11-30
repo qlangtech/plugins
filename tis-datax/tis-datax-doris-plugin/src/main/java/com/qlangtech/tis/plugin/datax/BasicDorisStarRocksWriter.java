@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- * This program is free software: you can use, redistribute, and/or modify
- * it under the terms of the GNU Affero General Public License, version 3
- * or later ("AGPL"), as published by the Free Software Foundation.
+ *   This program is free software: you can use, redistribute, and/or modify
+ *   it under the terms of the GNU Affero General Public License, version 3
+ *   or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.
+ *  This program is distributed in the hope that it will be useful, but WITHOUT
+ *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ *   FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -19,13 +19,13 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
+import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -36,13 +36,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * reference: https://github.com/DorisDB/DataX/blob/master/doriswriter/doc/doriswriter.md
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-09-07 09:39
- * @see com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter
+ * @create: 2021-11-29 14:46
  **/
-public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
+public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})
     public String loadProps;
@@ -58,7 +55,7 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
     }
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "DataXDorisWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(BasicDorisStarRocksWriter.class, "BasicDorisStarRocksWriter-tpl.json");
     }
 
 
@@ -171,9 +168,9 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
         return createTableSqlBuilder.build();
     }
 
-    @TISExtension()
-    public static class DefaultDescriptor extends RdbmsWriterDescriptor {
-        public DefaultDescriptor() {
+
+   protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
+        public BaseDescriptor() {
             super();
         }
 
@@ -202,9 +199,9 @@ public class DataXDorisWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> 
             return EndType.StarRocks;
         }
 
-        @Override
-        public String getDisplayName() {
-            return DorisSourceFactory.NAME_DORIS;
-        }
+//        @Override
+//        public String getDisplayName() {
+//            return DorisSourceFactory.NAME_DORIS;
+//        }
     }
 }

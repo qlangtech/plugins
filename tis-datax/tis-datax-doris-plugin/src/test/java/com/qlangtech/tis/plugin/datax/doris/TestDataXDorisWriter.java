@@ -1,20 +1,21 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- * This program is free software: you can use, redistribute, and/or modify
- * it under the terms of the GNU Affero General Public License, version 3
- * or later ("AGPL"), as published by the Free Software Foundation.
+ *   This program is free software: you can use, redistribute, and/or modify
+ *   it under the terms of the GNU Affero General Public License, version 3
+ *   or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.
+ *  This program is distributed in the hope that it will be useful, but WITHOUT
+ *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ *   FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugin.datax;
+package com.qlangtech.tis.plugin.datax.doris;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -24,6 +25,7 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -65,6 +67,12 @@ public class TestDataXDorisWriter extends TestCase {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXDorisWriter.class);
         assertTrue(extraProps.isPresent());
+        PluginExtraProps props = extraProps.get();
+        PluginExtraProps.Props dbNameProp = props.getProp("dbName");
+        assertNotNull(dbNameProp);
+        JSONObject creator = dbNameProp.getProps().getJSONObject("creator");
+        assertNotNull(creator);
+
     }
 
     public void testDescriptorsJSONGenerate() {

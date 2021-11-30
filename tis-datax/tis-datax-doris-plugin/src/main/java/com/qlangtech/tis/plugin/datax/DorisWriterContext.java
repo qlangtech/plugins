@@ -24,9 +24,9 @@ import org.apache.commons.lang.StringUtils;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 09:58
  **/
-public class DorisWriterContext extends RdbmsWriterContext<DataXDorisWriter, DorisSourceFactory> {
+public class DorisWriterContext extends RdbmsWriterContext<BasicDorisStarRocksWriter, DorisSourceFactory> {
 
-    public DorisWriterContext(DataXDorisWriter writer, IDataxProcessor.TableMap tabMapper) {
+    public DorisWriterContext(BasicDorisStarRocksWriter writer, IDataxProcessor.TableMap tabMapper) {
         super(writer, tabMapper);
     }
 

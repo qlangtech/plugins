@@ -33,7 +33,7 @@
             <groupId>com.ververica</groupId>
             <artifactId>flink-connector-debezium</artifactId>
             <version>${flink.cdc.version}</version>
-            <scope>provided</scope>
+<!--            <scope>provided</scope>-->
         </dependency>
 
         <dependency>

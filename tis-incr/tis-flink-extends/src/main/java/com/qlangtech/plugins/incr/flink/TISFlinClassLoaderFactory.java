@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.IRepositoryResource;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
@@ -72,7 +73,11 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
             , String[] alwaysParentFirstPatterns
             , @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
-
+        try {
+            FileUtils.forceMkdir(Config.getDataDir(false));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         ClassLoader parentClassLoader = TIS.get().getPluginManager().uberClassLoader;
 
         return (libraryURLs) -> {

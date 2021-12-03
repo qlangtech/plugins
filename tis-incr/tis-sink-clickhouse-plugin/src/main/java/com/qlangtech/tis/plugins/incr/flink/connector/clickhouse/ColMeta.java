@@ -13,24 +13,41 @@
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.coredefine.module.action;
+package com.qlangtech.tis.plugins.incr.flink.connector.clickhouse;
 
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 
-import com.google.common.collect.Lists;
-import com.qlangtech.tis.common.utils.Assert;
-import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.offline.DataxUtils;
-
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-06-17 10:50
+ * @create: 2021-12-02 14:11
  **/
-public class DataxAction {
-    public static List<String> getTablesInDB(IPropertyType.SubFormFilter filter) {
-        String dataxName = filter.param(DataxUtils.DATAX_NAME);
-        Assert.assertEquals("dataxName must equal", "baisuitestTestcase", dataxName);
-        return Lists.newArrayList("table1", "table2", "table3");
+public class ColMeta implements Serializable {
+    private String key;
+    private ColumnMetaData.DataType type;
+
+    public ColMeta(String key, ColumnMetaData.DataType type) {
+        this.key = key;
+        this.type = type;
+    }
+
+    public ColMeta() {
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public ColumnMetaData.DataType getType() {
+        return type;
+    }
+
+    public void setType(ColumnMetaData.DataType type) {
+        this.type = type;
     }
 }

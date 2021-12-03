@@ -86,29 +86,53 @@
       {
         "describable":false,
         "eprops":{
-          "dftVal":"\\\\x01",
+          "dftVal":"x01",
+          "enum":[
+            {
+              "label":"x01",
+              "val":"x01"
+            },
+            {
+              "label":"tab",
+              "val":"tab"
+            }
+          ],
           "help":"数据列分割符"
         },
         "key":"columnSeparator",
         "ord":6,
         "pk":false,
         "required":true,
-        "type":1
+        "type":5
       },
       {
         "describable":false,
         "eprops":{
-          "dftVal":"\\\\x02",
+          "dftVal":"x02",
+          "enum":[
+            {
+              "label":"x02",
+              "val":"x02"
+            },
+            {
+              "label":"x07",
+              "val":"x07"
+            },
+            {
+              "label":"charReturn",
+              "val":"charReturn"
+            }
+          ],
           "help":"数据行分割符"
         },
         "key":"rowDelimiter",
         "ord":7,
         "pk":false,
         "required":true,
-        "type":1
+        "type":5
       }
     ],
-    "displayName":"Flink-CDC-StarRocks-Sink",
+    "displayName":"Flink-StarRocks-Sink",
     "extendPoint":"com.qlangtech.tis.plugin.incr.TISSinkFactory",
     "extractProps":{
       "targetType":"starRocks"

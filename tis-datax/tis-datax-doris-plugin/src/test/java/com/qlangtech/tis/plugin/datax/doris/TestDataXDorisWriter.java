@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax.doris;
@@ -21,11 +21,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
-import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -34,11 +34,13 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -62,6 +64,47 @@ public class TestDataXDorisWriter extends TestCase {
     public void testGetDftTemplate() {
         String dftTemplate = DataXDorisWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
+    }
+
+    public void testGenerateCreateDDL() {
+        DataXDorisWriter writer = new DataXDorisWriter();
+        writer.autoCreateTable = true;
+
+        StringBuffer ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+            ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+            col.setPk(true);
+            col.setName("id3");
+            col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setName("col4");
+            col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setName("col5");
+            col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setName("col5");
+            col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setPk(true);
+            col.setName("col6");
+            col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+            cols.add(col);
+        }));
+
+        assertNotNull(ddl);
+        // System.out.println(ddl);
+
+        assertEquals(
+                StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "create-application-ddl.sql"))
+                , ddl.toString());
     }
 
     public void testPluginExtraPropsLoad() throws Exception {
@@ -89,6 +132,7 @@ public class TestDataXDorisWriter extends TestCase {
         DataxReader.dataxReaderThreadLocal.set(dataxReader);
         EasyMock.replay(dataxReader);
         DataXDorisWriter writer = new DataXDorisWriter();
+
         DescriptorsJSON descJson = new DescriptorsJSON(writer.getDescriptor());
 
         JsonUtil.assertJSONEqual(DataXDorisWriter.class, "doris-datax-writer-descriptor.json"
@@ -110,24 +154,8 @@ public class TestDataXDorisWriter extends TestCase {
         DorisSourceFactory dsFactory = createDorisWriter.getDsFactory();
         DataXDorisWriter writer = createDorisWriter.getWriter();
 
-        // IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
 
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-        tableMap.setFrom("application");
-        tableMap.setTo("application");
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-        ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
-        col.setPk(true);
-        col.setName("user_id");
-        col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
-        sourceCols.add(col);
-
-        col = new ISelectedTab.ColMeta();
-        col.setName("user_name");
-        col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-        sourceCols.add(col);
-
-        tableMap.setSourceCols(sourceCols);
+        IDataxProcessor.TableMap tableMap = getTabApplication();
 
         WriterTemplate.valiateCfgGenerate(
                 "doris-datax-writer-assert.json", writer, tableMap);
@@ -144,6 +172,31 @@ public class TestDataXDorisWriter extends TestCase {
                 "doris-datax-writer-assert-without-optional.json", writer, tableMap);
 
 
+    }
+
+    protected IDataxProcessor.TableMap getTabApplication(
+            Consumer<List<ISelectedTab.ColMeta>>... colsProcess) {
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        tableMap.setFrom("application");
+        tableMap.setTo("application");
+        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
+        ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+        col.setPk(true);
+        col.setName("user_id");
+        col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        sourceCols.add(col);
+
+        col = new ISelectedTab.ColMeta();
+        col.setName("user_name");
+        col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        sourceCols.add(col);
+
+        for (Consumer<List<ISelectedTab.ColMeta>> p : colsProcess) {
+            p.accept(sourceCols);
+        }
+
+        tableMap.setSourceCols(sourceCols);
+        return tableMap;
     }
 
     public void testRealDump() throws Exception {

@@ -50,6 +50,9 @@ public abstract class CreateTableSqlBuilder {
         List<ISelectedTab.ColMeta> pks = Lists.newArrayList();
         int maxColNameLength = 0;
         for (ISelectedTab.ColMeta col : this.getCols()) {
+            if (col.isPk()) {
+                pks.add(col);
+            }
             int m = StringUtils.length(col.getName());
             if (m > maxColNameLength) {
                 maxColNameLength = m;
@@ -59,10 +62,7 @@ public abstract class CreateTableSqlBuilder {
         final int colSize = getCols().size();
         int colIndex = 0;
         String escapeChar = supportColEscapeChar() ? String.valueOf(colEscapeChar()) : StringUtils.EMPTY;
-        for (ISelectedTab.ColMeta col : getCols()) {
-            if (col.isPk()) {
-                pks.add(col);
-            }
+        for (ISelectedTab.ColMeta col : preProcessCols(pks, getCols())) {
             script.append("    ").append(escapeChar)
                     .append(String.format("%-" + (maxColNameLength) + "s", col.getName() + (escapeChar)))
                     .append(convertType(col));
@@ -96,6 +96,16 @@ public abstract class CreateTableSqlBuilder {
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
         return script;
+    }
+
+    /**
+     * 在打印之前先对cols进行预处理，比如排序等
+     *
+     * @param cols
+     * @return
+     */
+    protected List<ISelectedTab.ColMeta> preProcessCols(List<ISelectedTab.ColMeta> pks, List<ISelectedTab.ColMeta> cols) {
+        return cols;
     }
 
 

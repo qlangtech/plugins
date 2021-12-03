@@ -16,6 +16,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -61,7 +62,7 @@ import static com.starrocks.connector.flink.table.StarRocksSinkOptions.*;
  **/
 public class StarRocksSinkFactory extends TISSinkFactory {
 
-    public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-CDC-StarRocks-Sink";
+    public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = Validator.require)
     public String sinkSemantic;
@@ -89,16 +90,25 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     public String rowDelimiter;
 
     public static List<Option> allColumnSeparator() {
-        return Collections.singletonList(new Option(Separator.x01.name(), Separator.x01.name()));
+        return Lists.newArrayList(
+                new Option(Separator.x01.name(), Separator.x01.name())
+                , new Option(Separator.tab.name(), Separator.tab.name())
+        );
     }
 
     public static List<Option> allRowDelimiter() {
-        return Collections.singletonList(new Option(Separator.x02.name(), Separator.x02.name()));
+        return Lists.newArrayList(
+                new Option(Separator.x02.name(), Separator.x02.name())
+                , new Option(Separator.x07.name(), Separator.x07.name())
+                , new Option(Separator.charReturn.name(), Separator.charReturn.name()));
     }
 
     private enum Separator {
         x01("\\x01"),
-        x02("\\x02");
+        x02("\\x02"),
+        x07("\\x07"),
+        tab("\\t"),
+        charReturn("\\n");
 
         private String val;
 

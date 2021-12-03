@@ -20,6 +20,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
@@ -37,6 +38,11 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXSqlserverWriter.class, "DataXSqlserverWriter-tpl.json");
+    }
+
+    @Override
+    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
     }
 
     @Override

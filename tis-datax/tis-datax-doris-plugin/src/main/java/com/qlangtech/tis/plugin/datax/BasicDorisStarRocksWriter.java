@@ -1,22 +1,23 @@
 /**
  * Copyright (c) 2020 QingLang, Inc. <baisui@qlangtech.com>
  * <p>
- *   This program is free software: you can use, redistribute, and/or modify
- *   it under the terms of the GNU Affero General Public License, version 3
- *   or later ("AGPL"), as published by the Free Software Foundation.
+ * This program is free software: you can use, redistribute, and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3
+ * or later ("AGPL"), as published by the Free Software Foundation.
  * <p>
- *  This program is distributed in the hope that it will be useful, but WITHOUT
- *  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- *   FITNESS FOR A PARTICULAR PURPOSE.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
  * <p>
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -25,7 +26,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
-import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -79,6 +79,16 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 //                if (pk != null) {
 //                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 //                }
+            }
+
+            @Override
+            protected List<ISelectedTab.ColMeta> preProcessCols(List<ISelectedTab.ColMeta> pks, List<ISelectedTab.ColMeta> cols) {
+                // 将主键排在最前面
+                List<ISelectedTab.ColMeta> result = Lists.newArrayList(pks);
+                cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
+                    result.add(c);
+                });
+                return result;
             }
 
             @Override
@@ -145,7 +155,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
                     @Override
                     public String varcharType(ColumnMetaData.DataType type) {
-                        return "VARCHAR(" + Math.min(type.columnSize, 65500) + ")";
+                        return "VARCHAR(" + Math.min(type.columnSize, 65000) + ")";
                     }
 
                     @Override
@@ -169,7 +179,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
 
-   protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
+    protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
         public BaseDescriptor() {
             super();
         }

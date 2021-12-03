@@ -13,21 +13,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
+package com.qlangtech.tis.plugins.incr.flink.connector.clickhouse;
 
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.datax.DataXClickhouseWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
 import junit.framework.TestCase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -35,49 +34,34 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.easymock.EasyMock;
 
 import java.sql.Types;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-12 09:54
+ * @create: 2021-12-02 09:13
  **/
-public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
+public class TestClickHouseSinkFactory extends TestCase implements TISEasyMock {
 
-    public void testGetConfigOption() {
-        String desc = StarRocksSinkFactory.desc("sinkSemantic");
-        assertNotNull(desc);
-    }
+//    public void test() {
+//        Path path = Paths.get("/tmp/tis-clickhouse-sink");
+//        System.out.println(Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS));
+//    }
 
     public void testDescriptorsJSONGenerate() {
-        StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
+        ClickHouseSinkFactory sinkFactory = new ClickHouseSinkFactory();
         DescriptorsJSON descJson = new DescriptorsJSON(sinkFactory.getDescriptor());
 
-        JsonUtil.assertJSONEqual(StarRocksSinkFactory.class, "starrocks-sink-factory.json"
+        JsonUtil.assertJSONEqual(ClickHouseSinkFactory.class, "clickhouse-sink-factory.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
 
     }
 
-    public void testStartRocksWrite() throws Exception {
-
-        /**
-         CREATE TABLE `totalpayinfo` (
-         `id` varchar(32) NULL COMMENT "",
-         `entity_id` varchar(10) NULL COMMENT "",
-         `num` int(11) NULL COMMENT "",
-         `create_time` bigint(20) NULL COMMENT ""
-         ) ENGINE=OLAP
-         UNIQUE KEY(`id`)
-         DISTRIBUTED BY HASH(`id`) BUCKETS 10
-         PROPERTIES (
-         "replication_num" = "1",
-         "in_memory" = "false",
-         "storage_format" = "DEFAULT"
-         );
-         * */
+    public void testCreateSinkFunction() throws Exception {
 
         String tableName = "totalpayinfo";
         String colEntityId = "entity_id";
@@ -90,7 +74,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
         List<ISelectedTab> selectedTabs = Lists.newArrayList();
         SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
-        EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).times(2);
+        EasyMock.expect(totalpayinfo.getName()).andReturn(tableName);
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
@@ -113,30 +97,29 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         cm.setType(new ColumnMetaData.DataType(Types.BIGINT));
         cols.add(cm);
 
-        EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).times(2);
+        EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();
         selectedTabs.add(totalpayinfo);
         EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs);
 
         EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader);
 
 
-        DataXDorisWriter dataXWriter = mock("dataXWriter", DataXDorisWriter.class);
-        DorisSourceFactory sourceFactory = new DorisSourceFactory();
-        sourceFactory.loadUrl = "192.168.28.201:8030";
-        sourceFactory.userName = "root";
+        DataXClickhouseWriter dataXWriter = mock("dataXWriter", DataXClickhouseWriter.class);
+        dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:clickhouse://192.168.28.201:8123/tis"));
+
+
+        ClickHouseDataSourceFactory sourceFactory = new ClickHouseDataSourceFactory();
+
+        sourceFactory.userName = "default";
         sourceFactory.dbName = "tis";
-        // sourceFactory.password = "";
-        sourceFactory.port = 9030;
+        sourceFactory.password = "123456";
+        sourceFactory.port = 8123;
         sourceFactory.nodeDesc = "192.168.28.201";
 
         EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
-        StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
-        sinkFactory.columnSeparator = "\\x01";
-        sinkFactory.rowDelimiter = "\\x02";
-        sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
 
         Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
         IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
@@ -144,9 +127,22 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
         this.replay();
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+
+        ClickHouseSinkFactory clickHouseSinkFactory = new ClickHouseSinkFactory();
+        clickHouseSinkFactory.ignoringSendingException = true;
+        clickHouseSinkFactory.maxBufferSize = 1;
+        clickHouseSinkFactory.numRetries = 5;
+        clickHouseSinkFactory.numWriters = 1;
+        clickHouseSinkFactory.queueMaxCapacity = 1;
+        clickHouseSinkFactory.timeout = 30;
+
+        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>>
+                sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
+        assertTrue(sinkFuncs.size() > 0);
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
         DTO d = new DTO();
         d.setTableName(tableName);
         Map<String, Object> after = Maps.newHashMap();
@@ -155,15 +151,17 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         after.put(colId, "123dsf124325253dsf123");
         after.put(colCreateTime, "20211113115959");
         d.setAfter(after);
-        assertEquals(1, sinkFunction.size());
-        for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
-            env.fromElements(new DTO[]{d}).addSink(entry.getValue());
+        assertEquals(1, sinkFuncs.size());
+
+        for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFuncs.entrySet()) {
+            env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             break;
         }
 
         env.execute("testJob");
 
+        Thread.sleep(5000);
+
         this.verifyAll();
     }
-
 }

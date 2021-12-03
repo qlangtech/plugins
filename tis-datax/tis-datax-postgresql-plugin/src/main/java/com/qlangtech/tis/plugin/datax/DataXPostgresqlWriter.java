@@ -20,6 +20,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
@@ -56,6 +57,11 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 //
 //    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String template;
+
+    @Override
+    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");

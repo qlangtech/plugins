@@ -21,9 +21,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -45,6 +47,11 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         }
         OracleWriterContext writerContext = new OracleWriterContext(this, tableMap.get());
         return writerContext;
+    }
+
+    @Override
+    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
     }
 
     @Override

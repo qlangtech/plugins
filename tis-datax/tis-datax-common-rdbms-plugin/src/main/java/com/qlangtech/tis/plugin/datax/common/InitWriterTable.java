@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,9 @@ public class InitWriterTable {
      * @throws Exception
      */
     public static void process(String dataXName, String tableName, List<String> jdbcUrls) throws Exception {
-
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalArgumentException("param dataXName can not be null");
+        }
         BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
                 = (BasicDataXRdbmsWriter<BasicDataSourceFactory>) DataxWriter.load(null, dataXName);
 

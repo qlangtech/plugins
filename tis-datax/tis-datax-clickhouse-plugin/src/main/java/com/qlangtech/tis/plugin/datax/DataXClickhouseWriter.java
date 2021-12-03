@@ -24,9 +24,11 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Types;
@@ -68,6 +70,11 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     public String dataXName;
 
     @Override
+    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+    }
+
+    @Override
     public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
@@ -81,7 +88,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             @Override
             protected void appendTabMeta(List<ISelectedTab.ColMeta> pk) {
                 script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
-                if (pk != null) {
+                if (CollectionUtils.isNotEmpty(pk)) {
                     script.append(" ORDER BY ").append(pk.stream().map((p) -> "`" + p.getName() + "`").collect(Collectors.joining(","))).append("\n");
                 }
                 script.append(" SETTINGS index_granularity = 8192");
@@ -266,6 +273,11 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         @Override
         protected int getMaxBatchSize() {
             return 3072;
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.Clickhouse;
         }
 
         @Override

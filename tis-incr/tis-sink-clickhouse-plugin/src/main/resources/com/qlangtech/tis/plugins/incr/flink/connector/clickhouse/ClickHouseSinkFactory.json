@@ -5,6 +5,8 @@
     "help": "缓冲区中最大记录容量"
   },
   "numWriters": {
+    "dftVal": 1,
+    "help": "number of writers, which build and send requests"
   },
   "queueMaxCapacity": {
     "dftVal": 1000,

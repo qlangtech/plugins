@@ -48,15 +48,6 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
     public static final String DATAX_NAME = "ClickHouse";
 
-//    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String dbName;
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String preSql;
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String postSql;
-//    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-//    public Integer batchSize;
-
     @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer batchByteSize;
 
@@ -246,11 +237,6 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         context.setCols(IDataxProcessor.TabCols.create(tableMap.get()));
         return context;
     }
-
-//    @Override
-//    public String getTemplate() {
-//        return template;
-//    }
 
 
     public static String getDftTemplate() {

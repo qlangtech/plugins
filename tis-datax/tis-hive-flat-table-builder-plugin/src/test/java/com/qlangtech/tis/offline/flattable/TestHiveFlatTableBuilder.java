@@ -36,6 +36,7 @@ import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -61,7 +62,7 @@ import java.util.Set;
 public class TestHiveFlatTableBuilder extends TestCase {
 
 
-    private PluginStore<FlatTableBuilder> flatTableBuilderStore;
+    private IPluginStore<FlatTableBuilder> flatTableBuilderStore;
 
     @Override
     protected void setUp() throws Exception {

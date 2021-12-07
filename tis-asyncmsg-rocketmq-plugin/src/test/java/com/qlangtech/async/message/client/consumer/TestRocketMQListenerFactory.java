@@ -21,6 +21,7 @@ package com.qlangtech.async.message.client.consumer;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IMQConsumerStatusFactory;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import junit.framework.TestCase;
 
@@ -33,7 +34,7 @@ public class TestRocketMQListenerFactory extends TestCase {
 
     public void testCreateConsumerStatus() {
 
-        PluginStore<MQListenerFactory> mqListenerFactory = TIS.getPluginStore(collection, MQListenerFactory.class);
+        IPluginStore<MQListenerFactory> mqListenerFactory = TIS.getPluginStore(collection, MQListenerFactory.class);
         assertNotNull(mqListenerFactory);
 
         MQListenerFactory plugin = mqListenerFactory.getPlugin();

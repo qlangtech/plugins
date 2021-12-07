@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.incr;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import junit.framework.TestCase;
@@ -71,7 +72,7 @@ public class TestDefaultIncrK8sConfig extends TestCase {
     }
 
     public static IRCController getIncrSync() {
-        PluginStore<IncrStreamFactory> store = TIS.getPluginStore(totalpay, IncrStreamFactory.class);
+        IPluginStore<IncrStreamFactory> store = TIS.getPluginStore(totalpay, IncrStreamFactory.class);
         assertNotNull(store);
         IncrStreamFactory incrStream = store.getPlugin();
         assertNotNull(incrStream);

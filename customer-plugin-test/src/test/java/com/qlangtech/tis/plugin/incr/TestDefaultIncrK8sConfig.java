@@ -24,6 +24,7 @@ import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 
 /**
@@ -40,7 +41,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
     @Override
     public void setUp() throws Exception {
         //super.setUp();
-        PluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
+        IPluginStore<IncrStreamFactory> s4totalpayIncr = TIS.getPluginStore(s4totalpay, IncrStreamFactory.class);
         incrFactory = s4totalpayIncr.getPlugin();
         assertNotNull(incrFactory);
     }

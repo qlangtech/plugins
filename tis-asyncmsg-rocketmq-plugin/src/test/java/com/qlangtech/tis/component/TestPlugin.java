@@ -29,6 +29,7 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.util.HeteroList;
 import com.qlangtech.tis.util.UploadPluginMeta;
@@ -139,7 +140,7 @@ public class TestPlugin extends BaseTestCase {
 //            IncrComponent incrComponent = createIncrComponent();
 //            TIS.get().saveComponent(collection, incrComponent);
 //            incrComponent = TIS.get().loadIncrComponent(collection);
-            PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+            IPluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
             List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();// incrComponent.getMqListenerFactory();
             assertEquals(1, mqListenerFactory.size());
             RocketMQListenerFactory rocketMQListenerFactory = (RocketMQListenerFactory) mqListenerFactory.get(0);
@@ -156,7 +157,7 @@ public class TestPlugin extends BaseTestCase {
 
     public void testSerialize() throws Exception {
 
-        PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+        IPluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
 //        IncrComponent incrComponent = createIncrComponent();
         List<MQListenerFactory> mqListenerFactory = pluginStore.getPlugins();
         UploadPluginMeta meta = UploadPluginMeta.parse("mq");

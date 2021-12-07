@@ -21,6 +21,7 @@ import com.qlangtech.async.message.client.consumer.RocketMQListenerFactory;
 import com.qlangtech.async.message.client.to.impl.DefaultJSONFormatDeserialize;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class TestIncrComponent extends BaseTestCase {
     public void testLoad() {
        // IncrComponent incrComponent = TIS.get().loadIncrComponent(collection);
 
-        PluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
+        IPluginStore<MQListenerFactory> pluginStore = TIS.getPluginStore(collection, MQListenerFactory.class);
 
       //  assertNotNull(incrComponent);
         List<MQListenerFactory> mqListenerFactoryList = pluginStore.getPlugins();// incrComponent.getMqListenerFactory();

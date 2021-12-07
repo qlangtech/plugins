@@ -21,6 +21,7 @@ package com.qlangtech.tis.offline.flattable;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 
 import java.sql.Connection;
@@ -34,7 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @create: 2020-04-21 13:39
  **/
 public class TestHiveFlatTableBuilder extends BaiscPluginTest {
-    private PluginStore<FlatTableBuilder> flatTableBuilderStore;
+    private IPluginStore<FlatTableBuilder> flatTableBuilderStore;
 
     @Override
     public void setUp() throws Exception {

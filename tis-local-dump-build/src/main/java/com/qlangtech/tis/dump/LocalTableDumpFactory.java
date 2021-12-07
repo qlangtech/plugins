@@ -36,6 +36,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.DbScope;
 import com.qlangtech.tis.offline.TableDumpFactory;
 import com.qlangtech.tis.order.dump.task.SingleTableDumpTask;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -76,7 +77,7 @@ public class LocalTableDumpFactory extends TableDumpFactory implements ITISFileS
     private DataSourceFactory getDataSourceFactory(IDumpTable table) {
         if (dataSourceFactoryGetter == null) {
             dataSourceFactoryGetter = (tab) -> {
-                PluginStore<DataSourceFactory> dbPlugin = TIS.getDataBasePluginStore(new PostedDSProp(tab.getDbName(), DbScope.DETAILED));
+                IPluginStore<DataSourceFactory> dbPlugin = TIS.getDataBasePluginStore(new PostedDSProp(tab.getDbName(), DbScope.DETAILED));
                 Objects.requireNonNull(dbPlugin, "dbPlugin can not be null");
                 DataSourceFactory dsFactory = dbPlugin.getPlugin();
                 if (dsFactory == null) {

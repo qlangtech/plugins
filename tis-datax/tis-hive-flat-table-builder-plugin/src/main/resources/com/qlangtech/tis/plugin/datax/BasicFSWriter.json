@@ -7,7 +7,6 @@
       "plugin": [
         {
           "hetero": "fs",
-          "extraParam": "append_true",
           "descName": "HDFS"
         }
       ]

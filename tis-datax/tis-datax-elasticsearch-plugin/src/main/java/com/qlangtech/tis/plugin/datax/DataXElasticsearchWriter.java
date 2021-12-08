@@ -28,7 +28,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
@@ -114,8 +114,8 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
-    public IAliyunToken getToken() {
-        return IAliyunToken.getToken(this.endpoint);
+    public IHttpToken getToken() {
+        return IHttpToken.getToken(this.endpoint);
     }
 
     public String getIndexName() {
@@ -154,7 +154,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         if (esSchema == null) {
             throw new IllegalArgumentException("param esSchema can not be null");
         }
-        IAliyunToken token = this.getToken();
+        IHttpToken token = this.getToken();
         /********************************************************
          * 初始化索引Schema
          *******************************************************/
@@ -412,7 +412,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IAliyunToken.class));
+            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IHttpToken.KEY_DISPLAY_NAME));
         }
 
         @Override

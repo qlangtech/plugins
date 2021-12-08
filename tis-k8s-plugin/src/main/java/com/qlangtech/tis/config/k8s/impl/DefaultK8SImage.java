@@ -139,7 +139,7 @@ public class DefaultK8SImage extends K8sImage {
 
         public DescriptorImpl() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IK8sContext.class));
+            this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IK8sContext.KEY_DISPLAY_NAME));
         }
 
         public boolean validateHostAliases(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

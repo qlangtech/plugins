@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import org.apache.commons.lang.StringUtils;
@@ -33,7 +33,7 @@ import java.util.Objects;
  **/
 public class ESContext implements IDataxContext {
     private final DataXElasticsearchWriter writer;
-    private final IAliyunToken token;
+    private final IHttpToken token;
     private final ESTableAlias mapper;
 
     public ESContext(DataXElasticsearchWriter writer, ESTableAlias mapper) {

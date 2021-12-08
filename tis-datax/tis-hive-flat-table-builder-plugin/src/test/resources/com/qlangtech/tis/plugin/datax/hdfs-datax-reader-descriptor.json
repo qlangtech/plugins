@@ -9,7 +9,6 @@
             "plugin":[
               {
                 "descName":"HDFS",
-                "extraParam":"append_true",
                 "hetero":"fs"
               }
             ],

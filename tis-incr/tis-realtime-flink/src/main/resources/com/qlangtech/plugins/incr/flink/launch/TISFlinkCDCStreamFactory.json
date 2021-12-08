@@ -8,8 +8,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "Flink-Cluster",
-          "extraParam": "append_true"
+          "descName": "Flink-Cluster"
         }
       ]
     }

@@ -99,7 +99,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
 
 
     private IYarnConfig getYarnConfig() {
-        return ParamsConfig.getItem(this.containerName, IYarnConfig.class);
+        return ParamsConfig.getItem(this.containerName, IYarnConfig.KEY_DISPLAY_NAME);
     }
 
     @Override
@@ -162,7 +162,7 @@ public class YarnIndexBuilderTriggerFactory extends IndexBuilderTriggerFactory i
 
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_CONTAINER_NAME, () -> ParamsConfig.getItems(IYarnConfig.class));
+            registerSelectOptions(FIELD_CONTAINER_NAME, () -> ParamsConfig.getItems(IYarnConfig.KEY_DISPLAY_NAME));
             registerSelectOptions(FIELD_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 

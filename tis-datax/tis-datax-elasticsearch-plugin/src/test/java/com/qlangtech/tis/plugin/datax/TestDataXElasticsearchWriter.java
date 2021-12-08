@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
@@ -101,7 +101,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter() {
             @Override
-            public IAliyunToken getToken() {
+            public IHttpToken getToken() {
                 return token;
             }
 
@@ -259,7 +259,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     }
 
 
-    private static class TestAliyunToken implements IAliyunToken {
+    private static class TestAliyunToken implements IHttpToken {
         private String accessKeyId;
         private String sccessKeySecret;
 

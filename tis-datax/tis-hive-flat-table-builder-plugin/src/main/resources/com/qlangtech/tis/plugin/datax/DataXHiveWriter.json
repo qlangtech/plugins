@@ -6,7 +6,6 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "extraParam": "append_true",
           "descName": "HiveConn"
         }
       ]

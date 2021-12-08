@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 
 /**
@@ -33,7 +33,7 @@ public class OSSWriterContext implements IDataxReaderContext {
         this.writer = ossWriter;
     }
 
-    public IAliyunToken getOss() {
+    public IHttpToken getOss() {
         return writer.getOSSConfig();
     }
 

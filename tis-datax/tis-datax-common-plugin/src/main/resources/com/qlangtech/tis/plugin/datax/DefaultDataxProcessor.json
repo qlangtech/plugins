@@ -22,8 +22,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "DataX-global",
-          "extraParam": "append_true"
+          "descName": "DataX-global"
         }
       ],
       "label": "配置"

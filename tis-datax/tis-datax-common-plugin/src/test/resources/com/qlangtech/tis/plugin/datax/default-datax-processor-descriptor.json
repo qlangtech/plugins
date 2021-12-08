@@ -21,7 +21,6 @@
             "plugin":[
               {
                 "descName":"DataX-global",
-                "extraParam":"append_true",
                 "hetero":"params-cfg"
               }
             ],

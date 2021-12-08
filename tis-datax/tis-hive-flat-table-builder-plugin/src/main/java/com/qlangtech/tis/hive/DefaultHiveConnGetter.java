@@ -39,7 +39,7 @@ import java.util.Optional;
  **/
 public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGetter {
 
-    private static final String PLUGIN_NAME = "HiveConn";
+
 
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_USE_USERTOKEN = "useUserToken";

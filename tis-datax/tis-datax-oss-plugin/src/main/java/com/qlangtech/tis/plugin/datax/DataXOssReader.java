@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -24,13 +24,13 @@ import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.Bucket;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.aliyun.AliyunEndpoint;
+import com.qlangtech.tis.plugin.aliyun.HttpEndpoint;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -128,8 +128,8 @@ public class DataXOssReader extends DataxReader {
         throw new UnsupportedOperationException();
     }
 
-    public IAliyunToken getOSSConfig() {
-        return IAliyunToken.getToken(this.endpoint);
+    public IHttpToken getOSSConfig() {
+        return IHttpToken.getToken(this.endpoint);
     }
 
 
@@ -137,7 +137,7 @@ public class DataXOssReader extends DataxReader {
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IAliyunToken.class));
+            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IHttpToken.KEY_DISPLAY_NAME));
         }
 
         @Override
@@ -182,7 +182,7 @@ public class DataXOssReader extends DataxReader {
     public static boolean verifyFormOSSRelative(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
         String endpoint = postFormVals.getField(FIELD_ENDPOINT);
         String bucket = postFormVals.getField(FIELD_BUCKET);
-        AliyunEndpoint end = ParamsConfig.getItem(endpoint, AliyunEndpoint.class);
+        HttpEndpoint end = ParamsConfig.getItem(endpoint, HttpEndpoint.KEY_DISPLAY_NAME);
 
         try {
             OSS ossClient = new OSSClientBuilder().build(end.getEndpoint(), end.getAccessKeyId(), end.getAccessKeySecret());

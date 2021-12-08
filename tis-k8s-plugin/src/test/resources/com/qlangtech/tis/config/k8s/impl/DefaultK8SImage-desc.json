@@ -20,7 +20,6 @@
             "plugin": [
               {
                 "descName": "k8s",
-                "extraParam": "append_true",
                 "hetero": "params-cfg"
               }
             ]

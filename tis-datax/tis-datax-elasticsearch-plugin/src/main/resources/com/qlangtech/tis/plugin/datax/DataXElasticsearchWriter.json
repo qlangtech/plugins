@@ -6,8 +6,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "Aliyun-Endpoint",
-          "extraParam": "append_true"
+          "descName": "Aliyun-Endpoint"
         }
       ]
     }

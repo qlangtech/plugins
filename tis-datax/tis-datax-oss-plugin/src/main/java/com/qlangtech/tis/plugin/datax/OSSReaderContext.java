@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -47,7 +47,7 @@ public class OSSReaderContext implements IDataxReaderContext {
         this.reader = reader;
     }
 
-    public IAliyunToken getOss() {
+    public IHttpToken getOss() {
         return reader.getOSSConfig();
     }
 

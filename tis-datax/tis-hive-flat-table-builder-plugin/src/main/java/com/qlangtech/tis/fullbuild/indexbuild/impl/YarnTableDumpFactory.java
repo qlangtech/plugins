@@ -196,7 +196,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
     }
 
     private IYarnConfig getYarnConfig() {
-        return ParamsConfig.getItem(this.yarnCfg, IYarnConfig.class);
+        return ParamsConfig.getItem(this.yarnCfg, IYarnConfig.KEY_DISPLAY_NAME);
     }
 
 
@@ -205,7 +205,7 @@ public class YarnTableDumpFactory extends TableDumpFactory implements IContainer
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_FIELD_YARN_CONTAINER, () -> ParamsConfig.getItems(IYarnConfig.class));
+            this.registerSelectOptions(KEY_FIELD_YARN_CONTAINER, () -> ParamsConfig.getItems(IYarnConfig.KEY_DISPLAY_NAME));
             this.registerSelectOptions(KEY_FIELD_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
             this.registerSelectOptions(KEY_FIELD_FLAT_TABLE_BUILDER_NAME, () -> TIS.getPluginStore(FlatTableBuilder.class).getPlugins());
         }

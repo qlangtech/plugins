@@ -67,7 +67,7 @@ public class YarnConfig extends ParamsConfig implements IYarnConfig {
         // private List<YarnConfig> installations;
         @Override
         public String getDisplayName() {
-            return "yarn";
+            return KEY_DISPLAY_NAME;
         }
 
         public DefaultDescriptor() {

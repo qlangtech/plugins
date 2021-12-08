@@ -95,7 +95,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         // private List<YarnConfig> installations;
         @Override
         public String getDisplayName() {
-            return "Flink-Cluster";
+            return KEY_DISPLAY_NAME;
         }
 
         public DefaultDescriptor() {

@@ -18,7 +18,7 @@
 package com.qlangtech.tis.plugin.fs.aliyun.oss;
 
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -58,7 +58,7 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     @Override
     public ITISFileSystem getFileSystem() {
         if (ossFs == null) {
-            IAliyunToken aliyunToken = ParamsConfig.getItem(this.aliyunToken, IAliyunToken.class);
+            IHttpToken aliyunToken = ParamsConfig.getItem(this.aliyunToken, IHttpToken.KEY_DISPLAY_NAME);
             ossFs = new AliyunOSSFileSystem(aliyunToken, this.endpoint, this.bucketName, this.rootDir);
         }
         return ossFs;
@@ -69,7 +69,7 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(IAliyunToken.KEY_FIELD_ALIYUN_TOKEN, () -> ParamsConfig.getItems(IAliyunToken.class));
+            this.registerSelectOptions(IHttpToken.KEY_FIELD_ALIYUN_TOKEN, () -> ParamsConfig.getItems(IHttpToken.KEY_DISPLAY_NAME));
         }
     }
 }

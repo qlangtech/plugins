@@ -64,7 +64,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     }
 
     FlinkCluster getClusterCfg() {
-        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.class);
+        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 //        }
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions("flinkCluster", () -> ParamsConfig.getItems(IFlinkCluster.class));
+            this.registerSelectOptions("flinkCluster", () -> ParamsConfig.getItems(IFlinkCluster.KEY_DISPLAY_NAME));
         }
 
         @Override

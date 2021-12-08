@@ -9,7 +9,6 @@
             "plugin": [
               {
                 "descName": "image",
-                "extraParam": "append_true",
                 "hetero": "k8s-images"
               }
             ]

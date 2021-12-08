@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 
 import com.qlangtech.org.apache.http.HttpHost;
-import com.qlangtech.tis.config.aliyun.IAliyunToken;
+import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -77,7 +77,7 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
-        IAliyunToken token = dataXWriter.getToken();
+        IHttpToken token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
         for (Map.Entry<String, IDataxProcessor.TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {

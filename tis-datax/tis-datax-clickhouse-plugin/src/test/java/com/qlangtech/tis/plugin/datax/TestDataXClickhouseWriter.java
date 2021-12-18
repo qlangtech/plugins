@@ -173,6 +173,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         ISelectedTab.ColMeta cm = null;
         List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
         cm = new ISelectedTab.ColMeta();
+        cm.setPk(true);
         cm.setName("customerregister_id");
         cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
@@ -237,7 +238,8 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         try {
             createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile
-                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXClickhouseWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
+                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXClickhouseWriter.class
+                            , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
             EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
@@ -278,7 +280,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
                 "   ,`__cc_ck_sign` Int8 DEFAULT 1\n" +
                 ")\n" +
                 " ENGINE = CollapsingMergeTree(__cc_ck_sign)\n" +
-                " ORDER BY \n" +
+                " ORDER BY `customerregister_id`\n" +
                 " SETTINGS index_granularity = 8192", String.valueOf(createDDL));
 
         System.out.println(createDDL);

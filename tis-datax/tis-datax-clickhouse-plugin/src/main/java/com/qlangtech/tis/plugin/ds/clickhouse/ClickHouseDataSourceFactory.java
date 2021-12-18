@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -142,7 +143,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             return false;
         }
 
-        // private static Pattern PatternClickHouse = Pattern.compile("jdbc:clickhouse://(.+):\\d+/.*");
+// private static Pattern PatternClickHouse = Pattern.compile("jdbc:clickhouse://(.+):\\d+/.*");
 
 //        public boolean validateJdbcUrl(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 //            Matcher matcher = PatternClickHouse.matcher(value);

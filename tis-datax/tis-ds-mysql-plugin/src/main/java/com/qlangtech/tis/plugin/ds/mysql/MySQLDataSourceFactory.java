@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
@@ -519,6 +520,11 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         @Override
         public boolean supportFacade() {
             return true;
+        }
+
+        @Override
+        public Optional<String> getDefaultDataXReaderDescName() {
+            return Optional.of(DataxMySQLReader.DATAX_NAME);
         }
 
         @Override

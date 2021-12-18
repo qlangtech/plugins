@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -65,14 +65,24 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
-            @Override
-            protected String convertType(ISelectedTab.ColMeta col) {
+
+            private String convertType(ISelectedTab.ColMeta col) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html
                 StringBuffer createSql = new StringBuffer(getSqlServerType(col));
                 if (col.isPk()) {
                     createSql.append(" primary key ");
                 }
                 return createSql.toString();
+            }
+
+            @Override
+            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+                return new ColWrapper(c) {
+                    @Override
+                    String getMapperType() {
+                        return convertType(this.meta);
+                    }
+                };
             }
 
             private String getSqlServerType(ISelectedTab.ColMeta col) {
@@ -111,12 +121,12 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             @Override
-            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pk) {
+            protected void appendExtraColDef(List<ColWrapper> pk) {
 
             }
 
             @Override
-            protected void appendTabMeta(List<ISelectedTab.ColMeta> pk) {
+            protected void appendTabMeta(List<ColWrapper> pk) {
 
             }
         };

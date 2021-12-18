@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,23 +39,22 @@ public abstract class CreateTableSqlBuilder {
         this.script = new StringBuffer();
     }
 
-    protected abstract String convertType(ISelectedTab.ColMeta col);
 
-    protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
+    protected void appendExtraColDef(List<ColWrapper> pks) {
     }
 
-    protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {
+    protected void appendTabMeta(List<ColWrapper> pks) {
     }
 
     public StringBuffer build() {
 
         script.append("CREATE TABLE ").append(getCreateTableName()).append("\n");
         script.append("(\n");
-        List<ISelectedTab.ColMeta> pks = Lists.newArrayList();
+        List<ColWrapper> pks = Lists.newArrayList();
         int maxColNameLength = 0;
         for (ISelectedTab.ColMeta col : this.getCols()) {
             if (col.isPk()) {
-                pks.add(col);
+                pks.add(this.createColWrapper(col));
             }
             int m = StringUtils.length(col.getName());
             if (m > maxColNameLength) {
@@ -65,10 +65,10 @@ public abstract class CreateTableSqlBuilder {
         final int colSize = getCols().size();
         int colIndex = 0;
         String escapeChar = supportColEscapeChar() ? String.valueOf(colEscapeChar()) : StringUtils.EMPTY;
-        for (ISelectedTab.ColMeta col : preProcessCols(pks, getCols())) {
+        for (ColWrapper col : preProcessCols(pks, getCols())) {
             script.append("    ").append(escapeChar)
                     .append(String.format("%-" + (maxColNameLength) + "s", col.getName() + (escapeChar)))
-                    .append(convertType(col));
+                    .append(col.getMapperType());
             if (++colIndex < colSize) {
                 script.append(",");
             }
@@ -107,8 +107,26 @@ public abstract class CreateTableSqlBuilder {
      * @param cols
      * @return
      */
-    protected List<ISelectedTab.ColMeta> preProcessCols(List<ISelectedTab.ColMeta> pks, List<ISelectedTab.ColMeta> cols) {
-        return cols;
+    protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<ISelectedTab.ColMeta> cols) {
+        return cols.stream().map((c) -> createColWrapper(c)).collect(Collectors.toList());
+    }
+
+    protected abstract ColWrapper createColWrapper(ISelectedTab.ColMeta c);//{
+//        return new ColWrapper(c);
+    // }
+
+    public static abstract class ColWrapper {
+        protected final ISelectedTab.ColMeta meta;
+
+        public ColWrapper(ISelectedTab.ColMeta meta) {
+            this.meta = meta;
+        }
+
+        abstract String getMapperType();
+
+        public String getName() {
+            return this.meta.getName();
+        }
     }
 
 

@@ -67,6 +67,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
 
+
+
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = Validator.require)
     public String sinkSemantic;
 

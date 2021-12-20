@@ -149,9 +149,9 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             //keyedPluginStores.add(TIS.getPluginStore(ParamsConfig.class));
             // keyedPluginStores.add(TIS.getPluginStore(FileSystemFactory.class));
             // keyedPluginStores.add(processStore);
-            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, appName, MQListenerFactory.class)));
-            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, appName, IncrStreamFactory.class)));
-            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, appName, TISSinkFactory.class)));
+            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, MQListenerFactory.class)));
+            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, IncrStreamFactory.class)));
+            keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, TISSinkFactory.class)));
 //            keyedPluginStores.add(DataxWriter.getPluginStore(null, dataxName));
             ComponentMeta dataxComponentMeta = new ComponentMeta(keyedPluginStores);
             dataxComponentMeta.synchronizePluginsFromRemoteRepository();

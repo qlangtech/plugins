@@ -127,7 +127,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
             protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
                 return new ColWrapper(c) {
                     @Override
-                    String getMapperType() {
+                    public String getMapperType() {
                         return convertType(this.meta);
                     }
                 };

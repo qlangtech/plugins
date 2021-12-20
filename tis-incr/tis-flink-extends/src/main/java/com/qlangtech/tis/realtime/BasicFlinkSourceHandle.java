@@ -39,11 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-//import org.apache.flink.types.Row;
-
-//import com.qlangtech.plugins.incr.flink.cdc.DTOTypeInfo;
-//import com.qlangtech.tis.realtime.transfer.DTO;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 14:18
@@ -92,8 +87,6 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
         }
 
         processTableStream(streamMap, sinkFunction);
-
-        //
         env.execute(dataxName.getName());
     }
 

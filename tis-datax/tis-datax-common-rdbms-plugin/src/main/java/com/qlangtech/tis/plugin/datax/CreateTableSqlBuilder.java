@@ -122,7 +122,7 @@ public abstract class CreateTableSqlBuilder {
             this.meta = meta;
         }
 
-        abstract String getMapperType();
+        public abstract String getMapperType();
 
         public String getName() {
             return this.meta.getName();

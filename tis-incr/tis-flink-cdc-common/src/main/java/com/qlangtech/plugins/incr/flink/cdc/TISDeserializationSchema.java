@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.cdc;
@@ -44,8 +44,14 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     private static final long serialVersionUID = 1L;
     //private static final JsonConverter CONVERTER = new JsonConverter();
 
+    private final ISourceValConvert rawValConvert;
+
+    public TISDeserializationSchema(ISourceValConvert rawValConvert) {
+        this.rawValConvert = rawValConvert;
+    }
+
     public TISDeserializationSchema() {
-        // this(false);
+        this((dto, field, val) -> val);
     }
 
 //    public TISDeserializationSchema(boolean includeSchema) {
@@ -98,7 +104,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
 
         Map<String, Object> afterVals = new HashMap<>();
         for (Field f : afterSchema.fields()) {
-            afterVals.put(f.name(), after.get(f.name()));
+            afterVals.put(f.name(), rawValConvert.convert(dto, f, after.get(f.name())));
         }
         dto.setAfter(afterVals);
     }
@@ -109,26 +115,13 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
         Struct before = value.getStruct("before");
         Map<String, Object> beforeVals = new HashMap<>();
         for (Field f : beforeSchema.fields()) {
-            beforeVals.put(f.name(), before.get(f.name()));
+            beforeVals.put(f.name(), rawValConvert.convert(dto, f, before.get(f.name())));
         }
         dto.setBefore(beforeVals);
     }
 
     @Override
     public TypeInformation<DTO> getProducedType() {
-
         return TypeInformation.of(DTO.class);
-
-//        cols.add(addCol("waitingorder_id", ISelectedTab.DataXReaderColType.STRING, true));
-//        cols.add(addCol("order_id", ISelectedTab.DataXReaderColType.STRING));
-//        cols.add(addCol("entity_id", ISelectedTab.DataXReaderColType.STRING));
-//        cols.add(addCol("is_valid", ISelectedTab.DataXReaderColType.INT));
-//        cols.add(addCol("last_ver", ISelectedTab.DataXReaderColType.INT));
-
-//        String[] fieldNames = new String[]{"waitingorder_id", "order_id", "entity_id", "is_valid", "last_ver"};
-//        TypeInformation<?>[] types = new TypeInformation<?>[]{Types.STRING, Types.STRING, Types.STRING,Types.INT,Types.INT};
-////
-//        // return Types.ROW_NAMED(fieldNames, types);
-//        return new DTOTypeInfo(fieldNames, types);
     }
 }

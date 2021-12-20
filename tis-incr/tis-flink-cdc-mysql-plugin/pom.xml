@@ -72,12 +72,12 @@
         </dependency>
 
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-elasticsearch7-sink-plugin</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-elasticsearch7-sink-plugin</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.easymock</groupId>
@@ -93,12 +93,27 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>com.qlangtech.tis</groupId>-->
+<!--                    <artifactId>tis-flink-extends</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
         </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-cdc-common</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

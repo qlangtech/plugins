@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
@@ -39,6 +39,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.starrocks.connector.flink.StarRocksSink;
+import com.starrocks.connector.flink.row.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
 import org.apache.commons.lang.StringUtils;
@@ -66,7 +67,6 @@ import static com.starrocks.connector.flink.table.StarRocksSinkOptions.*;
 public class StarRocksSinkFactory extends TISSinkFactory {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
-
 
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = Validator.require)
@@ -253,14 +253,26 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory)
                 // set the slots with streamRowData
                 , (slots, streamRowData) -> {
-                    if (streamRowData.getEventType() == DTO.EventType.DELETE) {
-                        return;
-                    }
+
                     for (int i = 0; i < fieldKeys.length; i++) {
                         slots[i] = streamRowData.getAfter().get(fieldKeys[i]);
                     }
+
+                    StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
+                    slots[fieldKeys.length] = sinkOp;
                 }
         );
+    }
+
+    private StarRocksSinkOP getSinkOP(DTO.EventType evt) {
+        switch (evt) {
+            case DELETE:
+                return StarRocksSinkOP.DELETE;
+            case UPDATE:
+                return StarRocksSinkOP.UPSERT;
+            default:
+                return null;
+        }
     }
 
     private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl, DorisSourceFactory dsFactory) {
@@ -294,7 +306,10 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         //if (StringUtils.isNotEmpty(dsFactory.getPassword())) {
         builder.withProperty(PASSWORD.key(), StringUtils.trimToEmpty(dsFactory.getPassword()));
         //}
-        return builder.build();
+
+        StarRocksSinkOptions sinkOptions = builder.build();
+        sinkOptions.enableUpsertDelete();
+        return sinkOptions;
     }
 
     private org.apache.flink.table.types.DataType mapFlinkColType(ColumnMetaData.DataType type) {

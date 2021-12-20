@@ -8430,3 +8430,556 @@ org.apache.flink.runtime.jobmaster.ExecutionGraphException: The execution attemp
 2021-12-20 12:09:55 INFO o.a.f.r.i.d.FileChannelManagerImpl:149- FileChannelManager removed spill file directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-netty-shuffle-85f9ed9a-2aa0-4a87-a6cf-b63799c821aa
 2021-12-20 12:09:55 INFO o.a.f.runtime.blob.BlobServer:345- Stopped BLOB server at 0.0.0.0:57985
 2021-12-20 12:09:55 INFO o.a.f.r.filecache.FileCache:160- removed file cache directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-dist-cache-d0ccd5db-887c-425c-b0d6-f082ecc9beca
+2021-12-20 16:29:39 INFO c.q.t.m.common.CenterResource:55- notFetchFromCenterRepository:true
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Started initialization
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Listing up plugins
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Preparing plugins
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-aliyun-hdfs-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi
+2021-12-20 16:29:39 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-solr-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-local-dump-build.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-dependency.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-elasticsearch7-sink-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-realtime-flink.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-aliyun-hdfs-plugin.tpi because /opt/data/tis/libs/plugins/tis-aliyun-hdfs-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-aliyun-hdfs-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi because /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi because /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi because /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-solr-plugin.tpi because /opt/data/tis/libs/plugins/tis-solr-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-solr-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi because /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-local-dump-build.tpi because /opt/data/tis/libs/plugins/tis-local-dump-build.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-local-dump-build.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-flink-dependency.tpi because /opt/data/tis/libs/plugins/tis-flink-dependency.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-dependency.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-elasticsearch7-sink-plugin.tpi because /opt/data/tis/libs/plugins/tis-elasticsearch7-sink-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-elasticsearch7-sink-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi because /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-realtime-flink.tpi because /opt/data/tis/libs/plugins/tis-realtime-flink.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-realtime-flink.tpi
+2021-12-20 16:29:40 INFO c.q.tis.extension.PluginManager:344- Ignoring /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi is already loaded
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Listed all plugins
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Checking cyclic dependencies
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugins
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-aliyun-hdfs-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-common-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-common-rdbms-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-ds-mysql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-ftp-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-kafka-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-asyncmsg-rocketmq-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-sqlserver-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-doris-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-local-executor
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-flink-dependency
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-k8s-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-realtime-flink
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-flink-cdc-oracle-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-solr-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-ds-tidb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-postgresql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-hive-flat-table-builder-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-local-dump-build
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-mongodb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-oracle-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-elasticsearch-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-elasticsearch7-sink-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-ds-mysql-v8-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-oss-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-flink-cdc-mysql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-cassandra-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-flink-cdc-postgresql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-ds-mysql-v5-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-sink-starrocks-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-datax-clickhouse-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-sink-clickhouse-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Prepared all plugins
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Loading plugin tis-flink-cdc-mongdb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Resolving Dependant Plugins Graph
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-aliyun-hdfs-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-common-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-common-rdbms-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-ds-mysql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-ftp-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-kafka-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-asyncmsg-rocketmq-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-sqlserver-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-doris-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-local-executor
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-flink-dependency
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-k8s-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-realtime-flink
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-flink-cdc-oracle-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-solr-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-ds-tidb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-postgresql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-hive-flat-table-builder-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-local-dump-build
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-mongodb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-oracle-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-elasticsearch-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-elasticsearch7-sink-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-ds-mysql-v8-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-oss-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-flink-cdc-mysql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-cassandra-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-flink-cdc-postgresql-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-ds-mysql-v5-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-sink-starrocks-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-datax-clickhouse-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-sink-clickhouse-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Initializing plugin tis-flink-cdc-mongdb-plugin
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Started all plugins
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained Load updateCenter
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Attained null
+2021-12-20 16:29:40 INFO c.q.t.e.init.InitReactorRunner:88- Completed initialization
+2021-12-20 16:29:40 INFO com.qlangtech.tis.TIS:324- tis plugin have been initialized,consume:497ms.
+2021-12-20 16:29:40 INFO c.q.tis.plugin.ComponentMeta:135- download plugin from remote repository:
+2021-12-20 16:29:40 INFO c.q.t.e.i.ClassicPluginStrategy:278- Scout-loading ExtensionList: class com.qlangtech.tis.extension.Descriptor
+2021-12-20 16:29:41 INFO c.q.tis.plugin.ComponentMeta:135- download plugin from remote repository:
+2021-12-20 16:29:41 INFO c.q.tis.plugin.ComponentMeta:135- download plugin from remote repository:
+2021-12-20 16:29:42 INFO c.q.tis.plugin.ComponentMeta:135- download plugin from remote repository:
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.cpu.cores required for local execution is not set, setting it to the maximal possible value.
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.memory.task.heap.size required for local execution is not set, setting it to the maximal possible value.
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.memory.task.off-heap.size required for local execution is not set, setting it to the maximal possible value.
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.memory.network.min required for local execution is not set, setting it to its default value 64 mb.
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.memory.network.max required for local execution is not set, setting it to its default value 64 mb.
+2021-12-20 16:29:42 INFO o.a.f.r.t.TaskExecutorResourceUtils:220- The configuration option taskmanager.memory.managed.size required for local execution is not set, setting it to its default value 128 mb.
+2021-12-20 16:29:42 INFO o.a.f.r.minicluster.MiniCluster:267- Starting Flink Mini Cluster
+2021-12-20 16:29:42 INFO o.a.f.r.minicluster.MiniCluster:277- Starting Metrics Registry
+2021-12-20 16:29:43 INFO o.a.f.r.m.MetricRegistryImpl:126- No metrics reporter configured, no metrics will be exposed/reported.
+2021-12-20 16:29:43 INFO o.a.f.r.minicluster.MiniCluster:281- Starting RPC Service(s)
+2021-12-20 16:29:43 INFO o.a.f.r.r.a.AkkaRpcServiceUtils:265- Trying to start local actor system
+2021-12-20 16:29:43 INFO akka.event.slf4j.Slf4jLogger:92- Slf4jLogger started
+2021-12-20 16:29:43 INFO o.a.f.r.r.a.AkkaRpcServiceUtils:298- Actor system started at akka://flink
+2021-12-20 16:29:43 INFO o.a.f.r.r.a.AkkaRpcServiceUtils:265- Trying to start local actor system
+2021-12-20 16:29:43 INFO akka.event.slf4j.Slf4jLogger:92- Slf4jLogger started
+2021-12-20 16:29:44 INFO o.a.f.r.r.a.AkkaRpcServiceUtils:298- Actor system started at akka://flink-metrics
+2021-12-20 16:29:44 INFO o.a.f.r.rpc.akka.AkkaRpcService:232- Starting RPC endpoint for org.apache.flink.runtime.metrics.dump.MetricQueryService at akka://flink-metrics/user/rpc/MetricQueryService .
+2021-12-20 16:29:44 INFO o.a.f.r.minicluster.MiniCluster:485- Starting high-availability services
+2021-12-20 16:29:44 INFO o.a.f.runtime.blob.BlobServer:138- Created BLOB server storage directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/blobStore-76bb2f3f-f56f-40a2-950e-aee08abf7aa4
+2021-12-20 16:29:44 INFO o.a.f.runtime.blob.BlobServer:213- Started BLOB server at 0.0.0.0:60661 - max concurrent requests: 50 - max backlog: 1000
+2021-12-20 16:29:44 INFO o.a.f.r.blob.PermanentBlobCache:90- Created BLOB cache storage directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/blobStore-62c7506a-d199-411a-ad10-a545c11b138c
+2021-12-20 16:29:44 INFO o.a.f.r.blob.TransientBlobCache:90- Created BLOB cache storage directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/blobStore-2d5136c0-0dd9-4c74-8c74-7ef239f3da9e
+2021-12-20 16:29:44 INFO o.a.f.r.minicluster.MiniCluster:604- Starting 1 TaskManger(s)
+2021-12-20 16:29:44 INFO o.a.f.r.t.TaskManagerRunner:479- Starting TaskManager with ResourceID: e1fcc440-80ff-4acd-8a67-03ccb8ca38c6
+2021-12-20 16:29:44 INFO o.a.f.r.t.TaskManagerServices:441- Temporary file directory '/var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T': total 465 GB, usable 81 GB (17.42% usable)
+2021-12-20 16:29:44 INFO o.a.f.r.i.d.FileChannelManagerImpl:98- FileChannelManager uses directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-io-e71c8d87-ba95-4f86-b4f7-be929c1903ad for spill files.
+2021-12-20 16:29:44 INFO o.a.f.r.i.d.FileChannelManagerImpl:98- FileChannelManager uses directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-netty-shuffle-1bd41e16-8dd6-4d58-b7cf-aa24d0783aa1 for spill files.
+2021-12-20 16:29:44 INFO o.a.f.r.i.n.b.NetworkBufferPool:145- Allocated 64 MB for network buffer pool (number of memory segments: 2048, bytes per segment: 32768).
+2021-12-20 16:29:44 INFO o.a.f.r.i.n.NettyShuffleEnvironment:328- Starting the network environment and its components.
+2021-12-20 16:29:44 INFO o.a.f.r.t.KvStateService:92- Starting the kvState service and its components.
+2021-12-20 16:29:44 INFO o.a.f.r.rpc.akka.AkkaRpcService:232- Starting RPC endpoint for org.apache.flink.runtime.taskexecutor.TaskExecutor at akka://flink/user/rpc/taskmanager_0 .
+2021-12-20 16:29:44 INFO o.a.f.r.t.DefaultJobLeaderService:123- Start job leader service.
+2021-12-20 16:29:44 INFO o.a.f.r.filecache.FileCache:116- User file cache uses directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-dist-cache-6b6e6669-7d2b-4adb-998a-97e590afe641
+2021-12-20 16:29:44 INFO o.a.f.r.d.DispatcherRestEndpoint:139- Starting rest endpoint.
+2021-12-20 16:29:44 INFO o.a.f.r.d.DispatcherRestEndpoint:126- Failed to load web based job submission extension. Probable reason: flink-runtime-web is not in the classpath.
+2021-12-20 16:29:44 WARN o.a.f.r.w.WebMonitorUtils:82- Log file environment variable 'log.file' is not set.
+2021-12-20 16:29:44 WARN o.a.f.r.w.WebMonitorUtils:88- JobManager log files are unavailable in the web dashboard. Log file location not found in environment variable 'log.file' or configuration key 'web.log.path'.
+2021-12-20 16:29:44 INFO o.a.f.r.d.DispatcherRestEndpoint:250- Rest endpoint listening at localhost:60662
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:308- Proposing leadership to contender http://localhost:60662
+2021-12-20 16:29:44 INFO o.a.f.r.d.DispatcherRestEndpoint:988- http://localhost:60662 was granted leadership with leaderSessionID=ce6058b0-e9d2-4ef5-97b7-c09cb628126c
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:256- Received confirmation of leadership for leader http://localhost:60662 , session=ce6058b0-e9d2-4ef5-97b7-c09cb628126c
+2021-12-20 16:29:44 INFO o.a.f.r.rpc.akka.AkkaRpcService:232- Starting RPC endpoint for org.apache.flink.runtime.resourcemanager.StandaloneResourceManager at akka://flink/user/rpc/resourcemanager_1 .
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:308- Proposing leadership to contender LeaderContender: DefaultDispatcherRunner
+2021-12-20 16:29:44 INFO o.a.f.r.r.StandaloneResourceManager:234- Starting the resource manager.
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:308- Proposing leadership to contender LeaderContender: StandaloneResourceManager
+2021-12-20 16:29:44 INFO o.a.f.r.r.StandaloneResourceManager:1226- ResourceManager akka://flink/user/rpc/resourcemanager_1 was granted leadership with fencing token bb079f7671cfd910d101af50273b4406
+2021-12-20 16:29:44 INFO o.a.f.r.minicluster.MiniCluster:411- Flink Mini Cluster started successfully
+2021-12-20 16:29:44 INFO o.a.f.r.d.r.SessionDispatcherLeaderProcess:97- Start SessionDispatcherLeaderProcess.
+2021-12-20 16:29:44 INFO o.a.f.r.d.r.SessionDispatcherLeaderProcess:117- Recover all persisted job graphs.
+2021-12-20 16:29:44 INFO o.a.f.r.d.r.SessionDispatcherLeaderProcess:125- Successfully recovered 0 persisted job graphs.
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:256- Received confirmation of leadership for leader akka://flink/user/rpc/resourcemanager_1 , session=d101af50-273b-4406-bb07-9f7671cfd910
+2021-12-20 16:29:44 INFO o.a.f.r.t.TaskExecutor:1293- Connecting to ResourceManager akka://flink/user/rpc/resourcemanager_1(bb079f7671cfd910d101af50273b4406).
+2021-12-20 16:29:44 INFO o.a.f.r.rpc.akka.AkkaRpcService:232- Starting RPC endpoint for org.apache.flink.runtime.dispatcher.StandaloneDispatcher at akka://flink/user/rpc/dispatcher_2 .
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:256- Received confirmation of leadership for leader akka://flink/user/rpc/dispatcher_2 , session=3baed01d-531d-4300-ba9b-58440828fb3c
+2021-12-20 16:29:44 INFO o.a.f.r.t.TaskExecutor:162- Resolved ResourceManager address, beginning registration
+2021-12-20 16:29:44 INFO o.a.f.r.r.StandaloneResourceManager:982- Registering TaskManager with ResourceID e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 (akka://flink/user/rpc/taskmanager_0) at ResourceManager
+2021-12-20 16:29:44 INFO o.a.f.r.t.TaskExecutor:99- Successful registration at resource manager akka://flink/user/rpc/resourcemanager_1 under registration id 7d5c50257607b0c65e845b3cb421e4d0.
+2021-12-20 16:29:44 INFO o.a.f.r.d.StandaloneDispatcher:300- Received JobGraph submission d490a478d5c488a1a228d14a3edc8832 (mysql_startrock2).
+2021-12-20 16:29:44 INFO o.a.f.r.d.StandaloneDispatcher:362- Submitting job d490a478d5c488a1a228d14a3edc8832 (mysql_startrock2).
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:308- Proposing leadership to contender LeaderContender: JobMasterServiceLeadershipRunner
+2021-12-20 16:29:44 INFO o.a.f.r.rpc.akka.AkkaRpcService:232- Starting RPC endpoint for org.apache.flink.runtime.jobmaster.JobMaster at akka://flink/user/rpc/jobmanager_3 .
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:289- Initializing job mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832).
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:98- Using restart back off time strategy NoRestartBackoffTimeStrategy for mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832).
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:159- Running initialization on master for job mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832).
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:183- Successfully ran initialization on master in 0 ms.
+2021-12-20 16:29:44 INFO o.a.f.r.s.a.DefaultExecutionTopology:271- Built 1 pipelined regions in 1 ms
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@36c54b50
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:44 INFO o.a.f.r.c.CheckpointCoordinator:1532- No checkpoint found during restore.
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:143- Using failover strategy org.apache.flink.runtime.executiongraph.failover.flip1.RestartPipelinedRegionFailoverStrategy@158bc228 for mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832).
+2021-12-20 16:29:44 INFO o.a.f.r.h.n.e.EmbeddedLeaderService:256- Received confirmation of leadership for leader akka://flink/user/rpc/jobmanager_3 , session=f4b1d9e6-a90c-443d-b709-75cf056fcaa9
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:867- Starting execution of job mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832) under job master id b70975cf056fcaa9f4b1d9e6a90c443d.
+2021-12-20 16:29:44 INFO o.a.f.r.jobmaster.JobMaster:174- Starting scheduling with scheduling strategy [org.apache.flink.runtime.scheduler.strategy.PipelinedRegionSchedulingStrategy]
+2021-12-20 16:29:44 INFO o.a.f.r.e.ExecutionGraph:1039- Job mysql_startrock2 (d490a478d5c488a1a228d14a3edc8832) switched from state CREATED to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Source: 192.168.28.200:3306:order2 (1/1) (6a181c31a2b1d4d3f52a559924863069) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (1/8) (ac88827c2dac23b4247ecc015d5bcaf0) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (2/8) (e2bb0295e833cf99ab96dcd90e8eb133) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (3/8) (43bcdb41cd619a45f1ca48f425df75c8) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (4/8) (6545cc6255ff06915d431eae5f10b17f) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (5/8) (49eededfbba04c7c90c49e746494e78e) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (6/8) (fe3346cd4e60fa86f75d6387e7b9f910) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (7/8) (f39ac3cbecb8d83d460cd5051f53dbb0) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (8/8) (d57f23b0b623de17c56023209dcf87a1) switched from CREATED to SCHEDULED.
+2021-12-20 16:29:45 INFO o.a.f.r.jobmaster.JobMaster:1040- Connecting to ResourceManager akka://flink/user/rpc/resourcemanager_1(bb079f7671cfd910d101af50273b4406)
+2021-12-20 16:29:45 INFO o.a.f.r.jobmaster.JobMaster:162- Resolved ResourceManager address, beginning registration
+2021-12-20 16:29:45 INFO o.a.f.r.r.StandaloneResourceManager:355- Registering job manager b70975cf056fcaa9f4b1d9e6a90c443d@akka://flink/user/rpc/jobmanager_3 for job d490a478d5c488a1a228d14a3edc8832.
+2021-12-20 16:29:45 INFO o.a.f.r.r.StandaloneResourceManager:909- Registered job manager b70975cf056fcaa9f4b1d9e6a90c443d@akka://flink/user/rpc/jobmanager_3 for job d490a478d5c488a1a228d14a3edc8832.
+2021-12-20 16:29:45 INFO o.a.f.r.jobmaster.JobMaster:1064- JobManager successfully registered at ResourceManager, leader id: bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.r.s.DeclarativeSlotManager:262- Received resource requirements from job d490a478d5c488a1a228d14a3edc8832: [ResourceRequirement{resourceProfile=ResourceProfile{UNKNOWN}, numberOfRequiredSlots=8}]
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request d539c51c3b898413c4d2bfe2b3cf91cb for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for d539c51c3b898413c4d2bfe2b3cf91cb.
+2021-12-20 16:29:45 INFO o.a.f.r.t.DefaultJobLeaderService:188- Add job d490a478d5c488a1a228d14a3edc8832 for job leader monitoring.
+2021-12-20 16:29:45 INFO o.a.f.r.t.DefaultJobLeaderService:346- Try to register at job manager akka://flink/user/rpc/jobmanager_3 with leader id f4b1d9e6-a90c-443d-b709-75cf056fcaa9.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request efb4e29473e8e239355da11d0575cd94 for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for efb4e29473e8e239355da11d0575cd94.
+2021-12-20 16:29:45 INFO o.a.f.r.t.DefaultJobLeaderService:162- Resolved JobManager address, beginning registration
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request 4a44530360db6dc03cc8032f529a702a for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for 4a44530360db6dc03cc8032f529a702a.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request 1213a917baa9ebf88f9164bd2082fdc7 for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for 1213a917baa9ebf88f9164bd2082fdc7.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request 4081b90ac7453f8d6ca68c9e3386aa5f for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for 4081b90ac7453f8d6ca68c9e3386aa5f.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request ab29ff03bc74d91d44bc70e3ec004e5d for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for ab29ff03bc74d91d44bc70e3ec004e5d.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request a6b387bca6231d0b23c40a18f71e7292 for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for a6b387bca6231d0b23c40a18f71e7292.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1027- Receive slot request d7133f6517a9d29298b196cbbb13a76a for job d490a478d5c488a1a228d14a3edc8832 from resource manager with leader id bb079f7671cfd910d101af50273b4406.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1104- Allocated slot for d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.r.t.DefaultJobLeaderService:413- Successful registration at job manager akka://flink/user/rpc/jobmanager_3 for job d490a478d5c488a1a228d14a3edc8832.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1608- Establish JobManager connection for job d490a478d5c488a1a228d14a3edc8832.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:1459- Offer reserved slots to the leader of job d490a478d5c488a1a228d14a3edc8832.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Source: 192.168.28.200:3306:order2 (1/1) (6a181c31a2b1d4d3f52a559924863069) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Source: 192.168.28.200:3306:order2 (1/1) (attempt #0) with attempt id 6a181c31a2b1d4d3f52a559924863069 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id d7133f6517a9d29298b196cbbb13a76a
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (1/8) (ac88827c2dac23b4247ecc015d5bcaf0) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (1/8) (attempt #0) with attempt id ac88827c2dac23b4247ecc015d5bcaf0 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id d7133f6517a9d29298b196cbbb13a76a
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (2/8) (e2bb0295e833cf99ab96dcd90e8eb133) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (2/8) (attempt #0) with attempt id e2bb0295e833cf99ab96dcd90e8eb133 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id 4a44530360db6dc03cc8032f529a702a
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (3/8) (43bcdb41cd619a45f1ca48f425df75c8) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (3/8) (attempt #0) with attempt id 43bcdb41cd619a45f1ca48f425df75c8 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id d539c51c3b898413c4d2bfe2b3cf91cb
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (4/8) (6545cc6255ff06915d431eae5f10b17f) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (4/8) (attempt #0) with attempt id 6545cc6255ff06915d431eae5f10b17f to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id a6b387bca6231d0b23c40a18f71e7292
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (5/8) (49eededfbba04c7c90c49e746494e78e) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (5/8) (attempt #0) with attempt id 49eededfbba04c7c90c49e746494e78e to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id 1213a917baa9ebf88f9164bd2082fdc7
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (6/8) (fe3346cd4e60fa86f75d6387e7b9f910) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (6/8) (attempt #0) with attempt id fe3346cd4e60fa86f75d6387e7b9f910 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id ab29ff03bc74d91d44bc70e3ec004e5d
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (7/8) (f39ac3cbecb8d83d460cd5051f53dbb0) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (7/8) (attempt #0) with attempt id f39ac3cbecb8d83d460cd5051f53dbb0 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id efb4e29473e8e239355da11d0575cd94
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (8/8) (d57f23b0b623de17c56023209dcf87a1) switched from SCHEDULED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:571- Deploying Process -> Sink: base (8/8) (attempt #0) with attempt id d57f23b0b623de17c56023209dcf87a1 to e1fcc440-80ff-4acd-8a67-03ccb8ca38c6 @ localhost (dataPort=-1) with allocation id 4081b90ac7453f8d6ca68c9e3386aa5f
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Source: 192.168.28.200:3306:order2 (1/1)#0 (6a181c31a2b1d4d3f52a559924863069), deploy into slot with allocation id d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Source: 192.168.28.200:3306:order2 (1/1)#0 (6a181c31a2b1d4d3f52a559924863069) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Source: 192.168.28.200:3306:order2 (1/1)#0 (6a181c31a2b1d4d3f52a559924863069) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (1/8)#0 (ac88827c2dac23b4247ecc015d5bcaf0), deploy into slot with allocation id d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (1/8)#0 (ac88827c2dac23b4247ecc015d5bcaf0) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 4a44530360db6dc03cc8032f529a702a.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (1/8)#0 (ac88827c2dac23b4247ecc015d5bcaf0) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (2/8)#0 (e2bb0295e833cf99ab96dcd90e8eb133), deploy into slot with allocation id 4a44530360db6dc03cc8032f529a702a.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@513731d9
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@328e8899
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (2/8)#0 (e2bb0295e833cf99ab96dcd90e8eb133) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot d539c51c3b898413c4d2bfe2b3cf91cb.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (2/8)#0 (e2bb0295e833cf99ab96dcd90e8eb133) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@40057139
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (3/8)#0 (43bcdb41cd619a45f1ca48f425df75c8), deploy into slot with allocation id d539c51c3b898413c4d2bfe2b3cf91cb.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (3/8)#0 (43bcdb41cd619a45f1ca48f425df75c8) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot a6b387bca6231d0b23c40a18f71e7292.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (3/8)#0 (43bcdb41cd619a45f1ca48f425df75c8) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@7350dd90
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (4/8)#0 (6545cc6255ff06915d431eae5f10b17f), deploy into slot with allocation id a6b387bca6231d0b23c40a18f71e7292.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (4/8)#0 (6545cc6255ff06915d431eae5f10b17f) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 1213a917baa9ebf88f9164bd2082fdc7.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (1/8)#0 (ac88827c2dac23b4247ecc015d5bcaf0) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (4/8)#0 (6545cc6255ff06915d431eae5f10b17f) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (3/8)#0 (43bcdb41cd619a45f1ca48f425df75c8) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (2/8)#0 (e2bb0295e833cf99ab96dcd90e8eb133) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Source: 192.168.28.200:3306:order2 (1/1)#0 (6a181c31a2b1d4d3f52a559924863069) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@20f5318f
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (4/8)#0 (6545cc6255ff06915d431eae5f10b17f) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (1/8) (ac88827c2dac23b4247ecc015d5bcaf0) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (3/8) (43bcdb41cd619a45f1ca48f425df75c8) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (5/8)#0 (49eededfbba04c7c90c49e746494e78e), deploy into slot with allocation id 1213a917baa9ebf88f9164bd2082fdc7.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (2/8) (e2bb0295e833cf99ab96dcd90e8eb133) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (5/8)#0 (49eededfbba04c7c90c49e746494e78e) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot ab29ff03bc74d91d44bc70e3ec004e5d.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Source: 192.168.28.200:3306:order2 (1/1) (6a181c31a2b1d4d3f52a559924863069) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (5/8)#0 (49eededfbba04c7c90c49e746494e78e) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (4/8) (6545cc6255ff06915d431eae5f10b17f) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (6/8)#0 (fe3346cd4e60fa86f75d6387e7b9f910), deploy into slot with allocation id ab29ff03bc74d91d44bc70e3ec004e5d.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@69ef6356
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot efb4e29473e8e239355da11d0575cd94.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (5/8)#0 (49eededfbba04c7c90c49e746494e78e) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (6/8)#0 (fe3346cd4e60fa86f75d6387e7b9f910) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (5/8) (49eededfbba04c7c90c49e746494e78e) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (6/8)#0 (fe3346cd4e60fa86f75d6387e7b9f910) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (7/8)#0 (f39ac3cbecb8d83d460cd5051f53dbb0), deploy into slot with allocation id efb4e29473e8e239355da11d0575cd94.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@568d08c4
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (6/8)#0 (fe3346cd4e60fa86f75d6387e7b9f910) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 4081b90ac7453f8d6ca68c9e3386aa5f.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (7/8)#0 (f39ac3cbecb8d83d460cd5051f53dbb0) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (6/8) (fe3346cd4e60fa86f75d6387e7b9f910) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (7/8)#0 (f39ac3cbecb8d83d460cd5051f53dbb0) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.t.TaskExecutor:722- Received task Process -> Sink: base (8/8)#0 (d57f23b0b623de17c56023209dcf87a1), deploy into slot with allocation id 4081b90ac7453f8d6ca68c9e3386aa5f.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@405a13d6
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (7/8)#0 (f39ac3cbecb8d83d460cd5051f53dbb0) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot efb4e29473e8e239355da11d0575cd94.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot ab29ff03bc74d91d44bc70e3ec004e5d.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (8/8)#0 (d57f23b0b623de17c56023209dcf87a1) switched from CREATED to DEPLOYING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 4081b90ac7453f8d6ca68c9e3386aa5f.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (7/8) (f39ac3cbecb8d83d460cd5051f53dbb0) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:626- Loading JAR files for task Process -> Sink: base (8/8)#0 (d57f23b0b623de17c56023209dcf87a1) [DEPLOYING].
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot a6b387bca6231d0b23c40a18f71e7292.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot d539c51c3b898413c4d2bfe2b3cf91cb.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:300- No state backend has been configured, using default (HashMap) org.apache.flink.runtime.state.hashmap.HashMapStateBackend@3586bcca
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 4a44530360db6dc03cc8032f529a702a.
+2021-12-20 16:29:45 INFO o.a.f.s.runtime.tasks.StreamTask:252- Checkpoint storage is set to 'jobmanager'
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot 1213a917baa9ebf88f9164bd2082fdc7.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (8/8)#0 (d57f23b0b623de17c56023209dcf87a1) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.r.t.slot.TaskSlotTableImpl:388- Activate slot d7133f6517a9d29298b196cbbb13a76a.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (8/8) (d57f23b0b623de17c56023209dcf87a1) switched from DEPLOYING to INITIALIZING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (8/8)#0 (d57f23b0b623de17c56023209dcf87a1) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (1/8)#0 (ac88827c2dac23b4247ecc015d5bcaf0) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (2/8)#0 (e2bb0295e833cf99ab96dcd90e8eb133) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (4/8)#0 (6545cc6255ff06915d431eae5f10b17f) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (7/8)#0 (f39ac3cbecb8d83d460cd5051f53dbb0) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (3/8)#0 (43bcdb41cd619a45f1ca48f425df75c8) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (6/8)#0 (fe3346cd4e60fa86f75d6387e7b9f910) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Process -> Sink: base (5/8)#0 (49eededfbba04c7c90c49e746494e78e) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (8/8) (d57f23b0b623de17c56023209dcf87a1) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (1/8) (ac88827c2dac23b4247ecc015d5bcaf0) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (2/8) (e2bb0295e833cf99ab96dcd90e8eb133) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (4/8) (6545cc6255ff06915d431eae5f10b17f) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (7/8) (f39ac3cbecb8d83d460cd5051f53dbb0) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (3/8) (43bcdb41cd619a45f1ca48f425df75c8) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (6/8) (fe3346cd4e60fa86f75d6387e7b9f910) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Process -> Sink: base (5/8) (49eededfbba04c7c90c49e746494e78e) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO c.v.c.d.DebeziumSourceFunction:254- Consumer subtask 0 has no restore state.
+2021-12-20 16:29:45 INFO io.debezium.jdbc.JdbcConnection:946- Connection gracefully closed
+2021-12-20 16:29:45 INFO c.v.c.c.mysql.MySqlValidator:88- MySQL validation passed.
+2021-12-20 16:29:45 INFO o.a.f.runtime.taskmanager.Task:1062- Source: 192.168.28.200:3306:order2 (1/1)#0 (6a181c31a2b1d4d3f52a559924863069) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.f.r.e.ExecutionGraph:1438- Source: 192.168.28.200:3306:order2 (1/1) (6a181c31a2b1d4d3f52a559924863069) switched from INITIALIZING to RUNNING.
+2021-12-20 16:29:45 INFO o.a.k.c.json.JsonConverterConfig:361- JsonConverterConfig values: 
+	converter.type = key
+	decimal.format = BASE64
+	schemas.cache.size = 1000
+	schemas.enable = true
+
+2021-12-20 16:29:45 INFO o.a.k.c.json.JsonConverterConfig:361- JsonConverterConfig values: 
+	converter.type = value
+	decimal.format = BASE64
+	schemas.cache.size = 1000
+	schemas.enable = false
+
+2021-12-20 16:29:45 INFO i.d.e.EmbeddedEngine$EmbeddedConfig:361- EmbeddedConfig values: 
+	access.control.allow.methods = 
+	access.control.allow.origin = 
+	admin.listeners = null
+	bootstrap.servers = [localhost:9092]
+	client.dns.lookup = use_all_dns_ips
+	config.providers = []
+	connector.client.config.override.policy = None
+	header.converter = class org.apache.kafka.connect.storage.SimpleHeaderConverter
+	internal.key.converter = class org.apache.kafka.connect.json.JsonConverter
+	internal.value.converter = class org.apache.kafka.connect.json.JsonConverter
+	key.converter = class org.apache.kafka.connect.json.JsonConverter
+	listeners = null
+	metric.reporters = []
+	metrics.num.samples = 2
+	metrics.recording.level = INFO
+	metrics.sample.window.ms = 30000
+	offset.flush.interval.ms = 9223372036854775807
+	offset.flush.timeout.ms = 5000
+	offset.storage.file.filename = 
+	offset.storage.partitions = null
+	offset.storage.replication.factor = null
+	offset.storage.topic = 
+	plugin.path = null
+	response.http.headers.config = 
+	rest.advertised.host.name = null
+	rest.advertised.listener = null
+	rest.advertised.port = null
+	rest.extension.classes = []
+	rest.host.name = null
+	rest.port = 8083
+	ssl.cipher.suites = null
+	ssl.client.auth = none
+	ssl.enabled.protocols = [TLSv1.2]
+	ssl.endpoint.identification.algorithm = https
+	ssl.engine.factory.class = null
+	ssl.key.password = null
+	ssl.keymanager.algorithm = SunX509
+	ssl.keystore.certificate.chain = null
+	ssl.keystore.key = null
+	ssl.keystore.location = null
+	ssl.keystore.password = null
+	ssl.keystore.type = JKS
+	ssl.protocol = TLSv1.2
+	ssl.provider = null
+	ssl.secure.random.implementation = null
+	ssl.trustmanager.algorithm = PKIX
+	ssl.truststore.certificates = null
+	ssl.truststore.location = null
+	ssl.truststore.password = null
+	ssl.truststore.type = JKS
+	task.shutdown.graceful.timeout.ms = 5000
+	topic.creation.enable = true
+	topic.tracking.allow.reset = true
+	topic.tracking.enable = true
+	value.converter = class org.apache.kafka.connect.json.JsonConverter
+
+2021-12-20 16:29:45 INFO o.a.k.c.runtime.WorkerConfig:389- Worker configuration property 'internal.key.converter' is deprecated and may be removed in an upcoming release. The specified value 'org.apache.kafka.connect.json.JsonConverter' matches the default, so this property can be safely removed from the worker configuration.
+2021-12-20 16:29:45 INFO o.a.k.c.runtime.WorkerConfig:389- Worker configuration property 'internal.value.converter' is deprecated and may be removed in an upcoming release. The specified value 'org.apache.kafka.connect.json.JsonConverter' matches the default, so this property can be safely removed from the worker configuration.
+2021-12-20 16:29:45 WARN o.a.k.c.runtime.WorkerConfig:420- Variables cannot be used in the 'plugin.path' property, since the property is used by plugin scanning before the config providers that replace the variables are initialized. The raw value 'null' was used for plugin scanning, as opposed to the transformed value 'null', and this may cause unexpected results.
+2021-12-20 16:29:45 WARN io.debezium.config.Configuration:2132- Using configuration property "table.whitelist" is deprecated and will be removed in future versions. Please use "table.include.list" instead.
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:124- Starting MySqlConnectorTask with configuration:
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    snapshot.locking.mode = none
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    connector.class = io.debezium.connector.mysql.MySqlConnector
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.user = root
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    bigint.unsigned.handling.mode = precise
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    offset.storage = com.ververica.cdc.debezium.internal.FlinkOffsetBackingStore
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.server.name = mysql_binlog_source
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    include.schema.changes = false
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.port = 3306
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    table.whitelist = order2.base
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    offset.flush.interval.ms = 9223372036854775807
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    tombstones.on.delete = false
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.hostname = 192.168.28.200
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.password = ********
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    name = engine
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.history.skip.unparseable.ddl = true
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.whitelist = order2
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.history.instance.name = d9527890-b8e2-40f6-b415-cc15fb82515e
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    snapshot.mode = schema_only
+2021-12-20 16:29:45 INFO i.d.c.common.BaseSourceTask:126-    database.history = com.ververica.cdc.debezium.internal.FlinkDatabaseSchemaHistory
+2021-12-20 16:29:45 INFO i.d.c.mysql.MySqlConnectorTask:89- No previous offset found
+2021-12-20 16:29:45 INFO i.d.c.mysql.MySqlConnectorTask:288- Connector started for the first time, database history recovery will not be executed
+2021-12-20 16:29:45 INFO io.debezium.util.Threads:270- Requested thread factory for connector MySqlConnector, id = mysql_binlog_source named = change-event-source-coordinator
+2021-12-20 16:29:45 INFO io.debezium.util.Threads:287- Creating thread debezium-mysqlconnector-mysql_binlog_source-change-event-source-coordinator
+2021-12-20 16:29:45 INFO i.d.p.ChangeEventSourceCoordinator:96- Metrics registered
+2021-12-20 16:29:45 INFO i.d.p.ChangeEventSourceCoordinator:99- Context created
+2021-12-20 16:29:45 INFO i.d.c.m.MySqlSnapshotChangeEventSource:95- No previous offset has been found
+2021-12-20 16:29:45 INFO i.d.c.m.MySqlSnapshotChangeEventSource:100- According to the connector configuration only schema will be snapshotted
+2021-12-20 16:29:45 INFO i.d.r.RelationalSnapshotChangeEventSource:96- Snapshot step 1 - Preparing
+2021-12-20 16:29:45 INFO i.d.r.RelationalSnapshotChangeEventSource:105- Snapshot step 2 - Determining captured tables
+2021-12-20 16:29:45 INFO i.d.c.m.MySqlSnapshotChangeEventSource:124- Read list of available databases
+2021-12-20 16:29:45 INFO i.d.c.m.MySqlSnapshotChangeEventSource:131- 	 list of available databases is: [information_schema, cardcenter0, dataweb, dataxweb, dmall10, dolphinscheduler, dsname_yuqing_zj2_bak, employees, item_center, member2, mysql, order0, order2, order3, performance_schema, shop, sys, test, tis_console, tis_console2, tis_console3]
+2021-12-20 16:29:45 INFO i.d.c.m.MySqlSnapshotChangeEventSource:139- Read list of available tables in each database
+2021-12-20 16:29:46 INFO i.d.c.m.MySqlSnapshotChangeEventSource:160- 	snapshot continuing with database(s): [order2]
+2021-12-20 16:29:46 INFO i.d.r.RelationalSnapshotChangeEventSource:112- Snapshot step 3 - Locking captured tables [order2.base]
+2021-12-20 16:29:46 INFO i.d.r.RelationalSnapshotChangeEventSource:118- Snapshot step 4 - Determining snapshot offset
+2021-12-20 16:29:46 INFO i.d.c.m.MySqlSnapshotChangeEventSource:274- Read binlog position of MySQL primary server
+2021-12-20 16:29:46 INFO i.d.c.m.MySqlSnapshotChangeEventSource:285- 	 using binlog 'mysql-bin.000356' at position '150' and gtid '65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196'
+2021-12-20 16:29:46 INFO i.d.r.RelationalSnapshotChangeEventSource:121- Snapshot step 5 - Reading structure of captured tables
+2021-12-20 16:29:46 INFO i.d.c.m.MySqlSnapshotChangeEventSource:323- All eligible tables schema should be captured, capturing: [order2.base, order2.customer_order_relation, order2.customer_order_relation1, order2.discount_detail, order2.dsname_yuqing_zj2_bak, order2.globalcodeorder, order2.instance_asset, order2.instancedetail, order2.order_bill, order2.order_promotion, order2.order_refund, order2.order_snapshot, order2.order_tag, order2.orderdetail, order2.paydetail, order2.payinfo, order2.payinfo_extra, order2.presell_order_extra, order2.promotion, order2.queueop, order2.queuestatus, order2.refund_pay_item, order2.servicebillinfo, order2.simplecodeorder, order2.specialfee, order2.stuff, order2.t1, order2.tab_5cols, order2.takeout_order_extra, order2.totalpayinfo, order2.waiting_pay, order2.waitinginstanceinfo, order2.waitingordercrid, order2.waitingorderdetail, order2.wide_stuff]
+2021-12-20 16:29:46 INFO i.d.c.m.MySqlSnapshotChangeEventSource:345- Reading structure of database 'order2'
+2021-12-20 16:29:47 INFO i.d.r.RelationalSnapshotChangeEventSource:125- Snapshot step 6 - Persisting schema history
+2021-12-20 16:29:47 INFO i.d.r.RelationalSnapshotChangeEventSource:141- Snapshot step 7 - Skipping snapshotting of data
+2021-12-20 16:29:47 INFO i.d.p.s.AbstractSnapshotChangeEventSource:85- Snapshot - Final stage
+2021-12-20 16:29:47 INFO i.d.p.ChangeEventSourceCoordinator:111- Snapshot ended with SnapshotResult [status=COMPLETED, offset=MySqlOffsetContext [sourceInfoSchema=Schema{io.debezium.connector.mysql.Source:STRUCT}, sourceInfo=SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin.000356, currentBinlogPosition=150, currentRowNumber=0, serverId=0, sourceTime=2021-12-20T08:29:47.202Z, threadId=-1, currentQuery=null, tableIds=[null], databaseName=order2], partition={server=mysql_binlog_source}, snapshotCompleted=true, transactionContext=TransactionContext [currentTransactionId=null, perTableEventCount={}, totalEventCount=0], restartGtidSet=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, currentGtidSet=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, restartBinlogFilename=mysql-bin.000356, restartBinlogPosition=150, restartRowsToSkip=0, restartEventsToSkip=0, currentEventLengthInBytes=0, inTransaction=false, transactionId=null]]
+2021-12-20 16:29:47 INFO io.debezium.util.Threads:270- Requested thread factory for connector MySqlConnector, id = mysql_binlog_source named = binlog-client
+2021-12-20 16:29:47 INFO i.d.p.ChangeEventSourceCoordinator:151- Starting streaming
+2021-12-20 16:29:47 INFO i.d.c.m.MySqlStreamingChangeEventSource:888- Skip 0 events on streaming start
+2021-12-20 16:29:47 INFO i.d.c.m.MySqlStreamingChangeEventSource:892- Skip 0 rows on streaming start
+2021-12-20 16:29:47 INFO io.debezium.util.Threads:287- Creating thread debezium-mysqlconnector-mysql_binlog_source-binlog-client
+2021-12-20 16:29:47 INFO io.debezium.util.Threads:287- Creating thread debezium-mysqlconnector-mysql_binlog_source-binlog-client
+2021-12-20 16:29:47 INFO i.d.c.m.MySqlStreamingChangeEventSource:1171- Connected to MySQL binlog at 192.168.28.200:3306, starting at MySqlOffsetContext [sourceInfoSchema=Schema{io.debezium.connector.mysql.Source:STRUCT}, sourceInfo=SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin.000356, currentBinlogPosition=150, currentRowNumber=0, serverId=0, sourceTime=2021-12-20T08:29:47.202Z, threadId=-1, currentQuery=null, tableIds=[null], databaseName=order2], partition={server=mysql_binlog_source}, snapshotCompleted=true, transactionContext=TransactionContext [currentTransactionId=null, perTableEventCount={}, totalEventCount=0], restartGtidSet=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, currentGtidSet=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, restartBinlogFilename=mysql-bin.000356, restartBinlogPosition=150, restartRowsToSkip=0, restartEventsToSkip=0, currentEventLengthInBytes=0, inTransaction=false, transactionId=null]
+2021-12-20 16:29:47 INFO i.d.c.m.MySqlStreamingChangeEventSource:909- Waiting for keepalive thread to start
+2021-12-20 16:29:47 INFO io.debezium.util.Threads:287- Creating thread debezium-mysqlconnector-mysql_binlog_source-binlog-client
+2021-12-20 16:29:47 INFO i.d.c.m.MySqlStreamingChangeEventSource:916- Keepalive thread is running
+2021-12-20 16:30:15 INFO i.d.c.common.BaseSourceTask:182- 3 records sent during previous 00:00:29.697, last recorded offset: {transaction_id=null, ts_sec=1639989015, file=mysql-bin.000356, pos=211, gtids=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, row=3, server_id=111, event=2}
+2021-12-20 16:30:15 INFO c.v.c.d.i.DebeziumChangeFetcher:149- Database snapshot phase can't perform checkpoint, acquired Checkpoint lock.
+2021-12-20 16:30:15 INFO c.v.c.d.i.DebeziumChangeFetcher:156- Received record from streaming binlog phase, released checkpoint lock.
+2021-12-20 16:30:41 INFO i.d.c.common.BaseSourceTask:182- 3 records sent during previous 00:00:26.501, last recorded offset: {transaction_id=null, ts_sec=1639989041, file=mysql-bin.000356, pos=564, gtids=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, row=3, server_id=111, event=2}

@@ -49,7 +49,12 @@ import org.apache.flink.configuration.description.TextElement;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.BigIntType;
+import org.apache.flink.table.types.logical.DoubleType;
+import org.apache.flink.table.types.logical.IntType;
+import org.apache.flink.table.types.logical.VarCharType;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -241,9 +246,18 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             throw new IllegalArgumentException("fieldKeys.length can not small than 1");
         }
         int index = 0;
+        List<String> pks = Lists.newArrayList();
+        // org.apache.flink.table.types.DataType dataType = null;
         for (ISelectedTab.ColMeta cm : tab.getCols()) {
-            schemaBuilder.field(cm.getName(), mapFlinkColType(cm.getType()));
+            // dataType = ;
+            if (cm.isPk()) {
+                pks.add(cm.getName());
+            }
+            schemaBuilder.field(cm.getName(), mapFlinkColType(cm.isPk(), cm.getType()));
             fieldKeys[index++] = cm.getName();
+        }
+        if (!pks.isEmpty()) {
+            schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
         }
 
         return StarRocksSink.sink(
@@ -253,14 +267,12 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory)
                 // set the slots with streamRowData
                 , (slots, streamRowData) -> {
-
                     for (int i = 0; i < fieldKeys.length; i++) {
                         slots[i] = streamRowData.getAfter().get(fieldKeys[i]);
                     }
-
                     StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
                     if (sinkOp != null) {
-                        slots[fieldKeys.length] = sinkOp;
+                        slots[fieldKeys.length] = sinkOp.ordinal();
                     }
                 }
         );
@@ -314,24 +326,29 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         return sinkOptions;
     }
 
-    private static org.apache.flink.table.types.DataType mapFlinkColType(ColumnMetaData.DataType type) {
+    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, ColumnMetaData.DataType type) {
         if (type == null) {
             throw new IllegalArgumentException("param type can not be null");
         }
+        final boolean isNullable = !pk;
         return type.accept(new ColumnMetaData.TypeVisitor<DataType>() {
             @Override
             public DataType intType(ColumnMetaData.DataType type) {
-                return DataTypes.INT();
+                //          return DataTypes.INT();
+                return new AtomicDataType(new IntType(isNullable));
             }
 
             @Override
             public DataType longType(ColumnMetaData.DataType type) {
-                return DataTypes.BIGINT();
+                //return DataTypes.BIGINT();
+                return new AtomicDataType(new BigIntType(isNullable));
             }
 
             @Override
             public DataType doubleType(ColumnMetaData.DataType type) {
-                return DataTypes.DOUBLE();
+                // return DataTypes.DOUBLE();
+
+                return new AtomicDataType(new DoubleType(isNullable));
             }
 
             @Override
@@ -356,7 +373,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
 
             @Override
             public DataType varcharType(ColumnMetaData.DataType type) {
-                return DataTypes.VARCHAR(type.columnSize);
+                //return DataTypes.VARCHAR(type.columnSize);
+                return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
             }
         });
     }

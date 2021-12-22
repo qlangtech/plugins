@@ -47,7 +47,7 @@ public class TaskExec {
 
     public static ExecutorService newFixedThreadPool(int nThreads) {
         return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(30),
+                new LinkedBlockingQueue<Runnable>(200),
                 Executors.defaultThreadFactory());
     }
 

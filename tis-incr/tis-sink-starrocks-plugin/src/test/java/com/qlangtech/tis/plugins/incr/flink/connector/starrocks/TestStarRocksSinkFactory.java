@@ -164,6 +164,9 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         sinkFactory.columnSeparator = "x01";
         sinkFactory.rowDelimiter = "x02";
         sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
+        sinkFactory.sinkBatchFlushInterval = 2000l;
+
+        System.out.println("sinkFactory.sinkBatchFlushInterval:" + sinkFactory.sinkBatchFlushInterval);
 
         Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
         IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
@@ -175,15 +178,16 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = new DTO();
+        d.setEventType(DTO.EventType.DELETE);
         d.setTableName(tableName);
         Map<String, Object> after = Maps.newHashMap();
         after.put(colEntityId, "334556");
         after.put(colNum, "5");
-        after.put(colId, "123dsf124325253dsf123");
+        after.put(colId, "88888888887");
         after.put(colCreateTime, "20211113115959");
-        after.put(updateTime, "2021-12-17 09:21:20");
+        after.put(updateTime, "2021-12-17T09:21:20Z");
         after.put(starTime, "2021-12-18 09:21:20");
-        after.put(updateDate, "2021-12-17");
+        after.put(updateDate, "2021-12-9");
         d.setAfter(after);
         assertEquals(1, sinkFunction.size());
         for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
@@ -192,6 +196,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         }
 
         env.execute("testJob");
+        Thread.sleep(14000);
 
         this.verifyAll();
     }

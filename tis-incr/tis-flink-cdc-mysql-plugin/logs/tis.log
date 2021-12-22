@@ -8983,3 +8983,10 @@ org.apache.flink.runtime.jobmaster.ExecutionGraphException: The execution attemp
 2021-12-20 16:30:15 INFO c.v.c.d.i.DebeziumChangeFetcher:149- Database snapshot phase can't perform checkpoint, acquired Checkpoint lock.
 2021-12-20 16:30:15 INFO c.v.c.d.i.DebeziumChangeFetcher:156- Received record from streaming binlog phase, released checkpoint lock.
 2021-12-20 16:30:41 INFO i.d.c.common.BaseSourceTask:182- 3 records sent during previous 00:00:26.501, last recorded offset: {transaction_id=null, ts_sec=1639989041, file=mysql-bin.000356, pos=564, gtids=65a2b4eb-d393-11e5-b12c-525400497fb2:1-188541196, row=3, server_id=111, event=2}
+2021-12-20 17:20:32 INFO o.a.f.r.s.TaskExecutorLocalStateStoresManager:231- Shutting down TaskExecutorLocalStateStoresManager.
+2021-12-20 17:20:32 INFO o.a.f.r.blob.PermanentBlobCache:240- Shutting down BLOB cache
+2021-12-20 17:20:32 INFO o.a.f.r.blob.TransientBlobCache:240- Shutting down BLOB cache
+2021-12-20 17:20:32 INFO o.a.f.r.filecache.FileCache:160- removed file cache directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-dist-cache-6b6e6669-7d2b-4adb-998a-97e590afe641
+2021-12-20 17:20:32 INFO o.a.f.r.i.d.FileChannelManagerImpl:149- FileChannelManager removed spill file directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-io-e71c8d87-ba95-4f86-b4f7-be929c1903ad
+2021-12-20 17:20:32 INFO o.a.f.r.i.d.FileChannelManagerImpl:149- FileChannelManager removed spill file directory /var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/flink-netty-shuffle-1bd41e16-8dd6-4d58-b7cf-aa24d0783aa1
+2021-12-20 17:20:32 INFO o.a.f.runtime.blob.BlobServer:345- Stopped BLOB server at 0.0.0.0:60661

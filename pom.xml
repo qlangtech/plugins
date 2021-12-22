@@ -50,8 +50,8 @@
 
 
         <module>tis-kafka-plugin</module>
-<!--        <module>tis-solr-plugin</module>-->
-        <module>tis-local-dump-build</module>
+<!--        <module>tis-solr-plugin</module>
+        <module>tis-local-dump-build</module>-->
 
 
     </modules>

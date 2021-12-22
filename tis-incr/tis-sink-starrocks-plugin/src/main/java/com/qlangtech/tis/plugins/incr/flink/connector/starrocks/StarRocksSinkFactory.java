@@ -259,12 +259,14 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                     }
 
                     StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
-                    slots[fieldKeys.length] = sinkOp;
+                    if (sinkOp != null) {
+                        slots[fieldKeys.length] = sinkOp;
+                    }
                 }
         );
     }
 
-    private StarRocksSinkOP getSinkOP(DTO.EventType evt) {
+    private static StarRocksSinkOP getSinkOP(DTO.EventType evt) {
         switch (evt) {
             case DELETE:
                 return StarRocksSinkOP.DELETE;
@@ -312,7 +314,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         return sinkOptions;
     }
 
-    private org.apache.flink.table.types.DataType mapFlinkColType(ColumnMetaData.DataType type) {
+    private static org.apache.flink.table.types.DataType mapFlinkColType(ColumnMetaData.DataType type) {
         if (type == null) {
             throw new IllegalArgumentException("param type can not be null");
         }

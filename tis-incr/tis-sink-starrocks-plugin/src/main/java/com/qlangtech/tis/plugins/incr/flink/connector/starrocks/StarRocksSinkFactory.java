@@ -268,12 +268,12 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 // set the slots with streamRowData
                 , (slots, streamRowData) -> {
                     for (int i = 0; i < fieldKeys.length; i++) {
-                        slots[i] = streamRowData.getAfter().get(fieldKeys[i]);
+                        slots[i] = (DTO.EventType.DELETE == streamRowData.getEventType())
+                                ? streamRowData.getBefore().get(fieldKeys[i])
+                                : streamRowData.getAfter().get(fieldKeys[i]);
                     }
                     StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
-                    if (sinkOp != null) {
-                        slots[fieldKeys.length] = sinkOp.ordinal();
-                    }
+                    slots[fieldKeys.length] = sinkOp.ordinal();
                 }
         );
     }

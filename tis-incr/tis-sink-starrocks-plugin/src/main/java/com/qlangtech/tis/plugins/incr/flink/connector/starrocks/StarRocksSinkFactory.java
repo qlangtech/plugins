@@ -283,9 +283,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             case DELETE:
                 return StarRocksSinkOP.DELETE;
             case UPDATE:
-                return StarRocksSinkOP.UPSERT;
             default:
-                return null;
+                return StarRocksSinkOP.UPSERT;
         }
     }
 

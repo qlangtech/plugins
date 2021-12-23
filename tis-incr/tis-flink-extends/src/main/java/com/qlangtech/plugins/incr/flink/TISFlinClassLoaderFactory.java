@@ -78,11 +78,7 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             FlinkUserCodeClassLoaders.ResolveOrder classLoaderResolveOrder
             , String[] alwaysParentFirstPatterns
             , @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
-        try {
-            FileUtils.forceMkdir(Config.getDataDir(false));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.makeDataDirUseable();
         ClassLoader parentClassLoader = TIS.get().getPluginManager().uberClassLoader;
 
         return (libraryURLs) -> {
@@ -94,6 +90,14 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     NOOP_EXCEPTION_HANDLER,
                     checkClassLoaderLeak);
         };
+    }
+
+    private void makeDataDirUseable() {
+        try {
+            FileUtils.forceMkdir(Config.getDataDir(false));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -111,7 +115,7 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     NOOP_EXCEPTION_HANDLER,
                     checkClassLoaderLeak);
         }
-
+        this.makeDataDirUseable();
 
         return new BlobLibraryCacheManager.DefaultClassLoaderFactory(classLoaderResolveOrder
                 , alwaysParentFirstPatterns, exceptionHander, checkClassLoaderLeak) {

@@ -99,7 +99,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
             protected void appendTabMeta(List<ColWrapper> pks) {
                 script.append(" ENGINE=olap").append("\n");
                 if (pks.size() > 0) {
-                    script.append("UNIQUE KEY(").append(pks.stream()
+                    script.append("PRIMARY KEY(").append(pks.stream()
                             .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
                             .collect(Collectors.joining(","))).append(")\n");
                 }
@@ -129,6 +129,13 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                     @Override
                     public String getMapperType() {
                         return convertType(this.meta);
+                    }
+
+                    @Override
+                    protected void appendExtraConstraint(StringBuffer ddlScript) {
+                        if (this.meta.isPk()) {
+                            ddlScript.append(" NOT NULL");
+                        }
                     }
                 };
             }

@@ -69,6 +69,7 @@ public abstract class CreateTableSqlBuilder {
             script.append("    ").append(escapeChar)
                     .append(String.format("%-" + (maxColNameLength) + "s", col.getName() + (escapeChar)))
                     .append(col.getMapperType());
+            col.appendExtraConstraint(script);
             if (++colIndex < colSize) {
                 script.append(",");
             }
@@ -101,6 +102,7 @@ public abstract class CreateTableSqlBuilder {
         return script;
     }
 
+
     /**
      * 在打印之前先对cols进行预处理，比如排序等
      *
@@ -123,6 +125,10 @@ public abstract class CreateTableSqlBuilder {
         }
 
         public abstract String getMapperType();
+
+        protected void appendExtraConstraint(StringBuffer ddlScript) {
+
+        }
 
         public String getName() {
             return this.meta.getName();

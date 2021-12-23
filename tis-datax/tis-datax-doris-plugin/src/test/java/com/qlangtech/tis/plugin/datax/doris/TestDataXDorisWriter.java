@@ -90,10 +90,6 @@ public class TestDataXDorisWriter extends TestCase {
             col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
             cols.add(col);
 
-            col = new ISelectedTab.ColMeta();
-            col.setName("col5");
-            col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-            cols.add(col);
 
             col = new ISelectedTab.ColMeta();
             col.setPk(true);

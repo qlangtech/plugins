@@ -59,7 +59,7 @@ public class TaskExec {
         return new IRemoteJobTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
-            private final ExecutorService dataXExecutor = newFixedThreadPool(10);// Executors.newCachedThreadPool();
+            private final ExecutorService dataXExecutor = newFixedThreadPool(2);// Executors.newCachedThreadPool();
 
             @Override
             public void submitJob() {

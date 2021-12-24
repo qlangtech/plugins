@@ -5,7 +5,8 @@
   "loadProps": {
     "style": "codemirror",
     "mode": "application/ld+json",
-    "rows": 4
+    "rows": 4,
+    "dftVal": "com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter.getDftLoadProps()"
   },
   "maxBatchRows": {
   },

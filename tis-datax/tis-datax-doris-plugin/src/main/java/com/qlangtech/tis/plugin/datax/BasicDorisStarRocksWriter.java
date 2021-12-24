@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -33,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +46,7 @@ import java.util.stream.Collectors;
  **/
 public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
 
-    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadProps;
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer maxBatchRows;
@@ -59,6 +61,38 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(BasicDorisStarRocksWriter.class, "BasicDorisStarRocksWriter-tpl.json");
+    }
+
+    public static String getDftLoadProps() {
+        return "{\n" +
+                "    \"" + Separator.COL_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
+                "    \"" + Separator.ROW_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
+                "}";
+    }
+
+    public Separator getSeparator() {
+        JSONObject props = JSON.parseObject(loadProps);
+        return new Separator() {
+            @Override
+            public String getColumnSeparator() {
+                return StringUtils.defaultIfBlank(props.getString(Separator.COL_SEPARATOR), COL_SEPARATOR_DEFAULT);
+            }
+            @Override
+            public String getRowDelimiter() {
+                return StringUtils.defaultIfBlank(props.getString(Separator.ROW_DELIMITER), ROW_DELIMITER_DEFAULT);
+            }
+        };
+    }
+
+
+    public interface Separator {
+        String COL_SEPARATOR = "column_separator";
+        String ROW_DELIMITER = "row_delimiter";
+
+        String COL_SEPARATOR_DEFAULT = "\\\\x01";
+        String ROW_DELIMITER_DEFAULT = "\\\\x02";
+        String getColumnSeparator();
+        String getRowDelimiter();
     }
 
 
@@ -190,7 +224,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
                     @Override
                     public String decimalType(ColumnMetaData.DataType type) {
-                        return "DECIMAL";
+                        return "DECIMAL(" + type.columnSize + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")";
                     }
                 });
             }

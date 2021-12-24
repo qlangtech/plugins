@@ -51,10 +51,7 @@ import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.DataType;
-import org.apache.flink.table.types.logical.BigIntType;
-import org.apache.flink.table.types.logical.DoubleType;
-import org.apache.flink.table.types.logical.IntType;
-import org.apache.flink.table.types.logical.VarCharType;
+import org.apache.flink.table.types.logical.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -93,49 +90,49 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     public Long sinkMaxRetries;
 
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String columnSeparator;
+//    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String columnSeparator;
+//
+//    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String rowDelimiter;
 
-    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String rowDelimiter;
+//    public static List<Option> allColumnSeparator() {
+//        return Lists.newArrayList(
+//                new Option(Separator.x01.name(), Separator.x01.name())
+//                , new Option(Separator.tab.name(), Separator.tab.name())
+//        );
+//    }
+//
+//    public static List<Option> allRowDelimiter() {
+//        return Lists.newArrayList(
+//                new Option(Separator.x02.name(), Separator.x02.name())
+//                , new Option(Separator.x07.name(), Separator.x07.name())
+//                , new Option(Separator.charReturn.name(), Separator.charReturn.name()));
+//    }
 
-    public static List<Option> allColumnSeparator() {
-        return Lists.newArrayList(
-                new Option(Separator.x01.name(), Separator.x01.name())
-                , new Option(Separator.tab.name(), Separator.tab.name())
-        );
-    }
-
-    public static List<Option> allRowDelimiter() {
-        return Lists.newArrayList(
-                new Option(Separator.x02.name(), Separator.x02.name())
-                , new Option(Separator.x07.name(), Separator.x07.name())
-                , new Option(Separator.charReturn.name(), Separator.charReturn.name()));
-    }
-
-    private enum Separator {
-        x01("\\x01"),
-        x02("\\x02"),
-        x07("\\x07"),
-        tab("\\t"),
-        charReturn("\\n");
-
-        private String val;
-
-        private Separator(String val) {
-            this.val = val;
-        }
-
-        private static Separator parse(String name) {
-            for (Separator s : Separator.values()) {
-                if (s.name().equalsIgnoreCase(name)) {
-                    return s;
-                }
-            }
-            throw new IllegalStateException("illegal seperator name:" + name);
-        }
-
-    }
+//    private enum Separator {
+//        x01("\\x01"),
+//        x02("\\x02"),
+//        x07("\\x07"),
+//        tab("\\t"),
+//        charReturn("\\n");
+//
+//        private String val;
+//
+//        private Separator(String val) {
+//            this.val = val;
+//        }
+//
+//        private static Separator parse(String name) {
+//            for (Separator s : Separator.values()) {
+//                if (s.name().equalsIgnoreCase(name)) {
+//                    return s;
+//                }
+//            }
+//            throw new IllegalStateException("illegal seperator name:" + name);
+//        }
+//
+//    }
 
 
     public static List<Option> allSinkSemantic() {
@@ -175,6 +172,9 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
         BasicDorisStarRocksWriter dataXWriter = (BasicDorisStarRocksWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
+
+        BasicDorisStarRocksWriter.Separator separator = dataXWriter.getSeparator();
+
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();
 
@@ -208,7 +208,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 
-                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab.get(), jdbcUrl, dsFactory));
+                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab.get(), jdbcUrl, dsFactory, separator));
 
                 } catch (Throwable e) {
                     exceptionLoader.set(new Object[]{jdbcUrl, e});
@@ -238,7 +238,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     }
 
     private SinkFunction<DTO> createSinkFunction(
-            String dbName, final String targetTabName, ISelectedTab tab, String jdbcUrl, DorisSourceFactory dsFactory) {
+            String dbName, final String targetTabName, ISelectedTab tab, String jdbcUrl
+            , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
 //import org.apache.flink.table.types.DataType;
         TableSchema.Builder schemaBuilder = TableSchema.builder();
         String[] fieldKeys = new String[tab.getCols().size()];
@@ -264,7 +265,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 // the table structure
                 schemaBuilder.build(),
                 // the sink options
-                createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory)
+                createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory, separator)
                 // set the slots with streamRowData
                 , (slots, streamRowData) -> {
                     for (int i = 0; i < fieldKeys.length; i++) {
@@ -288,14 +289,15 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         }
     }
 
-    private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl, DorisSourceFactory dsFactory) {
+    private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl
+            , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
         StarRocksSinkOptions.Builder builder = StarRocksSinkOptions.builder()
                 .withProperty(JDBC_URL.key(), jdbcUrl)
                 .withProperty(LOAD_URL.key(), dsFactory.getLoadUrls().stream().collect(Collectors.joining(";")))
                 .withProperty(TABLE_NAME.key(), targetTabName)
                 .withProperty(DATABASE_NAME.key(), dbName)
-                .withProperty(SINK_PROPERTIES_PREFIX + "column_separator", Separator.parse(this.columnSeparator).val)
-                .withProperty(SINK_PROPERTIES_PREFIX + "row_delimiter", Separator.parse(this.rowDelimiter).val)
+                .withProperty(SINK_PROPERTIES_PREFIX + "column_separator", separator.getColumnSeparator())
+                .withProperty(SINK_PROPERTIES_PREFIX + "row_delimiter", separator.getRowDelimiter())
                 .withProperty(SINK_SEMANTIC.key(), StarRocksSinkSemantic.fromName(this.sinkSemantic).getName())
                 .withProperty(USERNAME.key(), dsFactory.getUserName());
 
@@ -346,18 +348,19 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             @Override
             public DataType doubleType(ColumnMetaData.DataType type) {
                 // return DataTypes.DOUBLE();
-
                 return new AtomicDataType(new DoubleType(isNullable));
             }
 
             @Override
             public DataType dateType(ColumnMetaData.DataType type) {
-                return DataTypes.DATE();
+                // return DataTypes.DATE();
+                return new AtomicDataType(new DateType(isNullable));
             }
 
             @Override
             public DataType timestampType(ColumnMetaData.DataType type) {
-                return DataTypes.TIMESTAMP();
+                //return DataTypes.TIMESTAMP();
+                return new AtomicDataType(new TimestampType(isNullable, 6));
             }
 
             @Override

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.ds.mysql;
@@ -97,16 +97,18 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
-                + "?useUnicode=yes&useCursorFetch=true&useCompression=" + this.useCompression;
-
+        StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
+                + "?useUnicode=yes&useCursorFetch=true");
+        if (this.useCompression != null) {
+            jdbcUrl.append("&useCompression=").append(this.useCompression);
+        }
         if (StringUtils.isNotEmpty(this.encode)) {
-            jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
+            jdbcUrl.append("&characterEncoding=").append(this.encode);
         }
         if (StringUtils.isNotEmpty(this.extraParams)) {
-            jdbcUrl = jdbcUrl + "&" + this.extraParams;
+            jdbcUrl.append("&" + this.extraParams);
         }
-        return jdbcUrl;
+        return jdbcUrl.toString();
     }
 
     @Override

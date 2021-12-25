@@ -78,36 +78,38 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     @Override
     public final List<SelectedTab> getSelectedTabs() {
 
+        if (selectedTabs == null) {
+            return Collections.emptyList();
+        }
+
         if (this.colTypeSetted) {
             return selectedTabs;
         }
 
-        try {
-            Memoizer<String, Map<String, ColumnMetaData>> tabsMeta = getTabsMeta();
-            return (this.selectedTabs == null)
-                    ? Collections.emptyList()
-                    : this.selectedTabs.stream().map((tab) -> {
-                Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
-                ColumnMetaData colMeta = null;
-                if (colsMeta.size() < 1) {
-                    throw new IllegalStateException("table:" + tab.getName() + " relevant cols meta can not be null");
-                }
-                for (ISelectedTab.ColMeta col : tab.getCols()) {
-                    colMeta = colsMeta.get(col.getName());
-                    if (colMeta == null) {
-                        throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData',exist Keys:["
-                                + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
-                    }
-                    col.setPk(colMeta.isPk());
-                    // col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType().type));
+        Memoizer<String, Map<String, ColumnMetaData>> tabsMeta = getTabsMeta();
 
-                    col.setType(colMeta.getType());
+        this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
+            Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
+            ColumnMetaData colMeta = null;
+            if (colsMeta.size() < 1) {
+                throw new IllegalStateException("table:" + tab.getName() + " relevant cols meta can not be null");
+            }
+            for (ISelectedTab.ColMeta col : tab.getCols()) {
+                colMeta = colsMeta.get(col.getName());
+                if (colMeta == null) {
+                    throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData',exist Keys:["
+                            + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                 }
-                return tab;
-            }).collect(Collectors.toList());
-        } finally {
-            this.colTypeSetted = true;
-        }
+                col.setPk(colMeta.isPk());
+                // col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType().type));
+
+                col.setType(colMeta.getType());
+            }
+            return tab;
+        }).collect(Collectors.toList());
+        this.colTypeSetted = true;
+        return this.selectedTabs;
+
     }
 
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);

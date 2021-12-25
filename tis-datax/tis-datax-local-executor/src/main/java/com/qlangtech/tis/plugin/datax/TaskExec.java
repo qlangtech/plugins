@@ -34,7 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.File;
-import java.util.concurrent.*;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -45,24 +46,19 @@ public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
 
 
-    public static ExecutorService newFixedThreadPool(int nThreads) {
-        return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(200),
-                Executors.defaultThreadFactory());
-    }
-
-    static IRemoteJobTrigger getRemoteJobTrigger(IJoinTaskContext taskContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
+    static IRemoteJobTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
         // final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
-
+        IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteJobTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
-            private final ExecutorService dataXExecutor = newFixedThreadPool(2);// Executors.newCachedThreadPool();
+            final ExecutorService dataXExecutor = jobContext.getContextInstance();
 
             @Override
             public void submitJob() {
+                Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
                 dataXExecutor.submit(() -> {
                     try {
                         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
@@ -127,18 +123,18 @@ public class TaskExec {
                         }
                     } finally {
                         complete.set(true);
-                        shutdownExecutor();
+                        // shutdownExecutor();
                     }
                 });
             }
 
-            private void shutdownExecutor() {
-                try {
-                    dataXExecutor.shutdownNow();
-                } catch (Throwable e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
+//            private void shutdownExecutor() {
+//                try {
+//                    dataXExecutor.shutdownNow();
+//                } catch (Throwable e) {
+//                    logger.error(e.getMessage(), e);
+//                }
+//            }
 
             @Override
             public void cancel() {
@@ -149,7 +145,7 @@ public class TaskExec {
                     watchdog.destroyProcess();
                     logger.info("taskId:{} relevant task has been canceled", taskId);
                 });
-                shutdownExecutor();
+                // shutdownExecutor();
                 this.hasCanceled = true;
             }
 

@@ -77,6 +77,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
             public String getColumnSeparator() {
                 return StringUtils.defaultIfBlank(props.getString(Separator.COL_SEPARATOR), COL_SEPARATOR_DEFAULT);
             }
+
             @Override
             public String getRowDelimiter() {
                 return StringUtils.defaultIfBlank(props.getString(Separator.ROW_DELIMITER), ROW_DELIMITER_DEFAULT);
@@ -91,7 +92,9 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
         String COL_SEPARATOR_DEFAULT = "\\\\x01";
         String ROW_DELIMITER_DEFAULT = "\\\\x02";
+
         String getColumnSeparator();
+
         String getRowDelimiter();
     }
 
@@ -154,7 +157,6 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 script.append(")\n");
                 script.append("BUCKETS 10\n");
                 script.append("PROPERTIES(\"replication_num\" = \"1\")");
-                //script.append("DISTRIBUTED BY HASH(customerregister_id)");
             }
 
             @Override
@@ -250,10 +252,20 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
         public boolean validateLoadProps(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             try {
-                JSON.parseObject(value);
-                return true;
+                JSONObject props = JSON.parseObject(value);
+                boolean valid = true;
+                if (StringUtils.isEmpty(props.getString(Separator.COL_SEPARATOR))) {
+                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + Separator.COL_SEPARATOR + "'");
+                    valid = false;
+                }
+                if (StringUtils.isEmpty(props.getString(Separator.ROW_DELIMITER))) {
+                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + Separator.ROW_DELIMITER + "'");
+                    valid = false;
+                }
+
+                return valid;
             } catch (Exception e) {
-                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                msgHandler.addFieldError(context, fieldName, "错误的JSON格式：" + e.getMessage());
                 return false;
             }
         }

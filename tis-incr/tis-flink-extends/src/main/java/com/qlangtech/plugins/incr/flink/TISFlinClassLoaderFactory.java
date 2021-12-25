@@ -122,8 +122,8 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             @Override
             public URLClassLoader createClassLoader(URL[] libraryURLs) {
                 try {
-
                     String appName = getTisAppName(libraryURLs);
+                    logger.info("start createClassLoader of app:" + appName);
                     TIS.clean();
                     synchronizeIncrPluginsFromRemoteRepository(appName);
                     PluginManager pluginManager = TIS.get().getPluginManager();
@@ -148,11 +148,8 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 throw new IllegalArgumentException("param appName can not be null");
             }
 
-            // KeyedPluginStore<DataxProcessor> processStore = IAppSource.getPluginStore(null, dataxName);
-            List<IRepositoryResource> keyedPluginStores = Lists.newArrayList();// Lists.newArrayList(DataxReader.getPluginStore(dataxName), DataxWriter.getPluginStore(dataxName));
-            //keyedPluginStores.add(TIS.getPluginStore(ParamsConfig.class));
-            // keyedPluginStores.add(TIS.getPluginStore(FileSystemFactory.class));
-            // keyedPluginStores.add(processStore);
+            List<IRepositoryResource> keyedPluginStores = Lists.newArrayList();
+
             keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, MQListenerFactory.class)));
             keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, IncrStreamFactory.class)));
             keyedPluginStores.add(new KeyedPluginStore(new DataxReader.AppKey(null, false, appName, TISSinkFactory.class)));

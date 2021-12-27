@@ -50,10 +50,12 @@ public class HiveTaskFactory implements ITaskFactory {
 
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
-            , ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus) {
+            , ITaskContext taskContext, //
+                                   IJoinTaskStatus joinTaskStatus) {
         if (fileSystem == null) {
             throw new IllegalStateException("filesystem can not be null");
         }
+        IFs2Table fs2Table = null;
         JoinHiveTask task = new JoinHiveTask(nodeMeta, isFinalNode, this.erRules, joinTaskStatus, fileSystem, fs2Table, MREngine.HIVE);
         task.setContext(tplContext, taskContext);
         return task;

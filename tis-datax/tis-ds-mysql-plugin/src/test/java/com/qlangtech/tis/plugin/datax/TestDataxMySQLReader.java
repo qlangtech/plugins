@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -26,8 +26,10 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
@@ -36,14 +38,16 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -55,6 +59,116 @@ public class TestDataxMySQLReader extends BasicTest {
     String userName = "root";
     String password = "123456";
     final String dataXName = "dataXName";
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        TIS.dataXReaderPluginStore.clear();
+    }
+
+    /**
+     * 这个单元测试很重要
+     *
+     * @throws Exception
+     */
+    public void testUpdateDataxReader() throws Exception {
+        KeyedPluginStore<DataxReader> readerStore = DataxReader.getPluginStore(null, dataXName);
+        final SuFormProperties props = EasyMock.createMock("subformProp", SuFormProperties.class);
+        EasyMock.expect(props.getSubFormFieldName()).andReturn("selectedTabs").anyTimes();
+        EasyMock.replay(props);
+        DataxReader.SubFieldFormAppKey<DataxReader> subFieldKey
+                = new DataxReader.SubFieldFormAppKey<>(null, false, dataXName, props, DataxReader.class);
+        KeyedPluginStore<DataxReader> subFieldStore = KeyedPluginStore.getPluginStore(subFieldKey);
+
+
+        File targetFile = readerStore.getTargetFile();
+        FileUtils.deleteQuietly(targetFile);
+        FileUtils.deleteQuietly(subFieldStore.getTargetFile());
+
+        DataxMySQLReader dataxReader = (DataxMySQLReader) readerStore.getPlugin();
+        assertNull("targetFile:" + targetFile.getAbsolutePath(), dataxReader);
+
+        List<Descriptor.ParseDescribable<DataxReader>> dlist = Lists.newArrayList();
+
+        dataxReader = new DataxMySQLReader();
+        dataxReader.dbName = dbName;
+        dataxReader.fetchSize = 1999;
+        dataxReader.template = DataxMySQLReader.getDftTemplate();
+        dataxReader.dataXName = dataXName;
+
+        dlist.add(new Descriptor.ParseDescribable<>(dataxReader));
+
+
+        readerStore.setPlugins(null, Optional.empty(), dlist);
+
+        dataxReader = (DataxMySQLReader) readerStore.getPlugin();
+        assertNotNull(dataxReader);
+        assertTrue("dataxReader.getSelectedTabs() must be empty"
+                , CollectionUtils.isEmpty(dataxReader.getSelectedTabs()));
+
+
+        dlist = Lists.newArrayList();
+        DataxMySQLReader subformReader = new DataxMySQLReader();
+
+        SelectedTab tabOrder = new SelectedTab();
+        tabOrder.name = TestSelectedTabs.tabNameOrderDetail;
+        tabOrder.setCols(TestSelectedTabs.tabColsMetaOrderDetail
+                .stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        subformReader.setSelectedTabs(Collections.singletonList(tabOrder));
+        dlist.add(new Descriptor.ParseDescribable(subformReader));
+        subFieldStore.setPlugins(null, Optional.empty(), dlist);
+
+        assertFalse("must not dirty", dataxReader.isDirty());
+        // 这里有点像变魔术，这是通过 DataXReader中addPluginsUpdateListener添加的回调函数实现的
+        assertTrue(dataxReader.getSelectedTabs().size() > 0);
+        dataxReader.getSelectedTabs().forEach((t) -> {
+            t.getCols().forEach((c) -> {
+                assertNotNull("col:" + c.getName(), c.isPk());
+                assertNotNull("col:" + c.getName(), c.getType());
+            });
+        });
+
+        // 子form中再加一个tab
+        SelectedTab tabTotalpayinfo = new SelectedTab();
+        tabTotalpayinfo.name = TestSelectedTabs.tabNameTotalpayinfo;
+        tabTotalpayinfo.setCols(TestSelectedTabs.tabColsMetaTotalpayinfo
+                .stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        subformReader.setSelectedTabs(Lists.newArrayList(tabOrder, tabTotalpayinfo));
+        dlist = Lists.newArrayList();
+        dlist.add(new Descriptor.ParseDescribable(subformReader));
+        subFieldStore.setPlugins(null, Optional.empty(), dlist);
+
+        assertEquals(2, dataxReader.getSelectedTabs().size());
+        dataxReader.getSelectedTabs().forEach((t) -> {
+            t.getCols().forEach((c) -> {
+                assertNotNull("tab:" + t.getName() + ",col:" + c.getName() + " relevant PK can not be null", c.isPk());
+                assertNotNull("tab:" + t.getName() + ",col:" + c.getName() + " relevant Type can not be null", c.getType());
+            });
+        });
+
+        DataxMySQLReader oldReader = dataxReader;
+
+        dataxReader = new DataxMySQLReader();
+        dataxReader.dbName = dbName;
+        dataxReader.fetchSize = 2999;
+        dataxReader.template = DataxMySQLReader.getDftTemplate();
+        dataxReader.dataXName = dataXName;
+
+        readerStore.setPlugins(null
+                , Optional.empty(), Collections.singletonList(new Descriptor.ParseDescribable(dataxReader)));
+
+        assertTrue("oldReader must be dirty", oldReader.isDirty());
+        assertTrue(dataxReader.getSelectedTabs().size() > 0);
+
+        // 清空测试
+        dlist = Lists.newArrayList();
+        subformReader = new DataxMySQLReader();
+        dlist.add(new Descriptor.ParseDescribable(subformReader));
+        subFieldStore.setPlugins(null, Optional.empty(), dlist);
+        assertTrue("getSelectedTabs shall be empty", dataxReader.getSelectedTabs().size() < 1);
+
+        EasyMock.verify(props);
+    }
 
     public void testDescriptorsJSONGenerate() {
         DataxMySQLReader esWriter = new DataxMySQLReader();
@@ -84,7 +198,7 @@ public class TestDataxMySQLReader extends BasicTest {
         assertNotNull(descriptor);
 
         PluginFormProperties propertyTypes = descriptor.getPluginFormPropertyTypes();
-        assertEquals(3, propertyTypes.getKVTuples().size());
+        assertEquals(4, propertyTypes.getKVTuples().size());
     }
 
     public void testGetSubTasks() {
@@ -298,6 +412,31 @@ public class TestDataxMySQLReader extends BasicTest {
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue(extraProps.isPresent());
+    }
+
+    public void testRealDump() throws Exception {
+        DataxMySQLReader dataxReader = createHdfsReader(dataXName);
+        DataxReader.dataxReaderGetter = (name) -> {
+            assertEquals(dataXName, name);
+            return dataxReader;
+        };
+
+        ReaderTemplate.realExecute("mysql-datax-reader-test-cfg.json", dataxReader);
+    }
+
+    protected DataxMySQLReader createHdfsReader(String dataXName) {
+       // final HdfsFileSystemFactory fsFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
+
+        DataxMySQLReader dataxReader = new DataxMySQLReader() {
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataxMySQLReader.class;
+            }
+        };
+        dataxReader.dataXName = dataXName;
+        dataxReader.template = DataxMySQLReader.getDftTemplate();
+
+        return dataxReader;
     }
 
 }

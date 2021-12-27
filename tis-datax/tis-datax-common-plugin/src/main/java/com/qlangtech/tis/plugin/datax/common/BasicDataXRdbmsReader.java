@@ -50,7 +50,8 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
+        extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
@@ -67,7 +68,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public List<SelectedTab> selectedTabs;
 
-    private transient boolean colTypeSetted;
+    private transient int preSelectedTabsHash;
     public String dataXName;
 
     @Override
@@ -82,7 +83,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             return Collections.emptyList();
         }
 
-        if (this.colTypeSetted) {
+        if (this.preSelectedTabsHash == selectedTabs.hashCode()) {
             return selectedTabs;
         }
 
@@ -107,7 +108,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             }
             return tab;
         }).collect(Collectors.toList());
-        this.colTypeSetted = true;
+        this.preSelectedTabsHash = selectedTabs.hashCode();
         return this.selectedTabs;
 
     }

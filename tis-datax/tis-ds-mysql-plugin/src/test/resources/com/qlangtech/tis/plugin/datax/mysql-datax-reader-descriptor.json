@@ -59,6 +59,18 @@
       {
         "describable":false,
         "eprops":{
+          "dftVal":2000,
+          "help":"执行数据批量导出时单次从数据库中提取记录条数，可以有效减少网络IO次数，提升导出效率。切忌不能设置太大以免OOM发生"
+        },
+        "key":"fetchSize",
+        "ord":98,
+        "pk":false,
+        "required":true,
+        "type":4
+      },
+      {
+        "describable":false,
+        "eprops":{
           "dftVal":"{\n  \"name\": \"mysqlreader\",\n  \"parameter\": {\n    \"connection\": [\n      {\n        \"jdbcUrl\": [\n          \"${reader.jdbcUrl}\"\n        ],\n        \"querySql\": [\n          \"SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end\"\n        ]\n      }\n    ],\n    \"dataxName\": \"${reader.dataXName}\",\n    \"password\": \"${reader.password}\",\n    \"username\": \"${reader.username}\"\n  }\n}",
           "help":"无特殊情况请不要修改模版内容，避免不必要的错误",
           "label":"配置模版",
@@ -76,6 +88,7 @@
     "displayName":"MySQL",
     "extendPoint":"com.qlangtech.tis.datax.impl.DataxReader",
     "extractProps":{
+      "endType":"mysql",
       "rdbms":true
     },
     "impl":"com.qlangtech.tis.plugin.datax.DataxMySQLReader",

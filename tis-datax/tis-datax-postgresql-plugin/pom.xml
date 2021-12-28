@@ -46,6 +46,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.3.1</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-common</artifactId>
             <scope>provided</scope>

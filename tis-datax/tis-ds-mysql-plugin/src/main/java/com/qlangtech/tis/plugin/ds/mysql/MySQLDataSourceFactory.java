@@ -49,6 +49,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
 
+
 //    // 数据库名称
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public String dbName;
@@ -98,7 +99,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
-                + "?useUnicode=yes&useCursorFetch=true");
+                + "?useUnicode=yes&useCursorFetch=true&useSSL=false");
         if (this.useCompression != null) {
             jdbcUrl.append("&useCompression=").append(this.useCompression);
         }

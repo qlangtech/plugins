@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.plugin.ds.tidb;
 
@@ -224,15 +224,22 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             }
             return table1.getColumns().stream().map((col) -> {
                 // ref: com.pingcap.tikv.types.MySQLType
-                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), new ColumnMetaData.DataType(map2JdbcType(col.getType())), col.isPrimaryKey());
+                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), map2JdbcType(col.getType()), col.isPrimaryKey());
                 cmd.setSchemaFieldType(typeMap(col.getType()));
                 return cmd;
             }).collect(Collectors.toList());
         });
     }
 
-    private int map2JdbcType(DataType type) {
+    private ColumnMetaData.DataType map2JdbcType(com.pingcap.tikv.types.DataType type) {
+        int colSize = (int) Long.min(Integer.MAX_VALUE, type.getLength());
+        ColumnMetaData.DataType tisType = new ColumnMetaData.DataType(jdbcType(type), colSize);
+        // type.getType()
+        tisType.setDecimalDigits(type.getDecimal());
+        return tisType;
+    }
 
+    private int jdbcType(DataType type) {
         switch (type.getType()) {
             case TypeDecimal:
                 return Types.DECIMAL;

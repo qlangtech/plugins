@@ -64,15 +64,15 @@ public class PGDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-
-        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName;
-        boolean hasParam = false;
+        //https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
+        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName + "?ssl=false";
+        // boolean hasParam = false;
         if (StringUtils.isNotEmpty(this.encode)) {
-            hasParam = true;
-            jdbcUrl = jdbcUrl + "?charSet=" + this.encode;
+            // hasParam = true;
+            jdbcUrl = jdbcUrl + "&charSet=" + this.encode;
         }
         if (StringUtils.isNotEmpty(this.extraParams)) {
-            jdbcUrl = jdbcUrl + (hasParam ? "&" : "?") + this.extraParams;
+            jdbcUrl = jdbcUrl + "&" + this.extraParams;
         }
         return jdbcUrl;
     }

@@ -37,6 +37,9 @@
         <url>https://github.com/qlangtech/plugins/tree/master/tis-ds-tidb-plugin</url>
         <tag>HEAD</tag>
     </scm>
+    <properties>
+        <scala.binary.version>2.11</scala.binary.version>
+    </properties>
 
     <dependencies>
 
@@ -45,10 +48,16 @@
             <groupId>com.alibaba.datax</groupId>
             <artifactId>datax-common</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.pingcap.tikv</groupId>-->
+<!--            <artifactId>tikv-client</artifactId>-->
+<!--            <version>2.4.2</version>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.pingcap.tikv</groupId>
             <artifactId>tikv-client</artifactId>
-            <version>2.3.9</version>
+            <version>2.5.0-rc.1</version>
         </dependency>
 
         <dependency>

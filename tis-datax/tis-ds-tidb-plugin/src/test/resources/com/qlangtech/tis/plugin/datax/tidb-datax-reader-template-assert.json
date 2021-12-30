@@ -1,5 +1,4 @@
 {
-  "name":"tikvreader",
   "parameter":{
     "column":[
       "emp_no",
@@ -7,14 +6,17 @@
       "first_name",
       "last_name",
       "gender",
-      "hire_date"
+      "hire_date",
+      "create_time",
+      "update_time"
     ],
     "connection":[
       {
-        "dbName":"employees",
+        "dbName":"order2",
         "pdAddrs":"192.168.28.201:2399"
       }
     ],
     "table":"employees"
-  }
+  },
+  "name":"tikvreader"
 }

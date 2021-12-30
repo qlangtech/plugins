@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -135,8 +135,8 @@ public class TisDataXTiDBReader extends Reader {
         @Override
         public void startRead(RecordSender recordSender) {
             List<IDataSourceDumper> dumpers = getTiKVDataSource(this.cfg, Optional.of(this.cfg.getLong(PATH_REGION_ID)));
-            Iterator<Map<String, String>> rowsIt = null;
-            Map<String, String> row = null;
+            Iterator<Map<String, Object>> rowsIt = null;
+            Map<String, Object> row = null;
             Record record = null;
             Column column = null;
             List<ColumnMetaData> metaData = null;
@@ -165,31 +165,35 @@ public class TisDataXTiDBReader extends Reader {
             }
         }
 
-        private Column createCol(ColumnMetaData m, String val) {
+        private Column createCol(ColumnMetaData m, Object val) {
+
+            if (val == null) {
+                return new StringColumn();
+            }
 
             DateColumn d = null;
             switch (m.getType().type) {
                 case Types.TINYINT:
                 case Types.INTEGER:
                 case Types.BIGINT:
-                    return new LongColumn(val);
+                    return new LongColumn((String) val);
                 case Types.DECIMAL:
                 case Types.FLOAT:
                 case Types.DOUBLE:
-                    return new DoubleColumn(val);
+                    return new DoubleColumn((String) val);
                 case Types.TIMESTAMP:
-                    d = new DateColumn(DateUtils.formatTimestamp(Long.parseLong(val)));
+                    d = new DateColumn(((Long) val) / 1000);
                     d.setSubType(DateColumn.DateType.DATETIME);
                     return d;
                 case Types.DATE:
-                    d = new DateColumn(DateUtils.formatDate(Long.parseLong(val)));
+                    d = new DateColumn(DateUtils.formatDate((Long) (val)));
                     d.setSubType(DateColumn.DateType.DATE);
                     return d;
 //                case Types.NULL:
 //                case Types.VARCHAR:
 //                    return new StringColumn(val);
                 default:
-                    return new StringColumn(val);
+                    return new StringColumn((String) val);
             }
 
         }

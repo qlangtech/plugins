@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.plugin.ds.tidb;
 
@@ -53,7 +53,7 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
     }
 
     @Override
-    public Iterator<Map<String, String>> startDump() {
+    public Iterator<Map<String, Object>> startDump() {
 
         this.tiSession = dsFactory.getTiSession();
 
@@ -68,7 +68,7 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
         // 取得的是列向量
         Iterator<TiChunk> tiChunkIterator = snapshot.tableReadChunk(dagRequest, this.partition.tasks, 1024);
 
-        return new Iterator<Map<String, String>>() {
+        return new Iterator<Map<String, Object>>() {
             TiChunk next = null;
             int numOfRows = -1;
             int rowIndex = -1;
@@ -102,8 +102,8 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
             }
 
             @Override
-            public Map<String, String> next() {
-                Map<String, String> row = new HashMap<>();
+            public Map<String, Object> next() {
+                Map<String, Object> row = new HashMap<>();
                 MySQLType colType = null;
                 for (int i = 0; i < targetCols.size(); i++) {
                     column = next.column(i);
@@ -125,14 +125,14 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
 //                                       dsFactory.datetimeFormat
 //                                        ? DateUtils.formatDate(column.getLong(rowIndex))
 //                                        :
-                                String.valueOf(column.getLong(rowIndex)));
+                                column.getLong(rowIndex));
 
                     } else if (colType == MySQLType.TypeTimestamp || colType == MySQLType.TypeDatetime) {
                         row.put(columnMetaData.getKey(),
 //                                dsFactory.datetimeFormat
 //                                        ? DateUtils.formatTimestamp(column.getLong(rowIndex))
 //                                        :
-                                String.valueOf(column.getLong(rowIndex)));
+                                column.getLong(rowIndex));
                     } else {
                         row.put(columnMetaData.getKey(), column.getUTF8String(rowIndex));
                     }
@@ -142,26 +142,27 @@ public class TiKVDataSourceDumper implements IDataSourceDumper {
         };
     }
 
-    public static String filter(String input) {
-        if (input == null) {
-            return input;
-        }
-        StringBuffer filtered = new StringBuffer(input.length());
-        char c;
-        for (int i = 0; i <= input.length() - 1; i++) {
-            c = input.charAt(i);
-            switch (c) {
-                case '\t':
-                    break;
-                case '\r':
-                    break;
-                case '\n':
-                    break;
-                default:
-                    filtered.append(c);
-            }
-        }
-        return (filtered.toString());
+    private static String filter(String input) {
+        return input;
+//        if (input == null) {
+//            return input;
+//        }
+//        StringBuffer filtered = new StringBuffer(input.length());
+//        char c;
+//        for (int i = 0; i <= input.length() - 1; i++) {
+//            c = input.charAt(i);
+//            switch (c) {
+//                case '\t':
+//                    break;
+//                case '\r':
+//                    break;
+//                case '\n':
+//                    break;
+//                default:
+//                    filtered.append(c);
+//            }
+//        }
+//        return (filtered.toString());
     }
 
     @Override

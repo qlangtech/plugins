@@ -6,7 +6,7 @@
       "plugin": [
         {
           "hetero": "params-cfg",
-          "descName": "Aliyun-Endpoint"
+          "descName": "httpToken"
         }
       ]
     }

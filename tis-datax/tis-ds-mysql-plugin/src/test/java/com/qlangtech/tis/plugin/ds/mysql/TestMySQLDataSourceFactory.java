@@ -70,7 +70,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
 
 
         cols = dataSourceFactory.getTableMetadata("base");
-        for(ColumnMetaData col : cols){
+        for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }
 
@@ -84,6 +84,8 @@ public class TestMySQLDataSourceFactory extends TestCase {
 //
 //        mysqlDS.validate()
     }
+
+
 
     public void testDataDumpers() throws Exception {
         MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory() {
@@ -106,7 +108,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
 
         assertEquals(1, dataDumpers.splitCount);
         Iterator<IDataSourceDumper> dumpers = dataDumpers.dumpers;
-        Map<String, String> row = null;
+        Map<String, Object> row = null;
         int testRows = 0;
 
         List<Map<String, String>> exampleRows = getExampleRows();
@@ -116,11 +118,11 @@ public class TestMySQLDataSourceFactory extends TestCase {
             try {
                 dumper = dumpers.next();
                 assertEquals(300024, dumper.getRowSize());
-                Iterator<Map<String, String>> mapIterator = dumper.startDump();
+                Iterator<Map<String, Object>> mapIterator = dumper.startDump();
                 assertNotNull(mapIterator);
                 while (mapIterator.hasNext()) {
                     row = mapIterator.next();
-                    assertTrue(empNo + " can not empty", StringUtils.isNotEmpty(row.get(empNo)));
+                    assertTrue(empNo + " can not empty", row.get(empNo) != null);
                     Map<String, String> exampleRow = exampleRows.get(testRows);
                     for (Map.Entry<String, String> entry : exampleRow.entrySet()) {
                         assertEquals(entry.getKey() + " shall be equal", entry.getValue(), row.get(entry.getKey()));

@@ -21,6 +21,8 @@ package com.qlangtech.async.message.client.kafka;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import junit.framework.TestCase;
 
 /**
@@ -38,7 +40,7 @@ public class TestKafkaMQListener extends TestCase {
 
 
         IMQListener imqListener = listenerFactory.create();
-        imqListener.setConsumerHandle(new MockConsumer());
+        //imqListener.setConsumerHandle(new MockConsumer());
         // BasicDataSourceFactory dataSource, List<ISelectedTab > tabs, ISink sink
         //imqListener.start();
 
@@ -47,24 +49,11 @@ public class TestKafkaMQListener extends TestCase {
     }
 
     private static class MockConsumer implements IConsumerHandle {
-        @Override
-        public String getSubExpression() {
-            return "employees";
-        }
+
 
         @Override
-        public void consume(AsyncMsg asyncMsg) throws Exception {
+        public void consume(TargetResName dataxName, AsyncMsg asyncMsg, IDataxProcessor dataXProcessor) throws Exception {
 
         }
-
-        //        @Override
-//        public boolean consume(AsyncMsg asyncMsg) {
-//            try {
-//                System.out.println(JSON.toJSONString(asyncMsg.getContent()));
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            return true;
-//        }
     }
 }

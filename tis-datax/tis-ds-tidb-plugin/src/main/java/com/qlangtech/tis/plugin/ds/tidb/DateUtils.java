@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.ds.tidb;
@@ -49,15 +49,21 @@ public class DateUtils {
         // convert(0);
         System.out.println(formatDate(-6144));
         System.out.println(timestampFormat.get().format(new Date()));
+
+        //1603463884000000
+
+        Date d = new Date(1603463884000l);
+        ;
+        System.out.println(timestampFormat.get().format(d));
     }
 
-    public static long formatTimestamp(long baseOffset) {
-        Calendar instance = Calendar.getInstance();
-        instance.setTime(base);
-        instance.add(Calendar.MILLISECOND, (int) baseOffset);
-        //return timestampFormat.get().format(instance.getTime());
-        return instance.getTimeInMillis();
-    }
+  //  public static long formatTimestamp(long baseOffset) {
+//        Calendar instance = Calendar.getInstance();
+//        instance.setTime(base);
+//        instance.add(Calendar.MILLISECOND, (int) baseOffset);
+//        //return timestampFormat.get().format(instance.getTime());
+//        return instance.getTimeInMillis();
+   // }
 
     public static long formatDate(long baseOffset) {
 //        +--------+------------+------------+-----------+--------+------------+

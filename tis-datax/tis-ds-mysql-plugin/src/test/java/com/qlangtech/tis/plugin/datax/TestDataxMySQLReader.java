@@ -43,6 +43,7 @@ import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 
 import java.io.File;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -415,17 +416,23 @@ public class TestDataxMySQLReader extends BasicTest {
     }
 
     public void testRealDump() throws Exception {
+
         DataxMySQLReader dataxReader = createHdfsReader(dataXName);
         DataxReader.dataxReaderGetter = (name) -> {
             assertEquals(dataXName, name);
             return dataxReader;
         };
 
-        ReaderTemplate.realExecute("mysql-datax-reader-test-cfg.json", dataxReader);
+        try (StringWriter print = new StringWriter()) {
+
+            ReaderTemplate.realExecute("mysql-datax-reader-test-cfg.json", dataxReader, print);
+            System.out.println("hahaha");
+            System.out.println(print.getBuffer());
+        }
     }
 
     protected DataxMySQLReader createHdfsReader(String dataXName) {
-       // final HdfsFileSystemFactory fsFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
+        // final HdfsFileSystemFactory fsFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
 
         DataxMySQLReader dataxReader = new DataxMySQLReader() {
             @Override

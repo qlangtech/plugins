@@ -224,22 +224,22 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             }
             return table1.getColumns().stream().map((col) -> {
                 // ref: com.pingcap.tikv.types.MySQLType
-                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), map2JdbcType(col.getType()), col.isPrimaryKey());
+                ColumnMetaData cmd = new ColumnMetaData(index[0]++, col.getName(), map2JdbcType(col.getName(), col.getType()), col.isPrimaryKey());
                 cmd.setSchemaFieldType(typeMap(col.getType()));
                 return cmd;
             }).collect(Collectors.toList());
         });
     }
 
-    private ColumnMetaData.DataType map2JdbcType(com.pingcap.tikv.types.DataType type) {
+    private ColumnMetaData.DataType map2JdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
         int colSize = (int) Long.min(Integer.MAX_VALUE, type.getLength());
-        ColumnMetaData.DataType tisType = new ColumnMetaData.DataType(jdbcType(type), colSize);
+        ColumnMetaData.DataType tisType = new ColumnMetaData.DataType(jdbcType(keyName, type), colSize);
         // type.getType()
         tisType.setDecimalDigits(type.getDecimal());
         return tisType;
     }
 
-    private int jdbcType(DataType type) {
+    private int jdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
         switch (type.getType()) {
             case TypeDecimal:
                 return Types.DECIMAL;

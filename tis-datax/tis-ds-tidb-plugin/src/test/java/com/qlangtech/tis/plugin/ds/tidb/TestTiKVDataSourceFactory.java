@@ -121,7 +121,7 @@ public class TestTiKVDataSourceFactory extends TestCase {
         assertEquals(1, dataDumpers.splitCount);
 
         Iterator<IDataSourceDumper> dumpers = dataDumpers.dumpers;
-        Map<String, String> row = null;
+        Map<String, Object> row = null;
         StringBuffer rowContent = null;
         int rowCount = 0;
         while (dumpers.hasNext()) {
@@ -129,7 +129,7 @@ public class TestTiKVDataSourceFactory extends TestCase {
 //            assertEquals(300024, );
             assertTrue(dumper.getRowSize() > 0);
             try {
-                Iterator<Map<String, String>> rowIterator = dumper.startDump();
+                Iterator<Map<String, Object>> rowIterator = dumper.startDump();
 
                 while (rowIterator.hasNext()) {
                     rowContent = new StringBuffer();
@@ -137,7 +137,7 @@ public class TestTiKVDataSourceFactory extends TestCase {
 //                    if ("251149".equals(row.get("emp_no"))) {
 //                        System.out.println("==========="+row.get("emp_no"));
 //                    }
-                    for (Map.Entry<String, String> entry : row.entrySet()) {
+                    for (Map.Entry<String, Object> entry : row.entrySet()) {
                         rowContent.append(entry.getKey()).append(":").append(entry.getValue()).append(",");
                     }
                     rowCount++;

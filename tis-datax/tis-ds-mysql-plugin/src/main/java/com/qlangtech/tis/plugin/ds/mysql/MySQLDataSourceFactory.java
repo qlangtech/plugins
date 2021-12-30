@@ -78,6 +78,53 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 //    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String nodeDesc;
 
+    protected ColumnMetaData.DataType getDataType(String colName, ResultSet cols) throws SQLException {
+        ColumnMetaData.DataType type = super.getDataType(colName, cols);
+        ColumnMetaData.DataType fixType = type.accept(new ColumnMetaData.TypeVisitor<ColumnMetaData.DataType>() {
+            @Override
+            public ColumnMetaData.DataType longType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType doubleType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType dateType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType timestampType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType bitType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType blobType(ColumnMetaData.DataType type) {
+                return null;
+            }
+
+            @Override
+            public ColumnMetaData.DataType varcharType(ColumnMetaData.DataType type) {
+                if (type.columnSize < 1) {
+                    // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
+                    ColumnMetaData.DataType n = new ColumnMetaData.DataType(Types.VARCHAR, 2000);
+                    n.setDecimalDigits(type.getDecimalDigits());
+                    return n;
+                }
+                return null;
+            }
+        });
+        return fixType != null ? fixType : type;
+    }
+
     @Override
     public FacadeDataSource createFacadeDataSource() {
 
@@ -232,7 +279,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         }
 
         @Override
-        public Iterator<Map<String, String>> startDump() {
+        public Iterator<Map<String, Object>> startDump() {
             String executeSql = table.getSelectSql();
             if (StringUtils.isEmpty(executeSql)) {
                 throw new IllegalStateException("executeSql can not be null");
@@ -247,7 +294,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
 
                 final ResultSet result = resultSet;
-                return new Iterator<Map<String, String>>() {
+                return new Iterator<Map<String, Object>>() {
                     @Override
                     public boolean hasNext() {
                         try {
@@ -258,8 +305,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     }
 
                     @Override
-                    public Map<String, String> next() {
-                        Map<String, String> row = new LinkedHashMap<>(columCount);
+                    public Map<String, Object> next() {
+                        Map<String, Object> row = new LinkedHashMap<>(columCount);
                         String key = null;
                         String value = null;
 

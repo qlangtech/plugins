@@ -29,7 +29,6 @@
     </parent>
     <groupId>com.qlangtech.tis</groupId>
     <artifactId>tis-plugin-parent</artifactId>
-    <version>3.3.0</version>
     <packaging>pom</packaging>
 
     <name>TIS Plugin Parent POM</name>

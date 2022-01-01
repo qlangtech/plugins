@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -119,7 +120,9 @@ public class TaskExec {
                             logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
                         } else {
                             logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
-                            throw new RuntimeException(e);
+                            if (!(e instanceof DataXJobSingleProcessorException)) {
+                                throw new RuntimeException(e);
+                            }
                         }
                     } finally {
                         complete.set(true);

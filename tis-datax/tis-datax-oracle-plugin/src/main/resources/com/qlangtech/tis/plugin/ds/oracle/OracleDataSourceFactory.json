@@ -3,6 +3,20 @@
     "label": "SID",
     "dftVal": "xe"
   },
+  "asServiceName": {
+    "label": "以服务名",
+    "dftVal": true,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  },
   "port": {
     "dftVal": 1521
   },

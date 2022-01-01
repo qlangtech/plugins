@@ -20,6 +20,9 @@ package com.qlangtech.tis.plugin.ds.oracle;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -36,6 +39,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     public static final String ORACLE = "Oracle";
 
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean asServiceName;
 
     @Override
     public String identityValue() {
@@ -44,7 +49,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + ":" + dbName;
+        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") + dbName;
         return jdbcUrl;
     }
 

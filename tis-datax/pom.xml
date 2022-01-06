@@ -30,6 +30,13 @@
     <artifactId>tis-datax</artifactId>
     <packaging>pom</packaging>
 
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-datax</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <modules>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-common-rdbms-plugin</module>

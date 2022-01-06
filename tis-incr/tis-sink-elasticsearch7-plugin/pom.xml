@@ -30,7 +30,7 @@
 
     <packaging>tpi</packaging>
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <artifactId>tis-elasticsearch7-sink-plugin</artifactId>
+    <artifactId>tis-sink-elasticsearch7-plugin</artifactId>
 
 
     <dependencies>

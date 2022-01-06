@@ -41,12 +41,6 @@
         </plugins>
     </build>
 
-    <scm>
-        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
-        <url>https://github.com/qlangtech/plugins/tree/master/tis-hive-flat-table-builder-plugin</url>
-        <tag>HEAD</tag>
-    </scm>
 
     <dependencies>
 

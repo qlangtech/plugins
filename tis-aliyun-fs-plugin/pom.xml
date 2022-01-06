@@ -28,19 +28,13 @@
     </parent>
 
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <artifactId>tis-aliyun-hdfs-plugin</artifactId>
+    <artifactId>tis-aliyun-fs-plugin</artifactId>
     <packaging>tpi</packaging>
 
 
-    <name>tis-aliyun-hdfs-plugin</name>
+    <name>tis-aliyun-fs-plugin</name>
     <url>http://maven.apache.org</url>
 
-    <scm>
-        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
-        <url>https://github.com/qlangtech/plugins/tree/master/tis-aliyun-fs-plugin</url>
-        <tag>HEAD</tag>
-    </scm>
 
     <properties>
     </properties>

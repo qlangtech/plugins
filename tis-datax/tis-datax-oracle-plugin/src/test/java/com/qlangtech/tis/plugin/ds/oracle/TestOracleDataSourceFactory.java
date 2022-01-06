@@ -70,11 +70,13 @@ public class TestOracleDataSourceFactory extends TestCase {
 
     public static OracleDataSourceFactory createOracleDataSourceFactory() {
         OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
+        dsFactory.name = "xe";
         dsFactory.dbName = "xe";
         dsFactory.userName = "system";
         dsFactory.password = "oracle";
         dsFactory.nodeDesc = "192.168.28.201";
         dsFactory.port = 1521;
+        dsFactory.asServiceName = false;
         return dsFactory;
     }
 }

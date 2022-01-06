@@ -29,6 +29,13 @@
 
     <artifactId>tis-incr</artifactId>
     <packaging>pom</packaging>
+
+    <scm>
+        <connection>scm:git:git://github.com/qlangtech/plugins.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/qlangtech/plugins.git</developerConnection>
+        <url>https://github.com/qlangtech/plugins/tree/master/tis-incr</url>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
         <!--        -->
 
@@ -46,6 +53,7 @@
 
         <module>tis-sink-elasticsearch7</module>
         <module>tis-sink-elasticsearch7-plugin</module>
+
         <module>tis-sink-starrocks-plugin</module>
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>

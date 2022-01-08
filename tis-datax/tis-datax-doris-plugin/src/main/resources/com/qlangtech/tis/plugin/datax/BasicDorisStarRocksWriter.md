@@ -11,14 +11,6 @@ StreamLoad 的请求参数，详情参照[StreamLoad介绍页面](http://doris.a
 }
 ```
 
-如需更改导入格式为json， 则正确配置 loadProps 即可：
-```json
- {
-    "format": "json",
-    "strip_outer_array": true
-}
-```
-
 ## maxBatchRows
 
 - 描述：单次StreamLoad导入的最大行数

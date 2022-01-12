@@ -67,16 +67,17 @@ public class UniqueDatabase {
     }
 
     private UniqueDatabase(
-            MySqlContainer container,
+            MySqlContainer c,
             String databaseName,
             final String identifier,
             String username,
             String password) {
-        this.container = container;
+        this.container = c;
         this.databaseName = databaseName + "_" + identifier;
         this.templateName = databaseName;
         this.username = username;
         this.password = password;
+
     }
 
     public String getHost() {

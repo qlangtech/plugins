@@ -89,7 +89,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public DataXJobSubmit.IDataXJobContext createJobContext(final IJoinTaskContext parentContext) {
-        int nThreads = 4;
+        int nThreads = 2;
         final ExecutorService executorService = new ThreadPoolExecutor(
                 nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(MAX_TABS_NUM_IN_PER_JOB),

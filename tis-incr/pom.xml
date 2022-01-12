@@ -50,7 +50,7 @@
 
         <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
-
+        <module>tis-incr-test</module>
         <module>tis-sink-elasticsearch7</module>
         <module>tis-sink-elasticsearch7-plugin</module>
 
@@ -64,6 +64,7 @@
         <module>tis-flink-cdc-oracle-plugin</module>
         <module>tis-flink-cdc-mongdb-plugin</module>
         <module>tis-sink-clickhouse-plugin</module>
+
         <!--        <module>tis-flink-client</module>-->
     </modules>
 
@@ -73,6 +74,12 @@
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-flink-dependency</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-incr-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
 

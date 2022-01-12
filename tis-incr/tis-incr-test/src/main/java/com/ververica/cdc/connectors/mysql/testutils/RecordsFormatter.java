@@ -46,7 +46,7 @@ public class RecordsFormatter {
 
     private TypeInformation<RowData> typeInfo;
     private DebeziumDeserializationSchema<RowData> deserializationSchema;
-    private SimpleCollector collector;
+    private final SimpleCollector collector;
     private RowRowConverter rowRowConverter;
 
     public RecordsFormatter(DataType dataType) {

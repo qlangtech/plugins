@@ -30,6 +30,14 @@
     <groupId>com.qlangtech.tis.plugin</groupId>
     <artifactId>tis-datax-test-common</artifactId>
     <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-web-start-api</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-manage-pojo</artifactId>
@@ -57,7 +65,6 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>com.alibaba.datax</groupId>
             <artifactId>streamreader</artifactId>
@@ -68,7 +75,6 @@
             <artifactId>streamwriter</artifactId>
             <version>${alibaba.datax.version}</version>
         </dependency>
-
 
 
     </dependencies>

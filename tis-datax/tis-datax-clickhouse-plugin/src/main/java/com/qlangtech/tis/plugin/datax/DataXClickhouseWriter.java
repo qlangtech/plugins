@@ -128,27 +128,6 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
                         return "String";
                 }
             }
-
-
-//            @Override
-//            protected String convertType(ISelectedTab.ColMeta col) {
-//                switch (col.getType()) {
-//                    case Long:
-//                        return "Int64";
-//                    case INT:
-//                        return "Int32";
-//                    case Double:
-//                        return "Float64";
-//                    case Date:
-//                        return "Date";
-//                    case STRING:
-//                    case Boolean:
-//                    case Bytes:
-//                    default:
-//                        return "String";
-//                }
-//
-//            }
         };
         return createTableSqlBuilder.build();
         // List<ColumnMetaData> tableMetadata = this.getDataSourceFactory().getTableMetadata(tableMapper.getTo());

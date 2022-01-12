@@ -27,4 +27,17 @@ GRANT ALL PRIVILEGES ON *.* TO 'mysqluser'@'%';
 -- ----------------------------------------------------------------------------------------------------------------
 -- DATABASE:  emptydb
 -- ----------------------------------------------------------------------------------------------------------------
-CREATE DATABASE emptydb;
+-- CREATE DATABASE flink-test;
+use `flink-test`;
+
+CREATE TABLE `base` (
+  `base_id` int(11) NOT NULL,
+  `start_time` datetime DEFAULT NULL,
+  `update_date` date DEFAULT NULL,
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `price` decimal(5,2) DEFAULT NULL,
+  `json_content` json DEFAULT NULL,
+  `col_blob` blob,
+  `col_text` text,
+  PRIMARY KEY (`base_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

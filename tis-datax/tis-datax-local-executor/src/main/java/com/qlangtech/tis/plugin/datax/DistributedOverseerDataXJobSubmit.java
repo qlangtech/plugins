@@ -40,6 +40,9 @@ import org.apache.curator.framework.recipes.queue.DistributedQueue;
 @TISExtension()
 public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
+    private CuratorFramework curatorClient = null;
+    private DistributedQueue<CuratorDataXTaskMessage> curatorDistributedQueue = null;
+
     public DistributedOverseerDataXJobSubmit() {
 
     }
@@ -102,8 +105,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     }
 
 
-    private CuratorFramework curatorClient = null;
-    private DistributedQueue<CuratorDataXTaskMessage> curatorDistributedQueue = null;
+
 
     private DistributedQueue<CuratorDataXTaskMessage> getCuratorDistributedQueue() {
         synchronized (this) {

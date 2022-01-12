@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 
 import com.qlangtech.org.apache.http.HttpHost;
-import com.qlangtech.org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -42,21 +41,15 @@ import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureH
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
-import org.apache.flink.streaming.connectors.elasticsearch7.RestClientFactory;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
-import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.qlangtech.org.apache.http.client.CredentialsProvider;
-import com.qlangtech.org.apache.http.impl.client.BasicCredentialsProvider;
-import com.qlangtech.org.apache.http.auth.AuthScope;
-import com.qlangtech.org.apache.http.auth.UsernamePasswordCredentials;
 
 
 /**
@@ -176,20 +169,21 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
         if (StringUtils.isNotEmpty(token.getAccessKeyId())
                 || StringUtils.isNotEmpty(token.getAccessKeySecret())) {
             // 如果用户设置了accessKey 或者accessSecret
-            sinkBuilder.setRestClientFactory(new RestClientFactory() {
-                @Override
-                public void configureRestClientBuilder(RestClientBuilder restClientBuilder) {
-                    final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                    credentialsProvider.setCredentials(AuthScope.ANY,
-                            new UsernamePasswordCredentials(token.getAccessKeyId(), token.getAccessKeySecret()));
-                    restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
-                        @Override
-                        public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
-                            return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                        }
-                    });
-                }
-            });
+            sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(token.getAccessKeyId(), token.getAccessKeySecret()));
+//            sinkBuilder.setRestClientFactory(new RestClientFactory() {
+//                @Override
+//                public void configureRestClientBuilder(RestClientBuilder restClientBuilder) {
+//                    final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+//                    credentialsProvider.setCredentials(AuthScope.ANY,
+//                            new UsernamePasswordCredentials(token.getAccessKeyId(), token.getAccessKeySecret()));
+//                    restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+//                        @Override
+//                        public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
+//                            return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+//                        }
+//                    });
+//                }
+//            });
         }
 
 

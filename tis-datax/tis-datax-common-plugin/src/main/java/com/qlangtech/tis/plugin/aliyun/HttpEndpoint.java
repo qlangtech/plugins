@@ -31,7 +31,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public class HttpEndpoint extends ParamsConfig implements IHttpToken {
+public class HttpEndpoint extends ParamsConfig implements IHttpToken  {
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;

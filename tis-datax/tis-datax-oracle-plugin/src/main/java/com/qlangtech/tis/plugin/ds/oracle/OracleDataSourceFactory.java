@@ -30,6 +30,8 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -41,6 +43,9 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean asServiceName;
+
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean allAuthorized;
 
     @Override
     public String identityValue() {
@@ -54,7 +59,64 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     protected String getRefectTablesSql() {
-        return "SELECT (TABLE_NAME) FROM user_tables";
+        if (allAuthorized != null && allAuthorized) {
+            return "SELECT owner ||'.'|| table_name FROM all_tables";
+        } else {
+            return "SELECT '" + StringUtils.upperCase(this.userName) + "' ||'.'||  (TABLE_NAME) FROM user_tables";
+        }
+    }
+
+
+    @Override
+    protected ResultSet getColumnsMeta(String table, DatabaseMetaData metaData1) throws SQLException {
+        return getColRelevantMeta(table, (tab) -> {
+            try {
+                return metaData1.getColumns(null, tab.owner, tab.tabName, null);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, () -> {
+            return super.getColumnsMeta(table, metaData1);
+        });
+    }
+
+    @Override
+    protected ResultSet getPrimaryKeys(String table, DatabaseMetaData metaData1) throws SQLException {
+
+        return getColRelevantMeta(table, (tab) -> {
+            try {
+
+                return metaData1.getPrimaryKeys(null, tab.owner, tab.tabName);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }, () -> {
+            return super.getPrimaryKeys(table, metaData1);
+        });
+    }
+
+    private ResultSet getColRelevantMeta(String table
+            , Function<OracleTab, ResultSet> containSchema, Callable<ResultSet> notContainSchema) throws SQLException {
+        try {
+            if (StringUtils.indexOf(table, ".") > -1) {
+                String[] tab = StringUtils.split(table, ".");
+                return containSchema.apply(new OracleTab(tab[0], tab[1]));
+            } else {
+                return notContainSchema.call();
+            }
+        } catch (Exception e) {
+            throw new SQLException(e);
+        }
+    }
+
+    private static class OracleTab {
+        private final String owner;
+        private final String tabName;
+
+        public OracleTab(String owner, String tabName) {
+            this.owner = StringUtils.upperCase(owner);
+            this.tabName = tabName;
+        }
     }
 
 

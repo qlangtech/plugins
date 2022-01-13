@@ -17,6 +17,20 @@
       }
     ]
   },
+  "allAuthorized": {
+    "label": "包含授权",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  },
   "port": {
     "dftVal": 1521
   },

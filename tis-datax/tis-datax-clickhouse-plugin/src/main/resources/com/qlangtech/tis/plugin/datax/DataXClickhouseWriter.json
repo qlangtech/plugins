@@ -14,6 +14,7 @@
   },
   "writeMode": {
     "dftVal": "insert",
+    "disable": true,
     "enum": [
       {
         "val": "insert",

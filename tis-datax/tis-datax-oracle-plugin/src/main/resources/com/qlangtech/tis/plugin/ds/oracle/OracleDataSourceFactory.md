@@ -6,3 +6,11 @@
 
 "jdbc:oracle:thin:@" + hostname + ":" + port + **"/"** + dbname
 
+## allAuthorized
+
+Oracle系统会向用户授权其他用户名下的表
+
+* 如选择`是`可以包含系统授权的其他用户名下的表
+
+* 如选择`否`则只包含用户名下的表
+

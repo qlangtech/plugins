@@ -87,6 +87,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
                                                 .port(dsFactory.port)
                                                 .databaseList(databases) // monitor all tables under inventory database
                                                 .tableList(tbs.toArray(new String[tbs.size()]))
+                                                .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE)
                                                 .username(dsFactory.getUserName())
                                                 .password(dsFactory.getPassword())
                                                 .startupOptions(sourceFactory.getStartupOptions())

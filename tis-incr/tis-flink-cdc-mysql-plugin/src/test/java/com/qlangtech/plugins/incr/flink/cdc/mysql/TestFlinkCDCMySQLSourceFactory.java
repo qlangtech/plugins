@@ -54,6 +54,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -143,24 +145,7 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
         // DataxReader.IDataxReaderGetter readerGetter = mock("IDataxReaderGetter", DataxReader.IDataxReaderGetter.class);
 
 
-        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
-        Assert.assertNotNull(mySqlV5DataSourceFactory);
-
-        FormData formData = new FormData();
-        formData.addProp("name", "mysql");
-        formData.addProp("dbName", MYSQL_CONTAINER.getDatabaseName());
-        formData.addProp("nodeDesc", MYSQL_CONTAINER.getHost());
-        formData.addProp("password", MYSQL_CONTAINER.getPassword());
-        formData.addProp("userName", MYSQL_CONTAINER.getUsername());
-        formData.addProp("port", String.valueOf(MYSQL_CONTAINER.getDatabasePort()));
-        formData.addProp("encode", "utf8");
-        formData.addProp("useCompression", "true");
-
-        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
-                = mySqlV5DataSourceFactory.newInstance(IPluginContext.namedContext(dataxName.getName()), formData, Optional.empty());
-        Assert.assertNotNull(parseDescribable.instance);
-
-        BasicDataSourceFactory dataSourceFactory = parseDescribable.instance;
+        BasicDataSourceFactory dataSourceFactory = createMySqlDataSourceFactory(dataxName);
         List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
 
         BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {
@@ -211,11 +196,16 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
                 PreparedStatement statement = conn.prepareStatement(insertBase);
                 int id = 66;
 
+                java.sql.Date newDate = null;
+                SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 while (id < 88) {
+
+                    newDate = new java.sql.Date(System.currentTimeMillis());
+
                     statement.setInt(1, id++);
-                    statement.setDate(2, new java.sql.Date(System.currentTimeMillis()));
-                    statement.setDate(3, new java.sql.Date(System.currentTimeMillis()));
-                    statement.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+                    statement.setTimestamp(2, new Timestamp(newDate.getTime()));
+                    statement.setDate(3, newDate);
+                    statement.setTimestamp(4, new Timestamp(newDate.getTime()));
                     statement.setBigDecimal(5, BigDecimal.valueOf(199, 2));
                     statement.setString(6, "{\"name\":\"baisui\"}");
 
@@ -228,7 +218,7 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
                     }
                     statement.setString(8, "我爱北京天安门");
                     Assert.assertEquals(1, statement.executeUpdate());
-                    System.out.println("insert:" + id);
+                    System.out.println("insert:" + id + "，new time:" + timeFormat.format(newDate) + ",longformat:" + newDate.getTime());
                     try {
                         Thread.sleep(500);
                     } catch (Exception e) {
@@ -243,6 +233,27 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
         imqListener.start(dataxName, dataxReader, tabs, dataXProcessor);
         Thread.sleep(10000);
         verifyAll();
+    }
+
+    protected BasicDataSourceFactory createMySqlDataSourceFactory(TargetResName dataxName) {
+        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
+        Assert.assertNotNull(mySqlV5DataSourceFactory);
+
+        FormData formData = new FormData();
+        formData.addProp("name", "mysql");
+        formData.addProp("dbName", MYSQL_CONTAINER.getDatabaseName());
+        formData.addProp("nodeDesc", MYSQL_CONTAINER.getHost());
+        formData.addProp("password", MYSQL_CONTAINER.getPassword());
+        formData.addProp("userName", MYSQL_CONTAINER.getUsername());
+        formData.addProp("port", String.valueOf(MYSQL_CONTAINER.getDatabasePort()));
+        formData.addProp("encode", "utf8");
+        formData.addProp("useCompression", "true");
+
+        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
+                = mySqlV5DataSourceFactory.newInstance(IPluginContext.namedContext(dataxName.getName()), formData, Optional.empty());
+        Assert.assertNotNull(parseDescribable.instance);
+
+        return parseDescribable.instance;
     }
 
     private static class FormData extends HashMap<String, JSONObject> {

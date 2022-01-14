@@ -29,9 +29,14 @@ import org.apache.kafka.connect.data.Schema;
 import java.io.Serializable;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
+ * https://debezium.io/documentation/reference/1.8/connectors/mysql.html#mysql-temporal-types
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-12-20 11:06
  **/
@@ -47,10 +52,13 @@ public class MySQLSourceValConvert implements ISourceValConvert, Serializable {
     public static final ThreadLocal<SimpleDateFormat> TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
-            //return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+           // return SimpleDateFormat.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         }
     };
+    private static final ZoneId zof = ZoneId.of("Z");
+    // private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
     private TabColIndexer colIndexer;
 
     public MySQLSourceValConvert(TabColIndexer colIndexer) {
@@ -71,11 +79,13 @@ public class MySQLSourceValConvert implements ISourceValConvert, Serializable {
             case Types.DECIMAL:
                 return val;
             case Types.DATE: {
-                Date d = new Date(((Integer) val).longValue() * 24 * 3600 * 1000);
+                Date d = org.apache.kafka.connect.data.Date.toLogical(org.apache.kafka.connect.data.Date.SCHEMA, (Integer) val);
                 return DATE_FORMAT.get().format(d);
             }
             case Types.TIME: {
                 Date d = new Date((Long) val);
+                //  ZonedTimestamp.toIsoString(d);
+                //LocalDateTime localDateTime = LocalDateTime.ofInstant(d.toInstant(), zof);
                 return TIME_FORMAT.get().format(d);
             }
             case Types.TIMESTAMP:
@@ -83,6 +93,9 @@ public class MySQLSourceValConvert implements ISourceValConvert, Serializable {
                     return val;
                 } else {
                     Date d = new Date((Long) val);
+                    //return TIME_FORMAT.get().format(d);
+//                    LocalDateTime localDateTime = LocalDateTime.ofInstant(d.toInstant(), zof);
+//                    return localDateTime.format(TIME_FORMAT.get());
                     return TIME_FORMAT.get().format(d);
                 }
 

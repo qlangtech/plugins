@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -27,6 +28,8 @@ import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -145,18 +148,22 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
-                + "?useUnicode=yes&useCursorFetch=true&useSSL=false");
-        if (this.useCompression != null) {
-            jdbcUrl.append("&useCompression=").append(this.useCompression);
+        try {
+            StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
+                    + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE, TisUTF8.getName()));
+            if (this.useCompression != null) {
+                jdbcUrl.append("&useCompression=").append(this.useCompression);
+            }
+            if (StringUtils.isNotEmpty(this.encode)) {
+                jdbcUrl.append("&characterEncoding=").append(this.encode);
+            }
+            if (StringUtils.isNotEmpty(this.extraParams)) {
+                jdbcUrl.append("&" + this.extraParams);
+            }
+            return jdbcUrl.toString();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
-        if (StringUtils.isNotEmpty(this.encode)) {
-            jdbcUrl.append("&characterEncoding=").append(this.encode);
-        }
-        if (StringUtils.isNotEmpty(this.extraParams)) {
-            jdbcUrl.append("&" + this.extraParams);
-        }
-        return jdbcUrl.toString();
     }
 
     @Override

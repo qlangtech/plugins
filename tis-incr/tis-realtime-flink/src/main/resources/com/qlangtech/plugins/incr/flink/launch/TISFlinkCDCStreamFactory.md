@@ -18,7 +18,7 @@ TIS平台中提交Flink任务之前，请先创建Flink Cluster，支持两种�
         ```
       - 启动Flink-Cluster：
          ```shell script
-          sh ./bin/start-cluster.sh
+         ./bin/start-cluster.sh
          ```
          
 

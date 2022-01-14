@@ -42,7 +42,7 @@
         <dependency>
             <groupId>com.starrocks</groupId>
             <artifactId>flink-connector-starrocks</artifactId>
-            <version>1.1.12_flink-1.13</version>
+            <version>1.1.14_flink-1.13_${scala.binary.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.flink</groupId>

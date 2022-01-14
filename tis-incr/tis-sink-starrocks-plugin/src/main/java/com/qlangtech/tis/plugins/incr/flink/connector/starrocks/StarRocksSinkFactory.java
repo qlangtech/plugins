@@ -90,51 +90,6 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     public Long sinkMaxRetries;
 
 
-//    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String columnSeparator;
-//
-//    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String rowDelimiter;
-
-//    public static List<Option> allColumnSeparator() {
-//        return Lists.newArrayList(
-//                new Option(Separator.x01.name(), Separator.x01.name())
-//                , new Option(Separator.tab.name(), Separator.tab.name())
-//        );
-//    }
-//
-//    public static List<Option> allRowDelimiter() {
-//        return Lists.newArrayList(
-//                new Option(Separator.x02.name(), Separator.x02.name())
-//                , new Option(Separator.x07.name(), Separator.x07.name())
-//                , new Option(Separator.charReturn.name(), Separator.charReturn.name()));
-//    }
-
-//    private enum Separator {
-//        x01("\\x01"),
-//        x02("\\x02"),
-//        x07("\\x07"),
-//        tab("\\t"),
-//        charReturn("\\n");
-//
-//        private String val;
-//
-//        private Separator(String val) {
-//            this.val = val;
-//        }
-//
-//        private static Separator parse(String name) {
-//            for (Separator s : Separator.values()) {
-//                if (s.name().equalsIgnoreCase(name)) {
-//                    return s;
-//                }
-//            }
-//            throw new IllegalStateException("illegal seperator name:" + name);
-//        }
-//
-//    }
-
-
     public static List<Option> allSinkSemantic() {
         return Arrays.stream(StarRocksSinkSemantic.values())
                 .map((s) -> new Option(StringUtils.capitalize(s.getName()), s.getName()))
@@ -177,6 +132,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
 
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();
+
 
         DorisSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         DBConfig dbConfig = dsFactory.getDbConfig();
@@ -260,6 +216,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         if (!pks.isEmpty()) {
             schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
         }
+
+
 
         return StarRocksSink.sink(
                 // the table structure

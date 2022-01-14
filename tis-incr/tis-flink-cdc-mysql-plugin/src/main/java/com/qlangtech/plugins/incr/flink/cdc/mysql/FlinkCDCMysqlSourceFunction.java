@@ -66,10 +66,12 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
     public void start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-            TabColIndexer colIndexer = new TabColIndexer(tabs);
+            //TabColIndexer colIndexer = new TabColIndexer(tabs);
 
-            TISDeserializationSchema deserializationSchema
-                    = new TISDeserializationSchema(new MySQLSourceValConvert(colIndexer));
+//            TISDeserializationSchema deserializationSchema
+//                    = new TISDeserializationSchema(new MySQLSourceValConvert(colIndexer));
+
+            TISDeserializationSchema deserializationSchema = new TISDeserializationSchema();
 
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
             SourceChannel sourceChannel = new SourceChannel(
@@ -87,7 +89,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
                                                 .port(dsFactory.port)
                                                 .databaseList(databases) // monitor all tables under inventory database
                                                 .tableList(tbs.toArray(new String[tbs.size()]))
-                                                .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE)
+                                                .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
                                                 .username(dsFactory.getUserName())
                                                 .password(dsFactory.getPassword())
                                                 .startupOptions(sourceFactory.getStartupOptions())

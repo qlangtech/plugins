@@ -51,7 +51,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     }
 
     public TISDeserializationSchema() {
-        this((dto, field, val) -> val);
+        this(new DefaultSourceValConvert());
     }
 
 //    public TISDeserializationSchema(boolean includeSchema) {

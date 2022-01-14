@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.TISFlinClassLoaderFactory;
 import com.qlangtech.tis.TIS;
@@ -35,7 +34,6 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
-import com.qlangtech.tis.util.IPluginContext;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.test.util.AbstractTestBase;
@@ -56,7 +54,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -239,7 +240,7 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
         Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
         Assert.assertNotNull(mySqlV5DataSourceFactory);
 
-        FormData formData = new FormData();
+        Descriptor.FormData formData = new Descriptor.FormData();
         formData.addProp("name", "mysql");
         formData.addProp("dbName", MYSQL_CONTAINER.getDatabaseName());
         formData.addProp("nodeDesc", MYSQL_CONTAINER.getHost());
@@ -250,19 +251,9 @@ public class TestFlinkCDCMySQLSourceFactory extends AbstractTestBase implements 
         formData.addProp("useCompression", "true");
 
         Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
-                = mySqlV5DataSourceFactory.newInstance(IPluginContext.namedContext(dataxName.getName()), formData, Optional.empty());
+                = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.instance);
 
         return parseDescribable.instance;
-    }
-
-    private static class FormData extends HashMap<String, JSONObject> {
-
-        public JSONObject addProp(String key, String val) {
-            JSONObject o = new JSONObject();
-            o.put(Descriptor.KEY_primaryVal, val);
-            this.put(key, o);
-            return o;
-        }
     }
 }

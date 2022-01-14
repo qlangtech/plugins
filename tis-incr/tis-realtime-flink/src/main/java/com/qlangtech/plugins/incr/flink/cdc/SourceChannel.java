@@ -82,7 +82,8 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
                 debeziumProperties.put("datetime.format.time", "HH:mm:ss");
                 debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
                 debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
-                debeziumProperties.put("datetime.format.timestamp.zone", "UTC+8");
+                debeziumProperties.put("datetime.format.timestamp.zone"
+                        , BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
                 String dbHost = entry.getKey();
                 List<String> dbs = entry.getValue();
                 sourceFuncs.addAll(sourceFunctionCreator.create(dsFactory, dbHost, dbs, tbs, debeziumProperties));

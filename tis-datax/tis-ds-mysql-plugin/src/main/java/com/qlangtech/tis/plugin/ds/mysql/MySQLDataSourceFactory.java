@@ -150,7 +150,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         try {
             StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
-                    + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE, TisUTF8.getName()));
+                    + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }

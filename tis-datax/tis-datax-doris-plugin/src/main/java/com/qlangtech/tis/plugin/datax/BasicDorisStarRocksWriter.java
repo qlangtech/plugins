@@ -206,7 +206,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
                     @Override
                     public String blobType(ColumnMetaData.DataType type) {
-                        return "BITMAP";
+                        return varcharType(type);
                     }
 
                     @Override

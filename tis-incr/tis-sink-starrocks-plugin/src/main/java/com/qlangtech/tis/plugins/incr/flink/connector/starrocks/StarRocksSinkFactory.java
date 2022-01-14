@@ -370,7 +370,8 @@ public class StarRocksSinkFactory extends TISSinkFactory {
 
             @Override
             public DataType blobType(ColumnMetaData.DataType type) {
-                return DataTypes.VARBINARY(type.columnSize);
+                // return DataTypes.VARBINARY(type.columnSize);
+                return varcharType(type);
             }
 
             @Override

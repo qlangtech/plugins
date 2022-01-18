@@ -136,7 +136,7 @@
         <dependencies>
 
             <dependency>
-                <groupId>com.qlangtech.tis.plugin</groupId>
+                <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-datax-test-common</artifactId>
                 <scope>test</scope>
                 <version>${project.version}</version>

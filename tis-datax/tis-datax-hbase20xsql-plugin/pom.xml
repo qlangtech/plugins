@@ -35,8 +35,8 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
 
         <dependency>

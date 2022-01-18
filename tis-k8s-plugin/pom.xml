@@ -20,12 +20,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.qlangtech.tis</groupId>
+        <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>com.qlangtech.tis.plugins</groupId>
+
     <artifactId>tis-k8s-plugin</artifactId>
     <packaging>tpi</packaging>
 
@@ -67,7 +67,7 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.qlangtech.tis.plugin</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-test-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

@@ -21,13 +21,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
+        <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <groupId>com.qlangtech.tis</groupId>
         <version>3.5.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qlangtech.tis.plugin</groupId>
+
     <artifactId>tis-datax-test-common</artifactId>
     <dependencies>
 

@@ -67,7 +67,7 @@
             <artifactId>scala-reflect</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-extends</artifactId>
             <version>${project.version}</version>
         </dependency>

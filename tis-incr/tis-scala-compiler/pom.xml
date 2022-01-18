@@ -22,7 +22,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>tis-incr</artifactId>
-        <groupId>com.qlangtech.tis</groupId>
+        <groupId>com.qlangtech.tis.plugins</groupId>
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>

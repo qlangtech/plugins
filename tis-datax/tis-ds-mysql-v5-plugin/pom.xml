@@ -21,18 +21,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
+        <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <groupId>com.qlangtech.tis</groupId>
         <version>3.5.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>tpi</packaging>
 
-    <groupId>com.qlangtech.tis.plugins</groupId>
+
     <artifactId>tis-ds-mysql-v5-plugin</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-ds-mysql-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -41,8 +42,8 @@
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
     </dependencies>
 

@@ -24,6 +24,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -48,6 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-21 10:11
  **/
+@Public
 public class CassandraDatasourceFactory extends DataSourceFactory {
 
     public static final String DATAX_NAME = "Cassandra";

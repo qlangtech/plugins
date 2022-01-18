@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobConsumer;
 import com.qlangtech.tis.datax.DataXJobSubmit;
@@ -38,6 +39,7 @@ import org.apache.curator.framework.recipes.queue.DistributedQueue;
  * @create: 2021-04-27 21:41
  **/
 @TISExtension()
+@Public
 public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     private CuratorFramework curatorClient = null;

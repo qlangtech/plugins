@@ -18,6 +18,7 @@
 
 package com.qlangtech.async.message.client.kafka;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
@@ -33,6 +34,7 @@ import java.util.Optional;
  * @author: baisui 百岁
  * @create: 2020-12-09 11:43
  **/
+@Public
 public class TiKVKafkaMQListenerFactory extends MQListenerFactory {
 //    public static void main(String[] args) {
 //        List<KafkaMessage> kafkaMessages = Lists.newArrayList();

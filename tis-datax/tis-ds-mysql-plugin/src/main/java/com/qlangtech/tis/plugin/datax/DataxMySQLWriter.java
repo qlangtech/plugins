@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.writer.mysqlwriter.TISMysqlWriter
  **/
+@Public
 public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     private static final String DATAX_NAME = "MySQL";
 

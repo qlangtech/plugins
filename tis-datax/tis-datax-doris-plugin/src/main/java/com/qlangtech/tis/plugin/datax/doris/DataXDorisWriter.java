@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.doris;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * @create: 2021-09-07 09:39
  * @see com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter
  **/
+@Public
 public class DataXDorisWriter extends BasicDorisStarRocksWriter {
 
 //    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})

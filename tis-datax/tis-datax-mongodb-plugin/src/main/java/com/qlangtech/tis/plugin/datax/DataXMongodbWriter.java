@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -50,6 +51,7 @@ import java.util.Optional;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
+@Public
 public class DataXMongodbWriter extends DataxWriter
         implements IDataxProcessor.INullTableMapCreator, KeyedPluginStore.IPluginKeyAware, IDataSourceFactoryGetter {
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbWriter.class);

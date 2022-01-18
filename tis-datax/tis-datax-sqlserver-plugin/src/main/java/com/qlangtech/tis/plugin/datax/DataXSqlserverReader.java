@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -32,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.sqlserverreader.SqlServerReader
  **/
+@Public
 public class DataXSqlserverReader extends BasicDataXRdbmsReader<SqlServerDatasourceFactory> {
     public static final String DATAX_NAME = "SqlServer";
 

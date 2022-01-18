@@ -18,6 +18,7 @@
 // */
 package com.qlangtech.async.message.client.consumer;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -39,6 +40,7 @@ import java.util.Optional;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
+@Public
 public class RocketMQListenerFactory extends MQListenerFactory {
 
     @FormField(validate = {Validator.require, Validator.identity}, ordinal = 2)

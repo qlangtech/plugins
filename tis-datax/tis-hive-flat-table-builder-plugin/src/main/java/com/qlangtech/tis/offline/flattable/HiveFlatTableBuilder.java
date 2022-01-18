@@ -19,6 +19,7 @@ package com.qlangtech.tis.offline.flattable;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
@@ -57,6 +58,7 @@ import java.util.Optional;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
+@Public
 public class HiveFlatTableBuilder extends FlatTableBuilder {
 
     public static final String KEY_FIELD_NAME_FS_NAME = "fsName";

@@ -28,6 +28,7 @@ import com.pingcap.tikv.meta.TiDBInfo;
 import com.pingcap.tikv.meta.TiTableInfo;
 import com.pingcap.tikv.types.DataType;
 import com.pingcap.tikv.util.RangeSplitter;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2020-11-24 10:55
  **/
+@Public
 public class TiKVDataSourceFactory extends DataSourceFactory {
 
     private transient static final Logger logger = LoggerFactory.getLogger(TiKVDataSourceFactory.class);
@@ -346,11 +348,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
                 throw new RuntimeException("illegal type:" + dtype);
         }
     }
-
-//    @Override
-//    public String getName() {
-//        return this.dbName;
-//    }
 
 
     @TISExtension

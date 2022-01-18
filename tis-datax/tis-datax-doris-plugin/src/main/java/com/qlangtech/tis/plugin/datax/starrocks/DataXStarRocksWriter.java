@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.starrocks;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
@@ -26,6 +27,7 @@ import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 10:08
  **/
+@Public
 public class DataXStarRocksWriter extends BasicDorisStarRocksWriter {
 
     @TISExtension()

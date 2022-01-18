@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.doris;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -41,6 +42,7 @@ import java.util.Properties;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 09:44
  **/
+@Public
 public class DorisSourceFactory extends BasicDataSourceFactory {
 
     public static final String NAME_DORIS = "Doris";

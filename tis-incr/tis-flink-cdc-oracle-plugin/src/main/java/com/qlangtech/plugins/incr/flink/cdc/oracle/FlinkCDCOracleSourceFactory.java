@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -37,6 +38,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:15
  **/
+@Public
 public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
     private transient IConsumerHandle consumerHandle;
 

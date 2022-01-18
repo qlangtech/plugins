@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 
@@ -25,6 +26,7 @@ import com.qlangtech.tis.extension.TISExtension;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-23 14:48
  **/
+@Public
 public class DataXSparkWriter extends DataXHiveWriter {
     private static final String DATAX_NAME = "Spark";
 

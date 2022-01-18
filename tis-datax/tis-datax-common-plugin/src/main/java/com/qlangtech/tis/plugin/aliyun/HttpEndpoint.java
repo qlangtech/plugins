@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.aliyun;
 
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.Descriptor;
@@ -31,6 +32,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
+@Public
 public class HttpEndpoint extends ParamsConfig implements IHttpToken  {
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.writer.postgresqlwriter.PostgresqlWriter
  **/
+@Public
 public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFactory> {
 
 

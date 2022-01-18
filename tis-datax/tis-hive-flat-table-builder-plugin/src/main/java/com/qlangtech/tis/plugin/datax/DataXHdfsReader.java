@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  * @see com.qlangtech.tis.plugin.datax.TisDataXHdfsReader
  **/
+@Public
 public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPluginKeyAware {
     // private static final String DATAX_NAME = "Hdfs";
 

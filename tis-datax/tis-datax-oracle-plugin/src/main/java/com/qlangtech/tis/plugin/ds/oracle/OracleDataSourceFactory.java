@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.oracle;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -37,6 +38,7 @@ import java.util.function.Function;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-24 13:42
  **/
+@Public
 public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     public static final String ORACLE = "Oracle";

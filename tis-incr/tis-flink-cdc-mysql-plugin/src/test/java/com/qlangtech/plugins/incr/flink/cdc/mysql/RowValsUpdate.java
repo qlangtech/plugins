@@ -18,36 +18,30 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
-import junit.framework.TestCase;
-
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.sql.PreparedStatement;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-13 14:52
+ * @create: 2022-01-15 17:10
  **/
-public class TestIt extends TestCase {
-    public void test() {
-
-        ZoneId of = ZoneId.of("Z");
-        System.out.println(of);
-
-        System.out.println(of.getId());
-
-        Date d = new Date(1529476623000l);
-
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+public class RowValsUpdate extends RowVals<RowValsUpdate.UpdatedColVal> {
 
 
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(d.toInstant(), of);
-        System.out.println(localDateTime.format(dateTimeFormatter));
-        //System.out.println(ZonedTimestamp.toIsoString(d, of, TemporalAdjusters.ofDateAdjuster((ld) -> ld)));
+    public void put(String key, TestRow.ColValSetter val) {
+        super.put(key, new UpdatedColVal(val));
+    }
 
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        System.out.println(f.format(d));
+    static class UpdatedColVal {
+        public final TestRow.ColValSetter updateStrategy;
+        public Object updatedVal;
+
+
+        public UpdatedColVal(TestRow.ColValSetter updateStrategy) {
+            this.updateStrategy = updateStrategy;
+        }
+
+        public void setPrepColVal(PreparedStatement statement, int colIndex, RowVals<Object> vals) throws Exception {
+            this.updatedVal = updateStrategy.setPrepColVal(statement, colIndex, vals);
+        }
     }
 }

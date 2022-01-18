@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.postgresql;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -39,6 +40,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-23 19:03
  **/
+@Public
 public class PGDataSourceFactory extends BasicDataSourceFactory {
     // public static final String DS_TYPE_PG = "PG";
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})

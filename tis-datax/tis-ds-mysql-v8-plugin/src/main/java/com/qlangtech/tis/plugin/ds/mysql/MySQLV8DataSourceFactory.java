@@ -1,28 +1,28 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -30,33 +30,22 @@ import java.util.Properties;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-08 21:47
  **/
+@Public
 public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
-    //    static {
-//        try {
-//            Class.forName("com.mysql.cj.jdbc.Driver");
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-    private static final com.mysql.cj.jdbc.Driver mysql8Driver;
 
-    static {
-        try {
-            mysql8Driver = new com.mysql.cj.jdbc.Driver();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    private transient com.mysql.cj.jdbc.Driver mysql8Driver;
 
     @Override
     public Connection getConnection(String jdbcUrl) throws SQLException {
+
+        if (mysql8Driver == null) {
+            mysql8Driver = new com.mysql.cj.jdbc.Driver();
+        }
         Properties props = new Properties();
         props.put("user", StringUtils.trimToNull(this.userName));
         props.put("password", StringUtils.trimToEmpty(password));
         // 为了避开与Mysql5的连接冲突，需要直接从driver中创建connection对象
         return mysql8Driver.connect(jdbcUrl, props);
-       //  return DriverManager.getConnection(jdbcUrl, , );
     }
 
     @TISExtension
@@ -65,10 +54,5 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL_V8;
         }
-
-//        @Override
-//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-//            return super.validate(msgHandler, context, postFormVals);
-//        }
     }
 }

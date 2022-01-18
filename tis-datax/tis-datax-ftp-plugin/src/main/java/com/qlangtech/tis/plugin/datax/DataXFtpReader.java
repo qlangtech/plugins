@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
@@ -40,6 +41,7 @@ import java.util.List;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
+@Public
 public class DataXFtpReader extends DataxReader {
     public static final String DATAX_NAME = "FTP";
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})

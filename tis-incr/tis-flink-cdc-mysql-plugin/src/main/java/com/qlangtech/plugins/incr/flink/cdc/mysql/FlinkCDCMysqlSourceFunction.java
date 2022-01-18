@@ -20,7 +20,6 @@ package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
-import com.qlangtech.plugins.incr.flink.cdc.TabColIndexer;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -34,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
+import org.apache.flink.api.common.JobExecutionResult;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:17
  **/
-public class FlinkCDCMysqlSourceFunction implements IMQListener {
+public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResult> {
 
     private final FlinkCDCMySQLSourceFactory sourceFactory;
 
@@ -63,7 +63,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
 
 
     @Override
-    public void start(TargetResName dataxName, IDataxReader dataSource
+    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             //TabColIndexer colIndexer = new TabColIndexer(tabs);
@@ -101,12 +101,11 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener {
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
     }
-
 
     @Override
     public String getTopic() {

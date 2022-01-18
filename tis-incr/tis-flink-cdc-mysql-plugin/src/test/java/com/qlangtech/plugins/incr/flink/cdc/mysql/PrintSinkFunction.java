@@ -29,6 +29,11 @@ import java.util.Map;
  **/
 public class PrintSinkFunction implements SinkFunction<DTO> {
 
+
+    int i = 0;
+
+
+
     public void invoke(DTO value, SinkFunction.Context context) throws Exception {
 
         StringBuffer print = new StringBuffer("db:" + value.getDbName() + ",table:" + value.getTableName());
@@ -48,5 +53,8 @@ public class PrintSinkFunction implements SinkFunction<DTO> {
         }
 
         System.out.println(print.toString());
+        if (++i >= 20) {
+          //  stateConsumer.accept(i);
+        }
     }
 }

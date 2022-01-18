@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.oraclereader.OracleReader
  **/
+@Public
 public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFactory> {
     //private static final String DATAX_NAME = "Oracle";
 //    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})

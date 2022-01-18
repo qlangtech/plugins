@@ -36,6 +36,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.annotation.Public;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import ru.ivi.opensource.flinkclickhousesink.model.ClickHouseClusterSettings;
 import ru.ivi.opensource.flinkclickhousesink.model.ClickHouseSinkConst;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-18 12:05
  **/
+@Public
 public class ClickHouseSinkFactory extends TISSinkFactory {
     public static final String DISPLAY_NAME_FLINK_SINK = "Flink-ClickHouse-Sink";
 

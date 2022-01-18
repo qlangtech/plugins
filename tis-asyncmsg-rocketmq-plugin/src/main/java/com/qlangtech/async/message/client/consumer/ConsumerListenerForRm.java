@@ -1,24 +1,25 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.async.message.client.consumer;
 
 import com.qlangtech.async.message.client.to.impl.AsyncMsgRM;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
+import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -84,9 +85,9 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
     }
 
     @Override
-    public void start(TargetResName dataxName, IDataxReader rdbmsReader
+    public Object start(TargetResName dataxName, IDataxReader rdbmsReader
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
-
+        return null;
     }
 
 
@@ -94,7 +95,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
      * 启动，需要在bean中初始化
      */
     // @Override
-    public void start() throws MQConsumeException {
+    public Object start() throws MQConsumeException {
         try {
             /**
              * 一个应用创建一个Consumer，由应用来维护此对象，可以设置为全局对象或者单例<br>
@@ -107,12 +108,12 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
             }
             if (// MessageConfig.checkUnPublishEnv() &&
                     suspend)
-                return;
+                return null;
             consumer = new DefaultMQPushConsumer(consumerGroup);
             consumer.setNamesrvAddr(namesrvAddr);
             consumer.setConsumeThreadMin(consumeThreadMin);
             // 订阅指定topic下tags
-           // consumer.subscribe(topic, consumerHandle.getSubExpression());
+            // consumer.subscribe(topic, consumerHandle.getSubExpression());
             /**
              * Consumer第一次启动默认从队列尾部开始消费
              * 如果非第一次启动，那么按照上次消费的位置继续消费
@@ -136,6 +137,7 @@ public class ConsumerListenerForRm extends BaseConsumerListener {
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
+        return null;
     }
 
     public String getConsumerGroup() {

@@ -23,6 +23,7 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.Bucket;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
+@Public
 public class DataXOssReader extends DataxReader {
 
     private static final Logger logger = LoggerFactory.getLogger(DataXOssReader.class);

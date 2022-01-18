@@ -18,6 +18,7 @@
 package com.qlangtech.tis.config.k8s.impl;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.Descriptor;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
+@Public
 public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     private static final Logger logger = LoggerFactory.getLogger(DefaultK8sContext.class);
 

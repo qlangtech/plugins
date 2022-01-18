@@ -28,13 +28,12 @@ import java.util.Properties;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
-public abstract class BaseConsumerListener implements IMQListener {
+public abstract class BaseConsumerListener implements IMQListener<Object> {
 
     /**
      * 消息处理器
      */
     protected IConsumerHandle consumerHandle;
-
     /**
      * 属性
      */

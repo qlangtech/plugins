@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.mysqlreader.MysqlReader
  **/
+@Public
 public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFactory> {
     public static final String DATAX_NAME = "MySQL";
 

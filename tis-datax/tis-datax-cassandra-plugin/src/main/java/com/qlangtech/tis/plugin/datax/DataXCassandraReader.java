@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -32,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.cassandrareader.CassandraReader
  **/
+@Public
 public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasourceFactory> {
     public static final String DATAX_NAME = "Cassandra";
 

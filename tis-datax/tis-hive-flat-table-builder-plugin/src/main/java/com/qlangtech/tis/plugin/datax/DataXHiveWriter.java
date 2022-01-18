@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -37,6 +38,7 @@ import java.sql.Connection;
  * @create: 2021-05-23 14:48
  * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
+@Public
 public class DataXHiveWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hive";
     private static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";

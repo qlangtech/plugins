@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cluster;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -63,6 +64,7 @@ import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NA
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-04 14:30
  **/
+@Public
 public class FlinkK8SClusterManager extends DataXJobWorker {
 
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})

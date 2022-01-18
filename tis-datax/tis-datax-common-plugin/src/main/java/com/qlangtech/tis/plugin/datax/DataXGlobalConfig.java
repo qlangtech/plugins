@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.extension.Descriptor;
@@ -32,6 +33,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
  * @author: baisui 百岁
  * @create: 2021-04-21 09:29
  **/
+@Public
 public class DataXGlobalConfig extends ParamsConfig implements IDataxGlobalCfg {
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})

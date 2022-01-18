@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.realtime;
@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -43,14 +44,14 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 14:18
  **/
-public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<ReaderSource>>, Serializable {
+public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
 
     private transient TISSinkFactory sinkFuncFactory;
 
 
     @Override
-    public final void consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg, IDataxProcessor dataXProcessor) throws Exception {
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    public final JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg, IDataxProcessor dataXProcessor) throws Exception {
+        StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
             throw new IllegalArgumentException("focusTabs can not be empty");
         }
@@ -79,15 +80,22 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
             }
         });
 
-        SinkFuncs sinkFunction = new SinkFuncs(sinks);
+        SinkFuncs sinkFunction = new SinkFuncs(env, sinks);
 
         Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
         for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
             streamMap.put(e.getKey(), e.getValue().getStream());
         }
-
         processTableStream(streamMap, sinkFunction);
-        env.execute(dataxName.getName());
+        return executeFlinkJob(dataxName, env);
+    }
+
+    protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {
+        return StreamExecutionEnvironment.getExecutionEnvironment();
+    }
+
+    protected JobExecutionResult executeFlinkJob(TargetResName dataxName, StreamExecutionEnvironment env) throws Exception {
+        return env.execute(dataxName.getName());
     }
 
     /**
@@ -119,4 +127,6 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
         }
         this.sinkFuncFactory = sinkFuncFactory;
     }
+
+
 }

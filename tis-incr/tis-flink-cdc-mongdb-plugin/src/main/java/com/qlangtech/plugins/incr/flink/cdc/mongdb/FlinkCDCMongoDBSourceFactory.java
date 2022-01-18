@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -35,6 +36,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-02 11:36
  **/
+@Public
 public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT)

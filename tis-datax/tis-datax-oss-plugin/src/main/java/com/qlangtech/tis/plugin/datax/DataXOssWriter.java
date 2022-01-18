@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -49,6 +50,7 @@ import java.util.regex.Pattern;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
+@Public
 public class DataXOssWriter extends DataxWriter {
     private static final Logger logger = LoggerFactory.getLogger(DataXOssWriter.class);
     private static final String DATAX_NAME = "OSS";

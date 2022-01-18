@@ -19,6 +19,7 @@ package com.qlangtech.tis.config.k8s.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.Descriptor;
@@ -55,6 +56,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @create: 2020-04-12 11:06
  * @date 2020/04/13
  */
+@Public
 public class DefaultK8SImage extends K8sImage {
 
     public static final String KEY_FIELD_NAME = "k8sCfg";

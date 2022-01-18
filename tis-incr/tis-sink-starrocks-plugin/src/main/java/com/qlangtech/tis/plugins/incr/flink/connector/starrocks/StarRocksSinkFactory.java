@@ -43,6 +43,7 @@ import com.starrocks.connector.flink.row.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.annotation.Public;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.BlockElement;
 import org.apache.flink.configuration.description.TextElement;
@@ -66,6 +67,7 @@ import static com.starrocks.connector.flink.table.StarRocksSinkOptions.*;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-31 20:11
  **/
+@Public
 public class StarRocksSinkFactory extends TISSinkFactory {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";

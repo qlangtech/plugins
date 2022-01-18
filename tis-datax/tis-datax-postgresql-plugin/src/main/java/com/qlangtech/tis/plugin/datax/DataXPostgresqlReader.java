@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -33,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.postgresqlreader.PostgresqlReader
  **/
+@Public
 public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFactory> {
     public static final String PG_NAME = "PostgreSQL";
 

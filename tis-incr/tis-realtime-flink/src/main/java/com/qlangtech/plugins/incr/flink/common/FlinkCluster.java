@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
@@ -49,6 +50,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-23 12:10
  **/
+@Public
 public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     private static final Logger logger = LoggerFactory.getLogger(FlinkCluster.class);

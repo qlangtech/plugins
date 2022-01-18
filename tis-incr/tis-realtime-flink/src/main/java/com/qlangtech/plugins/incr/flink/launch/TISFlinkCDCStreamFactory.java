@@ -33,12 +33,14 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.rest.RestClusterClient;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-16 09:16
  **/
+@Public
 public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     public static final String NAME_FLINK_CDC = "Flink-CDC";

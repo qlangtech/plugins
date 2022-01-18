@@ -17,6 +17,7 @@
  */
 package com.qlangtech.async.message.client.to.impl;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.impl.AbstractAsyncMsgDeserialize;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -30,6 +31,7 @@ import java.nio.charset.CharsetDecoder;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2020/04/13
  */
+@Public
 public class DefaultJSONFormatDeserialize extends AbstractAsyncMsgDeserialize {
     // CharsetDecoder 有线程安全问题
     private static final ThreadLocal<CharsetDecoder> utf8CharsetDecoder = new ThreadLocal<CharsetDecoder>() {

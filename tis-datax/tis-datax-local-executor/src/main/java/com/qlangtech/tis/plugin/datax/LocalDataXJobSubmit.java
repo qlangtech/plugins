@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
@@ -41,6 +42,7 @@ import java.util.concurrent.*;
  * @create: 2021-04-27 17:28
  **/
 @TISExtension()
+@Public
 public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     private String mainClassName = DataxExecutor.class.getName();

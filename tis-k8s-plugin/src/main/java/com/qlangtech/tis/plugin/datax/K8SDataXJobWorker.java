@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.HorizontalpodAutoscaler;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
@@ -62,6 +63,7 @@ import java.util.regex.Pattern;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-23 18:16
  **/
+@Public
 public class K8SDataXJobWorker extends DataXJobWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);

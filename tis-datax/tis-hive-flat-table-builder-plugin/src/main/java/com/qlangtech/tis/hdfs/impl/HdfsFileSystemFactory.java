@@ -18,6 +18,7 @@
 package com.qlangtech.tis.hdfs.impl;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -47,6 +48,7 @@ import java.util.Optional;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2018年11月23日
  */
+@Public
 public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFileSystemFactory {
 
     private static final Logger Logger = LoggerFactory.getLogger(HdfsFileSystemFactory.class);

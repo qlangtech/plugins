@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:00
  **/
+@Public
 public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory> {
 
     public static final String DATAX_NAME = "TiDB";

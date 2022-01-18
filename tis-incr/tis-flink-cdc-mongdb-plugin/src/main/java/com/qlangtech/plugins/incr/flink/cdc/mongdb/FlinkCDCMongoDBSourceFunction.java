@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.cdc.mongdb;
@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mongodb.MongoDBSource;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
@@ -44,7 +45,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-02 11:40
  **/
-public class FlinkCDCMongoDBSourceFunction implements IMQListener {
+public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionResult> {
     private final FlinkCDCMongoDBSourceFactory sourceFactory;
 
     public FlinkCDCMongoDBSourceFunction(FlinkCDCMongoDBSourceFactory sourceFactory) {
@@ -52,7 +53,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
     }
 
     @Override
-    public void start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
+    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
 
         try {
 
@@ -72,7 +73,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
                     .password(dsFactory.getPassword())
                     .deserializer(new TISDeserializationSchema());
 
-          //  builder.
+            //  builder.
 
             if (sourceFactory.errorsLogEnable != null) {
                 builder.errorsLogEnable(sourceFactory.errorsLogEnable);
@@ -128,7 +129,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener {
             for (ISelectedTab tab : tabs) {
                 sourceChannel.addFocusTab(tab.getName());
             }
-            getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

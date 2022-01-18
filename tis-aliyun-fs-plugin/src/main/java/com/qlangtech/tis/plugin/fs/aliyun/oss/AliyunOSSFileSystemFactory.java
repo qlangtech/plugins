@@ -17,6 +17,7 @@
  */
 package com.qlangtech.tis.plugin.fs.aliyun.oss;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.Descriptor;
@@ -34,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * @create: 2020-04-12 20:03
  * @date 2020/04/13
  */
+@Public
 public class AliyunOSSFileSystemFactory extends FileSystemFactory {
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})

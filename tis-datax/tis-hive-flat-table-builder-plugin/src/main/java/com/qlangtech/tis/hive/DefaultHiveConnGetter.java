@@ -19,6 +19,7 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -37,6 +38,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-28 10:50
  **/
+@Public
 public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGetter {
 
 

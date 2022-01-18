@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.commons.lang.StringUtils;
 
@@ -29,6 +30,7 @@ import java.sql.SQLException;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-08 21:47
  **/
+@Public
 public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
 //    static {
 //        try {

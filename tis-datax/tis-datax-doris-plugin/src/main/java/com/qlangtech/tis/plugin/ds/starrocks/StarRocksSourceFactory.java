@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.starrocks;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 
@@ -25,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 10:01
  **/
+@Public
 public class StarRocksSourceFactory extends DorisSourceFactory {
 
     public static final String DISPLAY_NAME = "StarRocks";

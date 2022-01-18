@@ -24,6 +24,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
@@ -56,6 +57,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
  **/
+@Public
 public class DataXMongodbReader extends DataxReader {
 
     public static final String DATAX_NAME = "MongoDB";

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.ds.clickhouse;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -32,6 +33,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-09 14:38
  **/
+@Public
 public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 
     private static final String JDBC_DRIVER = "ru.yandex.clickhouse.ClickHouseDriver";

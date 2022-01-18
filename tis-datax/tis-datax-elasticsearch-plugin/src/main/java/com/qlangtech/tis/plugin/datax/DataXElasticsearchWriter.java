@@ -27,6 +27,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
@@ -57,6 +58,7 @@ import java.util.function.Consumer;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
+@Public
 public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext, ISearchEngineTypeTransfer {
     private static final String DATAX_NAME = "Elasticsearch";
     private static final String FIELD_ENDPOINT = "endpoint";

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.sqlserver;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-07 09:47
  **/
+@Public
 public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
 

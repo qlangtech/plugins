@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -37,6 +38,7 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.writer.sqlserverwriter.SqlServerWriter
  **/
+@Public
 public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasourceFactory> {
 
     public static String getDftTemplate() {

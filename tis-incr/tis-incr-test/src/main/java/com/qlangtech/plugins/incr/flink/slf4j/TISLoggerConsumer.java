@@ -16,25 +16,26 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlReader;
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlWriter;
-import com.qlangtech.tis.plugin.ds.postgresql.TestPGDataSourceFactory;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.plugins.incr.flink.slf4j;
+
+import org.slf4j.Logger;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
+ * @create: 2022-01-19 18:09
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestDataXPostgresqlReader.class, TestDataXPostgresqlWriter.class, TestPGDataSourceFactory.class})
-public class TestAll  //extends TestCase
-{
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXPostgresqlReader.class);
-//        suite.addTestSuite(TestDataXPostgresqlWriter.class);
-//        suite.addTestSuite(TestPGDataSourceFactory.class);
-//        return suite;
-//    }
+public class TISLoggerConsumer extends Slf4jLogConsumer {
+    public TISLoggerConsumer(Logger logger) {
+        super(logger);
+    }
+
+    @Override
+    public final void accept(OutputFrame outputFrame) {
+        OutputFrame.OutputType outputType = outputFrame.getType();
+        String utf8String = outputFrame.getUtf8String();
+        System.out.println(utf8String);
+        super.accept(outputFrame);
+    }
 }

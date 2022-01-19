@@ -16,8 +16,9 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.mysql;
+package com.qlangtech.plugins.incr.flink.cdc.valconvert;
 
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -49,15 +50,27 @@ import java.util.function.Consumer;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-13 22:50
  **/
-public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
+public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder, RelationalColumn> {
 
-    private static final Logger logger = LoggerFactory.getLogger(MySqlDateTimeConverter.class);
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
-    private DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
-    private DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
-    private DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
+    private static final Logger logger = LoggerFactory.getLogger(DateTimeConverter.class);
+    protected DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
+    protected DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
+    protected DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+    protected DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    private ZoneId timestampZoneId = ZoneId.systemDefault();
+    protected ZoneId timestampZoneId = ZoneId.systemDefault();
+
+    public static void setDatetimeConverters(String convertType, Properties debeziumProperties) {
+        debeziumProperties.put("converters", "datetime");
+        debeziumProperties.put("datetime.type", convertType);
+        debeziumProperties.put("datetime.format.date", "yyyy-MM-dd");
+        debeziumProperties.put("datetime.format.time", "HH:mm:ss");
+        debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
+        debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
+        debeziumProperties.put("datetime.format.timestamp.zone"
+                , BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
+    }
+
 
     @Override
     public void configure(Properties props) {
@@ -108,43 +121,46 @@ public class MySqlDateTimeConverter implements CustomConverter<SchemaBuilder, Re
         }
     }
 
-    private String convertDate(Object input) {
-        if (input instanceof LocalDate) {
-            return dateFormatter.format((LocalDate) input);
-        }
-        if (input instanceof Integer) {
-            LocalDate date = LocalDate.ofEpochDay((Integer) input);
-            return dateFormatter.format(date);
-        }
-        return null;
-    }
+    protected abstract String convertDate(Object input);
+//    {
+//        if (input instanceof LocalDate) {
+//            return dateFormatter.format((LocalDate) input);
+//        }
+//        if (input instanceof Integer) {
+//            LocalDate date = LocalDate.ofEpochDay((Integer) input);
+//            return dateFormatter.format(date);
+//        }
+//        return null;
+//    }
 
-    private String convertTime(Object input) {
-        if (input instanceof Duration) {
-            Duration duration = (Duration) input;
-            long seconds = duration.getSeconds();
-            int nano = duration.getNano();
-            LocalTime time = LocalTime.ofSecondOfDay(seconds).withNano(nano);
-            return timeFormatter.format(time);
-        }
-        return null;
-    }
+    protected abstract String convertTime(Object input);
+//    {
+//        if (input instanceof Duration) {
+//            Duration duration = (Duration) input;
+//            long seconds = duration.getSeconds();
+//            int nano = duration.getNano();
+//            LocalTime time = LocalTime.ofSecondOfDay(seconds).withNano(nano);
+//            return timeFormatter.format(time);
+//        }
+//        return null;
+//    }
 
-    private String convertDateTime(Object input) {
-        if (input instanceof LocalDateTime) {
-            return datetimeFormatter.format((LocalDateTime) input);
-        }
-        return null;
-    }
+    protected abstract String convertDateTime(Object input);
+//    {
+//        if (input instanceof LocalDateTime) {
+//            return datetimeFormatter.format((LocalDateTime) input);
+//        }
+//        return null;
+//    }
 
-    private String convertTimestamp(Object input) {
-        if (input instanceof ZonedDateTime) {
-            // mysql的timestamp会转成UTC存储，这里的zonedDatetime都是UTC时间
-            ZonedDateTime zonedDateTime = (ZonedDateTime) input;
-            LocalDateTime localDateTime = zonedDateTime.withZoneSameInstant(timestampZoneId).toLocalDateTime();
-            return timestampFormatter.format(localDateTime);
-        }
-        return null;
-    }
+    protected abstract String convertTimestamp(Object input); //{
+//        if (input instanceof ZonedDateTime) {
+//            // mysql的timestamp会转成UTC存储，这里的zonedDatetime都是UTC时间
+//            ZonedDateTime zonedDateTime = (ZonedDateTime) input;
+//            LocalDateTime localDateTime = zonedDateTime.withZoneSameInstant(timestampZoneId).toLocalDateTime();
+//            return timestampFormatter.format(localDateTime);
+//        }
+//        return null;
+//    }
 
 }

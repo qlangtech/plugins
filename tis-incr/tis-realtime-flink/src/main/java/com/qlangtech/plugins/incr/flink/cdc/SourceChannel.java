@@ -48,9 +48,14 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         this.sourceFunction = sourceFunction;
     }
 
-    //https://ververica.github.io/flink-cdc-connectors/master/
     public static List<ReaderSource> getSourceFunction(
             BasicDataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+        return getSourceFunction(dsFactory, false, tabs, sourceFunctionCreator);
+    }
+
+    //https://ververica.github.io/flink-cdc-connectors/master/
+    public static List<ReaderSource> getSourceFunction(
+            BasicDataSourceFactory dsFactory, boolean dsSchemaSupport, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
@@ -71,22 +76,20 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             });
 
             for (Map.Entry<String /**ip*/, List<String>/**dbs*/> entry : ip2dbs.entrySet()) {
+//                Set<String> tbs = entry.getValue().stream().flatMap(
+//                        (dbName) -> db2tabs.get(dbName).stream().map((tab) -> dbName + "." + tab.getName())).collect(Collectors.toSet());
+
                 Set<String> tbs = entry.getValue().stream().flatMap(
-                        (dbName) -> db2tabs.get(dbName).stream().map((tab) -> dbName + "." + tab.getName())).collect(Collectors.toSet());
+                        (dbName) -> db2tabs.get(dbName).stream().map((tab) -> {
+                            return (dsSchemaSupport ? ((BasicDataSourceFactory.ISchemaSupported) dsFactory).getDBSchema() : dbName) + "." + tab.getName();
+                        })).collect(Collectors.toSet());
 
                 Properties debeziumProperties = new Properties();
                 debeziumProperties.put("snapshot.locking.mode", "none");// do not use lock
-                debeziumProperties.put("converters", "datetime");
-                debeziumProperties.put("datetime.type", "com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlDateTimeConverter");
-                debeziumProperties.put("datetime.format.date", "yyyy-MM-dd");
-                debeziumProperties.put("datetime.format.time", "HH:mm:ss");
-                debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
-                debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
-                debeziumProperties.put("datetime.format.timestamp.zone"
-                        , BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
+
                 String dbHost = entry.getKey();
                 List<String> dbs = entry.getValue();
-                sourceFuncs.addAll(sourceFunctionCreator.create(dsFactory, dbHost, dbs, tbs, debeziumProperties));
+                sourceFuncs.addAll(sourceFunctionCreator.create(dbHost, dbs, tbs, debeziumProperties));
             }
 
             return sourceFuncs;
@@ -97,7 +100,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public interface ReaderSourceCreator {
-        List<ReaderSource> create(BasicDataSourceFactory dsFactory, String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
+        List<ReaderSource> create(String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
     }
 
     @Override

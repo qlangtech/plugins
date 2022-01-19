@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import junit.framework.TestCase;
+import org.junit.Assert;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,16 +38,17 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXPostgresqlWriter extends TestCase {
+public class TestDataXPostgresqlWriter  //extends TestCase
+{
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXPostgresqlWriter.getDftTemplate();
-        assertNotNull("dftTemplate can not be null", dftTemplate);
+        Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXPostgresqlWriter.class);
-        assertTrue(extraProps.isPresent());
+        Assert.assertTrue(extraProps.isPresent());
     }
 
     public void testDescriptorsJSONGenerate() {
@@ -57,7 +58,7 @@ public class TestDataXPostgresqlWriter extends TestCase {
         JsonUtil.assertJSONEqual(DataXPostgresqlReader.class
                 , "postgres-datax-writer-descriptor.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
-                    assertEquals(m, e, a);
+                    Assert.assertEquals(m, e, a);
                 });
     }
 
@@ -105,24 +106,24 @@ public class TestDataXPostgresqlWriter extends TestCase {
         DataXPostgresqlWriter dataXPostgresqlWriter = getDataXPostgresqlWriter();
         dataXPostgresqlWriter.autoCreateTable = true;
         DataxWriter.BaseDataxWriterDescriptor writerDescriptor = dataXPostgresqlWriter.getWriterDescriptor();
-        assertTrue("isSupportTabCreate", writerDescriptor.isSupportTabCreate());
+        Assert.assertTrue("isSupportTabCreate", writerDescriptor.isSupportTabCreate());
 
 
         IDataxProcessor.TableMap tableMapper = createCustomer_order_relationTableMap();
 
         StringBuffer createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
-        assertNotNull(createDDL);
+        Assert.assertNotNull(createDDL);
         // 多主键
-        assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
+        Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
 
         Optional<ISelectedTab.ColMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> customerregisterId.equals(col.getName())).findFirst();
-        assertTrue(firstCustomerregisterId.isPresent());
+        Assert.assertTrue(firstCustomerregisterId.isPresent());
         firstCustomerregisterId.get().setPk(false);
 
         createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
-        assertNotNull(createDDL);
+        Assert.assertNotNull(createDDL);
         // 单主键
-        assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "single-pks-create-ddl.txt"), createDDL.toString());
+        Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "single-pks-create-ddl.txt"), createDDL.toString());
         //  System.out.println(createDDL.toString());
     }
 

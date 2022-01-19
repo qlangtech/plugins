@@ -16,25 +16,15 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlReader;
-import com.qlangtech.tis.plugin.datax.TestDataXPostgresqlWriter;
-import com.qlangtech.tis.plugin.ds.postgresql.TestPGDataSourceFactory;
+import com.qlangtech.plugins.incr.flink.cdc.oracle.TestTISFlinkCDCOracleSourceFunction;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
+ * @create: 2022-01-19 18:12
  **/
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestDataXPostgresqlReader.class, TestDataXPostgresqlWriter.class, TestPGDataSourceFactory.class})
-public class TestAll  //extends TestCase
-{
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXPostgresqlReader.class);
-//        suite.addTestSuite(TestDataXPostgresqlWriter.class);
-//        suite.addTestSuite(TestPGDataSourceFactory.class);
-//        return suite;
-//    }
+@Suite.SuiteClasses({TestTISFlinkCDCOracleSourceFunction.class})
+public class TestAll {
 }

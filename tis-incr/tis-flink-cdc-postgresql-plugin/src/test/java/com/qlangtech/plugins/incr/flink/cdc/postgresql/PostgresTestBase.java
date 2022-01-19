@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
@@ -23,6 +23,7 @@ import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.utility.DockerImageName;
@@ -59,7 +60,15 @@ public abstract class PostgresTestBase extends AbstractTestBase {
                     .withDatabaseName("postgres")
                     .withUsername("postgres")
                     .withPassword("postgres")
-                    .withLogConsumer(new Slf4jLogConsumer(LOG));
+                    .withLogConsumer(new Slf4jLogConsumer(LOG) {
+                        @Override
+                        public void accept(OutputFrame outputFrame) {
+                            OutputFrame.OutputType outputType = outputFrame.getType();
+                            String utf8String = outputFrame.getUtf8String();
+                            System.out.println(utf8String);
+                            super.accept(outputFrame);
+                        }
+                    });
 
     @BeforeClass
     public static void startContainers() {
@@ -84,20 +93,20 @@ public abstract class PostgresTestBase extends AbstractTestBase {
         final URL ddlTestFile = PostgresTestBase.class.getClassLoader().getResource(ddlFile);
         assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
         try (Connection connection = getJdbcConnection();
-                Statement statement = connection.createStatement()) {
+             Statement statement = connection.createStatement()) {
             final List<String> statements =
                     Arrays.stream(
-                                    Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
-                                            .map(String::trim)
-                                            .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                                            .map(
-                                                    x -> {
-                                                        final Matcher m =
-                                                                COMMENT_PATTERN.matcher(x);
-                                                        return m.matches() ? m.group(1) : x;
-                                                    })
-                                            .collect(Collectors.joining("\n"))
-                                            .split(";"))
+                            Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
+                                    .map(String::trim)
+                                    .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                    .map(
+                                            x -> {
+                                                final Matcher m =
+                                                        COMMENT_PATTERN.matcher(x);
+                                                return m.matches() ? m.group(1) : x;
+                                            })
+                                    .collect(Collectors.joining("\n"))
+                                    .split(";"))
                             .collect(Collectors.toList());
             for (String stmt : statements) {
                 statement.execute(stmt);

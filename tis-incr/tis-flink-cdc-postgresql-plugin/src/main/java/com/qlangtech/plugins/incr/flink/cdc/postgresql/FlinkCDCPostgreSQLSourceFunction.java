@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
+import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -33,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
@@ -70,20 +72,28 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
+            final BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction((BasicDataSourceFactory) rdbmsReader.getDataSourceFactory()
+                    SourceChannel.getSourceFunction(dsFactory, true
                             , tabs
-                            , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
+                            , (dbHost, dbs, tbs, debeziumProperties) -> {
+                                DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
+                                BasicDataSourceFactory.ISchemaSupported schemaSupported = (BasicDataSourceFactory.ISchemaSupported) dsFactory;
+                                if (StringUtils.isEmpty(schemaSupported.getDBSchema())) {
+                                    throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
+                                }
+
                                 return dbs.stream().map((dbname) -> {
                                     SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
                                             //.debeziumProperties()
                                             .hostname(dbHost)
                                             .port(dsFactory.port)
                                             .database(dbname) // monitor postgres database
-                                            //.schemaList("inventory")  // monitor inventory schema
+                                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
                                             .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
                                             .username(dsFactory.userName)
                                             .password(dsFactory.password)
+                                            .debeziumProperties(debeziumProperties)
                                             .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
                                             .build();
                                     return new ReaderSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);

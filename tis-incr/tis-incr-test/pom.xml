@@ -31,6 +31,12 @@
     <artifactId>tis-incr-test</artifactId>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-cdc-common</artifactId>
@@ -114,6 +120,18 @@
             <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-extends</artifactId>
+            <version>3.5.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-common-plugin</artifactId>
+            <version>3.5.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -33,6 +33,13 @@
     <packaging>tpi</packaging>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-dependency</artifactId>

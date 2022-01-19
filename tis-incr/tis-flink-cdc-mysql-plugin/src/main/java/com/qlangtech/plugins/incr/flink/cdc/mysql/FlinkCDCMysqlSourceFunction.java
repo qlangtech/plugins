@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
+import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -72,13 +73,15 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
 //                    = new TISDeserializationSchema(new MySQLSourceValConvert(colIndexer));
 
             TISDeserializationSchema deserializationSchema = new TISDeserializationSchema();
-
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
+            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
             SourceChannel sourceChannel = new SourceChannel(
                     SourceChannel.getSourceFunction(
-                            (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory()
-                            , tabs
-                            , (dsFactory, dbHost, dbs, tbs, debeziumProperties) -> {
+                            dsFactory,
+                            tabs
+                            , (dbHost, dbs, tbs, debeziumProperties) -> {
+
+                                DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
 
                                 String[] databases = dbs.toArray(new String[dbs.size()]);
 

@@ -29,7 +29,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -61,10 +60,10 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
     public JobExecutionResult start(TargetResName channalName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
             BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
-            DataSourceFactory dataSourceFactory = reader.getDataSourceFactory();
+            BasicDataSourceFactory f = (BasicDataSourceFactory) reader.getDataSourceFactory();
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction((BasicDataSourceFactory) dataSourceFactory, tabs
-                            , (f, dbHost, dbs, tbs, debeziumProperties) -> {
+                    SourceChannel.getSourceFunction(f, tabs
+                            , (dbHost, dbs, tbs, debeziumProperties) -> {
                                 return dbs.stream().map((databaseName) -> {
                                     SourceFunction<DTO> sourceFunction = OracleSource.<DTO>builder()
                                             .hostname(dbHost)

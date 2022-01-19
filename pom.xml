@@ -457,7 +457,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.qlangtech.tis</groupId>
+                <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-datax-mongodb-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>

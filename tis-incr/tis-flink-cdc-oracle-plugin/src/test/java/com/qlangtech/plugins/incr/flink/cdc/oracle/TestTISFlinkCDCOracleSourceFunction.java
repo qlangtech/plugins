@@ -16,32 +16,29 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc.mysql;
+package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
-import java.sql.PreparedStatement;
+import com.qlangtech.plugins.incr.flink.cdc.oracle.utils.OracleTestUtils;
+import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
+import org.apache.flink.test.util.AbstractTestBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.OracleContainer;
+
+
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-15 17:10
+ * @create: 2021-10-11 11:24
  **/
-public class RowValsUpdate extends RowVals<RowValsUpdate.UpdatedColVal> {
+public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TestTISFlinkCDCOracleSourceFunction.class);
 
-    public void put(String key, TestRow.ColValSetter val) {
-        super.put(key, new UpdatedColVal(val));
-    }
+    private OracleContainer oracleContainer =
+            OracleTestUtils.ORACLE_CONTAINER.withLogConsumer(new TISLoggerConsumer(LOG));
 
-    static class UpdatedColVal {
-        public final TestRow.ColValSetter updateStrategy;
-        public Object updatedVal;
-
-
-        public UpdatedColVal(TestRow.ColValSetter updateStrategy) {
-            this.updateStrategy = updateStrategy;
-        }
-
-        public void setPrepColVal(PreparedStatement statement, int colIndex, RowVals<Object> vals) throws Exception {
-            this.updatedVal = updateStrategy.setPrepColVal(statement, colIndex, vals);
-        }
+    public void testBinlogMonitor() throws Exception {
+        //   TISFlinkCDCMysqlSourceFunction.main(new String[]{});
     }
 }

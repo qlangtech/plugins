@@ -41,7 +41,7 @@ import java.util.List;
  * @create: 2021-04-23 19:03
  **/
 @Public
-public class PGDataSourceFactory extends BasicDataSourceFactory {
+public class PGDataSourceFactory extends BasicDataSourceFactory implements BasicDataSourceFactory.ISchemaSupported {
     // public static final String DS_TYPE_PG = "PG";
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String tabSchema;
@@ -65,9 +65,14 @@ public class PGDataSourceFactory extends BasicDataSourceFactory {
 //    }
 
     @Override
+    public String getDBSchema() {
+        return this.tabSchema;
+    }
+
+    @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         //https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName + "?ssl=false";
+        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName + "?ssl=false&stringtype=unspecified";
         // boolean hasParam = false;
         if (StringUtils.isNotEmpty(this.encode)) {
             // hasParam = true;

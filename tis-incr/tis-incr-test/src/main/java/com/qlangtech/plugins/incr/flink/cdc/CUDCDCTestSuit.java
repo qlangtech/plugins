@@ -99,6 +99,12 @@ public abstract class CUDCDCTestSuit {
 
         BasicDataXRdbmsReader dataxReader = createDataxReader(dataxName, tabName);
 
+//        for (String tab : dataxReader.getDataSourceFactory().getTablesInDB()) {
+////            if (tab.indexOf("DEBE") > -1) {
+////                System.out.println(tab);
+////            }
+//        }
+
         IDataxProcessor dataXProcessor = null;
 
         //  replay();

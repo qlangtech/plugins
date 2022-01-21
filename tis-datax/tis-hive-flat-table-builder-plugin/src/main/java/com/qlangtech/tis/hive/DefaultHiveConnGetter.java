@@ -41,8 +41,6 @@ import java.util.Optional;
 @Public
 public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGetter {
 
-
-
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_USE_USERTOKEN = "useUserToken";
     public static final String KEY_USER_NAME = "userName";

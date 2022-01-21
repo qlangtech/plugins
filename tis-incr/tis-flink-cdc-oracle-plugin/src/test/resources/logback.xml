@@ -26,22 +26,9 @@
         </layout>
     </appender>
 
-    <appender name="tis"
-              class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>logs/tis.log</File>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/bak/%d{yyyy-MM-dd}-tis.log</fileNamePattern>
-            <maxHistory>15</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern><![CDATA[%d{yyyy-MM-dd HH:mm:ss} %level %logger{32}:%L- %msg%n]]></pattern>
-        </encoder>
-    </appender>
 
     <root>
-        <!---->
         <level value="INFO"/>
-        <appender-ref ref="tis"/>
         <appender-ref ref="STDOUT"/>
     </root>
 

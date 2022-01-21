@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -50,12 +51,12 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     public static List<ReaderSource> getSourceFunction(
             BasicDataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
-        return getSourceFunction(dsFactory, false, tabs, sourceFunctionCreator);
+        return getSourceFunction(dsFactory, (tab) -> tab.dbNanme + "." + tab.tab.getName(), tabs, sourceFunctionCreator);
     }
 
     //https://ververica.github.io/flink-cdc-connectors/master/
     public static List<ReaderSource> getSourceFunction(
-            BasicDataSourceFactory dsFactory, boolean dsSchemaSupport, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+            BasicDataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
@@ -81,7 +82,8 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
                 Set<String> tbs = entry.getValue().stream().flatMap(
                         (dbName) -> db2tabs.get(dbName).stream().map((tab) -> {
-                            return (dsSchemaSupport ? ((BasicDataSourceFactory.ISchemaSupported) dsFactory).getDBSchema() : dbName) + "." + tab.getName();
+                            //  return (dsSchemaSupport ? ((BasicDataSourceFactory.ISchemaSupported) dsFactory).getDBSchema() : dbName) + "." + tab.getName();
+                            return tabnameCreator.apply(new DBTable(dbName, tab));
                         })).collect(Collectors.toSet());
 
                 Properties debeziumProperties = new Properties();
@@ -96,6 +98,20 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static class DBTable {
+        public final String dbNanme;
+        private final ISelectedTab tab;
+
+        public DBTable(String dbNanme, ISelectedTab tab) {
+            this.dbNanme = dbNanme;
+            this.tab = tab;
+        }
+
+        public String getTabName() {
+            return tab.getName();
         }
     }
 

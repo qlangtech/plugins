@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.oracle.OracleSource;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
@@ -62,7 +63,7 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
             BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
             BasicDataSourceFactory f = (BasicDataSourceFactory) reader.getDataSourceFactory();
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction(f, tabs
+                    SourceChannel.getSourceFunction(f, (tab) -> tab.getTabName(), tabs
                             , (dbHost, dbs, tbs, debeziumProperties) -> {
                                 return dbs.stream().map((databaseName) -> {
                                     SourceFunction<DTO> sourceFunction = OracleSource.<DTO>builder()
@@ -70,9 +71,10 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .debeziumProperties(debeziumProperties)
                                             .port(f.port)
                                             .startupOptions(sourceFactory.getStartupOptions())
-                                            .database(f.dbName) // monitor XE database
+                                            .database(StringUtils.upperCase(f.dbName)) // monitor XE database
                                             // .schemaList("") // monitor inventory schema
                                             .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            //.tableList( StringUtils.lowerCase("DEBEZIUM.BASE"))
                                             .username(f.getUserName())
                                             .password(f.getPassword())
                                             .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String

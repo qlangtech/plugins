@@ -73,15 +73,15 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
         try {
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
             final BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
+            BasicDataSourceFactory.ISchemaSupported schemaSupported = (BasicDataSourceFactory.ISchemaSupported) dsFactory;
+            if (StringUtils.isEmpty(schemaSupported.getDBSchema())) {
+                throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
+            }
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction(dsFactory, true
+                    SourceChannel.getSourceFunction(dsFactory, (tab) -> schemaSupported.getDBSchema() + "." + tab.getTabName()
                             , tabs
                             , (dbHost, dbs, tbs, debeziumProperties) -> {
                                 DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
-                                BasicDataSourceFactory.ISchemaSupported schemaSupported = (BasicDataSourceFactory.ISchemaSupported) dsFactory;
-                                if (StringUtils.isEmpty(schemaSupported.getDBSchema())) {
-                                    throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
-                                }
 
                                 return dbs.stream().map((dbname) -> {
                                     SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()

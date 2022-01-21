@@ -1,7 +1,6 @@
 {
   "hiveConn": {
     "creator": {
-      "routerLink": "/base/basecfg",
       "label": "数据源管理",
       "plugin": [
         {

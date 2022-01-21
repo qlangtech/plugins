@@ -35,7 +35,7 @@ public class TISLoggerConsumer extends Slf4jLogConsumer {
     public final void accept(OutputFrame outputFrame) {
         OutputFrame.OutputType outputType = outputFrame.getType();
         String utf8String = outputFrame.getUtf8String();
-        System.out.println(utf8String);
+        System.out.println("->" + utf8String);
         super.accept(outputFrame);
     }
 }

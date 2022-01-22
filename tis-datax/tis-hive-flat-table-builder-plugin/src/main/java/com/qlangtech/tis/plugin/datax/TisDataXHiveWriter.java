@@ -39,34 +39,34 @@ public class TisDataXHiveWriter extends Writer {
 
 
     static final Logger logger = LoggerFactory.getLogger(TisDataXHiveWriter.class);
-    static final Field jobColumnsField;
-    static final Field jobFileType;
-    static final Field jobFieldDelimiter;
-    static final Field jobPath;
+//    static final Field jobColumnsField;
+//    static final Field jobFileType;
+//    static final Field jobFieldDelimiter;
+//    static final Field jobPath;
 
-    static {
-        jobColumnsField = getJobField("columns");
-        jobFileType = getJobField("fileType");
-        jobFieldDelimiter = getJobField("fieldDelimiter");
-        jobPath = getJobField("path");
-    }
+//    static {
+//        jobColumnsField = getJobField("columns");
+//        jobFileType = getJobField("fileType");
+//        jobFieldDelimiter = getJobField("fieldDelimiter");
+//        jobPath = getJobField("path");
+//    }
 
-    private static Field getJobField(String fieldName) {
-        try {
-            Field field = HdfsWriter.Job.class.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return field;
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    private static Field getJobField(String fieldName) {
+//        try {
+//            Field field = HdfsWriter.Job.class.getDeclaredField(fieldName);
+//            field.setAccessible(true);
+//            return field;
+//        } catch (NoSuchFieldException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public static class Job extends BasicEngineJob<DataXHiveWriter> {
 
     }
 
     public static class Task extends HdfsWriter.Task {
-        private Configuration cfg;
+       // private Configuration cfg;
         private BasicFSWriter writerPlugin;
 
         @Override
@@ -80,7 +80,7 @@ public class TisDataXHiveWriter extends Writer {
 
         @Override
         protected HdfsHelper createHdfsHelper() {
-            return BasicHdfsWriterJob.createHdfsHelper(this.cfg, this.writerPlugin);
+            return BasicHdfsWriterJob.createHdfsHelper(this.getPluginJobConf(), this.writerPlugin);
             // return new HdfsHelper(this.writerPlugin.getFs().getFileSystem().unwrap());
         }
 

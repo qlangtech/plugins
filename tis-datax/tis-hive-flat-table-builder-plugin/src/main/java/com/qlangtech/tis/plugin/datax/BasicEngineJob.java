@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -187,36 +187,41 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     }
 
     private HdfsFormat parseFSFormat() {
-        try {
-            HdfsFormat fsFormat = new HdfsFormat();
-            fsFormat.setFieldDelimiter((String) TisDataXHiveWriter.jobFieldDelimiter.get(this));
-            fsFormat.setFileType(HdfsFileType.parse((String) TisDataXHiveWriter.jobFileType.get(this)));
-            return fsFormat;
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        //try {
+        HdfsFormat fsFormat = new HdfsFormat();
+
+        fsFormat.setFieldDelimiter(this.fieldDelimiter
+                //        (String) TisDataXHiveWriter.jobFieldDelimiter.get(this)
+        );
+        //  (String) TisDataXHiveWriter.jobFileType.get(this)
+        fsFormat.setFileType(HdfsFileType.parse(this.fileType));
+        return fsFormat;
+//        } catch (IllegalAccessException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
     private List<HiveColumn> getCols() {
-        try {
-            List<Configuration> cols = (List<Configuration>) TisDataXHiveWriter.jobColumnsField.get(this);
-            AtomicInteger index = new AtomicInteger();
-            return cols.stream().map((c) -> {
-                HiveColumn hivCol = new HiveColumn();
-                SupportHiveDataType columnType = SupportHiveDataType.valueOf(
-                        StringUtils.upperCase(c.getString(Key.TYPE)));
-                String name = StringUtils.remove(c.getString(Key.NAME), "`");
-                if (StringUtils.isBlank(name)) {
-                    throw new IllegalStateException("col name can not be blank");
-                }
-                hivCol.setName(name);
-                hivCol.setType(columnType.name());
-                hivCol.setIndex(index.getAndIncrement());
-                return hivCol;
-            }).collect(Collectors.toList());
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        //try {
+
+        List<Configuration> cols = this.columns; //(List<Configuration>) TisDataXHiveWriter.jobColumnsField.get(this);
+        AtomicInteger index = new AtomicInteger();
+        return cols.stream().map((c) -> {
+            HiveColumn hivCol = new HiveColumn();
+            SupportHiveDataType columnType = SupportHiveDataType.valueOf(
+                    StringUtils.upperCase(c.getString(Key.TYPE)));
+            String name = StringUtils.remove(c.getString(Key.NAME), "`");
+            if (StringUtils.isBlank(name)) {
+                throw new IllegalStateException("col name can not be blank");
+            }
+            hivCol.setName(name);
+            hivCol.setType(columnType.name());
+            hivCol.setIndex(index.getAndIncrement());
+            return hivCol;
+        }).collect(Collectors.toList());
+//        } catch (IllegalAccessException e) {
+//            throw new RuntimeException(e);
+//        }
     }
 
 

@@ -1,30 +1,28 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.offline.flattable;
 
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
@@ -37,7 +35,6 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FlatTableBuilder;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.plugin.IPluginStore;
-import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -102,7 +99,12 @@ public class TestHiveFlatTableBuilder extends TestCase {
             try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("groupby_totalpay.sql")) {
                 //     try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("totalpay_summary.sql")) {
                 ISqlTask sqlTask = new DefaultSqlTask(IOUtils.toString(input, TisUTF8.get()));
-                DataflowTask joinTask = flatTableBuilder.createTask(sqlTask, true, tplContext, context, fs2Table, joinTaskStatus);
+
+//                ISqlTask nodeMeta, boolean isFinalNode
+//            , ITemplateContext tplContext, ITaskContext taskContext, //
+//                        IJoinTaskStatus joinTaskStatus
+
+                DataflowTask joinTask = flatTableBuilder.createTask(sqlTask, true, tplContext, context, joinTaskStatus);
                 joinTask.run();
             }
         });

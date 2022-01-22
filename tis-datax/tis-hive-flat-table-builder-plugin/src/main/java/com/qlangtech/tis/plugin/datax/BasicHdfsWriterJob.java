@@ -1,24 +1,25 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
@@ -33,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Objects;
 
 /**
@@ -41,21 +41,21 @@ import java.util.Objects;
  * @create: 2021-07-08 17:47
  **/
 public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWriter.Job {
-    static final Field jobHdfsHelperField;
-    static final Field taskHdfsHelperField;
+    //    static final Field jobHdfsHelperField;
+//    static final Field taskHdfsHelperField;
     private static final Logger logger = LoggerFactory.getLogger(BasicHdfsWriterJob.class);
 
-    static {
-        try {
-            jobHdfsHelperField = HdfsWriter.Job.class.getDeclaredField("hdfsHelper");
-            jobHdfsHelperField.setAccessible(true);
-
-            taskHdfsHelperField = HdfsWriter.Task.class.getDeclaredField("hdfsHelper");
-            taskHdfsHelperField.setAccessible(true);
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    static {
+//        try {
+//            jobHdfsHelperField = HdfsWriter.Job.class.getDeclaredField("hdfsHelper");
+//            jobHdfsHelperField.setAccessible(true);
+//
+//            taskHdfsHelperField = HdfsWriter.Task.class.getDeclaredField("hdfsHelper");
+//            taskHdfsHelperField.setAccessible(true);
+//        } catch (NoSuchFieldException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     protected Path tabDumpParentPath;
 
@@ -72,17 +72,25 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     public void init() {
         Configuration pluginJobConf = this.getPluginJobConf();
         Objects.requireNonNull(writerPlugin, "writerPlugin can not be null");
+        this.fileSystem = writerPlugin.getFs().getFileSystem();
+        Objects.requireNonNull(fileSystem, "fileSystem can not be null");
         super.init();
 
-        BasicHdfsWriterJob.setHdfsHelper(pluginJobConf, BasicHdfsWriterJob.jobHdfsHelperField, writerPlugin, this);
+        //  BasicHdfsWriterJob.setHdfsHelper(pluginJobConf, BasicHdfsWriterJob.jobHdfsHelperField, writerPlugin, this);
+    }
+
+    @Override
+    protected HdfsHelper createHdfsHelper() {
+        return createHdfsHelper(this.cfg, writerPlugin);
+        //  return new HdfsHelper(this.fileSystem.unwrap());
     }
 
     @Override
     public void prepare() {
         super.prepare();
         // 需要自动创建hive表
-        this.fileSystem = writerPlugin.getFs().getFileSystem();
-        Objects.requireNonNull(fileSystem, "fileSystem can not be null");
+
+
     }
 
     @Override
@@ -91,7 +99,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         this.writerPlugin = TisDataXHiveWriter.getHdfsWriterPlugin(this.cfg);
         try {
             if (this.tabDumpParentPath == null) {
-               // T writerPlugin = this.getWriterPlugin();
+                // T writerPlugin = this.getWriterPlugin();
                 Path path = createPath();
                 Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
 //                SimpleDateFormat timeFormat = new SimpleDateFormat(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
@@ -115,13 +123,14 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     protected abstract Path createPath() throws IOException;
 
-    static void setHdfsHelper(Configuration pluginJobConf, Field hdfsHelperField, BasicFSWriter hiveWriter, Object helperOwner) {
+    public static HdfsHelper createHdfsHelper(Configuration pluginJobConf, BasicFSWriter hiveWriter) {
+        Objects.requireNonNull(pluginJobConf, "pluginJobConf can not be null");
+        Objects.requireNonNull(hiveWriter, "hiveWriter can not be null");
         try {
-            TisExtendHdfsHelper hdfsHelper = new TisExtendHdfsHelper();
-
             //DataXHiveWriter hiveWriter = getHiveWriterPlugin(pluginJobConf);
             FileSystemFactory fs = hiveWriter.getFs();
-            hdfsHelper.fileSystem = fs.getFileSystem().unwrap();
+            HdfsHelper hdfsHelper = new HdfsHelper(fs.getFileSystem().unwrap());
+
             org.apache.hadoop.conf.Configuration cfg = new org.apache.hadoop.conf.Configuration();
             cfg.setClassLoader(TIS.get().getPluginManager().uberClassLoader);
 
@@ -130,7 +139,8 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
             conf.set(JobContext.WORKING_DIR, (new Path("/user/admin/dataxtest")).toString());
             hdfsHelper.conf = conf;
-            hdfsHelperField.set(helperOwner, hdfsHelper);
+            return hdfsHelper;
+            // hdfsHelperField.set(helperOwner, hdfsHelper);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

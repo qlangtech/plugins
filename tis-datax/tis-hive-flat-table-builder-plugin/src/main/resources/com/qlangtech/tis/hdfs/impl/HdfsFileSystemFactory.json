@@ -3,6 +3,20 @@
     "placeholder": "/user/admin",
     "help": "系统会将源数据导入到该子目录下，用户需要保证该子目录有读/写权限"
   },
+  "userHostname": {
+    "label": "使用域名",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
+  },
   "hdfsAddress": {
     "dftVal": "hdfs://daily-cdh"
   },

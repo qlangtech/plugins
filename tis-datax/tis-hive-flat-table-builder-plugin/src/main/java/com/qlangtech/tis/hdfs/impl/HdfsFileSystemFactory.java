@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.hdfs.impl;
 
@@ -58,13 +58,16 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean userHostname;
+
+    @FormField(ordinal = 4, validate = {Validator.require, Validator.url})
     public String hdfsAddress;
 
-    @FormField(ordinal = 2, validate = {Validator.require, Validator.absolute_path})
+    @FormField(ordinal = 7, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
 
-    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String hdfsSiteContent;
 
     private ITISFileSystem fileSystem;
@@ -72,7 +75,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @Override
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
-            fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(hdfsAddress, hdfsSiteContent), this.rootDir);
+            fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(hdfsAddress, hdfsSiteContent, userHostname), this.rootDir);
         }
         return fileSystem;
     }
@@ -98,7 +101,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
         private static final Map<String, FileSystem> fileSys = new HashMap<String, FileSystem>();
 
-        public static FileSystem getFileSystem(String hdfsAddress, String hdfsContent) {
+        public static FileSystem getFileSystem(String hdfsAddress, String hdfsContent, Boolean userHostname) {
 
             FileSystem fileSystem = fileSys.get(hdfsAddress);
             if (fileSystem == null) {
@@ -116,7 +119,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
                             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
 
-                            conf.set("dfs.client.use.datanode.hostname", "true");
+                            //https://segmentfault.com/q/1010000008473574
+                            if (userHostname != null && userHostname) {
+                                conf.set("dfs.client.use.datanode.hostname", "true");
+                            }
 
                             conf.set("fs.default.name", hdfsAddress);
                             conf.set("hadoop.job.ugi", "admin");

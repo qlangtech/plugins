@@ -59,10 +59,17 @@
         <module>tis-ds-mysql-v8-plugin</module>
         <module>tis-datax-local-executor</module>
         <module>tis-datax-hudi-plugin</module>
+        <module>tis-datax-hdfs-plugin</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-hdfs-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.alibaba.datax</groupId>

@@ -41,7 +41,7 @@ import java.sql.Connection;
 @Public
 public class DataXHiveWriter extends BasicFSWriter {
     private static final String DATAX_NAME = "Hive";
-    private static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
+
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String hiveConn;

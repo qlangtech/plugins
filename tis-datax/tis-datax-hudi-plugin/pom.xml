@@ -26,9 +26,15 @@
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+<!--    <parent>-->
+<!--        <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--        <artifactId>tis-hive-flat-table-builder-plugin</artifactId>-->
+<!--        <version>3.5.0</version>-->
+<!--        <relativePath>../tis-hive-flat-table-builder-plugin/pom.xml</relativePath>-->
+<!--    </parent>-->
+
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-datax-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
@@ -36,10 +42,18 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
+
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -82,6 +96,44 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.binary.version}</artifactId>
             <version>${spark2.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-csv</artifactId>
+            <version>2.6.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>hdfswriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>datax-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.alibaba.datax</groupId>
+                    <artifactId>plugin-unstructured-storage-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-serde</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-service</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hive.hcatalog</groupId>
+                    <artifactId>hive-hcatalog-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 

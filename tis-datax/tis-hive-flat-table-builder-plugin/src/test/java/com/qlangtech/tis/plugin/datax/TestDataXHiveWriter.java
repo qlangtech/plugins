@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -80,7 +81,7 @@ public class TestDataXHiveWriter extends BasicTest {
         hiveWriter.partitionFormat = "yyyyMMdd";
 
 
-        IDataxProcessor.TableMap tableMap = TestDataXHdfsWriter.createCustomer_order_relationTableMap();
+        IDataxProcessor.TableMap tableMap = WriterTemplate.createCustomer_order_relationTableMap();
 
 
         WriterTemplate.valiateCfgGenerate("hive-datax-writer-assert.json", hiveWriter, tableMap);
@@ -96,7 +97,7 @@ public class TestDataXHiveWriter extends BasicTest {
 
     public void testDataDump() throws Exception {
 
-        HdfsFileSystemFactory hdfsFileSystemFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
+        HdfsFileSystemFactory hdfsFileSystemFactory = HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
 
         final DefaultHiveConnGetter hiveConnGetter = new DefaultHiveConnGetter();
         hiveConnGetter.dbName = "tis";

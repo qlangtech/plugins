@@ -37,8 +37,6 @@ import java.util.Optional;
  **/
 @Public
 public class DataXFtpWriter extends DataxWriter {
-    //private static final String DATAX_NAME = "FTP";
-
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String protocol;
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})

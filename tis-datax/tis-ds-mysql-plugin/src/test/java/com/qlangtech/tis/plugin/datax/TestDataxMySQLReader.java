@@ -432,7 +432,6 @@ public class TestDataxMySQLReader extends BasicTest {
     }
 
     protected DataxMySQLReader createHdfsReader(String dataXName) {
-        // final HdfsFileSystemFactory fsFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
 
         DataxMySQLReader dataxReader = new DataxMySQLReader() {
             @Override

@@ -83,18 +83,6 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
         Objects.requireNonNull(this.dumpTimeStamp, "dumpTimeStamp can not be null");
 
-        // try {
-//                this.tabDumpParentPath = new Path(this.writerPlugin.getFs().getFileSystem().getRootDir(), getHdfsSubPath());
-//                Path pmodPath = getPmodPath();
-//                // 将path创建
-//                this.writerPlugin.getFs().getFileSystem().mkdirs(new HdfsPath(pmodPath));
-//                jobPath.set(this, pmodPath.toString());
-//                logger.info("hive writer hdfs path:{}", pmodPath);
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-
-
     }
 
     protected int getPtRetainNum() {
@@ -141,16 +129,6 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         return pmodPath;
     }
 
-    static class JobPropInitializeException extends RuntimeException {
-        public JobPropInitializeException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public JobPropInitializeException(String message) {
-            super(message);
-        }
-    }
-
 
     protected Path getPmodPath() {
         return new Path(tabDumpParentPath, "0");
@@ -178,7 +156,9 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
             TT writerPlugin = getWriterPlugin();
             try (Connection conn = writerPlugin.getConnection()) {
                 Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                JoinHiveTask.initializeHiveTable(fileSystem, fileSystem.getPath(new HdfsPath(this.tabDumpParentPath), ".."), writerPlugin.getEngineType(), parseFSFormat()
+                JoinHiveTask.initializeHiveTable(fileSystem
+                        , fileSystem.getPath(new HdfsPath(this.tabDumpParentPath), "..")
+                        , writerPlugin.getEngineType(), parseFSFormat()
                         , cols, colsExcludePartitionCols, conn, dumpTable, this.ptRetainNum);
             }
         } catch (Exception e) {

@@ -25,17 +25,20 @@ import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,6 +46,7 @@ import java.util.Optional;
  * @create: 2021-05-29 16:28
  **/
 public class WriterTemplate {
+    public final static String customerregisterId = "customerregister_id";
 
 
 //    public static final Field jarLoaderCenterField;
@@ -139,5 +143,43 @@ public class WriterTemplate {
         JobContainer container = new JobContainer(allConf);
 
         container.start();
+    }
+
+    public static IDataxProcessor.TableMap createCustomer_order_relationTableMap() {
+        ISelectedTab.ColMeta colMeta = null;
+
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        tableMap.setTo("customer_order_relation");
+        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName(customerregisterId);
+        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        colMeta.setPk(true);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("waitingorder_id");
+        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        colMeta.setPk(true);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("kind");
+        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("create_time");
+        colMeta.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        sourceCols.add(colMeta);
+
+        colMeta = new ISelectedTab.ColMeta();
+        colMeta.setName("last_ver");
+        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        sourceCols.add(colMeta);
+
+        tableMap.setSourceCols(sourceCols);
+        return tableMap;
     }
 }

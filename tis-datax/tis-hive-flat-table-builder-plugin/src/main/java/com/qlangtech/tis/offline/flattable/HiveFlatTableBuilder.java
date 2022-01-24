@@ -25,6 +25,7 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
+import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
@@ -61,7 +62,7 @@ import java.util.Optional;
 @Public
 public class HiveFlatTableBuilder extends FlatTableBuilder {
 
-    public static final String KEY_FIELD_NAME_FS_NAME = "fsName";
+
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_DB_NAME = "dbName";
 
@@ -150,7 +151,7 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     public static class DefaultDescriptor extends Descriptor<FlatTableBuilder> {
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
         }
 
         @Override

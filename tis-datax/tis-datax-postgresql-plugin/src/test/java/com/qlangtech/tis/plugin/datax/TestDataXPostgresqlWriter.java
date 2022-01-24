@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -31,7 +30,6 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import org.junit.Assert;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -109,14 +107,14 @@ public class TestDataXPostgresqlWriter  //extends TestCase
         Assert.assertTrue("isSupportTabCreate", writerDescriptor.isSupportTabCreate());
 
 
-        IDataxProcessor.TableMap tableMapper = createCustomer_order_relationTableMap();
+        IDataxProcessor.TableMap tableMapper = WriterTemplate.createCustomer_order_relationTableMap();
 
         StringBuffer createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
         Assert.assertNotNull(createDDL);
         // 多主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
 
-        Optional<ISelectedTab.ColMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> customerregisterId.equals(col.getName())).findFirst();
+        Optional<ISelectedTab.ColMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> WriterTemplate.customerregisterId.equals(col.getName())).findFirst();
         Assert.assertTrue(firstCustomerregisterId.isPresent());
         firstCustomerregisterId.get().setPk(false);
 
@@ -127,42 +125,4 @@ public class TestDataXPostgresqlWriter  //extends TestCase
         //  System.out.println(createDDL.toString());
     }
 
-    private final static String customerregisterId = "customerregister_id";
-
-    private static IDataxProcessor.TableMap createCustomer_order_relationTableMap() {
-        ISelectedTab.ColMeta colMeta = null;
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-        tableMap.setTo("customer_order_relation");
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName(customerregisterId);
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-        colMeta.setPk(true);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("waitingorder_id");
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-        colMeta.setPk(true);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("kind");
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("create_time");
-        colMeta.setType(ISelectedTab.DataXReaderColType.Long.dataType);
-        sourceCols.add(colMeta);
-
-        colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("last_ver");
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
-        sourceCols.add(colMeta);
-
-        tableMap.setSourceCols(sourceCols);
-        return tableMap;
-    }
 }

@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
+import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -81,7 +82,7 @@ public class TestDataXSparkWriter extends BasicTest {
         hiveWriter.partitionFormat = "yyyyMMddHHmmss";
 
 
-        IDataxProcessor.TableMap tableMap = TestDataXHdfsWriter.createCustomer_order_relationTableMap();
+        IDataxProcessor.TableMap tableMap = WriterTemplate.createCustomer_order_relationTableMap();
 
 
         WriterTemplate.valiateCfgGenerate("spark-datax-writer-assert.json", hiveWriter, tableMap);
@@ -99,7 +100,7 @@ public class TestDataXSparkWriter extends BasicTest {
 
         //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hiveDataXName);
 
-        HdfsFileSystemFactory hdfsFileSystemFactory = TestDataXHdfsWriter.getHdfsFileSystemFactory();
+        HdfsFileSystemFactory hdfsFileSystemFactory =  HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
 
         ITISFileSystem fileSystem = hdfsFileSystemFactory.getFileSystem();
 

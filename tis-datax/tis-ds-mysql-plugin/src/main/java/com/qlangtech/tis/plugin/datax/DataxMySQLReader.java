@@ -38,7 +38,8 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
  * @see com.alibaba.datax.plugin.reader.mysqlreader.MysqlReader
  **/
 @Public
-public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFactory> {
+public class
+DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFactory> {
     public static final String DATAX_NAME = "MySQL";
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})

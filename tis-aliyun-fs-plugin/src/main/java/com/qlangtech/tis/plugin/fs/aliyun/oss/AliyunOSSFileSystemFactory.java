@@ -54,6 +54,10 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String bucketName;
 
+    @Override
+    public String getFSAddress() {
+        return this.endpoint;
+    }
 
     private ITISFileSystem ossFs;
 

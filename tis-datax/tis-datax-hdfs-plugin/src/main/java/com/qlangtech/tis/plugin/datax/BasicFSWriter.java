@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+//import com.alibaba.datax.common.util.Configuration;
+
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -69,6 +71,14 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 //    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String kerberosPrincipal;
     public String dataXName;
+
+    public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName) {
+        DataxWriter dataxWriter = load(null, dataxName);
+        if (!(dataxWriter instanceof BasicFSWriter)) {
+            throw new BasicHdfsWriterJob.JobPropInitializeException("datax Writer must be type of 'BasicFSWriter',but now is:" + dataxWriter.getClass());
+        }
+        return (TT) dataxWriter;
+    }
 
     @Override
     public void setKey(KeyedPluginStore.Key key) {

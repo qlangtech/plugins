@@ -23,7 +23,6 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -50,6 +49,11 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     private T writerPlugin = null;
     protected ITISFileSystem fileSystem = null;
     protected Configuration cfg = null;
+
+    public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
+        String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
+        return BasicFSWriter.getWriterPlugin(dataxName);
+    }
 
 
     protected T getWriterPlugin() {
@@ -121,15 +125,6 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
-        String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
-        DataxWriter dataxWriter = DataxWriter.load(null, dataxName);
-        if (!(dataxWriter instanceof BasicFSWriter)) {
-            throw new JobPropInitializeException("datax Writer must be type of 'BasicFSWriter',but now is:" + dataxWriter.getClass());
-        }
-        return (TT) dataxWriter;
     }
 
     public static class JobPropInitializeException extends RuntimeException {

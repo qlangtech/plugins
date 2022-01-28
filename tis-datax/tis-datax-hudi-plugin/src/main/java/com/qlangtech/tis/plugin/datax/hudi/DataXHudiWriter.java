@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -41,14 +42,26 @@ import java.sql.Connection;
 public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware {
     public static final String DATAX_NAME = "hudi";
 
+    public static final String KEY_FIELD_NAME_HIVE_CONN = "sparkConn";
+
+    @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String sparkConn;
+
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String hiveConn;
+
+    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String tabType;
+
+    @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require, Validator.db_col_name})
+    public String partitionedBy;
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
     public boolean autoCreateTable;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+
+    @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
 
@@ -61,6 +74,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
     }
 
+    public ISparkConnGetter getSparkConnGetter() {
+        return ISparkConnGetter.getConnGetter(this.sparkConn);
+    }
+
     public Connection getConnection() {
         try {
             ParamsConfig connGetter = (ParamsConfig) getHiveConnGetter();
@@ -70,7 +87,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
     }
 
-    public String dataXName;
+    private String dataXName;
 
     @Override
     public void setKey(KeyedPluginStore.Key key) {
@@ -91,6 +108,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+            this.registerSelectOptions(ISparkConnGetter.PLUGIN_NAME, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
         }
 
         @Override

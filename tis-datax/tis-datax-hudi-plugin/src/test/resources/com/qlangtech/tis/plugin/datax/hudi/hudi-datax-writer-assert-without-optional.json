@@ -5,26 +5,28 @@
     "fileName": "customer_order_relation",
     "column": [
       {
-        "name": "`customerregister_id`",
+        "name": "customerregister_id",
         "type": "STRING"
       },
       {
-        "name": "`waitingorder_id`",
+        "name": "waitingorder_id",
         "type": "STRING"
       },
       {
-        "name": "`kind`",
+        "name": "kind",
         "type": "SMALLINT"
       },
       {
-        "name": "`create_time`",
+        "name": "create_time",
         "type": "BIGINT"
       },
       {
-        "name": "`last_ver`",
+        "name": "last_ver",
         "type": "BIGINT"
       }
     ],
+    "hudiRecordkey": "customerregister_id",
+    "hudiPartitionpathField": "kind",
     "fileType": "csv",
     "dataxName": "testDataX",
     "writeMode": "nonConflict",

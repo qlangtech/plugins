@@ -40,7 +40,6 @@
     <dependencies>
 
 
-
         <!--只需要包里面的:com.qlangtech.plugins.incr.flink.TISFlinkCDCStart-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -240,28 +239,46 @@
                     </sourceIncludes>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
-                <executions>
-                    <execution>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <target>
-                                <untar src="${project.basedir}/../../tis-scala-compiler-dependencies/tis-scala-compiler-dependencies.tar.gz"
-                                       dest="${project.build.directory}/${project.build.finalName}" overwrite="true" compression="gzip" />
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
 
     </build>
 
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>appname</name>
+                    <value>all</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <configuration>
+                                    <target>
+                                        <untar src="${project.basedir}/../../tis-scala-compiler-dependencies/tis-scala-compiler-dependencies.tar.gz"
+                                               dest="${project.build.directory}/${project.build.finalName}"
+                                               overwrite="true" compression="gzip"/>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
+        </profile>
+
+    </profiles>
 
 </project>

@@ -43,10 +43,10 @@ public class SelectedTab implements ISelectedTab {
     public String name;
 
     // 用户可以自己设置where条件
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 100, type = FormFieldType.INPUTTEXT)
     public String where;
 
-    @FormField(ordinal = 2, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 200, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public List<String> cols = Lists.newArrayList();
 
     private transient List<ColMeta> shadowCols = null;

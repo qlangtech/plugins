@@ -73,7 +73,7 @@ public class DataXHiveWriter extends BasicFSWriter {
 
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataXHdfsWriter.class, "DataXHiveWriter-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "DataXHiveWriter-tpl.json");
     }
 
     public Connection getConnection() {

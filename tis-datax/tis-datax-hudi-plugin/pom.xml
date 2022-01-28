@@ -26,12 +26,13 @@
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-<!--    <parent>-->
-<!--        <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--        <artifactId>tis-hive-flat-table-builder-plugin</artifactId>-->
-<!--        <version>3.5.0</version>-->
-<!--        <relativePath>../tis-hive-flat-table-builder-plugin/pom.xml</relativePath>-->
-<!--    </parent>-->
+    <!--    <parent>-->
+    <!--        <groupId>com.qlangtech.tis.plugins</groupId>-->
+    <!--        <artifactId>tis-hive-flat-table-builder-plugin</artifactId>-->
+    <!--        <version>3.5.0</version>-->
+    <!--        <relativePath>../tis-hive-flat-table-builder-plugin/pom.xml</relativePath>-->
+    <!--    </parent>-->
+
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -39,21 +40,47 @@
     <packaging>tpi</packaging>
     <properties>
         <spark2.version>2.4.4</spark2.version>
+        <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
+        <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
+
     </properties>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+
+    </build>
 
     <dependencies>
+
+        <!--        <dependency>-->
+        <!--            <groupId>javax.servlet</groupId>-->
+        <!--            <artifactId>javax.servlet-api</artifactId>-->
+        <!--            <version>3.1.0</version>-->
+        <!--        </dependency>-->
+
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hudi-dependency</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-hdfs-plugin</artifactId>
         </dependency>
-
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -80,11 +107,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-utilities_${scala.binary.version}</artifactId>
-            <version>0.10.0</version>
-        </dependency>
 
         <dependency>
             <groupId>io.netty</groupId>
@@ -138,6 +160,51 @@
 
 
     </dependencies>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>appname</name>
+                    <value>all</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <!--https://ant.apache.org/manual/index.html-->
+                                <configuration>
+                                    <target>
+                                        <untar src="${project.basedir}/../tis-datax-hudi-dependency/tis-datax-hudi-dependency.tar.gz"
+                                               dest="${project.build.directory}/${project.build.finalName}"
+                                               overwrite="true"
+                                               compression="gzip"/>
+                                        <mkdir dir="/tmp/tis"/>
+                                        <get src="${tis.release.repository.host}/${spark.package.name}"
+                                             dest="/tmp/tis/${spark.package.name}" skipexisting="true"
+                                             ignoreerrors="false"/>
+                                        <untar src="/tmp/tis/${spark.package.name}"
+                                               dest="${project.build.directory}/${project.build.finalName}"
+                                               overwrite="true"
+                                               compression="gzip"/>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 
 </project>

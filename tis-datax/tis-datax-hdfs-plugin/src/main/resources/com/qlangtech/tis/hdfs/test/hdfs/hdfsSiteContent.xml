@@ -3,50 +3,50 @@
 <configuration>
     <property>
         <name>dfs.nameservices</name>
-        <value>daily-cdh201</value>
+        <value>namenode</value>
     </property>
     <property>
-        <name>dfs.client.failover.proxy.provider.daily-cdh201</name>
+        <name>dfs.client.failover.proxy.provider.namenode</name>
         <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
     </property>
     <property>
-        <name>dfs.ha.automatic-failover.enabled.daily-cdh201</name>
+        <name>dfs.ha.automatic-failover.enabled.namenode</name>
         <value>true</value>
     </property>
     <property>
-        <name>dfs.ha.namenodes.daily-cdh201</name>
+        <name>dfs.ha.namenodes.namenode</name>
         <value>namenode228,namenode295</value>
     </property>
     <property>
-        <name>dfs.namenode.rpc-address.daily-cdh201.namenode228</name>
+        <name>dfs.namenode.rpc-address.namenode.namenode228</name>
         <value>namenode:8020</value>
     </property>
     <property>
-        <name>dfs.namenode.servicerpc-address.daily-cdh201.namenode228</name>
+        <name>dfs.namenode.servicerpc-address.namenode.namenode228</name>
         <value>namenode:8022</value>
     </property>
     <property>
-        <name>dfs.namenode.http-address.daily-cdh201.namenode228</name>
+        <name>dfs.namenode.http-address.namenode.namenode228</name>
         <value>namenode:50070</value>
     </property>
     <property>
-        <name>dfs.namenode.https-address.daily-cdh201.namenode228</name>
+        <name>dfs.namenode.https-address.namenode.namenode228</name>
         <value>namenode:50470</value>
     </property>
     <property>
-        <name>dfs.namenode.rpc-address.daily-cdh201.namenode295</name>
+        <name>dfs.namenode.rpc-address.namenode.namenode295</name>
         <value>namenode:8020</value>
     </property>
     <property>
-        <name>dfs.namenode.servicerpc-address.daily-cdh201.namenode295</name>
+        <name>dfs.namenode.servicerpc-address.namenode.namenode295</name>
         <value>namenode:8022</value>
     </property>
     <property>
-        <name>dfs.namenode.http-address.daily-cdh201.namenode295</name>
+        <name>dfs.namenode.http-address.namenode.namenode295</name>
         <value>namenode:50070</value>
     </property>
     <property>
-        <name>dfs.namenode.https-address.daily-cdh201.namenode295</name>
+        <name>dfs.namenode.https-address.namenode.namenode295</name>
         <value>namenode:50470</value>
     </property>
     <property>

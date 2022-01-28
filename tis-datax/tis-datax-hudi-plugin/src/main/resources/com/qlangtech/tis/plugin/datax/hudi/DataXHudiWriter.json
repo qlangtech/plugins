@@ -1,0 +1,16 @@
+{
+  "autoCreateTable": {
+  },
+  "tabType": {
+    "enum": [
+      {
+        "val": "COPY_ON_WRITE",
+        "label": "COPY_ON_WRITE"
+      },
+      {
+        "val": "READ_ON_MERGE",
+        "label": "READ_ON_MERGE"
+      }
+    ]
+  }
+}

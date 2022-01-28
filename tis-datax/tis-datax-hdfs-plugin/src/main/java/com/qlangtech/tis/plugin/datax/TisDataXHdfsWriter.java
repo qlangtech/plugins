@@ -26,13 +26,11 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

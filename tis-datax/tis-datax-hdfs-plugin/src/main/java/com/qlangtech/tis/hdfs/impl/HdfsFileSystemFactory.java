@@ -80,9 +80,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         return fileSystem;
     }
 
-
-    public String getHdfsAddress() {
-        return hdfsAddress;
+    @Override
+    public String getFSAddress() {
+        return this.hdfsAddress;
     }
 
     public void setHdfsAddress(String hdfsAddress) {
@@ -128,7 +128,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                             conf.set("hadoop.job.ugi", "admin");
                             try (InputStream input = new ByteArrayInputStream(hdfsContent.getBytes(TisUTF8.get()))) {
                                 conf.addResource(input);
-                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入的化就调用不到了
+                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
                                 conf.setBoolean("fs.hdfs.impl.disable.cache", false);
                                 fileSystem = new FilterFileSystem(FileSystem.get(conf)) {
                                     @Override
@@ -146,7 +146,8 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                                     }
 
                                     @Override
-                                    public FSDataOutputStream create(Path f, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
+                                    public FSDataOutputStream create(Path f, FsPermission permission
+                                            , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
                                         return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
                                     }
 
@@ -166,6 +167,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                                     }
                                 };
                                 fileSystem.listStatus(new Path("/"));
+                                Logger.info("successful create hdfs with hdfsAddress:" + hdfsAddress);
                                 fileSys.put(hdfsAddress, fileSystem);
                             }
                         }
@@ -206,8 +208,6 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 msgHandler.addFieldError(context, KEY_FIELD_HDFS_ADDRESS, "请检查连接地址，服务端是否能正常,错误:" + e.getMessage());
                 return false;
             }
-
-
         }
 
         public boolean validate() {

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package scala.tools;
 
@@ -348,25 +348,23 @@ public class ScalaCompilerSupport {
      * @return
      */
     public static Set<String> getStreamScriptCompilerClasspath() {
-
-
-        File tisFlinkDependency = new File(Config.getDataDir(), "libs/plugins/tis-flink-dependency/WEB-INF/lib");
-        if (!tisFlinkDependency.exists() || tisFlinkDependency.isFile()) {
-            throw new IllegalStateException("dir tisFlinkDependency is illegal:" + tisFlinkDependency.getAbsolutePath());
+        File tisFlinkDependency = Config.getPluginLibDir("tis-flink-dependency");// new File(Config.getDataDir(), Config.LIB_PLUGINS_PATH + "/tis-flink-dependency/WEB-INF/lib");
+//        if (!tisFlinkDependency.exists() || tisFlinkDependency.isFile()) {
+//            throw new IllegalStateException("dir tisFlinkDependency is illegal:" + tisFlinkDependency.getAbsolutePath());
+//        }
+        final String pluginRealtimeFlink = "tis-realtime-flink";
+        File tisRealtimeFlinkRootDir = new File(Config.getDataDir(), Config.LIB_PLUGINS_PATH + "/" + pluginRealtimeFlink);
+        if (!tisRealtimeFlinkRootDir.exists()) {
+            throw new IllegalStateException("tisRealtimeFlinkRootDir can not be emty:" + tisRealtimeFlinkRootDir.getAbsolutePath());
         }
-
-        File tisRealtimeFlinkRootDir = new File(Config.getDataDir(), "libs/plugins/tis-realtime-flink");
-
-        File tisRealtimeFlink = new File(tisRealtimeFlinkRootDir, "WEB-INF/lib");
+        File tisRealtimeFlink = Config.getPluginLibDir(pluginRealtimeFlink);
         if (!tisRealtimeFlink.exists() || tisRealtimeFlink.isFile()) {
             throw new IllegalStateException("dir tisRealtimeFlink is illegal:" + tisRealtimeFlink.getAbsolutePath());
         }
-
         File scalaCompilerDependencies = new File(tisRealtimeFlinkRootDir, "tis-scala-compiler-dependencies");
         if (!scalaCompilerDependencies.exists() || scalaCompilerDependencies.list().length < 1) {
             throw new IllegalStateException("dependencies list can not be null,path:" + scalaCompilerDependencies.getAbsolutePath());
         }
-
         return Sets.newHashSet(
                 tisRealtimeFlink.getAbsolutePath() + "/*"
                 , tisFlinkDependency.getAbsolutePath() + "/*"

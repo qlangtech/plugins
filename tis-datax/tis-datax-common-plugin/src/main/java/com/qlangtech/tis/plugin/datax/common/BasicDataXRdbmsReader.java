@@ -277,6 +277,18 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         return plugin.getTableMetadata(table);
     }
 
+    /**
+     * 取表的主键
+     *
+     * @param table
+     * @return
+     */
+    public List<ColumnMetaData> getPrimaryKeys(String table) {
+        return this.getTableMetadata(table).stream()
+                .filter((col) -> col.isPk()).collect(Collectors.toList());
+    }
+
+
     @Override
     protected Class<BasicDataXRdbmsReaderDescriptor> getExpectDescClass() {
         return BasicDataXRdbmsReaderDescriptor.class;

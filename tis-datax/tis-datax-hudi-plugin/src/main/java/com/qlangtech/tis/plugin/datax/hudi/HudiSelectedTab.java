@@ -29,7 +29,9 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
  **/
 public class HudiSelectedTab extends SelectedTab {
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public static final String KEY_RECORD_FIELD = "recordField";
+
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String recordField;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -37,4 +39,6 @@ public class HudiSelectedTab extends SelectedTab {
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String sourceOrderingField;
+
+
 }

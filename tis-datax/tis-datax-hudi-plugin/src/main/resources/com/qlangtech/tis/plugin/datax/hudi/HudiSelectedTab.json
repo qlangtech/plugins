@@ -1,5 +1,8 @@
 {
-  "partitionPathKey": {
-    "label": "分区键"
+  "partitionPathField": {
+    "label": "分区字段"
+  },
+  "recordField": {
+    "label": "主键"
   }
 }

@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import org.apache.commons.lang.StringUtils;
@@ -47,6 +48,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
+        System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS
+                , String.valueOf(Boolean.TRUE.booleanValue()));
         CenterResource.setNotFetchFromCenterRepository();
         final HoodieDeltaStreamer.Config cfg = HoodieDeltaStreamer.getConfig(args);
 
@@ -74,7 +77,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             Configuration hadoopCfg = jssc.hadoopConfiguration();
             FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();
             hadoopCfg.addResource(fs.getConf());
-            hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, ((IHiveConn)writerPlugin).getHiveConnMeta().getMetaStoreUrls());
+            hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
             new HoodieDeltaStreamer(cfg, jssc
                     , fs, jssc.hadoopConfiguration()).sync();
         } finally {

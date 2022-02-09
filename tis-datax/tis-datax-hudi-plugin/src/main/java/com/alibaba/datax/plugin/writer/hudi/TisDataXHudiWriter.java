@@ -36,6 +36,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
@@ -54,10 +55,7 @@ import org.apache.spark.launcher.SparkLauncher;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 //import com.alibaba.datax.plugin.unstructuredstorage.writer.Key;
@@ -266,19 +264,16 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         private void launchSparkRddConvert() throws Exception {
 
-            HashMap env = new HashMap();
+           // HashMap env = new HashMap();
+
+            Map<String, String> env = Config.getInstance().getAllKV();
             SparkLauncher handle = new SparkLauncher(env);
+
             handle.redirectError(new File("error.log"));
             String tabName = this.getFileName();
 
-            //    File hudiLibDir = Config.getPluginLibDir("tis-datax-hudi-plugin");
-            //  File hudiPluginDir = new File(hudiLibDir, "../..");
-            File hudiDependencyDir = HudiConfig.getHudiDependencyDir();// new File(hudiLibDir, "tis-datax-hudi-dependency");
-//            if (!hudiDependencyDir.exists()) {
-//                throw new IllegalStateException("hudiDependencyDir is not exist:" + hudiDependencyDir.getAbsolutePath());
-//            }
-            File sparkHome = HudiConfig.getSparkHome();//  new File(hudiPluginDir, HudiConfig.getSparkReleaseDir());
-
+            File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
+            File sparkHome = HudiConfig.getSparkHome();
 
             File resJar = FileUtils.listFiles(hudiDependencyDir, new String[]{"jar"}, false)
                     .stream().findFirst().orElseThrow(() -> new IllegalStateException("must have resJar hudiDependencyDir:" + hudiDependencyDir.getAbsolutePath()));
@@ -299,6 +294,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             handle.setMaster(sparkConnGetter.getSparkMaster());
             handle.setSparkHome(String.valueOf(sparkHome.toPath().normalize()));
             handle.setMainClass("com.alibaba.datax.plugin.writer.hudi.TISHoodieDeltaStreamer");
+
             IPath fsSourcePropsPath = getSourcePropsPath();
             IPath hudiDataDir = this.getFileSystem().getPath(getDumpDir(), "hudi");
             handle.addAppArgs("--table-type", hudiTabType.getValue()

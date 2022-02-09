@@ -52,10 +52,15 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 //import com.alibaba.datax.plugin.unstructuredstorage.writer.Key;
@@ -70,6 +75,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
     private static final boolean CSV_FILE_USE_HEADER = true;
     public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
+    private static final Logger logger = LoggerFactory.getLogger(TisDataXHudiWriter.class);
 
     public static class Job extends TisDataXHdfsWriter.Job {
         private String sourceOrderingField;
@@ -264,9 +270,13 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         private void launchSparkRddConvert() throws Exception {
 
-           // HashMap env = new HashMap();
-
+            // HashMap env = new HashMap();
             Map<String, String> env = Config.getInstance().getAllKV();
+            logger.info("environment props ===========================");
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                logger.info("key:{},value:{}", entry.getKey(), entry.getValue());
+            }
+            logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
 
             handle.redirectError(new File("error.log"));

@@ -143,7 +143,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
         private IHiveConnGetter getHiveConnGetter() {
-            return getHudiWriterPlugin().getHiveConnGetter();
+            return getHudiWriterPlugin().getHiveConnMeta();
         }
 
         protected Path createTabDumpParentPath(ITISFileSystem fs) {

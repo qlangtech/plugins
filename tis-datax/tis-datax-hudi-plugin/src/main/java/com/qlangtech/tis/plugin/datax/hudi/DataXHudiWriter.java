@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -51,7 +52,7 @@ import java.util.Map;
  * @create: 2022-01-21 13:02
  **/
 @Public
-public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware {
+public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn {
     public static final String DATAX_NAME = "Hudi";
 
     public static final String KEY_FIELD_NAME_SPARK_CONN = "sparkConn";
@@ -83,8 +84,17 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
+//    @Override
+//    public IHiveConnGetter getHiveConnMeta() {
+//        return null;
+//    }
 
-//    /**
+    @Override
+    public IHiveConnGetter getHiveConnMeta() {
+        return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
+    }
+
+    //    /**
 //     * @return
 //     */
 //    public static List<Option> allPrimaryKeys(Object contextObj) {
@@ -137,9 +147,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
     }
 
-    public IHiveConnGetter getHiveConnGetter() {
-        return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
-    }
 
     public ISparkConnGetter getSparkConnGetter() {
         if (StringUtils.isEmpty(this.sparkConn)) {
@@ -150,7 +157,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     public Connection getConnection() {
         try {
-            ParamsConfig connGetter = (ParamsConfig) getHiveConnGetter();
+            ParamsConfig connGetter = (ParamsConfig) getHiveConnMeta();
             return connGetter.createConfigInstance();
         } catch (Throwable e) {
             throw new RuntimeException(e);

@@ -119,7 +119,7 @@ public class TestDataXHudiWriter {
                 return DataXHudiWriter.class;
             }
 
-            public IHiveConnGetter getHiveConnGetter() {
+            public IHiveConnGetter getHiveConnMeta() {
                 return createHiveConnGetter();
             }
 

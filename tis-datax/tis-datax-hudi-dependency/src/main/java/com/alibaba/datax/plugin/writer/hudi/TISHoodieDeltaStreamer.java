@@ -72,7 +72,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
         BasicFSWriter writerPlugin = BasicFSWriter.getWriterPlugin(dataName);
         try {
             if (!(writerPlugin instanceof IHiveConn)) {
-                throw new IllegalStateException("instance writerPlugin must be type of " + IHiveConn.class.getSimpleName());
+                throw new IllegalStateException("instance writerPlugin:"
+                        + writerPlugin.getClass().getName() + " must be type of " + IHiveConn.class.getSimpleName());
             }
             Configuration hadoopCfg = jssc.hadoopConfiguration();
             FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();

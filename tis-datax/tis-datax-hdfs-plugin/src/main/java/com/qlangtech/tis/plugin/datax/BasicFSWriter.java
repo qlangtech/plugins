@@ -142,7 +142,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return this.tabMap.getSourceCols().stream().map((c) -> {
                 HiveColumn col = new HiveColumn();
                 col.setName(c.getName());
-                col.setType(SupportHiveDataTypeUtils.convert2HiveType(c.getType()).name());
+                 col.setType(SupportHiveDataTypeUtils.convert2HiveType(c.getType()).name());
                 return col;
             }).collect(Collectors.toList());
         }

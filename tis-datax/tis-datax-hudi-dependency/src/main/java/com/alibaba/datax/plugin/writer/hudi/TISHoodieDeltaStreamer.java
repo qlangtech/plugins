@@ -18,13 +18,17 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hudi.utilities.UtilHelpers;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
@@ -43,7 +47,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
-
+        CenterResource.setNotFetchFromCenterRepository();
         final HoodieDeltaStreamer.Config cfg = HoodieDeltaStreamer.getConfig(args);
 
         Map<String, String> additionalSparkConfigs = SchedulerConfGenerator.getSparkSchedulingConfigs(cfg);
@@ -64,8 +68,13 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
         BasicFSWriter writerPlugin = BasicFSWriter.getWriterPlugin(dataName);
         try {
+            if (!(writerPlugin instanceof IHiveConn)) {
+                throw new IllegalStateException("instance writerPlugin must be type of " + IHiveConn.class.getSimpleName());
+            }
+            Configuration hadoopCfg = jssc.hadoopConfiguration();
             FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();
-            jssc.hadoopConfiguration().addResource(fs.getConf());
+            hadoopCfg.addResource(fs.getConf());
+            hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, ((IHiveConn)writerPlugin).getHiveConnMeta().getMetaStoreUrls());
             new HoodieDeltaStreamer(cfg, jssc
                     , fs, jssc.hadoopConfiguration()).sync();
         } finally {

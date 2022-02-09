@@ -32,6 +32,7 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
@@ -85,6 +86,7 @@ public class TestDataXHdfsWriter extends BasicTest {
         hdfsWriter.encoding = "utf-8";
         hdfsWriter.template = DataXHdfsWriter.getDftTemplate();
         hdfsWriter.path = hdfsRelativePath;
+
 
 
         IDataxProcessor.TableMap tableMap = WriterTemplate.createCustomer_order_relationTableMap();

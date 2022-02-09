@@ -44,40 +44,20 @@ public class TisDataXHdfsWriter extends Writer {
 
     public static class Job extends BasicHdfsWriterJob<BasicFSWriter> {
 
-//        protected int getPtRetainNum() {
-//            return -1;
-//        }
-
-//        @Override
-//        protected EntityName createDumpTable() {
-//            return null;
-//        }
-//
-//        @Override
-//        protected void initializeHiveTable(List<HiveColumn> cols) {
-//            // super.initializeHiveTable(cols);
-//        }
-//
-//        @Override
-//        protected void bindHiveTables() {
-//            // super.bindHiveTables();
-//        }
-
-        //        protected Path getPmodPath() {
-//            return this.tabDumpParentPath;
-//        }
-//
-
         @Override
         protected Path createPath() throws IOException {
             ITISFileSystem fs = this.getWriterPlugin().getFs().getFileSystem();
-            this.tabDumpParentPath = new Path(fs.getRootDir()
-                    , this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE));
+            this.tabDumpParentPath = createTabDumpParentPath(fs);
             HdfsPath p = new HdfsPath(this.tabDumpParentPath);
             if (!fs.exists(p)) {
                 fs.mkdirs(p);
             }
             return this.tabDumpParentPath;
+        }
+
+        protected Path createTabDumpParentPath(ITISFileSystem fs) {
+            return new Path(fs.getRootDir().unwrap(Path.class)
+                    , this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE));
         }
     }
 

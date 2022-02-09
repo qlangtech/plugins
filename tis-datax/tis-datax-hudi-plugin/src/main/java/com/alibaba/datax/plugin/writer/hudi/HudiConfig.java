@@ -18,8 +18,11 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.tis.manage.common.Config;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
 import java.util.ResourceBundle;
 
 /**
@@ -31,6 +34,7 @@ public class HudiConfig {
 
     private final String sparkPackageName;
     private final String sparkDistDirName;
+    private final File sparkHome;
 
     private HudiConfig() {
         ResourceBundle bundle =
@@ -39,7 +43,36 @@ public class HudiConfig {
         if (StringUtils.isEmpty(this.sparkPackageName)) {
             throw new IllegalStateException("config prop sparkPackageName can not be null");
         }
-        sparkDistDirName =bundle.getString("sparkDistDirName");
+        sparkDistDirName = bundle.getString("sparkDistDirName");
+
+        File hudiLibDir = getHudiPluginLibDir();
+        File hudiPluginDir = new File(hudiLibDir, "../..");
+        sparkHome = new File(hudiPluginDir, sparkDistDirName);
+        if (!sparkHome.exists()) {
+            throw new IllegalStateException("sparkHome is not exist:" + sparkHome.getAbsolutePath());
+        }
+        // 有执行权限
+        FileUtils.listFiles(new File(sparkHome, "bin"), null, true)
+                .forEach((file) -> {
+                    file.setExecutable(true, false);
+                });
+    }
+
+    public static File getHudiDependencyDir() {
+        File hudiLibDir = getHudiPluginLibDir();
+        File hudiDependencyDir = new File(hudiLibDir, "../../tis-datax-hudi-dependency");
+        if (!hudiDependencyDir.exists()) {
+            throw new IllegalStateException("hudiDependencyDir is not exist:" + hudiDependencyDir.getAbsolutePath());
+        }
+        return hudiDependencyDir;
+    }
+
+    private static File getHudiPluginLibDir() {
+        return Config.getPluginLibDir("tis-datax-hudi-plugin");
+    }
+
+    public static File getSparkHome() {
+        return getInstance().sparkHome;
     }
 
     public static String getSparkPackageName() {

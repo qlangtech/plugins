@@ -56,8 +56,8 @@ public class AliyunOSSFileSystem implements ITISFileSystem {
     }
 
     @Override
-    public String getRootDir() {
-        return this.rootDir;
+    public IPath getRootDir() {
+        return this.getPath(this.rootDir);
     }
 
     @Override

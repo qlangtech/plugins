@@ -75,7 +75,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @Override
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
-            fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(hdfsAddress, hdfsSiteContent, userHostname), this.rootDir);
+            fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(hdfsAddress, hdfsSiteContent, userHostname), hdfsAddress, this.rootDir);
         }
         return fileSystem;
     }
@@ -172,7 +172,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                             }
                         }
                     } catch (Throwable e) {
-                        throw new RuntimeException(e);
+                        throw new RuntimeException("link faild:" + hdfsAddress, e);
                     } finally {
                         Thread.currentThread().setContextClassLoader(contextClassLoader);
                     }

@@ -193,6 +193,8 @@
                                                dest="${project.build.directory}/${project.build.finalName}"
                                                overwrite="true"
                                                compression="gzip"/>
+                                        <chmod dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/bin" perm="ugo+rx"
+                                               includes="**/*"/>
                                     </target>
                                 </configuration>
                                 <goals>

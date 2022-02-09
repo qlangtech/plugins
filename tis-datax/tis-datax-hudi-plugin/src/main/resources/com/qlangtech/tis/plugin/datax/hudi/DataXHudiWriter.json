@@ -1,7 +1,73 @@
 {
+  "hiveConn": {
+    "creator": {
+      "label": "数据源管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "HiveConn"
+        }
+      ]
+    }
+  },
+  "fileType": {
+    "disable": true
+  },
+  "fieldDelimiter": {
+    "disable": true
+  },
+  "compress": {
+    "disable": true
+  },
+  "encoding": {
+    "disable": true
+  },
+  "batchOp": {
+    "label": "批量操作",
+    "dftVal": "BULK_INSERT",
+    "enum": [
+      {
+        "val": "UPSERT",
+        "label": "UPSERT"
+      },
+      {
+        "val": "INSERT",
+        "label": "INSERT"
+      },
+      {
+        "val": "BULK_INSERT",
+        "label": "BULK_INSERT"
+      }
+    ]
+  },
+  "sparkConn": {
+    "creator": {
+      "label": "管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "SparkConn"
+        }
+      ]
+    }
+  },
   "autoCreateTable": {
+    "label": "同步Hive",
+    "dftVal": true,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
   },
   "tabType": {
+    "label": "表类型",
+    "dftVal": "COPY_ON_WRITE",
     "enum": [
       {
         "val": "COPY_ON_WRITE",
@@ -12,5 +78,12 @@
         "label": "READ_ON_MERGE"
       }
     ]
+  },
+  "shuffleParallelism": {
+    "dftVal": 2,
+    "label": "重分区数"
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter.getDftTemplate()"
   }
 }

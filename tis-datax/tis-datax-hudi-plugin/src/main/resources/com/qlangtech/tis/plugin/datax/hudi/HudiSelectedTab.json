@@ -4,5 +4,8 @@
   },
   "recordField": {
     "label": "主键"
+  },
+  "sourceOrderingField": {
+    "label": "去重字段"
   }
 }

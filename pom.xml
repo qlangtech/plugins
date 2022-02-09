@@ -57,22 +57,22 @@
 
 
         <module>tis-kafka-plugin</module>
-<!--        <module>tis-solr-plugin</module>
-        <module>tis-local-dump-build</module>-->
+        <!--        <module>tis-solr-plugin</module>
+                <module>tis-local-dump-build</module>-->
 
 
     </modules>
 
     <properties>
-<!--        <revision>2.3.0</revision>-->
+        <!--        <revision>2.3.0</revision>-->
 
         <hadoop-version>2.7.3</hadoop-version>
         <!--
                 <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>
             -->
-<!--        <hive.version>1.2.1</hive.version>-->
-        <hive.version>2.3.1</hive.version>
+        <!--    <hive.version>2.3.1</hive.version>    -->
 
+        <hive.version>1.2.1</hive.version>
 
         <maven-tpi-plugin.classpathDependentExcludes>
             commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:logback-classic
@@ -303,6 +303,24 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-hdfs</artifactId>
                 <version>${hadoop-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-runtime</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>xml-apis</groupId>
+                        <artifactId>xml-apis</artifactId>
+                    </exclusion>
+                    <!--                <exclusion>-->
+                    <!--                    <groupId>xerces</groupId>-->
+                    <!--                    <artifactId>xercesImpl</artifactId>-->
+                    <!--                </exclusion>-->
+                </exclusions>
             </dependency>
 
             <dependency>

@@ -30,6 +30,8 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 public class HudiSelectedTab extends SelectedTab {
 
     public static final String KEY_RECORD_FIELD = "recordField";
+    public static final String KEY_PARTITION_PATH_FIELD = "partitionPathField";
+    public static final String KEY_SOURCE_ORDERING_FIELD = "sourceOrderingField";
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String recordField;

@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -28,6 +30,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -35,6 +38,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -49,8 +54,6 @@ public class TestDataXHudiWriter {
 
     @Test
     public void testRealDump() throws Exception {
-
-
 
 
         HudiTest houseTest = createDataXWriter();
@@ -84,6 +87,15 @@ public class TestDataXHudiWriter {
         }
     }
 
+    @Test
+    public void testConfigGenerate() throws Exception {
+
+        HudiTest forTest = createDataXWriter();
+        WriterTemplate.valiateCfgGenerate("hudi-datax-writer-assert.json", forTest.writer, forTest.tableMap);
+
+
+    }
+
     private static class HudiTest {
         private final DataXHudiWriter writer;
         private final IDataxProcessor.TableMap tableMap;
@@ -97,48 +109,10 @@ public class TestDataXHudiWriter {
 
     private static HudiTest createDataXWriter() {
 
+        final DefaultSparkConnGetter sparkConnGetter = new DefaultSparkConnGetter();
+        sparkConnGetter.name = "default";
+        sparkConnGetter.master = "spark://sparkmaster:7077";
 
-        String dbName = "tis";
-//        ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();
-//        dsFactory.nodeDesc = "192.168.28.201";
-//        dsFactory.password = "123456";
-//        dsFactory.userName = "default";
-//        dsFactory.dbName = dbName;
-//        dsFactory.port = 8123;
-//        dsFactory.name = dbName;
-        // IDataxProcessor.TableMap tableMap = ;// Template new IDataxProcessor.TableMap();
-//        tableMap.setFrom("application");
-//        tableMap.setTo(targetTableName);
-//
-//        ISelectedTab.ColMeta cm = null;
-//        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
-//        cm = new ISelectedTab.ColMeta();
-//        cm.setPk(true);
-//        cm.setName("customerregister_id");
-//        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-//        cmetas.add(cm);
-//
-//        cm = new ISelectedTab.ColMeta();
-//        cm.setName("waitingorder_id");
-//        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
-//        cmetas.add(cm);
-//
-//        cm = new ISelectedTab.ColMeta();
-//        cm.setName("kind");
-//        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
-//        cmetas.add(cm);
-//
-//        cm = new ISelectedTab.ColMeta();
-//        cm.setName("create_time");
-//        cm.setType(ISelectedTab.DataXReaderColType.Long.dataType);
-//        cmetas.add(cm);
-//
-//        cm = new ISelectedTab.ColMeta();
-//        cm.setName("last_ver");
-//        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
-//        cmetas.add(cm);
-//
-//        tableMap.setSourceCols(cmetas);
         DataXHudiWriter writer = new DataXHudiWriter() {
             @Override
             public Class<?> getOwnerClass() {
@@ -150,6 +124,12 @@ public class TestDataXHudiWriter {
             }
 
             @Override
+            public ISparkConnGetter getSparkConnGetter() {
+                // return super.getSparkConnGetter();
+                return sparkConnGetter;
+            }
+
+            @Override
             public FileSystemFactory getFs() {
 
                 return HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
@@ -157,6 +137,12 @@ public class TestDataXHudiWriter {
         };
         writer.template = DataXHudiWriter.getDftTemplate();
         writer.fsName = HdfsFileSystemFactoryTestUtils.FS_NAME;
+        writer.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));
+        writer.tabType = HudiWriteTabType.COW.getValue();
+        writer.batchOp = BatchOpMode.BULK_INSERT.getValue();
+        writer.shuffleParallelism = 999;
+        writer.partitionedBy = "pt";
+
 //        writer.batchByteSize = 3456;
 //        writer.batchSize = 9527;
 //        writer.dbName = dbName;
@@ -165,9 +151,21 @@ public class TestDataXHudiWriter {
 //        writer.postSql = "drop table @table";
 //        writer.preSql = "drop table @table";
 
-       // writer.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
+        // writer.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
         //  writer.dbName = dbName;
-        return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap());
+
+        HudiSelectedTab hudiTab = new HudiSelectedTab() {
+            @Override
+            public List<ColMeta> getCols() {
+                return WriterTemplate.createColMetas();
+            }
+        };
+        hudiTab.partitionPathField =  WriterTemplate.kind;
+        hudiTab.recordField = WriterTemplate.customerregisterId;
+        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
+        hudiTab.setWhere("1=1");
+        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
+        return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(hudiTab)));
     }
 
 //    @NotNull

@@ -24,6 +24,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
@@ -121,7 +122,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         this.dumpTimeStamp = timeFormat.format(new Date());
         this.dumpTable = this.createDumpTable();
         TT writerPlugin = this.getWriterPlugin();
-        this.tabDumpParentPath = new Path(writerPlugin.getFs().getFileSystem().getRootDir(), getHdfsSubPath());
+        this.tabDumpParentPath = new Path(writerPlugin.getFs().getFileSystem().getRootDir().unwrap(Path.class), getHdfsSubPath());
         Path pmodPath = getPmodPath();
         // 将path创建
         HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) writerPlugin.getFs();
@@ -156,8 +157,9 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
             TT writerPlugin = getWriterPlugin();
             try (Connection conn = writerPlugin.getConnection()) {
                 Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                JoinHiveTask.initializeHiveTable(fileSystem
-                        , fileSystem.getPath(new HdfsPath(this.tabDumpParentPath), "..")
+                ITISFileSystem fs = this.getFileSystem();
+                JoinHiveTask.initializeHiveTable(fs
+                        , fs.getPath(new HdfsPath(this.tabDumpParentPath), "..")
                         , writerPlugin.getEngineType(), parseFSFormat()
                         , cols, colsExcludePartitionCols, conn, dumpTable, this.ptRetainNum);
             }
@@ -223,7 +225,8 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     protected void bindHiveTables() {
         try {
             try (Connection hiveConn = this.getWriterPlugin().getConnection()) {
-                BindHiveTableTool.bindHiveTables(this.getWriterPlugin().getEngineType(), fileSystem
+
+                BindHiveTableTool.bindHiveTables(this.getWriterPlugin().getEngineType(), this.getFileSystem()
                         , Collections.singletonMap(this.dumpTable, new Callable<BindHiveTableTool.HiveBindConfig>() {
                             @Override
                             public BindHiveTableTool.HiveBindConfig call() throws Exception {

@@ -166,12 +166,13 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         dsFactory.dbName = dbName;
         dsFactory.port = 8123;
         dsFactory.name = dbName;
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
+        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(cmetas);
         tableMap.setFrom("application");
         tableMap.setTo(targetTableName);
 
         ISelectedTab.ColMeta cm = null;
-        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
+
         cm = new ISelectedTab.ColMeta();
         cm.setPk(true);
         cm.setName("customerregister_id");
@@ -198,7 +199,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
-        tableMap.setSourceCols(cmetas);
+        //tableMap.setSourceCols(cmetas);
         DataXClickhouseWriter writer = new DataXClickhouseWriter() {
             @Override
             public Class<?> getOwnerClass() {

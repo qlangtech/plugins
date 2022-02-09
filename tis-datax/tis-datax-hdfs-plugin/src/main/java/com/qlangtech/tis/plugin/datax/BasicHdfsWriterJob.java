@@ -24,7 +24,6 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,7 +46,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     protected Path tabDumpParentPath;
 
     private T writerPlugin = null;
-    protected ITISFileSystem fileSystem = null;
+    private ITISFileSystem fileSystem = null;
     protected Configuration cfg = null;
 
     public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
@@ -63,14 +62,32 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     @Override
     public void init() {
         getPluginJobConf();
-        // Configuration pluginJobConf = this.getPluginJobConf();
+        try {
+            if (this.tabDumpParentPath == null) {
+                Path path = createPath();
+                this.path = String.valueOf(path);
+                Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
+                FileSystemFactory hdfsFactory = writerPlugin.getFs();
+                logger.info("config param {}:{}", Key.PATH, hdfsFactory.getFSAddress());
+                cfg.set(Key.DEFAULT_FS, hdfsFactory.getFSAddress());
+            }
+        } catch (Throwable e) {
+            throw new JobPropInitializeException("pmodPath initial error", e);
+        }
+
         Objects.requireNonNull(writerPlugin, "writerPlugin can not be null");
-        this.fileSystem = writerPlugin.getFs().getFileSystem();
-        Objects.requireNonNull(fileSystem, "fileSystem can not be null");
+
         super.init();
-
-
     }
+
+    protected ITISFileSystem getFileSystem() {
+        if (fileSystem == null) {
+            this.fileSystem = writerPlugin.getFs().getFileSystem();
+            Objects.requireNonNull(fileSystem, "fileSystem can not be null");
+        }
+        return fileSystem;
+    }
+
 
     @Override
     protected HdfsHelper createHdfsHelper() {
@@ -88,19 +105,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     public Configuration getPluginJobConf() {
         this.cfg = super.getPluginJobConf();
         this.writerPlugin = getHdfsWriterPlugin(this.cfg);
-        try {
-            if (this.tabDumpParentPath == null) {
-                Path path = createPath();
-                this.path = String.valueOf(path);
-                Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) writerPlugin.getFs();
-                // cfg.set(Key.PATH, path);
-                logger.info("config param {}:{}", Key.PATH, hdfsFactory.hdfsAddress);
-                cfg.set(Key.DEFAULT_FS, hdfsFactory.hdfsAddress);
-            }
-        } catch (Throwable e) {
-            throw new JobPropInitializeException("pmodPath initial error", e);
-        }
+
         return this.cfg;
     }
 
@@ -119,7 +124,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
             org.apache.hadoop.mapred.JobConf conf = new JobConf(cfg);
             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, pluginJobConf.getString("defaultFS"));
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
-            conf.set(JobContext.WORKING_DIR, (new Path(fs.getFileSystem().getRootDir())).toString());
+            conf.set(JobContext.WORKING_DIR, (fs.getFileSystem().getRootDir().unwrap(Path.class).toString()));
             hdfsHelper.conf = conf;
             return hdfsHelper;
         } catch (Exception e) {

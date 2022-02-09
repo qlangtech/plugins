@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.common;
@@ -47,6 +47,10 @@ import java.util.Optional;
  **/
 public class WriterTemplate {
     public final static String customerregisterId = "customerregister_id";
+    public final static String lastVer = "last_ver";
+    public final static String kind = "kind";
+
+    public final static String TAB_customer_order_relation = "customer_order_relation";
 
 
 //    public static final Field jarLoaderCenterField;
@@ -146,12 +150,24 @@ public class WriterTemplate {
     }
 
     public static IDataxProcessor.TableMap createCustomer_order_relationTableMap() {
+        return createCustomer_order_relationTableMap(Optional.empty());
+    }
+
+    public static IDataxProcessor.TableMap createCustomer_order_relationTableMap(Optional<ISelectedTab> tab) {
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
+            @Override
+            public List<ColMeta> getCols() {
+                return createColMetas();
+            }
+        });
+        tableMap.setTo(TAB_customer_order_relation);
+        //tableMap.setSourceCols(sourceCols);
+        return tableMap;
+    }
+
+    public static List<ISelectedTab.ColMeta> createColMetas() {
         ISelectedTab.ColMeta colMeta = null;
-
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-        tableMap.setTo("customer_order_relation");
         List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName(customerregisterId);
         colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
@@ -165,7 +181,7 @@ public class WriterTemplate {
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("kind");
+        colMeta.setName(kind);
         colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);
 
@@ -175,11 +191,9 @@ public class WriterTemplate {
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
-        colMeta.setName("last_ver");
+        colMeta.setName(lastVer);
         colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);
-
-        tableMap.setSourceCols(sourceCols);
-        return tableMap;
+        return sourceCols;
     }
 }

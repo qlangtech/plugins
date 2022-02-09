@@ -20,6 +20,7 @@ package com.qlangtech.tis.offline.flattable;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
@@ -143,9 +144,9 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
     }
 
 
-    public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
-        return FSHistoryFileUtils.getJoinTableStorePath(user, pathGetter);
-    }
+//    public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
+//        return FSHistoryFileUtils.getJoinTableStorePath(user, pathGetter);
+//    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<FlatTableBuilder> {
@@ -170,9 +171,9 @@ public class HiveFlatTableBuilder extends FlatTableBuilder {
         String dbName = postFormVals.getField(KEY_DB_NAME);
 
         boolean useUserToken = Boolean.parseBoolean(postFormVals.getField(DefaultHiveConnGetter.KEY_USE_USERTOKEN));
-        HiveDBUtils.UserToken userToken = null;
+        HiveUserToken userToken = null;
         if (useUserToken) {
-            userToken = new HiveDBUtils.UserToken(
+            userToken = new HiveUserToken(
                     postFormVals.getField(DefaultHiveConnGetter.KEY_USER_NAME), postFormVals.getField(DefaultHiveConnGetter.KEY_PASSWORD));
             if (StringUtils.isBlank(userToken.userName)) {
                 msgHandler.addFieldError(context, DefaultHiveConnGetter.KEY_USER_NAME, ValidatorCommons.MSG_EMPTY_INPUT_ERROR);

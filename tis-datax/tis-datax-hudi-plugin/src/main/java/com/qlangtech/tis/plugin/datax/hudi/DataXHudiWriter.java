@@ -18,9 +18,9 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
@@ -30,7 +30,6 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
-import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -38,10 +37,13 @@ import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,21 +73,68 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     public boolean autoCreateTable;
 
 
+    @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer shuffleParallelism;
+
+    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String batchOp;
+
+
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
-    /**
-     * @return
-     */
-    public static List<Option> allPrimaryKeys(Object contextObj) {
-        List<Option> pks = Lists.newArrayList();
-        pks.add(new Option("base_id"));
-        return pks;
-    }
+
+//    /**
+//     * @return
+//     */
+//    public static List<Option> allPrimaryKeys(Object contextObj) {
+//        List<Option> pks = Lists.newArrayList();
+//        pks.add(new Option("base_id"));
+//        return pks;
+//    }
 
     @Override
-    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
-        return new FSDataXContext(tableMap, dataXName);
+    protected HudiDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
+        return new HudiDataXContext(tableMap, this.dataXName);
+    }
+
+    public class HudiDataXContext extends FSDataXContext {
+
+        private final HudiSelectedTab hudiTab;
+
+        public HudiDataXContext(IDataxProcessor.TableMap tabMap, String dataxName) {
+            super(tabMap, dataxName);
+            ISelectedTab tab = tabMap.getSourceTab();
+            if (!(tab instanceof HudiSelectedTab)) {
+                throw new IllegalStateException(" param tabMap.getSourceTab() must be type of "
+                        + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
+            }
+            this.hudiTab = (HudiSelectedTab) tab;
+        }
+
+        public String getRecordField() {
+            return this.hudiTab.recordField;
+        }
+
+        public String getPartitionPathField() {
+            return this.hudiTab.partitionPathField;
+        }
+
+        public String getSourceOrderingField() {
+            return this.hudiTab.sourceOrderingField;
+        }
+
+        public Integer getShuffleParallelism() {
+            return shuffleParallelism;
+        }
+
+        public BatchOpMode getOpMode() {
+            return BatchOpMode.parse(batchOp);
+        }
+
+        public HudiWriteTabType getTabType() {
+            return HudiWriteTabType.parse(tabType);
+        }
     }
 
     public IHiveConnGetter getHiveConnGetter() {
@@ -93,6 +142,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     }
 
     public ISparkConnGetter getSparkConnGetter() {
+        if (StringUtils.isEmpty(this.sparkConn)) {
+            throw new IllegalArgumentException("param sparkConn can not be null");
+        }
         return ISparkConnGetter.getConnGetter(this.sparkConn);
     }
 
@@ -104,8 +156,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             throw new RuntimeException(e);
         }
     }
-
-    private String dataXName;
 
     @Override
     public void setKey(KeyedPluginStore.Key key) {
@@ -129,13 +179,36 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             this.registerSelectOptions(BasicFSWriter.KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
+        public boolean validateTabType(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            try {
+                HudiWriteTabType.parse(value);
+            } catch (Throwable e) {
+                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                return false;
+            }
+            return true;
+        }
+
+        public boolean validateBatchOp(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            try {
+                BatchOpMode.parse(value);
+            } catch (Throwable e) {
+                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                return false;
+            }
+            return true;
+        }
+
+
         @Override
         public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
             String overwriteSubField = IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
                     , DataXHudiWriter.class.getSimpleName() + "." + subformProps.getSubFormFieldName() + ".json", true);
             JSONObject subField = JSON.parseObject(overwriteSubField);
             Class<?> clazz = DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
-            return SuFormProperties.copy(filterFieldProp(Descriptor.buildPropertyTypes(this, clazz)), subformProps);
+            return SuFormProperties.copy(filterFieldProp(Descriptor.buildPropertyTypes(this, clazz)), clazz, subformProps);
         }
 
         @Override
@@ -154,15 +227,17 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //            }
 
             Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
-            //  JSONObject onClickFillData = behaviorMeta.getJSONObject("onClickFillData");
+
             SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
-            propProcess.setMethod("getPrimaryKeys");
+            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
             propProcess.setParams(Collections.singletonList("id"));
-//            propProcess.put("method", "getPrimaryKeys");
-//            JSONArray params = new JSONArray();
-//            params.add("id");
-//            propProcess.put("params", params);
             onClickFillData.put(HudiSelectedTab.KEY_RECORD_FIELD, propProcess);
+
+            propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
+            propProcess.setMethod(DataSourceMeta.METHOD_GET_PARTITION_KEYS);
+            propProcess.setParams(Collections.singletonList("id"));
+            onClickFillData.put(HudiSelectedTab.KEY_PARTITION_PATH_FIELD, propProcess);
+            onClickFillData.put(HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD, propProcess);
 
 
             return behaviorMeta;

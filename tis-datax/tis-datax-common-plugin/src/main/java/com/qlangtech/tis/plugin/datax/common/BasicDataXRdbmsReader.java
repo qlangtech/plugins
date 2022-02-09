@@ -273,8 +273,14 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 
     @Override
     public final List<ColumnMetaData> getTableMetadata(String table) {
-        DataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTableMetadata(table);
+        Map<String, List<ColumnMetaData>> tabMeta = DataSourceMeta.tableMetadataLocal.get();
+        List<ColumnMetaData> cols = null;
+        if ((cols = tabMeta.get(table)) == null) {
+            DataSourceFactory plugin = getDataSourceFactory();
+            cols = plugin.getTableMetadata(table);
+            tabMeta.put(table, cols);
+        }
+        return cols;
     }
 
     /**
@@ -286,6 +292,22 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     public List<ColumnMetaData> getPrimaryKeys(String table) {
         return this.getTableMetadata(table).stream()
                 .filter((col) -> col.isPk()).collect(Collectors.toList());
+    }
+
+
+
+    public List<ColumnMetaData> getPartitionKeys(String table) {
+        return this.getTableMetadata(table).stream()
+                .filter((col) -> {
+                    switch (col.getType().getCollapse()) {
+                        // case STRING:
+                        case INT:
+                        case Long:
+                        case Date:
+                            return true;
+                    }
+                    return false;
+                }).collect(Collectors.toList());
     }
 
 

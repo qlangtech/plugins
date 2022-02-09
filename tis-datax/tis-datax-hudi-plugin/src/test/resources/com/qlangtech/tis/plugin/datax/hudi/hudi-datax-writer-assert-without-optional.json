@@ -25,10 +25,14 @@
         "type": "BIGINT"
       }
     ],
+    "hudiSourceOrderingField": "last_ver",
     "hudiRecordkey": "customerregister_id",
     "hudiPartitionpathField": "kind",
+    "hudiBatchOp": "BULK_INSERT",
+    "hudiTabType": "COPY_ON_WRITE",
     "fileType": "csv",
-    "dataxName": "testDataX",
+    "shuffleParallelism": 2,
+    "dataxName": "testDataX4465",
     "writeMode": "nonConflict",
     "fieldDelimiter": "\t"
   }

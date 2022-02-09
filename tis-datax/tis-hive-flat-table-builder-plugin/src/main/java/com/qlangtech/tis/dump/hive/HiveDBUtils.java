@@ -1,23 +1,25 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -77,7 +79,7 @@ public class HiveDBUtils {
         return getInstance(hiveHost, defaultDbName, Optional.empty());
     }
 
-    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
@@ -88,22 +90,22 @@ public class HiveDBUtils {
         return hiveHelper;
     }
 
-    public static class UserToken {
-        public final String userName;
-        public final String password;
+//    public static class UserToken {
+//        public final String userName;
+//        public final String password;
+//
+//        public UserToken(String userName, String password) {
+//            this.userName = userName;
+//            this.password = password;
+//        }
+//    }
 
-        public UserToken(String userName, String password) {
-            this.userName = userName;
-            this.password = password;
-        }
-    }
-
-    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
+    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<UserToken> userToken) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -122,7 +124,7 @@ public class HiveDBUtils {
         hiveDatasource.setLogAbandoned(true);
         hiveDatasource.setRemoveAbandonedTimeout(300 * 30);
         if (userToken.isPresent()) {
-            UserToken ut = userToken.get();
+            HiveUserToken ut = userToken.get();
             hiveDatasource.setUsername(ut.userName);
             hiveDatasource.setPassword(ut.password);
         }
@@ -132,7 +134,7 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/" + defaultDbName;
+        hiveJdbcUrl = IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName;
         hiveDatasource.setUrl(hiveJdbcUrl);
         log.info("hiveJdbcUrl:" + hiveJdbcUrl);
         return hiveDatasource;

@@ -94,6 +94,11 @@ public class TISSerializerFactory extends SerializerFactory {
 
                 gen.writeFieldName(meta.left);
                 column = r.getColumn(i++);
+
+                if (column.getRawData() == null) {
+                    gen.writeNull();
+                    continue;
+                }
                 switch (meta.right) {
                     case STRING:
                         gen.writeString(column.asString());

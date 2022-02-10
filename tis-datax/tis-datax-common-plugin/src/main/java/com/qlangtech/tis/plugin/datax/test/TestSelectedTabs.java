@@ -40,16 +40,16 @@ public class TestSelectedTabs {
     public static final String tabNameTotalpayinfo = "totalpayinfo";
     public static List<ColumnMetaData> tabColsMetaOrderDetail
             = Lists.newArrayList(
-            new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true),
-            new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false)
-            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false)
-            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true, false),
+            new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
+            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
+            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
     );
     public static List<ColumnMetaData> tabColsMetaTotalpayinfo
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true)
-            , new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false)
-            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false)
-            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false)
+            = Lists.newArrayList(new ColumnMetaData(0, "col1", new ColumnMetaData.DataType(Types.VARCHAR), true, false)
+            , new ColumnMetaData(1, "col2", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
+            , new ColumnMetaData(2, "col3", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
+            , new ColumnMetaData(3, "col4", new ColumnMetaData.DataType(Types.VARCHAR), false, true)
     );
 
     public static List<SelectedTab> createSelectedTabs() {

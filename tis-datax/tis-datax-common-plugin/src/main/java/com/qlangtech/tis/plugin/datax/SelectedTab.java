@@ -104,7 +104,7 @@ public class SelectedTab implements ISelectedTab {
     public List<ISelectedTab.ColMeta> getCols() {
         if (shadowCols == null) {
             shadowCols = this.cols.stream().map((c) -> {
-                ColMeta colMeta = new ColMeta();
+                ColMeta colMeta = new  ColMeta();
                 colMeta.setName(c);
                 return colMeta;
             }).collect(Collectors.toList());

@@ -20,7 +20,6 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
@@ -28,7 +27,6 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.Serializers;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,10 +36,10 @@ import java.util.List;
  * @create: 2022-01-23 20:41
  **/
 public class TISSerializerFactory extends SerializerFactory {
-    private final List<ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType>> colsMeta;
+    private final List<HdfsHelper.HdfsColMeta> colsMeta;
 
     public TISSerializerFactory(
-            List<ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType>> colsMeta) {
+            List<HdfsHelper.HdfsColMeta> colsMeta) {
         this.colsMeta = colsMeta;
     }
 
@@ -90,16 +88,16 @@ public class TISSerializerFactory extends SerializerFactory {
             gen.setCurrentValue(r);
             int i = 0;
             Column column = null;
-            for (ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType> meta : colsMeta) {
+            for (HdfsHelper.HdfsColMeta meta : colsMeta) {
 
-                gen.writeFieldName(meta.left);
+                gen.writeFieldName(meta.colName);
                 column = r.getColumn(i++);
 
                 if (column.getRawData() == null) {
                     gen.writeNull();
                     continue;
                 }
-                switch (meta.right) {
+                switch (meta.csvType) {
                     case STRING:
                         gen.writeString(column.asString());
                         break;
@@ -134,7 +132,7 @@ public class TISSerializerFactory extends SerializerFactory {
                         gen.writeBoolean(column.asBoolean());
                         break;
                     default:
-                        throw new IllegalStateException("illegal type:" + meta.right);
+                        throw new IllegalStateException("illegal type:" + meta.csvType);
                 }
             }
             // [databind#631]: Assign current value, to be accessible by custom serializers

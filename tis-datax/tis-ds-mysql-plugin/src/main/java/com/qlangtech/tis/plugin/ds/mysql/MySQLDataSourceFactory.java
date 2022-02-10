@@ -277,7 +277,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             List<ColumnMetaData> result = new ArrayList<>();
             try {
                 for (int i = 1; i <= columCount; i++) {
-                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new ColumnMetaData.DataType(metaData.getColumnType(i)), false));
+                    result.add(
+                            new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new ColumnMetaData.DataType(metaData.getColumnType(i)), false, true));
                 }
                 return result;
             } catch (SQLException e) {

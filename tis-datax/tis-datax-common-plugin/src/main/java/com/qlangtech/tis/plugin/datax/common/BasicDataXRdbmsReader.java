@@ -102,9 +102,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                             + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                 }
                 col.setPk(colMeta.isPk());
-                // col.setType(ISelectedTab.DataXReaderColType.parse(colMeta.getType().type));
-
                 col.setType(colMeta.getType());
+                col.setComment(colMeta.getComment());
+                col.setNullable(colMeta.isNullable());
             }
             return tab;
         }).collect(Collectors.toList());
@@ -223,7 +223,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-        return new ColumnMetaData(index[0]++, colName, new ColumnMetaData.DataType(-999), false);
+        return new ColumnMetaData(index[0]++, colName, new ColumnMetaData.DataType(-999), false, true);
     }
 
     protected boolean isFilterUnexistCol() {
@@ -293,7 +293,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         return this.getTableMetadata(table).stream()
                 .filter((col) -> col.isPk()).collect(Collectors.toList());
     }
-
 
 
     public List<ColumnMetaData> getPartitionKeys(String table) {

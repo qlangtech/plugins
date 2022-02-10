@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 //import com.alibaba.datax.common.util.Configuration;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -30,7 +29,6 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -96,9 +94,6 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
 
-
-
-
     @Override
     public final IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
         if (!tableMap.isPresent()) {
@@ -142,7 +137,8 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return this.tabMap.getSourceCols().stream().map((c) -> {
                 HiveColumn col = new HiveColumn();
                 col.setName(c.getName());
-                 col.setType(SupportHiveDataTypeUtils.convert2HiveType(c.getType()).name());
+                col.setType(SupportHiveDataTypeUtils.convert2HiveType(c.getType()).name());
+                col.setNullable(c.isNullable());
                 return col;
             }).collect(Collectors.toList());
         }

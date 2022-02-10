@@ -156,7 +156,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         public void post() {
             super.post();
 
-            List<ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType>> colsMeta = HdfsHelper.getColsMeta(this.cfg);
+            List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.cfg);
 
             DataXHudiWriter hudiPlugin = this.getHudiWriterPlugin();
             ITISFileSystem fs = this.getFileSystem();
@@ -167,34 +167,58 @@ public class TisDataXHudiWriter extends HdfsWriter {
             try (FSDataOutputStream schemaWriter = this.hdfsHelper.getOutputStream(fsSourceSchemaPath.unwrap(Path.class))) {
                 SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(this.getFileName());
                 SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
-                for (ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType> meta : colsMeta) {
-                    switch (meta.middle) {
+                for (HdfsHelper.HdfsColMeta meta : colsMeta) {
+                    switch (meta.hiveType) {
                         case STRING:
                         case DATE:
                         case TIMESTAMP:
                         case VARCHAR:
                         case CHAR:
-                            fields.requiredString(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalString(meta.colName);
+                            } else {
+                                fields.requiredString(meta.colName);
+                            }
                             break;
                         case DOUBLE:
-                            fields.requiredDouble(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalDouble(meta.colName);
+                            } else {
+                                fields.requiredDouble(meta.colName);
+                            }
                             break;
                         case INT:
                         case TINYINT:
                         case SMALLINT:
-                            fields.requiredInt(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalInt(meta.colName);
+                            } else {
+                                fields.requiredInt(meta.colName);
+                            }
                             break;
                         case BOOLEAN:
-                            fields.requiredBoolean(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalBoolean(meta.colName);
+                            } else {
+                                fields.requiredBoolean(meta.colName);
+                            }
                             break;
                         case BIGINT:
-                            fields.requiredLong(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalLong(meta.colName);
+                            } else {
+                                fields.requiredLong(meta.colName);
+                            }
                             break;
                         case FLOAT:
-                            fields.requiredFloat(meta.left);
+                            if (meta.nullable) {
+                                fields.optionalFloat(meta.colName);
+                            } else {
+                                fields.requiredFloat(meta.colName);
+                            }
                             break;
                         default:
-                            throw new IllegalStateException("illegal type:" + meta.middle);
+                            throw new IllegalStateException("illegal type:" + meta.hiveType);
                     }
                 }
                 Schema schema = fields.endRecord();
@@ -371,10 +395,9 @@ public class TisDataXHudiWriter extends HdfsWriter {
             super.prepare();
             this.csvSchemaBuilder = CsvSchema.builder();
 
-            List<ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType>>
-                    colsMeta = HdfsHelper.getColsMeta(this.writerSliceConfig);
-            for (ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType> col : colsMeta) {
-                csvSchemaBuilder.addColumn(col.left, parseCsvType(col));
+            List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.writerSliceConfig);
+            for (HdfsHelper.HdfsColMeta col : colsMeta) {
+                csvSchemaBuilder.addColumn(col.colName, parseCsvType(col));
             }
             csvObjWriter = new CsvMapper()
                     .setSerializerFactory(new TISSerializerFactory(colsMeta))
@@ -383,8 +406,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
 
-        private CsvSchema.ColumnType parseCsvType(ImmutableTriple<String, SupportHiveDataType, HdfsHelper.CsvType> col) {
-            switch (col.right) {
+        private CsvSchema.ColumnType parseCsvType(HdfsHelper.HdfsColMeta col) {
+            switch (col.csvType) {
                 case STRING:
                     return CsvSchema.ColumnType.STRING;
                 case BOOLEAN:
@@ -392,7 +415,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 case NUMBER:
                     return CsvSchema.ColumnType.NUMBER;
             }
-            throw new IllegalStateException("illegal csv type:" + col.right);
+            throw new IllegalStateException("illegal csv type:" + col.csvType);
         }
 
 

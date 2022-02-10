@@ -6,8 +6,7 @@
     "dataxName" : "$writer.dataXName",
     "column": [
       #foreach($c in $writer.cols)
-{"name":"$c.name","type":"$c.type"},
-#end],
+{"name":"$c.name","type":"$c.type","nullable": ${c.nullable}},#end],
 "writeMode": "$writer.writeMode",
     "hudiSourceOrderingField": "$writer.sourceOrderingField",
     "hudiRecordkey": "$writer.recordField",

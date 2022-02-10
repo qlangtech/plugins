@@ -25,7 +25,6 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -47,7 +46,6 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.launcher.SparkAppHandle;
@@ -177,7 +175,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
                             if (meta.nullable) {
                                 fields.optionalString(meta.colName);
                             } else {
-                                fields.requiredString(meta.colName);
+                                // 针对数据列中虽然是设置为not null，但是真实的值为空字符串导致导入hudi中时候会报错
+                                fields.nullableString(meta.colName, StringUtils.EMPTY);
                             }
                             break;
                         case DOUBLE:

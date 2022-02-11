@@ -65,11 +65,11 @@
             <artifactId>tis-sql-parser</artifactId>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis</groupId>-->
+<!--            <artifactId>tis-dag</artifactId>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
     </dependencies>
 

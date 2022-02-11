@@ -58,10 +58,10 @@
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>tis-sql-parser</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-dag</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.qlangtech.tis</groupId>-->
+<!--                    <artifactId>tis-dag</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -124,7 +124,8 @@
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
+            <artifactId>tis-sql-parser</artifactId>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

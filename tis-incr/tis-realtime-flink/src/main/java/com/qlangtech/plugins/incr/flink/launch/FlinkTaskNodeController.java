@@ -81,7 +81,7 @@ public class FlinkTaskNodeController implements IRCController {
 
             FlinkClient flinkClient = new FlinkClient();
 
-            File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
+           // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
 
             File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
             File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());

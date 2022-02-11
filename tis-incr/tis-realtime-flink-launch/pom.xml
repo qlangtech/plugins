@@ -39,10 +39,10 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-sql-parser</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis</groupId>-->
+<!--            <artifactId>tis-dag</artifactId>-->
+<!--        </dependency>-->
     </dependencies>
 
 

@@ -82,10 +82,10 @@
             <artifactId>tis-datax-hdfs-plugin</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis</groupId>-->
+<!--            <artifactId>tis-dag</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-test-common</artifactId>

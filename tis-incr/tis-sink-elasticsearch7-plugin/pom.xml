@@ -51,11 +51,11 @@
             <artifactId>tis-datax-elasticsearch-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-            <scope>provided</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis</groupId>-->
+<!--            <artifactId>tis-dag</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-realtime-flink</artifactId>

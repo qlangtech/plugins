@@ -97,11 +97,11 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-solrconfig-parser</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis</groupId>-->
+<!--            <artifactId>tis-dag</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
 
     </dependencies>

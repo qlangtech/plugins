@@ -65,6 +65,10 @@
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>logback-flume-appender</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-dag</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

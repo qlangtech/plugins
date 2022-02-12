@@ -177,7 +177,11 @@ public class TisDataXHudiWriter extends HdfsWriter {
 //                            if (meta.nullable) {
 //                                fields.nullableString(meta.colName, StringUtils.EMPTY);
 //                            } else {
-                            fields.requiredString(meta.colName);
+                            // fields.requiredString(meta.colName);
+                            SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
+                            if (meta.nullable) {
+                                strType.stringDefault(StringUtils.EMPTY);
+                            }
                             //}
                             break;
                         case DOUBLE:

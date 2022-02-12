@@ -19,6 +19,7 @@
 package com.alibaba.datax.plugin.writer.hudi;
 
 import com.qlangtech.tis.config.hive.IHiveConn;
+import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
@@ -90,28 +91,35 @@ public class TISHoodieDeltaStreamer implements Serializable {
         if (HdfsFileSystemFactoryTestUtils.testDataXName.equalWithName(dataName)) {
             LOG.info("dataXName:" + dataName + " has match test phrase create test stub mock for DataxWriter");
             DataxWriter.dataxWriterGetter = (dataXname) -> {
-                return new BasicFSWriter() {
-                    @Override
-                    public String getTemplate() {
-                        return null;
-                    }
-
-                    @Override
-                    public Class<?> getOwnerClass() {
-                        return BasicFSWriter.class;
-                    }
-
-                    @Override
-                    public FileSystemFactory getFs() {
-                        return HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
-                    }
-
-                    @Override
-                    protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
-                        return null;
-                    }
-                };
+                return new MockBasicFSWriter();
             };
+        }
+    }
+
+    private static class MockBasicFSWriter extends BasicFSWriter implements IHiveConn {
+        @Override
+        public String getTemplate() {
+            return null;
+        }
+
+        @Override
+        public Class<?> getOwnerClass() {
+            return BasicFSWriter.class;
+        }
+
+        @Override
+        public FileSystemFactory getFs() {
+            return HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
+        }
+
+        @Override
+        protected FSDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
+            return null;
+        }
+
+        @Override
+        public IHiveConnGetter getHiveConnMeta() {
+            return HdfsFileSystemFactoryTestUtils.createHiveConnGetter();
         }
     }
 }

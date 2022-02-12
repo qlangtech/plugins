@@ -38,10 +38,6 @@ import java.io.IOException;
  **/
 public class TisDataXHdfsWriter extends Writer {
 
-    // public static final String KEY_HIVE_TAB_NAME = "hiveTableName";
-
-    // private static final Logger logger = LoggerFactory.getLogger(TisDataXHdfsWriter.class);
-
     public static class Job extends BasicHdfsWriterJob<BasicFSWriter> {
 
         @Override

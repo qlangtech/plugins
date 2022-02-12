@@ -18,16 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
-import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
-import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
-import com.qlangtech.tis.manage.common.Config;
-import org.apache.spark.launcher.SparkAppHandle;
-import org.apache.spark.launcher.SparkLauncher;
 import org.junit.Test;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * https://archive.apache.org/dist/spark/spark-2.4.4/
@@ -52,6 +43,7 @@ public class TestSparkLauncher {
 
     @Test
     public void submitHudiJob() throws Exception {
-
+        String[] str = new String[]{"1"};
+        System.out.println(str[1]);
     }
 }

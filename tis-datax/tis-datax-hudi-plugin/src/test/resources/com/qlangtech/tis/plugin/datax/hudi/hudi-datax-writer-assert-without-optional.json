@@ -6,23 +6,28 @@
     "column": [
       {
         "name": "customerregister_id",
-        "type": "STRING"
+        "type": "STRING",
+        "nullable": false
       },
       {
         "name": "waitingorder_id",
-        "type": "STRING"
+        "type": "STRING",
+        "nullable": true
       },
       {
         "name": "kind",
-        "type": "SMALLINT"
+        "type": "SMALLINT",
+        "nullable": true
       },
       {
         "name": "create_time",
-        "type": "BIGINT"
+        "type": "BIGINT",
+        "nullable": true
       },
       {
         "name": "last_ver",
-        "type": "BIGINT"
+        "type": "BIGINT",
+        "nullable": true
       }
     ],
     "hudiSourceOrderingField": "last_ver",

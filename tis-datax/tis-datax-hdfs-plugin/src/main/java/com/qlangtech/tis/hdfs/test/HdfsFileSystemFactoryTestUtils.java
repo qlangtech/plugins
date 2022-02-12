@@ -18,7 +18,11 @@
 
 package com.qlangtech.tis.hdfs.test;
 
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 
@@ -42,5 +46,29 @@ public class HdfsFileSystemFactoryTestUtils {
                 HdfsFileSystemFactoryTestUtils.class, "hdfs/hdfsSiteContent.xml"));
         fsFactory.rootDir = "/user/admin";
         return fsFactory;
+    }
+
+    public static IHiveConnGetter createHiveConnGetter() {
+        Descriptor hiveConnGetter = TIS.get().getDescriptor("DefaultHiveConnGetter");
+        Assert.assertNotNull(hiveConnGetter);
+
+        // 使用hudi的docker运行环境 https://hudi.apache.org/docs/docker_demo#step-3-sync-with-hive
+        Descriptor.FormData formData = new Descriptor.FormData();
+        formData.addProp("name", "testhiveConn");
+        formData.addProp("hiveAddress", "hiveserver:10000");
+
+        formData.addProp("useUserToken", "true");
+        formData.addProp("dbName", "default");
+        formData.addProp("password", "hive");
+        formData.addProp("userName", "hive");
+        formData.addProp("metaStoreUrls", "thrift://hiveserver:9083");
+
+
+        Descriptor.ParseDescribable<IHiveConnGetter> parseDescribable
+                = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
+        Assert.assertNotNull(parseDescribable.instance);
+
+        Assert.assertNotNull(parseDescribable.instance);
+        return parseDescribable.instance;
     }
 }

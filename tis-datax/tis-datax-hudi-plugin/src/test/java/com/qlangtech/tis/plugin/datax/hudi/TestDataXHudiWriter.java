@@ -119,8 +119,9 @@ public class TestDataXHudiWriter {
                 return DataXHudiWriter.class;
             }
 
+            @Override
             public IHiveConnGetter getHiveConnMeta() {
-                return createHiveConnGetter();
+                return HdfsFileSystemFactoryTestUtils.createHiveConnGetter();
             }
 
             @Override
@@ -180,26 +181,27 @@ public class TestDataXHudiWriter {
 //        return hdfsFactory;
 //    }
 
-    private static IHiveConnGetter createHiveConnGetter() {
-        Descriptor hiveConnGetter = TIS.get().getDescriptor("DefaultHiveConnGetter");
-        Assert.assertNotNull(hiveConnGetter);
-
-        // 使用hudi的docker运行环境 https://hudi.apache.org/docs/docker_demo#step-3-sync-with-hive
-        Descriptor.FormData formData = new Descriptor.FormData();
-        formData.addProp("name", "testhiveConn");
-        formData.addProp("hiveAddress", "hiveserver:10000");
-
-        formData.addProp("useUserToken", "true");
-        formData.addProp("dbName", "default");
-        formData.addProp("password", "hive");
-        formData.addProp("userName", "hive");
-
-
-        Descriptor.ParseDescribable<IHiveConnGetter> parseDescribable
-                = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
-        Assert.assertNotNull(parseDescribable.instance);
-
-        Assert.assertNotNull(parseDescribable.instance);
-        return parseDescribable.instance;
-    }
+//    private static IHiveConnGetter createHiveConnGetter() {
+//        Descriptor hiveConnGetter = TIS.get().getDescriptor("DefaultHiveConnGetter");
+//        Assert.assertNotNull(hiveConnGetter);
+//
+//        // 使用hudi的docker运行环境 https://hudi.apache.org/docs/docker_demo#step-3-sync-with-hive
+//        Descriptor.FormData formData = new Descriptor.FormData();
+//        formData.addProp("name", "testhiveConn");
+//        formData.addProp("hiveAddress", "hiveserver:10000");
+//
+//        formData.addProp("useUserToken", "true");
+//        formData.addProp("dbName", "default");
+//        formData.addProp("password", "hive");
+//        formData.addProp("userName", "hive");
+//        formData.addProp("metaStoreUrls","thrift://hiveserver:9083");
+//
+//
+//        Descriptor.ParseDescribable<IHiveConnGetter> parseDescribable
+//                = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
+//        Assert.assertNotNull(parseDescribable.instance);
+//
+//        Assert.assertNotNull(parseDescribable.instance);
+//        return parseDescribable.instance;
+//    }
 }

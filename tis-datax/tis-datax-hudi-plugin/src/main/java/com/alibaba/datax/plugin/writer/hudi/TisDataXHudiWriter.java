@@ -165,6 +165,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             try (FSDataOutputStream schemaWriter = this.hdfsHelper.getOutputStream(fsSourceSchemaPath.unwrap(Path.class))) {
                 SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(this.getFileName());
                 SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
+
                 for (HdfsHelper.HdfsColMeta meta : colsMeta) {
                     switch (meta.hiveType) {
                         case STRING:
@@ -172,49 +173,49 @@ public class TisDataXHudiWriter extends HdfsWriter {
                         case TIMESTAMP:
                         case VARCHAR:
                         case CHAR:
-                            if (meta.nullable) {
-                                fields.optionalString(meta.colName);
-                            } else {
-                                // 针对数据列中虽然是设置为not null，但是真实的值为空字符串导致导入hudi中时候会报错
-                                fields.nullableString(meta.colName, StringUtils.EMPTY);
-                            }
+                            // fields.nullableString(meta.colName, StringUtils.EMPTY);
+//                            if (meta.nullable) {
+//                                fields.nullableString(meta.colName, StringUtils.EMPTY);
+//                            } else {
+                            fields.requiredString(meta.colName);
+                            //}
                             break;
                         case DOUBLE:
-                            if (meta.nullable) {
-                                fields.optionalDouble(meta.colName);
-                            } else {
-                                fields.requiredDouble(meta.colName);
-                            }
+//                            if (meta.nullable) {
+//                                fields.optionalDouble(meta.colName);
+//                            } else {
+                            fields.requiredDouble(meta.colName);
+                            //}
                             break;
                         case INT:
                         case TINYINT:
                         case SMALLINT:
-                            if (meta.nullable) {
-                                fields.optionalInt(meta.colName);
-                            } else {
-                                fields.requiredInt(meta.colName);
-                            }
+//                            if (meta.nullable) {
+//                                fields.optionalInt(meta.colName);
+//                            } else {
+                            fields.requiredInt(meta.colName);
+                            //}
                             break;
                         case BOOLEAN:
-                            if (meta.nullable) {
-                                fields.optionalBoolean(meta.colName);
-                            } else {
-                                fields.requiredBoolean(meta.colName);
-                            }
+//                            if (meta.nullable) {
+//                                fields.optionalBoolean(meta.colName);
+//                            } else {
+                            fields.requiredBoolean(meta.colName);
+                            //}
                             break;
                         case BIGINT:
-                            if (meta.nullable) {
-                                fields.optionalLong(meta.colName);
-                            } else {
-                                fields.requiredLong(meta.colName);
-                            }
+//                            if (meta.nullable) {
+//                                fields.optionalLong(meta.colName);
+//                            } else {
+                            fields.requiredLong(meta.colName);
+                            //}
                             break;
                         case FLOAT:
-                            if (meta.nullable) {
-                                fields.optionalFloat(meta.colName);
-                            } else {
-                                fields.requiredFloat(meta.colName);
-                            }
+//                            if (meta.nullable) {
+//                                fields.optionalFloat(meta.colName);
+//                            } else {
+                            fields.requiredFloat(meta.colName);
+                            //}
                             break;
                         default:
                             throw new IllegalStateException("illegal type:" + meta.hiveType);
@@ -309,7 +310,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
             File sparkHome = HudiConfig.getSparkHome();
 
             File resJar = FileUtils.listFiles(hudiDependencyDir, new String[]{"jar"}, false)
-                    .stream().findFirst().orElseThrow(() -> new IllegalStateException("must have resJar hudiDependencyDir:" + hudiDependencyDir.getAbsolutePath()));
+                    .stream().findFirst().orElseThrow(
+                            () -> new IllegalStateException("must have resJar hudiDependencyDir:" + hudiDependencyDir.getAbsolutePath()));
 
             File addedJars = new File(hudiDependencyDir, "lib");
             boolean[] hasAddJar = new boolean[1];
@@ -337,7 +339,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
                     , "--target-table", tabName + "/" + this.dataXName
                     , "--props", String.valueOf(fsSourcePropsPath)
                     , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"
-                    , "--enable-sync");
+                    , "--enable-sync"
+            );
 
             CountDownLatch countDownLatch = new CountDownLatch(1);
 

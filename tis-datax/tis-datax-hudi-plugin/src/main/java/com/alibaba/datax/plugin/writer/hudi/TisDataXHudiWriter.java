@@ -181,6 +181,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
                             SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
                             if (meta.nullable) {
                                 strType.stringDefault(StringUtils.EMPTY);
+                            }else{
+                                strType.noDefault();
                             }
                             //}
                             break;
@@ -225,7 +227,12 @@ public class TisDataXHudiWriter extends HdfsWriter {
                             throw new IllegalStateException("illegal type:" + meta.hiveType);
                     }
                 }
+
                 Schema schema = fields.endRecord();
+
+                if (schema.getFields().size() != colsMeta.size()) {
+                    throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMeta.size());
+                }
                 IOUtils.write(schema.toString(true), schemaWriter, TisUTF8.get());
             } catch (Exception e) {
                 throw new RuntimeException(e);

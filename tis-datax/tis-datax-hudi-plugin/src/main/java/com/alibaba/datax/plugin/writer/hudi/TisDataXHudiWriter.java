@@ -35,6 +35,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -181,7 +182,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                             SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
                             if (meta.nullable) {
                                 strType.stringDefault(StringUtils.EMPTY);
-                            }else{
+                            } else {
                                 strType.noDefault();
                             }
                             //}
@@ -314,7 +315,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
 
-            handle.redirectError(new File("error.log"));
+            //  handle.redirectError(new File("error.log"));
             String tabName = this.getFileName();
 
             File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
@@ -354,14 +355,15 @@ public class TisDataXHudiWriter extends HdfsWriter {
             );
 
             CountDownLatch countDownLatch = new CountDownLatch(1);
-
-            handle.startApplication(new SparkAppHandle.Listener() {
+            // SparkAppHandle.State[] finalState = new SparkAppHandle.State[1];
+            SparkAppHandle sparkAppHandle = handle.startApplication(new SparkAppHandle.Listener() {
                 @Override
                 public void stateChanged(SparkAppHandle sparkAppHandle) {
 //                    System.out.println(sparkAppHandle.getAppId());
 //                    System.out.println("state:" + sparkAppHandle.getState().toString());
-
-                    if (sparkAppHandle.getState().isFinal()) {
+                    SparkAppHandle.State state = sparkAppHandle.getState();
+                    if (state.isFinal()) {
+                        // finalState[0] = state;
                         System.out.println("Info:" + sparkAppHandle.getState());
                         countDownLatch.countDown();
                     }
@@ -373,6 +375,9 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 }
             });
             countDownLatch.await();
+            if (sparkAppHandle.getState() != SparkAppHandle.State.FINISHED) {
+                throw new TisException("spark app:" + sparkAppHandle.getAppId() + " execute result not successfule:" + sparkAppHandle.getState());
+            }
         }
     }
 

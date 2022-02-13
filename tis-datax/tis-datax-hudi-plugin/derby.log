@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Sat Feb 12 19:07:44 CST 2022:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-017e-ed9e-081f-00001e10ff60 
+Sun Feb 13 19:11:22 CST 2022:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-017e-f2c7-baf8-0000147bc7f0 
 on database directory /Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-hudi-plugin/metastore_db with class loader sun.misc.Launcher$AppClassLoader@2957fcb0 
 Loaded from file:/opt/data/tis/libs/plugins/tis-datax-hudi-plugin/spark-2.4.4-bin-hadoop2.7/jars/derby-10.12.1.1.jar
 java.vendor=Oracle Corporation

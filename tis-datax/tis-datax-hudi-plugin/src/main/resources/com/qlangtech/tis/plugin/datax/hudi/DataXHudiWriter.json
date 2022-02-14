@@ -74,8 +74,8 @@
         "label": "COPY_ON_WRITE"
       },
       {
-        "val": "READ_ON_MERGE",
-        "label": "READ_ON_MERGE"
+        "val": "MERGE_ON_READ",
+        "label": "MERGE_ON_READ"
       }
     ]
   },

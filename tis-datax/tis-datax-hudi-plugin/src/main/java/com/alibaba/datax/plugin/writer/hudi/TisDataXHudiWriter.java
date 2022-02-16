@@ -317,7 +317,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
 
-            //  handle.redirectError(new File("error.log"));
+            handle.redirectError(new File("error.log"));
             String tabName = this.getFileName();
 
             File hudiDependencyDir = HudiConfig.getHudiDependencyDir();

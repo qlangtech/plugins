@@ -26,6 +26,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -63,10 +64,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String hiveConn;
 
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public String tabType;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String partitionedBy;
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -84,10 +85,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
-//    @Override
-//    public IHiveConnGetter getHiveConnMeta() {
-//        return null;
-//    }
 
     @Override
     public IHiveConnGetter getHiveConnMeta() {
@@ -253,6 +250,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         @Override
         public boolean isRdbms() {
             return false;
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.Hudi;
         }
 
         @Override

@@ -64,6 +64,7 @@
         <module>tis-flink-cdc-oracle-plugin</module>
         <module>tis-flink-cdc-mongdb-plugin</module>
         <module>tis-sink-clickhouse-plugin</module>
+        <module>tis-sink-hudi-plugin</module>
 
         <!--        <module>tis-flink-client</module>-->
     </modules>

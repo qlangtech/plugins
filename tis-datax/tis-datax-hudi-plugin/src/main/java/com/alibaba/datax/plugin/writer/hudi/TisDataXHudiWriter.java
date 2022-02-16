@@ -179,50 +179,52 @@ public class TisDataXHudiWriter extends HdfsWriter {
 //                                fields.nullableString(meta.colName, StringUtils.EMPTY);
 //                            } else {
                             // fields.requiredString(meta.colName);
-                            SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
+                            // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
                             if (meta.nullable) {
-                                strType.stringDefault(StringUtils.EMPTY);
+                                // strType.stringDefault(StringUtils.EMPTY);
+                                fields.optionalString(meta.colName);
                             } else {
-                                strType.noDefault();
+                                //   strType.noDefault();
+                                fields.requiredString(meta.colName);
                             }
                             //}
                             break;
                         case DOUBLE:
-//                            if (meta.nullable) {
-//                                fields.optionalDouble(meta.colName);
-//                            } else {
-                            fields.requiredDouble(meta.colName);
-                            //}
+                            if (meta.nullable) {
+                                fields.optionalDouble(meta.colName);
+                            } else {
+                                fields.requiredDouble(meta.colName);
+                            }
                             break;
                         case INT:
                         case TINYINT:
                         case SMALLINT:
-//                            if (meta.nullable) {
-//                                fields.optionalInt(meta.colName);
-//                            } else {
-                            fields.requiredInt(meta.colName);
-                            //}
+                            if (meta.nullable) {
+                                fields.optionalInt(meta.colName);
+                            } else {
+                                fields.requiredInt(meta.colName);
+                            }
                             break;
                         case BOOLEAN:
-//                            if (meta.nullable) {
-//                                fields.optionalBoolean(meta.colName);
-//                            } else {
-                            fields.requiredBoolean(meta.colName);
-                            //}
+                            if (meta.nullable) {
+                                fields.optionalBoolean(meta.colName);
+                            } else {
+                                fields.requiredBoolean(meta.colName);
+                            }
                             break;
                         case BIGINT:
-//                            if (meta.nullable) {
-//                                fields.optionalLong(meta.colName);
-//                            } else {
-                            fields.requiredLong(meta.colName);
-                            //}
+                            if (meta.nullable) {
+                                fields.optionalLong(meta.colName);
+                            } else {
+                                fields.requiredLong(meta.colName);
+                            }
                             break;
                         case FLOAT:
-//                            if (meta.nullable) {
-//                                fields.optionalFloat(meta.colName);
-//                            } else {
-                            fields.requiredFloat(meta.colName);
-                            //}
+                            if (meta.nullable) {
+                                fields.optionalFloat(meta.colName);
+                            } else {
+                                fields.requiredFloat(meta.colName);
+                            }
                             break;
                         default:
                             throw new IllegalStateException("illegal type:" + meta.hiveType);

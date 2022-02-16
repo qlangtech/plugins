@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.Serializers;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -89,68 +90,65 @@ public class TISSerializerFactory extends SerializerFactory {
             int i = 0;
             Column column = null;
             for (HdfsHelper.HdfsColMeta meta : colsMeta) {
-                // gen.writeFieldName(meta.colName);
+
+                gen.writeFieldName(meta.colName);
                 column = r.getColumn(i++);
-                serializers.defaultSerializeField(meta.colName, calVal(meta, column), gen);
+
+                if (column.getRawData() == null) {
+                    gen.writeNull();
+                    continue;
+                }
+                swh:
+                switch (meta.csvType) {
+                    case STRING:
+                        // gen.writeString(column.asString());
+                        String content = column.asString();
+                        if (StringUtils.isBlank(content)) {
+                            // gen.writeString(new SerializedString(StringUtils.EMPTY));
+                            gen.writeString(StringUtils.EMPTY);
+                        } else {
+                            gen.writeString(content);
+                        }
+                        break swh;
+                    case NUMBER:
+                        switch (column.getType()) {
+                            case STRING:
+                            case BAD:
+                            case BYTES:
+                            case DATE:
+                                gen.writeString(column.asString());
+                                break;
+                            case INT:
+                                gen.writeNumber(column.asBigInteger());
+                                break;
+                            case DOUBLE:
+                                gen.writeNumber(column.asDouble());
+                                break;
+                            case BOOL:
+                                gen.writeBoolean(column.asBoolean());
+                                break;
+                            case LONG:
+                                gen.writeNumber(column.asLong());
+                                break;
+                            case NULL:
+                                gen.writeNull();
+                                break;
+                            default:
+                                throw new IllegalStateException("illegal columnType:" + column.getType());
+                        }
+                        break swh;
+                    case BOOLEAN:
+                        gen.writeBoolean(column.asBoolean());
+                        break swh;
+                    default:
+                        throw new IllegalStateException("illegal type:" + meta.csvType);
+                }
             }
             // [databind#631]: Assign current value, to be accessible by custom serializers
 
             gen.writeEndObject();
 
             // throw new UnsupportedOperationException();
-        }
-    }
-
-    private Object calVal(HdfsHelper.HdfsColMeta meta, Column column) {
-        if (column.getRawData() == null) {
-            return null;
-        }
-        swh:
-        switch (meta.csvType) {
-            case STRING:
-                // gen.writeString(column.asString());
-                String content = column.asString();
-                return content;
-//                if (StringUtils.isBlank(content)) {
-//                    // gen.writeString(new SerializedString(StringUtils.EMPTY));
-//                    return StringUtils.EMPTY;
-//                } else {
-//                    return content;
-//                }
-            case NUMBER:
-                switch (column.getType()) {
-                    case STRING:
-                    case BAD:
-                    case BYTES:
-                    case DATE:
-                        // gen.writeString(column.asString());
-                        return column.asString();
-                    case INT:
-                        //   gen.writeNumber(column.asBigInteger());
-                        return column.asBigInteger();
-
-                    case DOUBLE:
-                        // gen.writeNumber(column.asDouble());
-                        return column.asDouble();
-                    case BOOL:
-                        //    gen.writeBoolean(column.asBoolean());
-                        return column.asBoolean();
-                    case LONG:
-                        //  gen.writeNumber(column.asLong());
-                        return column.asLong();
-                    case NULL:
-//                        gen.writeNull();
-//                        break;
-                        return null;
-                    default:
-                        throw new IllegalStateException("illegal columnType:" + column.getType());
-                }
-            case BOOLEAN:
-//                gen.writeBoolean(column.asBoolean());
-//                break swh;
-                return column.asBoolean();
-            default:
-                throw new IllegalStateException("illegal type:" + meta.csvType);
         }
     }
 }

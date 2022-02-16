@@ -98,7 +98,12 @@ public class TISSerializerFactory extends SerializerFactory {
                 column = r.getColumn(i++);
 
                 if (column.getRawData() == null) {
-                    gen.writeNull();
+                    if(meta.csvType == HdfsHelper.CsvType.STRING){
+                        logger.info("key:{}: xempty", meta.colName);
+                        gen.writeString(StringUtils.EMPTY);
+                    }else{
+                        gen.writeNull();
+                    }
                     continue;
                 }
                 swh:
@@ -106,13 +111,13 @@ public class TISSerializerFactory extends SerializerFactory {
                     case STRING:
                         // gen.writeString(column.asString());
                         String content = column.asString();
-                        if (StringUtils.isBlank(content)) {
-                            // gen.writeString(new SerializedString(StringUtils.EMPTY));
-                            logger.info("key:{}: empty", meta.colName);
-                            gen.writeString(StringUtils.EMPTY);
-                        } else {
+//                        if (StringUtils.isBlank(content)) {
+//                            // gen.writeString(new SerializedString(StringUtils.EMPTY));
+//                            logger.info("key:{}: empty", meta.colName);
+//                            gen.writeString(StringUtils.EMPTY);
+                      //  } else {
                             gen.writeString(content);
-                        }
+                       // }
                         break swh;
                     case NUMBER:
                         switch (column.getType()) {

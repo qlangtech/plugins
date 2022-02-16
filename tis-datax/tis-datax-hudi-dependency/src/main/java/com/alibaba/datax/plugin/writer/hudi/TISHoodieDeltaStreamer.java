@@ -25,7 +25,9 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -37,6 +39,7 @@ import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -49,6 +52,14 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
+
+        String mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
+        String taskId = System.getenv(IParamContext.KEY_TASK_ID);
+        MDC.put(IParamContext.KEY_TASK_ID, taskId);
+        if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
+            MDC.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
+        }
+
         System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS
                 , String.valueOf(Boolean.TRUE.booleanValue()));
         CenterResource.setNotFetchFromCenterRepository();

@@ -37,8 +37,10 @@ import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
@@ -53,6 +55,7 @@ import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.IOException;
@@ -310,6 +313,14 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
             // HashMap env = new HashMap();
             Map<String, String> env = Config.getInstance().getAllKV();
+
+
+            String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
+            env.put(IParamContext.KEY_TASK_ID, MDC.get(IParamContext.KEY_TASK_ID));
+            if (StringUtils.isNotEmpty(mdcCollection)) {
+                env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
+            }
+
             logger.info("environment props ===========================");
             for (Map.Entry<String, String> entry : env.entrySet()) {
                 logger.info("key:{},value:{}", entry.getKey(), entry.getValue());
@@ -317,7 +328,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
 
-           // handle.redirectError(new File("error.log"));
+            // handle.redirectError(new File("error.log"));
             handle.redirectToLog(DataXHudiWriter.class.getName());
             String tabName = this.getFileName();
 

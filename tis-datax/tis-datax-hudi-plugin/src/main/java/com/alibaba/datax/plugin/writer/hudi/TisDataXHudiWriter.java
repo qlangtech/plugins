@@ -27,6 +27,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
+import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import com.google.common.collect.Lists;
@@ -427,7 +428,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
     public static class Task extends TisDataXHdfsWriter.Task {
 
         ObjectWriter csvObjWriter = null;
-        CsvSchema.Builder csvSchemaBuilder = null;
+        CustomCSVSchemaBuilder csvSchemaBuilder = null;
 
         @Override
         public void init() {
@@ -438,13 +439,14 @@ public class TisDataXHudiWriter extends HdfsWriter {
         @Override
         public void prepare() {
             super.prepare();
-            this.csvSchemaBuilder = CsvSchema.builder();
+            this.csvSchemaBuilder = new CustomCSVSchemaBuilder(); //CsvSchema.builder();
+            // this.csvSchemaBuilder.enableAlwaysQuoteStrings();
 
             List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.writerSliceConfig);
             for (HdfsHelper.HdfsColMeta col : colsMeta) {
                 csvSchemaBuilder.addColumn(col.colName, parseCsvType(col));
             }
-            csvObjWriter = new CsvMapper()
+            csvObjWriter = new CsvMapper().configure(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS, true)
                     .setSerializerFactory(new TISSerializerFactory(colsMeta))
                     .writerFor(Record.class)
                     .with(csvSchemaBuilder
@@ -490,6 +492,11 @@ public class TisDataXHudiWriter extends HdfsWriter {
             }
 
         }
+    }
+
+
+    private static class CustomCSVSchemaBuilder extends CsvSchema.Builder {
+
     }
 }
 

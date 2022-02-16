@@ -19,23 +19,24 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.List;
@@ -55,7 +56,9 @@ public class TestDataXHudiWriter {
     @Test
     public void testRealDump() throws Exception {
 
-
+        MDC.put(TISCollectionUtils.KEY_COLLECTION
+                , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
+        MDC.put(IParamContext.KEY_TASK_ID, "123");
         HudiTest houseTest = createDataXWriter();
 
         houseTest.writer.autoCreateTable = true;
@@ -161,7 +164,7 @@ public class TestDataXHudiWriter {
                 return WriterTemplate.createColMetas();
             }
         };
-        hudiTab.partitionPathField =  WriterTemplate.kind;
+        hudiTab.partitionPathField = WriterTemplate.kind;
         hudiTab.recordField = WriterTemplate.customerregisterId;
         hudiTab.sourceOrderingField = WriterTemplate.lastVer;
         hudiTab.setWhere("1=1");

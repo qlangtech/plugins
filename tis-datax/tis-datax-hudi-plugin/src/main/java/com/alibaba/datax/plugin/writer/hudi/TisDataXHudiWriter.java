@@ -259,7 +259,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
 
                 // @see HoodieCompactionConfig.INLINE_COMPACT
-                props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");
+                // props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");
                 // BasicFSWriter writerPlugin = this.getWriterPlugin();
 
                 props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(this.tabDumpParentPath));

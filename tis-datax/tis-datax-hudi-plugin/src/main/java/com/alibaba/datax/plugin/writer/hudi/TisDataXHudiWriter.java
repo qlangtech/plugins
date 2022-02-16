@@ -256,7 +256,9 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.bulkinsert.shuffle.parallelism", String.valueOf(this.shuffleParallelism));
                 props.setProperty("hoodie.embed.timeline.server", "true");
                 props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
-                props.setProperty("hoodie.compact.inline", "false");
+
+                // @see HoodieCompactionConfig.INLINE_COMPACT
+                props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR)? "true": "false");
                 // BasicFSWriter writerPlugin = this.getWriterPlugin();
 
                 props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(this.tabDumpParentPath));

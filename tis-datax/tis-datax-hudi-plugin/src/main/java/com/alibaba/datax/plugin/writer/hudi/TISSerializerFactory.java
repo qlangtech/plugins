@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.Serializers;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -107,7 +108,13 @@ public class TISSerializerFactory extends SerializerFactory {
                             case BAD:
                             case BYTES:
                             case DATE:
-                                gen.writeString(column.asString());
+                                String content = column.asString();
+                                if (StringUtils.isBlank(content)) {
+                                    // gen.writeString(new SerializedString(StringUtils.EMPTY));
+                                    gen.writeRaw("\"\"");
+                                } else {
+                                    gen.writeString(content);
+                                }
                                 break;
                             case INT:
                                 gen.writeNumber(column.asBigInteger());

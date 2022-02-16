@@ -331,8 +331,10 @@ public class TisDataXHudiWriter extends HdfsWriter {
             }
             logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
-            handle.redirectOutput(new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log"));
-          //  handle.redirectError(new File("error.log"));
+            File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
+            FileUtils.touch(logFile);
+            handle.redirectError(logFile);
+            //  handle.redirectError(new File("error.log"));
             // handle.redirectToLog(DataXHudiWriter.class.getName());
             String tabName = this.getFileName();
 

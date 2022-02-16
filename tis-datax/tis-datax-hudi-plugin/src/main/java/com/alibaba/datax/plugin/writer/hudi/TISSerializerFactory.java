@@ -100,7 +100,14 @@ public class TISSerializerFactory extends SerializerFactory {
                 }
                 switch (meta.csvType) {
                     case STRING:
-                        gen.writeString(column.asString());
+                        // gen.writeString(column.asString());
+                        String content = column.asString();
+                        if (StringUtils.isBlank(content)) {
+                            // gen.writeString(new SerializedString(StringUtils.EMPTY));
+                            gen.writeRaw("\"\"");
+                        } else {
+                            gen.writeString(content);
+                        }
                         break;
                     case NUMBER:
                         switch (column.getType()) {
@@ -108,13 +115,7 @@ public class TISSerializerFactory extends SerializerFactory {
                             case BAD:
                             case BYTES:
                             case DATE:
-                                String content = column.asString();
-                                if (StringUtils.isBlank(content)) {
-                                    // gen.writeString(new SerializedString(StringUtils.EMPTY));
-                                    gen.writeRaw("\"\"");
-                                } else {
-                                    gen.writeString(content);
-                                }
+                                gen.writeString(column.asString());
                                 break;
                             case INT:
                                 gen.writeNumber(column.asBigInteger());

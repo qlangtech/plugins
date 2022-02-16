@@ -98,6 +98,7 @@ public class TISSerializerFactory extends SerializerFactory {
                     gen.writeNull();
                     continue;
                 }
+                swh:
                 switch (meta.csvType) {
                     case STRING:
                         // gen.writeString(column.asString());
@@ -108,7 +109,7 @@ public class TISSerializerFactory extends SerializerFactory {
                         } else {
                             gen.writeString(content);
                         }
-                        break;
+                        break swh;
                     case NUMBER:
                         switch (column.getType()) {
                             case STRING:
@@ -135,10 +136,10 @@ public class TISSerializerFactory extends SerializerFactory {
                             default:
                                 throw new IllegalStateException("illegal columnType:" + column.getType());
                         }
-                        break;
+                        break swh;
                     case BOOLEAN:
                         gen.writeBoolean(column.asBoolean());
-                        break;
+                        break swh;
                     default:
                         throw new IllegalStateException("illegal type:" + meta.csvType);
                 }

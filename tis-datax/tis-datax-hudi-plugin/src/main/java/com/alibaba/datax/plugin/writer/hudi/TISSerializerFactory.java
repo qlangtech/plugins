@@ -28,6 +28,8 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.Serializers;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -38,6 +40,7 @@ import java.util.List;
  **/
 public class TISSerializerFactory extends SerializerFactory {
     private final List<HdfsHelper.HdfsColMeta> colsMeta;
+    private static final Logger logger = LoggerFactory.getLogger(TISSerializerFactory.class);
 
     public TISSerializerFactory(
             List<HdfsHelper.HdfsColMeta> colsMeta) {
@@ -105,6 +108,7 @@ public class TISSerializerFactory extends SerializerFactory {
                         String content = column.asString();
                         if (StringUtils.isBlank(content)) {
                             // gen.writeString(new SerializedString(StringUtils.EMPTY));
+                            logger.info("key:{}: empty", meta.colName);
                             gen.writeString(StringUtils.EMPTY);
                         } else {
                             gen.writeString(content);

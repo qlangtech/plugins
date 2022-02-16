@@ -44,6 +44,7 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
+import com.qlangtech.tis.web.start.TisAppLaunchPort;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.commons.io.FileUtils;
@@ -258,7 +259,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
 
                 // @see HoodieCompactionConfig.INLINE_COMPACT
-                props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR)? "true": "false");
+                props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");
                 // BasicFSWriter writerPlugin = this.getWriterPlugin();
 
                 props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(this.tabDumpParentPath));
@@ -318,7 +319,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
 
             String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
-            env.put(IParamContext.KEY_TASK_ID, MDC.get(IParamContext.KEY_TASK_ID));
+            final String taskId = MDC.get(IParamContext.KEY_TASK_ID);
+            env.put(IParamContext.KEY_TASK_ID, taskId);
             if (StringUtils.isNotEmpty(mdcCollection)) {
                 env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
             }
@@ -329,8 +331,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
             }
             logger.info("=============================================");
             SparkLauncher handle = new SparkLauncher(env);
-
-            handle.redirectError(new File("error.log"));
+            handle.redirectOutput(new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log"));
+          //  handle.redirectError(new File("error.log"));
             // handle.redirectToLog(DataXHudiWriter.class.getName());
             String tabName = this.getFileName();
 
@@ -369,6 +371,11 @@ public class TisDataXHudiWriter extends HdfsWriter {
                     , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"
                     , "--enable-sync"
             );
+
+            if (this.hudiTabType == HudiWriteTabType.MOR) {
+                handle.addAppArgs("--disable-compaction");
+            }
+
 
             CountDownLatch countDownLatch = new CountDownLatch(1);
             // SparkAppHandle.State[] finalState = new SparkAppHandle.State[1];

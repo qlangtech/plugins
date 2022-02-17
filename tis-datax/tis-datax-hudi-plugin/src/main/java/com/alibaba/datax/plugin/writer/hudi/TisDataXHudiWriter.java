@@ -78,7 +78,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
     private static final char CSV_Column_Separator = ',';
     private static final String CSV_NULL_VALUE = "null";
-    private static final char CSV_ESCAPE_CHAR = '\\';
+    private static final char CSV_ESCAPE_CHAR = '"';
     private static final boolean CSV_FILE_USE_HEADER = true;
     public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
@@ -271,7 +271,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSV_Column_Separator));
                 props.setProperty("hoodie.deltastreamer.csv.nullValue", CSV_NULL_VALUE);
                 props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSV_ESCAPE_CHAR));
-                props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
+              //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
 
 
 

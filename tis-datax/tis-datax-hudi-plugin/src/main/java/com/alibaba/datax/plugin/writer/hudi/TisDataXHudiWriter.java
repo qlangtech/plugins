@@ -77,6 +77,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
     private static final char CSV_Column_Separator = ',';
     private static final String CSV_NULL_VALUE = "null";
+    private static final char CSV_ESCAPE_CHAR = '\\';
     private static final boolean CSV_FILE_USE_HEADER = true;
     public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
@@ -263,11 +264,13 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 // @see HoodieCompactionConfig.INLINE_COMPACT
                 // props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");
                 // BasicFSWriter writerPlugin = this.getWriterPlugin();
-
+//https://spark.apache.org/docs/3.2.1/sql-data-sources-csv.html
                 props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(this.tabDumpParentPath));
                 props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(CSV_FILE_USE_HEADER));
                 props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSV_Column_Separator));
                 props.setProperty("hoodie.deltastreamer.csv.nullValue", CSV_NULL_VALUE);
+                props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSV_ESCAPE_CHAR));
+
                 props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(fsSourceSchemaPath));
                 props.setProperty("hoodie.deltastreamer.schemaprovider.target.schema.file", String.valueOf(fsSourceSchemaPath));
 
@@ -452,7 +455,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
                     .with(csvSchemaBuilder
                             .setUseHeader(CSV_FILE_USE_HEADER)
                             .setColumnSeparator(CSV_Column_Separator)
-                            .setNullValue(CSV_NULL_VALUE).build());
+                            .setNullValue(CSV_NULL_VALUE)
+                            .setEscapeChar(CSV_ESCAPE_CHAR).build());
         }
 
 

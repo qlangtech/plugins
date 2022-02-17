@@ -50,7 +50,7 @@ import java.util.Optional;
 public class TestDataXHudiWriter {
 
     // private static final String targetTableName ="";
-    private static final String clickhouse_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
+    public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
 
 
     @Test
@@ -82,7 +82,7 @@ public class TestDataXHudiWriter {
             };
             EasyMock.replay(dataXProcessor);
             // DataXHudiWriter writer = new DataXHudiWriter();
-            WriterTemplate.realExecuteDump(clickhouse_datax_writer_assert_without_optional, houseTest.writer);
+            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.SerializerFactory;
 import com.fasterxml.jackson.databind.ser.Serializers;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,12 +97,7 @@ public class TISSerializerFactory extends SerializerFactory {
                 column = r.getColumn(i++);
 
                 if (column.getRawData() == null) {
-                    if(meta.csvType == HdfsHelper.CsvType.STRING){
-                        logger.info("key:{}: xempty", meta.colName);
-                        gen.writeString(StringUtils.EMPTY);
-                    }else{
-                        gen.writeNull();
-                    }
+                    gen.writeNull();
                     continue;
                 }
                 swh:
@@ -115,9 +109,9 @@ public class TISSerializerFactory extends SerializerFactory {
 //                            // gen.writeString(new SerializedString(StringUtils.EMPTY));
 //                            logger.info("key:{}: empty", meta.colName);
 //                            gen.writeString(StringUtils.EMPTY);
-                      //  } else {
-                            gen.writeString(content);
-                       // }
+                        //  } else {
+                        gen.writeString(content);
+                        // }
                         break swh;
                     case NUMBER:
                         switch (column.getType()) {

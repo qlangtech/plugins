@@ -61,6 +61,7 @@ import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -270,6 +271,9 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSV_Column_Separator));
                 props.setProperty("hoodie.deltastreamer.csv.nullValue", CSV_NULL_VALUE);
                 props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSV_ESCAPE_CHAR));
+                props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
+
+
 
                 props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(fsSourceSchemaPath));
                 props.setProperty("hoodie.deltastreamer.schemaprovider.target.schema.file", String.valueOf(fsSourceSchemaPath));
@@ -484,7 +488,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
 //                Path targetPath = new Path(hdfsHelper.conf.getWorkingDirectory()
 //                        , this.writerSliceConfig.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE)
 //                        + "/" + this.fileName);
-                try (FSDataOutputStream output = this.hdfsHelper.getOutputStream(targetPath)) {
+                try (OutputStream output = getOutputStream(targetPath)) {
                     SequenceWriter sequenceWriter = csvObjWriter.writeValues(output);
                     Record record = null;
                     while ((record = lineReceiver.getFromReader()) != null) {
@@ -495,6 +499,10 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 throw new RuntimeException(e);
             }
 
+        }
+
+        protected OutputStream getOutputStream(Path targetPath) {
+            return this.hdfsHelper.getOutputStream(targetPath);
         }
     }
 

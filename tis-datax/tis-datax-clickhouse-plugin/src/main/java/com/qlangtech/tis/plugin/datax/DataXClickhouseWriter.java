@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
@@ -101,7 +102,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             }
 
             private String convertType(ISelectedTab.ColMeta col) {
-                ColumnMetaData.DataType type = col.getType();
+                DataType type = col.getType();
                 switch (type.type) {
                     case Types.INTEGER:
                     case Types.TINYINT:

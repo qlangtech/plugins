@@ -59,7 +59,7 @@ public class TestTiKVDataSourceFactory extends TestCase {
     public void testColMetaParse() {
         GetColsMeta getColsMeta = new GetColsMeta().invoke();
         List<ColumnMetaData> table1Cols = getColsMeta.getColsMeta("table1");
-        ColumnMetaData.DataType type = null;
+        DataType type = null;
         for (ColumnMetaData col : table1Cols) {
             type = col.getType();
             System.out.println(col.getKey() + ",getDecimalDigits:" + type.getDecimalDigits() + ",columnSize:" + type.columnSize + ",type:" + type.type);

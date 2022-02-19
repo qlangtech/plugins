@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
@@ -26,8 +28,9 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -38,14 +41,18 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.File;
 import java.sql.Connection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,7 +60,7 @@ import java.util.Map;
  * @create: 2022-01-21 13:02
  **/
 @Public
-public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn {
+public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn, IStreamTableCreator {
     public static final String DATAX_NAME = "Hudi";
 
     public static final String KEY_FIELD_NAME_SPARK_CONN = "sparkConn";
@@ -91,7 +98,113 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
     }
 
-    //    /**
+    private transient Map<String, List<HdfsColMeta>> tableMeta = null;
+
+    @Override
+    public IStreamTableMeta getStreamTableMeta(final String tableName) {
+        if (StringUtils.isEmpty(tableName)) {
+            throw new IllegalArgumentException("param tableName can not empty");
+        }
+        if (tableMeta == null) {
+            if (StringUtils.isEmpty(this.dataXName)) {
+                throw new IllegalStateException("prop dataXName can not be null");
+            }
+            DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
+
+            List<File> dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
+            Configuration cfg = null;
+            Configuration paramCfg = null;
+            String table = null;
+            for (File f : dataxCfgFile) {
+                cfg = Configuration.from(f);
+                paramCfg = cfg.getConfiguration("writer.parameter");
+                table = paramCfg.getString("fileName");
+                if (StringUtils.isNotEmpty(table)) {
+                    throw new IllegalStateException("table can not be null:" + paramCfg.toJSON());
+                }
+                tableMeta.put(table, HdfsColMeta.getColsMeta(paramCfg));
+            }
+        }
+
+        final List<HdfsColMeta> colMetas = tableMeta.get(tableName);
+        return new IStreamTableMeta() {
+            @Override
+            public List<HdfsColMeta> getColsMeta() {
+                return colMetas;
+            }
+
+            /**
+             *
+             * https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/sql/create/#create-table
+             * @return
+             */
+            @Override
+            public StringBuffer createFlinkTableDDL() {
+                CreateTableSqlBuilder flinkTableDdlBuilder
+                        = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, colMetas)) {
+                    @Override
+                    protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+                        return new ColWrapper(c) {
+                            @Override
+                            public String getMapperType() {
+                                return convertType(meta);
+                            }
+                        };
+                    }
+                };
+                return flinkTableDdlBuilder.build();
+            }
+        };
+    }
+
+    private String convertType(ISelectedTab.ColMeta col) {
+        // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/
+        return col.getType().accept(new DataType.TypeVisitor<String>() {
+            @Override
+            public String longType(DataType type) {
+                return "BIGINT";
+            }
+
+            @Override
+            public String doubleType(DataType type) {
+                return "DOUBLE";
+            }
+
+            @Override
+            public String decimalType(DataType type) {
+                // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/#decimal
+                return "DECIMAL(" + type.getDecimalDigits() + ", " + type.columnSize + ")";
+            }
+
+            @Override
+            public String dateType(DataType type) {
+                // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/#date-and-time
+                return "DATE";
+            }
+
+            @Override
+            public String timestampType(DataType type) {
+                return "TIMESTAMP";
+            }
+
+            @Override
+            public String bitType(DataType type) {
+                return "BINARY(" + type.columnSize + ")";
+            }
+
+            @Override
+            public String blobType(DataType type) {
+                return "BYTES";
+            }
+
+            @Override
+            public String varcharType(DataType type) {
+                return "VARCHAR(" + type.columnSize + ")";
+            }
+        });
+    }
+
+//    /**
 //     * @return
 //     */
 //    public static List<Option> allPrimaryKeys(Object contextObj) {
@@ -103,45 +216,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @Override
     protected HudiDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
         return new HudiDataXContext(tableMap, this.dataXName);
-    }
-
-    public class HudiDataXContext extends FSDataXContext {
-
-        private final HudiSelectedTab hudiTab;
-
-        public HudiDataXContext(IDataxProcessor.TableMap tabMap, String dataxName) {
-            super(tabMap, dataxName);
-            ISelectedTab tab = tabMap.getSourceTab();
-            if (!(tab instanceof HudiSelectedTab)) {
-                throw new IllegalStateException(" param tabMap.getSourceTab() must be type of "
-                        + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
-            }
-            this.hudiTab = (HudiSelectedTab) tab;
-        }
-
-        public String getRecordField() {
-            return this.hudiTab.recordField;
-        }
-
-        public String getPartitionPathField() {
-            return this.hudiTab.partitionPathField;
-        }
-
-        public String getSourceOrderingField() {
-            return this.hudiTab.sourceOrderingField;
-        }
-
-        public Integer getShuffleParallelism() {
-            return shuffleParallelism;
-        }
-
-        public BatchOpMode getOpMode() {
-            return BatchOpMode.parse(batchOp);
-        }
-
-        public HudiWriteTabType getTabType() {
-            return HudiWriteTabType.parse(tabType);
-        }
     }
 
 
@@ -173,6 +247,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHudiWriter.class, "DataXHudiWriter-tpl.json");
+    }
+
+    @Override
+    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+        return null;
     }
 
     @TISExtension()
@@ -260,6 +339,45 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
+        }
+    }
+
+    public class HudiDataXContext extends FSDataXContext {
+
+        private final HudiSelectedTab hudiTab;
+
+        public HudiDataXContext(IDataxProcessor.TableMap tabMap, String dataxName) {
+            super(tabMap, dataxName);
+            ISelectedTab tab = tabMap.getSourceTab();
+            if (!(tab instanceof HudiSelectedTab)) {
+                throw new IllegalStateException(" param tabMap.getSourceTab() must be type of "
+                        + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
+            }
+            this.hudiTab = (HudiSelectedTab) tab;
+        }
+
+        public String getRecordField() {
+            return this.hudiTab.recordField;
+        }
+
+        public String getPartitionPathField() {
+            return this.hudiTab.partitionPathField;
+        }
+
+        public String getSourceOrderingField() {
+            return this.hudiTab.sourceOrderingField;
+        }
+
+        public Integer getShuffleParallelism() {
+            return shuffleParallelism;
+        }
+
+        public BatchOpMode getOpMode() {
+            return BatchOpMode.parse(batchOp);
+        }
+
+        public HudiWriteTabType getTabType() {
+            return HudiWriteTabType.parse(tabType);
         }
     }
 }

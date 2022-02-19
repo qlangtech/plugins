@@ -22,9 +22,10 @@ import com.alibaba.datax.common.element.Record;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
+import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
@@ -45,6 +46,7 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.web.start.TisAppLaunchPort;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -68,7 +70,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
-//import com.alibaba.datax.plugin.unstructuredstorage.writer.Key;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -163,7 +164,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         public void post() {
             super.post();
 
-            List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.cfg);
+            List<HdfsColMeta> colsMeta = HdfsColMeta.getColsMeta(this.cfg);
 
             DataXHudiWriter hudiPlugin = this.getHudiWriterPlugin();
             ITISFileSystem fs = this.getFileSystem();
@@ -175,8 +176,9 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(this.getFileName());
                 SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
 
-                for (HdfsHelper.HdfsColMeta meta : colsMeta) {
-                    switch (meta.hiveType) {
+                for (HdfsColMeta meta : colsMeta) {
+                    SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.type);
+                    switch (hiveDataType) {
                         case STRING:
                         case DATE:
                         case TIMESTAMP:
@@ -235,7 +237,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                             }
                             break;
                         default:
-                            throw new IllegalStateException("illegal type:" + meta.hiveType);
+                            throw new IllegalStateException("illegal type:" + hiveDataType);
                     }
                 }
 
@@ -271,8 +273,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSV_Column_Separator));
                 props.setProperty("hoodie.deltastreamer.csv.nullValue", CSV_NULL_VALUE);
                 props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSV_ESCAPE_CHAR));
-              //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
-
+                //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
 
 
                 props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(fsSourceSchemaPath));
@@ -449,8 +450,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
             this.csvSchemaBuilder = new CustomCSVSchemaBuilder(); //CsvSchema.builder();
             // this.csvSchemaBuilder.enableAlwaysQuoteStrings();
 
-            List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.writerSliceConfig);
-            for (HdfsHelper.HdfsColMeta col : colsMeta) {
+            List<HdfsColMeta> colsMeta = HdfsColMeta.getColsMeta(this.writerSliceConfig);
+            for (HdfsColMeta col : colsMeta) {
                 csvSchemaBuilder.addColumn(col.colName, parseCsvType(col));
             }
             csvObjWriter = new CsvMapper().configure(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS, true)
@@ -464,7 +465,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
 
-        private CsvSchema.ColumnType parseCsvType(HdfsHelper.HdfsColMeta col) {
+        private CsvSchema.ColumnType parseCsvType(HdfsColMeta col) {
             switch (col.csvType) {
                 case STRING:
                     return CsvSchema.ColumnType.STRING;

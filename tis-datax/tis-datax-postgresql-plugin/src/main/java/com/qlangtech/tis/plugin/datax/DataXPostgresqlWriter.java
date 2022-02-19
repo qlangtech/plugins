@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
@@ -126,70 +127,70 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
              * @return
              */
             private String convertType(ISelectedTab.ColMeta col) {
-                ColumnMetaData.DataType type = col.getType();
-                String colType = type.accept(new ColumnMetaData.TypeVisitor<String>() {
+                DataType type = col.getType();
+                String colType = type.accept(new DataType.TypeVisitor<String>() {
                     @Override
-                    public String longType(ColumnMetaData.DataType type) {
+                    public String longType(DataType type) {
                         return "BIGINT";
                     }
 
                     @Override
-                    public String doubleType(ColumnMetaData.DataType type) {
+                    public String doubleType(DataType type) {
                         return "FLOAT8";
                     }
 
                     @Override
-                    public String dateType(ColumnMetaData.DataType type) {
+                    public String dateType(DataType type) {
                         return "DATE";
                     }
 
                     @Override
-                    public String timestampType(ColumnMetaData.DataType type) {
+                    public String timestampType(DataType type) {
                         return "TIMESTAMP";
                     }
 
                     @Override
-                    public String bitType(ColumnMetaData.DataType type) {
+                    public String bitType(DataType type) {
                         return "BIT";
                     }
 
                     @Override
-                    public String blobType(ColumnMetaData.DataType type) {
+                    public String blobType(DataType type) {
                         return "BYTEA";
                     }
 
                     @Override
-                    public String varcharType(ColumnMetaData.DataType type) {
+                    public String varcharType(DataType type) {
                         return "VARCHAR(" + type.columnSize + ")";
                     }
 
                     @Override
-                    public String intType(ColumnMetaData.DataType type) {
+                    public String intType(DataType type) {
                         return "INTEGER";
                     }
 
                     @Override
-                    public String floatType(ColumnMetaData.DataType type) {
+                    public String floatType(DataType type) {
                         return "FLOAT4";
                     }
 
                     @Override
-                    public String decimalType(ColumnMetaData.DataType type) {
+                    public String decimalType(DataType type) {
                         return "DECIMAL";
                     }
 
                     @Override
-                    public String timeType(ColumnMetaData.DataType type) {
+                    public String timeType(DataType type) {
                         return "TIME";
                     }
 
                     @Override
-                    public String tinyIntType(ColumnMetaData.DataType dataType) {
+                    public String tinyIntType(DataType dataType) {
                         return smallIntType(dataType);
                     }
 
                     @Override
-                    public String smallIntType(ColumnMetaData.DataType dataType) {
+                    public String smallIntType(DataType dataType) {
                         return "SMALLINT";
                     }
                 });

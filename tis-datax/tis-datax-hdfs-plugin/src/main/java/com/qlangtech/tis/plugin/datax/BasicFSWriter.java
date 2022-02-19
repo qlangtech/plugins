@@ -23,18 +23,17 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -133,14 +132,17 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return tabName;
         }
 
-        public List<HiveColumn> getCols() {
-            return this.tabMap.getSourceCols().stream().map((c) -> {
-                HiveColumn col = new HiveColumn();
-                col.setName(c.getName());
-                col.setType(SupportHiveDataTypeUtils.convert2HiveType(c.getType()).name());
-                col.setNullable(c.isNullable());
-                return col;
-            }).collect(Collectors.toList());
+        public List<ISelectedTab.ColMeta> getCols() {
+
+            return this.tabMap.getSourceCols();
+
+//            return this.tabMap.getSourceCols().stream().map((c) -> {
+//                HiveColumn col = new HiveColumn();
+//                col.setName(c.getName());
+//                col.setType(c.getType().getS());
+//                col.setNullable(c.isNullable());
+//                return col;
+//            }).collect(Collectors.toList());
         }
 
 

@@ -57,7 +57,7 @@ public class TestDataXMongodbWriter extends TestCase {
 
         for (ISelectedTab tab : selectedTabs) {
             for (ISelectedTab.ColMeta cm : tab.getCols()) {
-                cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+                cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
         EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(4);

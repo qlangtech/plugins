@@ -116,55 +116,55 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter {
 //
 //            @Override
 //            protected String convertType(ISelectedTab.ColMeta col) {
-//                ColumnMetaData.DataType type = col.getType();
+//                DataType type = col.getType();
 //                return type.accept(new ColumnMetaData.TypeVisitor<String>() {
 //                    @Override
-//                    public String longType(ColumnMetaData.DataType type) {
+//                    public String longType(DataType type) {
 //                        return "BIGINT";
 //                    }
 //
 //                    @Override
-//                    public String doubleType(ColumnMetaData.DataType type) {
+//                    public String doubleType(DataType type) {
 //                        return "DOUBLE";
 //                    }
 //
 //                    @Override
-//                    public String dateType(ColumnMetaData.DataType type) {
+//                    public String dateType(DataType type) {
 //                        return "DATE";
 //                    }
 //
 //                    @Override
-//                    public String timestampType(ColumnMetaData.DataType type) {
+//                    public String timestampType(DataType type) {
 //                        return "DATETIME";
 //                    }
 //
 //                    @Override
-//                    public String bitType(ColumnMetaData.DataType type) {
+//                    public String bitType(DataType type) {
 //                        return "TINYINT";
 //                    }
 //
 //                    @Override
-//                    public String blobType(ColumnMetaData.DataType type) {
+//                    public String blobType(DataType type) {
 //                        return "BITMAP";
 //                    }
 //
 //                    @Override
-//                    public String varcharType(ColumnMetaData.DataType type) {
+//                    public String varcharType(DataType type) {
 //                        return "VARCHAR(" + Math.min(type.columnSize, 65500) + ")";
 //                    }
 //
 //                    @Override
-//                    public String intType(ColumnMetaData.DataType type) {
+//                    public String intType(DataType type) {
 //                        return "INT";
 //                    }
 //
 //                    @Override
-//                    public String floatType(ColumnMetaData.DataType type) {
+//                    public String floatType(DataType type) {
 //                        return "FLOAT";
 //                    }
 //
 //                    @Override
-//                    public String decimalType(ColumnMetaData.DataType type) {
+//                    public String decimalType(DataType type) {
 //                        return "DECIMAL";
 //                    }
 //                });

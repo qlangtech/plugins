@@ -75,8 +75,8 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 //        cols.add("project_name");
 //        tab.setCols(cols);
 //        List<ISelectedTab.ColMeta> cols1 = tab.getCols();
-//        cols1.get(0).setType(ISelectedTab.DataXReaderColType.INT);
-//        cols1.get(1).setType(ISelectedTab.DataXReaderColType.STRING);
+//        cols1.get(0).setType(DataXReaderColType.INT);
+//        cols1.get(1).setType(DataXReaderColType.STRING);
 //        selectedTabs.add(tab);
 //        return selectedTabs;
 //    }
@@ -238,11 +238,11 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         ISelectedTab.ColMeta col = null;
         col = new ISelectedTab.ColMeta();
         col.setName(null);
-        col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        col.setType(DataXReaderColType.STRING.dataType);
         cols.add(col);
         col = new ISelectedTab.ColMeta();
         col.setName(null);
-        col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        col.setType(DataXReaderColType.Long.dataType);
         cols.add(col);
         EasyMock.expect(selectedTab.getCols()).andReturn(cols);
 

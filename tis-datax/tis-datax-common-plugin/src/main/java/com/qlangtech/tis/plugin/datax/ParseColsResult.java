@@ -24,6 +24,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -64,7 +66,7 @@ public class ParseColsResult {
             }
             JSONObject col = null;
             String type = null;
-            ColumnMetaData.DataType parseType = null;
+            DataType parseType = null;
             Integer index = null;
             String appValue = null;
             for (int i = 0; i < cols.size(); i++) {
@@ -74,9 +76,10 @@ public class ParseColsResult {
                     msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type不能为空");
                     return parseOSSColsResult.faild();
                 }
-                parseType = ISelectedTab.DataXReaderColType.parse(type);
+                parseType = DataXReaderColType.parse(type);
                 if (parseType == null) {
-                    msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type必须为:" + ISelectedTab.DataXReaderColType.toDesc() + "中之一");
+                    msgHandler.addFieldError(context, fieldName
+                            , "index为" + i + "的字段列中，属性type必须为:" + DataXReaderColType.toDesc() + "中之一");
                     return parseOSSColsResult.faild();
                 }
 
@@ -116,13 +119,13 @@ public class ParseColsResult {
     }
 
     static class DataXColMeta {
-        public final ColumnMetaData.DataType parseType;
+        public final DataType parseType;
 
         // index和value两个属性为2选1
         private int index;
         private String value;
 
-        public DataXColMeta(ColumnMetaData.DataType parseType) {
+        public DataXColMeta(DataType parseType) {
             this.parseType = parseType;
         }
     }

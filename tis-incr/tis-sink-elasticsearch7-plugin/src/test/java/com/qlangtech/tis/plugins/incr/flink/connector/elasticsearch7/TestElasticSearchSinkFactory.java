@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -82,23 +83,23 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
-        cm.setType(new ColumnMetaData.DataType(Types.VARCHAR, 6));
+        cm.setType(new DataType(Types.VARCHAR, 6));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colNum);
-        cm.setType(new ColumnMetaData.DataType(Types.INTEGER));
+        cm.setType(new DataType(Types.INTEGER));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colId);
-        cm.setType(new ColumnMetaData.DataType(Types.VARCHAR, 32));
+        cm.setType(new DataType(Types.VARCHAR, 32));
         cm.setPk(true);
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colCreateTime);
-        cm.setType(new ColumnMetaData.DataType(Types.BIGINT));
+        cm.setType(new DataType(Types.BIGINT));
         cols.add(cm);
 
         EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();

@@ -18,38 +18,37 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
-import org.apache.flink.util.OutputTag;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import java.io.Serializable;
-import java.util.List;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-10-27 10:19
+ * @create: 2022-02-18 12:19
  **/
-public class DTOStream implements Serializable {
-    public final OutputTag<DTO> outputTag;
-    private transient DataStream<DTO> stream;
-    public transient List<FlinkCol> cols;
+public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle {
 
-    public DTOStream(OutputTag<DTO> outputTag, List<FlinkCol> cols) {
-        this.outputTag = outputTag;
-        this.cols = cols;
-    }
-
-    public DataStream<DTO> getStream() {
-        return this.stream;
-    }
-
-    public void addStream(SingleOutputStreamOperator<DTO> mainStream) {
-        if (stream == null) {
-            stream = mainStream.getSideOutput(outputTag);
-        } else {
-            stream = stream.union(mainStream.getSideOutput(outputTag));
+    /**
+     * 处理各个表对应的数据流
+     *
+     * @param
+     */
+    protected void processTableStream(StreamExecutionEnvironment env
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
+        Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
+        for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
+            streamMap.put(e.getKey(), e.getValue().getStream());
         }
+        this.processTableStream(streamMap, sinkFunction);
     }
+
+    /**
+     * 处理各个表对应的数据流
+     *
+     * @param
+     */
+    protected abstract void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction);
 }

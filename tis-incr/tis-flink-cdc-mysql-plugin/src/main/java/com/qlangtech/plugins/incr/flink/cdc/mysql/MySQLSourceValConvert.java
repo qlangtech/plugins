@@ -74,7 +74,7 @@
 //        if (colMeta == null) {
 //            return val;
 //        }
-//        ColumnMetaData.DataType t = colMeta.getType();
+//        DataType t = colMeta.getType();
 //        switch (t.type) {
 //            case Types.DECIMAL:
 //                return val;

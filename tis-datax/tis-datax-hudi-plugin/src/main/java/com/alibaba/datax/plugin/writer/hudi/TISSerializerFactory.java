@@ -19,7 +19,7 @@
 package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
@@ -38,11 +38,11 @@ import java.util.List;
  * @create: 2022-01-23 20:41
  **/
 public class TISSerializerFactory extends SerializerFactory {
-    private final List<HdfsHelper.HdfsColMeta> colsMeta;
+    private final List<HdfsColMeta> colsMeta;
     private static final Logger logger = LoggerFactory.getLogger(TISSerializerFactory.class);
 
     public TISSerializerFactory(
-            List<HdfsHelper.HdfsColMeta> colsMeta) {
+            List<HdfsColMeta> colsMeta) {
         this.colsMeta = colsMeta;
     }
 
@@ -91,7 +91,7 @@ public class TISSerializerFactory extends SerializerFactory {
             gen.setCurrentValue(r);
             int i = 0;
             Column column = null;
-            for (HdfsHelper.HdfsColMeta meta : colsMeta) {
+            for (HdfsColMeta meta : colsMeta) {
 
                 gen.writeFieldName(meta.colName);
                 column = r.getColumn(i++);

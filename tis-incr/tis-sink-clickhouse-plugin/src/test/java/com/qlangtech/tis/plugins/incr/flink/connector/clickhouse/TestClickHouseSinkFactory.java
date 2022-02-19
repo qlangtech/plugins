@@ -81,23 +81,23 @@ public class TestClickHouseSinkFactory extends TestCase implements TISEasyMock {
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
-        cm.setType(new ColumnMetaData.DataType(Types.VARCHAR, 6));
+        cm.setType(new DataType(Types.VARCHAR, 6));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colNum);
-        cm.setType(new ColumnMetaData.DataType(Types.INTEGER));
+        cm.setType(new DataType(Types.INTEGER));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colId);
-        cm.setType(new ColumnMetaData.DataType(Types.VARCHAR, 32));
+        cm.setType(new DataType(Types.VARCHAR, 32));
         cm.setPk(true);
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colCreateTime);
-        cm.setType(new ColumnMetaData.DataType(Types.BIGINT));
+        cm.setType(new DataType(Types.BIGINT));
         cols.add(cm);
 
         EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();

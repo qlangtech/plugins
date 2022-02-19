@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -170,29 +171,29 @@ public class WriterTemplate {
         List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName(customerregisterId);
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        colMeta.setType(DataXReaderColType.STRING.dataType);
         colMeta.setPk(true);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName("waitingorder_id");
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        colMeta.setType(DataXReaderColType.STRING.dataType);
         colMeta.setPk(true);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName(kind);
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        colMeta.setType(DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName("create_time");
-        colMeta.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        colMeta.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName(lastVer);
-        colMeta.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        colMeta.setType(DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);
         return sourceCols;
     }

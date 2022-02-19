@@ -65,7 +65,12 @@
             <artifactId>tis-sql-parser</artifactId>
             <scope>compile</scope>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--        <dependency>-->
 <!--            <groupId>com.qlangtech.tis</groupId>-->
 <!--            <artifactId>tis-dag</artifactId>-->
 <!--            <scope>compile</scope>-->

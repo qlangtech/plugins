@@ -35,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
@@ -61,13 +62,26 @@ public abstract class CUDCDCTestSuit {
 
 
     protected final TargetResName dataxName = new TargetResName("x");
-    String keyCol_text = "col_text";
+    static String keyCol_text = "col_text";
     String keyStart_time = "start_time";
-    String keyBaseId = "base_id";
+    static String keyBaseId = "base_id";
     String keyColBlob = "col_blob";
 
-    List<String> cols = Lists.newArrayList(
-            keyBaseId, keyStart_time, "update_date", "update_time", "price", "json_content", keyColBlob, keyCol_text);
+    public List<FlinkCol> cols = Lists.newArrayList(
+            new FlinkCol(keyBaseId, DataTypes.INT())
+//            , new FlinkCol(keyStart_time, DataTypes.TIMESTAMP())
+//            , new FlinkCol("update_date", DataTypes.DATE())
+//            , new FlinkCol("update_time", DataTypes.TIMESTAMP())
+
+            , new FlinkCol(keyStart_time, DataTypes.STRING())
+            , new FlinkCol("update_date", DataTypes.STRING())
+            , new FlinkCol("update_time", DataTypes.STRING())
+
+            , new FlinkCol("price", DataTypes.DECIMAL(5, 2))
+            , new FlinkCol("json_content", DataTypes.STRING())
+            // , new FlinkCol(keyColBlob, DataTypes.STRING())
+            , new FlinkCol(keyColBlob, DataTypes.BYTES(), FlinkCol.Bytes())
+            , new FlinkCol(keyCol_text, DataTypes.STRING()));
 
 
     static final ThreadLocal<SimpleDateFormat> timeFormat = new ThreadLocal<SimpleDateFormat>() {
@@ -188,7 +202,7 @@ public abstract class CUDCDCTestSuit {
 
         final String insertBase
                 = "insert into " + createTableName(tabName) + "("
-                + cols.stream().map((col) -> getColEscape() + col + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
+                + cols.stream().map((col) -> getColEscape() + col.name + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
                 "values(" +
                 cols.stream().map((col) -> "?").collect(Collectors.joining(" , ")) + ")";
 
@@ -228,7 +242,7 @@ public abstract class CUDCDCTestSuit {
                             List<TestRow> rows = fetchRows(snapshot, 1, false);
                             for (TestRow rr : rows) {
                                 System.out.println("------------" + rr.getInt(keyBaseId));
-                                assertTestRow(false, r, rr);
+                                assertTestRow(RowKind.INSERT, r, rr);
                             }
                             // System.out.println("########################");
 
@@ -236,21 +250,21 @@ public abstract class CUDCDCTestSuit {
 
 
                         // 执行更新
-                        for (TestRow r : exampleRows) {
-                            if (!r.execUpdate()) {
+                        for (TestRow exceptRow : exampleRows) {
+                            if (!exceptRow.execUpdate()) {
                                 continue;
                             }
 
-                            List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = r.updateVals.getCols();
+                            List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.updateVals.getCols();
 
                             String updateSql = String.format("UPDATE " + createTableName(tabName) + " set %s WHERE base_id=%s"
-                                    , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(",")), r.getIdVal());
+                                    , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(",")), exceptRow.getIdVal());
 
                             statement = conn.prepareStatement(updateSql);
 
                             int colIndex = 1;
                             for (Map.Entry<String, RowValsUpdate.UpdatedColVal> col : cols) {
-                                col.getValue().setPrepColVal(statement, colIndex++, r.vals);
+                                col.getValue().setPrepColVal(statement, colIndex++, exceptRow.vals);
                             }
 
                             Assert.assertTrue(updateSql, executePreparedStatement(conn, statement) > 0);
@@ -262,7 +276,7 @@ public abstract class CUDCDCTestSuit {
                             List<TestRow> rows = fetchRows(snapshot, 1, false);
                             for (TestRow rr : rows) {
                                 //System.out.println("------------" + rr.getInt(keyBaseId));
-                                assertTestRow(true, r, rr);
+                                assertTestRow(RowKind.UPDATE_AFTER, exceptRow, rr);
 
                             }
                         }
@@ -281,7 +295,7 @@ public abstract class CUDCDCTestSuit {
                                 List<TestRow> rows = fetchRows(snapshot, 1, true);
                                 for (TestRow rr : rows) {
                                     //System.out.println("------------" + rr.getInt(keyBaseId));
-                                    assertTestRow(true, r, rr);
+                                    assertTestRow(RowKind.DELETE, r, rr);
 
                                 }
                             }
@@ -318,7 +332,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected TestBasicFlinkSourceHandle getTestBasicFlinkSourceHandle(String tabName) {
-        TestBasicFlinkSourceHandle consumerHandle = new TestBasicFlinkSourceHandle(tabName);
+        TestBasicFlinkSourceHandle consumerHandle = createConsumerHandle(tabName);
 
         // PrintSinkFunction printSinkFunction = new PrintSinkFunction();
         TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
@@ -332,6 +346,10 @@ public abstract class CUDCDCTestSuit {
         };
         consumerHandle.setSinkFuncFactory(sinkFuncFactory);
         return consumerHandle;
+    }
+
+    protected TestBasicFlinkSourceHandle createConsumerHandle(String tabName) {
+        return new TestBasicFlinkSourceHandle(tabName);
     }
 
     private BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
@@ -358,9 +376,9 @@ public abstract class CUDCDCTestSuit {
 
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
 
-    private void assertTestRow(boolean updateVal, TestRow expect, TestRow actual) throws Exception {
+    private void assertTestRow(RowKind updateVal, TestRow expect, TestRow actual) throws Exception {
         assertEqualsInOrder(
-                expect.getValsList(updateVal, cols, (rowVals, key, val) -> {
+                expect.getValsList(Optional.of(updateVal), cols, (rowVals, key, val) -> {
                     if (keyColBlob.equals(key)) {
                         ByteArrayInputStream inputStream
                                 = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
@@ -372,9 +390,9 @@ public abstract class CUDCDCTestSuit {
                 }) //
                 , actual.getValsList(cols, (rowVals, key, val) -> {
                     if (keyColBlob.equals(key)) {
-                        java.nio.ByteBuffer buffer = (java.nio.ByteBuffer) val;
+                        byte[] buffer = (byte[]) val;
                         // buffer.reset();
-                        return new String(buffer.array());
+                        return new String(buffer);
                     } else {
                         return val;
                     }
@@ -395,6 +413,7 @@ public abstract class CUDCDCTestSuit {
 
     private static void waitForSnapshotStarted(CloseableIterator<Row> iterator) throws Exception {
         while (!iterator.hasNext()) {
+            System.out.println("waitForSnapshotStarted");
             Thread.sleep(100);
         }
     }
@@ -403,10 +422,13 @@ public abstract class CUDCDCTestSuit {
         List<TestRow> rows = new ArrayList<>(size);
         while (size > 0 && iter.hasNext()) {
             Row row = iter.next();
-            // System.out.println("=========" + size);
+            System.out.println("=========" + row.getField(keyBaseId));
             // ignore rowKind marker
-
-            rows.add(new TestRow(row.getKind(), new RowVals((Map) (deleteRow ? row.getField("before") : row.getField("after")))));
+            RowVals vals = new RowVals();
+            for (String key : row.getFieldNames(true)) {
+                vals.put(key, row.getField(key));
+            }
+            rows.add(new TestRow(row.getKind(), vals));
             size--;
         }
         return rows;

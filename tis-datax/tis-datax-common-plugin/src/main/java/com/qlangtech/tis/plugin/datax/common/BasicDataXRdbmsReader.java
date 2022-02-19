@@ -223,7 +223,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-        return new ColumnMetaData(index[0]++, colName, new ColumnMetaData.DataType(-999), false, true);
+        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
     }
 
     protected boolean isFilterUnexistCol() {

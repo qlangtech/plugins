@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
@@ -88,7 +89,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             private String getSqlServerType(ISelectedTab.ColMeta col) {
-                ColumnMetaData.DataType type = col.getType();
+                DataType type = col.getType();
                 switch (type.type) {
                     case Types.INTEGER:
                     case Types.TINYINT:

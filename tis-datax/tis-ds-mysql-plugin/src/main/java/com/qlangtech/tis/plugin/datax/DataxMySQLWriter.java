@@ -173,7 +173,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
              * @return
              */
             private String convertType(ISelectedTab.ColMeta col) {
-                ColumnMetaData.DataType type = col.getType();
+                DataType type = col.getType();
                 switch (type.type) {
                     case Types.BIT:
                     case Types.BOOLEAN:

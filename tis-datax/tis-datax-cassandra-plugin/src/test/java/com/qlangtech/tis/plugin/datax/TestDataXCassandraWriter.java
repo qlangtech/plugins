@@ -83,17 +83,17 @@ public class TestDataXCassandraWriter extends TestCase {
         ISelectedTab.ColMeta colMeta = null;
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName("user_id");
-        colMeta.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        colMeta.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName("user_name");
-        colMeta.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        colMeta.setType(DataXReaderColType.STRING.dataType);
         sourceCols.add(colMeta);
 
         colMeta = new ISelectedTab.ColMeta();
         colMeta.setName("bron_date");
-        colMeta.setType(ISelectedTab.DataXReaderColType.Date.dataType);
+        colMeta.setType(DataXReaderColType.Date.dataType);
         sourceCols.add(colMeta);
 
         // tableMap.setSourceCols(sourceCols);

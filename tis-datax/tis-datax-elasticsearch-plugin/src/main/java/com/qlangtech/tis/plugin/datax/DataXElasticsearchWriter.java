@@ -40,6 +40,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.VisualType;
@@ -323,22 +324,22 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         return ES_TYPE_TEXT;
     }
 
-    private static final Map<ISelectedTab.DataXReaderColType, VisualType> dataXTypeMapper;
+    private static final Map<DataXReaderColType, VisualType> dataXTypeMapper;
 
     static {
-        ImmutableMap.Builder<ISelectedTab.DataXReaderColType, VisualType> builder = ImmutableMap.builder();
-        builder.put(ISelectedTab.DataXReaderColType.Long, createInitType(ESFieldType.LONG));
-        builder.put(ISelectedTab.DataXReaderColType.INT, createInitType(ESFieldType.INTEGER));
-        builder.put(ISelectedTab.DataXReaderColType.Double, createInitType(ESFieldType.DOUBLE));
-        builder.put(ISelectedTab.DataXReaderColType.STRING, createInitType(ESFieldType.KEYWORD));
-        builder.put(ISelectedTab.DataXReaderColType.Boolean, createInitType(ESFieldType.BOOLEAN));
-        builder.put(ISelectedTab.DataXReaderColType.Date, createInitType(ESFieldType.DATE));
-        builder.put(ISelectedTab.DataXReaderColType.Bytes, createInitType(ESFieldType.BINARY));
+        ImmutableMap.Builder<DataXReaderColType, VisualType> builder = ImmutableMap.builder();
+        builder.put(DataXReaderColType.Long, createInitType(ESFieldType.LONG));
+        builder.put(DataXReaderColType.INT, createInitType(ESFieldType.INTEGER));
+        builder.put(DataXReaderColType.Double, createInitType(ESFieldType.DOUBLE));
+        builder.put(DataXReaderColType.STRING, createInitType(ESFieldType.KEYWORD));
+        builder.put(DataXReaderColType.Boolean, createInitType(ESFieldType.BOOLEAN));
+        builder.put(DataXReaderColType.Date, createInitType(ESFieldType.DATE));
+        builder.put(DataXReaderColType.Bytes, createInitType(ESFieldType.BINARY));
         dataXTypeMapper = builder.build();
     }
 
 
-    private VisualType mapSearchEngineType(ISelectedTab.DataXReaderColType type) {
+    private VisualType mapSearchEngineType(DataXReaderColType type) {
 
         VisualType esType = dataXTypeMapper.get(type);
         if (esType == null) {

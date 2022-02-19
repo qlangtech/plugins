@@ -29,10 +29,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataDumpers;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -104,7 +101,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
                 row = rows.next();
                 //int index, String key, int type, boolean pk
                 cmeta = new ColumnMetaData(index.getAndIncrement(), row.getString(0)
-                        , new ColumnMetaData.DataType(convertType(row.getString(1))), false, true);
+                        , new DataType(convertType(row.getString(1))), false, true);
                 // tables.add(row.getString(0));
                 colsMeta.add(cmeta);
             }

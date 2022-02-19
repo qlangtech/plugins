@@ -35,7 +35,10 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.ds.DataType;
 
+
+import javax.lang.model.type.TypeVisitor;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -176,56 +179,56 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 };
             }
 
-            private String convertType(ISelectedTab.ColMeta col) {
-                ColumnMetaData.DataType type = col.getType();
-                return type.accept(new ColumnMetaData.TypeVisitor<String>() {
+            protected String convertType(ISelectedTab.ColMeta col) {
+                DataType type = col.getType();
+                return type.accept(new DataType.TypeVisitor<String>() {
                     @Override
-                    public String longType(ColumnMetaData.DataType type) {
+                    public String longType(DataType type) {
                         return "BIGINT";
                     }
 
                     @Override
-                    public String doubleType(ColumnMetaData.DataType type) {
+                    public String doubleType(DataType type) {
                         return "DOUBLE";
                     }
 
                     @Override
-                    public String dateType(ColumnMetaData.DataType type) {
+                    public String dateType(DataType type) {
                         return "DATE";
                     }
 
                     @Override
-                    public String timestampType(ColumnMetaData.DataType type) {
+                    public String timestampType(DataType type) {
                         return "DATETIME";
                     }
 
                     @Override
-                    public String bitType(ColumnMetaData.DataType type) {
+                    public String bitType(DataType type) {
                         return "TINYINT";
                     }
 
                     @Override
-                    public String blobType(ColumnMetaData.DataType type) {
+                    public String blobType(DataType type) {
                         return varcharType(type);
                     }
 
                     @Override
-                    public String varcharType(ColumnMetaData.DataType type) {
+                    public String varcharType(DataType type) {
                         return "VARCHAR(" + Math.min(type.columnSize, 65000) + ")";
                     }
 
                     @Override
-                    public String intType(ColumnMetaData.DataType type) {
+                    public String intType(DataType type) {
                         return "INT";
                     }
 
                     @Override
-                    public String floatType(ColumnMetaData.DataType type) {
+                    public String floatType(DataType type) {
                         return "FLOAT";
                     }
 
                     @Override
-                    public String decimalType(ColumnMetaData.DataType type) {
+                    public String decimalType(DataType type) {
                         return "DECIMAL(" + type.columnSize + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")";
                     }
                 });

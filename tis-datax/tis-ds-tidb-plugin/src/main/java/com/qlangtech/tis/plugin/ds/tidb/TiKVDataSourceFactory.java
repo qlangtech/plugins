@@ -26,7 +26,8 @@ import com.pingcap.tikv.catalog.Catalog;
 import com.pingcap.tikv.meta.TiDAGRequest;
 import com.pingcap.tikv.meta.TiDBInfo;
 import com.pingcap.tikv.meta.TiTableInfo;
-import com.pingcap.tikv.types.DataType;
+//import com.pingcap.tikv.types.DataType;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.pingcap.tikv.util.RangeSplitter;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
@@ -235,9 +236,9 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         });
     }
 
-    private ColumnMetaData.DataType map2JdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
+    private com.qlangtech.tis.plugin.ds.DataType map2JdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
         int colSize = (int) Long.min(Integer.MAX_VALUE, type.getLength());
-        ColumnMetaData.DataType tisType = new ColumnMetaData.DataType(jdbcType(keyName, type), colSize);
+        DataType tisType = new DataType(jdbcType(keyName, type), colSize);
         // type.getType()
         tisType.setDecimalDigits(type.getDecimal());
         return tisType;
@@ -293,7 +294,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    private ReservedFieldType typeMap(DataType dtype) {
+    private ReservedFieldType typeMap(com.pingcap.tikv.types.DataType dtype) {
 
         switch (dtype.getType()) {
             case TypeDecimal:

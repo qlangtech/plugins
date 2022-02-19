@@ -33,10 +33,7 @@ import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -112,25 +109,25 @@ public class DataXMongodbReader extends DataxReader {
         return Collections.singletonList(tab);
     }
 
-    private ColumnMetaData.DataType convertType(String type) {
+    private DataType convertType(String type) {
         if (!acceptTypes.contains(type)) {
             throw new IllegalArgumentException("illegal type:" + type);
         }
         switch (type) {
             case "int":
             case "long":
-                return ISelectedTab.DataXReaderColType.Long.dataType;
+                return DataXReaderColType.Long.dataType;
             case "double":
-                return ISelectedTab.DataXReaderColType.Double.dataType;
+                return DataXReaderColType.Double.dataType;
             case "string":
             case "array":
-                return ISelectedTab.DataXReaderColType.STRING.dataType;
+                return DataXReaderColType.STRING.dataType;
             case "date":
-                return ISelectedTab.DataXReaderColType.Date.dataType;
+                return DataXReaderColType.Date.dataType;
             case "boolean":
-                return ISelectedTab.DataXReaderColType.Boolean.dataType;
+                return DataXReaderColType.Boolean.dataType;
             case "bytes":
-                return ISelectedTab.DataXReaderColType.Bytes.dataType;
+                return DataXReaderColType.Bytes.dataType;
             default:
                 throw new IllegalStateException("illegal type:" + type);
         }

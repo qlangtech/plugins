@@ -24,7 +24,7 @@ import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.transport.record.DefaultRecord;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hudi.TisDataXHudiWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import org.apache.commons.lang.RandomStringUtils;
@@ -55,10 +55,10 @@ public class TestDataXHudiWriterTask {
                                 TestDataXHudiWriterTask.class, TestDataXHudiWriter.hudi_datax_writer_assert_without_optional))
                         .getConfiguration("parameter");
 
-                List<HdfsHelper.HdfsColMeta> colsMeta = HdfsHelper.getColsMeta(this.writerSliceConfig);
+                List<HdfsColMeta> colsMeta = HdfsColMeta.getColsMeta(this.writerSliceConfig);
 
                 record[0] = new DefaultRecord();
-                for (HdfsHelper.HdfsColMeta col : colsMeta) {
+                for (HdfsColMeta col : colsMeta) {
                     // col.csvType
                     switch (col.csvType) {
                         case STRING:

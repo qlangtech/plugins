@@ -85,7 +85,7 @@ public class TestDataXStarRocksWriter extends TestCase {
 
         for (ISelectedTab tab : selectedTabs) {
             for (ISelectedTab.ColMeta cm : tab.getCols()) {
-                cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+                cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
         //  EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
@@ -122,12 +122,12 @@ public class TestDataXStarRocksWriter extends TestCase {
         ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
         col.setPk(true);
         col.setName("user_id");
-        col.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        col.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(col);
 
         col = new ISelectedTab.ColMeta();
         col.setName("user_name");
-        col.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        col.setType(DataXReaderColType.STRING.dataType);
         sourceCols.add(col);
 
         tableMap.setSourceCols(sourceCols);

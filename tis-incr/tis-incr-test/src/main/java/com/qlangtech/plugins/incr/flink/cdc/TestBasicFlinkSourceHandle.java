@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.cdc;
@@ -21,10 +21,9 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.SinkFuncs;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableResult;
@@ -41,9 +40,9 @@ import java.util.Objects;
  * @create: 2021-12-18 10:57
  **/
 public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implements Serializable {
-    final String tabName;
+    protected final String tabName;
 
-    private StreamTableEnvironment tabEnv;
+    protected StreamTableEnvironment tabEnv;
 
     private final Map<String, TableResult> sourceTableQueryResult = Maps.newHashMap();
 
@@ -54,7 +53,7 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
     @Override
     protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {
         StreamExecutionEnvironment evn = super.getFlinkExecutionEnvironment();
-       // evn.enableCheckpointing(1000);
+        // evn.enableCheckpointing(1000);
         return evn;
     }
 
@@ -66,10 +65,13 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
     }
 
     @Override
-    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {
-        sinkFunction.add2Sink(tabName, streamMap.get(tabName));
+    protected void processTableStream(StreamExecutionEnvironment env, Map<String, DTOStream> streamMap, SinkFuncs sinkFunction) {
+
+//    @Override
+//    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {
+        sinkFunction.add2Sink(tabName, streamMap.get(tabName).getStream());
         if (tabEnv == null) {
-            StreamExecutionEnvironment env = sinkFunction.env;
+
             tabEnv = StreamTableEnvironment.create(
                     env,
                     EnvironmentSettings.newInstance()
@@ -78,8 +80,12 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
                             .build());
         }
 
-        tabEnv.createTemporaryView(tabName, streamMap.get(tabName));
+        createTemporaryView(streamMap);
         sourceTableQueryResult.put(tabName, tabEnv.executeSql("SELECT * FROM " + tabName));
+    }
+
+    protected void createTemporaryView(Map<String, DTOStream> streamMap) {
+        tabEnv.createTemporaryView(tabName, streamMap.get(tabName).getStream());
     }
 
     public CloseableIterator<Row> getRowSnapshot(String tabName) {

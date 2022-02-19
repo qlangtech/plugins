@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -35,6 +36,7 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.MDC;
 
@@ -52,6 +54,11 @@ public class TestDataXHudiWriter {
     // private static final String targetTableName ="";
     public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
 
+
+    @BeforeClass
+    public static void start() {
+        CenterResource.setNotFetchFromCenterRepository();
+    }
 
     @Test
     public void testRealDump() throws Exception {
@@ -95,8 +102,13 @@ public class TestDataXHudiWriter {
 
         HudiTest forTest = createDataXWriter();
         WriterTemplate.valiateCfgGenerate("hudi-datax-writer-assert.json", forTest.writer, forTest.tableMap);
+    }
 
+    @Test
+    public void testFlinkSqlTableDDLCreate() {
+        HudiTest forTest = createDataXWriter();
 
+        forTest.writer.getStreamTableMeta("tableName");
     }
 
     private static class HudiTest {

@@ -19,6 +19,8 @@
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
+import com.qlangtech.plugins.incr.flink.cdc.TestBasicFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.cdc.TestBasicFlinkSourceHandleSchemaAware;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
@@ -52,9 +54,37 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return createMySqlDataSourceFactory(dataxName);
             }
+
             @Override
             protected String getColEscape() {
                 return "`";
+            }
+        };
+
+        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+
+    }
+
+    @Test
+    public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        mysqlCDCFactory.startupOptions = "latest";
+        final String tabName = "base";
+
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+            @Override
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+                return createMySqlDataSourceFactory(dataxName);
+            }
+
+            @Override
+            protected String getColEscape() {
+                return "`";
+            }
+
+            @Override
+            protected TestBasicFlinkSourceHandle createConsumerHandle(String tabName) {
+                return new TestBasicFlinkSourceHandleSchemaAware(tabName, cols);
             }
         };
 

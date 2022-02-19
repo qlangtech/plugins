@@ -81,44 +81,44 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 //    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String nodeDesc;
 
-    protected ColumnMetaData.DataType getDataType(String colName, ResultSet cols) throws SQLException {
-        ColumnMetaData.DataType type = super.getDataType(colName, cols);
-        ColumnMetaData.DataType fixType = type.accept(new ColumnMetaData.TypeVisitor<ColumnMetaData.DataType>() {
+    protected DataType getDataType(String colName, ResultSet cols) throws SQLException {
+        DataType type = super.getDataType(colName, cols);
+        DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
             @Override
-            public ColumnMetaData.DataType longType(ColumnMetaData.DataType type) {
+            public DataType longType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType doubleType(ColumnMetaData.DataType type) {
+            public DataType doubleType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType dateType(ColumnMetaData.DataType type) {
+            public DataType dateType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType timestampType(ColumnMetaData.DataType type) {
+            public DataType timestampType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType bitType(ColumnMetaData.DataType type) {
+            public DataType bitType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType blobType(ColumnMetaData.DataType type) {
+            public DataType blobType(DataType type) {
                 return null;
             }
 
             @Override
-            public ColumnMetaData.DataType varcharType(ColumnMetaData.DataType type) {
+            public DataType varcharType(DataType type) {
                 if (type.columnSize < 1) {
                     // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
-                    ColumnMetaData.DataType n = new ColumnMetaData.DataType(Types.VARCHAR, 2000);
+                    DataType n = new DataType(Types.VARCHAR, 2000);
                     n.setDecimalDigits(type.getDecimalDigits());
                     return n;
                 }
@@ -278,7 +278,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             try {
                 for (int i = 1; i <= columCount; i++) {
                     result.add(
-                            new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new ColumnMetaData.DataType(metaData.getColumnType(i)), false, true));
+                            new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new DataType(metaData.getColumnType(i)), false, true));
                 }
                 return result;
             } catch (SQLException e) {

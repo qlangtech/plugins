@@ -19,8 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
-import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
@@ -191,8 +191,8 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         return cols.stream().map((c) -> {
             HiveColumn hivCol = new HiveColumn();
             SupportHiveDataType columnType = SupportHiveDataType.valueOf(
-                    StringUtils.upperCase(c.getString(Key.TYPE)));
-            String name = StringUtils.remove(c.getString(Key.NAME), "`");
+                    StringUtils.upperCase(c.getString(HdfsColMeta.KEY_TYPE)));
+            String name = StringUtils.remove(c.getString(HdfsColMeta.KEY_NAME), "`");
             if (StringUtils.isBlank(name)) {
                 throw new IllegalStateException("col name can not be blank");
             }

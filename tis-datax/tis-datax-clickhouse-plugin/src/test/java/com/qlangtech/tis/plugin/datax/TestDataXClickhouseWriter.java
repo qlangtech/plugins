@@ -85,27 +85,27 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 //        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
 //        cm = new ISelectedTab.ColMeta();
 //        cm.setName("customerregister_id");
-//        cm.setType(ISelectedTab.DataXReaderColType.STRING);
+//        cm.setType(DataXReaderColType.STRING);
 //        cmetas.add(cm);
 //
 //        cm = new ISelectedTab.ColMeta();
 //        cm.setName("waitingorder_id");
-//        cm.setType(ISelectedTab.DataXReaderColType.STRING);
+//        cm.setType(DataXReaderColType.STRING);
 //        cmetas.add(cm);
 //
 //        cm = new ISelectedTab.ColMeta();
 //        cm.setName("kind");
-//        cm.setType(ISelectedTab.DataXReaderColType.INT);
+//        cm.setType(DataXReaderColType.INT);
 //        cmetas.add(cm);
 //
 //        cm = new ISelectedTab.ColMeta();
 //        cm.setName("create_time");
-//        cm.setType(ISelectedTab.DataXReaderColType.Long);
+//        cm.setType(DataXReaderColType.Long);
 //        cmetas.add(cm);
 //
 //        cm = new ISelectedTab.ColMeta();
 //        cm.setName("last_ver");
-//        cm.setType(ISelectedTab.DataXReaderColType.INT);
+//        cm.setType(DataXReaderColType.INT);
 //        cmetas.add(cm);
 //
 //        tableMap.setSourceCols(cmetas);
@@ -176,27 +176,27 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         cm = new ISelectedTab.ColMeta();
         cm.setPk(true);
         cm.setName("customerregister_id");
-        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        cm.setType(DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("waitingorder_id");
-        cm.setType(ISelectedTab.DataXReaderColType.STRING.dataType);
+        cm.setType(DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("kind");
-        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        cm.setType(DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("create_time");
-        cm.setType(ISelectedTab.DataXReaderColType.Long.dataType);
+        cm.setType(DataXReaderColType.Long.dataType);
         cmetas.add(cm);
 
         cm = new ISelectedTab.ColMeta();
         cm.setName("last_ver");
-        cm.setType(ISelectedTab.DataXReaderColType.INT.dataType);
+        cm.setType(DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
         //tableMap.setSourceCols(cmetas);

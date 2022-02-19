@@ -30,8 +30,8 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -51,7 +51,6 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.types.AtomicDataType;
-import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.*;
 
 import java.lang.reflect.Field;
@@ -220,7 +219,6 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         }
 
 
-
         return StarRocksSink.sink(
                 // the table structure
                 schemaBuilder.build(),
@@ -287,55 +285,55 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         return sinkOptions;
     }
 
-    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, ColumnMetaData.DataType type) {
+    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, com.qlangtech.tis.plugin.ds.DataType type) {
         if (type == null) {
             throw new IllegalArgumentException("param type can not be null");
         }
         final boolean isNullable = !pk;
-        return type.accept(new ColumnMetaData.TypeVisitor<DataType>() {
+        return type.accept(new com.qlangtech.tis.plugin.ds.DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
             @Override
-            public DataType intType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType intType(DataType type) {
                 //          return DataTypes.INT();
                 return new AtomicDataType(new IntType(isNullable));
             }
 
             @Override
-            public DataType longType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType longType(DataType type) {
                 //return DataTypes.BIGINT();
                 return new AtomicDataType(new BigIntType(isNullable));
             }
 
             @Override
-            public DataType doubleType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType doubleType(DataType type) {
                 // return DataTypes.DOUBLE();
                 return new AtomicDataType(new DoubleType(isNullable));
             }
 
             @Override
-            public DataType dateType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType dateType(DataType type) {
                 // return DataTypes.DATE();
                 return new AtomicDataType(new DateType(isNullable));
             }
 
             @Override
-            public DataType timestampType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType timestampType(DataType type) {
                 //return DataTypes.TIMESTAMP();
                 return new AtomicDataType(new TimestampType(isNullable, 6));
             }
 
             @Override
-            public DataType bitType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType bitType(DataType type) {
                 return DataTypes.BOOLEAN();
             }
 
             @Override
-            public DataType blobType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType blobType(DataType type) {
                 // return DataTypes.VARBINARY(type.columnSize);
                 return varcharType(type);
             }
 
             @Override
-            public DataType varcharType(ColumnMetaData.DataType type) {
+            public org.apache.flink.table.types.DataType varcharType(DataType type) {
                 //return DataTypes.VARCHAR(type.columnSize);
                 return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
             }

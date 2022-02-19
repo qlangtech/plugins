@@ -19,7 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -29,13 +29,13 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,16 +50,46 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
 
 
     @Override
-    public final JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg, IDataxProcessor dataXProcessor) throws Exception {
+    public final JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
+            , IDataxProcessor dataXProcessor) throws Exception {
         StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
+
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
             throw new IllegalArgumentException("focusTabs can not be empty");
         }
         //Key
+        Map<String, DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataXProcessor);
+
+        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinks
+                = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
+        sinks.forEach((tab, func) -> {
+            if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
+                throw new IllegalArgumentException("tab of "
+                        + this.getSinkFuncFactory().getDescriptor().getDisplayName() + ":" + tab + " is illegal");
+            }
+        });
+
+        SinkFuncs sinkFunction = new SinkFuncs(env, sinks);
+
+        this.processTableStream(env, tab2OutputTag, sinkFunction);
+        return executeFlinkJob(dataxName, env);
+    }
+
+    /**
+     * 处理各个表对应的数据流
+     *
+     * @param
+     */
+    protected abstract void processTableStream(StreamExecutionEnvironment env
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction);
+
+
+    private Map<String, DTOStream> createTab2OutputTag(
+            AsyncMsg<List<ReaderSource>> asyncMsg, StreamExecutionEnvironment env, IDataxProcessor dataXProcessor) throws java.io.IOException {
         Map<String, DTOStream> tab2OutputTag
                 = asyncMsg.getFocusTabs().stream().collect(Collectors.toMap((tab) -> tab
                 , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
-                })));
+                }, getTabColMetas(dataXProcessor, tab))));
 
         List<SingleOutputStreamOperator<DTO>> mainDataStream = Lists.newArrayList();
         for (ReaderSource sourceFunc : asyncMsg.getSource()) {
@@ -71,23 +101,11 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
                 e.getValue().addStream(mainStream);
             }
         }
+        return tab2OutputTag;
+    }
 
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinks = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
-        sinks.forEach((tab, func) -> {
-            if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
-                throw new IllegalArgumentException("tab of "
-                        + this.getSinkFuncFactory().getDescriptor().getDisplayName() + ":" + tab + " is illegal");
-            }
-        });
-
-        SinkFuncs sinkFunction = new SinkFuncs(env, sinks);
-
-        Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
-        for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
-            streamMap.put(e.getKey(), e.getValue().getStream());
-        }
-        processTableStream(streamMap, sinkFunction);
-        return executeFlinkJob(dataxName, env);
+    protected List<FlinkCol> getTabColMetas(IDataxProcessor dataXProcessor, String tabName) {
+        return Collections.emptyList();
     }
 
     protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {
@@ -97,13 +115,6 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
     protected JobExecutionResult executeFlinkJob(TargetResName dataxName, StreamExecutionEnvironment env) throws Exception {
         return env.execute(dataxName.getName());
     }
-
-    /**
-     * 处理各个表对应的数据流
-     *
-     * @param
-     */
-    protected abstract void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction);
 
 
     private SingleOutputStreamOperator<DTO> getSourceStream(

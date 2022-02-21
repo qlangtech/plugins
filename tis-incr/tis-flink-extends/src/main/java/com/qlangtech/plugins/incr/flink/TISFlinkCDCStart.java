@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
+import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.sql.parser.stream.generate.MergeData;
 import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
@@ -80,7 +81,7 @@ public class TISFlinkCDCStart {
 
     private static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
         String streamSourceHandlerClass
-                = "com.qlangtech.tis.realtime.transfer." + dataxName + "." + MergeData.getJavaName(dataxName) + "SourceHandle";
+                = "com.qlangtech.tis.realtime.transfer." + dataxName + "." + UnderlineUtils.getJavaName(dataxName) + "SourceHandle";
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Class<?> aClass = Class.forName(streamSourceHandlerClass, true, classLoader);

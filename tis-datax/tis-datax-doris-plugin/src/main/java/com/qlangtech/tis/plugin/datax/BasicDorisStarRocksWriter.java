@@ -30,15 +30,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
-import com.qlangtech.tis.plugin.ds.DataType;
 
-
-import javax.lang.model.type.TypeVisitor;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -171,7 +169,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                     }
 
                     @Override
-                    protected void appendExtraConstraint(StringBuffer ddlScript) {
+                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
                         if (this.meta.isPk()) {
                             ddlScript.append(" NOT NULL");
                         }

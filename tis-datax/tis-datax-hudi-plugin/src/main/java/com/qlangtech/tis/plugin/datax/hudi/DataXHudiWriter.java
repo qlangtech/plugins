@@ -23,6 +23,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
@@ -47,6 +48,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -54,6 +56,8 @@ import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -98,63 +102,159 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
     }
 
-    private transient Map<String, List<HdfsColMeta>> tableMeta = null;
+    private transient Map<String, HudiTableMeta> tableMetas = null;
+
+    @Override
+    public String getFlinkStreamGenerateTemplateFileName() {
+        return TEMPLATE_FLINK_TABLE_HANDLE_SCALA;
+    }
+
+    @Override
+    public IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
+        return new HudiStreamTemplateData(mergeData);
+    }
+
+    public class HudiStreamTemplateData extends AdapterStreamTemplateData {
+        public HudiStreamTemplateData(IStreamTemplateData data) {
+            super(data);
+        }
+
+        public StringBuffer getSinkFlinkTableDDL(String tableName) {
+
+            HudiTableMeta tabMeta = getTableMeta(tableName);
+            /**
+             *
+             * https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/sql/create/#create-table
+             * @return
+             */
+            //@Override
+//                public StringBuffer createFlinkTableDDL () {
+            CreateTableSqlBuilder flinkTableDdlBuilder
+                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas)) {
+                @Override
+                protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+                    return new ColWrapper(c) {
+                        @Override
+                        public String getMapperType() {
+                            return convertType(meta);
+                        }
+
+                        @Override
+                        protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+                            // super.appendExtraConstraint(ddlScript);
+                            // appendExtraConstraint
+                            Optional<ColWrapper> f
+                                    = pks.stream().filter((pk) -> pk.getName().equals(meta.getName())).findFirst();
+                            if (f.isPresent()) {
+                                ddlScript.append(" PRIMARY KEY NOT ENFORCED");
+                            }
+                        }
+                    };
+                }
+
+                @Override
+                protected void appendExtraColDef(List<ColWrapper> pks) {
+                    // super.appendExtraColDef(pks);
+                    // this.script.append(this.colEscapeChar()).append()
+                    //String pt = tabMeta.get
+                    //`partition` VARCHAR(20)
+                    this.script.appendLine("\t,");
+                    appendColName(partitionedBy);
+                    this.script
+                            .append("VARCHAR(30)")
+                            .returnLine();
+                }
+
+                @Override
+                protected void appendTabMeta(List<ColWrapper> pks) {
+//                        with (
+//                                'connector' = 'hudi',
+//                                'path' = '$HUDI_DEMO/t2', -- $HUDI_DEMO 替换成的绝对路径
+//                        'table.type' = 'MERGE_ON_READ',
+//                                'write.bucket_assign.tasks' = '2',
+//                                'write.tasks' = '2',
+//                                'hive_sync.enable' = 'true',
+//                                'hive_sync.mode' = 'hms',
+//                                'hive_sync.metastore.uris' = 'thrift://ip:9083' -- ip 替换成 HMS 的地址
+//                       );
+                    this.script.block("PARTITIONED BY", (sub) -> {
+                        // (`partition`)
+                        sub.appendLine("`" + partitionedBy + "`");
+                    });
+                    IHiveConnGetter hiveCfg = getHiveConnMeta();
+                    this.script.block(true, "WITH", (sub) -> {
+                        sub.appendLine("'connector' = 'hudi',");
+                        sub.appendLine("'path' = '" + tabMeta.getHudiDataDir(getFs().getFileSystem(), getHiveConnMeta()) + "',");
+                        sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
+
+                        if (tabMeta.getHudiTabType() == HudiWriteTabType.MOR) {
+                            sub.appendLine("'read.streaming.enabled' = 'true',");
+                            sub.appendLine("'read.streaming.check-interval' = '4',");
+                        }
+
+                        sub.appendLine("'hive_sync.enable' = 'true',");
+                        sub.appendLine("'hive_sync.table' = '" + tableName + "',");
+                        sub.appendLine("'hive_sync.database' = '" + hiveCfg.getDbName() + "',");
+                        sub.appendLine("'hive_sync.mode'   = 'hms',");
+                        sub.appendLine("'hive_sync.metastore.uris' = '" + hiveCfg.getMetaStoreUrls() + "'");
+
+                    });
+                }
+            };
+            return flinkTableDdlBuilder.build();
+            //  }
+        }
+    }
 
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
+        final HudiTableMeta tabMeta = getTableMeta(tableName);
+        return new IStreamTableMeta() {
+            @Override
+            public List<HdfsColMeta> getColsMeta() {
+                return tabMeta.colMetas;
+            }
+        };
+    }
+
+    private HudiTableMeta getTableMeta(String tableName) {
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not empty");
         }
-        if (tableMeta == null) {
+        if (tableMetas == null) {
             if (StringUtils.isEmpty(this.dataXName)) {
                 throw new IllegalStateException("prop dataXName can not be null");
             }
+            tableMetas = Maps.newHashMap();
             DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
 
             List<File> dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
             Configuration cfg = null;
             Configuration paramCfg = null;
             String table = null;
+            HudiTableMeta tableMeta = null;
             for (File f : dataxCfgFile) {
                 cfg = Configuration.from(f);
-                paramCfg = cfg.getConfiguration("writer.parameter");
+                paramCfg = cfg.getConfiguration("job.content[0].writer.parameter");
+                if (paramCfg == null) {
+                    throw new NullPointerException("paramCfg can not be null,relevant path:" + f.getAbsolutePath());
+                }
                 table = paramCfg.getString("fileName");
-                if (StringUtils.isNotEmpty(table)) {
+                if (StringUtils.isEmpty(table)) {
                     throw new IllegalStateException("table can not be null:" + paramCfg.toJSON());
                 }
-                tableMeta.put(table, HdfsColMeta.getColsMeta(paramCfg));
+                tableMeta = new HudiTableMeta(paramCfg);
+                tableMetas.put(table, tableMeta);
             }
         }
 
-        final List<HdfsColMeta> colMetas = tableMeta.get(tableName);
-        return new IStreamTableMeta() {
-            @Override
-            public List<HdfsColMeta> getColsMeta() {
-                return colMetas;
-            }
-
-            /**
-             *
-             * https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/sql/create/#create-table
-             * @return
-             */
-            @Override
-            public StringBuffer createFlinkTableDDL() {
-                CreateTableSqlBuilder flinkTableDdlBuilder
-                        = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, colMetas)) {
-                    @Override
-                    protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
-                        return new ColWrapper(c) {
-                            @Override
-                            public String getMapperType() {
-                                return convertType(meta);
-                            }
-                        };
-                    }
-                };
-                return flinkTableDdlBuilder.build();
-            }
-        };
+        final HudiTableMeta tabMeta = tableMetas.get(tableName);
+        if (tabMeta == null || tabMeta.isColsEmpty()) {
+            throw new IllegalStateException("table:" + tableName
+                    + " relevant colMetas can not be null,exist tables:"
+                    + tableMetas.keySet().stream().collect(Collectors.joining(",")));
+        }
+        return tabMeta;
     }
 
     private String convertType(ISelectedTab.ColMeta col) {
@@ -249,10 +349,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return IOUtils.loadResourceFromClasspath(DataXHudiWriter.class, "DataXHudiWriter-tpl.json");
     }
 
-    @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        return null;
-    }
+//    @Override
+//    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+//        return null;
+//    }
 
     @TISExtension()
     public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements IRewriteSuFormProperties {

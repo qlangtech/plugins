@@ -24,7 +24,6 @@ import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
@@ -41,10 +40,10 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.web.start.TisAppLaunchPort;
@@ -81,22 +80,25 @@ public class TisDataXHudiWriter extends HdfsWriter {
     private static final String CSV_NULL_VALUE = "null";
     private static final char CSV_ESCAPE_CHAR = '"';
     private static final boolean CSV_FILE_USE_HEADER = true;
-    public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
+
     // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     private static final Logger logger = LoggerFactory.getLogger(TisDataXHudiWriter.class);
 
     public static class Job extends TisDataXHdfsWriter.Job {
-        private String sourceOrderingField;
-        private String dataXName;
+
+        private HudiTableMeta tabMeta;
+
+        //        private String sourceOrderingField;
+//        private String dataXName;
         private DataXHudiWriter writerPlugin;
-        private String pkName;
-        private String partitionpathField;
-        private Integer shuffleParallelism;
+        //        private String pkName;
+//        private String partitionpathField;
+//        private Integer shuffleParallelism;
         //        private IPath fsSourcePropsPath;
 //        private IPath fsSourceSchemaPath;
         // private FileSystemFactory fsFactory;
         private IPath tabDumpDir;
-        private HudiWriteTabType hudiTabType;
+        // private HudiWriteTabType hudiTabType;
 
         private IPath rootDir;
 
@@ -104,14 +106,17 @@ public class TisDataXHudiWriter extends HdfsWriter {
         @Override
         public void init() {
             super.init();
-            this.sourceOrderingField
-                    = this.cfg.getNecessaryValue(KEY_SOURCE_ORDERING_FIELD, HdfsWriterErrorCode.REQUIRED_VALUE);
-            this.dataXName = this.cfg.getNecessaryValue(DataxUtils.DATAX_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
-            this.pkName = cfg.getNecessaryValue("hudiRecordkey", HdfsWriterErrorCode.REQUIRED_VALUE);
-            this.partitionpathField = cfg.getNecessaryValue("hudiPartitionpathField", HdfsWriterErrorCode.REQUIRED_VALUE);
-            this.shuffleParallelism
-                    = Integer.parseInt(cfg.getNecessaryValue("shuffleParallelism", HdfsWriterErrorCode.REQUIRED_VALUE));
-            this.hudiTabType = HudiWriteTabType.parse(cfg.getNecessaryValue("hudiTabType", HdfsWriterErrorCode.REQUIRED_VALUE));
+
+            this.tabMeta = new HudiTableMeta(this.cfg);
+
+//            this.sourceOrderingField
+//                    = this.cfg.getNecessaryValue(KEY_SOURCE_ORDERING_FIELD, HdfsWriterErrorCode.REQUIRED_VALUE);
+//            this.dataXName = this.cfg.getNecessaryValue(DataxUtils.DATAX_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
+//            this.pkName = cfg.getNecessaryValue("hudiRecordkey", HdfsWriterErrorCode.REQUIRED_VALUE);
+//            this.partitionpathField = cfg.getNecessaryValue("hudiPartitionpathField", HdfsWriterErrorCode.REQUIRED_VALUE);
+//            this.shuffleParallelism
+//                    = Integer.parseInt(cfg.getNecessaryValue("shuffleParallelism", HdfsWriterErrorCode.REQUIRED_VALUE));
+//            this.hudiTabType = HudiWriteTabType.parse(cfg.getNecessaryValue("hudiTabType", HdfsWriterErrorCode.REQUIRED_VALUE));
 
 //            this.writerPlugin = getWriterPlugin();
             //  this.fsFactory = writerPlugin.getFs();
@@ -124,21 +129,12 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         }
 
-        protected IPath getDumpDir() {
-            if (this.tabDumpDir == null) {
-                ITISFileSystem fs = this.getFileSystem();
-                this.tabDumpDir = fs.getPath(getRootPath(), getHiveConnGetter().getDbName() + "/" + this.getFileName());
-            }
-            return this.tabDumpDir;
-        }
 
         protected IPath getRootPath() {
             if (rootDir == null) {
-                //  DataXHudiWriter writerPlugin = getHudiWriterPlugin();
                 ITISFileSystem fs = this.getFileSystem();
-                // Objects.requireNonNull(writerPlugin, "writerPlugin can not be null");
                 Objects.requireNonNull(fs, "fileSystem can not be null");
-                rootDir = fs.getRootDir();// fs.getPath(writerPlugin.getFs().getFSAddress() + );
+                rootDir = fs.getRootDir();
             }
             return rootDir;
         }
@@ -257,10 +253,11 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 // TypedProperties props = new TypedProperties();
                 TypedPropertiesBuilder props = new TypedPropertiesBuilder();
 
-                props.setProperty("hoodie.upsert.shuffle.parallelism", String.valueOf(this.shuffleParallelism));
-                props.setProperty("hoodie.insert.shuffle.parallelism", String.valueOf(this.shuffleParallelism));
-                props.setProperty("hoodie.delete.shuffle.parallelism", String.valueOf(this.shuffleParallelism));
-                props.setProperty("hoodie.bulkinsert.shuffle.parallelism", String.valueOf(this.shuffleParallelism));
+                String shuffleParallelism = String.valueOf(this.tabMeta.getShuffleParallelism());
+                props.setProperty("hoodie.upsert.shuffle.parallelism", shuffleParallelism);
+                props.setProperty("hoodie.insert.shuffle.parallelism", (shuffleParallelism));
+                props.setProperty("hoodie.delete.shuffle.parallelism", (shuffleParallelism));
+                props.setProperty("hoodie.bulkinsert.shuffle.parallelism", (shuffleParallelism));
                 props.setProperty("hoodie.embed.timeline.server", "true");
                 props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
 
@@ -301,8 +298,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 props.setProperty("hoodie.datasource.hive_sync.jdbcurl", hiveMeta.getJdbcUrl());
                 props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");
 
-                props.setProperty("hoodie.datasource.write.recordkey.field", pkName);
-                props.setProperty("hoodie.datasource.write.partitionpath.field", partitionpathField);
+                props.setProperty("hoodie.datasource.write.recordkey.field", tabMeta.getPkName());
+                props.setProperty("hoodie.datasource.write.partitionpath.field", tabMeta.getPartitionpathField());
 
 
                 props.store(write);
@@ -316,6 +313,10 @@ public class TisDataXHudiWriter extends HdfsWriter {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        protected IPath getDumpDir() {
+            return this.tabMeta.getDumpDir(this.getFileSystem(), this.getHiveConnGetter());
         }
 
         private IPath getSourcePropsPath() {
@@ -365,27 +366,25 @@ public class TisDataXHudiWriter extends HdfsWriter {
             if (!hasAddJar[0]) {
                 throw new IllegalStateException("path must contain jars:" + addedJars.getAbsolutePath());
             }
-            //HudiWriteTabType tabType = writerPlugin.parseTabType();
             handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
-            // handle.addJar("/Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-hudi-plugin/target/tis-datax-hudi-plugin/WEB-INF/lib/hudi-utilities_2.11-0.10.0.jar");
             ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
             handle.setMaster(sparkConnGetter.getSparkMaster());
             handle.setSparkHome(String.valueOf(sparkHome.toPath().normalize()));
             handle.setMainClass("com.alibaba.datax.plugin.writer.hudi.TISHoodieDeltaStreamer");
 
             IPath fsSourcePropsPath = getSourcePropsPath();
-            IPath hudiDataDir = this.getFileSystem().getPath(getDumpDir(), "hudi");
-            handle.addAppArgs("--table-type", hudiTabType.getValue()
+
+            handle.addAppArgs("--table-type", this.tabMeta.getHudiTabType().getValue()
                     , "--source-class", "org.apache.hudi.utilities.sources.CsvDFSSource"
-                    , "--source-ordering-field", this.sourceOrderingField
-                    , "--target-base-path", String.valueOf(hudiDataDir)
-                    , "--target-table", tabName + "/" + this.dataXName
+                    , "--source-ordering-field", this.tabMeta.getSourceOrderingField()
+                    , "--target-base-path", String.valueOf(this.tabMeta.getDumpDir(getFileSystem(), getHiveConnGetter()))
+                    , "--target-table", tabName + "/" + this.tabMeta.getDataXName()
                     , "--props", String.valueOf(fsSourcePropsPath)
                     , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"
                     , "--enable-sync"
             );
 
-            if (this.hudiTabType == HudiWriteTabType.MOR) {
+            if (this.tabMeta.getHudiTabType() == HudiWriteTabType.MOR) {
                 handle.addAppArgs("--disable-compaction");
             }
 

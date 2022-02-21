@@ -5,10 +5,7 @@
         "fileType": "$writer.fileType",
         "fileName": "$writer.dataXName",
         "dataxName" : "$writer.dataXName",
-        "column": [
-            #foreach($c in $writer.cols)
-            {"name":"$c.name","type":"$c.type"},
-            #end],
+         #parse("com/qlangtech/tis/plugin/datax/hdfs/hdfs-cols.vm"),
         "writeMode": "$writer.writeMode",
          #if($writer.containEncoding) "encoding": "$writer.encoding", #end
          "fieldDelimiter": "$writer.fieldDelimiter",

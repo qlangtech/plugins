@@ -18,9 +18,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -32,11 +32,28 @@ import java.util.stream.Collectors;
  **/
 public abstract class CreateTableSqlBuilder {
     private final IDataxProcessor.TableMap tableMapper;
-    protected StringBuffer script;
+    protected BlockScriptBuffer script;
+    protected final List<ColWrapper> pks;
+    public int maxColNameLength;
+    private final String escapeChar;
 
     public CreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper) {
         this.tableMapper = tableMapper;
-        this.script = new StringBuffer();
+        this.script = new BlockScriptBuffer();
+        this.pks = this.getCols().stream()
+                .filter((c) -> c.isPk())
+                .map((c) -> createColWrapper(c))
+                .collect(Collectors.toList());
+
+        maxColNameLength = 0;
+        for (ISelectedTab.ColMeta col : this.getCols()) {
+            int m = StringUtils.length(col.getName());
+            if (m > maxColNameLength) {
+                maxColNameLength = m;
+            }
+        }
+        maxColNameLength += 4;
+        this.escapeChar = supportColEscapeChar() ? String.valueOf(colEscapeChar()) : StringUtils.EMPTY;
     }
 
 
@@ -46,29 +63,24 @@ public abstract class CreateTableSqlBuilder {
     protected void appendTabMeta(List<ColWrapper> pks) {
     }
 
+
+
     public StringBuffer build() {
 
         script.append("CREATE TABLE ").append(getCreateTableName()).append("\n");
         script.append("(\n");
-        List<ColWrapper> pks = Lists.newArrayList();
-        int maxColNameLength = 0;
-        for (ISelectedTab.ColMeta col : this.getCols()) {
-            if (col.isPk()) {
-                pks.add(this.createColWrapper(col));
-            }
-            int m = StringUtils.length(col.getName());
-            if (m > maxColNameLength) {
-                maxColNameLength = m;
-            }
-        }
-        maxColNameLength += 4;
+
+
         final int colSize = getCols().size();
         int colIndex = 0;
-        String escapeChar = supportColEscapeChar() ? String.valueOf(colEscapeChar()) : StringUtils.EMPTY;
+
         for (ColWrapper col : preProcessCols(pks, getCols())) {
-            script.append("    ").append(escapeChar)
-                    .append(String.format("%-" + (maxColNameLength) + "s", col.getName() + (escapeChar)))
-                    .append(col.getMapperType());
+            script.append("    ");
+
+            this.appendColName(col.getName());
+
+            script.append(col.getMapperType());
+
             col.appendExtraConstraint(script);
             if (++colIndex < colSize) {
                 script.append(",");
@@ -99,7 +111,12 @@ public abstract class CreateTableSqlBuilder {
 //        ENGINE = CollapsingMergeTree(__cc_ck_sign)
 //        ORDER BY customerregister_id
 //        SETTINGS index_granularity = 8192
-        return script;
+        return script.getContent();
+    }
+
+    protected void appendColName(String col) {
+        script.append(escapeChar)
+                .append(String.format("%-" + (maxColNameLength) + "s", col + (escapeChar)));
     }
 
 
@@ -126,7 +143,7 @@ public abstract class CreateTableSqlBuilder {
 
         public abstract String getMapperType();
 
-        protected void appendExtraConstraint(StringBuffer ddlScript) {
+        protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
 
         }
 

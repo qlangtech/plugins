@@ -1,37 +1,47 @@
 {
-  "name":"hudiwriter",
-  "parameter":{
-    "column":[
+  "name": "hudiwriter",
+  "parameter": {
+    "column": [
       {
-        "name":"customerregister_id",
-        "type":"STRING"
+        "name": "customerregister_id",
+        "nullable": false,
+        "pk": true,
+        "type": "12,256,"
       },
       {
-        "name":"waitingorder_id",
-        "type":"STRING"
+        "name": "waitingorder_id",
+        "nullable": false,
+        "pk": true,
+        "type": "12,256,"
       },
       {
-        "name":"kind",
-        "type":"INT"
+        "name": "kind",
+        "nullable": false,
+        "pk": false,
+        "type": "4,-1,"
       },
       {
-        "name":"create_time",
-        "type":"BIGINT"
+        "name": "create_time",
+        "nullable": false,
+        "pk": false,
+        "type": "-5,-1,"
       },
       {
-        "name":"last_ver",
-        "type":"INT"
+        "name": "last_ver",
+        "nullable": false,
+        "pk": false,
+        "type": "4,-1,"
       }
     ],
-    "dataxName":"testDataX4465",
-    "fileName":"customer_order_relation",
-    "fileType":"csv",
-    "hudiBatchOp":"BULK_INSERT",
-    "hudiPartitionpathField":"kind",
-    "hudiRecordkey":"customerregister_id",
-    "hudiSourceOrderingField":"last_ver",
-    "hudiTabType":"COPY_ON_WRITE",
-    "shuffleParallelism":999,
-    "writeMode":"insert"
+    "dataxName": "testDataX4465",
+    "fileName": "customer_order_relation",
+    "fileType": "csv",
+    "hudiBatchOp": "BULK_INSERT",
+    "hudiPartitionpathField": "kind",
+    "hudiRecordkey": "customerregister_id",
+    "hudiSourceOrderingField": "last_ver",
+    "hudiTabType": "COPY_ON_WRITE",
+    "shuffleParallelism": 999,
+    "writeMode": "insert"
   }
 }

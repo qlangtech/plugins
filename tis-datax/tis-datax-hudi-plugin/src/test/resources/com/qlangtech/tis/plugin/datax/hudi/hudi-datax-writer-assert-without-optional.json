@@ -6,28 +6,33 @@
     "column": [
       {
         "name": "customerregister_id",
-        "type": "STRING",
-        "nullable": false
+        "nullable": false,
+        "pk": true,
+        "type": "12,256,"
       },
       {
         "name": "waitingorder_id",
-        "type": "STRING",
-        "nullable": true
+        "nullable": false,
+        "pk": true,
+        "type": "12,256,"
       },
       {
         "name": "kind",
-        "type": "SMALLINT",
-        "nullable": true
+        "nullable": false,
+        "pk": false,
+        "type": "4,-1,"
       },
       {
         "name": "create_time",
-        "type": "BIGINT",
-        "nullable": true
+        "nullable": false,
+        "pk": false,
+        "type": "-5,-1,"
       },
       {
         "name": "last_ver",
-        "type": "BIGINT",
-        "nullable": true
+        "nullable": false,
+        "pk": false,
+        "type": "4,-1,"
       }
     ],
     "hudiSourceOrderingField": "last_ver",

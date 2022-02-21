@@ -22,8 +22,10 @@ package com.qlangtech.tis.coredefine.module.action;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.offline.DataxUtils;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,5 +37,9 @@ public class DataxAction {
         String dataxName = filter.param(DataxUtils.DATAX_NAME);
         Assert.assertEquals("dataxName must equal", "baisuitestTestcase", dataxName);
         return Lists.newArrayList("table1", "table2", "table3");
+    }
+
+    public static List<Option> getDepartments() {
+        return Collections.emptyList();
     }
 }

@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -31,9 +32,11 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * @author: baisui 百岁
@@ -74,6 +77,25 @@ public class DefaultDataxProcessor extends DataxProcessor {
         IDataxGlobalCfg globalCfg = ParamsConfig.getItem(this.globalCfg, IDataxGlobalCfg.KEY_DISPLAY_NAME);
         Objects.requireNonNull(globalCfg, "dataX Global config can not be null");
         return globalCfg;
+    }
+
+    @Override
+    public String getFlinkStreamGenerateTemplateFileName() {
+        return writerPluginOverwrite((s) -> s.getFlinkStreamGenerateTemplateFileName());
+    }
+
+    @Override
+    public IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
+        return writerPluginOverwrite((s) -> s.decorateMergeData(mergeData));
+    }
+
+    private <T> T writerPluginOverwrite(Function<IStreamIncrGenerateStrategy, T> func) {
+        IDataxWriter writer = this.getWriter(null);
+        Objects.requireNonNull(writer, "writer plugin can not be null");
+        if (writer instanceof IStreamIncrGenerateStrategy) {
+            return func.apply(((IStreamIncrGenerateStrategy) writer));
+        }
+        return func.apply(this);
     }
 
 

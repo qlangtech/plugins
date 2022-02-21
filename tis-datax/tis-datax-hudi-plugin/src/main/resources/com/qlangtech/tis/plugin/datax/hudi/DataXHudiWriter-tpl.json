@@ -4,10 +4,8 @@
     "fileType":   "csv",
     "fileName":   "$writer.tableName",
     "dataxName" : "$writer.dataXName",
-    "column": [
-      #foreach($c in $writer.cols)
-{"name":"$c.name","type":"$c.type","nullable": ${c.nullable}},#end],
-"writeMode": "$writer.writeMode",
+    #parse("com/qlangtech/tis/plugin/datax/hdfs/hdfs-cols.vm"),
+    "writeMode": "$writer.writeMode",
     "hudiSourceOrderingField": "$writer.sourceOrderingField",
     "hudiRecordkey": "$writer.recordField",
     "hudiPartitionpathField": "$writer.partitionPathField",

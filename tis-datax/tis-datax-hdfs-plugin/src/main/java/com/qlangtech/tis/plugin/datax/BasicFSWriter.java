@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.offline.FileSystemFactoryGetter;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -39,7 +40,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-01 10:05
  **/
-public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware , FileSystemFactoryGetter {
 
     protected static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
 
@@ -92,6 +93,10 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         return fileSystem;
     }
 
+    @Override
+    public FileSystemFactory getFsFactory() {
+        return this.getFs();
+    }
 
     @Override
     public final IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {

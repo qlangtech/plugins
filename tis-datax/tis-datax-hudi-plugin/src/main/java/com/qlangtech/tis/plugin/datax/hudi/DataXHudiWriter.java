@@ -36,6 +36,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -119,6 +120,15 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             super(data);
         }
 
+        public String getSourceTable(String tableName) {
+            return tableName + IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX;
+        }
+
+        public List<HdfsColMeta> getCols(String tableName) {
+            HudiTableMeta tableMeta = getTableMeta(tableName);
+            return tableMeta.colMetas;
+        }
+
         public StringBuffer getSinkFlinkTableDDL(String tableName) {
 
             HudiTableMeta tabMeta = getTableMeta(tableName);
@@ -182,7 +192,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                         sub.appendLine("`" + partitionedBy + "`");
                     });
                     IHiveConnGetter hiveCfg = getHiveConnMeta();
+                    if (StringUtils.isEmpty(dataXName)) {
+                        throw new IllegalStateException("prop of dataXName can not be empty");
+                    }
                     this.script.block(true, "WITH", (sub) -> {
+                        sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + dataXName + "',");
                         sub.appendLine("'connector' = 'hudi',");
                         sub.appendLine("'path' = '" + tabMeta.getHudiDataDir(getFs().getFileSystem(), getHiveConnMeta()) + "',");
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
@@ -273,7 +287,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             @Override
             public String decimalType(DataType type) {
                 // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/#decimal
-                return "DECIMAL(" + type.getDecimalDigits() + ", " + type.columnSize + ")";
+                return "DECIMAL(" + type.columnSize + ", " + type.getDecimalDigits() + ")";
             }
 
             @Override

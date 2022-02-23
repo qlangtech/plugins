@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -149,7 +150,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         DataStream<Row> rowStream = dtoDataStream.getStream().map(new DTO2RowMapper(cols), outputType);
 
         Table table = tabEnv.fromChangelogStream(rowStream, schema, ChangelogMode.all());
-        tabEnv.createTemporaryView(tabName, table);
+        tabEnv.createTemporaryView(tabName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
 
 
     }

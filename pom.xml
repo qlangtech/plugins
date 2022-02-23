@@ -64,6 +64,7 @@
     </modules>
 
     <properties>
+        <hudi.version>0.10.0</hudi.version>
         <!--        <revision>2.3.0</revision>-->
 
         <hadoop-version>2.7.3</hadoop-version>
@@ -144,12 +145,12 @@
                 <version>${project.version}</version>
             </dependency>
 
-<!--            <dependency>-->
-<!--                <groupId>com.qlangtech.tis</groupId>-->
-<!--                <artifactId>tis-dag</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--                <scope>provided</scope>-->
-<!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>com.qlangtech.tis</groupId>-->
+            <!--                <artifactId>tis-dag</artifactId>-->
+            <!--                <version>${project.version}</version>-->
+            <!--                <scope>provided</scope>-->
+            <!--            </dependency>-->
 
             <dependency>
                 <groupId>com.qlangtech.tis.tools</groupId>
@@ -250,6 +251,13 @@
                 <groupId>com.qlangtech.tis</groupId>
                 <artifactId>tis-plugin</artifactId>
                 <version>${tis.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.datax</groupId>
+                <artifactId>datax-config</artifactId>
+                <version>${project.version}</version>
                 <scope>provided</scope>
             </dependency>
 

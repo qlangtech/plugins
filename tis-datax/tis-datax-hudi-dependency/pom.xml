@@ -31,7 +31,7 @@
     <artifactId>tis-datax-hudi-dependency</artifactId>
     <properties>
         <spark.version>2.4.4</spark.version>
-        <hudi.version>0.10.0</hudi.version>
+
     </properties>
 
 

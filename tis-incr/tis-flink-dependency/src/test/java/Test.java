@@ -16,23 +16,35 @@
  * limitations under the License.
  */
 
-package com.alibaba.datax.plugin.writer.hudi;
+import com.qlangtech.tis.TIS;
 
-//import org.apache.spark.api.java.JavaSparkContext;
-//import org.apache.spark.sql.SparkSession;
+import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-21 18:43
+ * @create: 2022-02-22 15:14
  **/
-public class SparkTest {
-    public static void main(String[] args) {
-        // Spark session setup..
-//        SparkSession spark = SparkSession.builder().appName("Hoodie Spark APP")
-//                .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-//                .config("spark.ui.enabled", "false")
-//                .master("local[1]").getOrCreate();
-//        JavaSparkContext jssc = new JavaSparkContext(spark.sparkContext());
-//        spark.sparkContext().setLogLevel("WARN");
+public class Test {
+
+    @org.junit.Test
+    public void test() throws Exception {
+        //
+//        Enumeration<URL> resources
+//                = Thread.currentThread().getContextClassLoader().getResources("org/codehaus/janino/CompilerFactory.class");
+//        while (resources.hasMoreElements()) {
+//            System.out.println(resources.nextElement());
+//        }
+
+
+
+        Enumeration<URL> resources
+                =  TIS.get().getPluginManager().uberClassLoader.getResources("com/esotericsoftware/kryo/Serializer.class");
+        while (resources.hasMoreElements()) {
+            System.out.println(resources.nextElement());
+        }
+
+
+
     }
 }

@@ -80,10 +80,14 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     @Override
     public RestClusterClient createConfigInstance() {
-        return createFlinkRestClusterClient();
+        return createFlinkRestClusterClient(Optional.empty());
     }
 
-    private RestClusterClient createFlinkRestClusterClient() {
+    /**
+     * @param connTimeout The maximum time in ms for the client to establish a TCP connection.
+     * @return
+     */
+    public RestClusterClient createFlinkRestClusterClient(Optional<Long> connTimeout) {
 
 
 //        String[] address = StringUtils.split(factory.jobManagerAddress, ":");
@@ -96,6 +100,12 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             configuration.setString(JobManagerOptions.ADDRESS, managerAddress.host);
             configuration.setInteger(JobManagerOptions.PORT, managerAddress.port);
             configuration.setInteger(RestOptions.PORT, managerAddress.port);
+
+            if (connTimeout.isPresent()) {
+                configuration.setLong(RestOptions.CONNECTION_TIMEOUT, connTimeout.get());
+                configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
+                configuration.setLong(RestOptions.RETRY_DELAY, 0l);
+            }
             return new RestClusterClient<>(configuration, this.clusterId);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -106,6 +116,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     public String identityValue() {
         return this.name;
     }
+
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {

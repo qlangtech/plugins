@@ -29,6 +29,9 @@ import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -119,13 +122,27 @@ public class TestDataXHudiWriter {
 
     @Test
     public void testFlinkSqlTableDDLCreate() throws Exception {
-        HudiTest forTest = createDataXWriter();
+        FileSystemFactory fsFactory = EasyMock.createMock("fsFactory", FileSystemFactory.class);
+
+        ITISFileSystem fs = EasyMock.createMock("fileSystem", ITISFileSystem.class);
+        //  fs.getRootDir()
+        String child = "default/customer_order_relation";
+        String dataDir = "hudi";
+        IPath rootPath = new HdfsPath(HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin");
+        IPath tabPath = new HdfsPath(rootPath, child);
+        IPath hudiDataPath = new HdfsPath(tabPath, dataDir);
+        EasyMock.expect(fs.getPath(rootPath, child)).andReturn(tabPath);
+        EasyMock.expect(fs.getPath(tabPath, dataDir)).andReturn(hudiDataPath);
+        EasyMock.expect(fs.getRootDir()).andReturn(rootPath);
+        EasyMock.expect(fsFactory.getFileSystem()).andReturn(fs);
+        HudiTest forTest = createDataXWriter(Optional.of(fsFactory));
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File dataXCfg = folder.newFile();
         FileUtils.writeStringToFile(dataXCfg
-                , "{\"writer\":"
-                        + IOUtils.loadResourceFromClasspath(this.getClass(), hudi_datax_writer_assert_without_optional)
-                        + "}"
+                , "{job:{content:[{\"writer\":"
+                        + IOUtils.loadResourceFromClasspath(
+                        this.getClass(), hudi_datax_writer_assert_without_optional)
+                        + "}]}}"
                 , TisUTF8.get());
 
         List<File> dataXFiles = Lists.newArrayList(dataXCfg);
@@ -136,7 +153,7 @@ public class TestDataXHudiWriter {
             Assert.assertEquals(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), dataXName);
             return dataXProcessor;
         };
-        EasyMock.replay(dataXProcessor);
+        EasyMock.replay(dataXProcessor, fsFactory, fs);
         IStreamTableCreator.IStreamTableMeta
                 streamTableMeta = forTest.writer.getStreamTableMeta(HudiWriter.targetTableName);
 
@@ -158,7 +175,7 @@ public class TestDataXHudiWriter {
         System.out.println(createTabDdl);
 
 
-        EasyMock.verify(dataXProcessor);
+        EasyMock.verify(dataXProcessor, fsFactory, fs);
     }
 
     private static class TestStreamTemplateData implements IStreamIncrGenerateStrategy.IStreamTemplateData {
@@ -191,8 +208,11 @@ public class TestDataXHudiWriter {
         }
     }
 
-
     private static HudiTest createDataXWriter() {
+        return createDataXWriter(Optional.empty());
+    }
+
+    private static HudiTest createDataXWriter(Optional<FileSystemFactory> fsFactory) {
 
         final DefaultSparkConnGetter sparkConnGetter = new DefaultSparkConnGetter();
         sparkConnGetter.name = "default";
@@ -216,8 +236,7 @@ public class TestDataXHudiWriter {
 
             @Override
             public FileSystemFactory getFs() {
-
-                return HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
+                return fsFactory.isPresent() ? fsFactory.get() : HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
             }
         };
         writer.template = DataXHudiWriter.getDftTemplate();

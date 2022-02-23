@@ -155,7 +155,8 @@ public class WriterTemplate {
     }
 
     public static IDataxProcessor.TableMap createCustomer_order_relationTableMap(Optional<ISelectedTab> tab) {
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
+        IDataxProcessor.TableMap tableMap
+                = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
             @Override
             public List<ColMeta> getCols() {
                 return createColMetas();

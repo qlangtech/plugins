@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.launch;
@@ -41,6 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
@@ -49,7 +50,9 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -74,14 +77,29 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
     @Override
+    public void checkUseable() {
+        FlinkCluster cluster = factory.getClusterCfg();
+        try {
+            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
+                // restClient.getClusterId();
+                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
+                Collection<JobStatusMessage> jobStatus = status.get();
+            }
+        } catch (Exception e) {
+            throw new TisException("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
+        }
+    }
+
+    @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
         final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
         try (RestClusterClient restClient = factory.getFlinkCluster()) {
 
+
             FlinkClient flinkClient = new FlinkClient();
 
-           // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
+            // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
 
             File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
             File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());

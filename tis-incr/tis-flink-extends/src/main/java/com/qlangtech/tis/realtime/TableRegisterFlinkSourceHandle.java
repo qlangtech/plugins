@@ -21,10 +21,12 @@ package com.qlangtech.tis.realtime;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -73,15 +75,17 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     abstract protected void executeSql(StreamTableEnvironment tabEnv);
 
     @Override
-    protected List<FlinkCol> getTabColMetas(IDataxProcessor dataXProcessor, String tabName) {
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
 
+        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
 
-        IDataxWriter writer = dataXProcessor.getWriter(null);
-        if (!(writer instanceof IStreamTableCreator)) {
-            throw new IllegalStateException("writer:" + writer.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
+        if (!(sinKFactory instanceof IStreamTableCreator)) {
+            throw new IllegalStateException("writer:"
+                    + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
         }
 
-        IStreamTableCreator.IStreamTableMeta streamTableMeta = ((IStreamTableCreator) writer).getStreamTableMeta(tabName);
+        IStreamTableCreator.IStreamTableMeta streamTableMeta
+                = ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
         return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 

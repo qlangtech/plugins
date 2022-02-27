@@ -75,7 +75,8 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IRemoteJobTrigger createDataXJob(IDataXJobContext dataXJobContext, RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
+    public IRemoteJobTrigger createDataXJob(IDataXJobContext dataXJobContext
+            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
         DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();

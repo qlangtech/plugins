@@ -44,9 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -61,7 +59,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     private static final Logger logger = LoggerFactory.getLogger(BasicEngineJob.class);
     private EntityName dumpTable = null;
     private List<HiveColumn> colsExcludePartitionCols = null;
-    private String dumpTimeStamp;
+
     private Integer ptRetainNum;
 
 
@@ -82,7 +80,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         Objects.requireNonNull(writerPlugin, "writerPlugin can not be null");
         //this.getDumpTable();
 
-        Objects.requireNonNull(this.dumpTimeStamp, "dumpTimeStamp can not be null");
+        // Objects.requireNonNull(this.dumpTimeStamp, "dumpTimeStamp can not be null");
 
     }
 
@@ -118,8 +116,8 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     }
 
     protected Path createPath() throws IOException {
-        SimpleDateFormat timeFormat = new SimpleDateFormat(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
-        this.dumpTimeStamp = timeFormat.format(new Date());
+        // SimpleDateFormat timeFormat = new SimpleDateFormat(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
+
         this.dumpTable = this.createDumpTable();
         TT writerPlugin = this.getWriterPlugin();
         this.tabDumpParentPath = new Path(writerPlugin.getFs().getFileSystem().getRootDir().unwrap(Path.class), getHdfsSubPath());
@@ -137,7 +135,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
     protected String getHdfsSubPath() {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return this.dumpTable.getNameWithPath() + "/" + this.dumpTimeStamp;
+        return this.dumpTable.getNameWithPath() + "/" + this.getDumpTimeStamp();
     }
 
     protected EntityName createDumpTable() {
@@ -233,7 +231,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
                                 return new BindHiveTableTool.HiveBindConfig(colsExcludePartitionCols, tabDumpParentPath);
                             }
                         })
-                        , this.dumpTimeStamp //
+                        , this.getDumpTimeStamp() //
                         , new ITaskContext() {
                             @Override
                             public Connection getObj() {

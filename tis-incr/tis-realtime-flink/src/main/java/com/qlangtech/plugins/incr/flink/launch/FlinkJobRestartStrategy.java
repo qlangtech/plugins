@@ -16,23 +16,28 @@
  * limitations under the License.
  */
 
-package com.alibaba.datax.plugin.writer.hudi;
-
-//import org.apache.spark.api.java.JavaSparkContext;
-//import org.apache.spark.sql.SparkSession;
+package com.qlangtech.plugins.incr.flink.launch;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-21 18:43
+ * @create: 2022-02-25 16:01
  **/
-public class SparkTest {
-    public static void main(String[] args) {
-        // Spark session setup..
-//        SparkSession spark = SparkSession.builder().appName("Hoodie Spark APP")
-//                .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-//                .config("spark.ui.enabled", "false")
-//                .master("local[1]").getOrCreate();
-//        JavaSparkContext jssc = new JavaSparkContext(spark.sparkContext());
-//        spark.sparkContext().setLogLevel("WARN");
+public enum FlinkJobRestartStrategy {
+    OFF("off"), FIXED_DELAY("fixed-delay"), EXPONENTIAL_DELAY("exponential-delay"), FAILURE_RATE("failure-rate");
+
+    public final String val;
+
+    private FlinkJobRestartStrategy(String val) {
+        this.val = val;
+    }
+
+    public static FlinkJobRestartStrategy parse(String val) {
+
+        for (FlinkJobRestartStrategy s : FlinkJobRestartStrategy.values()) {
+            if (s.val.equals(val)) {
+                return s;
+            }
+        }
+        throw new IllegalStateException("val:" + val + " is illegal");
     }
 }

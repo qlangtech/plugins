@@ -28,6 +28,7 @@ import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -35,8 +36,12 @@ import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -62,6 +67,15 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer parallelism;
 
+    @FormField(ordinal = 4, validate = {Validator.require})
+    public RestartStrategyFactory restartStrategy;
+
+    public static List<Option> allRestartStrategy() {
+        return Arrays.stream(FlinkJobRestartStrategy.values())
+                .map((v) -> new Option(v.val))
+                .collect(Collectors.toList());
+    }
+
     public RestClusterClient getFlinkCluster() {
         FlinkCluster item = getClusterCfg();
         return item.createConfigInstance();
@@ -71,6 +85,15 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 //        FlinkCluster item = getClusterCfg();
 //        return item.createFlinkRestClusterClient(Optional.of(timeout));
 //    }
+
+    @Override
+    public StreamExecutionEnvironment createStreamExecutionEnvironment() {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(this.parallelism);
+        Objects.requireNonNull(this.restartStrategy, "restartStrategy can not be null");
+        env.setRestartStrategy(this.restartStrategy.parseRestartStrategy());
+        return env;
+    }
 
     public FlinkCluster getClusterCfg() {
         return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);

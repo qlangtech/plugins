@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
-import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -31,6 +30,7 @@ import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import com.qlangtech.tis.util.UploadPluginMeta;
@@ -90,10 +90,10 @@ public class DefaultDataxProcessor extends DataxProcessor {
     }
 
     private <T> T writerPluginOverwrite(Function<IStreamIncrGenerateStrategy, T> func) {
-        IDataxWriter writer = this.getWriter(null);
-        Objects.requireNonNull(writer, "writer plugin can not be null");
-        if (writer instanceof IStreamIncrGenerateStrategy) {
-            return func.apply(((IStreamIncrGenerateStrategy) writer));
+        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
+        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
+        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
+            return func.apply(((IStreamIncrGenerateStrategy) sinKFactory));
         }
         return func.apply(this);
     }

@@ -21,11 +21,13 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
@@ -48,6 +50,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
     private T writerPlugin = null;
     private ITISFileSystem fileSystem = null;
     protected Configuration cfg = null;
+    private String dumpTimeStamp;
 
     public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
@@ -80,7 +83,15 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         super.init();
     }
 
-    protected ITISFileSystem getFileSystem() {
+    public String getDumpTimeStamp() {
+        if (StringUtils.isEmpty(this.dumpTimeStamp)) {
+            this.dumpTimeStamp = this.getPluginJobConf()
+                    .getNecessaryValue(DataxUtils.EXEC_TIMESTAMP, HdfsWriterErrorCode.REQUIRED_VALUE); // timeFormat.format(new Date());
+        }
+        return this.dumpTimeStamp;
+    }
+
+    public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
             this.fileSystem = writerPlugin.getFs().getFileSystem();
             Objects.requireNonNull(fileSystem, "fileSystem can not be null");

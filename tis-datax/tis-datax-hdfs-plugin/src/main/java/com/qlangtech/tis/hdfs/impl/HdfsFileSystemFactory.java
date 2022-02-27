@@ -119,8 +119,8 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                             // fs.defaultFS
                             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
                             conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
-
                             //https://segmentfault.com/q/1010000008473574
+                            Logger.info("userHostname:{}", userHostname);
                             if (userHostname != null && userHostname) {
                                 conf.set("dfs.client.use.datanode.hostname", "true");
                             }

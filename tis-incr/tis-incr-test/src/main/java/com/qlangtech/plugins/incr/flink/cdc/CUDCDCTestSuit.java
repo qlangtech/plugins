@@ -119,8 +119,6 @@ public abstract class CUDCDCTestSuit {
 ////            }
 //        }
 
-        IDataxProcessor dataXProcessor = null;
-
         //  replay();
         List<SelectedTab> selectedTabs = dataxReader.getSelectedTabs();
         Optional<SelectedTab> firstSelectedTab

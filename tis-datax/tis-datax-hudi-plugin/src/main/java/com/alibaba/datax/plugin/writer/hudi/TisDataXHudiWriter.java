@@ -1,19 +1,19 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Licensed to the Apache Software Foundation (ASF) under one
+ *   or more contributor license agreements.  See the NOTICE file
+ *   distributed with this work for additional information
+ *   regarding copyright ownership.  The ASF licenses this file
+ *   to you under the Apache License, Version 2.0 (the
+ *   "License"); you may not use this file except in compliance
+ *   with the License.  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package com.alibaba.datax.plugin.writer.hudi;
@@ -24,7 +24,6 @@ import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SequenceWriter;
 import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
@@ -45,10 +44,7 @@ import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.web.start.TisAppLaunchPort;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -88,45 +84,15 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         private HudiTableMeta tabMeta;
 
-        //        private String sourceOrderingField;
-//        private String dataXName;
         private DataXHudiWriter writerPlugin;
-        //        private String pkName;
-//        private String partitionpathField;
-//        private Integer shuffleParallelism;
-        //        private IPath fsSourcePropsPath;
-//        private IPath fsSourceSchemaPath;
-        // private FileSystemFactory fsFactory;
         private IPath tabDumpDir;
-        // private HudiWriteTabType hudiTabType;
-
         private IPath rootDir;
 
 
         @Override
         public void init() {
             super.init();
-
             this.tabMeta = new HudiTableMeta(this.cfg);
-
-//            this.sourceOrderingField
-//                    = this.cfg.getNecessaryValue(KEY_SOURCE_ORDERING_FIELD, HdfsWriterErrorCode.REQUIRED_VALUE);
-//            this.dataXName = this.cfg.getNecessaryValue(DataxUtils.DATAX_NAME, HdfsWriterErrorCode.REQUIRED_VALUE);
-//            this.pkName = cfg.getNecessaryValue("hudiRecordkey", HdfsWriterErrorCode.REQUIRED_VALUE);
-//            this.partitionpathField = cfg.getNecessaryValue("hudiPartitionpathField", HdfsWriterErrorCode.REQUIRED_VALUE);
-//            this.shuffleParallelism
-//                    = Integer.parseInt(cfg.getNecessaryValue("shuffleParallelism", HdfsWriterErrorCode.REQUIRED_VALUE));
-//            this.hudiTabType = HudiWriteTabType.parse(cfg.getNecessaryValue("hudiTabType", HdfsWriterErrorCode.REQUIRED_VALUE));
-
-//            this.writerPlugin = getWriterPlugin();
-            //  this.fsFactory = writerPlugin.getFs();
-            //final String fsAddress = fsFactory.getFSAddress();
-            // IPath rootDir = getRootPath(fsAddress);
-            //IHiveConnGetter hiveConnGetter = getHiveConnGetter();
-
-            // this.tabDumpDir = getDumpDir();
-
-
         }
 
 
@@ -160,93 +126,14 @@ public class TisDataXHudiWriter extends HdfsWriter {
         public void post() {
             super.post();
 
-            List<HdfsColMeta> colsMeta = HdfsColMeta.getColsMeta(this.cfg);
 
             DataXHudiWriter hudiPlugin = this.getHudiWriterPlugin();
             ITISFileSystem fs = this.getFileSystem();
             String tabName = this.getFileName();
             IPath fsSourcePropsPath = getSourcePropsPath();
-            IPath fsSourceSchemaPath = fs.getPath(getDumpDir(), "meta/schema.avsc");
 
-            try (FSDataOutputStream schemaWriter = this.hdfsHelper.getOutputStream(fsSourceSchemaPath.unwrap(Path.class))) {
-                SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(this.getFileName());
-                SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
-
-                for (HdfsColMeta meta : colsMeta) {
-                    SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.type);
-                    switch (hiveDataType) {
-                        case STRING:
-                        case DATE:
-                        case TIMESTAMP:
-                        case VARCHAR:
-                        case CHAR:
-                            // fields.nullableString(meta.colName, StringUtils.EMPTY);
-//                            if (meta.nullable) {
-//                                fields.nullableString(meta.colName, StringUtils.EMPTY);
-//                            } else {
-                            // fields.requiredString(meta.colName);
-                            // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
-                            if (meta.nullable) {
-                                // strType.stringDefault(StringUtils.EMPTY);
-                                fields.optionalString(meta.colName);
-                            } else {
-                                //   strType.noDefault();
-                                fields.requiredString(meta.colName);
-                            }
-                            //}
-                            break;
-                        case DOUBLE:
-                            if (meta.nullable) {
-                                fields.optionalDouble(meta.colName);
-                            } else {
-                                fields.requiredDouble(meta.colName);
-                            }
-                            break;
-                        case INT:
-                        case TINYINT:
-                        case SMALLINT:
-                            if (meta.nullable) {
-                                fields.optionalInt(meta.colName);
-                            } else {
-                                fields.requiredInt(meta.colName);
-                            }
-                            break;
-                        case BOOLEAN:
-                            if (meta.nullable) {
-                                fields.optionalBoolean(meta.colName);
-                            } else {
-                                fields.requiredBoolean(meta.colName);
-                            }
-                            break;
-                        case BIGINT:
-                            if (meta.nullable) {
-                                fields.optionalLong(meta.colName);
-                            } else {
-                                fields.requiredLong(meta.colName);
-                            }
-                            break;
-                        case FLOAT:
-                            if (meta.nullable) {
-                                fields.optionalFloat(meta.colName);
-                            } else {
-                                fields.requiredFloat(meta.colName);
-                            }
-                            break;
-                        default:
-                            throw new IllegalStateException("illegal type:" + hiveDataType);
-                    }
-                }
-
-                Schema schema = fields.endRecord();
-
-                if (schema.getFields().size() != colsMeta.size()) {
-                    throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMeta.size());
-                }
-                IOUtils.write(schema.toString(true), schemaWriter, TisUTF8.get());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
+            IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
+                    fs, this.getHiveConnGetter(), this.getFileName(), this.getDumpTimeStamp(), this.tabMeta);
 
             // 写csv文件属性元数据文件
             try (FSDataOutputStream write = this.hdfsHelper.getOutputStream(fsSourcePropsPath.unwrap(Path.class))) {
@@ -315,8 +202,13 @@ public class TisDataXHudiWriter extends HdfsWriter {
             }
         }
 
+//        protected static IPath createFsSourceSchema(ITISFileSystem fs, String tabName, String dumpTimeStamp, HudiTableMeta hudiTabMeta) {
+//            return createFsSourceSchema(fs, tabName, dumpTimeStamp, hudiTabMeta.colMetas);
+//        }
+
         protected IPath getDumpDir() {
-            return this.tabMeta.getDumpDir(this.getFileSystem(), this.getHiveConnGetter());
+            // this.getDumpTimeStamp()
+            return this.tabMeta.getDumpDir(this, this.getHiveConnGetter());
         }
 
         private IPath getSourcePropsPath() {
@@ -377,7 +269,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             handle.addAppArgs("--table-type", this.tabMeta.getHudiTabType().getValue()
                     , "--source-class", "org.apache.hudi.utilities.sources.CsvDFSSource"
                     , "--source-ordering-field", this.tabMeta.getSourceOrderingField()
-                    , "--target-base-path", String.valueOf(this.tabMeta.getDumpDir(getFileSystem(), getHiveConnGetter()))
+                    , "--target-base-path", String.valueOf(this.tabMeta.getDumpDir(this, getHiveConnGetter()))
                     , "--target-table", tabName + "/" + this.tabMeta.getDataXName()
                     , "--props", String.valueOf(fsSourcePropsPath)
                     , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"

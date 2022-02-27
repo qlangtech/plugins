@@ -92,8 +92,8 @@ public class StreamerUtil {
         if (cfg.propsFilePath.isEmpty()) {
             return new TypedProperties();
         }
-        return readConfig(
-                getHadoopConf(),
+        return readConfig( // baisui 百岁modify
+                getHadoopConf(cfg),
                 new Path(cfg.propsFilePath), cfg.configs).getProps();
     }
 
@@ -131,10 +131,29 @@ public class StreamerUtil {
 
         return conf;
     }
-
+    // baisui 百岁 修改，将TIS hdfs的配置插入到hudi的配置中 2022/2/23
     // Keep the redundant to avoid too many modifications.
-    public static org.apache.hadoop.conf.Configuration getHadoopConf() {
-        return FlinkClientUtil.getHadoopConf();
+    public static org.apache.hadoop.conf.Configuration getHadoopConf(Configuration conf) {
+        String dataXName = conf.getString(dataXNameCfg);
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalStateException("param dataName can not be empty");
+        }
+        org.apache.hadoop.conf.Configuration hadoopConf = FlinkClientUtil.getHadoopConf();
+        DataxWriter dataxWriter = DataxWriter.load(null, dataXName);
+        if (!(dataxWriter instanceof FileSystemFactoryGetter)) {
+            throw new IllegalStateException("dataxWriter must be type of "
+                    + FileSystemFactoryGetter.class.getName() + " but now is " + dataxWriter.getClass().getName());
+        }
+        FileSystemFactory fsFactory = ((FileSystemFactoryGetter) dataxWriter).getFsFactory();
+        FileSystem fs = fsFactory.getFileSystem().unwrap();
+        org.apache.hadoop.conf.Configuration fsConfig = fs.getConf();
+        StringBuffer confs = new StringBuffer("tis hdfs configs:\n");
+        for (Map.Entry<String, String> entry : fsConfig) {
+            confs.append("key:" + entry.getKey() + " -> value:" + entry.getValue()).append("\n");
+        }
+        LOG.debug(confs.toString());
+        hadoopConf.addResource(fsConfig);
+        return hadoopConf;
     }
 
     public static HoodieWriteConfig getHoodieClientConfig(Configuration conf) {
@@ -227,22 +246,7 @@ public class StreamerUtil {
      */
     public static HoodieTableMetaClient initTableIfNotExists(Configuration conf) throws IOException {
         final String basePath = conf.getString(FlinkOptions.PATH);
-        final org.apache.hadoop.conf.Configuration hadoopConf = StreamerUtil.getHadoopConf();
-
-        // baisui 百岁 修改，将TIS hdfs的配置插入到hudi的配置中 2022/2/23
-        String dataName = conf.getString(dataXNameCfg);
-        if (StringUtils.isEmpty(dataName)) {
-            throw new IllegalStateException("param dataName can not be empty");
-        }
-        DataxWriter dataxWriter = DataxWriter.load(null, dataName);
-        if (!(dataxWriter instanceof FileSystemFactoryGetter)) {
-            throw new IllegalStateException("dataxWriter must be type of "
-                    + FileSystemFactoryGetter.class.getName() + " but now is " + dataxWriter.getClass().getName());
-        }
-        FileSystemFactory fsFactory = ((FileSystemFactoryGetter) dataxWriter).getFsFactory();
-        FileSystem fs = fsFactory.getFileSystem().unwrap();
-        hadoopConf.addResource(fs.getConf());
-        // baisui 修改 end
+        final org.apache.hadoop.conf.Configuration hadoopConf = initializeHadoopConfig(conf);
 
         if (!tableExists(basePath, hadoopConf)) {
             HoodieTableMetaClient metaClient = HoodieTableMetaClient.withPropertyBuilder()
@@ -267,6 +271,13 @@ public class StreamerUtil {
         }
         // Do not close the filesystem in order to use the CACHE,
         // some filesystems release the handles in #close method.
+    }
+
+    protected static org.apache.hadoop.conf.Configuration initializeHadoopConfig(Configuration conf) {
+        // baisui 百岁 修改，将TIS hdfs的配置插入到hudi的配置中 2022/2/23
+        org.apache.hadoop.conf.Configuration hadoopConf = StreamerUtil.getHadoopConf(conf);
+        // baisui 修改 end
+        return hadoopConf;
     }
 
     /**
@@ -346,7 +357,9 @@ public class StreamerUtil {
      * Creates the meta client.
      */
     public static HoodieTableMetaClient createMetaClient(Configuration conf) {
-        return createMetaClient(conf.getString(FlinkOptions.PATH));
+        // baisui 百岁修改
+        final org.apache.hadoop.conf.Configuration hadoopConf = initializeHadoopConfig(conf);
+        return createMetaClient(conf.getString(FlinkOptions.PATH), hadoopConf);
     }
 
     /**
@@ -355,8 +368,8 @@ public class StreamerUtil {
     @SuppressWarnings("rawtypes")
     public static HoodieFlinkWriteClient createWriteClient(Configuration conf, RuntimeContext runtimeContext) {
         HoodieFlinkEngineContext context =
-                new HoodieFlinkEngineContext(
-                        new SerializableConfiguration(getHadoopConf()),
+                new HoodieFlinkEngineContext( // baisui modify
+                        new SerializableConfiguration(getHadoopConf(conf)),
                         new FlinkTaskContextSupplier(runtimeContext));
 
         HoodieWriteConfig writeConfig = getHoodieClientConfig(conf);

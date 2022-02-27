@@ -66,16 +66,19 @@ public class TISFlinkCDCStart {
         // CenterResource.setNotFetchFromCenterRepository();
         //Thread.currentThread().setContextClassLoader(TIS.get().pluginManager.uberClassLoader);
 
-        IPluginContext pluginContext = IPluginContext.namedContext(dataxName);
+//        IPluginContext pluginContext = IPluginContext.namedContext(dataxName);
+//
+//
+//        List<IncrStreamFactory> streamFactories = HeteroEnum.INCR_STREAM_CONFIG.getPlugins(pluginContext, null);
+//        IRCController incrController = null;
+//        for (IncrStreamFactory factory : streamFactories) {
+//            incrController = factory.getIncrSync();
+//        }
+//        Objects.requireNonNull(incrController, "stream app:" + dataxName + " incrController can not not be null");
 
-
-        List<IncrStreamFactory> streamFactories = HeteroEnum.INCR_STREAM_CONFIG.getPlugins(pluginContext, null);
-        IRCController incrController = null;
-        for (IncrStreamFactory factory : streamFactories) {
-            incrController = factory.getIncrSync();
-        }
-        Objects.requireNonNull(incrController, "stream app:" + dataxName + " incrController can not not be null");
+        IncrStreamFactory incrStreamFactory = HeteroEnum.getIncrStreamFactory(dataxName);
         BasicFlinkSourceHandle tableStreamHandle = createFlinkSourceHandle(dataxName);
+        tableStreamHandle.setStreamFactory(incrStreamFactory);
         deploy(new TargetResName(dataxName), tableStreamHandle, null, -1);
     }
 
@@ -100,25 +103,28 @@ public class TISFlinkCDCStart {
         }
         // ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
 
-        IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
-        List<TISSinkFactory> sinkFactories = TISSinkFactory.sinkFactory.getPlugins(pluginContext, null);
-        TISSinkFactory sinkFactory = null;
-        logger.info("sinkFactories size:" + sinkFactories.size());
-        for (TISSinkFactory factory : sinkFactories) {
-            sinkFactory = factory;
-            break;
-        }
-        Objects.requireNonNull(sinkFactory, "sinkFactories.size():" + sinkFactories.size());
 
-        tableStreamHandle.setSinkFuncFactory(sinkFactory);
 
-        List<MQListenerFactory> mqFactories = HeteroEnum.MQ.getPlugins(pluginContext, null);
-        MQListenerFactory mqFactory = null;
-        for (MQListenerFactory factory : mqFactories) {
-            factory.setConsumerHandle(tableStreamHandle);
-            mqFactory = factory;
-        }
-        Objects.requireNonNull(mqFactory, "mqFactory can not be null, mqFactories size:" + mqFactories.size());
+//        IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
+//        List<TISSinkFactory> sinkFactories = TISSinkFactory.sinkFactory.getPlugins(pluginContext, null);
+
+//        logger.info("sinkFactories size:" + sinkFactories.size());
+//        for (TISSinkFactory factory : sinkFactories) {
+//            sinkFactory = factory;
+//            break;
+//        }
+//        Objects.requireNonNull(sinkFactory, "sinkFactories.size():" + sinkFactories.size());
+
+        tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataxName.getName()));
+
+       // List<MQListenerFactory> mqFactories = HeteroEnum.MQ.getPlugins(pluginContext, null);
+        MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataxName.getName());
+        mqFactory.setConsumerHandle(tableStreamHandle);
+//        for (MQListenerFactory factory : mqFactories) {
+//            factory.setConsumerHandle(tableStreamHandle);
+//            mqFactory = factory;
+//        }
+        //Objects.requireNonNull(mqFactory, "mqFactory can not be null, mqFactories size:" + mqFactories.size());
 
         IMQListener mq = mqFactory.create();
 

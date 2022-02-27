@@ -12,5 +12,9 @@
         }
       ]
     }
+  },
+  "restartStrategy": {
+    "label": "重启策略",
+    "enum": "com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory.allRestartStrategy()"
   }
 }

@@ -44,6 +44,7 @@ public class DataXSparkWriter extends DataXHiveWriter {
 
         @Override
         public String getDisplayName() {
+
             return DATAX_NAME;
         }
     }

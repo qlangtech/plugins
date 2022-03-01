@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.cdc.valconvert;
@@ -25,14 +25,15 @@ import org.apache.kafka.connect.data.SchemaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.*;
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
  * copy from:https://github.com/holmofy/debezium-datetime-converter/blob/master/src/main/java/com/darcytech/debezium/converter/MySqlDateTimeConverter.java <br/>
- *
+ * <p>
  * 处理Debezium时间转换的问题
  * Debezium默认将MySQL中datetime类型转成UTC的时间戳({@link io.debezium.time.Timestamp})，时区是写死的没法儿改，
  * 导致数据库中设置的UTC+8，到kafka中变成了多八个小时的long型时间戳
@@ -46,6 +47,7 @@ import java.util.function.Consumer;
  *
  * @see io.debezium.connector.mysql.converters.TinyIntOneToBooleanConverter
  */
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-13 22:50
@@ -55,7 +57,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
     private static final Logger logger = LoggerFactory.getLogger(DateTimeConverter.class);
     protected DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_DATE;
     protected DateTimeFormatter timeFormatter = DateTimeFormatter.ISO_TIME;
-    protected DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+    public DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     protected DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
     protected ZoneId timestampZoneId = ZoneId.systemDefault();

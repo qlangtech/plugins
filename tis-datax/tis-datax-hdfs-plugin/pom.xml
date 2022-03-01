@@ -37,10 +37,10 @@
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>datax-common</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>datax-common</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -63,6 +63,10 @@
             <artifactId>hdfsreader</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-exec</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>datax-common</artifactId>
@@ -91,6 +95,10 @@
             <artifactId>hdfswriter</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hive</groupId>
+                    <artifactId>hive-exec</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>datax-common</artifactId>

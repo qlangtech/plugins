@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc;
+package com.qlangtech.plugins.incr.flink.cdc.source;
 
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.DTOStream;
@@ -28,18 +30,15 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.types.Row;
-import org.apache.flink.util.CloseableIterator;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-12-18 10:57
  **/
-public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implements Serializable {
+public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implements Serializable, IResultRows {
     protected final String tabName;
 
     protected StreamTableEnvironment tabEnv;
@@ -51,10 +50,16 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
     }
 
     @Override
+    public Object deColFormat(String tableName, String colName, Object val) {
+        return val;
+    }
+
+    @Override
     protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {
-        StreamExecutionEnvironment evn = super.getFlinkExecutionEnvironment();
-        // evn.enableCheckpointing(1000);
-        return evn;
+//        StreamExecutionEnvironment evn = super.getFlinkExecutionEnvironment();
+//        // evn.enableCheckpointing(1000);
+//        return evn;
+        return StreamExecutionEnvironment.getExecutionEnvironment();
     }
 
     @Override
@@ -81,30 +86,41 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
         }
 
         createTemporaryView(streamMap);
-        sourceTableQueryResult.put(tabName, tabEnv.executeSql("SELECT * FROM " + tabName));
+        getSourceTableQueryResult().put(tabName, tabEnv.executeSql("SELECT * FROM " + tabName));
     }
 
     protected void createTemporaryView(Map<String, DTOStream> streamMap) {
         tabEnv.createTemporaryView(tabName, streamMap.get(tabName).getStream());
     }
 
-    public CloseableIterator<Row> getRowSnapshot(String tabName) {
-        TableResult tableResult = sourceTableQueryResult.get(tabName);
-        Objects.requireNonNull(tableResult, "tabName:" + tabName + " relevant TableResult can not be null");
-        CloseableIterator<Row> collect = tableResult.collect();
-        return collect;
+    @Override
+    public IConsumerHandle getConsumerHandle() {
+        return this;
     }
 
-    /**
-     * 终止flink
-     */
-    public void cancel() {
-        try {
-            for (TableResult tabResult : sourceTableQueryResult.values()) {
-                tabResult.getJobClient().get().cancel().get();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+//    @Override
+//    public CloseableIterator<Row> getRowSnapshot(String tabName) {
+//        TableResult tableResult = getSourceTableQueryResult().get(tabName);
+//        Objects.requireNonNull(tableResult, "tabName:" + tabName + " relevant TableResult can not be null");
+//        CloseableIterator<Row> collect = tableResult.collect();
+//        return collect;
+//    }
+
+    public Map<String, TableResult> getSourceTableQueryResult() {
+        return sourceTableQueryResult;
     }
+
+//    /**
+//     * 终止flink
+//     */
+//    @Override
+//    public void cancel() {
+//        try {
+//            for (TableResult tabResult : getSourceTableQueryResult().values()) {
+//                tabResult.getJobClient().get().cancel().get();
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

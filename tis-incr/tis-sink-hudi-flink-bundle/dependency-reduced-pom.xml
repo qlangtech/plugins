@@ -24,7 +24,7 @@
               <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
               <filters>
                 <filter>
-                  <artifact>org.apache.hudi:hudi-flink-bundle_${scala.binary.version}</artifact>
+                  <artifact>org.apache.hudi:tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifact>
                   <excludes>
                     <exclude>com/esotericsoftware/**</exclude>
                     <exclude>org/apache/hudi/util/StreamerUtil*</exclude>

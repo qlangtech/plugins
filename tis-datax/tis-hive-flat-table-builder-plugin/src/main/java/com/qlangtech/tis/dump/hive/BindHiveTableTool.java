@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 
 import static java.sql.Types.*;
 
-/*
+/**
  * 将hdfs上的数据和hive database中的表绑定
  *
  * @author 百岁（baisui@qlangtech.com）
@@ -60,18 +60,13 @@ import static java.sql.Types.*;
  */
 public class BindHiveTableTool {
     private static final Logger logger = LoggerFactory.getLogger(HiveTableBuilder.class);
-
-    // private static final Logger logger = LoggerFactory
-    // .getLogger(BindHiveTableTool.class);
     public static void bindHiveTables(MREngine engine, ITISFileSystem fileSystem, Map<EntityName
             , Callable<HiveBindConfig>> hiveTables, String timestamp, ITaskContext context) {
         Objects.nonNull(fileSystem);
-        // Objects.nonNull(userName);
         Objects.nonNull(timestamp);
         try {
             // Dump 任务结束,开始绑定hive partition
             HiveTableBuilder hiveTableBuilder = new HiveTableBuilder(timestamp);
-
             hiveTableBuilder.setFileSystem(fileSystem);
             hiveTableBuilder.bindHiveTables(engine, hiveTables, context);
         } catch (Exception e) {

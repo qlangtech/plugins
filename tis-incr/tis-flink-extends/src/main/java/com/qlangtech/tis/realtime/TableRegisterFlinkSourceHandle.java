@@ -22,8 +22,6 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -77,20 +75,48 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     @Override
     protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
 
+        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(dataxName, tabName);
+        return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+    }
+
+    protected IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
 
         if (!(sinKFactory instanceof IStreamTableCreator)) {
             throw new IllegalStateException("writer:"
                     + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
         }
-
-        IStreamTableCreator.IStreamTableMeta streamTableMeta
-                = ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
-        return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+        return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
     }
 
     private FlinkCol mapFlinkCol(HdfsColMeta meta) {
         return meta.type.accept(new DataType.TypeVisitor<FlinkCol>() {
+
+            @Override
+            public FlinkCol intType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.INT());
+            }
+
+            @Override
+            public FlinkCol smallIntType(DataType dataType) {
+                return new FlinkCol(meta.colName, DataTypes.SMALLINT());
+            }
+
+            @Override
+            public FlinkCol tinyIntType(DataType dataType) {
+                return new FlinkCol(meta.colName, DataTypes.TINYINT());
+            }
+
+            @Override
+            public FlinkCol floatType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.FLOAT());
+            }
+
+            @Override
+            public FlinkCol timeType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.TIME(3));
+            }
+
             @Override
             public FlinkCol longType(DataType type) {
                 return new FlinkCol(meta.colName, DataTypes.BIGINT());
@@ -107,12 +133,12 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
             @Override
             public FlinkCol dateType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DATE());
+                return new FlinkCol(meta.colName, DataTypes.DATE(), FlinkCol.Date());
             }
 
             @Override
             public FlinkCol timestampType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP());
+                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP(3), FlinkCol.DateTime());
             }
 
             @Override
@@ -133,7 +159,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     }
 
-    private void registerTable(StreamTableEnvironment tabEnv
+    protected void registerTable(StreamTableEnvironment tabEnv
             , String tabName, DTOStream dtoDataStream) {
         Schema.Builder scmBuilder = Schema.newBuilder();
         List<FlinkCol> cols = dtoDataStream.cols;

@@ -76,9 +76,40 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
             fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(
-                    hdfsAddress, hdfsSiteContent, userHostname), hdfsAddress, this.rootDir);
+                    hdfsAddress, getConfiguration()), hdfsAddress, this.rootDir);
         }
         return fileSystem;
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+            Configuration conf = new Configuration();
+            conf.set(FsPermission.UMASK_LABEL, "000");
+            // fs.defaultFS
+            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
+            //https://segmentfault.com/q/1010000008473574
+            Logger.info("userHostname:{}", userHostname);
+            if (userHostname != null && userHostname) {
+                conf.set("dfs.client.use.datanode.hostname", "true");
+            }
+
+            conf.set("fs.default.name", hdfsAddress);
+            conf.set("hadoop.job.ugi", "admin");
+            try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
+                conf.addResource(input);
+                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
+                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
+                return conf;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("hdfsAddress:" + hdfsAddress, e);
+        }finally {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
+        }
     }
 
     @Override
@@ -102,80 +133,80 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
         private static final Map<String, FileSystem> fileSys = new HashMap<String, FileSystem>();
 
-        public static FileSystem getFileSystem(String hdfsAddress, String hdfsContent, Boolean userHostname) {
+        public static FileSystem getFileSystem(String hdfsAddress, Configuration config) {
 
             FileSystem fileSystem = fileSys.get(hdfsAddress);
             if (fileSystem == null) {
                 synchronized (HdfsUtils.class) {
 
-                    final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+
                     try {
-                        Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+
 
                         fileSystem = fileSys.get(hdfsAddress);
                         if (fileSystem == null) {
-                            Configuration conf = new Configuration();
-                            conf.set(FsPermission.UMASK_LABEL, "000");
-                            // fs.defaultFS
-                            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
-                            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
-                            //https://segmentfault.com/q/1010000008473574
-                            Logger.info("userHostname:{}", userHostname);
-                            if (userHostname != null && userHostname) {
-                                conf.set("dfs.client.use.datanode.hostname", "true");
-                            }
-
-                            conf.set("fs.default.name", hdfsAddress);
-                            conf.set("hadoop.job.ugi", "admin");
-                            try (InputStream input = new ByteArrayInputStream(hdfsContent.getBytes(TisUTF8.get()))) {
-                                conf.addResource(input);
-                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
-                                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
-                                fileSystem = new FilterFileSystem(FileSystem.get(conf)) {
-                                    @Override
-                                    public boolean delete(Path f, boolean recursive) throws IOException {
-                                        try {
-                                            return super.delete(f, recursive);
-                                        } catch (Exception e) {
-                                            throw new RuntimeException("path:" + f, e);
-                                        }
+//                            Configuration conf = new Configuration();
+//                            conf.set(FsPermission.UMASK_LABEL, "000");
+//                            // fs.defaultFS
+//                            conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+//                            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
+//                            //https://segmentfault.com/q/1010000008473574
+//                            Logger.info("userHostname:{}", userHostname);
+//                            if (userHostname != null && userHostname) {
+//                                conf.set("dfs.client.use.datanode.hostname", "true");
+//                            }
+//
+//                            conf.set("fs.default.name", hdfsAddress);
+//                            conf.set("hadoop.job.ugi", "admin");
+//                            try (InputStream input = new ByteArrayInputStream(hdfsContent.getBytes(TisUTF8.get()))) {
+//                                conf.addResource(input);
+//                                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
+//                                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
+                            fileSystem = new FilterFileSystem(FileSystem.get(config)) {
+                                @Override
+                                public boolean delete(Path f, boolean recursive) throws IOException {
+                                    try {
+                                        return super.delete(f, recursive);
+                                    } catch (Exception e) {
+                                        throw new RuntimeException("path:" + f, e);
                                     }
+                                }
 
-                                    @Override
-                                    public boolean mkdirs(Path f, FsPermission permission) throws IOException {
-                                        return super.mkdirs(f, FsPermission.getDirDefault());
-                                    }
+                                @Override
+                                public boolean mkdirs(Path f, FsPermission permission) throws IOException {
+                                    return super.mkdirs(f, FsPermission.getDirDefault());
+                                }
 
-                                    @Override
-                                    public FSDataOutputStream create(Path f, FsPermission permission
-                                            , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
-                                        return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
-                                    }
+                                @Override
+                                public FSDataOutputStream create(Path f, FsPermission permission
+                                        , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
+                                    return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
+                                }
 
-                                    @Override
-                                    public FileStatus[] listStatus(Path f) throws IOException {
-                                        try {
-                                            return super.listStatus(f);
-                                        } catch (Exception e) {
-                                            throw new RuntimeException("path:" + f, e);
-                                        }
+                                @Override
+                                public FileStatus[] listStatus(Path f) throws IOException {
+                                    try {
+                                        return super.listStatus(f);
+                                    } catch (Exception e) {
+                                        throw new RuntimeException("path:" + f, e);
                                     }
+                                }
 
-                                    @Override
-                                    public void close() throws IOException {
-                                        // super.close();
-                                        // 设置不被关掉
-                                    }
-                                };
-                                fileSystem.listStatus(new Path("/"));
-                                Logger.info("successful create hdfs with hdfsAddress:" + hdfsAddress);
-                                fileSys.put(hdfsAddress, fileSystem);
-                            }
+                                @Override
+                                public void close() throws IOException {
+                                    // super.close();
+                                    // 设置不被关掉
+                                }
+                            };
+                            fileSystem.listStatus(new Path("/"));
+                            Logger.info("successful create hdfs with hdfsAddress:" + hdfsAddress);
+                            fileSys.put(hdfsAddress, fileSystem);
                         }
+
                     } catch (Throwable e) {
                         throw new RuntimeException("link faild:" + hdfsAddress, e);
                     } finally {
-                        Thread.currentThread().setContextClassLoader(contextClassLoader);
+
                     }
                 }
 

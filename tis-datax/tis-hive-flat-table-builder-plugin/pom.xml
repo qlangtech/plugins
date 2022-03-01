@@ -53,19 +53,23 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -79,8 +83,6 @@
         <!--            <artifactId>tis-hdfs-plugin</artifactId>-->
         <!--            <version>${project.version}</version>-->
         <!--        </dependency>-->
-
-
 
 
         <dependency>

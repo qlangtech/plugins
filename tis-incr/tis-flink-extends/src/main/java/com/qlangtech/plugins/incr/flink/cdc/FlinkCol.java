@@ -21,7 +21,9 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import org.apache.flink.table.types.DataType;
 
 import java.io.Serializable;
-import java.util.function.Function;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,14 +35,14 @@ public class FlinkCol implements Serializable {
 
     private boolean pk;
 
-    private Function<Object, Object> process;
+    public BiFunction process;
 
     public FlinkCol(String name, DataType type
     ) {
         this(name, type, new NoOpProcess());
     }
 
-    public FlinkCol(String name, DataType type, Function<Object, Object> process) {
+    public FlinkCol(String name, DataType type, BiFunction process) {
         this.name = name;
         this.type = type;
         this.process = process;
@@ -59,25 +61,79 @@ public class FlinkCol implements Serializable {
         return this.process.apply(val);
     }
 
-    public static Function<Object, Object> Bytes() {
+    public static BiFunction Bytes() {
         return new ByteBufferProcess();
     }
 
-    public static Function<Object, Object> NoOp() {
+    public static BiFunction DateTime() {
+        return new DateTimeProcess();
+    }
+
+    public static BiFunction Date() {
+        return new DateProcess();
+    }
+
+    public static BiFunction NoOp() {
         return new NoOpProcess();
     }
 
-    private static class ByteBufferProcess implements Function<Object, Object>, Serializable {
+    private static class ByteBufferProcess extends BiFunction {
         @Override
         public Object apply(Object o) {
             java.nio.ByteBuffer buffer = (java.nio.ByteBuffer) o;
             return buffer.array();
         }
+
+        @Override
+        public Object deApply(Object o) {
+            return null;
+        }
     }
 
-    private static class NoOpProcess implements Function<Object, Object>, Serializable {
+    private static class DateProcess extends BiFunction {
+        private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
         @Override
         public Object apply(Object o) {
+            if (o instanceof String) {
+                // com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter
+                return LocalDate.parse((String) o, dateFormatter);
+            }
+            return (LocalDate) o;
+        }
+
+        @Override
+        public Object deApply(Object o) {
+            return dateFormatter.format((LocalDate) o);
+        }
+    }
+
+    private static class DateTimeProcess extends BiFunction {
+        private final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        @Override
+        public Object deApply(Object o) {
+            return datetimeFormatter.format((LocalDateTime) o);
+        }
+
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof String) {
+                // com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter
+                return LocalDateTime.parse((String) o, datetimeFormatter);
+            }
+            return (LocalDateTime) o;
+        }
+    }
+
+    private static class NoOpProcess extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            return o;
+        }
+
+        @Override
+        public Object deApply(Object o) {
             return o;
         }
     }

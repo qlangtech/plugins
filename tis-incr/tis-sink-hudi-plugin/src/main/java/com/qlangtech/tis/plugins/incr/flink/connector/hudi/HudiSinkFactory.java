@@ -135,7 +135,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         }
 
         public StringBuffer getSinkFlinkTableDDL(String tableName) {
-            DataXHudiWriter dataXWriter = (DataXHudiWriter) DataxWriter.getPluginStore(null, dataXName).getPlugin();
+            DataXHudiWriter dataXWriter
+                    = (DataXHudiWriter) DataxWriter.getPluginStore(null, dataXName).getPlugin();
             HudiTableMeta tabMeta = getTableMeta(tableName);
             /**
              *
@@ -208,7 +209,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
 
                         IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
-                                dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta(), tableName, dumpTimeStamp, getTableMeta(tableName));
+                                dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta()
+                                , tableName, dumpTimeStamp, getTableMeta(tableName));
                         // FlinkOptions
                         sub.appendLine("'source.avro-schema.path' = '" + String.valueOf(fsSourceSchemaPath) + "' ,");
 
@@ -216,7 +218,6 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                             sub.appendLine("'read.streaming.enabled' = 'true',");
                             sub.appendLine("'read.streaming.check-interval' = '4',");
                         }
-
 
                         sub.appendLine("'hive_sync.enable' = 'true',");
                         sub.appendLine("'hive_sync.table' = '" + tableName + "',");
@@ -228,7 +229,6 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                 }
             };
             return flinkTableDdlBuilder.build();
-            //  }
         }
     }
 

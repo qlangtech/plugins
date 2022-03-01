@@ -70,6 +70,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 4, validate = {Validator.require})
     public RestartStrategyFactory restartStrategy;
 
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public CheckpointFactory checkpoint;
+
     public static List<Option> allRestartStrategy() {
         return Arrays.stream(FlinkJobRestartStrategy.values())
                 .map((v) -> new Option(v.val))
@@ -92,6 +95,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         env.setParallelism(this.parallelism);
         Objects.requireNonNull(this.restartStrategy, "restartStrategy can not be null");
         env.setRestartStrategy(this.restartStrategy.parseRestartStrategy());
+
+        Objects.requireNonNull(this.checkpoint, "checkpoint can not be null");
+        this.checkpoint.setProps(env);
         return env;
     }
 

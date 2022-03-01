@@ -21,7 +21,6 @@ package com.qlangtech.plugins.incr.flink;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
@@ -116,7 +115,7 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     checkClassLoaderLeak);
         }
         this.makeDataDirUseable();
-
+        logger.info("buildServerLoader classLoaderResolveOrder:{}", classLoaderResolveOrder);
         return new BlobLibraryCacheManager.DefaultClassLoaderFactory(classLoaderResolveOrder
                 , alwaysParentFirstPatterns, exceptionHander, checkClassLoaderLeak) {
             @Override

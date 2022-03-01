@@ -61,7 +61,6 @@
         <module>tis-datax-hudi-dependency</module>
         <module>tis-datax-hudi-plugin</module>
         <module>tis-datax-hdfs-plugin</module>
-        <module>tis-datax-hudi</module>
 
     </modules>
 

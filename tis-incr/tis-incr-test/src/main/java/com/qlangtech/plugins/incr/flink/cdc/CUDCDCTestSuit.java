@@ -18,8 +18,10 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -35,7 +37,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
@@ -67,21 +68,23 @@ public abstract class CUDCDCTestSuit {
     static String keyBaseId = "base_id";
     String keyColBlob = "col_blob";
 
-    public List<FlinkCol> cols = Lists.newArrayList(
-            new FlinkCol(keyBaseId, DataTypes.INT())
-//            , new FlinkCol(keyStart_time, DataTypes.TIMESTAMP())
-//            , new FlinkCol("update_date", DataTypes.DATE())
-//            , new FlinkCol("update_time", DataTypes.TIMESTAMP())
+    protected List<HdfsColMeta> cols;
 
-            , new FlinkCol(keyStart_time, DataTypes.STRING())
-            , new FlinkCol("update_date", DataTypes.STRING())
-            , new FlinkCol("update_time", DataTypes.STRING())
-
-            , new FlinkCol("price", DataTypes.DECIMAL(5, 2))
-            , new FlinkCol("json_content", DataTypes.STRING())
-            // , new FlinkCol(keyColBlob, DataTypes.STRING())
-            , new FlinkCol(keyColBlob, DataTypes.BYTES(), FlinkCol.Bytes())
-            , new FlinkCol(keyCol_text, DataTypes.STRING()));
+//    public List<FlinkCol> cols = Lists.newArrayList(
+//            new FlinkCol(keyBaseId, DataTypes.INT())
+////            , new FlinkCol(keyStart_time, DataTypes.TIMESTAMP())
+////            , new FlinkCol("update_date", DataTypes.DATE())
+////            , new FlinkCol("update_time", DataTypes.TIMESTAMP())
+//
+//            , new FlinkCol(keyStart_time, DataTypes.STRING())
+//            , new FlinkCol("update_date", DataTypes.STRING())
+//            , new FlinkCol("update_time", DataTypes.STRING())
+//
+//            , new FlinkCol("price", DataTypes.DECIMAL(5, 2))
+//            , new FlinkCol("json_content", DataTypes.STRING())
+//            // , new FlinkCol(keyColBlob, DataTypes.STRING())
+//            , new FlinkCol(keyColBlob, DataTypes.BYTES(), FlinkCol.Bytes())
+//            , new FlinkCol(keyCol_text, DataTypes.STRING()));
 
 
     static final ThreadLocal<SimpleDateFormat> timeFormat = new ThreadLocal<SimpleDateFormat>() {
@@ -102,22 +105,7 @@ public abstract class CUDCDCTestSuit {
     public void startTest(MQListenerFactory cdcFactory, String tabName) throws Exception {
 
 
-        TestBasicFlinkSourceHandle consumerHandle = getTestBasicFlinkSourceHandle(tabName);
-
-        cdcFactory.setConsumerHandle(consumerHandle);
-
-        IMQListener<JobExecutionResult> imqListener = cdcFactory.create();
-
-        // DataxReader.IDataxReaderGetter readerGetter = mock("IDataxReaderGetter", DataxReader.IDataxReaderGetter.class);
-
-
         BasicDataXRdbmsReader dataxReader = createDataxReader(dataxName, tabName);
-
-//        for (String tab : dataxReader.getDataSourceFactory().getTablesInDB()) {
-////            if (tab.indexOf("DEBE") > -1) {
-////                System.out.println(tab);
-////            }
-//        }
 
         //  replay();
         List<SelectedTab> selectedTabs = dataxReader.getSelectedTabs();
@@ -127,6 +115,24 @@ public abstract class CUDCDCTestSuit {
 
 
         ISelectedTab tab = firstSelectedTab.get();
+
+        this.cols = Lists.newArrayList();
+        HdfsColMeta cMeta = null;
+        for (ISelectedTab.ColMeta c : tab.getCols()) {
+            cMeta = new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType());
+            cols.add(cMeta);
+        }
+
+
+        IResultRows consumerHandle = getTestBasicFlinkSourceHandle(tabName);
+
+        cdcFactory.setConsumerHandle(consumerHandle.getConsumerHandle());
+
+        IMQListener<JobExecutionResult> imqListener = cdcFactory.create();
+
+        // DataxReader.IDataxReaderGetter readerGetter = mock("IDataxReaderGetter", DataxReader.IDataxReaderGetter.class);
+
+
         List<ISelectedTab> tabs = Collections.singletonList(tab);
 
         List<TestRow> exampleRows = Lists.newArrayList();
@@ -200,7 +206,7 @@ public abstract class CUDCDCTestSuit {
 
         final String insertBase
                 = "insert into " + createTableName(tabName) + "("
-                + cols.stream().map((col) -> getColEscape() + col.name + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
+                + cols.stream().map((col) -> getColEscape() + col.getName() + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
                 "values(" +
                 cols.stream().map((col) -> "?").collect(Collectors.joining(" , ")) + ")";
 
@@ -214,6 +220,7 @@ public abstract class CUDCDCTestSuit {
                     PreparedStatement statement = null;
                     try {
                         // 执行添加
+                        System.out.println("start to insert");
                         for (TestRow r : exampleRows) {
 
                             statement = conn.prepareStatement(insertBase);
@@ -236,11 +243,13 @@ public abstract class CUDCDCTestSuit {
                             statement.close();
                             sleepForAWhile();
 
+                            System.out.println("wait to show insert rows");
                             waitForSnapshotStarted(snapshot);
+
                             List<TestRow> rows = fetchRows(snapshot, 1, false);
                             for (TestRow rr : rows) {
                                 System.out.println("------------" + rr.getInt(keyBaseId));
-                                assertTestRow(RowKind.INSERT, r, rr);
+                                assertTestRow(tabName, RowKind.INSERT, consumerHandle, r, rr);
                             }
                             // System.out.println("########################");
 
@@ -274,7 +283,7 @@ public abstract class CUDCDCTestSuit {
                             List<TestRow> rows = fetchRows(snapshot, 1, false);
                             for (TestRow rr : rows) {
                                 //System.out.println("------------" + rr.getInt(keyBaseId));
-                                assertTestRow(RowKind.UPDATE_AFTER, exceptRow, rr);
+                                assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
 
                             }
                         }
@@ -293,7 +302,7 @@ public abstract class CUDCDCTestSuit {
                                 List<TestRow> rows = fetchRows(snapshot, 1, true);
                                 for (TestRow rr : rows) {
                                     //System.out.println("------------" + rr.getInt(keyBaseId));
-                                    assertTestRow(RowKind.DELETE, r, rr);
+                                    assertTestRow(tabName, RowKind.DELETE, consumerHandle, r, rr);
 
                                 }
                             }
@@ -329,25 +338,32 @@ public abstract class CUDCDCTestSuit {
         // conn.setAutoCommit(false);
     }
 
-    protected TestBasicFlinkSourceHandle getTestBasicFlinkSourceHandle(String tabName) {
-        TestBasicFlinkSourceHandle consumerHandle = createConsumerHandle(tabName);
+    protected IResultRows getTestBasicFlinkSourceHandle(String tabName) {
+        IResultRows consumerHandle = createConsumerHandle(tabName);
 
         // PrintSinkFunction printSinkFunction = new PrintSinkFunction();
-        TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
-            @Override
-            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-//                Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> result = Maps.newHashMap();
-//                result.put(new IDataxProcessor.TableAlias(tabName), printSinkFunction);
-//                return result;
-                return Collections.emptyMap();
-            }
-        };
-        consumerHandle.setSinkFuncFactory(sinkFuncFactory);
+//        TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
+//            @Override
+//            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+//                return Collections.emptyMap();
+//            }
+//        };
+        //  consumerHandle.setSinkFuncFactory(sinkFuncFactory);
         return consumerHandle;
     }
 
-    protected TestBasicFlinkSourceHandle createConsumerHandle(String tabName) {
-        return new TestBasicFlinkSourceHandle(tabName);
+    protected IResultRows createConsumerHandle(String tabName) {
+        TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
+
+        TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
+            @Override
+            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+                return Collections.emptyMap();
+            }
+        };
+
+        sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+        return sourceHandle;
     }
 
     private BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
@@ -374,7 +390,7 @@ public abstract class CUDCDCTestSuit {
 
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
 
-    private void assertTestRow(RowKind updateVal, TestRow expect, TestRow actual) throws Exception {
+    private void assertTestRow(String tabName, RowKind updateVal, IResultRows consumerHandle, TestRow expect, TestRow actual) throws Exception {
         assertEqualsInOrder(
                 expect.getValsList(Optional.of(updateVal), cols, (rowVals, key, val) -> {
                     if (keyColBlob.equals(key)) {
@@ -387,12 +403,16 @@ public abstract class CUDCDCTestSuit {
                     }
                 }) //
                 , actual.getValsList(cols, (rowVals, key, val) -> {
-                    if (keyColBlob.equals(key)) {
-                        byte[] buffer = (byte[]) val;
-                        // buffer.reset();
-                        return new String(buffer);
-                    } else {
-                        return val;
+                    try {
+                        if (keyColBlob.equals(key)) {
+                            byte[] buffer = (byte[]) val;
+                            // buffer.reset();
+                            return new String(buffer);
+                        } else {
+                            return consumerHandle.deColFormat(tabName, key, val);
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException("colKey:" + key + ",val:" + val, e);
                     }
                 }));
     }
@@ -420,7 +440,7 @@ public abstract class CUDCDCTestSuit {
         List<TestRow> rows = new ArrayList<>(size);
         while (size > 0 && iter.hasNext()) {
             Row row = iter.next();
-            System.out.println("=========" + row.getField(keyBaseId));
+            //System.out.println("=========" + row.getField(keyBaseId) + ",detail:" + row.toString());
             // ignore rowKind marker
             RowVals vals = new RowVals();
             for (String key : row.getFieldNames(true)) {

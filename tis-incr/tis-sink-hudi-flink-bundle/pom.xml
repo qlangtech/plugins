@@ -31,10 +31,11 @@
     <artifactId>tis-sink-hudi-flink-bundle</artifactId>
     <packaging>jar</packaging>
 
+
     <dependencies>
         <dependency>
             <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-flink-bundle_${scala.binary.version}</artifactId>
+            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>
             <version>${hudi.version}</version>
             <exclusions>
                 <exclusion>
@@ -99,7 +100,7 @@
                             <keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
                             <filters>
                                 <filter>
-                                    <artifact>org.apache.hudi:hudi-flink-bundle_${scala.binary.version}</artifact>
+                                    <artifact>org.apache.hudi:tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifact>
                                     <!--因为com.esotericsoftware.kryo:kryo:jar:2.24.0:compile 已经在tis-flink-dependency 中依赖到了，为了避免冲突先在这里去掉了-->
                                     <excludes>
                                         <exclude>com/esotericsoftware/**</exclude>

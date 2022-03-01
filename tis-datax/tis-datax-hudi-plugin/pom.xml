@@ -64,6 +64,13 @@
         <!--        </dependency>-->
 
         <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.10.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
@@ -93,10 +100,6 @@
             <artifactId>tis-datax-hdfs-plugin</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-test-common</artifactId>
@@ -125,11 +128,11 @@
             <version>4.1.17.Final</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.spark</groupId>-->
-<!--            <artifactId>spark-sql_${scala.binary.version}</artifactId>-->
-<!--            <version>${spark2.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.spark</groupId>-->
+        <!--            <artifactId>spark-sql_${scala.binary.version}</artifactId>-->
+        <!--            <version>${spark2.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -138,40 +141,37 @@
         </dependency>
 
 
-
-
-
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>hdfswriter</artifactId>-->
-<!--            <version>${alibaba.datax.version}</version>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.alibaba.datax</groupId>-->
-<!--                    <artifactId>datax-common</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.alibaba.datax</groupId>-->
-<!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.hive</groupId>-->
-<!--                    <artifactId>hive-serde</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.hive</groupId>-->
-<!--                    <artifactId>hive-service</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.hive</groupId>-->
-<!--                    <artifactId>hive-common</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.hive.hcatalog</groupId>-->
-<!--                    <artifactId>hive-hcatalog-core</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>hdfswriter</artifactId>-->
+        <!--            <version>${alibaba.datax.version}</version>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>com.alibaba.datax</groupId>-->
+        <!--                    <artifactId>datax-common</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>com.alibaba.datax</groupId>-->
+        <!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.hive</groupId>-->
+        <!--                    <artifactId>hive-serde</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.hive</groupId>-->
+        <!--                    <artifactId>hive-service</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.hive</groupId>-->
+        <!--                    <artifactId>hive-common</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.hive.hcatalog</groupId>-->
+        <!--                    <artifactId>hive-hcatalog-core</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
 
 
     </dependencies>
@@ -208,8 +208,8 @@
                                                dest="${project.build.directory}/${project.build.finalName}"
                                                overwrite="true"
                                                compression="gzip"/>
-<!--                                        <chmod dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/bin" perm="ugo+rx"-->
-<!--                                               includes="**/*"/>-->
+                                        <!--                                        <chmod dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/bin" perm="ugo+rx"-->
+                                        <!--                                               includes="**/*"/>-->
                                     </target>
                                 </configuration>
                                 <goals>

@@ -55,6 +55,12 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     public String bucketName;
 
     @Override
+    public <Configuration> Configuration getConfiguration() {
+        throw new UnsupportedOperationException();
+       // return null;
+    }
+
+    @Override
     public String getFSAddress() {
         return this.endpoint;
     }

@@ -19,8 +19,8 @@
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
-import com.qlangtech.plugins.incr.flink.cdc.TestBasicFlinkSourceHandle;
-import com.qlangtech.plugins.incr.flink.cdc.TestBasicFlinkSourceHandleSchemaAware;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
@@ -83,8 +83,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected TestBasicFlinkSourceHandle createConsumerHandle(String tabName) {
-                return new TestBasicFlinkSourceHandleSchemaAware(tabName, cols);
+            protected IResultRows createConsumerHandle(String tabName) {
+                return new TestTableRegisterFlinkSourceHandle(tabName, cols);
             }
         };
 

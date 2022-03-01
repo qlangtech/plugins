@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import org.apache.flink.types.RowKind;
 
@@ -69,29 +70,29 @@ public class TestRow {
         return vals.getInputStream(key);
     }
 
-    public List<String> getValsList(List<FlinkCol> keys) throws Exception {
+    public List<String> getValsList(List<HdfsColMeta> keys) throws Exception {
         return getValsList(keys, (rowVals, key, val) -> val);
     }
 
-    public List<String> getValsList(List<FlinkCol> keys, ValProcessor processor) throws Exception {
+    public List<String> getValsList(List<HdfsColMeta> keys, ValProcessor processor) throws Exception {
         return getValsList(Optional.empty(), keys, processor);
     }
 
-    public List<String> getValsList(Optional<RowKind> updateVal, List<FlinkCol> keys, ValProcessor processor) throws Exception {
+    public List<String> getValsList(Optional<RowKind> updateVal, List<HdfsColMeta> keys, ValProcessor processor) throws Exception {
         RowKind rowKind = updateVal.isPresent() ? updateVal.get() : this.kind;
         List<String> valsEnum = Lists.newArrayList(rowKind.shortString());
-        for (FlinkCol key : keys) {
+        for (HdfsColMeta key : keys) {
             Object val = null;
             if (rowKind != RowKind.INSERT) {
-                RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.name);
+                RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());
                 if (uptColVal != null) {
                     val = uptColVal.updatedVal;
                 }
             }
             if (val == null) {
-                val = vals.getObj(key.name);
+                val = vals.getObj(key.getName());
             }
-            valsEnum.add(key.name + ":" + processor.process(vals, key.name, val));
+            valsEnum.add(key.getName() + ":" + processor.process(vals, key.getName(), val));
         }
         return valsEnum;
     }

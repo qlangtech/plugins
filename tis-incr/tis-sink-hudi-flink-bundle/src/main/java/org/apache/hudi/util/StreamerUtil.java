@@ -22,7 +22,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.FileSystemFactoryGetter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
@@ -46,6 +46,7 @@ import org.apache.hudi.common.table.log.HoodieLogFormat;
 import org.apache.hudi.common.table.timeline.HoodieActiveTimeline;
 import org.apache.hudi.common.table.timeline.HoodieInstant;
 import org.apache.hudi.common.table.timeline.HoodieTimeline;
+import org.apache.hudi.common.table.view.FileSystemViewStorageConfig;
 import org.apache.hudi.common.util.Option;
 import org.apache.hudi.common.util.ReflectionUtils;
 import org.apache.hudi.common.util.ValidationUtils;
@@ -92,7 +93,7 @@ public class StreamerUtil {
         if (cfg.propsFilePath.isEmpty()) {
             return new TypedProperties();
         }
-        return readConfig( // baisui 百岁modify
+        return readConfig(
                 getHadoopConf(cfg),
                 new Path(cfg.propsFilePath), cfg.configs).getProps();
     }
@@ -100,6 +101,7 @@ public class StreamerUtil {
     public static org.apache.hudi.org.apache.avro.Schema getSourceSchema(FlinkStreamerConfig cfg) {
         return new FilebasedSchemaProvider(FlinkStreamerConfig.toFlinkConfig(cfg)).getSourceSchema();
     }
+
 
     public static org.apache.hudi.org.apache.avro.Schema getSourceSchema(org.apache.flink.configuration.Configuration conf) {
         if (conf.getOptional(FlinkOptions.SOURCE_AVRO_SCHEMA_PATH).isPresent()) {
@@ -131,13 +133,33 @@ public class StreamerUtil {
 
         return conf;
     }
+
+    // Keep the redundant to avoid too many modifications.
+//    public static org.apache.hadoop.conf.Configuration getHadoopConf() {
+//        return FlinkClientUtil.getHadoopConf();
+//    }
+
     // baisui 百岁 修改，将TIS hdfs的配置插入到hudi的配置中 2022/2/23
     // Keep the redundant to avoid too many modifications.
+    private static final ConfigOption<String> dataXNameCfg = ConfigOptions.key(DataxUtils.DATAX_NAME).stringType().noDefaultValue();
+
+    private static org.apache.hadoop.conf.Configuration hadoopConfCache;
+
+    public static org.apache.hadoop.conf.Configuration getHadoopConf() {
+        //return FlinkClientUtil.getHadoopConf();
+        return Objects.requireNonNull(hadoopConfCache, "hadoopConfCache can not be null");
+    }
+
     public static org.apache.hadoop.conf.Configuration getHadoopConf(Configuration conf) {
         String dataXName = conf.getString(dataXNameCfg);
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalStateException("param dataName can not be empty");
         }
+
+        if (hadoopConfCache != null) {
+            return hadoopConfCache;
+        }
+
         org.apache.hadoop.conf.Configuration hadoopConf = FlinkClientUtil.getHadoopConf();
         DataxWriter dataxWriter = DataxWriter.load(null, dataXName);
         if (!(dataxWriter instanceof FileSystemFactoryGetter)) {
@@ -145,18 +167,33 @@ public class StreamerUtil {
                     + FileSystemFactoryGetter.class.getName() + " but now is " + dataxWriter.getClass().getName());
         }
         FileSystemFactory fsFactory = ((FileSystemFactoryGetter) dataxWriter).getFsFactory();
-        FileSystem fs = fsFactory.getFileSystem().unwrap();
-        org.apache.hadoop.conf.Configuration fsConfig = fs.getConf();
+        // FileSystem fs = fsFactory.getFileSystem().unwrap();
+        org.apache.hadoop.conf.Configuration fsConfig = fsFactory.getConfiguration();
         StringBuffer confs = new StringBuffer("tis hdfs configs:\n");
         for (Map.Entry<String, String> entry : fsConfig) {
             confs.append("key:" + entry.getKey() + " -> value:" + entry.getValue()).append("\n");
         }
         LOG.debug(confs.toString());
         hadoopConf.addResource(fsConfig);
+        hadoopConfCache = hadoopConf;
         return hadoopConf;
     }
 
+    /**
+     * Mainly used for tests.
+     */
     public static HoodieWriteConfig getHoodieClientConfig(Configuration conf) {
+        return getHoodieClientConfig(conf, false, false);
+    }
+
+    public static HoodieWriteConfig getHoodieClientConfig(Configuration conf, boolean loadFsViewStorageConfig) {
+        return getHoodieClientConfig(conf, false, loadFsViewStorageConfig);
+    }
+
+    public static HoodieWriteConfig getHoodieClientConfig(
+            Configuration conf,
+            boolean enableEmbeddedTimelineService,
+            boolean loadFsViewStorageConfig) {
         HoodieWriteConfig.Builder builder =
                 HoodieWriteConfig.newBuilder()
                         .withEngineType(EngineType.FLINK)
@@ -201,13 +238,20 @@ public class StreamerUtil {
                                 .withPayloadOrderingField(conf.getString(FlinkOptions.PRECOMBINE_FIELD))
                                 .withPayloadEventTimeField(conf.getString(FlinkOptions.PRECOMBINE_FIELD))
                                 .build())
+                        .withEmbeddedTimelineServerEnabled(enableEmbeddedTimelineService)
                         .withEmbeddedTimelineServerReuseEnabled(true) // make write client embedded timeline service singleton
                         .withAutoCommit(false)
                         .withAllowOperationMetadataField(conf.getBoolean(FlinkOptions.CHANGELOG_ENABLED))
                         .withProps(flinkConf2TypedProperties(conf))
                         .withSchema(getSourceSchema(conf).toString());
 
-        return builder.build();
+        HoodieWriteConfig writeConfig = builder.build();
+        if (loadFsViewStorageConfig) {
+            // do not use the builder to give a change for recovering the original fs view storage config
+            FileSystemViewStorageConfig viewStorageConfig = ViewStorageProperties.loadFromProperties(conf.getString(FlinkOptions.PATH));
+            writeConfig.setViewStorageConfig(viewStorageConfig);
+        }
+        return writeConfig;
     }
 
     /**
@@ -236,8 +280,6 @@ public class StreamerUtil {
                 Preconditions.checkState(props.containsKey(prop), "Required property " + prop + " is missing"));
     }
 
-    private static final ConfigOption<String> dataXNameCfg = ConfigOptions.key(DataxUtils.DATAX_NAME).stringType().noDefaultValue();
-
     /**
      * Initialize the table if it does not exist.
      *
@@ -246,8 +288,8 @@ public class StreamerUtil {
      */
     public static HoodieTableMetaClient initTableIfNotExists(Configuration conf) throws IOException {
         final String basePath = conf.getString(FlinkOptions.PATH);
+        // baisui modify
         final org.apache.hadoop.conf.Configuration hadoopConf = initializeHadoopConfig(conf);
-
         if (!tableExists(basePath, hadoopConf)) {
             HoodieTableMetaClient metaClient = HoodieTableMetaClient.withPropertyBuilder()
                     .setTableType(conf.getString(FlinkOptions.TABLE_TYPE))
@@ -364,15 +406,28 @@ public class StreamerUtil {
 
     /**
      * Creates the Flink write client.
+     *
+     * <p>This expects to be used by client, the driver should start an embedded timeline server.
      */
     @SuppressWarnings("rawtypes")
     public static HoodieFlinkWriteClient createWriteClient(Configuration conf, RuntimeContext runtimeContext) {
+        return createWriteClient(conf, runtimeContext, true);
+    }
+
+    /**
+     * Creates the Flink write client.
+     *
+     * <p>This expects to be used by client, set flag {@code loadFsViewStorageConfig} to use
+     * remote filesystem view storage config, or an in-memory filesystem view storage is used.
+     */
+    @SuppressWarnings("rawtypes")
+    public static HoodieFlinkWriteClient createWriteClient(Configuration conf, RuntimeContext runtimeContext, boolean loadFsViewStorageConfig) {
         HoodieFlinkEngineContext context =
-                new HoodieFlinkEngineContext( // baisui modify
+                new HoodieFlinkEngineContext(// baisui modify
                         new SerializableConfiguration(getHadoopConf(conf)),
                         new FlinkTaskContextSupplier(runtimeContext));
 
-        HoodieWriteConfig writeConfig = getHoodieClientConfig(conf);
+        HoodieWriteConfig writeConfig = getHoodieClientConfig(conf, loadFsViewStorageConfig);
         return new HoodieFlinkWriteClient<>(context, writeConfig);
     }
 
@@ -385,9 +440,18 @@ public class StreamerUtil {
      */
     @SuppressWarnings("rawtypes")
     public static HoodieFlinkWriteClient createWriteClient(Configuration conf) throws IOException {
-        HoodieWriteConfig writeConfig = getHoodieClientConfig(conf);
+        HoodieWriteConfig writeConfig = getHoodieClientConfig(conf, true, false);
         // build the write client to start the embedded timeline server
-        return new HoodieFlinkWriteClient<>(HoodieFlinkEngineContext.DEFAULT, writeConfig);
+        final HoodieFlinkWriteClient writeClient = new HoodieFlinkWriteClient<>(HoodieFlinkEngineContext.DEFAULT, writeConfig);
+        // create the filesystem view storage properties for client
+        final FileSystemViewStorageConfig viewStorageConfig = writeConfig.getViewStorageConfig();
+        // rebuild the view storage config with simplified options.
+        FileSystemViewStorageConfig rebuilt = FileSystemViewStorageConfig.newBuilder()
+                .withStorageType(viewStorageConfig.getStorageType())
+                .withRemoteServerHost(viewStorageConfig.getRemoteViewServerHost())
+                .withRemoteServerPort(viewStorageConfig.getRemoteViewServerPort()).build();
+        ViewStorageProperties.createProperties(conf.getString(FlinkOptions.PATH), rebuilt);
+        return writeClient;
     }
 
     /**
@@ -486,9 +550,5 @@ public class StreamerUtil {
      */
     public static boolean haveSuccessfulCommits(HoodieTableMetaClient metaClient) {
         return !metaClient.getCommitsTimeline().filterCompletedInstants().empty();
-    }
-
-    public static class TISModifier {
-
     }
 }

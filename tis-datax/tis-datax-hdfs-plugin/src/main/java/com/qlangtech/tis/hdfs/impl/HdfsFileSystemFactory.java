@@ -87,6 +87,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         try {
             Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
             Configuration conf = new Configuration();
+            try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
+                conf.addResource(input);
+            }
             conf.set(FsPermission.UMASK_LABEL, "000");
             // fs.defaultFS
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
@@ -97,14 +100,12 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 conf.set("dfs.client.use.datanode.hostname", "true");
             }
 
-            conf.set("fs.default.name", hdfsAddress);
+            conf.set("fs.defaultFS", hdfsAddress);
             conf.set("hadoop.job.ugi", "admin");
-            try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
-                conf.addResource(input);
-                // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
-                conf.setBoolean("fs.hdfs.impl.disable.cache", false);
-                return conf;
-            }
+            // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
+            conf.setBoolean("fs.hdfs.impl.disable.cache", false);
+            conf.reloadConfiguration();
+            return conf;
         } catch (Exception e) {
             throw new RuntimeException("hdfsAddress:" + hdfsAddress, e);
         }finally {

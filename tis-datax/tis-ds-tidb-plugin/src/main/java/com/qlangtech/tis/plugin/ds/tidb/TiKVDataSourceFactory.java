@@ -26,8 +26,6 @@ import com.pingcap.tikv.catalog.Catalog;
 import com.pingcap.tikv.meta.TiDAGRequest;
 import com.pingcap.tikv.meta.TiDBInfo;
 import com.pingcap.tikv.meta.TiTableInfo;
-//import com.pingcap.tikv.types.DataType;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.pingcap.tikv.util.RangeSplitter;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
@@ -45,6 +43,8 @@ import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+//import com.pingcap.tikv.types.DataType;
 
 /**
  * 针对PingCap TiKV作为数据源实现
@@ -377,7 +377,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 //                DataSourceFactory sourceFactory = tikv.instance;
                 List<String> tables = sourceFactory.getTablesInDB();
                 if (tables.size() < 1) {
-                    msgHandler.addErrorMessage(context, "TiKV库" + sourceFactory.identityValue() + "中的没有数据表");
+                    msgHandler.addErrorMessage(context, "TiKV库'" + sourceFactory.dbName + "'中的没有数据表");
                     return false;
                 }
             } catch (Exception e) {

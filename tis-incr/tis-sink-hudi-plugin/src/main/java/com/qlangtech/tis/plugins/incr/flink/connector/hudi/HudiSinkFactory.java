@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
@@ -45,10 +46,12 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,8 +86,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         HudiSinkFactory sink = (HudiSinkFactory) GroovyShellEvaluate.pluginThreadLocal.get();
         if (sink != null) {
             try {
-                DataXHudiWriter dataXWriter =
-                        (DataXHudiWriter) DataxWriter.getPluginStore(null, sink.dataXName).getPlugin();
+                DataXHudiWriter dataXWriter = getDataXHudiWriter(sink);
                 return HudiTableMeta.getHistoryBatchs(dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta());
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
@@ -95,8 +97,19 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     }
 
+    protected static DataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
+        return (DataXHudiWriter) DataxWriter.getPluginStore(null, sink.dataXName).getPlugin();
+    }
+
     @Override
     public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+        DataXHudiWriter hudiWriter = getDataXHudiWriter(this);
+
+        if (!IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME.equals(hudiWriter.fsName)) {
+            throw new IllegalStateException("fsName of hudiWriter must be equal to '"
+                    + IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME + "', but now is " + hudiWriter.fsName);
+        }
+
         return Collections.emptyMap();
     }
 
@@ -135,8 +148,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         }
 
         public StringBuffer getSinkFlinkTableDDL(String tableName) {
-            DataXHudiWriter dataXWriter
-                    = (DataXHudiWriter) DataxWriter.getPluginStore(null, dataXName).getPlugin();
+            DataXHudiWriter dataXWriter = getDataXHudiWriter(HudiSinkFactory.this);
             HudiTableMeta tabMeta = getTableMeta(tableName);
             /**
              *
@@ -342,6 +354,16 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         @Override
         public String getDisplayName() {
             return DISPLAY_NAME_FLINK_CDC_SINK;
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            if (!DataXHudiWriter.HUDI_FILESYSTEM_NAME.equals(IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME)) {
+                throw new IllegalStateException("DataXHudiWriter.HUDI_FILESYSTEM_NAME:" + DataXHudiWriter.HUDI_FILESYSTEM_NAME
+                        + ",IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME:"
+                        + IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME + " must be equal");
+            }
+            return super.validateAll(msgHandler, context, postFormVals);
         }
 
         @Override

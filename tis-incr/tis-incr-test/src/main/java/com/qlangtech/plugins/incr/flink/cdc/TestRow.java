@@ -97,6 +97,10 @@ public class TestRow {
         return valsEnum;
     }
 
+    public Object get(String key) {
+        return vals.getObj(key);
+    }
+
     interface ValProcessor {
         Object process(RowVals<Object> rowVals, String key, Object val) throws Exception;
     }

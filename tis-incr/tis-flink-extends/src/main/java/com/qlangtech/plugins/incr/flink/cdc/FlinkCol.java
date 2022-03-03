@@ -61,8 +61,12 @@ public class FlinkCol implements Serializable {
         return this.process.apply(val);
     }
 
-    public static BiFunction Bytes() {
+    public static BiFunction ByteBuffer() {
         return new ByteBufferProcess();
+    }
+
+    public static BiFunction Byte() {
+        return new ByteProcess();
     }
 
     public static BiFunction DateTime() {
@@ -89,6 +93,22 @@ public class FlinkCol implements Serializable {
             return null;
         }
     }
+
+    private static class ByteProcess extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof java.lang.Short) {
+                return new Byte(((java.lang.Short) o).byteValue());
+            }
+            return (Byte) o;
+        }
+
+        @Override
+        public Object deApply(Object o) {
+            return o;
+        }
+    }
+
 
     private static class DateProcess extends BiFunction {
         private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

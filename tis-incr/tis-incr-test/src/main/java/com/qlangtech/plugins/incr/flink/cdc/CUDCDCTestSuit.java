@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -87,14 +88,14 @@ public abstract class CUDCDCTestSuit {
 //            , new FlinkCol(keyCol_text, DataTypes.STRING()));
 
 
-    static final ThreadLocal<SimpleDateFormat> timeFormat = new ThreadLocal<SimpleDateFormat>() {
+    protected static final ThreadLocal<SimpleDateFormat> timeFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         }
     };
 
-    static final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
+    protected static final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd");
@@ -130,9 +131,16 @@ public abstract class CUDCDCTestSuit {
 
         IMQListener<JobExecutionResult> imqListener = cdcFactory.create();
 
-        // DataxReader.IDataxReaderGetter readerGetter = mock("IDataxReaderGetter", DataxReader.IDataxReaderGetter.class);
+
+        this.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
 
 
+        consumerHandle.cancel();
+    }
+
+    protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
+            throws com.qlangtech.tis.async.message.client.consumer.MQConsumeException, InterruptedException {
         List<ISelectedTab> tabs = Collections.singletonList(tab);
 
         List<TestRow> exampleRows = Lists.newArrayList();
@@ -313,9 +321,6 @@ public abstract class CUDCDCTestSuit {
                     }
                 }
         );
-
-
-        consumerHandle.cancel();
     }
 
     protected String createTableName(String tabName) {
@@ -390,31 +395,35 @@ public abstract class CUDCDCTestSuit {
 
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
 
-    private void assertTestRow(String tabName, RowKind updateVal, IResultRows consumerHandle, TestRow expect, TestRow actual) throws Exception {
-        assertEqualsInOrder(
-                expect.getValsList(Optional.of(updateVal), cols, (rowVals, key, val) -> {
-                    if (keyColBlob.equals(key)) {
-                        ByteArrayInputStream inputStream
-                                = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
-                        inputStream.reset();
-                        return IOUtils.toString(inputStream, TisUTF8.get());
-                    } else {
-                        return val;
-                    }
-                }) //
-                , actual.getValsList(cols, (rowVals, key, val) -> {
-                    try {
+    protected void assertTestRow(String tabName, RowKind updateVal, IResultRows consumerHandle, TestRow expect, TestRow actual) {
+        try {
+            assertEqualsInOrder(
+                    expect.getValsList(Optional.of(updateVal), cols, (rowVals, key, val) -> {
                         if (keyColBlob.equals(key)) {
-                            byte[] buffer = (byte[]) val;
-                            // buffer.reset();
-                            return new String(buffer);
+                            ByteArrayInputStream inputStream
+                                    = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
+                            inputStream.reset();
+                            return IOUtils.toString(inputStream, TisUTF8.get());
                         } else {
-                            return consumerHandle.deColFormat(tabName, key, val);
+                            return val;
                         }
-                    } catch (Exception e) {
-                        throw new RuntimeException("colKey:" + key + ",val:" + val, e);
-                    }
-                }));
+                    }) //
+                    , actual.getValsList(cols, (rowVals, key, val) -> {
+                        try {
+                            if (keyColBlob.equals(key)) {
+                                byte[] buffer = (byte[]) val;
+                                // buffer.reset();
+                                return new String(buffer);
+                            } else {
+                                return consumerHandle.deColFormat(tabName, key, val);
+                            }
+                        } catch (Exception e) {
+                            throw new RuntimeException("colKey:" + key + ",val:" + val, e);
+                        }
+                    }));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Timestamp parseTimestamp(String timeLiterial) throws ParseException {
@@ -429,14 +438,18 @@ public abstract class CUDCDCTestSuit {
     }
 
 
-    private static void waitForSnapshotStarted(CloseableIterator<Row> iterator) throws Exception {
-        while (!iterator.hasNext()) {
-            System.out.println("waitForSnapshotStarted");
-            Thread.sleep(100);
+    protected static void waitForSnapshotStarted(CloseableIterator<Row> iterator) {
+        try {
+            while (!iterator.hasNext()) {
+                System.out.println("waitForSnapshotStarted");
+                Thread.sleep(100);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private static List<TestRow> fetchRows(Iterator<Row> iter, int size, boolean deleteRow) {
+    protected static List<TestRow> fetchRows(Iterator<Row> iter, int size, boolean deleteRow) {
         List<TestRow> rows = new ArrayList<>(size);
         while (size > 0 && iter.hasNext()) {
             Row row = iter.next();
@@ -463,5 +476,34 @@ public abstract class CUDCDCTestSuit {
         assertTrue(expected != null && actual != null);
         assertEquals(expected.size(), actual.size());
         assertArrayEquals(expected.toArray(new String[0]), actual.toArray(new String[0]));
+    }
+
+
+    /**
+     * 构建测试样本
+     *
+     * @param kind
+     * @param path
+     * @return
+     */
+    protected TestRow parseTestRow(RowKind kind, Class<?> clazz, String path) {
+        return new TestRow(kind, com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(
+                clazz, path, true, (input) -> {
+                    RowVals vals = new RowVals();
+                    String colName = null;
+                    String colValue = null;
+                    LineIterator it = null;
+                    String line = null;
+                    it = IOUtils.lineIterator(input, TisUTF8.get());
+                    while (it.hasNext()) {
+                        line = it.nextLine();
+                        colName = StringUtils.trimToEmpty(StringUtils.substringBefore(line, ":"));
+                        colValue = StringUtils.trimToEmpty(StringUtils.substringAfter(line, ":"));
+                        if (!"null".equalsIgnoreCase(colValue)) {
+                            vals.put(colName, colValue);
+                        }
+                    }
+                    return vals;
+                }));
     }
 }

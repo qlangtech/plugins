@@ -104,7 +104,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
             @Override
             public FlinkCol tinyIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.TINYINT());
+                return new FlinkCol(meta.colName, DataTypes.TINYINT(), FlinkCol.Byte());
             }
 
             @Override
@@ -143,12 +143,12 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
             @Override
             public FlinkCol bitType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize));
+                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize), FlinkCol.Byte());
             }
 
             @Override
             public FlinkCol blobType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BYTES(), FlinkCol.Bytes());
+                return new FlinkCol(meta.colName, DataTypes.BYTES(), FlinkCol.ByteBuffer());
             }
 
             @Override

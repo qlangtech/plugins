@@ -42,6 +42,7 @@ import com.starrocks.connector.flink.StarRocksSink;
 import com.starrocks.connector.flink.row.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.configuration.ConfigOption;
@@ -138,14 +139,19 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         DorisSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         DBConfig dbConfig = dsFactory.getDbConfig();
 
-        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : dataxProcessor.getTabAlias().entrySet()) {
+
+        Map<String, IDataxProcessor.TableAlias> selectedTabs = dataxProcessor.getTabAlias();
+        if (MapUtils.isEmpty(selectedTabs)) {
+            throw new IllegalStateException("selectedTabs can not be empty");
+        }
+
+        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
             tableName = tabAliasEntry.getValue();
 
             Objects.requireNonNull(tableName, "tableName can not be null");
             if (StringUtils.isEmpty(tableName.getFrom())) {
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
-
 
             AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
             final IDataxProcessor.TableAlias tabName = tableName;

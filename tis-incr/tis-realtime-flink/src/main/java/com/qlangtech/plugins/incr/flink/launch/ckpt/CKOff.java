@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.launch.ckpt;
 
 import com.qlangtech.plugins.incr.flink.launch.CheckpointFactory;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -27,6 +28,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-01 16:21
  **/
+@Public
 public class CKOff extends CheckpointFactory {
     @Override
     public void setProps(StreamExecutionEnvironment env) {

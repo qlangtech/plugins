@@ -45,6 +45,7 @@ import org.apache.commons.lang.StringUtils;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -188,7 +189,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                     , DataXHudiWriter.class.getSimpleName() + "." + subformProps.getSubFormFieldName() + ".json", true);
             JSONObject subField = JSON.parseObject(overwriteSubField);
             Class<?> clazz = DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
-            return SuFormProperties.copy(filterFieldProp(buildPropertyTypes(this, clazz)), clazz, subformProps);
+            return SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(this), clazz)), clazz, subformProps);
         }
 
         @Override
@@ -258,7 +259,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         public String getPartitionPathField() {
-            return this.hudiTab.partitionPathField;
+//            return this.hudiTab.partition.;
+            return "xxx";
         }
 
         public String getSourceOrderingField() {

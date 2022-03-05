@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch.impl;
+package com.qlangtech.plugins.incr.flink.launch.restart;
 
+import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.FlinkJobRestartStrategy;
 import com.qlangtech.plugins.incr.flink.launch.RestartStrategyFactory;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -86,7 +86,20 @@ public class ExponentialDelay extends RestartStrategyFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<RestartStrategyFactory> {
+    public static class DefaultDescriptor extends FlinkDescriptor<RestartStrategyFactory> {
+
+        public DefaultDescriptor() {
+            super();
+            this.addFieldDescriptor("initialBackoff", RestartStrategyOptions
+                    .RESTART_STRATEGY_EXPONENTIAL_DELAY_INITIAL_BACKOFF);
+            this.addFieldDescriptor("maxBackoff", RestartStrategyOptions.RESTART_STRATEGY_EXPONENTIAL_DELAY_MAX_BACKOFF);
+            this.addFieldDescriptor("backoffMultiplier", RestartStrategyOptions.RESTART_STRATEGY_EXPONENTIAL_DELAY_BACKOFF_MULTIPLIER);
+            this.addFieldDescriptor("resetBackoffThreshold", RestartStrategyOptions
+                    .RESTART_STRATEGY_EXPONENTIAL_DELAY_RESET_BACKOFF_THRESHOLD);
+            this.addFieldDescriptor("jitter", RestartStrategyOptions.RESTART_STRATEGY_EXPONENTIAL_DELAY_JITTER_FACTOR);
+
+        }
+
         @Override
         public String getDisplayName() {
             return FlinkJobRestartStrategy.EXPONENTIAL_DELAY.val;

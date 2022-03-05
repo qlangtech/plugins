@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -25,6 +26,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-01 16:15
  **/
+@Public
 public abstract class CheckpointFactory implements Describable<CheckpointFactory> {
 
     public abstract void setProps(StreamExecutionEnvironment env);

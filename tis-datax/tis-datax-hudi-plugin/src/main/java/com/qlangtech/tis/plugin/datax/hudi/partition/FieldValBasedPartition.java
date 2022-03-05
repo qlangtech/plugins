@@ -16,31 +16,32 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch;
+package com.qlangtech.tis.plugin.datax.hudi.partition;
+
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-25 16:01
+ * @create: 2022-03-05 11:12
  **/
-public enum FlinkJobRestartStrategy {
+public class FieldValBasedPartition extends HudiTablePartition {
 
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String partitionPathField;
 
-    OFF(StateBackendFactory.OFF), FIXED_DELAY("fixed-delay")
-    , EXPONENTIAL_DELAY("exponential-delay"), FAILURE_RATE("failure-rate");
-
-    public final String val;
-
-    private FlinkJobRestartStrategy(String val) {
-        this.val = val;
-    }
-
-    public static FlinkJobRestartStrategy parse(String val) {
-
-        for (FlinkJobRestartStrategy s : FlinkJobRestartStrategy.values()) {
-            if (s.val.equals(val)) {
-                return s;
-            }
+    @TISExtension
+    public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
+        public DefaultDescriptor() {
+            super();
         }
-        throw new IllegalStateException("val:" + val + " is illegal");
+
+        @Override
+        public String getDisplayName() {
+            return "fieldValBased";
+        }
     }
 }

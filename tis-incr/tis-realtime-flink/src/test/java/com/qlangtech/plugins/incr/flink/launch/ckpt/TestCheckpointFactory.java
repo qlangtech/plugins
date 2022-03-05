@@ -16,31 +16,20 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch;
+package com.qlangtech.plugins.incr.flink.launch.ckpt;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-25 16:01
+ * @create: 2022-03-05 09:56
  **/
-public enum FlinkJobRestartStrategy {
+public class TestCheckpointFactory {
 
-
-    OFF(StateBackendFactory.OFF), FIXED_DELAY("fixed-delay")
-    , EXPONENTIAL_DELAY("exponential-delay"), FAILURE_RATE("failure-rate");
-
-    public final String val;
-
-    private FlinkJobRestartStrategy(String val) {
-        this.val = val;
-    }
-
-    public static FlinkJobRestartStrategy parse(String val) {
-
-        for (FlinkJobRestartStrategy s : FlinkJobRestartStrategy.values()) {
-            if (s.val.equals(val)) {
-                return s;
-            }
-        }
-        throw new IllegalStateException("val:" + val + " is illegal");
+    @Test
+    public void testCKOn() {
+        CKOn ckOn = new CKOn();
+        Assert.assertNotNull(ckOn.getDescriptor());
     }
 }

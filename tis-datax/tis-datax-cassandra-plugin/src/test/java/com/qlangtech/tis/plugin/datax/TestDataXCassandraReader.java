@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
@@ -43,6 +44,7 @@ public class TestDataXCassandraReader extends TestCase {
     }
 
     public void testPluginExtraPropsLoad() throws Exception {
+
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXCassandraReader.class);
         assertTrue(extraProps.isPresent());
     }

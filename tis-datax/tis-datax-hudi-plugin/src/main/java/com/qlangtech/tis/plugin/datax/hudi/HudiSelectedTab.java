@@ -18,10 +18,15 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,17 +35,38 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 public class HudiSelectedTab extends SelectedTab {
 
     public static final String KEY_RECORD_FIELD = "recordField";
-    public static final String KEY_PARTITION_PATH_FIELD = "partitionPathField";
+    public static final String KEY_PARTITION_PATH_FIELD = "partition";
     public static final String KEY_SOURCE_ORDERING_FIELD = "sourceOrderingField";
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String recordField;
 
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String partitionPathField;
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public HudiTablePartition partition;
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String sourceOrderingField;
+
+
+    /**
+     * 主键候选字段
+     *
+     * @return
+     */
+    public static List<Option> getPrimaryKeys() {
+        List<Option> pks = Lists.newArrayList();
+        return pks;
+    }
+
+    /**
+     * 分区键候选字段
+     *
+     * @return
+     */
+    public static List<Option> getPartitionKeys() {
+        List<Option> pts = Lists.newArrayList();
+        return pts;
+    }
 
 
 }

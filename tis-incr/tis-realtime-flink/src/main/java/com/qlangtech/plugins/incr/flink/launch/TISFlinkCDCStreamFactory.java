@@ -49,7 +49,6 @@ import java.util.stream.Collectors;
  **/
 @Public
 public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
-
     public static final String NAME_FLINK_CDC = "Flink-CDC";
 
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
@@ -72,6 +71,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     @FormField(ordinal = 5, validate = {Validator.require})
     public CheckpointFactory checkpoint;
+
+    @FormField(ordinal = 6, validate = {Validator.require})
+    public StateBackendFactory stateBackend;
 
     public static List<Option> allRestartStrategy() {
         return Arrays.stream(FlinkJobRestartStrategy.values())
@@ -98,6 +100,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
         Objects.requireNonNull(this.checkpoint, "checkpoint can not be null");
         this.checkpoint.setProps(env);
+
+        Objects.requireNonNull(this.stateBackend, "stateBackend can not be null");
+        stateBackend.setProps(env);
         return env;
     }
 

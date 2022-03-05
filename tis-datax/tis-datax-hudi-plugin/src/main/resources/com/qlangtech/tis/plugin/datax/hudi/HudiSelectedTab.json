@@ -1,11 +1,14 @@
 {
-  "partitionPathField": {
-    "label": "分区字段"
+  "partition": {
+    "label": "分区策略",
+    "dftVal": "off"
   },
   "recordField": {
-    "label": "主键"
+    "label": "主键",
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPrimaryKeys()"
   },
   "sourceOrderingField": {
-    "label": "去重字段"
+    "label": "去重字段",
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPartitionKeys()"
   }
 }

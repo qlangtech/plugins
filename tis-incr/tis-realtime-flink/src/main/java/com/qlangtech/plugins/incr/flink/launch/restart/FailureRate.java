@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch.impl;
+package com.qlangtech.plugins.incr.flink.launch.restart;
 
+import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.FlinkJobRestartStrategy;
 import com.qlangtech.plugins.incr.flink.launch.RestartStrategyFactory;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -61,7 +61,14 @@ public class FailureRate extends RestartStrategyFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<RestartStrategyFactory> {
+    public static class DefaultDescriptor extends FlinkDescriptor<RestartStrategyFactory> {
+        public DefaultDescriptor() {
+            super();
+            this.addFieldDescriptor("maxFailures", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_MAX_FAILURES_PER_INTERVAL);
+            this.addFieldDescriptor("failureRateInterval", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_FAILURE_RATE_INTERVAL);
+            this.addFieldDescriptor("failureRateDelay", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_DELAY);
+        }
+
         @Override
         public String getDisplayName() {
             return FlinkJobRestartStrategy.FAILURE_RATE.val;

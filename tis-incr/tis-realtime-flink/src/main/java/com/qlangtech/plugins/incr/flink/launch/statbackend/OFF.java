@@ -16,31 +16,31 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch;
+package com.qlangtech.plugins.incr.flink.launch.statbackend;
+
+import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
+import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-25 16:01
+ * @create: 2022-03-03 16:38
  **/
-public enum FlinkJobRestartStrategy {
+@Public
+public class OFF extends StateBackendFactory {
+    @Override
+    public void setProps(StreamExecutionEnvironment env) {
 
-
-    OFF(StateBackendFactory.OFF), FIXED_DELAY("fixed-delay")
-    , EXPONENTIAL_DELAY("exponential-delay"), FAILURE_RATE("failure-rate");
-
-    public final String val;
-
-    private FlinkJobRestartStrategy(String val) {
-        this.val = val;
     }
 
-    public static FlinkJobRestartStrategy parse(String val) {
-
-        for (FlinkJobRestartStrategy s : FlinkJobRestartStrategy.values()) {
-            if (s.val.equals(val)) {
-                return s;
-            }
+    @TISExtension()
+    public static class DefaultDescriptor extends FlinkDescriptor<StateBackendFactory> {
+        @Override
+        public String getDisplayName() {
+            return StateBackendFactory.OFF;
         }
-        throw new IllegalStateException("val:" + val + " is illegal");
     }
 }

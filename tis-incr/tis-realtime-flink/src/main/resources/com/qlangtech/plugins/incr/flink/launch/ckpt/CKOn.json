@@ -1,6 +1,4 @@
 {
   "ckpointInterval": {
-    "dftVal": 3000,
-    "help": "Sets the interval in which checkpoints are periodically scheduled. Unit:milliseconds"
   }
 }

@@ -16,25 +16,27 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch.impl;
+package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkJobRestartStrategy;
-import com.qlangtech.plugins.incr.flink.launch.RestartStrategyFactory;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-25 17:00
+ * @create: 2022-03-05 11:00
  **/
 @Public
-public class OFF extends RestartStrategyFactory {
-    @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<RestartStrategyFactory> {
+public class OffPartition extends HudiTablePartition {
+
+    @TISExtension
+    public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
+        public DefaultDescriptor() {
+            super();
+        }
         @Override
         public String getDisplayName() {
-            return FlinkJobRestartStrategy.OFF.val;
+            return "off";
         }
     }
 }

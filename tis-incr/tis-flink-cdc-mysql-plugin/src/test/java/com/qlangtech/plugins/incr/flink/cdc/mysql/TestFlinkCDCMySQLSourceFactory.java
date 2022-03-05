@@ -136,6 +136,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             protected String getColEscape() {
                 return "`";
+
             }
 
             @Override

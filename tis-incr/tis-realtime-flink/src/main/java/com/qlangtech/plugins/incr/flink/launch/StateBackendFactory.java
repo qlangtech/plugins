@@ -18,29 +18,19 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
+import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Describable;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
 /**
+ * Flink 状态存储
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-25 16:01
+ * @create: 2022-03-03 16:32
  **/
-public enum FlinkJobRestartStrategy {
+@Public
+public abstract class StateBackendFactory implements Describable<StateBackendFactory> {
+    public static final String OFF= "off";
 
-
-    OFF(StateBackendFactory.OFF), FIXED_DELAY("fixed-delay")
-    , EXPONENTIAL_DELAY("exponential-delay"), FAILURE_RATE("failure-rate");
-
-    public final String val;
-
-    private FlinkJobRestartStrategy(String val) {
-        this.val = val;
-    }
-
-    public static FlinkJobRestartStrategy parse(String val) {
-
-        for (FlinkJobRestartStrategy s : FlinkJobRestartStrategy.values()) {
-            if (s.val.equals(val)) {
-                return s;
-            }
-        }
-        throw new IllegalStateException("val:" + val + " is illegal");
-    }
+    public abstract void setProps(StreamExecutionEnvironment env);
 }

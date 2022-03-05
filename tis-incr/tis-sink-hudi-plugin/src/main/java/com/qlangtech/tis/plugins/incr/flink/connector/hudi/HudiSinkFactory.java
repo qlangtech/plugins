@@ -220,11 +220,11 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                                 dataXWriter.getFs().getFileSystem(), dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
 
-                        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
-                                dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta()
-                                , tableName, dumpTimeStamp, getTableMeta(tableName));
+//                        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
+//                                dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta()
+//                                , tableName, dumpTimeStamp, getTableMeta(tableName));
                         // FlinkOptions
-                        sub.appendLine("'source.avro-schema.path' = '" + String.valueOf(fsSourceSchemaPath) + "' ,");
+                        //  sub.appendLine("'source.avro-schema.path' = '" + String.valueOf(fsSourceSchemaPath) + "' ,");
 
                         if (tabMeta.getHudiTabType() == HudiWriteTabType.MOR) {
                             sub.appendLine("'read.streaming.enabled' = 'true',");

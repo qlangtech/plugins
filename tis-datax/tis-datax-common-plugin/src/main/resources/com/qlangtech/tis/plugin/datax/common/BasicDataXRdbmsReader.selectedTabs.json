@@ -1,9 +1,3 @@
 {
-  "clickBtnLabel": "设置",
-  "onClickFillData": {
-    "cols": {
-      "method": "getTableMetadata",
-      "params": ["id"]
-    }
-  }
+  "clickBtnLabel": "设置"
 }

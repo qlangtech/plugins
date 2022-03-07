@@ -192,9 +192,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             return SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(this), clazz)), clazz, subformProps);
         }
 
-        @Override
-        public SuFormProperties.SuFormPropertiesBehaviorMeta overwriteBehaviorMeta(
-                SuFormProperties.SuFormPropertiesBehaviorMeta behaviorMeta) throws Exception {
+//        @Override
+//        public SuFormProperties.SuFormPropertiesBehaviorMeta overwriteBehaviorMeta(
+//                SuFormProperties.SuFormPropertiesBehaviorMeta behaviorMeta) throws Exception {
 
 
 //            {
@@ -207,22 +207,22 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //            }
 //            }
 
-            Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
+           // Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
 
-            SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
-            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
-            propProcess.setParams(Collections.singletonList("id"));
-            onClickFillData.put(HudiSelectedTab.KEY_RECORD_FIELD, propProcess);
+//            SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
+//            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
+//            propProcess.setParams(Collections.singletonList("id"));
+//            onClickFillData.put(HudiSelectedTab.KEY_RECORD_FIELD, propProcess);
+//
+//            propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
+//            propProcess.setMethod(DataSourceMeta.METHOD_GET_PARTITION_KEYS);
+//            propProcess.setParams(Collections.singletonList("id"));
+//            onClickFillData.put(HudiSelectedTab.KEY_PARTITION_PATH_FIELD, propProcess);
+//            onClickFillData.put(HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD, propProcess);
 
-            propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
-            propProcess.setMethod(DataSourceMeta.METHOD_GET_PARTITION_KEYS);
-            propProcess.setParams(Collections.singletonList("id"));
-            onClickFillData.put(HudiSelectedTab.KEY_PARTITION_PATH_FIELD, propProcess);
-            onClickFillData.put(HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD, propProcess);
 
-
-            return behaviorMeta;
-        }
+//            return behaviorMeta;
+//        }
 
         @Override
         public boolean isRdbms() {

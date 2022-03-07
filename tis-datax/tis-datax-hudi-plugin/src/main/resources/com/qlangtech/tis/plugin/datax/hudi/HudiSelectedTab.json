@@ -5,10 +5,10 @@
   },
   "recordField": {
     "label": "主键",
-    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPrimaryKeys()"
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPrimaryKeys():uncache_true"
   },
   "sourceOrderingField": {
     "label": "去重字段",
-    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPartitionKeys()"
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPartitionKeys():uncache_true"
   }
 }

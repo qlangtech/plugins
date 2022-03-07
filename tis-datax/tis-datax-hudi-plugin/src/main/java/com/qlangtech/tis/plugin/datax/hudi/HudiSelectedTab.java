@@ -18,15 +18,23 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
-import com.google.common.collect.Lists;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,6 +45,8 @@ public class HudiSelectedTab extends SelectedTab {
     public static final String KEY_RECORD_FIELD = "recordField";
     public static final String KEY_PARTITION_PATH_FIELD = "partition";
     public static final String KEY_SOURCE_ORDERING_FIELD = "sourceOrderingField";
+
+
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String recordField;
@@ -54,8 +64,7 @@ public class HudiSelectedTab extends SelectedTab {
      * @return
      */
     public static List<Option> getPrimaryKeys() {
-        List<Option> pks = Lists.newArrayList();
-        return pks;
+        return getContextTableCols((cols) -> cols.stream().filter((col) -> col.isPk()));
     }
 
     /**
@@ -64,9 +73,20 @@ public class HudiSelectedTab extends SelectedTab {
      * @return
      */
     public static List<Option> getPartitionKeys() {
-        List<Option> pts = Lists.newArrayList();
-        return pts;
+        return getContextTableCols((cols) -> cols.stream()
+                .filter((col) -> {
+                    switch (col.getType().getCollapse()) {
+                        // case STRING:
+                        case INT:
+                        case Long:
+                        case Date:
+                            return true;
+                    }
+                    return false;
+                }));
     }
+
+
 
 
 }

@@ -20,9 +20,13 @@ package com.qlangtech.tis.plugin.datax.hudi.partition;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -32,6 +36,10 @@ public class FieldValBasedPartition extends HudiTablePartition {
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionPathField;
+
+    public static List<Option> getPtCandidateFields(){
+        return HudiSelectedTab.getPartitionKeys();
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {

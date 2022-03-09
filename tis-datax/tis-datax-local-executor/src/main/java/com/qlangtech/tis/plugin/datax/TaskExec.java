@@ -23,7 +23,7 @@ import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -47,20 +47,20 @@ public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
 
 
-    static IRemoteJobTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
+    static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
         // final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
-        return new IRemoteJobTrigger() {
+        return new IRemoteTaskTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
-            final ExecutorService dataXExecutor = jobContext.getContextInstance();
+           // final ExecutorService dataXExecutor = jobContext.getContextInstance();
 
             @Override
-            public void submitJob() {
-                Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
-                dataXExecutor.submit(() -> {
+            public void run() {
+             //   Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
+               // dataXExecutor.submit(() -> {
                     try {
                         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
                         MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
@@ -128,7 +128,7 @@ public class TaskExec {
                         complete.set(true);
                         // shutdownExecutor();
                     }
-                });
+                //});
             }
 
 //            private void shutdownExecutor() {
@@ -138,6 +138,11 @@ public class TaskExec {
 //                    logger.error(e.getMessage(), e);
 //                }
 //            }
+
+            @Override
+            public String getTaskName() {
+                return dataXfileName;
+            }
 
             @Override
             public void cancel() {

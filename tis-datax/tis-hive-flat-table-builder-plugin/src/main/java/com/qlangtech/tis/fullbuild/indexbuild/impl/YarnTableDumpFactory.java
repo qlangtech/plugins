@@ -29,7 +29,7 @@
 //import com.qlangtech.tis.fs.ITableBuildTask;
 //import com.qlangtech.tis.fs.ITaskContext;
 //import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-//import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+//import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 //import com.qlangtech.tis.fullbuild.indexbuild.TaskContext;
 //import com.qlangtech.tis.offline.FileSystemFactory;
 //import com.qlangtech.tis.offline.FlatTableBuilder;
@@ -175,7 +175,7 @@
 //    }
 //
 //    @Override
-//    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
+//    public IRemoteTaskTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
 //
 //        Hadoop020RemoteJobTriggerFactory dumpTriggerFactory
 //                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFs(), this);

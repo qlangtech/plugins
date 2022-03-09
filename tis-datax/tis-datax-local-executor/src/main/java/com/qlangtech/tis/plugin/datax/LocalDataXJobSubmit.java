@@ -24,7 +24,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
@@ -57,7 +57,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IRemoteJobTrigger createDataXJob(DataXJobSubmit.IDataXJobContext taskContext, RpcServiceReference statusRpc
+    public IRemoteTaskTrigger createDataXJob(DataXJobSubmit.IDataXJobContext taskContext, RpcServiceReference statusRpc
             , IDataxProcessor dataxProcessor, String dataXfileName) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
@@ -91,17 +91,13 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public DataXJobSubmit.IDataXJobContext createJobContext(final IJoinTaskContext parentContext) {
-        int nThreads = 2;
-        final ExecutorService executorService = new ThreadPoolExecutor(
-                nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(MAX_TABS_NUM_IN_PER_JOB),
-                Executors.defaultThreadFactory());
+
 
         return new DataXJobSubmit.IDataXJobContext() {
-            @Override
-            public ExecutorService getContextInstance() {
-                return executorService;
-            }
+//            @Override
+//            public ExecutorService getContextInstance() {
+//                return executorService;
+//            }
 
             @Override
             public IJoinTaskContext getTaskContext() {
@@ -110,7 +106,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
             @Override
             public void destroy() {
-                executorService.shutdownNow();
+               // executorService.shutdownNow();
             }
         };
     }

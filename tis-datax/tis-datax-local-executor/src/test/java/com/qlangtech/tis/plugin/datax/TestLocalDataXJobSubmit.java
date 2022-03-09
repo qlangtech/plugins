@@ -24,7 +24,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.PhaseStatusCollection;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
@@ -104,7 +104,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
         EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();
 
         EasyMock.replay(taskContext, dataxProcessor, zkClient);
-        IRemoteJobTrigger dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
+        IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
 
         RunningStatus running = getRunningStatus(dataXJob);
         assertTrue("running.isSuccess", running.isSuccess());
@@ -132,12 +132,12 @@ public class TestLocalDataXJobSubmit extends TestCase {
         EasyMock.verify(taskContext, dataxProcessor, zkClient);
     }
 
-    protected RunningStatus getRunningStatus(IRemoteJobTrigger dataXJob) {
+    protected RunningStatus getRunningStatus(IRemoteTaskTrigger dataXJob) {
         return this.getRunningStatus(dataXJob, true);
     }
 
-    protected RunningStatus getRunningStatus(IRemoteJobTrigger dataXJob, boolean waitting) {
-        dataXJob.submitJob();
+    protected RunningStatus getRunningStatus(IRemoteTaskTrigger dataXJob, boolean waitting) {
+        dataXJob.run();
         RunningStatus running = null;
         while ((running = dataXJob.getRunningStatus()) != null && waitting) {
             if (running.isComplete()) {

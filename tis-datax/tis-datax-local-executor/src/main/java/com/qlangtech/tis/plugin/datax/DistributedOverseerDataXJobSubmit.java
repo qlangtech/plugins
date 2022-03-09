@@ -25,7 +25,7 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.AsynRemoteJobTrigger;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
@@ -57,10 +57,10 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     @Override
     public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
         return new IDataXJobContext() {
-            @Override
-            public Void getContextInstance() {
-                throw new UnsupportedOperationException();
-            }
+//            @Override
+//            public Void getContextInstance() {
+//                throw new UnsupportedOperationException();
+//            }
 
             @Override
             public IJoinTaskContext getTaskContext() {
@@ -75,7 +75,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public IRemoteJobTrigger createDataXJob(IDataXJobContext dataXJobContext
+    public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
             , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
@@ -83,7 +83,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
         // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
         return new AsynRemoteJobTrigger(dataXfileName) {
             @Override
-            public void submitJob() {
+            public void run() {
                 try {
                     CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, dataXfileName);
                     distributedQueue.put(msg);

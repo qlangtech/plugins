@@ -18,23 +18,18 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,7 +40,6 @@ public class HudiSelectedTab extends SelectedTab {
     public static final String KEY_RECORD_FIELD = "recordField";
     public static final String KEY_PARTITION_PATH_FIELD = "partition";
     public static final String KEY_SOURCE_ORDERING_FIELD = "sourceOrderingField";
-
 
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -87,6 +81,28 @@ public class HudiSelectedTab extends SelectedTab {
     }
 
 
+    @TISExtension
+    public static class DefaultDescriptor extends SelectedTab.DefaultDescriptor {
 
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
+
+            HudiSelectedTab tab = (HudiSelectedTab) postFormVals;
+            boolean success = true;
+            if (!tab.containCol(tab.sourceOrderingField)) {
+                msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "需要选择" + HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD);
+                success = false;
+            }
+
+            if (!tab.containCol(tab.recordField)) {
+                msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "需要选择" + HudiSelectedTab.KEY_RECORD_FIELD);
+                success = false;
+            }
+
+            return success;
+        }
+
+
+    }
 
 }

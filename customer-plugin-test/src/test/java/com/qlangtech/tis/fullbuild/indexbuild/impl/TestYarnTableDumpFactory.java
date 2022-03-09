@@ -41,7 +41,7 @@ public class TestYarnTableDumpFactory extends BaiscPluginTest {
 //        params.put(IParamContext.KEY_TASK_ID, "123");
 //        TaskContext context = TaskContext.create(params);
 //
-//        IRemoteJobTrigger singleTabDumpJob = tabDump.createSingleTableDumpJob(table, context);
+//        IRemoteTaskTrigger singleTabDumpJob = tabDump.createSingleTableDumpJob(table, context);
 //        assertNotNull(singleTabDumpJob);
 //
 //        singleTabDumpJob.submitJob();

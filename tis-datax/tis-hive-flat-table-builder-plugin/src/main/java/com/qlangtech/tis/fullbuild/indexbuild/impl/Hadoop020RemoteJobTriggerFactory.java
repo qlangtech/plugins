@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年11月3日 上午10:39:41
  */
-public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactory {
+public class Hadoop020RemoteJobTriggerFactory implements IRemoteTaskTriggerFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(Hadoop020RemoteJobTriggerFactory.class);
     private static final Logger logger = LOG;
@@ -94,7 +94,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
      * @throws Exception
      */
     @Override
-    public IRemoteJobTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
+    public IRemoteTaskTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
             , String groupNum, IIndexBuildParam state) throws Exception {
         final String coreName = indexName + "-" + groupNum;
         return getRemoteJobTrigger(coreName, CLASS_NAME_TASK, "index-build-" + state.getTaskId()
@@ -115,7 +115,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
      * @return
      */
     @Override
-    public IRemoteJobTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
+    public IRemoteTaskTrigger createSingleTableDumpJob(IDumpTable table, TaskContext context) {
 
 
         JobConfParams tabDumpParams = JobConfParams.createTabDumpParams(context, table, context.getStartTime(), podSpec.identityValue());
@@ -129,7 +129,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
     }
 
 
-    private IRemoteJobTrigger getRemoteJobTrigger(String name, String startClassName, String appType, JobConfParams launcherParam)
+    private IRemoteTaskTrigger getRemoteJobTrigger(String name, String startClassName, String appType, JobConfParams launcherParam)
             throws IOException, YarnException {
 
         ParamsConfig pConfig = (ParamsConfig) this.yarnConfig;
@@ -180,9 +180,9 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         p.setPriority(2);
         submissionContext.setPriority(p);
 
-        return new IRemoteJobTrigger() {
+        return new IRemoteTaskTrigger() {
             @Override
-            public void submitJob() {
+            public void run() {
                 try {
                     yarnClient.submitApplication(submissionContext);
                 } catch (Exception e) {

@@ -20,8 +20,10 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.IPropertyType;
@@ -42,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -132,7 +135,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 //    }
 
     @Override
-    public final Iterator<IDataxReaderContext> getSubTasks() {
+    public final IGroupChildTaskIterator getSubTasks() {
         Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
         DS dsFactory = this.getDataSourceFactory();
 
@@ -142,10 +145,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         AtomicInteger taskIndex = new AtomicInteger(0);
 
         final int selectedTabsSize = this.selectedTabs.size();
-
+        ConcurrentHashMap<String, List<String>> groupedInfo = new ConcurrentHashMap();
         AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
 
-        return new Iterator<IDataxReaderContext>() {
+        return new IGroupChildTaskIterator() {
+            @Override
+            public Map<String, List<String>> getGroupedInfo() {
+                return groupedInfo;
+            }
+
             @Override
             public boolean hasNext() {
 
@@ -194,26 +202,17 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
                 IDataSourceDumper dumper = dumperIterator.next();
                 SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
+                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
+                List<String> childTasks = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
+                childTasks.add(childTask);
+                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
 
-                RdbmsReaderContext dataxContext = createDataXReaderContext(tab.getName() + "_" + taskIndex.getAndIncrement(), tab, dumper);
-
-//                MySQLDataXReaderContext dataxContext = new MySQLDataXReaderContext(
-//                        tab.getName() + "_" + taskIndex.getAndIncrement(), tab.getName());
-//                dataxContext.setJdbcUrl(dumper.getDbHost());
-//                dataxContext.setUsername(dsFactory.getUserName());
-//                dataxContext.setPassword(dsFactory.getPassword());
                 dataxContext.setWhere(tab.getWhere());
 
                 if (isFilterUnexistCol()) {
                     Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-//                if (tab.isAllCols()) {
-//                    dataxContext.setCols(tableMetadata.keySet().stream().collect(Collectors.toList()));
-//                } else {
+
                     dataxContext.setCols(tab.cols.stream().filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
-//                    dataxContext.cols = tableMetadata.values().stream().filter((col) -> {
-//                        return tab.containCol(col.getKey());
-//                    }).map((t) -> t.getValue()).collect(Collectors.toList());
-                    // }
                 } else {
                     dataxContext.setCols(tab.cols);
                 }

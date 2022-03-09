@@ -264,7 +264,7 @@ public class TestDataXHudiWriter {
                 return WriterTemplate.createColMetas();
             }
         };
-        hudiTab.partitionPathField = WriterTemplate.kind;
+        //hudiTab.partitionPathField = WriterTemplate.kind;
         hudiTab.recordField = WriterTemplate.customerregisterId;
         hudiTab.sourceOrderingField = WriterTemplate.lastVer;
         hudiTab.setWhere("1=1");

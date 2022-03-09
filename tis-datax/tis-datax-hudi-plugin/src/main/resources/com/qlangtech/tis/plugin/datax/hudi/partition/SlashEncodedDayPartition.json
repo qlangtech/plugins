@@ -1,0 +1,6 @@
+{
+  "partitionPathField": {
+    "label": "分区字段",
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.partition.SlashEncodedDayPartition.getPtCandidateFields():uncache_true"
+  }
+}

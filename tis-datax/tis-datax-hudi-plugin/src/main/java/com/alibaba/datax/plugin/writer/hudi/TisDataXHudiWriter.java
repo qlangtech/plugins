@@ -211,101 +211,12 @@ public class TisDataXHudiWriter extends HdfsWriter {
             return this.tabMeta.getDumpDir(this, this.getHiveConnGetter());
         }
 
-        private IPath getSourcePropsPath() {
-            ITISFileSystem fs = this.getFileSystem();
-            return fs.getPath(getDumpDir(), "meta/" + this.getFileName() + "-source.properties");
-        }
-
-        private void launchSparkRddConvert() throws Exception {
-
-            // HashMap env = new HashMap();
-            Map<String, String> env = Config.getInstance().getAllKV();
+//        private IPath getSourcePropsPath() {
+//            ITISFileSystem fs = this.getFileSystem();
+//            return fs.getPath(getDumpDir(), "meta/" + this.getFileName() + "-source.properties");
+//        }
 
 
-            String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
-            final String taskId = MDC.get(IParamContext.KEY_TASK_ID);
-            env.put(IParamContext.KEY_TASK_ID, taskId);
-            if (StringUtils.isNotEmpty(mdcCollection)) {
-                env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
-            }
-
-            logger.info("environment props ===========================");
-            for (Map.Entry<String, String> entry : env.entrySet()) {
-                logger.info("key:{},value:{}", entry.getKey(), entry.getValue());
-            }
-            logger.info("=============================================");
-            SparkLauncher handle = new SparkLauncher(env);
-            File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
-            FileUtils.touch(logFile);
-            handle.redirectError(logFile);
-            //  handle.redirectError(new File("error.log"));
-            // handle.redirectToLog(DataXHudiWriter.class.getName());
-            String tabName = this.getFileName();
-
-            File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
-            File sparkHome = HudiConfig.getSparkHome();
-
-            File resJar = FileUtils.listFiles(hudiDependencyDir, new String[]{"jar"}, false)
-                    .stream().findFirst().orElseThrow(
-                            () -> new IllegalStateException("must have resJar hudiDependencyDir:" + hudiDependencyDir.getAbsolutePath()));
-
-            File addedJars = new File(hudiDependencyDir, "lib");
-            boolean[] hasAddJar = new boolean[1];
-            FileUtils.listFiles(addedJars, new String[]{"jar"}, false).forEach((jar) -> {
-                handle.addJar(String.valueOf(jar.toPath().normalize()));
-                hasAddJar[0] = true;
-            });
-            if (!hasAddJar[0]) {
-                throw new IllegalStateException("path must contain jars:" + addedJars.getAbsolutePath());
-            }
-            handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
-            ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
-            handle.setMaster(sparkConnGetter.getSparkMaster());
-            handle.setSparkHome(String.valueOf(sparkHome.toPath().normalize()));
-            handle.setMainClass("com.alibaba.datax.plugin.writer.hudi.TISHoodieDeltaStreamer");
-
-            IPath fsSourcePropsPath = getSourcePropsPath();
-
-            handle.addAppArgs("--table-type", this.tabMeta.getHudiTabType().getValue()
-                    , "--source-class", "org.apache.hudi.utilities.sources.CsvDFSSource"
-                    , "--source-ordering-field", this.tabMeta.getSourceOrderingField()
-                    , "--target-base-path", String.valueOf(this.tabMeta.getDumpDir(this, getHiveConnGetter()))
-                    , "--target-table", tabName + "/" + this.tabMeta.getDataXName()
-                    , "--props", String.valueOf(fsSourcePropsPath)
-                    , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"
-                    , "--enable-sync"
-            );
-
-            if (this.tabMeta.getHudiTabType() == HudiWriteTabType.MOR) {
-                handle.addAppArgs("--disable-compaction");
-            }
-
-
-            CountDownLatch countDownLatch = new CountDownLatch(1);
-            // SparkAppHandle.State[] finalState = new SparkAppHandle.State[1];
-            SparkAppHandle sparkAppHandle = handle.startApplication(new SparkAppHandle.Listener() {
-                @Override
-                public void stateChanged(SparkAppHandle sparkAppHandle) {
-//                    System.out.println(sparkAppHandle.getAppId());
-//                    System.out.println("state:" + sparkAppHandle.getState().toString());
-                    SparkAppHandle.State state = sparkAppHandle.getState();
-                    if (state.isFinal()) {
-                        // finalState[0] = state;
-                        System.out.println("Info:" + sparkAppHandle.getState());
-                        countDownLatch.countDown();
-                    }
-                }
-
-                @Override
-                public void infoChanged(SparkAppHandle sparkAppHandle) {
-                    System.out.println("Info:" + sparkAppHandle.getState().toString());
-                }
-            });
-            countDownLatch.await();
-            if (sparkAppHandle.getState() != SparkAppHandle.State.FINISHED) {
-                throw new TisException("spark app:" + sparkAppHandle.getAppId() + " execute result not successfule:" + sparkAppHandle.getState());
-            }
-        }
     }
 
 

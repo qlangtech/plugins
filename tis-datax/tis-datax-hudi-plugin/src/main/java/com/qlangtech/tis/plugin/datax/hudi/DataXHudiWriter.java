@@ -26,10 +26,12 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -37,14 +39,11 @@ import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -52,7 +51,7 @@ import java.util.Optional;
  * @create: 2022-01-21 13:02
  **/
 @Public
-public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn {
+public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn, IDataXBatchPost {
     public static final String DATAX_NAME = "Hudi";
 
     public static final String KEY_FIELD_NAME_SPARK_CONN = "sparkConn";
@@ -207,7 +206,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //            }
 //            }
 
-           // Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
+        // Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
 
 //            SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
 //            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
@@ -239,6 +238,12 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             return DATAX_NAME;
         }
     }
+
+    @Override
+    public IRemoteTaskTrigger createPostTask(IDataxProcessor.TableAlias tab) {
+        return ;
+    }
+
 
     public class HudiDataXContext extends FSDataXContext {
 

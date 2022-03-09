@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteJobTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.tis.hadoop.rpc.ITISRpcService;
@@ -74,7 +74,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         EasyMock.replay(taskContext);
         //IJoinTaskContext taskContext
         //            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName
-        IRemoteJobTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME);
+        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME);
         dataXJob.submitJob();
         EasyMock.verify(taskContext);
     }

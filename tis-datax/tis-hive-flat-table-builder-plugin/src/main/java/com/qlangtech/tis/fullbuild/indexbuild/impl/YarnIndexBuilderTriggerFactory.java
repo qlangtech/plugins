@@ -103,7 +103,7 @@
 //    }
 //
 //    @Override
-//    public IRemoteJobTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
+//    public IRemoteTaskTrigger createBuildJob(IJoinTaskContext execContext, String timePoint, String indexName
 //            , String groupNum, IIndexBuildParam buildParam) throws Exception {
 //        Hadoop020RemoteJobTriggerFactory indexBuilderTriggerFactory
 //                = new Hadoop020RemoteJobTriggerFactory(getYarnConfig(), getFileSystem(), this);

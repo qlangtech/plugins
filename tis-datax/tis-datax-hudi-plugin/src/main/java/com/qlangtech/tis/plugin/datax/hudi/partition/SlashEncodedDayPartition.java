@@ -21,23 +21,51 @@ package com.qlangtech.tis.plugin.datax.hudi.partition;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+
+import java.util.List;
 
 /**
- * NonPartitionedExtractor
+ * // @see SlashEncodedDayPartitionValueExtractor
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-05 11:00
+ * @create: 2022-03-08 15:59
  **/
 @Public
-public class OffPartition extends HudiTablePartition {
+public class SlashEncodedDayPartition extends HudiTablePartition {
+
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String partitionPathField;
+
+    public static List<Option> getPtCandidateFields() {
+        return HudiSelectedTab.getContextTableCols((cols) -> cols.stream()
+                .filter((col) -> {
+                    switch (col.getType().getCollapse()) {
+                        // case STRING:
+//                        case INT:
+//                        case Long:
+                        case Date:
+                            return true;
+                    }
+                    return false;
+                }));
+
+    }
+
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
         public DefaultDescriptor() {
             super();
         }
+
         @Override
         public String getDisplayName() {
-            return "off";
+            return "slashEncodedDay";
         }
     }
 }

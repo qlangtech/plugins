@@ -18,9 +18,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IdentityName;
@@ -30,6 +33,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -38,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,8 +51,9 @@ import java.util.stream.Stream;
  * @author: baisui 百岁
  * @create: 2021-04-08 13:29
  **/
-public class SelectedTab implements ISelectedTab, IdentityName {
+public class SelectedTab implements Describable<SelectedTab>, ISelectedTab, IdentityName {
     private static final String KEY_TABLE_COLS = "tableRelevantCols";
+    public static final String KEY_FIELD_COLS = "cols";
     private static final Logger logger = LoggerFactory.getLogger(SelectedTab.class);
     // 表名称
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -146,7 +152,7 @@ public class SelectedTab implements ISelectedTab, IdentityName {
     }
 
 
-    protected static List<Option> getContextTableCols(Function<List<ColumnMetaData>, Stream<ColumnMetaData>> func) {
+    public static List<Option> getContextTableCols(Function<List<ColumnMetaData>, Stream<ColumnMetaData>> func) {
         SuFormProperties.SuFormGetterContext context = SuFormProperties.subFormGetterProcessThreadLocal.get();
         if (context == null || context.plugin == null) {
             return Collections.emptyList();
@@ -159,9 +165,28 @@ public class SelectedTab implements ISelectedTab, IdentityName {
         DataSourceMeta dsMeta = (DataSourceMeta) plugin;
         List<ColumnMetaData> cols
                 = context.getContextAttr(KEY_TABLE_COLS, (key) -> dsMeta.getTableMetadata(context.getSubFormIdentityField()));
-        return func.apply(cols).map((c) -> new Option(c.getName())).collect(Collectors.toList());
+        return func.apply(cols).map((c) -> c).collect(Collectors.toList());
 
 
+    }
+
+    @TISExtension
+    public static class DefaultDescriptor extends Descriptor<SelectedTab> {
+        @Override
+        protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            ParseDescribable<SelectedTab> plugin = this.newInstance(null, postFormVals.rawFormData, Optional.empty());
+            SelectedTab tab = plugin.instance;
+            if (tab.cols.isEmpty()) {
+                msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "请选择");
+                return false;
+            }
+            return this.validateAll(msgHandler, context, plugin.instance);
+        }
+
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
+            return true;
+        }
     }
 
 

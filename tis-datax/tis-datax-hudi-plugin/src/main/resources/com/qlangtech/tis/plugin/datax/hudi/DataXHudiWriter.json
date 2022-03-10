@@ -55,20 +55,6 @@
       ]
     }
   },
-  "autoCreateTable": {
-    "label": "同步Hive",
-    "dftVal": true,
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
-  },
   "tabType": {
     "label": "表类型",
     "dftVal": "COPY_ON_WRITE",

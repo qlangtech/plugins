@@ -75,7 +75,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         //IJoinTaskContext taskContext
         //            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName
         IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME);
-        dataXJob.submitJob();
+        dataXJob.run();
         EasyMock.verify(taskContext);
     }
 }

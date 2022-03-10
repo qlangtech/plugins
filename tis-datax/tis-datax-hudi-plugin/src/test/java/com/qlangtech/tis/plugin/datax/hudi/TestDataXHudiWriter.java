@@ -84,7 +84,7 @@ public class TestDataXHudiWriter {
         MDC.put(IParamContext.KEY_TASK_ID, "123");
         HudiTest houseTest = createDataXWriter();
 
-        houseTest.writer.autoCreateTable = true;
+       // houseTest.writer.autoCreateTable = true;
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");

@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -77,9 +78,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String partitionedBy;
 
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
-    // 目标源中是否自动创建表，这样会方便不少
-    public boolean autoCreateTable;
+//    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+//    // 目标源中是否自动创建表，这样会方便不少
+//    public boolean autoCreateTable;
 
 
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
@@ -254,18 +255,20 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @Override
     public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab) {
-        DataXCfgGenerator.GenerateCfgs genCfg = generateCfgs.updateAndGet((pre) -> {
-            if (pre == null) {
-                if (dataXName == null) {
-                    throw new IllegalStateException("prop dataXName can not be null");
-                }
-                File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, dataXName);
-                pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
-                logger.info("create GenerateCfgs with genTime:" + pre.getGenTime());
-                return pre;
-            }
-            return pre;
-        });
+        DataXCfgGenerator.GenerateCfgs genCfg
+                = Objects.requireNonNull(generateCfgs, "generateCfgs can not be null")
+                .updateAndGet((pre) -> {
+                    if (pre == null) {
+                        if (dataXName == null) {
+                            throw new IllegalStateException("prop dataXName can not be null");
+                        }
+                        File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, dataXName);
+                        pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
+                        logger.info("create GenerateCfgs with genTime:" + pre.getGenTime());
+                        return pre;
+                    }
+                    return pre;
+                });
         return new HudiDumpPostTask(execContext, (HudiSelectedTab) tab, this, genCfg);
     }
 

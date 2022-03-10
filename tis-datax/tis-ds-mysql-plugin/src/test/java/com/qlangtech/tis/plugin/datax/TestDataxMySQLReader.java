@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
@@ -45,8 +46,8 @@ import org.easymock.EasyMock;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -267,8 +268,7 @@ public class TestDataxMySQLReader extends BasicTest {
 
         int readerContextCount = 0;
         IDataxReaderContext readerContext = null;
-        Iterator<IDataxReaderContext> subTasks = mySQLReader.getSubTasks();
-
+        IGroupChildTaskIterator subTasks = mySQLReader.getSubTasks();
 
         while (subTasks.hasNext()) {
             readerContext = subTasks.next();
@@ -279,6 +279,18 @@ public class TestDataxMySQLReader extends BasicTest {
             readerContextCount++;
         }
         assertEquals(16, readerContextCount);
+
+
+        Map<String, List<String>> groupedInfo = subTasks.getGroupedInfo();
+        assertNotNull("groupedInfo can not be null", groupedInfo);
+
+        List<String> subTabs = groupedInfo.get(TestSelectedTabs.tabNameOrderDetail);
+        assertEquals(8, subTabs.size());
+
+        subTabs = groupedInfo.get(TestSelectedTabs.tabNameTotalpayinfo);
+        assertEquals(8, subTabs.size());
+
+
         EasyMock.verify(pluginContext, context);
     }
 

@@ -28,6 +28,8 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
@@ -42,9 +44,13 @@ import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.sql.Connection;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,6 +63,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     public static final String KEY_FIELD_NAME_SPARK_CONN = "sparkConn";
 
     public static final String HUDI_FILESYSTEM_NAME = "hudi_hdfs";
+    private static final Logger logger = LoggerFactory.getLogger(DataXHudiWriter.class);
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String sparkConn;
@@ -85,6 +92,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
+
+    public HudiWriteTabType getHudiTableType() {
+        return HudiWriteTabType.parse(tabType);
+    }
 
     @Override
     public IHiveConnGetter getHiveConnMeta() {
@@ -239,9 +250,23 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
     }
 
+    private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs = new AtomicReference<>();
+
     @Override
-    public IRemoteTaskTrigger createPostTask(IDataxProcessor.TableAlias tab) {
-        return ;
+    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab) {
+        DataXCfgGenerator.GenerateCfgs genCfg = generateCfgs.updateAndGet((pre) -> {
+            if (pre == null) {
+                if (dataXName == null) {
+                    throw new IllegalStateException("prop dataXName can not be null");
+                }
+                File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, dataXName);
+                pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
+                logger.info("create GenerateCfgs with genTime:" + pre.getGenTime());
+                return pre;
+            }
+            return pre;
+        });
+        return new HudiDumpPostTask(execContext, (HudiSelectedTab) tab, this, genCfg);
     }
 
 
@@ -263,10 +288,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             return this.hudiTab.recordField;
         }
 
-        public String getPartitionPathField() {
-//            return this.hudiTab.partition.;
-            return "xxx";
-        }
+//        public String getPartitionPathField() {
+////            return this.hudiTab.partition.;
+//            return "xxx";
+//        }
 
         public String getSourceOrderingField() {
             return this.hudiTab.sourceOrderingField;
@@ -281,7 +306,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         public HudiWriteTabType getTabType() {
-            return HudiWriteTabType.parse(tabType);
+            return getHudiTableType();
         }
     }
 }

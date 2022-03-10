@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -25,12 +26,15 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 /**
- *  //@see org.apache.hudi.hive.MultiPartKeysValueExtractor
+ * //@see org.apache.hudi.hive.MultiPartKeysValueExtractor
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-05 11:12
  **/
@@ -40,7 +44,17 @@ public class FieldValBasedPartition extends HudiTablePartition {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionPathField;
 
-    public static List<Option> getPtCandidateFields(){
+    @Override
+    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+        super.setProps(props, hudiWriter);
+        if (StringUtils.isEmpty(this.partitionPathField)) {
+            throw new IllegalStateException("partitionPathField can not be empty");
+        }
+        setPartitionProps(props, partitionPathField, "org.apache.hudi.hive.MultiPartKeysValueExtractor");
+    }
+
+
+    public static List<Option> getPtCandidateFields() {
         return HudiSelectedTab.getPartitionKeys();
     }
 

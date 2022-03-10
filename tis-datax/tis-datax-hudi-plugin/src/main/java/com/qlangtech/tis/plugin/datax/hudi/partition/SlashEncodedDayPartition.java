@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -25,6 +26,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 
 import java.util.List;
@@ -40,6 +42,12 @@ public class SlashEncodedDayPartition extends HudiTablePartition {
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionPathField;
+
+    @Override
+    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+        super.setProps(props, hudiWriter);
+        setPartitionProps(props, partitionPathField, "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
+    }
 
     public static List<Option> getPtCandidateFields() {
         return HudiSelectedTab.getContextTableCols((cols) -> cols.stream()

@@ -32,6 +32,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.BasicHdfsWriterJob;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.commons.collections.CollectionUtils;
@@ -57,18 +58,18 @@ public class HudiTableMeta {
     private final String hudiTabName;
     private IPath tabDumpDir = null;
 
-    public static IPath createFsSourceSchema(ITISFileSystem fs, IHiveConnGetter hiveConn
-            , String tabName, String dumpTimeStamp, HudiTableMeta hudiTabMeta) {
+    public static IPath createFsSourceSchema(ITISFileSystem fs
+            , String tabName, IPath tabDumpDir, HudiSelectedTab hudiTabMeta) {
 
-        List<HdfsColMeta> colsMeta = hudiTabMeta.colMetas;
-        IPath fsSourceSchemaPath = fs.getPath(hudiTabMeta.getDumpDir(fs, dumpTimeStamp, hiveConn), "meta/schema.avsc");
+        List<ISelectedTab.ColMeta> colsMetas = hudiTabMeta.getCols();
+        IPath fsSourceSchemaPath = fs.getPath(tabDumpDir, "meta/schema.avsc");
 
         try (OutputStream schemaWriter = fs.getOutputStream(fsSourceSchemaPath)) {
             SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(tabName);
             SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
 
-            for (HdfsColMeta meta : colsMeta) {
-                SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.type);
+            for (ISelectedTab.ColMeta meta : colsMetas) {
+                SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.getType());
                 switch (hiveDataType) {
                     case STRING:
                     case DATE:
@@ -81,50 +82,50 @@ public class HudiTableMeta {
 //                            } else {
                         // fields.requiredString(meta.colName);
                         // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
-                        if (meta.nullable) {
+                        if (meta.isNullable()) {
                             // strType.stringDefault(StringUtils.EMPTY);
-                            fields.optionalString(meta.colName);
+                            fields.optionalString(meta.getName());
                         } else {
                             //   strType.noDefault();
-                            fields.requiredString(meta.colName);
+                            fields.requiredString(meta.getName());
                         }
                         //}
                         break;
                     case DOUBLE:
-                        if (meta.nullable) {
-                            fields.optionalDouble(meta.colName);
+                        if (meta.isNullable()) {
+                            fields.optionalDouble(meta.getName());
                         } else {
-                            fields.requiredDouble(meta.colName);
+                            fields.requiredDouble(meta.getName());
                         }
                         break;
                     case INT:
                     case TINYINT:
                     case SMALLINT:
-                        if (meta.nullable) {
-                            fields.optionalInt(meta.colName);
+                        if (meta.isNullable()) {
+                            fields.optionalInt(meta.getName());
                         } else {
-                            fields.requiredInt(meta.colName);
+                            fields.requiredInt(meta.getName());
                         }
                         break;
                     case BOOLEAN:
-                        if (meta.nullable) {
-                            fields.optionalBoolean(meta.colName);
+                        if (meta.isNullable()) {
+                            fields.optionalBoolean(meta.getName());
                         } else {
-                            fields.requiredBoolean(meta.colName);
+                            fields.requiredBoolean(meta.getName());
                         }
                         break;
                     case BIGINT:
-                        if (meta.nullable) {
-                            fields.optionalLong(meta.colName);
+                        if (meta.isNullable()) {
+                            fields.optionalLong(meta.getName());
                         } else {
-                            fields.requiredLong(meta.colName);
+                            fields.requiredLong(meta.getName());
                         }
                         break;
                     case FLOAT:
-                        if (meta.nullable) {
-                            fields.optionalFloat(meta.colName);
+                        if (meta.isNullable()) {
+                            fields.optionalFloat(meta.getName());
                         } else {
-                            fields.requiredFloat(meta.colName);
+                            fields.requiredFloat(meta.getName());
                         }
                         break;
                     default:
@@ -134,8 +135,8 @@ public class HudiTableMeta {
 
             Schema schema = fields.endRecord();
 
-            if (schema.getFields().size() != colsMeta.size()) {
-                throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMeta.size());
+            if (schema.getFields().size() != colsMetas.size()) {
+                throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMetas.size());
             }
             IOUtils.write(schema.toString(true), schemaWriter, TisUTF8.get());
         } catch (Exception e) {
@@ -172,9 +173,13 @@ public class HudiTableMeta {
 
     public IPath getDumpDir(ITISFileSystem fs, String dumpTimeStamp, IHiveConnGetter hiveConn) {
         if (this.tabDumpDir == null) {
-            this.tabDumpDir = fs.getPath(fs.getRootDir(), hiveConn.getDbName() + "/" + dumpTimeStamp + "/" + this.hudiTabName);
+            this.tabDumpDir = getDumpDir(fs, hudiTabName, dumpTimeStamp, hiveConn);// fs.getPath(fs.getRootDir(), hiveConn.getDbName() + "/" + dumpTimeStamp + "/" + this.hudiTabName);
         }
         return this.tabDumpDir;
+    }
+
+    public static IPath getDumpDir(ITISFileSystem fs, String hudiTabName, String dumpTimeStamp, IHiveConnGetter hiveConn) {
+        return fs.getPath(fs.getRootDir(), hiveConn.getDbName() + "/" + dumpTimeStamp + "/" + hudiTabName);
     }
 
     public static List<Option> getHistoryBatchs(ITISFileSystem fs, IHiveConnGetter hiveConn) {

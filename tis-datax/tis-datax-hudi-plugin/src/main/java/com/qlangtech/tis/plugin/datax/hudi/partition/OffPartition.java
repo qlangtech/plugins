@@ -18,23 +18,32 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 
 /**
  * NonPartitionedExtractor
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-05 11:00
  **/
 @Public
 public class OffPartition extends HudiTablePartition {
 
+    @Override
+    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter writer) {
+
+    }
+
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
         public DefaultDescriptor() {
             super();
         }
+
         @Override
         public String getDisplayName() {
             return "off";

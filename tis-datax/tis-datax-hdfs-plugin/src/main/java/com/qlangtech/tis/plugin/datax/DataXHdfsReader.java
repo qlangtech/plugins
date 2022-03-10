@@ -23,6 +23,7 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -39,7 +40,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -138,9 +138,9 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     }
 
     @Override
-    public Iterator<IDataxReaderContext> getSubTasks() {
+    public IGroupChildTaskIterator getSubTasks() {
         IDataxReaderContext readerContext = new HdfsReaderContext(this);
-        return Collections.singleton(readerContext).iterator();
+        return IGroupChildTaskIterator.create(readerContext);
     }
 
     public HdfsFileSystemFactory getFs() {

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -78,7 +78,11 @@ public class TestLocalDataXJobSubmit extends TestCase {
         ref.set(StatusRpcClient.AssembleSvcCompsite.MOCK_PRC);
         RpcServiceReference statusRpc = new RpcServiceReference(ref);
 
+        DataXJobSubmit.IDataXJobContext dataXJobContext = EasyMock.createMock("dataXJobContext", DataXJobSubmit.IDataXJobContext.class);
+
+
         IExecChainContext taskContext = EasyMock.createMock("taskContext", IExecChainContext.class);
+        EasyMock.expect(dataXJobContext.getTaskContext()).andReturn(taskContext).anyTimes();
         IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
         EasyMock.expect(taskContext.getIndexName()).andReturn(dataXName).anyTimes();
         EasyMock.expect(taskContext.getTaskId()).andReturn(TaskId).anyTimes();
@@ -103,21 +107,21 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();
 
-        EasyMock.replay(taskContext, dataxProcessor, zkClient);
-        IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
+        EasyMock.replay(taskContext, dataxProcessor, zkClient, dataXJobContext);
+        IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName);
 
         RunningStatus running = getRunningStatus(dataXJob);
         assertTrue("running.isSuccess", running.isSuccess());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointThrowException.class.getName());
-        dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName);
 
         running = getRunningStatus(dataXJob);
         assertFalse("shall faild", running.isSuccess());
         assertTrue("shall complete", running.isComplete());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointCancellable.class.getName());
-        dataXJob = jobSubmit.createDataXJob(taskContext, statusRpc, dataxProcessor, dataXfileName);
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName);
         running = getRunningStatus(dataXJob, false);
         Thread.sleep(2000);
         dataXJob.cancel();

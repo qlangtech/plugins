@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年11月3日 上午10:39:41
  */
-public class Hadoop020RemoteJobTriggerFactory implements IRemoteTaskTriggerFactory {
+public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(Hadoop020RemoteJobTriggerFactory.class);
     private static final Logger logger = LOG;
@@ -188,6 +188,11 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteTaskTriggerFacto
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
+            }
+
+            @Override
+            public String getTaskName() {
+               throw new UnsupportedOperationException();
             }
 
             @Override

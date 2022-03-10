@@ -27,6 +27,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -44,9 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,9 +99,8 @@ public class DataXOssReader extends DataxReader {
 
 
     @Override
-    public Iterator<IDataxReaderContext> getSubTasks() {
-        IDataxReaderContext readerContext = new OSSReaderContext(this);
-        return Collections.singleton(readerContext).iterator();
+    public IGroupChildTaskIterator getSubTasks() {
+        return IGroupChildTaskIterator.create(new OSSReaderContext(this));
     }
 
     @Override

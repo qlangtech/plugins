@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -100,9 +101,10 @@ public class DataXFtpReader extends DataxReader {
     }
 
     @Override
-    public Iterator<IDataxReaderContext> getSubTasks() {
+    public IGroupChildTaskIterator getSubTasks() {
         IDataxReaderContext readerContext = new DataXFtpReaderContext(this);
-        return Collections.singletonList(readerContext).iterator();
+        return IGroupChildTaskIterator.create(readerContext);
+        //return Collections.singletonList(readerContext).iterator();
     }
 
     @Override

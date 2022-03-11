@@ -92,7 +92,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, this.hudiWriter.dataXName);
 //        DataXCfgGenerator.GenerateCfgs generateCfgs = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
 //        return generateCfgs.getGroupedChildTask().get(tableName);
-        return this.generateCfgs.getGroupedChildTask().get(hudiTab.getName())
+        return this.generateCfgs.getDataXTaskDependencies(hudiTab.getName())
                 .stream().map((childTask) -> childTask + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX)
                 .collect(Collectors.toList());
     }

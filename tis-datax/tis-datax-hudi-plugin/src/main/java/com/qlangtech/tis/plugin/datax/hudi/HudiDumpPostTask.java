@@ -24,7 +24,6 @@ import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
@@ -51,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 /**
  * Hudi 文件导入完成之后，开始执行同步工作

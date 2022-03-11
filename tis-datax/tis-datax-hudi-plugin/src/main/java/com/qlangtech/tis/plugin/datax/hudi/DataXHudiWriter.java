@@ -29,6 +29,7 @@ import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -265,8 +266,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                 if (dataXName == null) {
                     throw new IllegalStateException("prop dataXName can not be null");
                 }
-                File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, dataXName);
-                pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
+                DataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
+                pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataxProcessor.getDataxCfgDir(null));
                 logger.info("create GenerateCfgs with genTime:" + pre.getGenTime());
                 return pre;
             }

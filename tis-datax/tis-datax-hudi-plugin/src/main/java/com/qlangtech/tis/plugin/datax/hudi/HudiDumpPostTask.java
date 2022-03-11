@@ -24,6 +24,7 @@ import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
@@ -37,7 +38,6 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.web.start.TisAppLaunchPort;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 import org.slf4j.Logger;
@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /**
  * Hudi 文件导入完成之后，开始执行同步工作
@@ -91,7 +92,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, this.hudiWriter.dataXName);
 //        DataXCfgGenerator.GenerateCfgs generateCfgs = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
 //        return generateCfgs.getGroupedChildTask().get(tableName);
-        return this.generateCfgs.getGroupedChildTask().get(hudiTab.getName());
+        return this.generateCfgs.getGroupedChildTask().get(hudiTab.getName())
+                .stream().map((childTask) -> childTask + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX)
+                .collect(Collectors.toList());
     }
 
     @Override

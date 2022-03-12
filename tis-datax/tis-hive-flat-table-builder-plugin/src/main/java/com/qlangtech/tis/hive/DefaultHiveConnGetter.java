@@ -23,6 +23,8 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -34,11 +36,15 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -102,6 +108,33 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         try {
             return HiveDBUtils.getInstance(this.hiveAddress, this.dbName, getUserToken()).createConnection();
         } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public IHiveMetaStore createMetaStoreClient() {
+        try {
+            HiveConf c = new HiveConf();
+            c.set(HiveConf.ConfVars.METASTOREURIS.varname, this.metaStoreUrls);
+            final IMetaStoreClient storeClient = Hive.get(c, false).getMSC();
+            return new IHiveMetaStore() {
+                @Override
+                public HiveTable getTable(String database, String tableName) {
+                    try {
+                        Table table = storeClient.getTable(database, tableName);
+                        return new HiveTable(table.getTableName());
+                    } catch (TException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                @Override
+                public void close() throws IOException {
+                    storeClient.close();
+                }
+            };
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  **/
 public abstract class CreateTableSqlBuilder {
     private final IDataxProcessor.TableMap tableMapper;
-    protected BlockScriptBuffer script;
+    public BlockScriptBuffer script;
     protected final List<ColWrapper> pks;
     public int maxColNameLength;
     private final String escapeChar;
@@ -62,7 +62,6 @@ public abstract class CreateTableSqlBuilder {
 
     protected void appendTabMeta(List<ColWrapper> pks) {
     }
-
 
 
     public StringBuffer build() {
@@ -114,7 +113,7 @@ public abstract class CreateTableSqlBuilder {
         return script.getContent();
     }
 
-    protected void appendColName(String col) {
+    public void appendColName(String col) {
         script.append(escapeChar)
                 .append(String.format("%-" + (maxColNameLength) + "s", col + (escapeChar)));
     }

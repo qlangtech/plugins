@@ -1,33 +1,38 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
+import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -36,10 +41,12 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.io.FileUtils;
@@ -55,6 +62,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -65,7 +73,7 @@ public class TestDataXHudiWriter {
 
     // private static final String targetTableName ="";
     public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
-
+    static final String cfgPathParameter = "parameter";
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
@@ -83,11 +91,14 @@ public class TestDataXHudiWriter {
                 , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
         MDC.put(IParamContext.KEY_TASK_ID, "123");
         HudiTest houseTest = createDataXWriter();
+        long timestamp = 20220311135455l;
 
-       // houseTest.writer.autoCreateTable = true;
+        // houseTest.writer.autoCreateTable = true;
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
-        File createDDLDir = new File(".");
+
+        File dataXCfgDir = folder.newFolder();
+        File createDDLDir = folder.newFolder();
         File createDDLFile = null;
         try {
             createDDLFile = new File(createDDLDir, HudiWriter.targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
@@ -95,6 +106,13 @@ public class TestDataXHudiWriter {
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
+            DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs();
+            genCfg.setGenTime(timestamp);
+            genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
+                    , Lists.newArrayList(WriterTemplate.TAB_customer_order_relation + "_0")));
+            genCfg.write2GenFile(dataXCfgDir);
+
+            EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);
             // EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
                 return houseTest.writer;
@@ -103,13 +121,38 @@ public class TestDataXHudiWriter {
                 Assert.assertEquals(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), dataXName);
                 return dataXProcessor;
             };
-            EasyMock.replay(dataXProcessor);
-            // DataXHudiWriter writer = new DataXHudiWriter();
-            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer);
 
-            EasyMock.verify(dataXProcessor);
+
+            IExecChainContext execContext = EasyMock.mock("execContext", IExecChainContext.class);
+            EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(timestamp));
+
+
+            EasyMock.replay(dataXProcessor, execContext);
+
+//            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
+//                cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
+//                return cfg;
+//            });
+
+
+            // DataXHudiWriter hudiWriter = new DataXHudiWriter();
+//            hudiWriter.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
+//            hudiWriter.createPostTask(execContext, tab);
+
+            HudiDumpPostTask postTask = (HudiDumpPostTask) houseTest.writer.createPostTask(execContext, houseTest.tab);
+            Assert.assertNotNull("postTask can not be null", postTask);
+            postTask.run();
+
+            IHiveConnGetter hiveConnMeta = houseTest.writer.getHiveConnMeta();
+            try (IHiveMetaStore metaStoreClient = hiveConnMeta.createMetaStoreClient()) {
+                Assert.assertNotNull(metaStoreClient);
+                HiveTable table = metaStoreClient.getTable(hiveConnMeta.getDbName(), WriterTemplate.TAB_customer_order_relation);
+                Assert.assertNotNull(WriterTemplate.TAB_customer_order_relation + " can not be null", table);
+            }
+
+            EasyMock.verify(dataXProcessor, execContext);
         } finally {
-            FileUtils.deleteQuietly(createDDLFile);
+            //  FileUtils.deleteQuietly(createDDLFile);
         }
     }
 
@@ -201,10 +244,12 @@ public class TestDataXHudiWriter {
     private static class HudiTest {
         private final DataXHudiWriter writer;
         private final IDataxProcessor.TableMap tableMap;
+        private final HudiSelectedTab tab;
 
-        public HudiTest(DataXHudiWriter writer, IDataxProcessor.TableMap tableMap) {
+        public HudiTest(DataXHudiWriter writer, IDataxProcessor.TableMap tableMap, HudiSelectedTab tab) {
             this.writer = writer;
             this.tableMap = tableMap;
+            this.tab = tab;
         }
     }
 
@@ -244,7 +289,7 @@ public class TestDataXHudiWriter {
         writer.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));
         writer.tabType = HudiWriteTabType.COW.getValue();
         writer.batchOp = BatchOpMode.BULK_INSERT.getValue();
-        writer.shuffleParallelism = 999;
+        writer.shuffleParallelism = 3;
         writer.partitionedBy = "pt";
 
 //        writer.batchByteSize = 3456;
@@ -258,18 +303,42 @@ public class TestDataXHudiWriter {
         // writer.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
         //  writer.dbName = dbName;
 
-        HudiSelectedTab hudiTab = new HudiSelectedTab() {
+//        HudiSelectedTab hudiTab = new HudiSelectedTab() {
+//            @Override
+//            public List<ColMeta> getCols() {
+//                return WriterTemplate.createColMetas();
+//            }
+//        };
+//        //hudiTab.partitionPathField = WriterTemplate.kind;
+//        hudiTab.recordField = WriterTemplate.customerregisterId;
+//        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
+//        hudiTab.setWhere("1=1");
+//        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
+
+
+        List<HdfsColMeta> colsMeta
+                = HdfsColMeta.getColsMeta(Configuration.from(IOUtils.loadResourceFromClasspath(writer.getClass()
+                , hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
+        HudiSelectedTab tab = new HudiSelectedTab() {
             @Override
             public List<ColMeta> getCols() {
-                return WriterTemplate.createColMetas();
+                return colsMeta.stream().map((c) -> {
+                    ColMeta col = new ColMeta();
+                    col.setName(c.getName());
+                    col.setPk(c.pk);
+                    col.setType(c.type);
+                    col.setNullable(c.nullable);
+                    return col;
+                }).collect(Collectors.toList());
             }
         };
-        //hudiTab.partitionPathField = WriterTemplate.kind;
-        hudiTab.recordField = WriterTemplate.customerregisterId;
-        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
-        hudiTab.setWhere("1=1");
-        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
-        return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(hudiTab)));
+        tab.name = WriterTemplate.TAB_customer_order_relation;
+        tab.partition = new OffPartition();
+        tab.sourceOrderingField = "last_ver";
+        tab.recordField = "customerregister_id";
+
+
+        return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(tab)), tab);
     }
 
 //    @NotNull

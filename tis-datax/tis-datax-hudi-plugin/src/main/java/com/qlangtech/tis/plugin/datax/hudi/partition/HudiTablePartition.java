@@ -21,7 +21,11 @@ package com.qlangtech.tis.plugin.datax.hudi.partition;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,8 +41,22 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
         props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class", partition_extractor_class);
     }
 
+    protected static void appendPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
+        createTableSqlBuilder.script.appendLine("\t,");
+        createTableSqlBuilder.appendColName(pts.stream().collect(Collectors.joining(",")));
+        createTableSqlBuilder.script
+                .append("VARCHAR(30)")
+                .returnLine();
+    }
+
 
     public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
         props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
     }
+
+    public boolean isSupportPartition() {
+        return true;
+    }
+
+    public abstract void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder);
 }

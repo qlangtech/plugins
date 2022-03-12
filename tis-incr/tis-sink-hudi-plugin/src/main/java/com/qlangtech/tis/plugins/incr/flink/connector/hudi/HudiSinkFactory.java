@@ -26,12 +26,12 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellEvaluate;
-import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IParamContext;
@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -49,6 +50,7 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
@@ -56,10 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +79,9 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dumpTimeStamp;
+
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer currentLimit;
 
     public static List<Option> getHistoryBatch() {
 
@@ -118,7 +120,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
      * start implements IStreamTableCreator
      * ------------------------------------------------------------------------------
      */
-    private transient Map<String, HudiTableMeta> tableMetas = null;
+    private transient Map<String, Pair<HudiSelectedTab, HudiTableMeta>> tableMetas = null;
 
     @Override
     public String getFlinkStreamGenerateTemplateFileName() {
@@ -143,20 +145,20 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         }
 
         public List<HdfsColMeta> getCols(String tableName) {
-            HudiTableMeta tableMeta = getTableMeta(tableName);
-            return tableMeta.colMetas;
+            Pair<HudiSelectedTab, HudiTableMeta> tableMeta = getTableMeta(tableName);
+            return tableMeta.getRight().colMetas;
         }
 
         public StringBuffer getSinkFlinkTableDDL(String tableName) {
             DataXHudiWriter dataXWriter = getDataXHudiWriter(HudiSinkFactory.this);
-            HudiTableMeta tabMeta = getTableMeta(tableName);
+            Pair<HudiSelectedTab, HudiTableMeta> tabMetaPair = getTableMeta(tableName);
+            final HudiTableMeta tabMeta = tabMetaPair.getRight();
+            HudiSelectedTab tab = tabMetaPair.getLeft();
             /**
              *
              * https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/sql/create/#create-table
              * @return
              */
-            //@Override
-//                public StringBuffer createFlinkTableDDL () {
             CreateTableSqlBuilder flinkTableDdlBuilder
                     = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas)) {
                 @Override
@@ -186,11 +188,14 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                     // this.script.append(this.colEscapeChar()).append()
                     //String pt = tabMeta.get
                     //`partition` VARCHAR(20)
-                    this.script.appendLine("\t,");
-                    appendColName(dataXWriter.partitionedBy);
-                    this.script
-                            .append("VARCHAR(30)")
-                            .returnLine();
+
+                    tab.partition.addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.partitionedBy), this);
+
+//                    this.script.appendLine("\t,");
+//                    appendColName(dataXWriter.partitionedBy);
+//                    this.script
+//                            .append("VARCHAR(30)")
+//                            .returnLine();
                 }
 
                 @Override
@@ -205,19 +210,21 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 //                                'hive_sync.mode' = 'hms',
 //                                'hive_sync.metastore.uris' = 'thrift://ip:9083' -- ip 替换成 HMS 的地址
 //                       );
-                    this.script.block("PARTITIONED BY", (sub) -> {
-                        // (`partition`)
-                        sub.appendLine("`" + dataXWriter.partitionedBy + "`");
-                    });
+                    if (tab.partition.isSupportPartition()) {
+                        this.script.block("PARTITIONED BY", (sub) -> {
+                            // (`partition`)
+                            sub.appendLine("`" + dataXWriter.partitionedBy + "`");
+                        });
+                    }
                     IHiveConnGetter hiveCfg = dataXWriter.getHiveConnMeta();
                     if (StringUtils.isEmpty(dataXName)) {
                         throw new IllegalStateException("prop of dataXName can not be empty");
                     }
-                    this.script.block(true, "WITH", (sub) -> {
+                    this.script.block(!tab.partition.isSupportPartition(), "WITH", (sub) -> {
                         sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + dataXName + "',");
                         sub.appendLine("'connector' = 'hudi',");
-                        sub.appendLine("'path' = '" + tabMeta.getHudiDataDir(
-                                dataXWriter.getFs().getFileSystem(), dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
+                        sub.appendLine("'path' = '" + HudiTableMeta.getHudiDataDir(
+                                dataXWriter.getFs().getFileSystem(), tableName, dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
 
 //                        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
@@ -246,16 +253,16 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
-        final HudiTableMeta tabMeta = getTableMeta(tableName);
+        final Pair<HudiSelectedTab, HudiTableMeta> tabMeta = getTableMeta(tableName);
         return new IStreamTableMeta() {
             @Override
             public List<HdfsColMeta> getColsMeta() {
-                return tabMeta.colMetas;
+                return tabMeta.getRight().colMetas;
             }
         };
     }
 
-    private HudiTableMeta getTableMeta(String tableName) {
+    private Pair<HudiSelectedTab, HudiTableMeta> getTableMeta(String tableName) {
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not empty");
         }
@@ -265,6 +272,11 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
             }
             tableMetas = Maps.newHashMap();
             DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
+
+            IDataxReader reader = dataXProcessor.getReader(null);
+            Map<String, HudiSelectedTab> selTabs
+                    = reader.getSelectedTabs().stream()
+                    .map((tab) -> (HudiSelectedTab) tab).collect(Collectors.toMap((tab) -> tab.getName(), (tab) -> tab));
 
             List<File> dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
             Configuration cfg = null;
@@ -281,13 +293,14 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                 if (StringUtils.isEmpty(table)) {
                     throw new IllegalStateException("table can not be null:" + paramCfg.toJSON());
                 }
-                tableMeta = new HudiTableMeta(paramCfg);
-                tableMetas.put(table, tableMeta);
+
+                tableMetas.put(table, Pair.of(Objects.requireNonNull(selTabs.get(table), "tab:" + table + " relevant 'HudiSelectedTab' can not be null")
+                        , new HudiTableMeta(paramCfg)));
             }
         }
 
-        final HudiTableMeta tabMeta = tableMetas.get(tableName);
-        if (tabMeta == null || tabMeta.isColsEmpty()) {
+        final Pair<HudiSelectedTab, HudiTableMeta> tabMeta = tableMetas.get(tableName);
+        if (tabMeta == null || tabMeta.getRight().isColsEmpty()) {
             throw new IllegalStateException("table:" + tableName
                     + " relevant colMetas can not be null,exist tables:"
                     + tableMetas.keySet().stream().collect(Collectors.joining(",")));

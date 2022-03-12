@@ -1,0 +1,297 @@
+22/03/12 18:30:40 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+log4j:WARN No appenders could be found for logger (org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+22/03/12 18:30:41 INFO SparkContext: Running Spark version 2.4.4
+22/03/12 18:30:41 INFO SparkContext: Submitted application: delta-streamer-customer_order_relation/testDataX4465
+22/03/12 18:30:41 INFO SecurityManager: Changing view acls to: mozhenghua
+22/03/12 18:30:41 INFO SecurityManager: Changing modify acls to: mozhenghua
+22/03/12 18:30:41 INFO SecurityManager: Changing view acls groups to: 
+22/03/12 18:30:41 INFO SecurityManager: Changing modify acls groups to: 
+22/03/12 18:30:41 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(mozhenghua); groups with view permissions: Set(); users  with modify permissions: Set(mozhenghua); groups with modify permissions: Set()
+22/03/12 18:30:41 INFO deprecation: mapred.output.compression.codec is deprecated. Instead, use mapreduce.output.fileoutputformat.compress.codec
+22/03/12 18:30:41 INFO deprecation: mapred.output.compress is deprecated. Instead, use mapreduce.output.fileoutputformat.compress
+22/03/12 18:30:41 INFO deprecation: mapred.output.compression.type is deprecated. Instead, use mapreduce.output.fileoutputformat.compress.type
+22/03/12 18:30:41 INFO Utils: Successfully started service 'sparkDriver' on port 52976.
+22/03/12 18:30:41 INFO SparkEnv: Registering MapOutputTracker
+22/03/12 18:30:41 INFO SparkEnv: Registering BlockManagerMaster
+22/03/12 18:30:41 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+22/03/12 18:30:41 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+22/03/12 18:30:41 INFO DiskBlockManager: Created local directory at /private/var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/blockmgr-b4220e8b-15df-4040-993e-9d47d2faf8ef
+22/03/12 18:30:41 INFO MemoryStore: MemoryStore started with capacity 366.3 MB
+22/03/12 18:30:41 INFO SparkEnv: Registering OutputCommitCoordinator
+22/03/12 18:30:41 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+22/03/12 18:30:41 INFO SparkUI: Bound SparkUI to 0.0.0.0, and started at http://192.168.28.108:4040
+22/03/12 18:30:41 INFO SparkContext: Added JAR file:///opt/data/tis/libs/plugins/tis-datax-hudi-plugin/tis-datax-hudi-dependency/lib/hudi-utilities-bundle_2.11-0.10.1.jar at spark://192.168.28.108:52976/jars/hudi-utilities-bundle_2.11-0.10.1.jar with timestamp 1647081041943
+22/03/12 18:30:41 INFO SparkContext: Added JAR file:/opt/data/tis/libs/plugins/tis-datax-hudi-plugin/tis-datax-hudi-dependency/tis-datax-hudi-dependency-dist-3.5.0.jar at spark://192.168.28.108:52976/jars/tis-datax-hudi-dependency-dist-3.5.0.jar with timestamp 1647081041944
+22/03/12 18:30:42 INFO StandaloneAppClient$ClientEndpoint: Connecting to master spark://sparkmaster:7077...
+22/03/12 18:30:42 INFO TransportClientFactory: Successfully created connection to sparkmaster/192.168.28.201:7077 after 30 ms (0 ms spent in bootstraps)
+22/03/12 18:30:42 INFO StandaloneSchedulerBackend: Connected to Spark cluster with app ID app-20220312102307-0019
+22/03/12 18:30:42 INFO StandaloneAppClient$ClientEndpoint: Executor added: app-20220312102307-0019/0 on worker-20220312010144-172.21.0.14-35670 (172.21.0.14:35670) with 4 core(s)
+22/03/12 18:30:42 INFO StandaloneSchedulerBackend: Granted executor ID app-20220312102307-0019/0 on hostPort 172.21.0.14:35670 with 4 core(s), 1024.0 MB RAM
+22/03/12 18:30:42 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 52980.
+22/03/12 18:30:42 INFO NettyBlockTransferService: Server created on 192.168.28.108:52980
+22/03/12 18:30:42 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+22/03/12 18:30:42 INFO StandaloneAppClient$ClientEndpoint: Executor updated: app-20220312102307-0019/0 is now RUNNING
+22/03/12 18:30:42 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, 192.168.28.108, 52980, None)
+22/03/12 18:30:42 INFO BlockManagerMasterEndpoint: Registering block manager 192.168.28.108:52980 with 366.3 MB RAM, BlockManagerId(driver, 192.168.28.108, 52980, None)
+22/03/12 18:30:42 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, 192.168.28.108, 52980, None)
+22/03/12 18:30:42 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, 192.168.28.108, 52980, None)
+22/03/12 18:30:42 INFO StandaloneSchedulerBackend: SchedulerBackend is ready for scheduling beginning after reached minRegisteredResourcesRatio: 0.0
+22/03/12 18:30:42 INFO TISHoodieDeltaStreamer: dataXName:testDataX4465 has match test phrase create test stub mock for DataxWriter
+22/03/12 18:30:42 INFO HdfsFileSystemFactory: userHostname:true
+22/03/12 18:30:42 INFO HdfsFileSystemFactory: successful create hdfs with hdfsAddress:hdfs://namenode
+22/03/12 18:30:42 INFO InitReactorRunner: Started initialization
+22/03/12 18:30:42 INFO InitReactorRunner: Attained Listing up plugins
+22/03/12 18:30:42 INFO InitReactorRunner: Attained null
+22/03/12 18:30:42 INFO InitReactorRunner: Attained null
+22/03/12 18:30:42 INFO InitReactorRunner: Attained Preparing plugins
+22/03/12 18:30:42 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-aliyun-fs-plugin.tpi
+22/03/12 18:30:42 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-hudi-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-hdfs-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-elasticsearch7-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-dependency.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-hudi-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-realtime-flink.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-aliyun-fs-plugin.tpi because /opt/data/tis/libs/plugins/tis-aliyun-fs-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-aliyun-fs-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-ftp-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi because /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-kafka-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi because /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-asyncmsg-rocketmq-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-sqlserver-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-sink-hudi-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-hudi-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-hudi-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-doris-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-hdfs-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-hdfs-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-hdfs-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi because /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-local-executor.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-oracle-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-tidb-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-sink-elasticsearch7-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-elasticsearch7-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-elasticsearch7-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-postgresql-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi because /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-hive-flat-table-builder-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-mongodb-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oracle-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-flink-dependency.tpi because /opt/data/tis/libs/plugins/tis-flink-dependency.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-dependency.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v8-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi because /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-k8s-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-elasticsearch-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-oss-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mysql-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-cassandra-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-postgresql-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi because /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-ds-mysql-v5-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-hudi-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-hudi-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-hudi-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-starrocks-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi because /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-sink-clickhouse-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-clickhouse-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi because /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-flink-cdc-mongdb-plugin.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-realtime-flink.tpi because /opt/data/tis/libs/plugins/tis-realtime-flink.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-realtime-flink.tpi
+22/03/12 18:30:43 INFO PluginManager: Ignoring /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi because /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi is already loaded
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Inspecting plugin /opt/data/tis/libs/plugins/tis-datax-common-rdbms-plugin.tpi
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Checking cyclic dependencies
+22/03/12 18:30:43 INFO InitReactorRunner: Listed all plugins
+22/03/12 18:30:43 INFO CenterResource: notFetchFromCenterRepository:true
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugins
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-aliyun-fs-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-common-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-common-rdbms-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-ds-mysql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-ftp-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-kafka-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-asyncmsg-rocketmq-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-sqlserver-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-hdfs-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-hudi-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-flink-dependency
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-sink-hudi-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-doris-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-local-executor
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-k8s-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-realtime-flink
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-flink-cdc-oracle-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-ds-tidb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-elasticsearch-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-sink-elasticsearch7-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-postgresql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-hive-flat-table-builder-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-mongodb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-oracle-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-ds-mysql-v8-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-oss-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-flink-cdc-mysql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-cassandra-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-flink-cdc-postgresql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-ds-mysql-v5-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-sink-starrocks-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-datax-clickhouse-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-sink-clickhouse-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Loading plugin tis-flink-cdc-mongdb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Prepared all plugins
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-aliyun-fs-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Resolving Dependant Plugins Graph
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-common-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-common-rdbms-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-ds-mysql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-ftp-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-kafka-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-asyncmsg-rocketmq-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-sqlserver-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-hdfs-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-hudi-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-flink-dependency
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-sink-hudi-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-doris-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-local-executor
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-k8s-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-realtime-flink
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-flink-cdc-oracle-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-ds-tidb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-elasticsearch-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-sink-elasticsearch7-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-postgresql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-hive-flat-table-builder-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-mongodb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-oracle-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-ds-mysql-v8-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-oss-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-flink-cdc-mysql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-cassandra-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-flink-cdc-postgresql-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-ds-mysql-v5-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-sink-starrocks-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-datax-clickhouse-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-sink-clickhouse-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Initializing plugin tis-flink-cdc-mongdb-plugin
+22/03/12 18:30:43 INFO InitReactorRunner: Attained Load updateCenter
+22/03/12 18:30:43 INFO InitReactorRunner: Started all plugins
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Attained null
+22/03/12 18:30:43 INFO InitReactorRunner: Completed initialization
+22/03/12 18:30:43 INFO TIS: tis plugin have been initialized,consume:527ms.
+22/03/12 18:30:43 INFO ClassicPluginStrategy: Scout-loading ExtensionList: class com.qlangtech.tis.extension.Descriptor
+22/03/12 18:30:43 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Registered executor NettyRpcEndpointRef(spark-client://Executor) (192.168.28.201:47532) with ID 0
+22/03/12 18:30:43 INFO BlockManagerMasterEndpoint: Registering block manager 172.21.0.14:34566 with 366.3 MB RAM, BlockManagerId(0, 172.21.0.14, 34566, None)
+22/03/12 18:30:44 WARN DFSPropertiesConfiguration: Cannot find HUDI_CONF_DIR, please set it as the dir of hudi-defaults.conf
+22/03/12 18:30:44 WARN DFSPropertiesConfiguration: Properties file file:/etc/hudi/conf/hudi-defaults.conf not found. Ignoring to load props file
+22/03/12 18:30:44 WARN SparkContext: Using an existing SparkContext; some configuration may not take effect.
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Loading HoodieTableMetaClient from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieTableConfig: Loading table properties from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi/.hoodie/hoodie.properties
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Finished Loading Table of type COPY_ON_WRITE(version=1, baseFileFormat=PARQUET) from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieDeltaStreamer: Creating delta streamer with configs:
+hoodie.bulkinsert.shuffle.parallelism: 3
+hoodie.datasource.hive_sync.database: default
+hoodie.datasource.hive_sync.jdbcurl: jdbc:hive2://hiveserver:10000
+hoodie.datasource.hive_sync.mode: jdbc
+hoodie.datasource.hive_sync.password: hive
+hoodie.datasource.hive_sync.table: customer_order_relation
+hoodie.datasource.hive_sync.username: hive
+hoodie.datasource.write.partitionpath.field: 
+hoodie.datasource.write.reconcile.schema: false
+hoodie.datasource.write.recordkey.field: customerregister_id
+hoodie.delete.shuffle.parallelism: 3
+hoodie.deltastreamer.csv.escape: "
+hoodie.deltastreamer.csv.header: true
+hoodie.deltastreamer.csv.nullValue: null
+hoodie.deltastreamer.csv.sep: ,
+hoodie.deltastreamer.schemaprovider.source.schema.file: hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/meta/schema.avsc
+hoodie.deltastreamer.schemaprovider.target.schema.file: hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/meta/schema.avsc
+hoodie.deltastreamer.source.dfs.root: hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/data
+hoodie.embed.timeline.server: true
+hoodie.filesystem.view.type: EMBEDDED_KV_STORE
+hoodie.insert.shuffle.parallelism: 3
+hoodie.upsert.shuffle.parallelism: 3
+
+22/03/12 18:30:44 INFO FSUtils: Resolving file hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/meta/schema.avscto be a remote file.
+22/03/12 18:30:44 INFO HoodieSparkKeyGeneratorFactory: The value of hoodie.datasource.write.keygenerator.type is empty, use SIMPLE
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Loading HoodieTableMetaClient from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieTableConfig: Loading table properties from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi/.hoodie/hoodie.properties
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Finished Loading Table of type COPY_ON_WRITE(version=1, baseFileFormat=PARQUET) from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieActiveTimeline: Loaded instants upto : Option{val=[20220312155857111__commit__COMPLETED]}
+22/03/12 18:30:44 INFO DFSPathSelector: Using path selector org.apache.hudi.utilities.sources.helpers.DFSPathSelector
+22/03/12 18:30:44 INFO HoodieDeltaStreamer: Delta Streamer running only single round
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Loading HoodieTableMetaClient from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieTableConfig: Loading table properties from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi/.hoodie/hoodie.properties
+22/03/12 18:30:44 INFO HoodieTableMetaClient: Finished Loading Table of type COPY_ON_WRITE(version=1, baseFileFormat=PARQUET) from hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/hudi
+22/03/12 18:30:44 INFO HoodieActiveTimeline: Loaded instants upto : Option{val=[20220312155857111__commit__COMPLETED]}
+22/03/12 18:30:44 INFO DeltaSync: Checkpoint to resume from : Option{val=1647071461700}
+22/03/12 18:30:44 INFO DFSPathSelector: Root path => hdfs://namenode/user/admin/default/20220311135455/customer_order_relation/data source limit => 9223372036854775807
+22/03/12 18:30:44 INFO DeltaSync: No new data, source checkpoint has not changed. Nothing to commit. Old checkpoint=(Option{val=1647071461700}). New Checkpoint=(1647071461700)
+22/03/12 18:30:44 INFO DeltaSync: Shutting down embedded timeline server
+22/03/12 18:30:44 INFO HoodieDeltaStreamer: Shut down delta streamer
+22/03/12 18:30:44 INFO SparkUI: Stopped Spark web UI at http://192.168.28.108:4040
+22/03/12 18:30:44 INFO StandaloneSchedulerBackend: Shutting down all executors
+22/03/12 18:30:44 INFO CoarseGrainedSchedulerBackend$DriverEndpoint: Asking each executor to shut down
+22/03/12 18:30:44 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+22/03/12 18:30:44 INFO MemoryStore: MemoryStore cleared
+22/03/12 18:30:44 INFO BlockManager: BlockManager stopped
+22/03/12 18:30:44 INFO BlockManagerMaster: BlockManagerMaster stopped
+22/03/12 18:30:44 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+22/03/12 18:30:44 INFO SparkContext: Successfully stopped SparkContext
+22/03/12 18:30:44 INFO ShutdownHookManager: Shutdown hook called
+22/03/12 18:30:44 INFO ShutdownHookManager: Deleting directory /private/var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/spark-7f79aa42-a976-4d66-b78d-2c0ab9bc0480
+22/03/12 18:30:44 INFO ShutdownHookManager: Deleting directory /private/var/folders/p_/5jfy_yk16kb_m48kn65vrqd40000gn/T/spark-a6ea0728-fd81-4fcd-9515-39d771fcdbf9

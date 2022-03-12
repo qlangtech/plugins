@@ -110,15 +110,16 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         IPath dumpDir = HudiTableMeta.getDumpDir(fs, this.hudiTab.getName(), execContext.getPartitionTimestamp(), this.hiveConnMeta);
         IPath fsSourcePropsPath = fs.getPath(dumpDir, "meta/" + this.hudiTab.getName() + "-source.properties");
 
+
         try {
             this.writeSourceProps(fs, dumpDir, fsSourcePropsPath);
-            this.launchSparkRddConvert(dumpDir, fsSourcePropsPath);
+            this.launchSparkRddConvert(fs, dumpDir, fsSourcePropsPath);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void launchSparkRddConvert(IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
+    private void launchSparkRddConvert(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
 
         // HashMap env = new HashMap();
         Map<String, String> env = Config.getInstance().getAllKV();
@@ -170,7 +171,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         handle.addAppArgs("--table-type", this.hudiWriter.getHudiTableType().getValue()
                 , "--source-class", "org.apache.hudi.utilities.sources.CsvDFSSource"
                 , "--source-ordering-field", hudiTab.sourceOrderingField
-                , "--target-base-path", String.valueOf(dumpDir)
+                , "--target-base-path", String.valueOf(HudiTableMeta.getHudiDataDir(fs, dumpDir))
                 , "--target-table", this.hudiTab.getName() + "/" + hudiWriter.dataXName
                 , "--props", String.valueOf(fsSourcePropsPath)
                 , "--schemaprovider-class", "org.apache.hudi.utilities.schema.FilebasedSchemaProvider"
@@ -190,7 +191,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                 SparkAppHandle.State state = sparkAppHandle.getState();
                 if (state.isFinal()) {
                     // finalState[0] = state;
-                    System.out.println("Info:" + sparkAppHandle.getState());
+                    System.out.println("Info:" + state + ",appId:" + sparkAppHandle.getAppId());
                     countDownLatch.countDown();
                 }
             }
@@ -202,7 +203,8 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         });
         countDownLatch.await();
         if (sparkAppHandle.getState() != SparkAppHandle.State.FINISHED) {
-            throw new TisException("spark app:" + sparkAppHandle.getAppId() + " execute result not successfule:" + sparkAppHandle.getState());
+            throw new TisException("spark app:" + sparkAppHandle.getAppId()
+                    + " execute result not successful:" + sparkAppHandle.getState());
         }
     }
 
@@ -267,8 +269,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");
 
             props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.recordField);
-//            props.setProperty("hoodie.datasource.write.partitionpath.field", this.hudiWriter.partitionedBy);
-
+          //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
 
             props.store(write);
 

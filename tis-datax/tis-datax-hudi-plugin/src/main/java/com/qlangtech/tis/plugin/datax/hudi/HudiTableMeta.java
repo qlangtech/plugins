@@ -22,7 +22,6 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
@@ -33,6 +32,7 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.BasicHdfsWriterJob;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.commons.collections.CollectionUtils;
@@ -62,26 +62,70 @@ public class HudiTableMeta {
             , String tabName, IPath tabDumpDir, HudiSelectedTab hudiTabMeta) {
 
         List<ISelectedTab.ColMeta> colsMetas = hudiTabMeta.getCols();
+        if (CollectionUtils.isEmpty(colsMetas)) {
+            throw new IllegalStateException("colsMetas of hudiTabMeta can not be empty");
+        }
         IPath fsSourceSchemaPath = fs.getPath(tabDumpDir, "meta/schema.avsc");
 
         try (OutputStream schemaWriter = fs.getOutputStream(fsSourceSchemaPath)) {
             SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(tabName);
+//            builder.prop("testFiled", LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT)));
             SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
 
             for (ISelectedTab.ColMeta meta : colsMetas) {
-                SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.getType());
-                switch (hiveDataType) {
-                    case STRING:
-                    case DATE:
-                    case TIMESTAMP:
-                    case VARCHAR:
-                    case CHAR:
-                        // fields.nullableString(meta.colName, StringUtils.EMPTY);
-//                            if (meta.nullable) {
-//                                fields.nullableString(meta.colName, StringUtils.EMPTY);
-//                            } else {
-                        // fields.requiredString(meta.colName);
-                        // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
+                meta.getType().accept(new DataType.TypeVisitor<Void>() {
+                    @Override
+                    public Void longType(DataType type) {
+                        if (meta.isNullable()) {
+                            fields.optionalLong(meta.getName());
+                        } else {
+                            fields.requiredLong(meta.getName());
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public Void doubleType(DataType type) {
+                        if (meta.isNullable()) {
+                            fields.optionalDouble(meta.getName());
+                        } else {
+                            fields.requiredDouble(meta.getName());
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public Void dateType(DataType type) {
+                        Schema schema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+                        addNullableSchema(fields, schema, meta);
+                        return null;
+                    }
+
+                    @Override
+                    public Void timestampType(DataType type) {
+                        Schema schema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+                        addNullableSchema(fields, schema, meta);
+                        return null;
+                    }
+
+                    @Override
+                    public Void bitType(DataType type) {
+                        if (meta.isNullable()) {
+                            fields.optionalInt(meta.getName());
+                        } else {
+                            fields.requiredInt(meta.getName());
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    public Void blobType(DataType type) {
+                        varcharType(type);
+                        return null;
+                    }
+
+                    @Override
+                    public Void varcharType(DataType type) {
                         if (meta.isNullable()) {
                             // strType.stringDefault(StringUtils.EMPTY);
                             fields.optionalString(meta.getName());
@@ -89,51 +133,131 @@ public class HudiTableMeta {
                             //   strType.noDefault();
                             fields.requiredString(meta.getName());
                         }
-                        //}
-                        break;
-                    case DOUBLE:
-                        if (meta.isNullable()) {
-                            fields.optionalDouble(meta.getName());
-                        } else {
-                            fields.requiredDouble(meta.getName());
-                        }
-                        break;
-                    case INT:
-                    case TINYINT:
-                    case SMALLINT:
+                        return null;
+                    }
+
+                    @Override
+                    public Void intType(DataType type) {
                         if (meta.isNullable()) {
                             fields.optionalInt(meta.getName());
                         } else {
                             fields.requiredInt(meta.getName());
                         }
-                        break;
-                    case BOOLEAN:
-                        if (meta.isNullable()) {
-                            fields.optionalBoolean(meta.getName());
-                        } else {
-                            fields.requiredBoolean(meta.getName());
-                        }
-                        break;
-                    case BIGINT:
-                        if (meta.isNullable()) {
-                            fields.optionalLong(meta.getName());
-                        } else {
-                            fields.requiredLong(meta.getName());
-                        }
-                        break;
-                    case FLOAT:
+                        return null;
+                    }
+
+                    @Override
+                    public Void floatType(DataType type) {
                         if (meta.isNullable()) {
                             fields.optionalFloat(meta.getName());
                         } else {
                             fields.requiredFloat(meta.getName());
                         }
-                        break;
-                    default:
-                        throw new IllegalStateException("illegal type:" + hiveDataType);
-                }
+                        return null;
+                    }
+
+                    @Override
+                    public Void decimalType(DataType type) {
+                        Schema schema = LogicalTypes.decimal(
+                                type.columnSize, type.getDecimalDigits()).addToSchema(Schema.create(Schema.Type.DOUBLE));
+                        addNullableSchema(fields, schema, meta);
+                        return null;
+                    }
+
+                    @Override
+                    public Void timeType(DataType type) {
+                        Schema schema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+                        addNullableSchema(fields, schema, meta);
+                        return null;
+                    }
+
+                    @Override
+                    public Void tinyIntType(DataType dataType) {
+                        smallIntType(dataType);
+                        return null;
+                    }
+
+                    @Override
+                    public Void smallIntType(DataType dataType) {
+                        if (meta.isNullable()) {
+                            fields.optionalInt(meta.getName());
+                        } else {
+                            fields.requiredInt(meta.getName());
+                        }
+                        return null;
+                    }
+                });
+
+
+//                SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.getType());
+//                switch (hiveDataType) {
+//                    case STRING:
+//                    case DATE:
+//                    case TIMESTAMP:
+//                    case VARCHAR:
+//                    case CHAR:
+//                        // fields.nullableString(meta.colName, StringUtils.EMPTY);
+////                            if (meta.nullable) {
+////                                fields.nullableString(meta.colName, StringUtils.EMPTY);
+////                            } else {
+//                        // fields.requiredString(meta.colName);
+//                        // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
+//                        if (meta.isNullable()) {
+//                            // strType.stringDefault(StringUtils.EMPTY);
+//                            fields.optionalString(meta.getName());
+//                        } else {
+//                            //   strType.noDefault();
+//                            fields.requiredString(meta.getName());
+//                        }
+//                        //}
+//                        break;
+//                    case DOUBLE:
+//                        if (meta.isNullable()) {
+//                            fields.optionalDouble(meta.getName());
+//                        } else {
+//                            fields.requiredDouble(meta.getName());
+//                        }
+//                        break;
+//                    case INT:
+//                    case TINYINT:
+//                    case SMALLINT:
+//                        if (meta.isNullable()) {
+//                            fields.optionalInt(meta.getName());
+//                        } else {
+//                            fields.requiredInt(meta.getName());
+//                        }
+//                        break;
+//                    case BOOLEAN:
+//                        if (meta.isNullable()) {
+//                            fields.optionalBoolean(meta.getName());
+//                        } else {
+//                            fields.requiredBoolean(meta.getName());
+//                        }
+//                        break;
+//                    case BIGINT:
+//                        if (meta.isNullable()) {
+//                            fields.optionalLong(meta.getName());
+//                        } else {
+//                            fields.requiredLong(meta.getName());
+//                        }
+//                        break;
+//                    case FLOAT:
+//                        if (meta.isNullable()) {
+//                            fields.optionalFloat(meta.getName());
+//                        } else {
+//                            fields.requiredFloat(meta.getName());
+//                        }
+//                        break;
+//                    default:
+//                        throw new IllegalStateException("illegal type:" + hiveDataType);
+//                }
             }
 
             Schema schema = fields.endRecord();
+
+
+            // LogicalTypes.date().addToSchema(schema.getField("last_ver").schema());
+
 
             if (schema.getFields().size() != colsMetas.size()) {
                 throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMetas.size());
@@ -143,6 +267,13 @@ public class HudiTableMeta {
             throw new RuntimeException(e);
         }
         return fsSourceSchemaPath;
+    }
+
+    protected static void addNullableSchema(SchemaBuilder.FieldAssembler<Schema> fields, Schema schema, ISelectedTab.ColMeta meta) {
+        if (meta.isNullable()) {
+            schema = Schema.createUnion(Schema.create(Schema.Type.NULL), schema);
+        }
+        fields.name(meta.getName()).type(schema);
     }
 
 
@@ -188,8 +319,12 @@ public class HudiTableMeta {
         return child.stream().map((c) -> new Option(c.getName())).collect(Collectors.toList());
     }
 
-    public IPath getHudiDataDir(ITISFileSystem fs, String dumpTimeStamp, IHiveConnGetter hiveConn) {
-        return fs.getPath(getDumpDir(fs, dumpTimeStamp, hiveConn), "hudi");
+    public static IPath getHudiDataDir(ITISFileSystem fs, String hudiTabName, String dumpTimeStamp, IHiveConnGetter hiveConn) {
+        return getHudiDataDir(fs, getDumpDir(fs, hudiTabName, dumpTimeStamp, hiveConn));
+    }
+
+    public static IPath getHudiDataDir(ITISFileSystem fs, IPath getDumpDir) {
+        return fs.getPath(getDumpDir, "hudi");
     }
 
     public String getSourceOrderingField() {

@@ -125,6 +125,13 @@
         </dependency>
 
         <dependency>
+            <artifactId>datax-config</artifactId>
+            <groupId>com.alibaba.datax</groupId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-hdfs-plugin</artifactId>
             <version>${project.version}</version>

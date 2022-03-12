@@ -75,8 +75,10 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         @Override
         public void init() {
-            super.init();
+            getPluginJobConf();
             this.tabMeta = new HudiTableMeta(this.cfg);
+            super.init();
+
         }
 
 

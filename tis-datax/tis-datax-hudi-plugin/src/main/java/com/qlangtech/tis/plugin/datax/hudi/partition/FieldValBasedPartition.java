@@ -26,11 +26,13 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * //@see org.apache.hudi.hive.MultiPartKeysValueExtractor
@@ -52,6 +54,14 @@ public class FieldValBasedPartition extends HudiTablePartition {
         }
         setPartitionProps(props, partitionPathField, "org.apache.hudi.hive.MultiPartKeysValueExtractor");
     }
+
+    @Override
+    public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
+
+        appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
+
+    }
+
 
 
     public static List<Option> getPtCandidateFields() {

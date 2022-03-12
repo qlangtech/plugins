@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.io.FileUtils;
@@ -156,7 +157,6 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
     }
 
     private static ClickHouseTest createDataXWriter() {
-
 
         String dbName = "tis";
         ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();

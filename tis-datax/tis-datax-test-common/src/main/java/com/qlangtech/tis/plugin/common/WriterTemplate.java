@@ -41,6 +41,7 @@ import org.junit.Assert;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -107,7 +108,7 @@ public class WriterTemplate {
      * @param dataxWriter
      * @throws IllegalAccessException
      */
-    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter, Function<Configuration, Configuration>... cfgSetter) throws IllegalAccessException {
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
         DataxExecutor.initializeClassLoader(
                 Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxWriter.getDataxMeta().getName()), uberClassLoader);
@@ -134,7 +135,11 @@ public class WriterTemplate {
                             , dataxWriter.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].writer" //
                             , IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
-                                return Configuration.from(writerJsonInput);
+                                Configuration c = Configuration.from(writerJsonInput);
+                                for (Function<Configuration, Configuration> setter : cfgSetter) {
+                                    c = setter.apply(c);
+                                }
+                                return c;
                             }));
 
                     return cfg;

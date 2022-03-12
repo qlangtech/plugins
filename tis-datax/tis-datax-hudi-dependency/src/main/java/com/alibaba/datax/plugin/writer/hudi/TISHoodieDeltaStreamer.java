@@ -90,7 +90,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
             Configuration hadoopCfg = jssc.hadoopConfiguration();
             FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();
             hadoopCfg.addResource(fs.getConf());
-            hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
+            hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
+                    , ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
             new HoodieDeltaStreamer(cfg, jssc
                     , fs, jssc.hadoopConfiguration()).sync();
         } finally {

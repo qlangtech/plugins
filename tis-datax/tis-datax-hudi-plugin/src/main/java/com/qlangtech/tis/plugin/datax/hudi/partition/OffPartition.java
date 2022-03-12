@@ -22,7 +22,10 @@ import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+
+import java.util.List;
 
 /**
  * NonPartitionedExtractor
@@ -35,9 +38,17 @@ public class OffPartition extends HudiTablePartition {
 
     @Override
     public void setProps(TypedPropertiesBuilder props, DataXHudiWriter writer) {
-
+        props.setProperty("hoodie.datasource.write.partitionpath.field", null);
     }
 
+    @Override
+    public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
+
+    }
+    @Override
+    public boolean isSupportPartition() {
+        return false;
+    }
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
         public DefaultDescriptor() {

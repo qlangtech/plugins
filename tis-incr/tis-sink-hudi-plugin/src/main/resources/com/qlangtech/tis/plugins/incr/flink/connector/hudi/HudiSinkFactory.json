@@ -2,5 +2,9 @@
   "dumpTimeStamp": {
     "enum": "com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory.getHistoryBatch()",
     "help": "导入批次，如历史数据采用DataX批量导入方式，则每次导入会在HDFS中生成一个'yyyyMMddHHmmss'格式的时间戳目录以保存该批次数据"
+  },
+  "currentLimit": {
+    "label": "限流",
+    "dftVal": 200
   }
 }

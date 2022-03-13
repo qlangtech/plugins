@@ -32,7 +32,6 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * //@see org.apache.hudi.hive.MultiPartKeysValueExtractor
@@ -52,12 +51,11 @@ public class FieldValBasedPartition extends HudiTablePartition {
         if (StringUtils.isEmpty(this.partitionPathField)) {
             throw new IllegalStateException("partitionPathField can not be empty");
         }
-        setPartitionProps(props, partitionPathField, "org.apache.hudi.hive.MultiPartKeysValueExtractor");
+        setHiveSyncPartitionProps(props, partitionPathField, "org.apache.hudi.hive.MultiPartKeysValueExtractor");
     }
 
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
-
         appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
 
     }

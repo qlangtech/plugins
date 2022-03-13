@@ -23,6 +23,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,7 +35,14 @@ import java.util.stream.Collectors;
 @Public
 public abstract class HudiTablePartition implements Describable<HudiTablePartition> {
 
-    protected static void setPartitionProps(TypedPropertiesBuilder props, String field, String partition_extractor_class) {
+    /**
+     * //@see org.apache.hudi.DataSourceUtils +buildHiveSyncConfig()
+     *
+     * @param props
+     * @param field
+     * @param partition_extractor_class
+     */
+    protected static void setHiveSyncPartitionProps(TypedPropertiesBuilder props, String field, String partition_extractor_class) {
         props.setProperty("hoodie.datasource.hive_sync.partition_fields", field);
         // "org.apache.hudi.hive.MultiPartKeysValueExtractor";
         // partition 分区值抽取类
@@ -49,9 +57,25 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
                 .returnLine();
     }
 
+    /**
+     * HoodieWriteConfig.KEYGENERATOR_TYPE
+     * // @see HoodieSparkKeyGeneratorFactory l78
+     *
+     * @param props
+     * @param type
+     */
+    protected void setKeyGeneratorType(TypedPropertiesBuilder props, String type) {
+        // HoodieWriteConfig.KEYGENERATOR_TYPE
+        props.setProperty("hoodie.datasource.write.keygenerator.type", type);
+    }
+
 
     public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+        if (StringUtils.isEmpty(hudiWriter.partitionedBy)) {
+            throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
+        }
         props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
+        setKeyGeneratorType(props, "SIMPLE");
     }
 
     public boolean isSupportPartition() {

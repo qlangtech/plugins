@@ -51,10 +51,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.MDC;
 
@@ -69,6 +66,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-24 10:20
  **/
+@Ignore
 public class TestDataXHudiWriter {
 
     // private static final String targetTableName ="";
@@ -129,10 +127,10 @@ public class TestDataXHudiWriter {
 
             EasyMock.replay(dataXProcessor, execContext);
 
-//            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
-//                cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
-//                return cfg;
-//            });
+            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
+                cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
+                return cfg;
+            });
 
 
             // DataXHudiWriter hudiWriter = new DataXHudiWriter();

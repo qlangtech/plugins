@@ -89,6 +89,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <version>${hudi.version}</version>
+            <artifactId>hudi-client-common</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -139,17 +145,17 @@
             <artifactId>spark-launcher_${scala.binary.version}</artifactId>
             <version>${spark2.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hive</groupId>-->
-<!--            <artifactId>hive-exec</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>ant</groupId>-->
-<!--                    <artifactId>ant</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.hive</groupId>-->
+        <!--            <artifactId>hive-exec</artifactId>-->
+        <!--            <scope>test</scope>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>ant</groupId>-->
+        <!--                    <artifactId>ant</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
 
 
         <!--        <dependency>-->

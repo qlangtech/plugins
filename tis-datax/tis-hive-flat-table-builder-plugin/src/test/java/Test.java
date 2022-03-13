@@ -25,7 +25,8 @@ import java.util.Enumeration;
  **/
 public class Test {
     public static void main(String[] args) throws Exception {
-        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("org/slf4j/LoggerFactory.class");
+        Enumeration<URL> resources
+                = Thread.currentThread().getContextClassLoader().getResources("org/apache/hadoop/hive/ql/udf/UDFSubstr.class");
         while(resources.hasMoreElements()){
             System.out.println(resources.nextElement());
         }

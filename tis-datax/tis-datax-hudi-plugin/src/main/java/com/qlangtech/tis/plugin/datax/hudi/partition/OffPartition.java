@@ -38,17 +38,25 @@ public class OffPartition extends HudiTablePartition {
 
     @Override
     public void setProps(TypedPropertiesBuilder props, DataXHudiWriter writer) {
-        props.setProperty("hoodie.datasource.write.partitionpath.field", null);
+        //  props.setProperty("hoodie.datasource.write.partitionpath.field", null);
+        // HoodieWriteConfig.KEYGENERATOR_TYPE
+        // @see HoodieSparkKeyGeneratorFactory l78
+        setKeyGeneratorType(props, "NON_PARTITION");
+        setHiveSyncPartitionProps(props,null,"org.apache.hudi.hive.NonPartitionedExtractor" );
     }
+
+
 
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
 
     }
+
     @Override
     public boolean isSupportPartition() {
         return false;
     }
+
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
         public DefaultDescriptor() {

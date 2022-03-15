@@ -19,6 +19,7 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -228,13 +229,13 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            ParseDescribable<FileSystemFactory> fs = null;
+            ParseDescribable<Describable> fs = null;
             try {
                 fs = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-                HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.instance;
+                HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.getInstance();
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 hdfs.listChildren(hdfs.getPath("/"));
-                msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) fs.instance).hdfsAddress + "连接正常");
+                msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) fs.getInstance()).hdfsAddress + "连接正常");
                 return true;
             } catch (Exception e) {
                 Logger.warn(e.getMessage(), e);

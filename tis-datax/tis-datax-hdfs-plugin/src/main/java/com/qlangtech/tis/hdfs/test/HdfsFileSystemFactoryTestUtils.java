@@ -22,6 +22,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
@@ -64,11 +65,12 @@ public class HdfsFileSystemFactoryTestUtils {
         formData.addProp("metaStoreUrls", "thrift://hiveserver:9083");
 
 
-        Descriptor.ParseDescribable<IHiveConnGetter> parseDescribable
+        Descriptor.ParseDescribable<Describable> parseDescribable
                 = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
-        Assert.assertNotNull(parseDescribable.instance);
+       //IHiveConnGetter
+        Assert.assertNotNull(parseDescribable.getInstance());
 
-        Assert.assertNotNull(parseDescribable.instance);
-        return parseDescribable.instance;
+        Assert.assertNotNull(parseDescribable.getInstance());
+        return parseDescribable.getInstance();
     }
 }

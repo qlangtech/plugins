@@ -23,6 +23,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.ConfigFileContext;
@@ -134,8 +135,8 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            ParseDescribable<ParamsConfig> paramsConfigParseDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            FlinkCluster flinkCluster = (FlinkCluster) paramsConfigParseDescribable.instance;
+            ParseDescribable<Describable> paramsConfigParseDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+            FlinkCluster flinkCluster = (FlinkCluster) paramsConfigParseDescribable.getInstance();
             JobManagerAddress jobManagerAddress = flinkCluster.getJobManagerAddress();
 
             try {

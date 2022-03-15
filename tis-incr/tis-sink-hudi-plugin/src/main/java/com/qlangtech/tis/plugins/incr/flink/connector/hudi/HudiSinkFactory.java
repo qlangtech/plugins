@@ -189,7 +189,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                     //String pt = tabMeta.get
                     //`partition` VARCHAR(20)
 
-                    tab.partition.addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.partitionedBy), this);
+                    Objects.requireNonNull(tab.partition, "partition can not be null")
+                            .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.partitionedBy), this);
 
 //                    this.script.appendLine("\t,");
 //                    appendColName(dataXWriter.partitionedBy);

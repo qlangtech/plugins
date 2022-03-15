@@ -124,8 +124,8 @@ public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
 
         Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
                 = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
-        Assert.assertNotNull(parseDescribable.instance);
+        Assert.assertNotNull(parseDescribable.getInstance());
 
-        return parseDescribable.instance;
+        return parseDescribable.getInstance();
     }
 }

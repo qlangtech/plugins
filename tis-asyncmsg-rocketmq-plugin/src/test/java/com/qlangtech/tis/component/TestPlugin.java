@@ -106,7 +106,7 @@ public class TestPlugin extends BaseTestCase {
             for (int i = 0; i < jsonArray.size(); i++) {
                 // 创建一个item
                 jsonObject = jsonArray.getJSONObject(i);
-                describable = (Describable) parseDescribable(jsonObject).instance;
+                describable = (Describable) parseDescribable(jsonObject).getInstance();
             }
         }
         assertNotNull(describable);

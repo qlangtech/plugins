@@ -19,6 +19,7 @@
 import com.qlangtech.tis.plugin.datax.hudi.TestDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.TestDataXHudiWriterTask;
 import com.qlangtech.tis.plugin.datax.hudi.TestHudiConfig;
+import com.qlangtech.tis.plugin.datax.hudi.TestHudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.partition.TestFieldValBasedPartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.TestOffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.TestSlashEncodedDayPartition;
@@ -36,6 +37,7 @@ import org.junit.runners.Suite;
                 , TestSlashEncodedDayPartition.class
                 , TestHudiConfig.class
                 , TestDataXHudiWriterTask.class
-                , TestDataXHudiWriter.class})
+                , TestDataXHudiWriter.class
+                , TestHudiSelectedTab.class})
 public class TestAll {
 }

@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -177,8 +178,8 @@ public class DefaultK8SImage extends K8sImage {
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            ParseDescribable<K8sImage> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            K8sImage k8sCfg = k8s.instance;
+            ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+            K8sImage k8sCfg = k8s.getInstance();
             try {
                 ApiClient client = k8sCfg.createApiClient();
                 CoreV1Api api = new CoreV1Api(client);

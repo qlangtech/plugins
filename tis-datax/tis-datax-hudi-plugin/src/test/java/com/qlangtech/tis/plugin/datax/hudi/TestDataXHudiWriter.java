@@ -27,16 +27,12 @@ import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.fs.IPath;
-import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -47,8 +43,6 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.*;
@@ -66,7 +60,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-24 10:20
  **/
-@Ignore
+
 public class TestDataXHudiWriter {
 
     // private static final String targetTableName ="";
@@ -76,12 +70,15 @@ public class TestDataXHudiWriter {
     public TemporaryFolder folder = new TemporaryFolder();
 
 
+
+
     @BeforeClass
     public static void start() {
         CenterResource.setNotFetchFromCenterRepository();
 
     }
 
+    @Ignore
     @Test
     public void testRealDump() throws Exception {
 
@@ -161,83 +158,63 @@ public class TestDataXHudiWriter {
         WriterTemplate.valiateCfgGenerate("hudi-datax-writer-assert.json", forTest.writer, forTest.tableMap);
     }
 
-    @Test
-    public void testFlinkSqlTableDDLCreate() throws Exception {
-        FileSystemFactory fsFactory = EasyMock.createMock("fsFactory", FileSystemFactory.class);
-
-        ITISFileSystem fs = EasyMock.createMock("fileSystem", ITISFileSystem.class);
-        //  fs.getRootDir()
-        String child = "default/customer_order_relation";
-        String dataDir = "hudi";
-        IPath rootPath = new HdfsPath(HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin");
-        IPath tabPath = new HdfsPath(rootPath, child);
-        IPath hudiDataPath = new HdfsPath(tabPath, dataDir);
-        EasyMock.expect(fs.getPath(rootPath, child)).andReturn(tabPath);
-        EasyMock.expect(fs.getPath(tabPath, dataDir)).andReturn(hudiDataPath);
-        EasyMock.expect(fs.getRootDir()).andReturn(rootPath);
-        EasyMock.expect(fsFactory.getFileSystem()).andReturn(fs);
-        HudiTest forTest = createDataXWriter(Optional.of(fsFactory));
-        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
-        File dataXCfg = folder.newFile();
-        FileUtils.writeStringToFile(dataXCfg
-                , "{job:{content:[{\"writer\":"
-                        + IOUtils.loadResourceFromClasspath(
-                        this.getClass(), hudi_datax_writer_assert_without_optional)
-                        + "}]}}"
-                , TisUTF8.get());
-
-        List<File> dataXFiles = Lists.newArrayList(dataXCfg);
-
-        EasyMock.expect(dataXProcessor.getDataxCfgFileNames(null)).andReturn(dataXFiles);
-
-        DataxProcessor.processorGetter = (dataXName) -> {
-            Assert.assertEquals(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), dataXName);
-            return dataXProcessor;
-        };
-        EasyMock.replay(dataXProcessor, fsFactory, fs);
-//        IStreamTableCreator.IStreamTableMeta
-//                streamTableMeta = forTest.writer.getStreamTableMeta(HudiWriter.targetTableName);
-
-//        Assert.assertNotNull("streamTableMeta can not be null", streamTableMeta);
-//        streamTableMeta.getColsMeta();
-
-        // System.out.println(streamTableMeta.createFlinkTableDDL());
-
-//        DataXHudiWriter.HudiStreamTemplateData tplData
-//                = (DataXHudiWriter.HudiStreamTemplateData) forTest.writer.decorateMergeData(
-//                new TestStreamTemplateData(HdfsFileSystemFactoryTestUtils.testDataXName, HudiWriter.targetTableName));
+//    @Test
+//    public void testFlinkSqlTableDDLCreate() throws Exception {
+//        FileSystemFactory fsFactory = EasyMock.createMock("fsFactory", FileSystemFactory.class);
+//
+//        ITISFileSystem fs = EasyMock.createMock("fileSystem", ITISFileSystem.class);
+//        //  fs.getRootDir()
+//        String child = "default/customer_order_relation";
+//        String dataDir = "hudi";
+//        IPath rootPath = new HdfsPath(HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin");
+//        IPath tabPath = new HdfsPath(rootPath, child);
+//        IPath hudiDataPath = new HdfsPath(tabPath, dataDir);
+//        EasyMock.expect(fs.getPath(rootPath, child)).andReturn(tabPath);
+//        EasyMock.expect(fs.getPath(tabPath, dataDir)).andReturn(hudiDataPath);
+//        EasyMock.expect(fs.getRootDir()).andReturn(rootPath);
+//        EasyMock.expect(fsFactory.getFileSystem()).andReturn(fs);
+//        HudiTest forTest = createDataXWriter(Optional.of(fsFactory));
+//        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
+//        File dataXCfg = folder.newFile();
+//        FileUtils.writeStringToFile(dataXCfg
+//                , "{job:{content:[{\"writer\":"
+//                        + IOUtils.loadResourceFromClasspath(
+//                        this.getClass(), hudi_datax_writer_assert_without_optional)
+//                        + "}]}}"
+//                , TisUTF8.get());
+//
+//        List<File> dataXFiles = Lists.newArrayList(dataXCfg);
+//
+//        EasyMock.expect(dataXProcessor.getDataxCfgFileNames(null)).andReturn(dataXFiles);
+//
+//        DataxProcessor.processorGetter = (dataXName) -> {
+//            Assert.assertEquals(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), dataXName);
+//            return dataXProcessor;
+//        };
+//        EasyMock.replay(dataXProcessor, fsFactory, fs);
+////        IStreamTableCreator.IStreamTableMeta
+////                streamTableMeta = forTest.writer.getStreamTableMeta(HudiWriter.targetTableName);
+//
+////        Assert.assertNotNull("streamTableMeta can not be null", streamTableMeta);
+////        streamTableMeta.getColsMeta();
+//
+//        // System.out.println(streamTableMeta.createFlinkTableDDL());
+//
+////        DataXHudiWriter.HudiStreamTemplateData tplData
+////                = (DataXHudiWriter.HudiStreamTemplateData) forTest.writer.decorateMergeData(
+////                new TestStreamTemplateData(HdfsFileSystemFactoryTestUtils.testDataXName, HudiWriter.targetTableName));
+////
+////
+////        StringBuffer createTabDdl = tplData.getSinkFlinkTableDDL(HudiWriter.targetTableName);
 //
 //
-//        StringBuffer createTabDdl = tplData.getSinkFlinkTableDDL(HudiWriter.targetTableName);
-
-
-//        Assert.assertNotNull(createTabDdl);
+////        Assert.assertNotNull(createTabDdl);
+////
+////        System.out.println(createTabDdl);
 //
-//        System.out.println(createTabDdl);
-
-
-        EasyMock.verify(dataXProcessor, fsFactory, fs);
-    }
-
-    private static class TestStreamTemplateData implements IStreamIncrGenerateStrategy.IStreamTemplateData {
-        private final TargetResName collection;
-        private final String targetTableName;
-
-        public TestStreamTemplateData(TargetResName collection, String targetTableName) {
-            this.collection = collection;
-            this.targetTableName = targetTableName;
-        }
-
-        @Override
-        public String getCollection() {
-            return this.collection.getName();
-        }
-
-        @Override
-        public List<EntityName> getDumpTables() {
-            return Collections.singletonList(EntityName.parse(this.targetTableName));
-        }
-    }
+//
+//        EasyMock.verify(dataXProcessor, fsFactory, fs);
+//    }
 
     private static class HudiTest {
         private final DataXHudiWriter writer;

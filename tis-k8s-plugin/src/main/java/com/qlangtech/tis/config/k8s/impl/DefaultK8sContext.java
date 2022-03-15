@@ -21,6 +21,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -120,8 +121,8 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             //return super.validate(msgHandler, context, postFormVals);
-            ParseDescribable<ParamsConfig> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            DefaultK8sContext k8sCfg = (DefaultK8sContext) k8s.instance;
+            ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+            DefaultK8sContext k8sCfg = (DefaultK8sContext) k8s.getInstance();
             try {
                 ApiClient client = k8sCfg.createConfigInstance();
                 CoreV1Api api = new CoreV1Api(client);

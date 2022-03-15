@@ -89,12 +89,14 @@ public class HudiSelectedTab extends SelectedTab {
             HudiSelectedTab tab = (HudiSelectedTab) postFormVals;
             boolean success = true;
             if (!tab.containCol(tab.sourceOrderingField)) {
-                msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "需要选择" + HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD);
+                msgHandler.addFieldError(context, KEY_SOURCE_ORDERING_FIELD, "'"
+                        + tab.sourceOrderingField + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
                 success = false;
             }
 
             if (!tab.containCol(tab.recordField)) {
-                msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "需要选择" + HudiSelectedTab.KEY_RECORD_FIELD);
+                msgHandler.addFieldError(context, KEY_RECORD_FIELD
+                        , "'" + tab.recordField + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
                 success = false;
             }
 

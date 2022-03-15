@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
@@ -31,6 +32,8 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
@@ -155,6 +158,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @TISExtension()
     public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements IRewriteSuFormProperties {
+        private transient SuFormProperties rewriteSubFormProperties;
+
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
@@ -195,11 +200,21 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
         @Override
         public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+
+            if (rewriteSubFormProperties != null) {
+                return rewriteSubFormProperties;
+            }
+
             String overwriteSubField = IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
-                    , DataXHudiWriter.class.getSimpleName() + "." + subformProps.getSubFormFieldName() + ".json", true);
+                    , DataXHudiWriter.class.getSimpleName() + "."
+                            + subformProps.getSubFormFieldName() + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX, true);
             JSONObject subField = JSON.parseObject(overwriteSubField);
-            Class<?> clazz = DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
-            return SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(this), clazz)), clazz, subformProps);
+            Class<? extends Describable> clazz
+                    = (Class<? extends Describable>) DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
+            Descriptor newSubDescriptor = TIS.get().getDescriptor(clazz);
+            rewriteSubFormProperties = SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), clazz)), clazz, newSubDescriptor, subformProps);
+
+            return rewriteSubFormProperties;
         }
 
 //        @Override

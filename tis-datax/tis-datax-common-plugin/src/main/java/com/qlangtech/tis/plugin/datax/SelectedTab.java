@@ -175,13 +175,13 @@ public class SelectedTab implements Describable<SelectedTab>, ISelectedTab, Iden
         @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            ParseDescribable<SelectedTab> plugin = this.newInstance(null, postFormVals.rawFormData, Optional.empty());
-            SelectedTab tab = plugin.instance;
+            ParseDescribable<Describable> plugin = this.newInstance(null, postFormVals.rawFormData, Optional.empty());
+            SelectedTab tab = plugin.getInstance();
             if (tab.cols.isEmpty()) {
                 msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "请选择");
                 return false;
             }
-            return this.validateAll(msgHandler, context, plugin.instance);
+            return this.validateAll(msgHandler, context,tab);
         }
 
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {

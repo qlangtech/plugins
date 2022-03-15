@@ -111,9 +111,9 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
 
         Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
                 = pgDataSourceFactory.newInstance(dataxName.getName(), formData);
-        Assert.assertNotNull(parseDescribable.instance);
+        Assert.assertNotNull(parseDescribable.getInstance());
 
-        return parseDescribable.instance;
+        return parseDescribable.getInstance();
     }
 
 }

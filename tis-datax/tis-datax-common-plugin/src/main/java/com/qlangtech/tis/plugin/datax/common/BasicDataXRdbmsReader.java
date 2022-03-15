@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -364,8 +365,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             try {
-                ParseDescribable<DataxReader> readerDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-                BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) readerDescribable.instance;
+                ParseDescribable<Describable> readerDescribable
+                        = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+                BasicDataXRdbmsReader rdbmsReader = readerDescribable.getInstance();
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
                 // msgHandler.addErrorMessage(context, );

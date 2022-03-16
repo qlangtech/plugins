@@ -33,7 +33,7 @@ import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
-import com.qlangtech.tis.fullbuild.taskflow.hive.HiveTaskFactory;
+//import com.qlangtech.tis.fullbuild.taskflow.hive.HiveTaskFactory;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.FlatTableBuilder;
@@ -52,120 +52,121 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 import java.util.Optional;
-
-/**
- * HIVE 宽表构建task
- * @create: 2020-04-03 12:12
- *
- * @author 百岁（baisui@qlangtech.com）
- * @date 2020/04/13
- */
+//
+///**
+// * HIVE 宽表构建task
+// * @create: 2020-04-03 12:12
+// *
+// * @author 百岁（baisui@qlangtech.com）
+// * @date 2020/04/13
+// */
 @Public
-public class HiveFlatTableBuilder extends FlatTableBuilder {
-
-
+public class HiveFlatTableBuilder  //extends FlatTableBuilder
+{
+//
+//
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_DB_NAME = "dbName";
-
-    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
-    public String name;
-
-    @FormField(ordinal = 1, validate = {Validator.require, Validator.host})
-    public String // "jdbc:hive2://10.1.5.68:10000/tis";
-            hiveAddress;
-
-    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
-    public String dbName;
-
-    @FormField(ordinal = 3, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
-    public String fsName;
-
-    private FileSystemFactory fileSystem;
-
-    private FileSystemFactory getFs() {
-        if (fileSystem == null) {
-            this.fileSystem = FileSystemFactory.getFsFactory(fsName);
-        }
-        Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
-        return fileSystem;
-    }
-
-    private HiveTaskFactory taskFactory;
-
-    @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode
-            , ITemplateContext tplContext, ITaskContext taskContext, //
-                                   IJoinTaskStatus joinTaskStatus) {
-        HiveTaskFactory taskFactory = getTaskFactory(tplContext);
-        return taskFactory.createTask(nodeMeta, isFinalNode, tplContext, taskContext, joinTaskStatus);
-    }
-
-    private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
-        IPrimaryTabFinder erRules = tplContext.getExecContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
-        Objects.requireNonNull(erRules, "erRule can not be null");
-        Objects.requireNonNull(getFs(), "join relevant FS can not be null");
-        this.taskFactory = new HiveTaskFactory(erRules, getFs());
-        return taskFactory;
-    }
-
-    @Override
-    public void startTask(ITableBuildTask dumpTask) {
-        final Connection conn = getConnection();
-        final DelegatingConnection delegate = new DelegatingConnection(conn) {
-            @Override
-            public void close() throws SQLException {
-                throw new UnsupportedOperationException("in exec phrase close is not supported");
-            }
-        };
-        ITaskContext context = new ITaskContext() {
-            @Override
-            public Connection getObj() {
-                return delegate;
-            }
-        };
-        try {
-            dumpTask.process(context);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                conn.close();
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    private Connection getConnection() {
-        try {
-            return HiveDBUtils.getInstance(this.hiveAddress, this.dbName).createConnection();
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-//    public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
-//        return FSHistoryFileUtils.getJoinTableStorePath(user, pathGetter);
+//
+//    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
+//    public String name;
+//
+//    @FormField(ordinal = 1, validate = {Validator.require, Validator.host})
+//    public String // "jdbc:hive2://10.1.5.68:10000/tis";
+//            hiveAddress;
+//
+//    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
+//    public String dbName;
+//
+//    @FormField(ordinal = 3, validate = {Validator.require, Validator.identity}, type = FormFieldType.SELECTABLE)
+//    public String fsName;
+//
+//    private FileSystemFactory fileSystem;
+//
+//    private FileSystemFactory getFs() {
+//        if (fileSystem == null) {
+//            this.fileSystem = FileSystemFactory.getFsFactory(fsName);
+//        }
+//        Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
+//        return fileSystem;
 //    }
-
-    @TISExtension
-    public static class DefaultDescriptor extends Descriptor<FlatTableBuilder> {
-        public DefaultDescriptor() {
-            super();
-            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "hive";
-        }
-
-        @Override
-        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            return validateHiveAvailable(msgHandler, context, postFormVals);
-        }
-    }
-
+//
+//    private HiveTaskFactory taskFactory;
+//
+//    @Override
+//    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode
+//            , ITemplateContext tplContext, ITaskContext taskContext, //
+//                                   IJoinTaskStatus joinTaskStatus) {
+//        HiveTaskFactory taskFactory = getTaskFactory(tplContext);
+//        return taskFactory.createTask(nodeMeta, isFinalNode, tplContext, taskContext, joinTaskStatus);
+//    }
+//
+//    private HiveTaskFactory getTaskFactory(ITemplateContext tplContext) {
+//        IPrimaryTabFinder erRules = tplContext.getExecContext().getAttribute(IFullBuildContext.KEY_ER_RULES);
+//        Objects.requireNonNull(erRules, "erRule can not be null");
+//        Objects.requireNonNull(getFs(), "join relevant FS can not be null");
+//        this.taskFactory = new HiveTaskFactory(erRules, getFs());
+//        return taskFactory;
+//    }
+//
+//    @Override
+//    public void startTask(ITableBuildTask dumpTask) {
+//        final Connection conn = getConnection();
+//        final DelegatingConnection delegate = new DelegatingConnection(conn) {
+//            @Override
+//            public void close() throws SQLException {
+//                throw new UnsupportedOperationException("in exec phrase close is not supported");
+//            }
+//        };
+//        ITaskContext context = new ITaskContext() {
+//            @Override
+//            public Connection getObj() {
+//                return delegate;
+//            }
+//        };
+//        try {
+//            dumpTask.process(context);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            try {
+//                conn.close();
+//            } catch (Exception e) {
+//            }
+//        }
+//    }
+//
+//    private Connection getConnection() {
+//        try {
+//            return HiveDBUtils.getInstance(this.hiveAddress, this.dbName).createConnection();
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//
+////    public String getJoinTableStorePath(String user, INameWithPathGetter pathGetter) {
+////        return FSHistoryFileUtils.getJoinTableStorePath(user, pathGetter);
+////    }
+//
+//    @TISExtension
+//    public static class DefaultDescriptor extends Descriptor<FlatTableBuilder> {
+//        public DefaultDescriptor() {
+//            super();
+//            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+//        }
+//
+//        @Override
+//        public String getDisplayName() {
+//            return "hive";
+//        }
+//
+//        @Override
+//        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            return validateHiveAvailable(msgHandler, context, postFormVals);
+//        }
+//    }
+//
     public static boolean validateHiveAvailable(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
         String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
         String dbName = postFormVals.getField(KEY_DB_NAME);

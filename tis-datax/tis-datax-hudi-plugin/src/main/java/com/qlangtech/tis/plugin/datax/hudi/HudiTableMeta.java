@@ -74,6 +74,7 @@ public class HudiTableMeta {
 
             for (ISelectedTab.ColMeta meta : colsMetas) {
                 meta.getType().accept(new DataType.TypeVisitor<Void>() {
+
                     @Override
                     public Void longType(DataType type) {
                         if (meta.isNullable()) {
@@ -273,7 +274,7 @@ public class HudiTableMeta {
         if (meta.isNullable()) {
             schema = Schema.createUnion(Schema.create(Schema.Type.NULL), schema);
         }
-        fields.name(meta.getName()).type(schema);
+        fields.name(meta.getName()).type(schema).noDefault();
     }
 
 

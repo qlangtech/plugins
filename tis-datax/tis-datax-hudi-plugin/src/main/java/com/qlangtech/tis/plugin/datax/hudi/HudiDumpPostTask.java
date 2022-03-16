@@ -18,8 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
+import com.alibaba.datax.plugin.writer.hudi.CSVWriter;
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
-import com.alibaba.datax.plugin.writer.hudi.TisDataXHudiWriter;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
@@ -83,6 +84,12 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         this.hudiWriter = hudiWriter;
         this.generateCfgs = generateCfgs;
 
+    }
+
+    public static IPath createTabDumpParentPath(ITISFileSystem fs, IPath tabDumpDir) {
+        Objects.requireNonNull(fs, "ITISFileSystem can not be null");
+        //IPath tabDumpDir = getDumpDir();
+        return fs.getPath(tabDumpDir, "data");
     }
 
     @Override
@@ -213,7 +220,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
 
         IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(fs, this.hudiTab.getName(), dumpDir, this.hudiTab);
-        IPath tabDumpParentPath = TisDataXHudiWriter.createTabDumpParentPath(fs, dumpDir);
+        IPath tabDumpParentPath = createTabDumpParentPath(fs, dumpDir);
         // 写csv文件属性元数据文件
 
         try (OutputStream write = fs.create(fsSourcePropsPath, true)) {
@@ -233,10 +240,10 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             // BasicFSWriter writerPlugin = this.getWriterPlugin();
 //https://spark.apache.org/docs/3.2.1/sql-data-sources-csv.html
             props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(tabDumpParentPath));
-            props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(TisDataXHudiWriter.CSV_FILE_USE_HEADER));
-            props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(TisDataXHudiWriter.CSV_Column_Separator));
-            props.setProperty("hoodie.deltastreamer.csv.nullValue", TisDataXHudiWriter.CSV_NULL_VALUE);
-            props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(TisDataXHudiWriter.CSV_ESCAPE_CHAR));
+            props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(CSVWriter.CSV_FILE_USE_HEADER));
+            props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSVWriter.CSV_Column_Separator));
+            props.setProperty("hoodie.deltastreamer.csv.nullValue", CSVWriter.CSV_NULL_VALUE);
+            props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSVWriter.CSV_ESCAPE_CHAR));
             //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
 
 

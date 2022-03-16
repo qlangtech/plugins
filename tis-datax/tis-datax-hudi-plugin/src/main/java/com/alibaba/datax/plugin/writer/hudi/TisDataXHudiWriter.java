@@ -34,6 +34,7 @@ import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.HudiDumpPostTask;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -49,17 +50,6 @@ import java.util.Objects;
  * @create: 2022-01-22 15:16
  **/
 public class TisDataXHudiWriter extends HdfsWriter {
-
-    public static final char CSV_Column_Separator = ',';
-    public static final String CSV_NULL_VALUE = "null";
-    public static final char CSV_ESCAPE_CHAR = '"';
-    public static final boolean CSV_FILE_USE_HEADER = true;
-
-    public static IPath createTabDumpParentPath(ITISFileSystem fs, IPath tabDumpDir) {
-        Objects.requireNonNull(fs, "ITISFileSystem can not be null");
-        //IPath tabDumpDir = getDumpDir();
-        return fs.getPath(tabDumpDir, "data");
-    }
 
     // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     private static final Logger logger = LoggerFactory.getLogger(TisDataXHudiWriter.class);
@@ -103,7 +93,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
         protected Path createTabDumpParentPath(ITISFileSystem fs) {
-            return TisDataXHudiWriter.createTabDumpParentPath(fs, getDumpDir()).unwrap(Path.class);
+            return HudiDumpPostTask.createTabDumpParentPath(fs, getDumpDir()).unwrap(Path.class);
 //            Objects.requireNonNull(fs, "ITISFileSystem can not be null");
 //            IPath tabDumpDir = getDumpDir();
 //            return fs.getPath(tabDumpDir, "data").unwrap(Path.class);
@@ -232,10 +222,10 @@ public class TisDataXHudiWriter extends HdfsWriter {
                     .setSerializerFactory(new TISSerializerFactory(colsMeta))
                     .writerFor(Record.class)
                     .with(csvSchemaBuilder
-                            .setUseHeader(CSV_FILE_USE_HEADER)
-                            .setColumnSeparator(CSV_Column_Separator)
-                            .setNullValue(CSV_NULL_VALUE)
-                            .setEscapeChar(CSV_ESCAPE_CHAR).build());
+                            .setUseHeader(CSVWriter.CSV_FILE_USE_HEADER)
+                            .setColumnSeparator(CSVWriter.CSV_Column_Separator)
+                            .setNullValue(CSVWriter.CSV_NULL_VALUE)
+                            .setEscapeChar(CSVWriter.CSV_ESCAPE_CHAR).build());
         }
 
 

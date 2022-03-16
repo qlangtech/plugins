@@ -159,7 +159,7 @@ public class HudiTableMeta {
                     @Override
                     public Void decimalType(DataType type) {
                         Schema schema = LogicalTypes.decimal(
-                                type.columnSize, type.getDecimalDigits()).addToSchema(Schema.create(Schema.Type.DOUBLE));
+                                type.columnSize, type.getDecimalDigits()).addToSchema(Schema.create(Schema.Type.BYTES));
                         addNullableSchema(fields, schema, meta);
                         return null;
                     }

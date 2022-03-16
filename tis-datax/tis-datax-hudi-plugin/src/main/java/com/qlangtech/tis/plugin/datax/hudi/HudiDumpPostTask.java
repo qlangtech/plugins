@@ -145,6 +145,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
+
         File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
         FileUtils.touch(logFile);
         handle.redirectError(logFile);
@@ -188,7 +189,11 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         if (hudiWriter.getHudiTableType() == HudiWriteTabType.MOR) {
             handle.addAppArgs("--disable-compaction");
         }
-
+        // https://hudi.apache.org/docs/tuning-guide/
+        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
+        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
+//        handle.addSparkArg("--driver-memory", "1024M");
+//        handle.addSparkArg("--executor-memory", "2G");
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -208,6 +213,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                 System.out.println("Info:" + sparkAppHandle.getState().toString());
             }
         });
+
         countDownLatch.await();
         if (sparkAppHandle.getState() != SparkAppHandle.State.FINISHED) {
             throw new TisException("spark app:" + sparkAppHandle.getAppId()
@@ -276,7 +282,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");
 
             props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.recordField);
-          //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
+            //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
 
             props.store(write);
 

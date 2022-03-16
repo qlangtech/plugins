@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -85,8 +84,14 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     public String getDumpTimeStamp() {
         if (StringUtils.isEmpty(this.dumpTimeStamp)) {
-            this.dumpTimeStamp = this.getPluginJobConf()
-                    .getNecessaryValue(DataxUtils.EXEC_TIMESTAMP, HdfsWriterErrorCode.REQUIRED_VALUE); // timeFormat.format(new Date());
+
+            this.dumpTimeStamp = System.getProperty(DataxUtils.EXEC_TIMESTAMP);
+            if (StringUtils.isEmpty(this.dumpTimeStamp)) {
+                throw new IllegalStateException("dumpTimeStamp can not be empty");
+            }
+
+//            this.dumpTimeStamp = this.getPluginJobConf()
+//                    .getNecessaryValue(DataxUtils.EXEC_TIMESTAMP, HdfsWriterErrorCode.REQUIRED_VALUE); // timeFormat.format(new Date());
         }
         return this.dumpTimeStamp;
     }

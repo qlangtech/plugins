@@ -132,7 +132,8 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         Objects.requireNonNull(hiveWriter, "hiveWriter can not be null");
         try {
             FileSystemFactory fs = hiveWriter.getFs();
-            HdfsHelper hdfsHelper = new HdfsHelper(fs.getFileSystem().unwrap());
+            FileSystem fileSystem = Objects.requireNonNull(fs.getFileSystem().unwrap(), "fileSystem can not be empty");
+            HdfsHelper hdfsHelper = new HdfsHelper(fileSystem);
 
             org.apache.hadoop.conf.Configuration cfg = new org.apache.hadoop.conf.Configuration();
             cfg.setClassLoader(TIS.get().getPluginManager().uberClassLoader);

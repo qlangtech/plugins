@@ -128,9 +128,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
     private void launchSparkRddConvert(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
 
-        // HashMap env = new HashMap();
         Map<String, String> env = Config.getInstance().getAllKV();
-
 
         String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
         final String taskId = MDC.get(IParamContext.KEY_TASK_ID);

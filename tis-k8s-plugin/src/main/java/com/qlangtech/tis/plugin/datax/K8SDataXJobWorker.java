@@ -270,7 +270,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
                 @Override
                 public String getExtraSysProps() {
-                    return "-D" + CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_VALUE;
+                    return "-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE;
                 }
 
                 @Override

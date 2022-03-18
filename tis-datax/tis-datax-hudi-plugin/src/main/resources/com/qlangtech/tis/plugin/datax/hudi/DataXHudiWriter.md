@@ -42,11 +42,12 @@ Find more [here](https://hudi.apache.org/docs/concepts/).
 
 ## shuffleParallelism
 
-## autoCreateTable
-
 ## sparkConn
 
 指定Spark服务端连接地址
+
+## sparkSubmitParam
+Spark服务端执行`HoodieDeltaStreamer`对内存有一定要求，太小容易产生OOM导致终止运行
 
 ## batchOp
 
@@ -55,3 +56,4 @@ Find more [here](https://hudi.apache.org/docs/concepts/).
 * Possible Values: `UPSERT`, `INSERT`, `BULK_INSERT`
 
 ## partitionedBy
+

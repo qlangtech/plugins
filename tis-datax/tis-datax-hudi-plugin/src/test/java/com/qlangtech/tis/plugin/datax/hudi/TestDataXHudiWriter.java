@@ -43,9 +43,13 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
+import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.MDC;
 
@@ -70,15 +74,13 @@ public class TestDataXHudiWriter {
     public TemporaryFolder folder = new TemporaryFolder();
 
 
-
-
     @BeforeClass
     public static void start() {
         CenterResource.setNotFetchFromCenterRepository();
 
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void testRealDump() throws Exception {
 
@@ -87,6 +89,8 @@ public class TestDataXHudiWriter {
         MDC.put(IParamContext.KEY_TASK_ID, "123");
         HudiTest houseTest = createDataXWriter();
         long timestamp = 20220311135455l;
+
+        System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(timestamp));
 
         // houseTest.writer.autoCreateTable = true;
 
@@ -124,10 +128,10 @@ public class TestDataXHudiWriter {
 
             EasyMock.replay(dataXProcessor, execContext);
 
-            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
-                cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
-                return cfg;
-            });
+//            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
+//              //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
+//                return cfg;
+//            });
 
 
             // DataXHudiWriter hudiWriter = new DataXHudiWriter();
@@ -266,6 +270,11 @@ public class TestDataXHudiWriter {
         writer.batchOp = BatchOpMode.BULK_INSERT.getValue();
         writer.shuffleParallelism = 3;
         writer.partitionedBy = "pt";
+        SparkSubmitParams sparkSubmitParams = new SparkSubmitParams();
+        sparkSubmitParams.driverMemory = "1G";
+        sparkSubmitParams.executorMemory = "2G";
+        writer.sparkSubmitParam = sparkSubmitParams;
+
 
 //        writer.batchByteSize = 3456;
 //        writer.batchSize = 9527;

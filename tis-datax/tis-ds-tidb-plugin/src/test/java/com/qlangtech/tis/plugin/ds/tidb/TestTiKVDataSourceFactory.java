@@ -21,10 +21,7 @@ package com.qlangtech.tis.plugin.ds.tidb;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataDumpers;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
-import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.*;
 import junit.framework.TestCase;
 
 import java.sql.Types;

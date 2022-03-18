@@ -63,6 +63,7 @@
                                     <exclude>org.codehaus.groovy:groovy-all</exclude>
                                     <exclude>org.scala-lang:scala-library</exclude>
                                     <exclude>org.scala-lang:scala-reflect</exclude>
+                                    <exclude>org.slf4j:slf4j-log4j12</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>
@@ -103,6 +104,17 @@
         <!--            <artifactId>scala-library</artifactId>-->
         <!--            <version>${scala.version}</version>-->
         <!--        </dependency>-->
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-logback-flume-appender</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.spark</groupId>

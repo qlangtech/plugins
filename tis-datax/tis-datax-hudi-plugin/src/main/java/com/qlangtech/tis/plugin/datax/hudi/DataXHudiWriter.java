@@ -45,6 +45,7 @@ import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
+import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -71,13 +72,16 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String sparkConn;
 
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public SparkSubmitParams sparkSubmitParam;
+
+    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String hiveConn;
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String tabType;
 
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String partitionedBy;
 
 //    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -85,11 +89,12 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //    public boolean autoCreateTable;
 
 
-    @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer shuffleParallelism;
 
-    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
     public String batchOp;
+
 
 
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})

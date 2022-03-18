@@ -49,9 +49,14 @@ import java.util.Map;
  * @create: 2022-01-25 16:12
  **/
 public class TISHoodieDeltaStreamer implements Serializable {
+
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
+
+        if (StringUtils.isEmpty(System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY))) {
+            throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' can not be empty");
+        }
 
         String mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
         String taskId = System.getenv(IParamContext.KEY_TASK_ID);

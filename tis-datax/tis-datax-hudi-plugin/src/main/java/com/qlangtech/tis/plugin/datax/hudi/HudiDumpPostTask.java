@@ -34,7 +34,6 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IParamContext;
-import com.qlangtech.tis.web.start.TisAppLaunchPort;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.launcher.SparkAppHandle;
@@ -146,11 +145,12 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
 
-        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
-        FileUtils.touch(logFile);
-        handle.redirectError(logFile);
-        //  handle.redirectError(new File("error.log"));
-        // handle.redirectToLog(DataXHudiWriter.class.getName());
+//        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
+//        FileUtils.touch(logFile);
+//        handle.redirectError(logFile);
+        // 测试用
+        handle.redirectError(new File("error.log"));
+        handle.redirectToLog(DataXHudiWriter.class.getName());
         // String tabName = this.getFileName();
 
         File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
@@ -190,10 +190,15 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             handle.addAppArgs("--disable-compaction");
         }
         // https://hudi.apache.org/docs/tuning-guide/
-        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
-        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
+
+        handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS
+                , "-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
+//        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
+//        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
 //        handle.addSparkArg("--driver-memory", "1024M");
 //        handle.addSparkArg("--executor-memory", "2G");
+
+        this.hudiWriter.sparkSubmitParam.setHandle(handle);
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 

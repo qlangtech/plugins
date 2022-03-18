@@ -134,6 +134,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
         final String taskId = MDC.get(IParamContext.KEY_TASK_ID);
+        if (StringUtils.isEmpty(taskId)) {
+            throw new IllegalStateException("mdc param taskId can not be null");
+        }
         env.put(IParamContext.KEY_TASK_ID, taskId);
         if (StringUtils.isNotEmpty(mdcCollection)) {
             env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);

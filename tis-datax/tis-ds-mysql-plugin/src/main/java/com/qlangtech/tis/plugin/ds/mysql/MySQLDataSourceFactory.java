@@ -85,7 +85,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         DataType type = super.getDataType(colName, cols);
         DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
             @Override
-            public DataType longType(DataType type) {
+            public DataType bigInt(DataType type) {
                 return null;
             }
 

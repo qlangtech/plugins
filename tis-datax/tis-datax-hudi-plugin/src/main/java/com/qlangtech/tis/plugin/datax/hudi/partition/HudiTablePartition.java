@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
+import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
@@ -42,11 +42,11 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
      * @param field
      * @param partition_extractor_class
      */
-    protected static void setHiveSyncPartitionProps(TypedPropertiesBuilder props, String field, String partition_extractor_class) {
-        props.setProperty("hoodie.datasource.hive_sync.partition_fields", field);
+    protected static void setHiveSyncPartitionProps(IPropertiesBuilder props, String field, String partition_extractor_class) {
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS, field);
         // "org.apache.hudi.hive.MultiPartKeysValueExtractor";
         // partition 分区值抽取类
-        props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class", partition_extractor_class);
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_EXTRACTOR_CLASS, partition_extractor_class);
     }
 
     protected static void appendPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
@@ -64,19 +64,20 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
      * @param props
      * @param type
      */
-    protected void setKeyGeneratorType(TypedPropertiesBuilder props, String type) {
+    protected void setKeyGeneratorType(IPropertiesBuilder props, String type) {
         // HoodieWriteConfig.KEYGENERATOR_TYPE
-        props.setProperty("hoodie.datasource.write.keygenerator.type", type);
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, type);
     }
 
 
-    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+    public void setProps(IPropertiesBuilder props, DataXHudiWriter hudiWriter) {
         if (StringUtils.isEmpty(hudiWriter.partitionedBy)) {
             throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
         }
-        props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, hudiWriter.partitionedBy);
         setKeyGeneratorType(props, "SIMPLE");
     }
+
 
     public boolean isSupportPartition() {
         return true;

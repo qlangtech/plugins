@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -118,7 +119,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
             }
 
             @Override
-            public FlinkCol longType(DataType type) {
+            public FlinkCol bigInt(DataType type) {
                 return new FlinkCol(meta.colName, DataTypes.BIGINT());
             }
 
@@ -174,10 +175,15 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
             fieldNames[i++] = col.name;
 
         }
+        List<String> pks = cols.stream().filter((c) -> c.isPk()).map((c) -> c.name).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(pks)) {
+            scmBuilder.primaryKey(pks);
+        }
         Schema schema = scmBuilder.build();
 
         TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
-        DataStream<Row> rowStream = dtoDataStream.getStream().map(new DTO2RowMapper(cols), outputType);
+        DataStream<Row> rowStream = dtoDataStream.getStream()
+                .map(new DTO2RowMapper(cols), outputType).name(tabName).uid("uid_" + tabName);
 
         Table table = tabEnv.fromChangelogStream(rowStream, schema, ChangelogMode.all());
         tabEnv.createTemporaryView(tabName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);

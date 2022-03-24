@@ -19,17 +19,23 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hudi.common.model.WriteOperationType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-05 07:00
  **/
 public enum BatchOpMode {
-    UPSERT("UPSERT"), INSERT("INSERT"), BULK_INSERT("BULK_INSERT");
-    private final String value;
+    UPSERT("UPSERT", WriteOperationType.UPSERT) //
+    , INSERT("INSERT", WriteOperationType.INSERT) //
+    , BULK_INSERT("BULK_INSERT", WriteOperationType.BULK_INSERT);
 
-    private BatchOpMode(String value) {
+    private final String value;
+    public final WriteOperationType hudiType;
+
+    private BatchOpMode(String value, WriteOperationType hudiType) {
         this.value = value;
+        this.hudiType = hudiType;
     }
 
     public String getValue() {
@@ -37,6 +43,7 @@ public enum BatchOpMode {
     }
 
     public static BatchOpMode parse(String value) {
+
         if (StringUtils.isEmpty(value)) {
             throw new IllegalArgumentException("argument value can not be empty");
         }

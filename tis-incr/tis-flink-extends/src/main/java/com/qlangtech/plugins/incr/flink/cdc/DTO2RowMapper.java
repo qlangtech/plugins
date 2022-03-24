@@ -52,7 +52,7 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
         return row;
     }
 
-    private RowKind getKind(DTO dto) {
+    public static RowKind getKind(DTO dto) {
         switch (dto.getEvent()) {
             case DELETE:
                 return RowKind.DELETE;

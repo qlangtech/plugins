@@ -37,7 +37,10 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
+import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -94,7 +97,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
     public String batchOp;
-
 
 
     @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
@@ -295,6 +297,30 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return new HudiDumpPostTask(execContext, (HudiSelectedTab) tab, this, genCfg);
     }
 
+    @Override
+    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+
+
+        return new IRemoteTaskTrigger() {
+            @Override
+            public String getTaskName() {
+                return "prep_" + tab.getName();
+            }
+
+            @Override
+            public RunningStatus getRunningStatus() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void run() {
+                // 创建hud schema
+                FileSystemFactory fsFactory = getFs();
+                IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(), execContext.getPartitionTimestamp(), getHiveConnMeta());
+                HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(), tab.getName(), dumpDir, (HudiSelectedTab) tab);
+            }
+        };
+    }
 
     public class HudiDataXContext extends FSDataXContext {
 

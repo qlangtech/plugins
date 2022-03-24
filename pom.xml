@@ -53,10 +53,11 @@
 
         <module>tis-k8s-plugin</module>
         <module>tis-aliyun-fs-plugin</module>
-        <module>customer-plugin-test</module>
+        <module>tis-plugin-test/customer-plugin-test</module>
 
 
         <module>tis-kafka-plugin</module>
+        <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
 

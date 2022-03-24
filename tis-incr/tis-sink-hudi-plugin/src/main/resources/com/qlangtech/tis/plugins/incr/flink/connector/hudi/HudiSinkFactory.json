@@ -6,5 +6,18 @@
   "currentLimit": {
     "label": "限流",
     "dftVal": 200
+  },
+  "scriptType": {
+    "label": "脚本类型",
+    "dftVal": "streamApi",
+    "enum": [
+      {
+        "label": "SQL",
+        "val": "sql"
+      },
+      {
+        "label": "StreamAPI",
+        "val": "streamApi"
+      },
   }
 }

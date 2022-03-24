@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import junit.framework.TestCase;
@@ -73,7 +74,37 @@ public class ReaderTemplate {
 
     private static void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor
             , DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
+        String readerCfg = generateReaderCfg(processor, dataXReader, dataxWriter, dataXName);
+        TestCase.assertNotNull(readerCfg);
+        System.out.println(readerCfg);
+        com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
+            Assert.assertEquals(msg, expect, actual);
+        });
+        JSONObject reader = JSON.parseObject(readerCfg);
+        Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
+    }
 
+    public static String generateReaderCfg(IDataxProcessor processor, DataxReader dataXReader, String dataXName) throws IOException {
+
+        IDataxWriter dataxWriter = new IDataxWriter() {
+            @Override
+            public String getTemplate() {
+                return null;
+            }
+            @Override
+            public DataxWriter.BaseDataxWriterDescriptor getWriterDescriptor() {
+                return null;
+            }
+
+            @Override
+            public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+                return null;
+            }
+        };
+        return generateReaderCfg(processor, dataXReader, dataxWriter, dataXName);
+    }
+
+    private static String generateReaderCfg(IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
 
         IDataxReaderContext dataxReaderContext = null;
         Iterator<IDataxReaderContext> subTasks = dataXReader.getSubTasks();
@@ -84,8 +115,6 @@ public class ReaderTemplate {
         }
         TestCase.assertEquals(1, dataxReaderContextCount);
         TestCase.assertNotNull(dataxReaderContext);
-
-
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, dataXName, processor) {
             @Override
             public String getTemplateContent() {
@@ -93,19 +122,12 @@ public class ReaderTemplate {
             }
         };
 
-        String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());
-        TestCase.assertNotNull(readerCfg);
-        System.out.println(readerCfg);
-        com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
-            Assert.assertEquals(msg, expect, actual);
-        });
-        JSONObject reader = JSON.parseObject(readerCfg);
-        Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
+        return dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());
     }
 
-    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
-        realExecute(readerJson, dataxReader, null);
-    }
+//    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+//        realExecute(readerJson, dataxReader);
+//    }
 
     /**
      * dataXWriter执行
@@ -114,7 +136,7 @@ public class ReaderTemplate {
      * @param dataxReader
      * @throws IllegalAccessException
      */
-    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader, Writer contentWriter) throws IllegalAccessException {
+    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 //        DataxExecutor.initializeClassLoader(
 //                Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxReader.getDataxMeta().getName()), uberClassLoader);
@@ -150,10 +172,10 @@ public class ReaderTemplate {
                             "        \"print\": true\n" +
                             "    }\n" +
                             "}"));
-                    if (contentWriter != null) {
-                        cfg.set("job.content[0].writer.parameter."
-                                + com.alibaba.datax.plugin.writer.streamwriter.Key.CONTENT_WRITER, contentWriter);
-                    }
+                  //  if (contentWriter != null) {
+//                        cfg.set("job.content[0].writer.parameter."
+//                                + com.alibaba.datax.plugin.writer.streamwriter.Key.CONTENT_WRITER, contentWriter);
+                   // }
                     return cfg;
                 });
 

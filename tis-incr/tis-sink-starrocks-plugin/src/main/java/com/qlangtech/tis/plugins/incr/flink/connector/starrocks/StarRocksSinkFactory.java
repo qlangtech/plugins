@@ -304,7 +304,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             }
 
             @Override
-            public org.apache.flink.table.types.DataType longType(DataType type) {
+            public org.apache.flink.table.types.DataType bigInt(DataType type) {
                 //return DataTypes.BIGINT();
                 return new AtomicDataType(new BigIntType(isNullable));
             }

@@ -20,10 +20,8 @@ package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
-import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
@@ -34,20 +32,30 @@ import java.sql.SQLException;
 public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
 //    static {
 //        try {
-//            DriverManager.registerDriver(new com.mysql.jdbc.Driver());
+    //   DriverManager.registerDriver(new com.mysql.jdbc.Driver());
 //        } catch (SQLException e) {
 //            throw new RuntimeException(e);
 //        }
 //    }
 
+    private transient java.sql.Driver driver;
+
     @Override
     public Connection getConnection(String jdbcUrl) throws SQLException {
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new SQLException(e);
+        if (driver == null) {
+            driver = new com.mysql.jdbc.Driver();
         }
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
+        java.util.Properties info = new java.util.Properties();
+
+        if (this.userName != null) {
+            info.put("user", this.userName);
+        }
+        if (password != null) {
+            info.put("password", password);
+        }
+        return driver.connect(jdbcUrl, info);
+
+        // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
     }
 
     @TISExtension

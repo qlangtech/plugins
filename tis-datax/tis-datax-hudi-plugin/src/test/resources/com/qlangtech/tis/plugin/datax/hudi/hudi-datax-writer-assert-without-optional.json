@@ -40,7 +40,7 @@
     "hudiPartitionpathField": "kind",
     "hudiBatchOp": "BULK_INSERT",
     "hudiTabType": "COPY_ON_WRITE",
-    "fileType": "csv",
+    "fileType": "avro",
     "shuffleParallelism": 2,
     "dataxName": "testDataX4465",
     "writeMode": "nonConflict",

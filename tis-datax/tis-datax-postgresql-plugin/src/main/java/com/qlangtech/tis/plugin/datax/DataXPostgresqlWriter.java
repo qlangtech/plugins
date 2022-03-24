@@ -130,7 +130,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
                 DataType type = col.getType();
                 String colType = type.accept(new DataType.TypeVisitor<String>() {
                     @Override
-                    public String longType(DataType type) {
+                    public String bigInt(DataType type) {
                         return "BIGINT";
                     }
 

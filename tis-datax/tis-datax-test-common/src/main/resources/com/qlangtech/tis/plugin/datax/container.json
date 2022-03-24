@@ -67,32 +67,6 @@
     "content": [
       {
         "reader": {
-          "name": "streamreader",
-          "parameter": {
-            "column": [
-              {
-                "random": "3,4",
-                "type": "string"
-              },
-              {
-                "random": "0,0",
-                "type": "string"
-              },
-              {
-                "random": "1,2",
-                "type": "long"
-              },
-              {
-                "random": "2021050111,2021063111",
-                "type": "long"
-              },
-              {
-                "random": "4,999",
-                "type": "long"
-              }
-            ],
-            "sliceRecordCount": 30
-          }
         },
         "writer": {}
       }

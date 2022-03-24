@@ -35,7 +35,7 @@
     ],
     "dataxName": "testDataX4465",
     "fileName": "customer_order_relation",
-    "fileType": "csv",
+    "fileType": "avro",
     "hudiBatchOp": "BULK_INSERT",
     "hudiPartitionpathField": "kind",
     "hudiRecordkey": "customerregister_id",

@@ -42,7 +42,7 @@
         <spark2.version>2.4.4</spark2.version>
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
-
+        <avro.version>1.11.0</avro.version>
     </properties>
     <build>
         <resources>
@@ -51,11 +51,24 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
-
-
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-testcontainer-mysql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
 
         <!--        <dependency>-->
         <!--            <groupId>javax.servlet</groupId>-->
@@ -64,22 +77,15 @@
         <!--        </dependency>-->
 
         <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>1.10.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-            <version>2.6.7</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>com.fasterxml.jackson.dataformat</groupId>-->
+        <!--            <artifactId>jackson-dataformat-csv</artifactId>-->
+        <!--            <version>2.6.7</version>-->
+        <!--        </dependency>-->
 
 
         <dependency>
@@ -87,6 +93,12 @@
             <artifactId>tis-datax-hudi-dependency</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-logback-flume-appender</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

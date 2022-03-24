@@ -24,11 +24,9 @@ import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.cdc.RowVals;
 import com.qlangtech.plugins.incr.flink.cdc.TestRow;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -36,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.test.TISEasyMock;
+import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -75,7 +74,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return createMySqlDataSourceFactory(dataxName);
+                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -97,7 +96,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return createMySqlDataSourceFactory(dataxName);
+                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -130,7 +129,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return createMySqlDataSourceFactory(dataxName);
+                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -148,7 +147,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
                     throws MQConsumeException, InterruptedException {
-               // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+                // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
 
                 List<ISelectedTab> tabs = Collections.singletonList(tab);
 
@@ -180,7 +179,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                         cols.stream().filter((c) -> vals.notNull(c.getName())).forEach((col) -> {
                             col.type.accept(new DataType.TypeVisitor<Void>() {
                                 @Override
-                                public Void longType(DataType type) {
+                                public Void bigInt(DataType type) {
                                     try {
                                         statement.setLong(ci.incrementAndGet(), Long.parseLong(vals.getString(col.getName())));
                                     } catch (SQLException e) {
@@ -338,24 +337,4 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     }
 
 
-    protected BasicDataSourceFactory createMySqlDataSourceFactory(TargetResName dataxName) {
-        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
-        Assert.assertNotNull(mySqlV5DataSourceFactory);
-
-        Descriptor.FormData formData = new Descriptor.FormData();
-        formData.addProp("name", "mysql");
-        formData.addProp("dbName", MYSQL_CONTAINER.getDatabaseName());
-        formData.addProp("nodeDesc", MYSQL_CONTAINER.getHost());
-        formData.addProp("password", MYSQL_CONTAINER.getPassword());
-        formData.addProp("userName", MYSQL_CONTAINER.getUsername());
-        formData.addProp("port", String.valueOf(MYSQL_CONTAINER.getDatabasePort()));
-        formData.addProp("encode", "utf8");
-        formData.addProp("useCompression", "true");
-
-        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
-                = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
-        Assert.assertNotNull(parseDescribable.getInstance());
-
-        return parseDescribable.getInstance();
-    }
 }

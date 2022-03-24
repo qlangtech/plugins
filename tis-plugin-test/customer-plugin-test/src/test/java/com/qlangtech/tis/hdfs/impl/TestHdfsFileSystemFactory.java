@@ -23,6 +23,7 @@ import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.BaiscPluginTest;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.PluginStore;
 
 import java.util.List;
@@ -36,7 +37,7 @@ import java.util.List;
 public class TestHdfsFileSystemFactory extends BaiscPluginTest {
 
     public void testCreate() {
-        PluginStore pluginStore = TIS.getPluginStore(FileSystemFactory.class);
+        IPluginStore<FileSystemFactory> pluginStore = TIS.getPluginStore(FileSystemFactory.class);
         assertNotNull(pluginStore);
         Describable<FileSystemFactory> plugin = pluginStore.getPlugin();
         assertNotNull(plugin);

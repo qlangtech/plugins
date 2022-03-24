@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-10 10:51
  **/
-public class TypedPropertiesBuilder {
+public class TypedPropertiesBuilder implements IPropertiesBuilder {
     private List<String[]> props = Lists.newArrayList();
 
     public void setProperty(String key, String value) {

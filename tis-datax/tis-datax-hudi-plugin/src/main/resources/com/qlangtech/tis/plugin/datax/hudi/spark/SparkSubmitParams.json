@@ -1,10 +1,10 @@
 {
   "driverMemory": {
     "dftVal": "1G",
-    "help": "Configuration key for the Spark driver memory. the value format '1G' or '1024M'"
+    "help": "Configuration key for the Spark driver memory. the value format like '1G' or '1024M'"
   },
   "executorMemory": {
-    "dftVal": "2G",
-    "help": "Configuration key for the Spark driver memory. the value format '1G' or '1024M'"
+    "dftVal": "3G",
+    "help": "Configuration key for the Spark executor memory. the value format like '1G' or '1024M'"
   }
 }

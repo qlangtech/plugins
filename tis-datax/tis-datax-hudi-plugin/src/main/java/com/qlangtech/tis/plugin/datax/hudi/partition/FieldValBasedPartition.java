@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
@@ -46,12 +47,14 @@ public class FieldValBasedPartition extends HudiTablePartition {
     public String partitionPathField;
 
     @Override
-    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+    public void setProps(IPropertiesBuilder props, DataXHudiWriter hudiWriter) {
         super.setProps(props, hudiWriter);
         if (StringUtils.isEmpty(this.partitionPathField)) {
             throw new IllegalStateException("partitionPathField can not be empty");
         }
-        setHiveSyncPartitionProps(props, partitionPathField, "org.apache.hudi.hive.MultiPartKeysValueExtractor");
+        setHiveSyncPartitionProps(props
+                , this.partitionPathField
+                , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
     }
 
     @Override
@@ -59,7 +62,6 @@ public class FieldValBasedPartition extends HudiTablePartition {
         appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
 
     }
-
 
 
     public static List<Option> getPtCandidateFields() {

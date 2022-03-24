@@ -27,6 +27,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -39,6 +40,7 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -78,17 +80,10 @@ public class WriterTemplate {
 
         //EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
 
-        MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
+
         EasyMock.replay(processor, dataxGlobalCfg, dataXReader);
 
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
-            @Override
-            public String getTemplateContent() {
-                return dataXWriter.getTemplate();
-            }
-        };
-
-        String writerCfg = dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));
+        String writerCfg = generateWriterCfg(dataXWriter, tableMap, processor, dataXReader);
         Assert.assertNotNull(writerCfg);
         System.out.println(writerCfg);
         JsonUtil.assertJSONEqual(dataXWriter.getClass(), assertFileName, writerCfg, (message, expected, actual) -> {
@@ -101,22 +96,131 @@ public class WriterTemplate {
         EasyMock.verify(processor, dataxGlobalCfg, dataXReader);
     }
 
+    public static String generateWriterCfg(DataxWriter dataXWriter
+            , IDataxProcessor.TableMap tableMap
+            , IDataxProcessor processor) throws IOException {
+
+        IDataxReader dataxReader = new IDataxReader() {
+            @Override
+            public List<ISelectedTab> getSelectedTabs() {
+                return null;
+            }
+
+            @Override
+            public IGroupChildTaskIterator getSubTasks() {
+                return null;
+            }
+
+            @Override
+            public String getTemplate() {
+                return null;
+            }
+        };
+        return generateWriterCfg(dataXWriter, tableMap, processor, dataxReader);
+    }
+
+    private static String generateWriterCfg(DataxWriter dataXWriter
+            , IDataxProcessor.TableMap tableMap
+            , IDataxProcessor processor, IDataxReader dataXReader) throws IOException {
+        MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
+        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
+            @Override
+            public String getTemplateContent() {
+                return dataXWriter.getTemplate();
+            }
+        };
+
+        return dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));
+    }
+
+    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter
+            , Function<Configuration, Configuration>... cfgSetter) throws IllegalAccessException {
+        final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
+            @Override
+            public DataXMeta getDataxMeta() {
+                DataXMeta randomStrMeta = new DataXMeta();
+                randomStrMeta.setName("streamreader");
+                randomStrMeta.setClass("com.alibaba.datax.plugin.reader.streamreader.StreamReader");
+                return randomStrMeta;
+            }
+
+            @Override
+            public String getReaderJsonCfgContent() {
+                return "{\n" +
+                        "          \"name\": \"streamreader\",\n" +
+                        "          \"parameter\": {\n" +
+                        "            \"column\": [\n" +
+                        "              {\n" +
+                        "                \"random\": \"3,4\",\n" +
+                        "                \"type\": \"string\"\n" +
+                        "              },\n" +
+                        "              {\n" +
+                        "                \"random\": \"0,0\",\n" +
+                        "                \"type\": \"string\"\n" +
+                        "              },\n" +
+                        "              {\n" +
+                        "                \"random\": \"1,2\",\n" +
+                        "                \"type\": \"long\"\n" +
+                        "              },\n" +
+                        "              {\n" +
+                        "                \"random\": \"2021050111,2021063111\",\n" +
+                        "                \"type\": \"long\"\n" +
+                        "              },\n" +
+                        "              {\n" +
+                        "                \"random\": \"4,999\",\n" +
+                        "                \"type\": \"long\"\n" +
+                        "              }\n" +
+                        "            ],\n" +
+                        "            \"sliceRecordCount\": 30\n" +
+                        "          }\n" +
+                        "        }";
+            }
+        };
+
+        final IWriterPluginMeta writerMeta = new IWriterPluginMeta() {
+
+            @Override
+            public DataXMeta getDataxMeta() {
+//                DataXMeta randomStrMeta = new DataXMeta();
+//                randomStrMeta.setName("streamreader");
+//                randomStrMeta.setClass("com.alibaba.datax.plugin.reader.streamreader.StreamReader");
+//                return randomStrMeta;
+                return dataxWriter.getDataxMeta();
+            }
+
+            @Override
+            public Configuration getWriterJsonCfg() {
+                return IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
+                    Configuration c = Configuration.from(writerJsonInput);
+                    for (Function<Configuration, Configuration> setter : cfgSetter) {
+                        c = setter.apply(c);
+                    }
+                    return c;
+                });
+            }
+        };
+
+        realExecuteDump(readerMeta, writerMeta);
+    }
+
     /**
      * dataXWriter执行
      *
-     * @param writerJson
-     * @param dataxWriter
+     * @param
+     * @param writerMeta
      * @throws IllegalAccessException
      */
-    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter, Function<Configuration, Configuration>... cfgSetter) throws IllegalAccessException {
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+    public static void realExecuteDump(IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
+    ) throws IllegalAccessException {
+       // final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+        final JarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());
+        IDataXPluginMeta.DataXMeta readerMeta = readerPluginMeta.getDataxMeta();
         DataxExecutor.initializeClassLoader(
-                Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxWriter.getDataxMeta().getName()), uberClassLoader);
+                Sets.newHashSet("plugin.reader." + readerMeta.getName()
+                        , "plugin.writer." + writerMeta.getDataxMeta().getName()), uberClassLoader);
 
 //        Map<String, JarLoader> jarLoaderCenter = (Map<String, JarLoader>) jarLoaderCenterField.get(null);
 //        jarLoaderCenter.clear();
-//
-//
 //        jarLoaderCenter.put("plugin.reader.streamreader", uberClassLoader);
 //        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
 
@@ -128,19 +232,15 @@ public class WriterTemplate {
 //                        "class": "com.alibaba.datax.plugin.reader.streamreader.StreamReader"
 //                    }
 
-                    cfg.set("plugin.reader.streamreader.class"
-                            , "com.alibaba.datax.plugin.reader.streamreader.StreamReader");
+                    cfg.set("plugin.reader." + readerMeta.getName() + ".class", readerMeta.getImplClass());
+                    //    , "com.alibaba.datax.plugin.reader.streamreader.StreamReader");
 
-                    cfg.set("plugin.writer." + dataxWriter.getDataxMeta().getName() + ".class"
-                            , dataxWriter.getDataxMeta().getImplClass());
+                    cfg.set("plugin.writer." + writerMeta.getDataxMeta().getName() + ".class"
+                            , writerMeta.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].writer" //
-                            , IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
-                                Configuration c = Configuration.from(writerJsonInput);
-                                for (Function<Configuration, Configuration> setter : cfgSetter) {
-                                    c = setter.apply(c);
-                                }
-                                return c;
-                            }));
+                            , writerMeta.getWriterJsonCfg());
+
+                    cfg.set("job.content[0].reader", Configuration.from(readerPluginMeta.getReaderJsonCfgContent()));
 
                     return cfg;
                 });

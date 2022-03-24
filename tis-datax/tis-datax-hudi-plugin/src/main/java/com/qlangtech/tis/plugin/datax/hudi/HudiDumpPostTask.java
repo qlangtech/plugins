@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax.hudi;
 
-import com.alibaba.datax.plugin.writer.hudi.CSVWriter;
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.config.hive.HiveUserToken;
@@ -179,7 +178,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
 
         handle.addAppArgs("--table-type", this.hudiWriter.getHudiTableType().getValue()
-                , "--source-class", "org.apache.hudi.utilities.sources.CsvDFSSource"
+                , "--source-class", "org.apache.hudi.utilities.sources.AvroDFSSource"
                 , "--source-ordering-field", hudiTab.sourceOrderingField
                 , "--target-base-path", String.valueOf(HudiTableMeta.getHudiDataDir(fs, dumpDir))
                 , "--target-table", this.hudiTab.getName() + "/" + hudiWriter.dataXName
@@ -232,7 +231,10 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     private void writeSourceProps(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) {
 
 
-        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(fs, this.hudiTab.getName(), dumpDir, this.hudiTab);
+        IPath sourceSchemaPath = HudiTableMeta.getTableSourceSchema(fs, dumpDir);// HudiTableMeta.createFsSourceSchema(fs, this.hudiTab.getName(), dumpDir, this.hudiTab);
+        if (!fs.exists(sourceSchemaPath)) {
+            throw new IllegalStateException("sourceSchemaPath:" + sourceSchemaPath.getName() + " is not exist");
+        }
         IPath tabDumpParentPath = createTabDumpParentPath(fs, dumpDir);
         // 写csv文件属性元数据文件
 
@@ -253,15 +255,15 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             // BasicFSWriter writerPlugin = this.getWriterPlugin();
 //https://spark.apache.org/docs/3.2.1/sql-data-sources-csv.html
             props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(tabDumpParentPath));
-            props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(CSVWriter.CSV_FILE_USE_HEADER));
-            props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSVWriter.CSV_Column_Separator));
-            props.setProperty("hoodie.deltastreamer.csv.nullValue", CSVWriter.CSV_NULL_VALUE);
-            props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSVWriter.CSV_ESCAPE_CHAR));
+//            props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(CSVWriter.CSV_FILE_USE_HEADER));
+//            props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSVWriter.CSV_Column_Separator));
+//            props.setProperty("hoodie.deltastreamer.csv.nullValue", CSVWriter.CSV_NULL_VALUE);
+//            props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSVWriter.CSV_ESCAPE_CHAR));
             //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
 
 
-            props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(fsSourceSchemaPath));
-            props.setProperty("hoodie.deltastreamer.schemaprovider.target.schema.file", String.valueOf(fsSourceSchemaPath));
+            props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(sourceSchemaPath));
+            props.setProperty("hoodie.deltastreamer.schemaprovider.target.schema.file", String.valueOf(sourceSchemaPath));
 
             // please reference: DataSourceWriteOptions , HiveSyncConfig
             final IHiveConnGetter hiveMeta = this.hudiWriter.getHiveConnMeta();

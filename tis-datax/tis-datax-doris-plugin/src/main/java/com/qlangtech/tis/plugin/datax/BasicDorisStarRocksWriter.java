@@ -181,7 +181,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 DataType type = col.getType();
                 return type.accept(new DataType.TypeVisitor<String>() {
                     @Override
-                    public String longType(DataType type) {
+                    public String bigInt(DataType type) {
                         return "BIGINT";
                     }
 

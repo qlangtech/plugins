@@ -135,7 +135,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
     protected String getHdfsSubPath() {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return this.dumpTable.getNameWithPath() + "/" + this.getDumpTimeStamp();
+        return this.dumpTable.getNameWithPath() + "/" + getDumpTimeStamp();
     }
 
     protected EntityName createDumpTable() {
@@ -231,7 +231,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
                                 return new BindHiveTableTool.HiveBindConfig(colsExcludePartitionCols, tabDumpParentPath);
                             }
                         })
-                        , this.getDumpTimeStamp() //
+                        , getDumpTimeStamp() //
                         , new ITaskContext() {
                             @Override
                             public Connection getObj() {

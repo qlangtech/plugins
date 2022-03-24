@@ -8,4 +8,12 @@
 
 如通过Flink-CDC Snapshot导入全量历史数据，由于一个checkpoint周期内的数据量巨大，导致执行checkpoint超时，可以通过限流的方式避免checkpoint超时
 
+## scriptType
+
+Hudi Flink实时同步脚本支持两种类型：
+
+1. SQL
+
+2. StreamAPI
+
 

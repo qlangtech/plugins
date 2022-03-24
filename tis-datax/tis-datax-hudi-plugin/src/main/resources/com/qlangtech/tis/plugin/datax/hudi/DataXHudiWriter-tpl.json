@@ -1,7 +1,7 @@
 {
   "name": "hudiwriter",
   "parameter": {
-    "fileType":   "csv",
+    "fileType":   "avro",
     "fileName":   "$writer.tableName",
     "dataxName" : "$writer.dataXName",
     #parse("com/qlangtech/tis/plugin/datax/hdfs/hdfs-cols.vm"),

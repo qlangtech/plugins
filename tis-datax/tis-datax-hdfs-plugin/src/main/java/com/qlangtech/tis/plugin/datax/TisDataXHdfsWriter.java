@@ -59,7 +59,7 @@ public class TisDataXHdfsWriter extends Writer {
 
 
     public static class Task extends HdfsWriter.Task {
-        private BasicFSWriter writerPlugin;
+        protected BasicFSWriter writerPlugin;
 
         @Override
         public void init() {
@@ -76,6 +76,12 @@ public class TisDataXHdfsWriter extends Writer {
         @Override
         protected HdfsHelper createHdfsHelper() {
             return BasicHdfsWriterJob.createHdfsHelper(this.getPluginJobConf(), this.writerPlugin);
+        }
+
+        @Override
+        protected void avroFileStartWrite(RecordReceiver lineReceiver
+                , Configuration writerSliceConfig, String fileName, TaskPluginCollector taskPluginCollector) {
+            throw new UnsupportedOperationException();
         }
     }
 

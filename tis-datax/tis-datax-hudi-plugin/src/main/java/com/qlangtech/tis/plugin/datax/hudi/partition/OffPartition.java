@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
+import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -37,14 +37,13 @@ import java.util.List;
 public class OffPartition extends HudiTablePartition {
 
     @Override
-    public void setProps(TypedPropertiesBuilder props, DataXHudiWriter writer) {
+    public void setProps(IPropertiesBuilder props, DataXHudiWriter writer) {
         //  props.setProperty("hoodie.datasource.write.partitionpath.field", null);
         // HoodieWriteConfig.KEYGENERATOR_TYPE
         // @see HoodieSparkKeyGeneratorFactory l78
         setKeyGeneratorType(props, "NON_PARTITION");
-        setHiveSyncPartitionProps(props,null,"org.apache.hudi.hive.NonPartitionedExtractor" );
+        setHiveSyncPartitionProps(props, null, "org.apache.hudi.hive.NonPartitionedExtractor");
     }
-
 
 
     @Override

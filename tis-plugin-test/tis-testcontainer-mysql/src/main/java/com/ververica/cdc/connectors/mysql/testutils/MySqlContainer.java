@@ -18,6 +18,12 @@
 
 package com.ververica.cdc.connectors.mysql.testutils;
 
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.realtime.utils.NetUtils;
+import org.junit.Assert;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
@@ -51,6 +57,30 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     public MySqlContainer(String tag) {
         super(IMAGE + ":" + tag);
         addExposedPort(MYSQL_PORT);
+    }
+
+    public static BasicDataSourceFactory createMySqlDataSourceFactory(TargetResName dataxName, MySqlContainer mySqlContainer) {
+        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
+        Assert.assertNotNull(mySqlV5DataSourceFactory);
+
+        Descriptor.FormData formData = new Descriptor.FormData();
+        formData.addProp("name", "mysql");
+        formData.addProp("dbName", mySqlContainer.getDatabaseName());
+       // formData.addProp("nodeDesc", mySqlContainer.getHost());
+
+        formData.addProp("nodeDesc", NetUtils.getHost());
+
+        formData.addProp("password", mySqlContainer.getPassword());
+        formData.addProp("userName", mySqlContainer.getUsername());
+        formData.addProp("port", String.valueOf(mySqlContainer.getDatabasePort()));
+        formData.addProp("encode", "utf8");
+        formData.addProp("useCompression", "true");
+
+        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
+                = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
+        Assert.assertNotNull(parseDescribable.getInstance());
+
+        return parseDescribable.getInstance();
     }
 
     @Override

@@ -48,6 +48,12 @@
             <artifactId>tis-base-test</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-realtime-flink</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.apache.hudi</groupId>

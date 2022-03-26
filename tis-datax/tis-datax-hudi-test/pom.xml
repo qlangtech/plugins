@@ -14,67 +14,54 @@
   ~   distributed under the License is distributed on an "AS IS" BASIS,
   ~   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~   See the License for the specific language governing permissions and
-  ~   limitations under the License.
+  ~   limitations under the License.++++++++++
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>tis-incr</artifactId>
+        <artifactId>tis-datax</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <version>3.5.0</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <packaging>tpi</packaging>
-    <artifactId>tis-sink-elasticsearch7-plugin</artifactId>
-
+    <groupId>com.qlangtech.tis.plugins</groupId>
+    <artifactId>tis-datax-hudi-test</artifactId>
 
     <dependencies>
-
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-sink-elasticsearch7</artifactId>
+            <artifactId>tis-datax-test-common</artifactId>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hudi-plugin</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-testcontainer-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-dependency</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-elasticsearch-plugin</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-realtime-flink</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-base-test</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-incr-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-scala-compiler</artifactId>
-        </dependency>
-
     </dependencies>
 
 

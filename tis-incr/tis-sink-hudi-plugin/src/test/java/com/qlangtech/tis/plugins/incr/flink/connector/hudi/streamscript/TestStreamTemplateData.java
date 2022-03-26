@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.connector.hudi;
+package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;

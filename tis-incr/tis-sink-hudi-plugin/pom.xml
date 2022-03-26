@@ -43,6 +43,14 @@
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hudi-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>
@@ -59,26 +67,30 @@
             <groupId>org.apache.hudi</groupId>
             <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>
             <version>${hudi.version}</version>
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.esotericsoftware.kryo</groupId>-->
-<!--                    <artifactId>kryo</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
+            <!--            <exclusions>-->
+            <!--                <exclusion>-->
+            <!--                    <groupId>com.esotericsoftware.kryo</groupId>-->
+            <!--                    <artifactId>kryo</artifactId>-->
+            <!--                </exclusion>-->
+            <!--            </exclusions>-->
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-scala-compiler</artifactId>
         </dependency>
 
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-sink-hudi-flink-bundle</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>org.apache.hudi</groupId>-->
-<!--                    <artifactId>hudi-flink-bundle_${scala.binary.version}</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-sink-hudi-flink-bundle</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.hudi</groupId>-->
+        <!--                    <artifactId>hudi-flink-bundle_${scala.binary.version}</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
 
     </dependencies>
 

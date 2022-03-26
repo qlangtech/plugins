@@ -12,8 +12,8 @@
 
 Hudi Flink实时同步脚本支持两种类型：
 
-1. SQL
+1. **SQL**:
 
-2. StreamAPI
+2. **StreamAPI**: HoodieFlinkStreamer
 
 

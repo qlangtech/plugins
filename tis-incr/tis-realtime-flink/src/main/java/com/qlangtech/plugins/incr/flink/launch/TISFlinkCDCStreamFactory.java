@@ -21,8 +21,6 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
-import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
-import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
@@ -118,10 +116,6 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         return flinkTaskNodeController;
     }
 
-    @Override
-    public ICompileAndPackage getCompileAndPackageManager() {
-        return new CompileAndPackage();
-    }
 
     // private BasicFlinkSourceHandle createTableStreamHandle() {
     //   return new TISFlinkSourceHandle();

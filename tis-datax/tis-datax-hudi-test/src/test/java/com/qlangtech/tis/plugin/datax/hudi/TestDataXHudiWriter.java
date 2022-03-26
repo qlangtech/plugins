@@ -21,15 +21,12 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.spark.ISparkConnGetter;
-import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -46,7 +43,6 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.IReaderPluginMeta;
@@ -55,7 +51,6 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
-import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -64,7 +59,6 @@ import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
-import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
@@ -90,8 +84,6 @@ public class TestDataXHudiWriter {
 
     // private static final String targetTableName ="";
     private static final Logger logger = LoggerFactory.getLogger(TestDataXHudiWriter.class);
-    public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
-    static final String cfgPathParameter = "parameter";
 
     @ClassRule
     public static TemporaryFolder folder = new TemporaryFolder();
@@ -111,7 +103,6 @@ public class TestDataXHudiWriter {
                             .withUsername("flinkuser")
                             .withPassword("flinkpw")
                             .withLogConsumer(new TISLoggerConsumer(logger));
-    final static long timestamp = 20220311135455l;
 
     @BeforeClass
     public static void start() throws Exception {
@@ -123,7 +114,7 @@ public class TestDataXHudiWriter {
         logger.info("Containers are started.");
 
 
-        System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(timestamp));
+        System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(HudiWriter.timestamp));
     }
 
     @Test
@@ -181,7 +172,7 @@ public class TestDataXHudiWriter {
         tabs = dataxReader.getSelectedTabs();
 
         IExecChainContext execContext = EasyMock.createMock("execContext", IExecChainContext.class);
-        EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(timestamp)).anyTimes();
+        EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;
         File dataxCfgDir = caseFolder.newFolder("dataxCfgDir");
@@ -199,7 +190,7 @@ public class TestDataXHudiWriter {
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
 
 
-        DataXHudiWriter dataxWriter = createDataXHudiWriter(Optional.empty());
+        DataXHudiWriter dataxWriter = HudiTest.createDataXHudiWriter(Optional.empty());
         // HudiTest hudiTest = createDataXWriter();
         // save the writer
         DataxWriter.getPluginStore(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName())
@@ -224,7 +215,7 @@ public class TestDataXHudiWriter {
             }
 
             @Override
-            public DataXMeta getDataxMeta() {
+            public IDataXPluginMeta.DataXMeta getDataxMeta() {
                 return dataxReader.getDataxMeta();
             }
         };
@@ -234,7 +225,7 @@ public class TestDataXHudiWriter {
 
         IWriterPluginMeta writerMeta = new IWriterPluginMeta() {
             @Override
-            public DataXMeta getDataxMeta() {
+            public IDataXPluginMeta.DataXMeta getDataxMeta() {
                 return dataxWriter.getDataxMeta();
             }
 
@@ -277,7 +268,7 @@ public class TestDataXHudiWriter {
         MDC.put(TISCollectionUtils.KEY_COLLECTION
                 , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
         MDC.put(IParamContext.KEY_TASK_ID, "123");
-        HudiTest houseTest = createDataXWriter();
+        HudiTest houseTest = HudiTest.createDataXWriter();
 
 
         // houseTest.writer.autoCreateTable = true;
@@ -294,7 +285,7 @@ public class TestDataXHudiWriter {
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
             DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs();
-            genCfg.setGenTime(timestamp);
+            genCfg.setGenTime(HudiWriter.timestamp);
             genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
                     , Lists.newArrayList(WriterTemplate.TAB_customer_order_relation + "_0")));
             genCfg.write2GenFile(dataXCfgDir);
@@ -311,7 +302,7 @@ public class TestDataXHudiWriter {
 
 
             IExecChainContext execContext = EasyMock.mock("execContext", IExecChainContext.class);
-            EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(timestamp)).anyTimes();
+            EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
 
 
             EasyMock.replay(dataXProcessor, execContext);
@@ -320,7 +311,7 @@ public class TestDataXHudiWriter {
             Assert.assertNotNull("postTask can not be null", preExecuteTask);
             preExecuteTask.run();
 
-            WriterTemplate.realExecuteDump(hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
+            WriterTemplate.realExecuteDump(HudiTest.hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
                 //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
                 return cfg;
             });
@@ -351,7 +342,7 @@ public class TestDataXHudiWriter {
     @Test
     public void testConfigGenerate() throws Exception {
 
-        HudiTest forTest = createDataXWriter();
+        HudiTest forTest = HudiTest.createDataXWriter();
         WriterTemplate.valiateCfgGenerate("hudi-datax-writer-assert.json", forTest.writer, forTest.tableMap);
     }
 
@@ -413,118 +404,7 @@ public class TestDataXHudiWriter {
 //        EasyMock.verify(dataXProcessor, fsFactory, fs);
 //    }
 
-    private static class HudiTest {
-        private final DataXHudiWriter writer;
-        private final IDataxProcessor.TableMap tableMap;
-        private final HudiSelectedTab tab;
-
-        public HudiTest(DataXHudiWriter writer, IDataxProcessor.TableMap tableMap, HudiSelectedTab tab) {
-            this.writer = writer;
-            this.tableMap = tableMap;
-            this.tab = tab;
-        }
-    }
-
-    private static HudiTest createDataXWriter() {
-        return createDataXWriter(Optional.empty());
-    }
-
-    private static HudiTest createDataXWriter(Optional<FileSystemFactory> fsFactory) {
-
-        DataXHudiWriter writer = createDataXHudiWriter(fsFactory);
-
-
-        List<HdfsColMeta> colsMeta
-                = HdfsColMeta.getColsMeta(Configuration.from(IOUtils.loadResourceFromClasspath(writer.getClass()
-                , hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
-        HudiSelectedTab tab = new HudiSelectedTab() {
-            @Override
-            public List<ColMeta> getCols() {
-                return colsMeta.stream().map((c) -> {
-                    ColMeta col = new ColMeta();
-                    col.setName(c.getName());
-                    col.setPk(c.pk);
-                    col.setType(c.type);
-                    col.setNullable(c.nullable);
-                    return col;
-                }).collect(Collectors.toList());
-            }
-        };
-        tab.name = WriterTemplate.TAB_customer_order_relation;
-        tab.partition = new OffPartition();
-        tab.sourceOrderingField = "last_ver";
-        tab.recordField = "customerregister_id";
-
-
-        return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(tab)), tab);
-    }
-
-    @NotNull
-    private static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
-        final DefaultSparkConnGetter sparkConnGetter = new DefaultSparkConnGetter();
-        sparkConnGetter.name = "default";
-        sparkConnGetter.master = "spark://sparkmaster:7077";
-
-        DataXHudiWriter writer = new DataXHudiWriter() {
-            @Override
-            public Class<?> getOwnerClass() {
-                return DataXHudiWriter.class;
-            }
-
-            @Override
-            public IHiveConnGetter getHiveConnMeta() {
-                return HdfsFileSystemFactoryTestUtils.createHiveConnGetter();
-            }
-
-            @Override
-            public ISparkConnGetter getSparkConnGetter() {
-                return sparkConnGetter;
-            }
-
-            @Override
-            public FileSystemFactory getFs() {
-                return fsFactory.isPresent() ? fsFactory.get() : HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
-            }
-        };
-        writer.template = DataXHudiWriter.getDftTemplate();
-        writer.fsName = HdfsFileSystemFactoryTestUtils.FS_NAME;
-        writer.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));
-        writer.tabType = HudiWriteTabType.COW.getValue();
-        writer.batchOp = BatchOpMode.BULK_INSERT.getValue();
-        writer.shuffleParallelism = 3;
-        writer.partitionedBy = "pt";
-        SparkSubmitParams sparkSubmitParams = new SparkSubmitParams();
-        sparkSubmitParams.driverMemory = "1G";
-        sparkSubmitParams.executorMemory = "2G";
-        writer.sparkSubmitParam = sparkSubmitParams;
-
-
-//        writer.batchByteSize = 3456;
-//        writer.batchSize = 9527;
-//        writer.dbName = dbName;
-        writer.writeMode = "append";
-        // writer.autoCreateTable = true;
-//        writer.postSql = "drop table @table";
-//        writer.preSql = "drop table @table";
-
-        // writer.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
-        //  writer.dbName = dbName;
-
-//        HudiSelectedTab hudiTab = new HudiSelectedTab() {
-//            @Override
-//            public List<ColMeta> getCols() {
-//                return WriterTemplate.createColMetas();
-//            }
-//        };
-//        //hudiTab.partitionPathField = WriterTemplate.kind;
-//        hudiTab.recordField = WriterTemplate.customerregisterId;
-//        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
-//        hudiTab.setWhere("1=1");
-//        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
-        return writer;
-    }
-
-//    @NotNull
+    //    @NotNull
 //    private static FileSystemFactory createFileSystemFactory() {
 //        HdfsFileSystemFactory hdfsFactory = new HdfsFileSystemFactory();
 //        hdfsFactory.name = FS_NAME;

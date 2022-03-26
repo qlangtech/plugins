@@ -39,7 +39,7 @@
     <artifactId>tis-datax-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
-        <spark2.version>2.4.4</spark2.version>
+
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
         <avro.version>1.11.0</avro.version>
@@ -56,18 +56,24 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-launcher_${scala.binary.version}</artifactId>
+            <version>${spark2.version}</version>
+        </dependency>
+
+
+        <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>${avro.version}</version>
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-testcontainer-mysql</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
+
 
 
         <!--        <dependency>-->
@@ -113,25 +119,9 @@
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-plugin</artifactId>
-        </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-test-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-hadoop-rpc</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>netty</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -152,11 +142,7 @@
         <!--            <version>${spark2.version}</version>-->
         <!--        </dependency>-->
 
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-launcher_${scala.binary.version}</artifactId>
-            <version>${spark2.version}</version>
-        </dependency>
+
         <!--        <dependency>-->
         <!--            <groupId>org.apache.hive</groupId>-->
         <!--            <artifactId>hive-exec</artifactId>-->

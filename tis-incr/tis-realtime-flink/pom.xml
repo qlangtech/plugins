@@ -65,11 +65,11 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-scala-compiler</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-scala-compiler</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.easymock</groupId>

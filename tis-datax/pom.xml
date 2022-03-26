@@ -36,7 +36,9 @@
         <url>https://github.com/qlangtech/plugins/tree/master/tis-datax</url>
         <tag>HEAD</tag>
     </scm>
-
+    <properties>
+        <spark2.version>2.4.4</spark2.version>
+    </properties>
     <modules>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-common-rdbms-plugin</module>
@@ -59,9 +61,10 @@
         <module>tis-ds-mysql-v8-plugin</module>
         <module>tis-datax-local-executor</module>
         <module>tis-datax-hudi-dependency</module>
+        <module>tis-datax-hudi-test</module>
         <module>tis-datax-hudi-plugin</module>
         <module>tis-datax-hdfs-plugin</module>
-
+        <module>tis-datax-hudi-common</module>
     </modules>
 
     <dependencyManagement>

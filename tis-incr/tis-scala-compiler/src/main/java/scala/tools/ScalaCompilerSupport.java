@@ -348,10 +348,7 @@ public class ScalaCompilerSupport {
      * @return
      */
     public static Set<String> getStreamScriptCompilerClasspath() {
-        File tisFlinkDependency = Config.getPluginLibDir("tis-flink-dependency");// new File(Config.getDataDir(), Config.LIB_PLUGINS_PATH + "/tis-flink-dependency/WEB-INF/lib");
-//        if (!tisFlinkDependency.exists() || tisFlinkDependency.isFile()) {
-//            throw new IllegalStateException("dir tisFlinkDependency is illegal:" + tisFlinkDependency.getAbsolutePath());
-//        }
+        File tisFlinkDependency = Config.getPluginLibDir("tis-flink-dependency");
         final String pluginRealtimeFlink = "tis-realtime-flink";
         File tisRealtimeFlinkRootDir = new File(Config.getDataDir(), Config.LIB_PLUGINS_PATH + "/" + pluginRealtimeFlink);
         if (!tisRealtimeFlinkRootDir.exists()) {

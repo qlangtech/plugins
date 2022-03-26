@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -364,6 +365,10 @@ public abstract class CUDCDCTestSuit {
             @Override
             public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
                 return Collections.emptyMap();
+            }
+            @Override
+            public ICompileAndPackage getCompileAndPackageManager() {
+                throw new UnsupportedOperationException();
             }
         };
 

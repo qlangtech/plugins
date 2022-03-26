@@ -1,45 +1,44 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
-import com.qlangtech.tis.sql.parser.stream.generate.MergeData;
 import com.qlangtech.tis.util.HeteroEnum;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -83,14 +82,27 @@ public class TISFlinkCDCStart {
     }
 
     private static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
-        String streamSourceHandlerClass
+        final String streamSourceHandlerClass
                 = "com.qlangtech.tis.realtime.transfer." + dataxName + "." + UnderlineUtils.getJavaName(dataxName) + "SourceHandle";
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        //logger.info("current classLoader:{}", classLoader.getClass().getName());
+
+//        ExtensionList<BasicFlinkSourceHandle> flinkSourceHandles = TIS.get().getExtensionList(BasicFlinkSourceHandle.class);
+//        Optional<BasicFlinkSourceHandle> handle = flinkSourceHandles.stream().findFirst();
+//        if (!handle.isPresent()) {
+//            throw new IllegalStateException("dataxName:" + dataxName
+//                    + " relevant " + BasicFlinkSourceHandle.class.getSimpleName() + " is not present");
+//        }
+//
+//        return handle.get();
         try {
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            // Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
             Class<?> aClass = Class.forName(streamSourceHandlerClass, true, classLoader);
             return (BasicFlinkSourceHandle) aClass.newInstance();
         } catch (Exception e) {
             throw new RuntimeException(streamSourceHandlerClass, e);
+        } finally {
+            //Thread.currentThread().setContextClassLoader(classLoader);
         }
     }
 
@@ -102,7 +114,6 @@ public class TISFlinkCDCStart {
             throw new IllegalStateException("tableStreamHandle has not been instantiated");
         }
         // ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
-
 
 
 //        IPluginContext pluginContext = IPluginContext.namedContext(dataxName.getName());
@@ -117,7 +128,7 @@ public class TISFlinkCDCStart {
 
         tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataxName.getName()));
 
-       // List<MQListenerFactory> mqFactories = HeteroEnum.MQ.getPlugins(pluginContext, null);
+        // List<MQListenerFactory> mqFactories = HeteroEnum.MQ.getPlugins(pluginContext, null);
         MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataxName.getName());
         mqFactory.setConsumerHandle(tableStreamHandle);
 //        for (MQListenerFactory factory : mqFactories) {

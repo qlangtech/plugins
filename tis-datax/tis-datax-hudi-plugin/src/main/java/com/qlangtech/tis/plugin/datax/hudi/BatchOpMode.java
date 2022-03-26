@@ -19,21 +19,23 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hudi.common.model.WriteOperationType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-05 07:00
  **/
 public enum BatchOpMode {
-    UPSERT("UPSERT", WriteOperationType.UPSERT) //
-    , INSERT("INSERT", WriteOperationType.INSERT) //
-    , BULK_INSERT("BULK_INSERT", WriteOperationType.BULK_INSERT);
+    // WriteOperationType.UPSERT
+    // WriteOperationType.INSERT
+    // WriteOperationType.BULK_INSERT
+    UPSERT("UPSERT", "upsert") //
+    , INSERT("INSERT", "insert") //
+    , BULK_INSERT("BULK_INSERT", "bulk_insert");
 
     private final String value;
-    public final WriteOperationType hudiType;
+    public final String hudiType;
 
-    private BatchOpMode(String value, WriteOperationType hudiType) {
+    private BatchOpMode(String value, String hudiType) {
         this.value = value;
         this.hudiType = hudiType;
     }

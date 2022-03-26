@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.clickhouse;
 
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -186,6 +188,10 @@ public class ClickHouseSinkFactory extends TISSinkFactory {
         return sinkFuncs;
     }
 
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return new CompileAndPackage();
+    }
 
     @TISExtension
     public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {

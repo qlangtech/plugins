@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
@@ -110,6 +111,11 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
             @Override
             public <SinkFunc> Map<IDataxProcessor.TableAlias, SinkFunc> createSinkFunction(IDataxProcessor dataxProcessor) {
                 return Collections.emptyMap();
+            }
+
+            @Override
+            public ICompileAndPackage getCompileAndPackageManager() {
+                throw new UnsupportedOperationException();
             }
         };
     }

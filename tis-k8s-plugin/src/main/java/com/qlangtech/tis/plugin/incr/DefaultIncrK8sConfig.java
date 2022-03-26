@@ -52,11 +52,6 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
     }
 
     @Override
-    public ICompileAndPackage getCompileAndPackageManager() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public <StreamExecutionEnvironment> StreamExecutionEnvironment createStreamExecutionEnvironment() {
         throw new UnsupportedOperationException();
     }

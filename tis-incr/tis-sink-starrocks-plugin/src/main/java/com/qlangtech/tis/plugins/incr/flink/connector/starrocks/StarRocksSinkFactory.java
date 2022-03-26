@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -120,6 +122,10 @@ public class StarRocksSinkFactory extends TISSinkFactory {
         return StringUtils.EMPTY;
     }
 
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return new CompileAndPackage();
+    }
 
     @Override
     public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {

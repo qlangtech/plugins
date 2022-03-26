@@ -22,6 +22,8 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -30,6 +32,7 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellEvaluate;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -110,7 +113,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     }
 
     public static DataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
-        return (DataXHudiWriter) DataxWriter.getPluginStore(null, sink.dataXName).getPlugin();
+        return (DataXHudiWriter) DataxWriter.load(null, sink.dataXName);
     }
 
     @Override
@@ -201,6 +204,15 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     public IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
         return getStreamTableCreator().decorateMergeData(mergeData);
     }
+
+
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return new CompileAndPackage(Lists.newArrayList(
+                Config.getPluginLibDir("tis-sink-hudi-plugin").getAbsolutePath() + "/*"
+                , Config.getPluginLibDir("tis-datax-hudi-plugin").getAbsolutePath() + "/*"));
+    }
+
 
     /**
      * ------------------------------------------------------------------------------

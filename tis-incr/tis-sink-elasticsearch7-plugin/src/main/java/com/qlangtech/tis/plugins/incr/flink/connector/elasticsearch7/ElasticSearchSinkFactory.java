@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 
 import com.qlangtech.org.apache.http.HttpHost;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -204,6 +206,11 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
             //throwable.printStackTrace();
             logger.error(throwable.getMessage(), throwable);
         }
+    }
+
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return new CompileAndPackage();
     }
 
     private static class DefaultElasticsearchSinkFunction implements ElasticsearchSinkFunction<DTO>, Serializable {

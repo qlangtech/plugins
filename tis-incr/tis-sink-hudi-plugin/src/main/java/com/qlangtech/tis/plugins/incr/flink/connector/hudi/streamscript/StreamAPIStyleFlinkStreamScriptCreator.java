@@ -47,7 +47,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
 
     @Override
     public IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
-        return null;
+        return new HudiStreamTemplateData(mergeData);
     }
 
     public class HudiStreamTemplateData extends AdapterStreamTemplateData {
@@ -56,7 +56,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
         }
 
         public String getFlinkStreamerConfig(String tableName) {
-            BlockScriptBuffer script = new BlockScriptBuffer();
+            BlockScriptBuffer script = new BlockScriptBuffer(BlockScriptBuffer.INDENT_STEP);
             // Pair<HudiSelectedTab, HudiTableMeta> tableMeta = hudiSinkFactory.getTableMeta(tableName);
             createStreamerConfig(tableName, script, hudiSinkFactory);
             return script.toString();
@@ -74,12 +74,13 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
         ITISFileSystem fs = hudiWriter.getFs().getFileSystem();
         IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, sinkFuncFactory.dumpTimeStamp, hiveMeta);
         // ITISFileSystem fs, IHiveConnGetter hiveConn, String tabName, String dumpTimeStamp
+
         script.appendLine("// table "+tabName+" relevant Flink config");
         script.appendLine("cfg.sourceAvroSchemaPath = %s", String.valueOf(HudiTableMeta.getTableSourceSchema(fs, dumpDir)));
         script.appendLine("cfg.targetBasePath = %s", String.valueOf(HudiTableMeta.getHudiDataDir(fs, dumpDir)));
         script.appendLine("cfg.targetTableName = %s", tabName);
         script.appendLine("cfg.tableType = %s", hudiWriter.getHudiTableType().getValue());
-        script.appendLine("cfg.operation = BatchOpMode.parse(%s).hudiType ", BatchOpMode.parse(hudiWriter.batchOp).hudiType);
+        script.appendLine("cfg.operation = %s ", BatchOpMode.parse(hudiWriter.batchOp).hudiType);
         script.appendLine("cfg.preCombine = true");
         script.appendLine("cfg.sourceOrderingField = %s", hudiTab.sourceOrderingField);
         script.appendLine("cfg.recordKeyField = %s", hudiTab.recordField);

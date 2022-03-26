@@ -1,19 +1,19 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Licensed to the Apache Software Foundation (ASF) under one
+ *   or more contributor license agreements.  See the NOTICE file
+ *   distributed with this work for additional information
+ *   regarding copyright ownership.  The ASF licenses this file
+ *   to you under the Apache License, Version 2.0 (the
+ *   "License"); you may not use this file except in compliance
+ *   with the License.  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.hudi;
@@ -28,9 +28,11 @@ import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
@@ -164,13 +166,13 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements IRewriteSuFormProperties {
+    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements DataxWriter.IRewriteSuFormProperties {
         private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
-            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+            this.registerSelectOptions(BasicFSWriter.KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
 
@@ -219,7 +221,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             Class<? extends Describable> clazz
                     = (Class<? extends Describable>) DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
             Descriptor newSubDescriptor = TIS.get().getDescriptor(clazz);
-            rewriteSubFormProperties = SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), clazz)), clazz, newSubDescriptor, subformProps);
+            rewriteSubFormProperties = SuFormProperties.copy(Descriptor.filterFieldProp(Descriptor.buildPropertyTypes(Optional.of(newSubDescriptor), clazz)), clazz, newSubDescriptor, subformProps);
 
             return rewriteSubFormProperties;
         }
@@ -262,8 +264,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         @Override
-        protected EndType getEndType() {
-            return EndType.Hudi;
+        protected IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.Hudi;
         }
 
         @Override

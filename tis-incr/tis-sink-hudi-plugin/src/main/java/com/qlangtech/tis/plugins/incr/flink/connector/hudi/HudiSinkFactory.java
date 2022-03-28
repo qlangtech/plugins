@@ -30,6 +30,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellEvaluate;
 import com.qlangtech.tis.manage.common.Config;
@@ -208,6 +209,9 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
+
+        PluginWrapper.Dependency();
+
         return new CompileAndPackage(Lists.newArrayList(
                 Config.getPluginLibDir("tis-sink-hudi-plugin").getAbsolutePath() + "/*"
                 , Config.getPluginLibDir("tis-datax-hudi-plugin").getAbsolutePath() + "/*"));

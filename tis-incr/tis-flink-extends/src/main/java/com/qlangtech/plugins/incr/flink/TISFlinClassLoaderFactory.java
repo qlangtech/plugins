@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.PluginManager;
+import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.ComponentMeta;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
@@ -38,15 +40,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 import static org.apache.flink.util.FlinkUserCodeClassLoader.NOOP_EXCEPTION_HANDLER;
 
@@ -71,6 +80,9 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //        }
 //    }
 
+    public static void main(String[] args) throws Exception {
+
+    }
 
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildClientLoaderFactory(
@@ -78,16 +90,70 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             , String[] alwaysParentFirstPatterns
             , @Nullable Consumer<Throwable> exceptionHander, boolean checkClassLoaderLeak) {
         this.makeDataDirUseable();
-        ClassLoader parentClassLoader = TIS.get().getPluginManager().uberClassLoader;
+
+        PluginManager pluginManager = TIS.get().getPluginManager();
+
 
         return (libraryURLs) -> {
-            return FlinkUserCodeClassLoaders.create(
-                    classLoaderResolveOrder,
-                    libraryURLs,
-                    parentClassLoader,
-                    alwaysParentFirstPatterns,
-                    NOOP_EXCEPTION_HANDLER,
-                    checkClassLoaderLeak);
+            logger.info("create Flink app classloader:{},resolveOrder:{}"
+                    , Arrays.stream(libraryURLs).map((url) -> String.valueOf(url)).collect(Collectors.joining(","))
+                    , classLoaderResolveOrder);
+            try {
+                //
+                File appPluginDir = null;
+                for (URL cp : libraryURLs) {
+                    // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
+
+                    JarFile jar = new JarFile(new File(cp.toURI()));
+                    Manifest manifest = jar.getManifest();
+
+                    String tisAppName = getTisAppName(cp, manifest);
+                    String entryPrefix = tisAppName + "/";
+
+                    File pluginLibDir = Config.getPluginLibDir("flink/" + tisAppName);
+                    File webInf = pluginLibDir.getParentFile();
+                    FileUtils.forceMkdir(webInf);
+                    File classDir = new File(webInf, "classes");
+                    appPluginDir = webInf.getParentFile();
+                    AtomicInteger appRelevantResCount = new AtomicInteger();
+                    jar.stream().forEach((entry) -> {
+                        if (entry.isDirectory() || !StringUtils.startsWith(entry.getName(), entryPrefix)) {
+                            return;
+                        }
+                        try (InputStream entryStream = jar.getInputStream(entry)) {
+                            try (OutputStream out = FileUtils.openOutputStream(
+                                    new File(classDir, StringUtils.substringAfter(entry.getName(), entryPrefix)), false)) {
+                                IOUtils.copy(entryStream, out);
+                                appRelevantResCount.incrementAndGet();
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(entry.getName(), e);
+                        }
+                    });
+                    if (appRelevantResCount.get() < 1) {
+                        throw new IllegalStateException("appName:" + tisAppName + " relevant classpath res can not find in " + cp);
+                    }
+                    // pluginRoot
+                    // 写入MANIFEST文件
+                    // pluginRoot
+                    try (OutputStream manOutput = FileUtils.openOutputStream(new File(appPluginDir, PluginWrapper.MANIFEST_FILENAME), false)) {
+                        manifest.write(manOutput);
+                    }
+
+                    break;
+                }
+                pluginManager.dynamicLoad(appPluginDir, true, null);
+
+                return FlinkUserCodeClassLoaders.create(
+                        classLoaderResolveOrder,
+                        libraryURLs,
+                        pluginManager.uberClassLoader,
+                        alwaysParentFirstPatterns,
+                        NOOP_EXCEPTION_HANDLER,
+                        checkClassLoaderLeak);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
         };
     }
 
@@ -169,20 +235,7 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
         for (URL lib : libraryURLs) {
             try (JarInputStream jarReader = new JarInputStream(lib.openStream())) {
                 Manifest manifest = jarReader.getManifest();
-                Attributes tisAppName = manifest.getAttributes(TISFlinkCDCStart.TIS_APP_NAME);
-                //  Attributes pluginInventory = manifest.getAttributes("plugin_inventory");
-                if (tisAppName == null) {
-                    throw new IllegalStateException("tisAppName can not be empty in lib:" + lib);
-                }
-
-                aa:
-                for (Map.Entry<Object, Object> pluginDesc : tisAppName.entrySet()) {
-                    Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
-                    String val = (String) pluginDesc.getValue();
-                    appName = name.toString();
-                    break aa;
-                    //  pluginManager.dynamicLoadPlugin(String.valueOf(pluginDesc.getKey()));
-                }
+                appName = getTisAppName(lib, manifest);
 
                 Attributes sysProps = manifest.getAttributes(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS);
                 Config.setConfig(null);
@@ -205,6 +258,25 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             }
         }
 
+        return appName;
+    }
+
+    private static String getTisAppName(URL lib, Manifest manifest) {
+        Attributes tisAppName = manifest.getAttributes(TISFlinkCDCStart.TIS_APP_NAME);
+        String appName = null;
+        //  Attributes pluginInventory = manifest.getAttributes("plugin_inventory");
+        if (tisAppName == null) {
+            throw new IllegalStateException("tisAppName can not be empty in lib:" + lib);
+        }
+
+        aa:
+        for (Map.Entry<Object, Object> pluginDesc : tisAppName.entrySet()) {
+            Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
+            String val = (String) pluginDesc.getValue();
+            appName = name.toString();
+            break aa;
+            //  pluginManager.dynamicLoadPlugin(String.valueOf(pluginDesc.getKey()));
+        }
         return appName;
     }
 }

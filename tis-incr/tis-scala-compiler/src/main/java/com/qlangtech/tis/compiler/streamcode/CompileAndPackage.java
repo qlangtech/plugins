@@ -25,9 +25,13 @@ import com.qlangtech.tis.compiler.java.FileObjectsContext;
 import com.qlangtech.tis.compiler.java.MyJavaFileObject;
 import com.qlangtech.tis.compiler.java.NestClassFileObject;
 import com.qlangtech.tis.compiler.java.SourceGetterStrategy;
+import com.qlangtech.tis.extension.PluginStrategy;
+import com.qlangtech.tis.extension.PluginWrapper;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.IDBNodeMeta;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +43,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -46,13 +52,13 @@ import java.util.*;
  **/
 public class CompileAndPackage implements ICompileAndPackage {
 
-    private final List<String> extraDependencyClasspaths;
+    private final List<PluginWrapper.Dependency> extraPluginDependencies;
 
-    public CompileAndPackage(List<String> extraDependencyClasspaths) {
-        if (extraDependencyClasspaths == null) {
+    public CompileAndPackage(List<PluginWrapper.Dependency> extraPluginDependencies) {
+        if (extraPluginDependencies == null) {
             throw new IllegalArgumentException("param extraDependencyClasspaths can not be null");
         }
-        this.extraDependencyClasspaths = extraDependencyClasspaths;
+        this.extraPluginDependencies = extraPluginDependencies;
     }
 
     public CompileAndPackage() {
@@ -119,10 +125,16 @@ public class CompileAndPackage implements ICompileAndPackage {
         File streamScriptClassesDir = new File(sourceRoot, "classes");
         appendClassFile(streamScriptClassesDir, compiledCodeContext, null);
 
+        Manifest man = new Manifest();
+        if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
+            man.getMainAttributes().put(PluginStrategy.KEY_MANIFEST_DEPENDENCIES
+                    , this.extraPluginDependencies.stream().map((dpt) -> dpt.shortName + ":" + dpt.version)
+                            .collect(Collectors.joining(",")));
+        }
 
         // 将stream code打包
         FileObjectsContext.packageJar(
-                sourceRoot, StreamContextConstant.getIncrStreamJarName(appName)
+                sourceRoot, StreamContextConstant.getIncrStreamJarName(appName), man
                 , fileObjects, compiledCodeContext, xmlConfigs);
     }
 
@@ -135,7 +147,9 @@ public class CompileAndPackage implements ICompileAndPackage {
             }
         };
         HashSet<String> depClasspath = Sets.newHashSet(IDBNodeMeta.appendDBDependenciesClasspath(dependencyDBNodes));
-        depClasspath.addAll(this.extraDependencyClasspaths);
+        depClasspath.addAll(this.extraPluginDependencies.stream().map((plugin) -> {
+            return Config.getPluginLibDir(plugin.shortName).getAbsolutePath() + "/*";
+        }).collect(Collectors.toList()));
         return ScalaCompilerSupport.streamScriptCompile(sourceRoot, depClasspath, loggerListener);
     }
 

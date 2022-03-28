@@ -35,7 +35,6 @@ import org.apache.hudi.util.StreamerUtil;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,7 +44,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
     @Override
     protected void processTableStream(StreamExecutionEnvironment env
             , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
-        Map<String, Callable<Object>> tabStreamerCfg = createTabStreamerCfg();
+        Map<String, org.apache.hudi.streamer.FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
         try {
             for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
                 this.registerTable(env, Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
@@ -58,13 +57,13 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
     }
 
     //FlinkStreamerConfig
-    protected abstract Map<String, Callable<Object>> createTabStreamerCfg();
+    protected abstract Map<String, org.apache.hudi.streamer.FlinkStreamerConfig> createTabStreamerCfg();
 
-    private void registerTable(StreamExecutionEnvironment env, Callable<Object> tabStreamerCfg
+    private void registerTable(StreamExecutionEnvironment env, org.apache.hudi.streamer.FlinkStreamerConfig tabStreamerCfg
             , String tabName, DTOStream dtoDataStream) throws Exception {
         int parallelism = env.getParallelism();
 
-        final org.apache.hudi.streamer.FlinkStreamerConfig cfg = (org.apache.hudi.streamer.FlinkStreamerConfig)tabStreamerCfg.call();
+        final org.apache.hudi.streamer.FlinkStreamerConfig cfg = tabStreamerCfg;
 
         RowType rowType =
                 (RowType) AvroSchemaConverter.convertToDataType(StreamerUtil.getSourceSchema(cfg))

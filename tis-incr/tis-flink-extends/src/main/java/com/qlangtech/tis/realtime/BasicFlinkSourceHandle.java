@@ -26,7 +26,6 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtensible;
-import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -50,6 +49,7 @@ import java.util.stream.Collectors;
  * @create: 2021-09-27 14:18
  **/
 @Public
+@TISExtensible
 public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
 
     private transient TISSinkFactory sinkFuncFactory;

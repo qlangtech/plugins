@@ -26,6 +26,7 @@ import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.extension.PluginStrategy;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -59,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.*;
 import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -102,10 +104,10 @@ public class FlinkTaskNodeController implements IRCController {
             // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
 
             File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
-            File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());
             if (!streamJar.exists()) {
                 throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
             }
+            File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());
             logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
             //request.setCache(true);
@@ -113,66 +115,24 @@ public class FlinkTaskNodeController implements IRCController {
             request.setParallelism(factory.parallelism);
             // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
             request.setEntryClass(TISFlinkCDCStart.class.getName());
-            // List<URL> classPaths = Lists.newArrayList();
-            // classPaths.add((new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-flink-cdc-plugin/target/tis-flink-cdc-plugin/WEB-INF/lib")).toURL());
 
-            // SubModule[] subModules = new SubModule[]{
-//                $("tis-datax", "tis-datax-elasticsearch-plugin") //
-//                , $("tis-incr", "tis-elasticsearch7-sink-plugin") //
-//                , $("tis-incr", "tis-realtime-flink") //
-//                , $("tis-incr", "tis-flink-cdc-plugin") //
-            //        , $("tis-incr", "tis-realtime-flink-launch")
-            //};
-            File subDir = null;
-            // Set<String> addedFiles = Sets.newHashSet();
-            // List<File> classpaths = Lists.newArrayList();
-//        for (SubModule sub : subModules) {
-//            subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/" + sub.module + "/WEB-INF/lib");
-//            if (subDir.exists()) {
-//                for (File f : subDir.listFiles()) {
-//                    if (addedFiles.add(f.getName())) {
-//                        classpaths.add(f);
-//                    }
-//                }
-//                continue;
-//            } else {
-//                subDir = new File(rootLibDir, sub.getFullModuleName() + "/target/dependency");
-//                if (subDir.exists()) {
-//                    for (File f : subDir.listFiles()) {
-//                        if (addedFiles.add(f.getName())) {
-//                            classpaths.add(f);
-//                        }
-//                    }
-//                    continue;
-//                }
-//            }
-//            throw new IllegalStateException("subModule is illegal:" + sub);
-//        }
 
-//            classpaths.forEach((f) -> {
-//                System.out.println(f.getAbsolutePath());
-//            });
-//            System.out.println("==============================");
-
-            Manifest manifest = new Manifest();
-            Map<String, Attributes> entries = manifest.getEntries();
-            Attributes attrs = new Attributes();
-            attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
-            // 传递App名称
-            entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
-
-            this.setCfgAttrs(entries);
-
-            //FileUtils.copyFile(streamJar, streamUberJar);
-            // 删除一下以确保每次文件是更新的，以免出现诡异的问题
-            // FileUtils.deleteQuietly(streamUberJar);
+//             new Manifest();
+//            Map<String, Attributes> entries = manifest.getEntries();
+//            Attributes attrs = new Attributes();
+//            attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
+//            // 传递App名称
+//            entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
+            JarFile jarFile = new JarFile(streamJar);
+            Manifest manifest = this.createManifestCfgAttrs(jarFile, collection, timestamp);
+            final JarFile oJarFile = jarFile;
             try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, false), manifest)) {
-                JarFile jarFile = new JarFile(streamJar);
-                jarFile.stream().forEach((f) -> {
+
+                oJarFile.stream().forEach((f) -> {
                     try {
-                        jaroutput.putNextEntry(f);
+                        jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + f.getName()));
                         if (!f.isDirectory()) {
-                            try (InputStream content = jarFile.getInputStream(f)) {
+                            try (InputStream content = oJarFile.getInputStream(f)) {
                                 jaroutput.write(IOUtils.toByteArray(content));
                             }
                         }
@@ -182,27 +142,13 @@ public class FlinkTaskNodeController implements IRCController {
                     }
                 });
 
-//                JarEntry entry = new JarEntry("lib/");
-//                entry.setTime(System.currentTimeMillis());
-//                jaroutput.putNextEntry(entry);
-//                jaroutput.closeEntry();
-
                 JarEntry entry = new JarEntry("META-INF/");
                 entry.setTime(System.currentTimeMillis());
                 jaroutput.putNextEntry(entry);
                 jaroutput.closeEntry();
-
-//                classpaths.forEach(cp -> {
-//                    writeJarEntry(jaroutput, "lib/" + cp.getName(), cp);
-//                    try {
-//                        FileUtils.copyFile(cp, new File(streamUberJar.getParentFile(), "lib/" + cp.getName()));
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
             }
 
-            JarFile jarFile = new JarFile(streamUberJar);
+            jarFile = new JarFile(streamUberJar);
             jarFile.stream().forEach((entry) -> {
                 System.out.println("-----" + entry.getName());
             });
@@ -220,7 +166,15 @@ public class FlinkTaskNodeController implements IRCController {
         }
     }
 
-    private void setCfgAttrs(Map<String, Attributes> entries) {
+    private Manifest createManifestCfgAttrs(JarFile originJarFile, TargetResName collection, long timestamp) throws Exception {
+
+        Manifest manifest = new Manifest();
+        Map<String, Attributes> entries = manifest.getEntries();
+        Attributes attrs = new Attributes();
+        attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
+        // 传递App名称
+        entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
+
         final Attributes cfgAttrs = new Attributes();
         // 传递Config变量
         Config.getInstance().visitKeyValPair((e) -> {
@@ -232,6 +186,14 @@ public class FlinkTaskNodeController implements IRCController {
         });
         cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
         entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
+
+        Manifest omanifest = originJarFile.getManifest();
+        String dpts = omanifest.getMainAttributes().getValue(PluginStrategy.KEY_MANIFEST_DEPENDENCIES);
+        if (StringUtils.isNotEmpty(dpts)) {
+            Attributes mattrs = manifest.getMainAttributes();
+            mattrs.put(PluginStrategy.KEY_MANIFEST_DEPENDENCIES, dpts);
+        }
+        return manifest;
     }
 
     private File getIncrJobRecordFile(TargetResName collection) {

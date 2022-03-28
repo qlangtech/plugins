@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -84,26 +86,29 @@ public class TISFlinkCDCStart {
     private static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
         final String streamSourceHandlerClass
                 = "com.qlangtech.tis.realtime.transfer." + dataxName + "." + UnderlineUtils.getJavaName(dataxName) + "SourceHandle";
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        //logger.info("current classLoader:{}", classLoader.getClass().getName());
+       // final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-//        ExtensionList<BasicFlinkSourceHandle> flinkSourceHandles = TIS.get().getExtensionList(BasicFlinkSourceHandle.class);
-//        Optional<BasicFlinkSourceHandle> handle = flinkSourceHandles.stream().findFirst();
-//        if (!handle.isPresent()) {
-//            throw new IllegalStateException("dataxName:" + dataxName
-//                    + " relevant " + BasicFlinkSourceHandle.class.getSimpleName() + " is not present");
-//        }
-//
-//        return handle.get();
-        try {
-            // Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
-            Class<?> aClass = Class.forName(streamSourceHandlerClass, true, classLoader);
-            return (BasicFlinkSourceHandle) aClass.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(streamSourceHandlerClass, e);
-        } finally {
-            //Thread.currentThread().setContextClassLoader(classLoader);
+        ExtensionList<BasicFlinkSourceHandle> flinkSourceHandles = TIS.get().getExtensionList(BasicFlinkSourceHandle.class);
+        List<String> candidatePluginClasses = Lists.newArrayList();
+        Optional<BasicFlinkSourceHandle> handle = flinkSourceHandles.stream().filter((p) -> {
+            candidatePluginClasses.add(p.getClass().getName());
+            return streamSourceHandlerClass.equals(p.getClass().getName());
+        }).findFirst();
+        if (!handle.isPresent()) {
+            throw new IllegalStateException("dataxName:" + dataxName
+                    + " relevant " + BasicFlinkSourceHandle.class.getSimpleName() + " is not present in:"
+                    + candidatePluginClasses.stream().collect(Collectors.joining(",")));
         }
+
+        return handle.get();
+//        try {
+//            Class<?> aClass = Class.forName(streamSourceHandlerClass, true, classLoader);
+//            return (BasicFlinkSourceHandle) aClass.newInstance();
+//        } catch (Exception e) {
+//            throw new RuntimeException(streamSourceHandlerClass, e);
+//        } finally {
+//            //Thread.currentThread().setContextClassLoader(classLoader);
+//        }
     }
 
 

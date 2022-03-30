@@ -51,8 +51,11 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
     }
 
     public class HudiStreamTemplateData extends AdapterStreamTemplateData {
+        private final DataXHudiWriter hudiWriter;
+
         public HudiStreamTemplateData(IStreamTemplateData data) {
             super(data);
+            this.hudiWriter = HudiSinkFactory.getDataXHudiWriter(hudiSinkFactory);
         }
 
         public String getFlinkStreamerConfig(String tableName) {
@@ -62,39 +65,42 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             return script.toString();
         }
 
+        public String getHudiOperationType() {
+            return BatchOpMode.parse(hudiWriter.batchOp).hudiType;
+        }
+
+        private void createStreamerConfig(String tabName, BlockScriptBuffer script, HudiSinkFactory sinkFuncFactory) {
+            // final FlinkStreamerConfig cfg = new FlinkStreamerConfig();
+
+            IHiveConnGetter hiveMeta = hudiWriter.getHiveConnMeta();
+            Pair<HudiSelectedTab, HudiTableMeta> tableMeta = sinkFuncFactory.getTableMeta(tabName);
+            HudiSelectedTab hudiTab = tableMeta.getLeft();
+            ITISFileSystem fs = hudiWriter.getFs().getFileSystem();
+            IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, sinkFuncFactory.dumpTimeStamp, hiveMeta);
+            // ITISFileSystem fs, IHiveConnGetter hiveConn, String tabName, String dumpTimeStamp
+
+            script.appendLine("// table " + tabName + " relevant Flink config");
+            script.appendLine("cfg.sourceAvroSchemaPath = %s", String.valueOf(HudiTableMeta.getTableSourceSchema(fs, dumpDir)));
+            script.appendLine("cfg.targetBasePath = %s", String.valueOf(HudiTableMeta.getHudiDataDir(fs, dumpDir)));
+            script.appendLine("cfg.targetTableName = %s", tabName);
+            script.appendLine("cfg.tableType = %s", hudiWriter.getHudiTableType().getValue());
+            // script.appendLine("cfg.operation = %s ", BatchOpMode.parse(hudiWriter.batchOp).hudiType);
+            script.appendLine("cfg.preCombine = true");
+            script.appendLine("cfg.sourceOrderingField = %s", hudiTab.sourceOrderingField);
+            script.appendLine("cfg.recordKeyField = %s", hudiTab.recordField);
+
+            // cfg.partitionPathField =
+            setPartitionRelevantProps(script, hudiTab, hudiWriter);
+            script.appendLine("cfg.writeRateLimit = %sl", sinkFuncFactory.currentLimit);
+
+            script.appendLine("cfg.hiveSyncEnabled = true");
+            script.appendLine("cfg.hiveSyncDb = %s", hiveMeta.getDbName());
+            script.appendLine("cfg.hiveSyncTable = %s", tabName);
+            script.appendLine("cfg.hiveSyncMode = %s", HudiSinkFactory.HIVE_SYNC_MODE);
+            script.appendLine("cfg.hiveSyncMetastoreUri = %s", hiveMeta.getMetaStoreUrls());
+        }
     }
 
-
-    private void createStreamerConfig(String tabName, BlockScriptBuffer script, HudiSinkFactory sinkFuncFactory) {
-        // final FlinkStreamerConfig cfg = new FlinkStreamerConfig();
-        DataXHudiWriter hudiWriter = HudiSinkFactory.getDataXHudiWriter(sinkFuncFactory);
-        IHiveConnGetter hiveMeta = hudiWriter.getHiveConnMeta();
-        Pair<HudiSelectedTab, HudiTableMeta> tableMeta = sinkFuncFactory.getTableMeta(tabName);
-        HudiSelectedTab hudiTab = tableMeta.getLeft();
-        ITISFileSystem fs = hudiWriter.getFs().getFileSystem();
-        IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, sinkFuncFactory.dumpTimeStamp, hiveMeta);
-        // ITISFileSystem fs, IHiveConnGetter hiveConn, String tabName, String dumpTimeStamp
-
-        script.appendLine("// table "+tabName+" relevant Flink config");
-        script.appendLine("cfg.sourceAvroSchemaPath = %s", String.valueOf(HudiTableMeta.getTableSourceSchema(fs, dumpDir)));
-        script.appendLine("cfg.targetBasePath = %s", String.valueOf(HudiTableMeta.getHudiDataDir(fs, dumpDir)));
-        script.appendLine("cfg.targetTableName = %s", tabName);
-        script.appendLine("cfg.tableType = %s", hudiWriter.getHudiTableType().getValue());
-        script.appendLine("cfg.operation = %s ", BatchOpMode.parse(hudiWriter.batchOp).hudiType);
-        script.appendLine("cfg.preCombine = true");
-        script.appendLine("cfg.sourceOrderingField = %s", hudiTab.sourceOrderingField);
-        script.appendLine("cfg.recordKeyField = %s", hudiTab.recordField);
-
-        // cfg.partitionPathField =
-        this.setPartitionRelevantProps(script, hudiTab, hudiWriter);
-        script.appendLine("cfg.writeRateLimit = %sl", sinkFuncFactory.currentLimit);
-
-        script.appendLine("cfg.hiveSyncEnabled = true");
-        script.appendLine("cfg.hiveSyncDb = %s", hiveMeta.getDbName());
-        script.appendLine("cfg.hiveSyncTable = %s", tabName);
-        script.appendLine("cfg.hiveSyncMode = %s", HudiSinkFactory.HIVE_SYNC_MODE);
-        script.appendLine("cfg.hiveSyncMetastoreUri = %s", hiveMeta.getMetaStoreUrls());
-    }
 
     private void setPartitionRelevantProps(BlockScriptBuffer script, HudiSelectedTab hudiTab, DataXHudiWriter hudiWriter) {
         hudiTab.partition.setProps((key, val) -> {

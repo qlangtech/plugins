@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
+import com.qlangtech.tis.manage.common.Config;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -54,7 +55,7 @@ public class LocalDataXJobMainEntrypoint {
         assertEquals("local", args[4]);
         assertEquals(String.valueOf(testAllRows), args[5]);
 
-        assertEquals(CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(CuratorDataXTaskMessage.SYSTEM_KEY_LOGBACK_PATH_KEY));
+        assertEquals(Config.SYSTEM_KEY_LOGBACK_PATH_VALUE, System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY));
     }
 
     private static void assertEquals(String expect, String actual) {

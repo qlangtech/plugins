@@ -32,7 +32,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
-import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -83,10 +82,10 @@ public class TISFlinkCDCStart {
         deploy(new TargetResName(dataxName), tableStreamHandle, null, -1);
     }
 
-    private static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
-        final String streamSourceHandlerClass
-                = "com.qlangtech.tis.realtime.transfer." + dataxName + "." + UnderlineUtils.getJavaName(dataxName) + "SourceHandle";
-       // final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    public static BasicFlinkSourceHandle createFlinkSourceHandle(String dataxName) {
+        TargetResName name = new TargetResName(dataxName);
+        final String streamSourceHandlerClass = name.getStreamSourceHandlerClass();
+        // final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
         ExtensionList<BasicFlinkSourceHandle> flinkSourceHandles = TIS.get().getExtensionList(BasicFlinkSourceHandle.class);
         List<String> candidatePluginClasses = Lists.newArrayList();

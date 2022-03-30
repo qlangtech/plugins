@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.PluginManager;
-import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.ComponentMeta;
@@ -31,7 +30,6 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
@@ -42,14 +40,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -63,6 +58,7 @@ import static org.apache.flink.util.FlinkUserCodeClassLoader.NOOP_EXCEPTION_HAND
 public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
     public static final String SKIP_CLASSLOADER_FACTORY_CREATION = "skip_classloader_factory_creation";
+
 
     private static final Logger logger = LoggerFactory.getLogger(TISFlinClassLoaderFactory.class);
 
@@ -101,53 +97,67 @@ public class TISFlinClassLoaderFactory implements ClassLoaderFactoryBuilder {
             try {
                 //
                 File appPluginDir = null;
+                String tisAppName = null;
                 for (URL cp : libraryURLs) {
                     // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
 
                     JarFile jar = new JarFile(new File(cp.toURI()));
                     Manifest manifest = jar.getManifest();
 
-                    String tisAppName = getTisAppName(cp, manifest);
-                    String entryPrefix = tisAppName + "/";
+                    tisAppName = getTisAppName(cp, manifest);
+                    //  String entryPrefix = tisAppName + "/";
 
-                    File pluginLibDir = Config.getPluginLibDir("flink/" + tisAppName);
-                    File webInf = pluginLibDir.getParentFile();
-                    FileUtils.forceMkdir(webInf);
-                    File classDir = new File(webInf, "classes");
-                    appPluginDir = webInf.getParentFile();
-                    AtomicInteger appRelevantResCount = new AtomicInteger();
-                    jar.stream().forEach((entry) -> {
-                        if (entry.isDirectory() || !StringUtils.startsWith(entry.getName(), entryPrefix)) {
-                            return;
-                        }
-                        try (InputStream entryStream = jar.getInputStream(entry)) {
-                            try (OutputStream out = FileUtils.openOutputStream(
-                                    new File(classDir, StringUtils.substringAfter(entry.getName(), entryPrefix)), false)) {
-                                IOUtils.copy(entryStream, out);
-                                appRelevantResCount.incrementAndGet();
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(entry.getName(), e);
-                        }
-                    });
-                    if (appRelevantResCount.get() < 1) {
-                        throw new IllegalStateException("appName:" + tisAppName + " relevant classpath res can not find in " + cp);
-                    }
+                    File pluginLibDir = Config.getPluginLibDir("flink/" + tisAppName, true);
+//                    if (!pluginLibDir.exists()) {
+//                        throw new IllegalStateException("pluginLibDir can not empty:" + pluginLibDir.getAbsolutePath());
+//                    }
+//                    FileUtils.forceMkdir(pluginLibDir);
+//                    File webInf = pluginLibDir.getParentFile();
+//
+//                    File classDir = new File(webInf, "classes");
+                    appPluginDir = new File(pluginLibDir, "../.."); // webInf.getParentFile();
+//                    AtomicInteger appRelevantResCount = new AtomicInteger();
+//                    jar.stream().forEach((entry) -> {
+//                        if (entry.isDirectory() || !StringUtils.startsWith(entry.getName(), entryPrefix)) {
+//                            return;
+//                        }
+//                        try (InputStream entryStream = jar.getInputStream(entry)) {
+//                            try (OutputStream out = FileUtils.openOutputStream(
+//                                    new File(classDir, StringUtils.substringAfter(entry.getName(), entryPrefix)), false)) {
+//                                IOUtils.copy(entryStream, out);
+//                                appRelevantResCount.incrementAndGet();
+//                            }
+//                        } catch (IOException e) {
+//                            throw new RuntimeException(entry.getName(), e);
+//                        }
+//                    });
+//                    if (appRelevantResCount.get() < 1) {
+//                        throw new IllegalStateException("appName:" + tisAppName + " relevant classpath res can not find in " + cp);
+//                    }
                     // pluginRoot
                     // 写入MANIFEST文件
                     // pluginRoot
-                    try (OutputStream manOutput = FileUtils.openOutputStream(new File(appPluginDir, PluginWrapper.MANIFEST_FILENAME), false)) {
-                        manifest.write(manOutput);
-                    }
+//                    try (OutputStream manOutput = FileUtils.openOutputStream(new File(appPluginDir, PluginWrapper.MANIFEST_FILENAME), false)) {
+//                        manifest.write(manOutput);
+//                    }
 
                     break;
                 }
-                pluginManager.dynamicLoad(appPluginDir, true, null);
+
+                if (StringUtils.isBlank(tisAppName)) {
+                    throw new IllegalStateException("param tisAppName can not be empty");
+                }
+                if (appPluginDir == null || !appPluginDir.exists()) {
+                    throw new IllegalStateException("appPluginDir can not be empty,path:" + appPluginDir.getAbsolutePath());
+                }
+                final String shotName = TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + tisAppName;
+
+                pluginManager.dynamicLoad(shotName, appPluginDir, true, null);
 
                 return FlinkUserCodeClassLoaders.create(
                         classLoaderResolveOrder,
                         libraryURLs,
-                        pluginManager.uberClassLoader,
+                        TISFlinClassLoaderFactory.class.getClassLoader(),
                         alwaysParentFirstPatterns,
                         NOOP_EXCEPTION_HANDLER,
                         checkClassLoaderLeak);

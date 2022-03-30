@@ -46,6 +46,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.utils.TisMetaProps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
@@ -209,12 +210,10 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
-
-        PluginWrapper.Dependency();
-
+        TisMetaProps metaProps = Config.getMetaProps();
         return new CompileAndPackage(Lists.newArrayList(
-                Config.getPluginLibDir("tis-sink-hudi-plugin").getAbsolutePath() + "/*"
-                , Config.getPluginLibDir("tis-datax-hudi-plugin").getAbsolutePath() + "/*"));
+                new PluginWrapper.Dependency("tis-sink-hudi-plugin", metaProps.getVersion(), false)
+                , new PluginWrapper.Dependency("tis-datax-hudi-plugin", metaProps.getVersion(), false)));
     }
 
 

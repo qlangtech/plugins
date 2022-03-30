@@ -26,7 +26,6 @@ import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.extension.PluginStrategy;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -102,16 +101,16 @@ public class FlinkTaskNodeController implements IRCController {
             FlinkClient flinkClient = new FlinkClient();
 
             // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
-
-            File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
-            if (!streamJar.exists()) {
-                throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
-            }
-            File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar.getName());
+            String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
+            // File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
+//            if (!streamJar.exists()) {
+//                throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
+//            }
+            File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
             logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
             //request.setCache(true);
-            request.setDependency(streamJar.getAbsolutePath());
+            // request.setDependency(streamJar.getAbsolutePath());
             request.setParallelism(factory.parallelism);
             // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
             request.setEntryClass(TISFlinkCDCStart.class.getName());
@@ -123,35 +122,49 @@ public class FlinkTaskNodeController implements IRCController {
 //            attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
 //            // 传递App名称
 //            entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
-            JarFile jarFile = new JarFile(streamJar);
-            Manifest manifest = this.createManifestCfgAttrs(jarFile, collection, timestamp);
-            final JarFile oJarFile = jarFile;
-            try (JarOutputStream jaroutput = new JarOutputStream(FileUtils.openOutputStream(streamUberJar, false), manifest)) {
+            //  JarFile jarFile = new JarFile(streamJar);
+            Manifest manifest = this.createManifestCfgAttrs( collection, timestamp);
 
-                oJarFile.stream().forEach((f) -> {
-                    try {
-                        jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + f.getName()));
-                        if (!f.isDirectory()) {
-                            try (InputStream content = oJarFile.getInputStream(f)) {
-                                jaroutput.write(IOUtils.toByteArray(content));
-                            }
-                        }
-                        jaroutput.closeEntry();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+            try (JarOutputStream jaroutput = new JarOutputStream(
+                    FileUtils.openOutputStream(streamUberJar, false), manifest)) {
 
-                JarEntry entry = new JarEntry("META-INF/");
-                entry.setTime(System.currentTimeMillis());
-                jaroutput.putNextEntry(entry);
-                jaroutput.closeEntry();
+                jaroutput.flush();
+//                oJarFile.stream().forEach((f) -> {
+//                    try {
+//                        jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + f.getName()));
+//                        if (!f.isDirectory()) {
+//                            try (InputStream content = oJarFile.getInputStream(f)) {
+//                                jaroutput.write(IOUtils.toByteArray(content));
+//                            }
+//                        }
+//                        jaroutput.closeEntry();
+//                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+
+
+//                // 保证组件服务可以成功加载
+//                jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + Indexer.METAINF_ANNOTATIONS + TISExtension.class.getName()));
+//                ByteArrayOutputStream bytes = null;
+//                try (ObjectOutputStream output = new ObjectOutputStream(bytes = new ByteArrayOutputStream())) {
+//                    output.writeObject(SerAnnotatedElementUtils.create(collection));
+//                    output.writeObject(null);
+//                    output.flush();
+//                    jaroutput.write(bytes.toByteArray());
+//                }
+//                jaroutput.closeEntry();
+
+//                JarEntry entry = new JarEntry("META-INF/");
+//                entry.setTime(System.currentTimeMillis());
+//                jaroutput.putNextEntry(entry);
+//                jaroutput.closeEntry();
             }
 
-            jarFile = new JarFile(streamUberJar);
-            jarFile.stream().forEach((entry) -> {
-                System.out.println("-----" + entry.getName());
-            });
+//            jarFile = new JarFile(streamUberJar);
+//            jarFile.stream().forEach((entry) -> {
+//                System.out.println("-----" + entry.getName());
+//            });
 
             request.setProgramArgs(collection.getName());
             request.setDependency(streamUberJar.getAbsolutePath());
@@ -166,7 +179,7 @@ public class FlinkTaskNodeController implements IRCController {
         }
     }
 
-    private Manifest createManifestCfgAttrs(JarFile originJarFile, TargetResName collection, long timestamp) throws Exception {
+    private Manifest createManifestCfgAttrs(TargetResName collection, long timestamp) throws Exception {
 
         Manifest manifest = new Manifest();
         Map<String, Attributes> entries = manifest.getEntries();
@@ -187,12 +200,7 @@ public class FlinkTaskNodeController implements IRCController {
         cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
         entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
 
-        Manifest omanifest = originJarFile.getManifest();
-        String dpts = omanifest.getMainAttributes().getValue(PluginStrategy.KEY_MANIFEST_DEPENDENCIES);
-        if (StringUtils.isNotEmpty(dpts)) {
-            Attributes mattrs = manifest.getMainAttributes();
-            mattrs.put(PluginStrategy.KEY_MANIFEST_DEPENDENCIES, dpts);
-        }
+
         return manifest;
     }
 

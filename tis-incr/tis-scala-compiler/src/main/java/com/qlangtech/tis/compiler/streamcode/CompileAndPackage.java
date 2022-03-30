@@ -21,16 +21,17 @@ package com.qlangtech.tis.compiler.streamcode;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
-import com.qlangtech.tis.compiler.java.FileObjectsContext;
-import com.qlangtech.tis.compiler.java.MyJavaFileObject;
-import com.qlangtech.tis.compiler.java.NestClassFileObject;
-import com.qlangtech.tis.compiler.java.SourceGetterStrategy;
+import com.qlangtech.tis.compiler.java.*;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.PluginStrategy;
 import com.qlangtech.tis.extension.PluginWrapper;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.IDBNodeMeta;
+import net.java.sezpoz.impl.Indexer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -39,10 +40,10 @@ import scala.tools.ScalaCompilerSupport;
 import scala.tools.scala_maven_executions.LogProcessorUtils;
 
 import javax.tools.JavaFileObject;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
@@ -126,16 +127,77 @@ public class CompileAndPackage implements ICompileAndPackage {
         appendClassFile(streamScriptClassesDir, compiledCodeContext, null);
 
         Manifest man = new Manifest();
-        if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
-            man.getMainAttributes().put(PluginStrategy.KEY_MANIFEST_DEPENDENCIES
-                    , this.extraPluginDependencies.stream().map((dpt) -> dpt.shortName + ":" + dpt.version)
-                            .collect(Collectors.joining(",")));
+
+
+        File pluginLibDir = Config.getPluginLibDir("flink/" + appName, false);
+        FileUtils.forceMkdir(pluginLibDir);
+        File webInf = pluginLibDir.getParentFile();
+
+
+        //====================================================================
+
+
+//        Attributes mattrs = man.getMainAttributes();
+//
+//
+        TargetResName collection = new TargetResName(appName);
+        createPluginMetaInfo(webInf, collection);
+//
+//        mattrs.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+//        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_SHORTNAME)
+//                , TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + collection.getName());
+//        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_VERSION), Config.getMetaProps().getVersion());
+//        if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
+//            mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_DEPENDENCIES)
+//                    , this.extraPluginDependencies.stream().map((dpt) -> dpt.shortName + ":" + dpt.version)
+//                            .collect(Collectors.joining(",")));
+//        }
+        //====================================================================
+
+        FileObjectsContext tisExtension = new FileObjectsContext();
+
+        // 保证组件服务可以成功加载
+        ByteArrayOutputStream bytes = null;
+        try (ObjectOutputStream output = new ObjectOutputStream(bytes = new ByteArrayOutputStream())) {
+            output.writeObject(SerAnnotatedElementUtils.create(collection));
+            output.writeObject(null);
+            output.flush();
+            tisExtension.resources.add(
+                    new ResourcesFile(new ZipPath(Indexer.METAINF_ANNOTATIONS, TISExtension.class.getName(), JavaFileObject.Kind.OTHER)
+                            , bytes.toByteArray()));
         }
 
         // 将stream code打包
         FileObjectsContext.packageJar(
-                sourceRoot, StreamContextConstant.getIncrStreamJarName(appName), man
-                , fileObjects, compiledCodeContext, xmlConfigs);
+                new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName)), man
+                , fileObjects, compiledCodeContext, xmlConfigs, tisExtension);
+    }
+
+
+    private void createPluginMetaInfo(File webInf, TargetResName collection) {
+        Manifest man = new Manifest();
+        Attributes mattrs = man.getMainAttributes();
+
+        mattrs.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_SHORTNAME)
+                , TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + collection.getName());
+        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_VERSION), Config.getMetaProps().getVersion());
+        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_FIRST_CLASSLOADER), "true");
+
+
+        if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
+            mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_DEPENDENCIES)
+                    , this.extraPluginDependencies.stream().map((dpt) -> dpt.shortName + ":" + dpt.version)
+                            .collect(Collectors.joining(",")));
+        }
+
+        try (OutputStream output = FileUtils.openOutputStream(
+                new File(webInf.getParentFile(), JarFile.MANIFEST_NAME), false)) {
+            man.write(output);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     private boolean streamScriptCompile(File sourceRoot, Set<IDBNodeMeta> dependencyDBNodes) throws Exception {

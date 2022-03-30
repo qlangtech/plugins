@@ -41,6 +41,7 @@ import java.util.*;
  */
 public class ScalaCompilerSupport {
 
+    public static final String KEY_SCALA_SOURCE_ROOT_DIR   = "src/main/scala";
 
     private static final Logger logger = LoggerFactory.getLogger(ScalaCompilerSupport.class);
 
@@ -52,7 +53,7 @@ public class ScalaCompilerSupport {
 
     /**
      * 开始编译scala 脚本
-     *
+     *https://docs.scala-lang.org/overviews/compiler-options/index.html
      * @param sourceRoot
      * @param dependencyDBNodesClasspaths
      * @param loggerListener
@@ -61,7 +62,7 @@ public class ScalaCompilerSupport {
      */
     public static boolean streamScriptCompile(File sourceRoot, Set<String> dependencyDBNodesClasspaths, LogProcessorUtils.LoggerListener loggerListener) throws Exception {
         ScalaCompilerSupport scalaCompiler = new ScalaCompilerSupport(loggerListener);
-        List<File> sourceRootDirs = Lists.newArrayList(new File(sourceRoot, "/src/main/scala"));
+        List<File> sourceRootDirs = Lists.newArrayList(new File(sourceRoot, KEY_SCALA_SOURCE_ROOT_DIR));
         File outputDir = new File(sourceRoot, "/classes");
         Set<String> classpathElements = ScalaCompilerSupport.getStreamScriptCompilerClasspath();
         classpathElements.addAll(dependencyDBNodesClasspaths);

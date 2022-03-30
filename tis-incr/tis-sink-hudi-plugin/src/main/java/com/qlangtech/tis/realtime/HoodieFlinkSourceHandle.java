@@ -19,6 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowDataMapper;
+import com.qlangtech.tis.extension.impl.PluginFirstClassLoader;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -26,15 +27,18 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.hudi.common.model.HoodieRecord;
+import org.apache.hudi.common.model.WriteOperationType;
 import org.apache.hudi.common.util.Option;
 import org.apache.hudi.configuration.FlinkOptions;
 import org.apache.hudi.sink.transform.Transformer;
 import org.apache.hudi.sink.utils.Pipelines;
+import org.apache.hudi.streamer.FlinkStreamerConfig;
 import org.apache.hudi.util.AvroSchemaConverter;
 import org.apache.hudi.util.StreamerUtil;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -54,6 +58,19 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected FlinkStreamerConfig createHudiCfg(String operationType) {
+        FlinkStreamerConfig cfg = new FlinkStreamerConfig();
+        PluginFirstClassLoader cl1 = (PluginFirstClassLoader) cfg.operation.getClass().getClassLoader();
+        PluginFirstClassLoader cl2 = (PluginFirstClassLoader) WriteOperationType.BULK_INSERT.getClass().getClassLoader();
+
+        System.out.println("cl1:" + cl1.hashCode() + "->" + cl1.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
+        System.out.println("cl2:" + cl2.hashCode() + "->" + cl2.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
+
+
+        cfg.operation = WriteOperationType.fromValue(operationType);
+        return cfg;
     }
 
     //FlinkStreamerConfig

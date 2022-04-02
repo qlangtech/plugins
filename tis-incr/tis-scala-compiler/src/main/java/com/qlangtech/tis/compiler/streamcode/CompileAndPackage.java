@@ -122,12 +122,12 @@ public class CompileAndPackage implements ICompileAndPackage {
         };
         //
         FileObjectsContext fileObjects = FileObjectsContext.getFileObjects(sourceRoot, getterStrategy);
+
         final FileObjectsContext compiledCodeContext = new FileObjectsContext();
         File streamScriptClassesDir = new File(sourceRoot, "classes");
         appendClassFile(streamScriptClassesDir, compiledCodeContext, null);
 
         Manifest man = new Manifest();
-
 
         File pluginLibDir = Config.getPluginLibDir("flink/" + appName, false);
         FileUtils.forceMkdir(pluginLibDir);
@@ -135,23 +135,9 @@ public class CompileAndPackage implements ICompileAndPackage {
 
 
         //====================================================================
-
-
-//        Attributes mattrs = man.getMainAttributes();
-//
-//
         TargetResName collection = new TargetResName(appName);
+        // 插件元数据
         createPluginMetaInfo(webInf, collection);
-//
-//        mattrs.put(Attributes.Name.MANIFEST_VERSION, "1.0");
-//        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_SHORTNAME)
-//                , TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + collection.getName());
-//        mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_VERSION), Config.getMetaProps().getVersion());
-//        if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
-//            mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_DEPENDENCIES)
-//                    , this.extraPluginDependencies.stream().map((dpt) -> dpt.shortName + ":" + dpt.version)
-//                            .collect(Collectors.joining(",")));
-//        }
         //====================================================================
 
         FileObjectsContext tisExtension = new FileObjectsContext();
@@ -169,7 +155,8 @@ public class CompileAndPackage implements ICompileAndPackage {
 
         // 将stream code打包
         FileObjectsContext.packageJar(
-                new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName)), man
+                new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName))
+                , man
                 , fileObjects, compiledCodeContext, xmlConfigs, tisExtension);
     }
 
@@ -202,7 +189,6 @@ public class CompileAndPackage implements ICompileAndPackage {
 
     private boolean streamScriptCompile(File sourceRoot, Set<IDBNodeMeta> dependencyDBNodes) throws Exception {
         LogProcessorUtils.LoggerListener loggerListener = new LogProcessorUtils.LoggerListener() {
-
             @Override
             public void receiveLog(LogProcessorUtils.Level level, String line) {
                 System.err.println(line);

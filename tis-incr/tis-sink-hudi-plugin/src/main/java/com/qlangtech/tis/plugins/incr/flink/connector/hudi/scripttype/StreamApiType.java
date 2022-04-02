@@ -16,31 +16,30 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
+package com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype;
 
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.StreamAPIStyleFlinkStreamScriptCreator;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-24 10:36
+ * @create: 2022-03-31 11:48
  **/
-public enum StreamScriptType {
-    SQL("sql"), STREAM_API("streamApi");
-    public final String val;
+public class StreamApiType extends ScriptType {
 
-    private StreamScriptType(String val) {
-        this.val = val;
+    @Override
+    public IStreamTableCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory) {
+        return new StreamAPIStyleFlinkStreamScriptCreator(hudiSinkFactory);
     }
 
-    public static StreamScriptType parse(String val) {
-        if (StringUtils.isEmpty(val)) {
-            throw new IllegalArgumentException("param val can not be empty");
+    @TISExtension
+    public static class DefaultDescriptor extends Descriptor<ScriptType> {
+        @Override
+        public String getDisplayName() {
+            return "StreamAPI";
         }
-        for (StreamScriptType type : StreamScriptType.values()) {
-            if (type.val.equals(val)) {
-                return type;
-            }
-        }
-        throw new IllegalStateException("illegal stream script val:" + val);
     }
 }

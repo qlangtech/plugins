@@ -50,7 +50,7 @@ public class TestCompileAndPackage implements TISEasyMock {
     public void testCompile() throws Exception {
         CompileAndPackage cap = new CompileAndPackage(Collections.singletonList(
                 new PluginWrapper.Dependency("tis-sink-hudi-plugin", Config.getMetaProps().getVersion(), false)));
-
+        String dataXName = "test";
         File rootDir = folder.newFolder(ScalaCompilerSupport.KEY_SCALA_SOURCE_ROOT_DIR);
         String hudiSource = "HudiSourceHandle.scala";
         FileUtils.writeStringToFile(new File(rootDir, "tis/" + hudiSource)
@@ -65,9 +65,11 @@ public class TestCompileAndPackage implements TISEasyMock {
         IControlMsgHandler msgHander = this.mock("msgHander", IControlMsgHandler.class);
 
         this.replay();
-        cap.process(context, msgHander, "test", Collections.emptyMap(), sourceRoot, objsContext);
+        cap.process(context, msgHander, dataXName, Collections.emptyMap(), sourceRoot, objsContext);
 
-        File genJar = new File(sourceRoot, StreamContextConstant.getIncrStreamJarName("test"));
+
+        File genJar = new File(Config.getPluginLibDir("flink/" + dataXName, true)
+                , StreamContextConstant.getIncrStreamJarName(dataXName));
         Assert.assertTrue(genJar.exists());
 
         this.verifyAll();

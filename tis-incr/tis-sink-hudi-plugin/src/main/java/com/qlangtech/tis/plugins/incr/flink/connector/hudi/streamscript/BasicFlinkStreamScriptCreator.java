@@ -42,15 +42,16 @@ public class BasicFlinkStreamScriptCreator implements IStreamTableCreator {
     }
 
     public static IStreamTableCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory) {
-        StreamScriptType scriptType = StreamScriptType.parse(hudiSinkFactory.scriptType);
-        switch (scriptType) {
-            case SQL:
-                return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
-            case STREAM_API:
-                return new StreamAPIStyleFlinkStreamScriptCreator(hudiSinkFactory);
-            default:
-                throw new IllegalStateException("illegal:" + hudiSinkFactory.scriptType);
-        }
+//        StreamScriptType scriptType = StreamScriptType.parse();
+//        switch (scriptType) {
+//            case SQL:
+//                return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
+//            case STREAM_API:
+//                return new StreamAPIStyleFlinkStreamScriptCreator(hudiSinkFactory);
+//            default:
+//                throw new IllegalStateException("illegal:" + hudiSinkFactory.scriptType);
+//        }
+        return hudiSinkFactory.scriptType.createStreamTableCreator(hudiSinkFactory);
     }
 
     @Override

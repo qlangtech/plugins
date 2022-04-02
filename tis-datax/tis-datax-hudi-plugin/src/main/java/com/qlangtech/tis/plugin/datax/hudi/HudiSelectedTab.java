@@ -79,6 +79,10 @@ public class HudiSelectedTab extends SelectedTab {
                 }));
     }
 
+    @Override
+    public String toString() {
+        return "name='" + name + '\'';
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends SelectedTab.DefaultDescriptor {

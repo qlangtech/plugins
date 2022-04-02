@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -73,19 +74,17 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     private static final Logger logger = LoggerFactory.getLogger(HudiSinkFactory.class);
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String catalog;
-
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String database;
-
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String dumpTimeStamp;
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public ScriptType scriptType;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String scriptType;
+    public String dumpTimeStamp;
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String opType;
+
+
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer currentLimit;
 
     private transient IStreamTableCreator streamTableCreator;

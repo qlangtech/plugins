@@ -66,7 +66,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
         }
 
         public String getHudiOperationType() {
-            return BatchOpMode.parse(hudiWriter.batchOp).hudiType;
+            return BatchOpMode.parse(hudiSinkFactory.opType).hudiType;
         }
 
         private void createStreamerConfig(String tabName, BlockScriptBuffer script, HudiSinkFactory sinkFuncFactory) {

@@ -60,7 +60,8 @@ public class ScalaCompilerSupport {
      * @return hasError
      * @throws Exception
      */
-    public static boolean streamScriptCompile(File sourceRoot, Set<String> dependencyDBNodesClasspaths, LogProcessorUtils.LoggerListener loggerListener) throws Exception {
+    public static boolean streamScriptCompile(File sourceRoot, Set<String> dependencyDBNodesClasspaths
+            , LogProcessorUtils.LoggerListener loggerListener) throws Exception {
         ScalaCompilerSupport scalaCompiler = new ScalaCompilerSupport(loggerListener);
         List<File> sourceRootDirs = Lists.newArrayList(new File(sourceRoot, KEY_SCALA_SOURCE_ROOT_DIR));
         File outputDir = new File(sourceRoot, "/classes");
@@ -237,15 +238,7 @@ public class ScalaCompilerSupport {
         }
         long n1 = System.nanoTime();
         long t1 = t0 + ((n1 - n0) / 1_000_000);
-        // if (compileInLoop && recompileMode == RecompileMode.incremental) {
-        // // if compileInLoop, do not invoke incrementalCompile when there's no change
-        // int retCode = incrementalCompile(classpathElements, sourceRootDirs, outputDir, analysisCacheFile, true);
-        // _lastCompileAt = t1;
-        // if (retCode == 1) {
-        // lastCompilationInfo.setLastSuccessfullTS(t1);
-        // }
-        // return retCode;
-        // }
+
         getLog().info(String.format("Compiling %d source files to %s at %d", files.size(), outputDir.getAbsolutePath(), t1));
         JavaMainCaller jcmd = getScalaCommand();
         jcmd.redirectToLog();

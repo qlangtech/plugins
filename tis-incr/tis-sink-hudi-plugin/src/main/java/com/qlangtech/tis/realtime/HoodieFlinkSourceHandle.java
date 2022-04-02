@@ -19,7 +19,12 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowDataMapper;
-import com.qlangtech.tis.extension.impl.PluginFirstClassLoader;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -35,24 +40,34 @@ import org.apache.hudi.sink.utils.Pipelines;
 import org.apache.hudi.streamer.FlinkStreamerConfig;
 import org.apache.hudi.util.AvroSchemaConverter;
 import org.apache.hudi.util.StreamerUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-23 11:18
  **/
 public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
+    private static final Logger logger = LoggerFactory.getLogger(HoodieFlinkSourceHandle.class);
+
     @Override
     protected void processTableStream(StreamExecutionEnvironment env
             , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
-        Map<String, org.apache.hudi.streamer.FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
+        FlinkStreamerConfig flinkCfg = null;
+        Map<String, FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
+        HudiSinkFactory sinkFunc = (HudiSinkFactory) this.getSinkFuncFactory();
+        DataXHudiWriter dataXHudiWriter = HudiSinkFactory.getDataXHudiWriter(sinkFunc);
+        FileSystemFactory fsFactory = dataXHudiWriter.getFs();
+        ITISFileSystem fs = fsFactory.getFileSystem();
         try {
             for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
-                this.registerTable(env, Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
-                        , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null")
+                flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
+                        , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null");
+                this.createSchema(entry.getKey(), flinkCfg, sinkFunc, fs);
+                this.registerTable(env, flinkCfg
                         , entry.getKey(), entry.getValue());
             }
         } catch (Exception e) {
@@ -60,15 +75,37 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         }
     }
 
+    /**
+     * @param tableName
+     * @param flinkCfg
+     * @param sinkFunc
+     * @param fs
+     */
+    private void createSchema(String tableName, FlinkStreamerConfig flinkCfg, HudiSinkFactory sinkFunc, ITISFileSystem fs) {
+        IPath schemaSourcePath = fs.getPath(flinkCfg.sourceAvroSchemaPath);
+        if (fs.exists(schemaSourcePath)) {
+            logger.info("schemaSourcePath has been create,shall not be create again , path:{}", schemaSourcePath);
+            return;
+        }
+        HudiTableMeta.createSourceSchema(
+                fs, tableName
+                , schemaSourcePath, sinkFunc.getTableMeta(tableName).getLeft());
+    }
+
+
+    /**
+     * velocity 模版中会用到
+     *
+     * @param operationType
+     * @return
+     */
     protected FlinkStreamerConfig createHudiCfg(String operationType) {
         FlinkStreamerConfig cfg = new FlinkStreamerConfig();
-        PluginFirstClassLoader cl1 = (PluginFirstClassLoader) cfg.operation.getClass().getClassLoader();
-        PluginFirstClassLoader cl2 = (PluginFirstClassLoader) WriteOperationType.BULK_INSERT.getClass().getClassLoader();
-
-        System.out.println("cl1:" + cl1.hashCode() + "->" + cl1.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
-        System.out.println("cl2:" + cl2.hashCode() + "->" + cl2.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
-
-
+//        PluginFirstClassLoader cl1 = (PluginFirstClassLoader) cfg.operation.getClass().getClassLoader();
+//        PluginFirstClassLoader cl2 = (PluginFirstClassLoader) WriteOperationType.BULK_INSERT.getClass().getClassLoader();
+//
+//        System.out.println("cl1:" + cl1.hashCode() + "->" + cl1.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
+//        System.out.println("cl2:" + cl2.hashCode() + "->" + cl2.getURLs().stream().map((url) -> String.valueOf(url)).collect(Collectors.joining(",")));
         cfg.operation = WriteOperationType.fromValue(operationType);
         return cfg;
     }

@@ -60,14 +60,13 @@ public class HudiTableMeta {
     private final String hudiTabName;
     private IPath tabDumpDir = null;
 
-    public static IPath createFsSourceSchema(ITISFileSystem fs
-            , String tabName, IPath tabDumpDir, HudiSelectedTab hudiTabMeta) {
-
+    public static IPath createSourceSchema(ITISFileSystem fs
+            , String tabName, IPath fsSourceSchemaPath, HudiSelectedTab hudiTabMeta) {
         List<ISelectedTab.ColMeta> colsMetas = hudiTabMeta.getCols();
         if (CollectionUtils.isEmpty(colsMetas)) {
             throw new IllegalStateException("colsMetas of hudiTabMeta can not be empty");
         }
-        IPath fsSourceSchemaPath = getTableSourceSchema(fs, tabDumpDir);
+
 
         try (OutputStream schemaWriter = fs.getOutputStream(fsSourceSchemaPath)) {
             SchemaBuilder.RecordBuilder<Schema> builder = SchemaBuilder.record(tabName);
@@ -293,6 +292,11 @@ public class HudiTableMeta {
             throw new RuntimeException(e);
         }
         return fsSourceSchemaPath;
+    }
+
+    public static IPath createFsSourceSchema(ITISFileSystem fs
+            , String tabName, IPath tabDumpDir, HudiSelectedTab hudiTabMeta) {
+        return createSourceSchema(fs, tabName, getTableSourceSchema(fs, tabDumpDir), hudiTabMeta);
     }
 
     public static IPath getTableSourceSchema(ITISFileSystem fs, IPath tabDumpDir) {

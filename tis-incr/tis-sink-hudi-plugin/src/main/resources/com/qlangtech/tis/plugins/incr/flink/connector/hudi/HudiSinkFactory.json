@@ -20,5 +20,23 @@
         "val": "streamApi"
       }
     ]
+  },
+  "opType": {
+    "label": "操作类型",
+    "dftVal": "UPSERT",
+    "enum": [
+      {
+        "val": "INSERT",
+        "label": "INSERT"
+      },
+      {
+        "val": "UPSERT",
+        "label": "UPSERT"
+      },
+      {
+        "val": "INSERT_OVERWRITE",
+        "label": "INSERT_OVERWRITE"
+      }
+    ]
   }
 }

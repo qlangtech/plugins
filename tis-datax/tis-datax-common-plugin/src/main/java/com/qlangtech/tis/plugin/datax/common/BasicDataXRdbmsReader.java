@@ -70,7 +70,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 
     @SubForm(desClazz = SelectedTab.class
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
-    public List<SelectedTab> selectedTabs;
+    public transient List<SelectedTab> selectedTabs;
 
     private transient int preSelectedTabsHash;
     public String dataXName;
@@ -102,7 +102,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             for (ISelectedTab.ColMeta col : tab.getCols()) {
                 colMeta = colsMeta.get(col.getName());
                 if (colMeta == null) {
-                    throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'ColumnMetaData',exist Keys:["
+                    throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'col' on " + tab.getName() + ",exist Keys:["
                             + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
                 }
                 col.setPk(colMeta.isPk());

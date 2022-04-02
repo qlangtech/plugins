@@ -16,23 +16,19 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.compiler.streamcode.TestCompileAndPackage;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import scala.tools.TestScalaCompilerSupport;
+package com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype;
+
+import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 
 /**
- * @author 百岁（baisui@qlangtech.com）
- * @date 2020/04/13
- */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestScalaCompilerSupport.class, TestCompileAndPackage.class})
-public class TestAll {
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2022-03-31 11:43
+ **/
+@Public
+public abstract class ScriptType implements Describable<ScriptType> {
 
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestScalaCompilerSupport.class);
-//        // suite.addTestSuite(TestCompileAndPackage.class);
-//        return suite;
-//    }
+   public abstract IStreamTableCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory);
 }

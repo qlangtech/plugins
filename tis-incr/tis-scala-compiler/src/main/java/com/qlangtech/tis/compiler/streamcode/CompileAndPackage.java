@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.java.*;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.PluginStrategy;
 import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
@@ -41,11 +42,14 @@ import scala.tools.scala_maven_executions.LogProcessorUtils;
 
 import javax.tools.JavaFileObject;
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -61,6 +65,7 @@ public class CompileAndPackage implements ICompileAndPackage {
         }
         this.extraPluginDependencies = extraPluginDependencies;
     }
+
 
     public CompileAndPackage() {
         this(Collections.emptyList());
@@ -101,7 +106,6 @@ public class CompileAndPackage implements ICompileAndPackage {
          */
         SourceGetterStrategy getterStrategy
                 = new SourceGetterStrategy(false, "/src/main/scala", ".scala") {
-
             @Override
             public JavaFileObject.Kind getSourceKind() {
                 // 没有scala的类型，暂且用other替换一下
@@ -120,7 +124,7 @@ public class CompileAndPackage implements ICompileAndPackage {
                 return fileObj;
             }
         };
-        //
+
         FileObjectsContext fileObjects = FileObjectsContext.getFileObjects(sourceRoot, getterStrategy);
 
         final FileObjectsContext compiledCodeContext = new FileObjectsContext();
@@ -129,9 +133,10 @@ public class CompileAndPackage implements ICompileAndPackage {
 
         Manifest man = new Manifest();
 
-        File pluginLibDir = Config.getPluginLibDir("flink/" + appName, false);
+        File pluginLibDir = Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + appName, false);
         FileUtils.forceMkdir(pluginLibDir);
         File webInf = pluginLibDir.getParentFile();
+        File pluginDir = webInf.getParentFile();
 
 
         //====================================================================
@@ -153,11 +158,44 @@ public class CompileAndPackage implements ICompileAndPackage {
                             , bytes.toByteArray()));
         }
 
+        File pkgJar = new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName));
+        FileUtils.forceDelete(pkgJar);
         // 将stream code打包
         FileObjectsContext.packageJar(
-                new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName))
+                pkgJar
                 , man
                 , fileObjects, compiledCodeContext, xmlConfigs, tisExtension);
+
+        // 继续打一个tpi包
+        File tpi = new File(pluginDir.getParentFile(), pluginDir.getName() + PluginManager.PACAKGE_TPI_EXTENSION);
+        FileUtils.forceDelete(tpi);
+        File f = null;
+        Path pluginRootPath = pluginDir.toPath();
+        try (JarOutputStream jaroutput = new JarOutputStream(
+                FileUtils.openOutputStream(tpi, false))) {
+            Iterator<File> fit = FileUtils.iterateFiles(pluginDir, null, true);
+            while (fit.hasNext()) {
+                f = fit.next();
+                try {
+                    jaroutput.putNextEntry(new ZipEntry(pluginRootPath.relativize(f.toPath()).toString()));
+                    if (!f.isDirectory()) {
+                        try (InputStream content = FileUtils.openInputStream(f)) {
+                            jaroutput.write(IOUtils.toByteArray(content));
+                        }
+                    }
+                    jaroutput.closeEntry();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        }
+
+
+//        FileObjectsContext.packageJar(
+//
+//                , man
+//                , fileObjects, compiledCodeContext, xmlConfigs, tisExtension);
     }
 
 
@@ -167,10 +205,10 @@ public class CompileAndPackage implements ICompileAndPackage {
 
         mattrs.put(Attributes.Name.MANIFEST_VERSION, "1.0");
         mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_SHORTNAME)
-                , TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + collection.getName());
+                , TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + collection.getName());
         mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_VERSION), Config.getMetaProps().getVersion());
         mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_PLUGIN_FIRST_CLASSLOADER), "true");
-
+        mattrs.put(new Attributes.Name(PluginStrategy.KEY_LAST_MODIFY_TIME), String.valueOf(System.currentTimeMillis()));
 
         if (CollectionUtils.isNotEmpty(this.extraPluginDependencies)) {
             mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_DEPENDENCIES)

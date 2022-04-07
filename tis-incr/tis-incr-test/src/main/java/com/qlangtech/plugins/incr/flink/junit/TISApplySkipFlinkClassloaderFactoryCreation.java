@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.junit;
 
-import com.qlangtech.plugins.incr.flink.TISFlinClassLoaderFactory;
+import com.qlangtech.plugins.incr.flink.TISFlinkClassLoaderFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 
@@ -32,7 +32,7 @@ public class TISApplySkipFlinkClassloaderFactoryCreation implements TestRule {
 //    public static TestRule name = new TestRule() {
     @Override
     public org.junit.runners.model.Statement apply(org.junit.runners.model.Statement base, Description description) {
-        System.setProperty(TISFlinClassLoaderFactory.SKIP_CLASSLOADER_FACTORY_CREATION, "true");
+        System.setProperty(TISFlinkClassLoaderFactory.SKIP_CLASSLOADER_FACTORY_CREATION, "true");
         return base;
     }
 //    };

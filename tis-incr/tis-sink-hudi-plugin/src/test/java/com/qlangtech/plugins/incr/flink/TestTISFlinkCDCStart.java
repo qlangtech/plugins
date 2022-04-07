@@ -32,7 +32,6 @@ import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.File;
@@ -47,7 +46,7 @@ import java.util.Map;
 public class TestTISFlinkCDCStart implements TISEasyMock {
 
     @BeforeClass
-    public static void beforeClass(){
+    public static void beforeClass() {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
@@ -55,8 +54,8 @@ public class TestTISFlinkCDCStart implements TISEasyMock {
     public void testProcessFlinkSourceHandle() throws Throwable {
         TargetResName dataxName = new TargetResName("hudi");
         String table1 = "totalpayinfo";
-        String shortName = TISSinkFactory.KEY_FLINK_STREAM_APP_NAME_PREFIX + dataxName.getName();
-        File pluginDir = new File(Config.getPluginLibDir("flink/" + dataxName.getName()), "../..");
+        String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
+        File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
 
         TIS.get().pluginManager.dynamicLoad(shortName, pluginDir, true, null);
         IDataxProcessor processor = this.mock("dataXprocess", IDataxProcessor.class);

@@ -16,6 +16,6 @@
 #   limitations under the License.
 #
 
-com.qlangtech.plugins.incr.flink.TISFlinClassLoaderFactory
+com.qlangtech.plugins.incr.flink.TISFlinkClassLoaderFactory
 
 

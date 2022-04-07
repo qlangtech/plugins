@@ -27,6 +27,7 @@ import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.Description;
 import org.apache.flink.configuration.description.HtmlFormatter;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +47,8 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
 
         StringBuffer helperContent = new StringBuffer(htmlFormatter.format(desc));
 
-        Class<?> targetClazz = configOption.getClazz();
+        Class<?> targetClazz = getTargetClass(configOption);
+
         List<Option> opts = null;
         if (targetClazz == Duration.class) {
             if (d != null) {
@@ -61,6 +63,20 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
         }
 
         this.addFieldDescriptor(fieldName, d, helperContent.toString(), Optional.ofNullable(opts));
+    }
+
+    private static Method getClazzMethod;
+
+    private static Class<?> getTargetClass(ConfigOption<?> configOption) {
+        try {
+            if (getClazzMethod == null) {
+                getClazzMethod = ConfigOption.class.getDeclaredMethod("getClazz");
+                getClazzMethod.setAccessible(true);
+            }
+            return (Class<?>) getClazzMethod.invoke(configOption);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

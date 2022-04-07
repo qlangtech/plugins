@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
-import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
 import com.qlangtech.tis.TIS;
@@ -27,19 +26,18 @@ import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
-import com.qlangtech.tis.plugin.*;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.XStream2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -54,7 +52,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +63,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 /**
@@ -202,54 +201,22 @@ public class FlinkTaskNodeController implements IRCController {
             }
             cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
         });
-        cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
+        cfgAttrs.put(new Attributes.Name(
+                TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
         entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
 
         //=====================================================================
-        //  = Lists.newArrayList();
         if (!CenterResource.notFetchFromCenterRepository()) {
             throw new IllegalStateException("must not fetchFromCenterRepository");
         }
-
-        ExtensionList<HeteroEnum> hlist = TIS.get().getExtensionList(HeteroEnum.class);
-        List<IRepositoryResource> keyedPluginStores = hlist.stream()
-                .filter((e) -> !e.isAppNameAware())
-                .map((e) -> e.getPluginStore(null, null))
-                .collect(Collectors.toList());
-        ComponentMeta dataxComponentMeta = new ComponentMeta(keyedPluginStores);
-        Set<XStream2.PluginMeta> globalPluginMetas = dataxComponentMeta.loadPluginMeta();
-        Map<String, Long> gPluginStoreLastModify = ComponentMeta.getGlobalPluginStoreLastModifyTimestamp(dataxComponentMeta);
-        // Attributes storeCfgLastModifyAttr = new Attributes();
-
-        StringBuffer globalPluginStore = new StringBuffer();
-        for (Map.Entry<String, Long> e : gPluginStoreLastModify.entrySet()) {
-            globalPluginStore.append(e.getKey())
-                    .append(XStream2.PluginMeta.NAME_VER_SPLIT).append(e.getValue()).append(",");
-        }
-
         //"globalPluginStore"  "pluginMetas"  "appLastModifyTimestamp"
+        XStream2.PluginMeta flinkPluginMeta
+                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + collection.getName()
+                , Config.getMetaProps().getVersion());
+        PluginAndCfgsSnapshot localSnapshot
+                = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(collection, flinkPluginMeta);
 
-        PluginAndCfgsSnapshot localPluginAndCfgsSnapshot
-                = PluginStore.getLocalPluginAndCfgsSnapshot(collection);
-
-        localPluginAndCfgsSnapshot.attachPluginCfgSnapshot2Manifest(manifest);
-
-
-//        final Attributes pmetas = new Attributes();
-//        pmetas.put(new Attributes.Name(KeyedPluginStore.PluginMetas.KEY_GLOBAL_PLUGIN_STORE), globalPluginStore);
-//        // 本次任务相关插件元信息
-//        KeyedPluginStore.PluginMetas pluginMetas = KeyedPluginStore.getPluginMetas(false, collection.getName());
-//        pmetas.put(new Attributes.Name(KeyedPluginStore.PluginMetas.KEY_PLUGIN_META)
-//                , Sets.union(pluginMetas.metas, globalPluginMetas).stream().map((meta) -> {
-//            meta.getLastModifyTimeStamp();
-//            return meta.toString();
-//        }).collect(Collectors.joining(",")));
-//        pmetas.put(new Attributes.Name(KeyedPluginStore.PluginMetas.KEY_APP_LAST_MODIFY_TIMESTAMP)
-//                , String.valueOf(pluginMetas.lastModifyTimestamp));
-//
-//        entries.put(Config.KEY_PLUGIN_METAS, pmetas);
-
-
+        localSnapshot.attachPluginCfgSnapshot2Manifest(manifest);
         return manifest;
     }
 
@@ -324,26 +291,26 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    private static void writeJarEntry(JarOutputStream jarOutput, String entryPath, File jarFile) {
-
-        try {
-            byte[] data = FileUtils.readFileToByteArray(jarFile);
-
-            // ZipPath zipPath = fileObj.getZipPath();
-            JarEntry entry = new JarEntry(entryPath);
-            entry.setTime(System.currentTimeMillis());
-            //byte[] data = fileObj.getOutputStream().toByteArray();
-            entry.setSize(data.length);
-            CRC32 crc = new CRC32();
-            crc.update(data);
-            entry.setCrc(crc.getValue());
-            jarOutput.putNextEntry(entry);
-            jarOutput.write(data);
-            jarOutput.closeEntry();
-        } catch (IOException e) {
-            throw new RuntimeException(jarFile.getAbsolutePath(), e);
-        }
-    }
+//    private static void writeJarEntry(JarOutputStream jarOutput, String entryPath, File jarFile) {
+//
+//        try {
+//            byte[] data = FileUtils.readFileToByteArray(jarFile);
+//
+//            // ZipPath zipPath = fileObj.getZipPath();
+//            JarEntry entry = new JarEntry(entryPath);
+//            entry.setTime(System.currentTimeMillis());
+//            //byte[] data = fileObj.getOutputStream().toByteArray();
+//            entry.setSize(data.length);
+//            CRC32 crc = new CRC32();
+//            crc.update(data);
+//            entry.setCrc(crc.getValue());
+//            jarOutput.putNextEntry(entry);
+//            jarOutput.write(data);
+//            jarOutput.closeEntry();
+//        } catch (IOException e) {
+//            throw new RuntimeException(jarFile.getAbsolutePath(), e);
+//        }
+//    }
 
 //    private static SubModule $(String dir, String module) {
 //        return new SubModule(dir, module);

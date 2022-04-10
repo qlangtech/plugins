@@ -210,8 +210,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
 //        }
 
         protected IPath getDumpDir() {
-            // this.getDumpTimeStamp()
-            return this.tabMeta.getDumpDir(this, this.getHiveConnGetter());
+
+            return this.tabMeta.getDumpDir(this.getFileSystem(), this.getHiveConnGetter());
         }
 
 //        private IPath getSourcePropsPath() {

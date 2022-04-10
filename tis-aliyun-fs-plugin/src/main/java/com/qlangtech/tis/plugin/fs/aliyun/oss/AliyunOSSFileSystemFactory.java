@@ -61,6 +61,11 @@ public class AliyunOSSFileSystemFactory extends FileSystemFactory {
     }
 
     @Override
+    public String identityValue() {
+        return this.name;
+    }
+
+    @Override
     public String getFSAddress() {
         return this.endpoint;
     }

@@ -34,14 +34,27 @@
     <dependencies>
 
         <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>
+            <version>${hudi.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-dependency</artifactId>
         </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-datax-hudi-plugin</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hudi-plugin</artifactId>
+            <artifactId>tis-datax-hudi-common</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -56,29 +69,44 @@
             <artifactId>tis-base-test</artifactId>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-scala-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-incr-test</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
         </dependency>
-
-
         <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>
-            <version>${hudi.version}</version>
-            <!--            <exclusions>-->
-            <!--                <exclusion>-->
-            <!--                    <groupId>com.esotericsoftware.kryo</groupId>-->
-            <!--                    <artifactId>kryo</artifactId>-->
-            <!--                </exclusion>-->
-            <!--            </exclusions>-->
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.25</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-scala-compiler</artifactId>
+            <artifactId>tis-flink-cdc-mysql-plugin</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-common</artifactId>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->

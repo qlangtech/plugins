@@ -39,9 +39,9 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
@@ -87,6 +87,9 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer currentLimit;
 
+//    @FormField(ordinal = 7, validate = {Validator.require})
+//    public CompactionConfig compaction;
+
     private transient IStreamTableCreator streamTableCreator;
 
     private IStreamTableCreator getStreamTableCreator() {
@@ -102,8 +105,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         HudiSinkFactory sink = (HudiSinkFactory) GroovyShellEvaluate.pluginThreadLocal.get();
         if (sink != null) {
             try {
-                DataXHudiWriter dataXWriter = getDataXHudiWriter(sink);
-                return HudiTableMeta.getHistoryBatchs(dataXWriter.getFs().getFileSystem(), dataXWriter.getHiveConnMeta());
+                IDataXHudiWriter dataXWriter = getDataXHudiWriter(sink);
+                return HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
             }
@@ -113,17 +116,17 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
     }
 
-    public static DataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
-        return (DataXHudiWriter) DataxWriter.load(null, sink.dataXName);
+    public static IDataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
+        return (IDataXHudiWriter) DataxWriter.load(null, sink.dataXName);
     }
 
     @Override
     public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-        DataXHudiWriter hudiWriter = getDataXHudiWriter(this);
+        IDataXHudiWriter hudiWriter = getDataXHudiWriter(this);
 
-        if (!IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME.equals(hudiWriter.fsName)) {
+        if (!IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME.equals(hudiWriter.getFsName())) {
             throw new IllegalStateException("fsName of hudiWriter must be equal to '"
-                    + IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME + "', but now is " + hudiWriter.fsName);
+                    + IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME + "', but now is " + hudiWriter.getFsName());
         }
 
         return Collections.emptyMap();
@@ -216,7 +219,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     }
 
 
-    /**
+    /**h
      * ------------------------------------------------------------------------------
      * End implements IStreamTableCreator
      * ------------------------------------------------------------------------------
@@ -231,8 +234,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            if (!DataXHudiWriter.HUDI_FILESYSTEM_NAME.equals(IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME)) {
-                throw new IllegalStateException("DataXHudiWriter.HUDI_FILESYSTEM_NAME:" + DataXHudiWriter.HUDI_FILESYSTEM_NAME
+            if (!IDataXHudiWriter.HUDI_FILESYSTEM_NAME.equals(IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME)) {
+                throw new IllegalStateException("DataXHudiWriter.HUDI_FILESYSTEM_NAME:" + IDataXHudiWriter.HUDI_FILESYSTEM_NAME
                         + ",IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME:"
                         + IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME + " must be equal");
             }

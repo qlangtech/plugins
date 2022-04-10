@@ -20,7 +20,9 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 
 import com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.SqlType;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -29,11 +31,17 @@ import org.junit.Test;
  **/
 public class TestSQLStyleFlinkStreamScriptCreator extends BaiscFlinkStreamScriptCreator {
 
+    private SqlType sqlType;
+
+    @Before
+    public void before() {
+        this.sqlType = new SqlType();
+    }
 
     @Test
     public void testFlinkSqlTableDDLCreate() throws Exception {
 
-        validateGenerateScript(StreamScriptType.SQL, new OffPartition(), (mdata) -> {
+        validateGenerateScript(sqlType, new OffPartition(), (mdata) -> {
             SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData
                     = (SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData) mdata;
             StringBuffer createTabDdl = tplData.getSinkFlinkTableDDL(targetTableName);
@@ -45,12 +53,12 @@ public class TestSQLStyleFlinkStreamScriptCreator extends BaiscFlinkStreamScript
 
 
     @Test
-    public void testFlinkSqlTableDDLCreateWithFieldValBasedPartition () throws Exception {
+    public void testFlinkSqlTableDDLCreateWithFieldValBasedPartition() throws Exception {
 
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
         fieldValBasedPartition.partitionPathField = "kind";
 
-        validateGenerateScript(StreamScriptType.SQL, fieldValBasedPartition, (mdata) -> {
+        validateGenerateScript(sqlType, fieldValBasedPartition, (mdata) -> {
             SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData
                     = (SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData) mdata;
             StringBuffer createTabDdl = tplData.getSinkFlinkTableDDL(targetTableName);

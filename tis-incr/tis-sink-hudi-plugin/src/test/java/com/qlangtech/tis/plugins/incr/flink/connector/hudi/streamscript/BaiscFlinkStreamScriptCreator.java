@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiTest;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -63,7 +64,7 @@ public class BaiscFlinkStreamScriptCreator {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
-    protected void validateGenerateScript(StreamScriptType scriptType, HudiTablePartition partition, MergeDataProcessor mergeDataProcessor) throws IOException {
+    protected void validateGenerateScript(ScriptType scriptType, HudiTablePartition partition, MergeDataProcessor mergeDataProcessor) throws IOException {
         String child = "default/customer_order_relation";
         String dataDir = "hudi";
         IPath rootPath = new HdfsPath(HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin");
@@ -119,7 +120,7 @@ public class BaiscFlinkStreamScriptCreator {
 
         HudiSinkFactory sinkFactory = new HudiSinkFactory();
         sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
-        sinkFactory.scriptType = scriptType.val;
+        sinkFactory.scriptType = scriptType;
         sinkFactory.currentLimit = 2000;
         //String groupName, String keyVal, Class<T> pluginClass
         sinkFactory.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));

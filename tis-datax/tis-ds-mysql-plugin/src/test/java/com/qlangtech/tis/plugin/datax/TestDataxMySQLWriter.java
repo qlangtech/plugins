@@ -97,7 +97,7 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbWriterName));
 
-        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)));
+        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
 
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();

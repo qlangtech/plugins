@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.hudi;
@@ -40,6 +40,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -58,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -66,12 +68,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * @create: 2022-01-21 13:02
  **/
 @Public
-public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn, IDataXBatchPost {
-    public static final String DATAX_NAME = "Hudi";
+public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn, IDataXBatchPost, IDataXHudiWriter {
 
-    public static final String KEY_FIELD_NAME_SPARK_CONN = "sparkConn";
-
-    public static final String HUDI_FILESYSTEM_NAME = "hudi_hdfs";
     private static final Logger logger = LoggerFactory.getLogger(DataXHudiWriter.class);
 
     @FormField(ordinal = 0, type = FormFieldType.SELECTABLE, validate = {Validator.require})
@@ -94,6 +92,16 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //    public boolean autoCreateTable;
 
 
+    @Override
+    public ITISFileSystem getFileSystem() {
+        return this.getFs().getFileSystem();
+    }
+
+    @Override
+    public String getFsName() {
+        return this.fsName;
+    }
+
     @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer shuffleParallelism;
 
@@ -105,6 +113,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     public String template;
 
 
+    @Override
     public HudiWriteTabType getHudiTableType() {
         return HudiWriteTabType.parse(tabType);
     }
@@ -160,6 +169,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return IOUtils.loadResourceFromClasspath(DataXHudiWriter.class, "DataXHudiWriter-tpl.json");
     }
 
+    @Override
+    public String getPartitionedBy() {
+        return this.partitionedBy;
+    }
+
 //    @Override
 //    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
 //        return null;
@@ -172,7 +186,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
-            this.registerSelectOptions(BasicFSWriter.KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
 
@@ -218,11 +232,15 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                     , DataXHudiWriter.class.getSimpleName() + "."
                             + subformProps.getSubFormFieldName() + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX, true);
             JSONObject subField = JSON.parseObject(overwriteSubField);
-            Class<? extends Describable> clazz
-                    = (Class<? extends Describable>) DataXHudiWriter.class.getClassLoader().loadClass(subField.getString(SubForm.FIELD_DES_CLASS));
-            Descriptor newSubDescriptor = TIS.get().getDescriptor(clazz);
-            rewriteSubFormProperties = SuFormProperties.copy(Descriptor.filterFieldProp(Descriptor.buildPropertyTypes(Optional.of(newSubDescriptor), clazz)), clazz, newSubDescriptor, subformProps);
+            final String targetClass = subField.getString(SubForm.FIELD_DES_CLASS);
 
+            Descriptor newSubDescriptor = Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
+                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+            rewriteSubFormProperties = SuFormProperties.copy(
+                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), newSubDescriptor.clazz))
+                    , newSubDescriptor.clazz
+                    , newSubDescriptor
+                    , subformProps);
             return rewriteSubFormProperties;
         }
 

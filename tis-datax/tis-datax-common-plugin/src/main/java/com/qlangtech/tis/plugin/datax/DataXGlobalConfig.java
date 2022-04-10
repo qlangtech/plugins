@@ -52,6 +52,11 @@ public class DataXGlobalConfig extends ParamsConfig implements IDataxGlobalCfg {
     public String template;
 
     @Override
+    public String identityValue() {
+        return name;
+    }
+
+    @Override
     public String getTemplate() {
         return this.template;
     }

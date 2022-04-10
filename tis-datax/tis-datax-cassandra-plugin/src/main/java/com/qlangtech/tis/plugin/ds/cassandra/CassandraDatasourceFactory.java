@@ -78,6 +78,11 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     public Boolean useSSL;
 
     @Override
+    public String identityValue() {
+        return this.name;
+    }
+
+    @Override
     public DataDumpers getDataDumpers(TISTable table) {
         List<String> jdbcUrls = Lists.newArrayList();
         for (String host : this.getHosts()) {

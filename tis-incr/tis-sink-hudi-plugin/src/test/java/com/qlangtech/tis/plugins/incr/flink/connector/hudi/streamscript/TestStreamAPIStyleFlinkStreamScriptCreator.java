@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 
 import com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.StreamApiType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,9 +29,13 @@ import org.junit.Test;
  * @create: 2022-03-24 16:50
  **/
 public class TestStreamAPIStyleFlinkStreamScriptCreator extends BaiscFlinkStreamScriptCreator {
+    StreamApiType streamApiType = new StreamApiType();
     @Test
     public void testStreamScriptGenerate() throws Exception {
-        validateGenerateScript(StreamScriptType.STREAM_API, new OffPartition(),(mdata) -> {
+
+
+
+        validateGenerateScript(streamApiType, new OffPartition(),(mdata) -> {
             StreamAPIStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData
                     = (StreamAPIStyleFlinkStreamScriptCreator.HudiStreamTemplateData) mdata;
             String createTabDdl = tplData.getFlinkStreamerConfig(targetTableName);
@@ -46,7 +51,7 @@ public class TestStreamAPIStyleFlinkStreamScriptCreator extends BaiscFlinkStream
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
         fieldValBasedPartition.partitionPathField = "kind";
 
-        validateGenerateScript(StreamScriptType.STREAM_API, fieldValBasedPartition,(mdata) -> {
+        validateGenerateScript(streamApiType, fieldValBasedPartition,(mdata) -> {
             StreamAPIStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData
                     = (StreamAPIStyleFlinkStreamScriptCreator.HudiStreamTemplateData) mdata;
             String createTabDdl = tplData.getFlinkStreamerConfig(targetTableName);

@@ -32,7 +32,6 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,7 +92,7 @@ public class HudiTest {
         return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(tab)), tab);
     }
 
-    @NotNull
+
     public static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
         final DefaultSparkConnGetter sparkConnGetter = new DefaultSparkConnGetter();
         sparkConnGetter.name = "default";

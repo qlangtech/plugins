@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class FieldValBasedPartition extends HudiTablePartition {
     public String partitionPathField;
 
     @Override
-    public void setProps(IPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         super.setProps(props, hudiWriter);
         if (StringUtils.isEmpty(this.partitionPathField)) {
             throw new IllegalStateException("partitionPathField can not be empty");

@@ -31,7 +31,7 @@ import java.io.IOException;
  * @create: 2022-03-02 12:11
  **/
 public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
-    private Configuration configuration;
+    //private Configuration configuration;
 
     @Override
     public FileSystem getHadoopFileSystem(String path) {
@@ -40,20 +40,21 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
             throw new IllegalStateException(
                     "fs identity:" + HUDI_FILESYSTEM_NAME + " relevant fileSystemFactory can not be null");
         }
-        if (configuration == null) {
-            synchronized (TISHadoopFileSystemGetter.class) {
-                if (configuration == null) {
-                    configuration = fsFactory.getConfiguration();
-                }
-            }
-        }
-        try {
-            return new Path(path).getFileSystem(configuration);
-        } catch (ClassCastException e) {
-            throw new RuntimeException(Configuration.class.getClassLoader()
-                    + ",cast from:" + fsFactory.getConfiguration().getClass().getClassLoader(), e);
-        } catch (IOException e) {
-            throw new RuntimeException("path:" + path, e);
-        }
+        return fsFactory.getFileSystem().unwrap();
+//        if (configuration == null) {
+//            synchronized (TISHadoopFileSystemGetter.class) {
+//                if (configuration == null) {
+//                    configuration = fsFactory.getConfiguration();
+//                }
+//            }
+//        }
+//        try {
+//            return new Path(path).getFileSystem(configuration);
+//        } catch (ClassCastException e) {
+//            throw new RuntimeException(Configuration.class.getClassLoader()
+//                    + ",cast from:" + fsFactory.getConfiguration().getClass().getClassLoader(), e);
+//        } catch (IOException e) {
+//            throw new RuntimeException("path:" + path, e);
+//        }
     }
 }

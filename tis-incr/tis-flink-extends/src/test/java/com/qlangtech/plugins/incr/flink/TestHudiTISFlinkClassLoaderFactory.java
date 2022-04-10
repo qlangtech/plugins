@@ -25,6 +25,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.solr.common.DOMUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
@@ -93,6 +94,25 @@ public class TestHudiTISFlinkClassLoaderFactory {
                 }
             }
         });
+
+        HttpUtils.addMockApply("." + DOMUtil.XML_RESERVED_PREFIX, new HttpUtils.IClasspathRes() {
+            @Override
+            public InputStream getResourceAsStream(URL url) {
+                ///opt/data/tis/libs/plugins/
+                try {
+                    String path = URLDecoder.decode(StringUtils.substringAfter(url.getQuery(), "path="));
+                    File xml = new File(Config.DEFAULT_DATA_DIR, path);
+                    if (!xml.exists()) {
+                        throw new IllegalStateException("cfg is not exist:" + xml.getAbsolutePath());
+                    }
+                    return FileUtils.openInputStream(xml);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+
         KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, false, "hudi", null);
         String appPath = Config.SUB_DIR_CFG_REPO + File.separator + TIS.KEY_TIS_PLUGIN_CONFIG + File.separator + appKey.getSubDirPath();
         HttpUtils.addMockApply(-1, new HttpUtils.MockMatchKey(URLEncoder.encode(appPath, TisUTF8.getName()), false, true), new HttpUtils.IClasspathRes() {

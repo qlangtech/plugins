@@ -33,6 +33,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -135,7 +136,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
     protected String getHdfsSubPath() {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return this.dumpTable.getNameWithPath() + "/" + getDumpTimeStamp();
+        return this.dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
     }
 
     protected EntityName createDumpTable() {
@@ -231,7 +232,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
                                 return new BindHiveTableTool.HiveBindConfig(colsExcludePartitionCols, tabDumpParentPath);
                             }
                         })
-                        , getDumpTimeStamp() //
+                        , DataxUtils.getDumpTimeStamp() //
                         , new ITaskContext() {
                             @Override
                             public Connection getObj() {

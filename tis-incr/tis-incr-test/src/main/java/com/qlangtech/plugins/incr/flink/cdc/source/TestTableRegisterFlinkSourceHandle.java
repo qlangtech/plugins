@@ -85,10 +85,10 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
         return flinkCols;
     }
 
-    @Override
-    protected IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
-        return () -> cols;
-    }
+//    @Override
+//    protected IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+//        return () -> cols;
+//    }
 
     @Override
     protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {

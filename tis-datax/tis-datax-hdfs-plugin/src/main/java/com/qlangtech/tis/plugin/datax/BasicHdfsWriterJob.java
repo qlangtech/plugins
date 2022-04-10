@@ -82,21 +82,6 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         super.init();
     }
 
-    public static String getDumpTimeStamp() {
-        // if (StringUtils.isEmpty(dumpTimeStamp)) {
-
-        String dumpTimeStamp = System.getProperty(DataxUtils.EXEC_TIMESTAMP);
-        if (StringUtils.isEmpty(dumpTimeStamp)) {
-            throw new IllegalStateException("dumpTimeStamp can not be empty");
-        }
-
-        return dumpTimeStamp;
-//            this.dumpTimeStamp = this.getPluginJobConf()
-//                    .getNecessaryValue(DataxUtils.EXEC_TIMESTAMP, HdfsWriterErrorCode.REQUIRED_VALUE); // timeFormat.format(new Date());
-        //}
-        //return dumpTimeStamp;
-    }
-
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
             this.fileSystem = writerPlugin.getFs().getFileSystem();

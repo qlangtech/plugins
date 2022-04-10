@@ -132,7 +132,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
             return (urls) -> FlinkUserCodeClassLoaders.create(classLoaderResolveOrder,
                     urls,
-                    TISFlinkClassLoaderFactory.class.getClassLoader(),
+                    TIS.get().getPluginManager().uberClassLoader,
+                    //TISFlinkClassLoaderFactory.class.getClassLoader(),
                     alwaysParentFirstPatterns,
                     NOOP_EXCEPTION_HANDLER,
                     checkClassLoaderLeak);

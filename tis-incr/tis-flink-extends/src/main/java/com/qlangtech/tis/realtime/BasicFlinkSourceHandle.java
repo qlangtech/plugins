@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
@@ -25,7 +26,9 @@ import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.extension.TISExtensible;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -35,6 +38,7 @@ import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -54,6 +58,91 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
 
     private transient TISSinkFactory sinkFuncFactory;
     private transient IncrStreamFactory streamFactory;
+
+    public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, String tabName) {
+        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(dataxName, tabName);
+        return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+    }
+
+    protected static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
+
+        if (!(sinKFactory instanceof IStreamTableCreator)) {
+            throw new IllegalStateException("writer:"
+                    + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
+        }
+        return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
+    }
+
+    private static FlinkCol mapFlinkCol(HdfsColMeta meta) {
+        return meta.type.accept(new DataType.TypeVisitor<FlinkCol>() {
+
+            @Override
+            public FlinkCol intType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.INT());
+            }
+
+            @Override
+            public FlinkCol smallIntType(DataType dataType) {
+                return new FlinkCol(meta.colName, DataTypes.SMALLINT());
+            }
+
+            @Override
+            public FlinkCol tinyIntType(DataType dataType) {
+                return new FlinkCol(meta.colName, DataTypes.TINYINT(), FlinkCol.Byte());
+            }
+
+            @Override
+            public FlinkCol floatType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.FLOAT());
+            }
+
+            @Override
+            public FlinkCol timeType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.TIME(3));
+            }
+
+            @Override
+            public FlinkCol bigInt(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.BIGINT());
+            }
+
+            public FlinkCol decimalType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.DECIMAL(type.columnSize, type.getDecimalDigits()));
+            }
+
+            @Override
+            public FlinkCol doubleType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.DOUBLE());
+            }
+
+            @Override
+            public FlinkCol dateType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.DATE(), FlinkCol.Date());
+            }
+
+            @Override
+            public FlinkCol timestampType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP(3), FlinkCol.DateTime());
+            }
+
+            @Override
+            public FlinkCol bitType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize), FlinkCol.Byte());
+            }
+
+            @Override
+            public FlinkCol blobType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.BYTES(), FlinkCol.ByteBuffer());
+            }
+
+            @Override
+            public FlinkCol varcharType(DataType type) {
+                return new FlinkCol(meta.colName, DataTypes.VARCHAR(type.columnSize));
+            }
+        });
+
+    }
 
 
     @Override
@@ -94,9 +183,11 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
     private Map<String, DTOStream> createTab2OutputTag(
             AsyncMsg<List<ReaderSource>> asyncMsg, StreamExecutionEnvironment env, TargetResName dataxName) throws java.io.IOException {
         Map<String, DTOStream> tab2OutputTag
-                = asyncMsg.getFocusTabs().stream().collect(Collectors.toMap((tab) -> tab
-                , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
-                }, getTabColMetas(dataxName, tab))));
+                = asyncMsg.getFocusTabs().stream().collect(
+                Collectors.toMap(
+                        (tab) -> tab
+                        , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
+                        }, getTabColMetas(dataxName, tab))));
 
         List<SingleOutputStreamOperator<DTO>> mainDataStream = Lists.newArrayList();
         for (ReaderSource sourceFunc : asyncMsg.getSource()) {

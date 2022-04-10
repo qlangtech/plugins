@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
@@ -23,10 +23,10 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
@@ -76,7 +76,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
         }
 
         public StringBuffer getSinkFlinkTableDDL(String tableName) {
-            DataXHudiWriter dataXWriter = HudiSinkFactory.getDataXHudiWriter(hudiSinkFactory);
+            IDataXHudiWriter dataXWriter = HudiSinkFactory.getDataXHudiWriter(hudiSinkFactory);
             Pair<HudiSelectedTab, HudiTableMeta> tabMetaPair = hudiSinkFactory.getTableMeta(tableName);
             final HudiTableMeta tabMeta = tabMetaPair.getRight();
             HudiSelectedTab tab = tabMetaPair.getLeft();
@@ -116,7 +116,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     //`partition` VARCHAR(20)
 
                     Objects.requireNonNull(tab.partition, "partition can not be null")
-                            .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.partitionedBy), this);
+                            .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.getPartitionedBy()), this);
 
                     //                    this.script.appendLine("\t,");
                     //                    appendColName(dataXWriter.partitionedBy);
@@ -140,7 +140,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     if (tab.partition.isSupportPartition()) {
                         this.script.block("PARTITIONED BY", (sub) -> {
                             // (`partition`)
-                            sub.appendLine("`" + dataXWriter.partitionedBy + "`");
+                            sub.appendLine("`" + dataXWriter.getPartitionedBy() + "`");
                         });
                     }
                     IHiveConnGetter hiveCfg = dataXWriter.getHiveConnMeta();
@@ -151,7 +151,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                         sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + hudiSinkFactory.getDataXName() + "',");
                         sub.appendLine("'connector' = 'hudi',");
                         sub.appendLine("'path' = '" + HudiTableMeta.getHudiDataDir(
-                                dataXWriter.getFs().getFileSystem(), tableName, hudiSinkFactory.dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
+                                dataXWriter.getFileSystem(), tableName, hudiSinkFactory.dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
 
                         //                        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(

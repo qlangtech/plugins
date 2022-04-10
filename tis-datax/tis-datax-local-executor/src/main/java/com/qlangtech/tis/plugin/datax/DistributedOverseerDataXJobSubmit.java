@@ -57,11 +57,6 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     @Override
     public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
         return new IDataXJobContext() {
-//            @Override
-//            public Void getContextInstance() {
-//                throw new UnsupportedOperationException();
-//            }
-
             @Override
             public IJoinTaskContext getTaskContext() {
                 return parentContext;

@@ -19,11 +19,12 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowDataMapper;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -43,6 +44,7 @@ import org.apache.hudi.util.StreamerUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -59,9 +61,9 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         FlinkStreamerConfig flinkCfg = null;
         Map<String, FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
         HudiSinkFactory sinkFunc = (HudiSinkFactory) this.getSinkFuncFactory();
-        DataXHudiWriter dataXHudiWriter = HudiSinkFactory.getDataXHudiWriter(sinkFunc);
-        FileSystemFactory fsFactory = dataXHudiWriter.getFs();
-        ITISFileSystem fs = fsFactory.getFileSystem();
+        IDataXHudiWriter dataXHudiWriter = HudiSinkFactory.getDataXHudiWriter(sinkFunc);
+
+        ITISFileSystem fs = dataXHudiWriter.getFileSystem();
         try {
             for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
                 flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
@@ -73,6 +75,11 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
+        return getAllTabColsMeta(dataxName, tabName);
     }
 
     /**
@@ -123,8 +130,10 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
                 (RowType) AvroSchemaConverter.convertToDataType(StreamerUtil.getSourceSchema(cfg))
                         .getLogicalType();
 
-        DataStream<RowData> dataStream = dtoDataStream.getStream()
-                .map(new DTO2RowDataMapper(dtoDataStream.cols), InternalTypeInfo.of(rowType))
+        DTO2RowDataMapper toRowMapper = new DTO2RowDataMapper(dtoDataStream.cols);
+
+        DataStream<RowData> dataStream = Objects.requireNonNull(dtoDataStream.getStream(), "source stream can not be null")
+                .map(toRowMapper, InternalTypeInfo.of(rowType))
                 .name(tabName).uid("uid_" + tabName);
 
 

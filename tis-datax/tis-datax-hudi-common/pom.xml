@@ -27,15 +27,29 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
+    <properties>
+        <avro.version>1.11.0</avro.version>
+    </properties>
 
-    <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-datax-hudi-common</artifactId>
+    <packaging>tpi</packaging>
 
     <dependencies>
-
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-common-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-common-rdbms-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
-
-
 
 
 </project>

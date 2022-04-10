@@ -35,8 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.File;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -55,79 +53,79 @@ public class TaskExec {
         return new IRemoteTaskTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
-           // final ExecutorService dataXExecutor = jobContext.getContextInstance();
+            // final ExecutorService dataXExecutor = jobContext.getContextInstance();
 
             @Override
             public void run() {
-             //   Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
-               // dataXExecutor.submit(() -> {
-                    try {
-                        MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
-                        MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
+                //   Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
+                // dataXExecutor.submit(() -> {
+                try {
+                    MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
+                    MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
 
-                        jobConsumer = new DataXJobSingleProcessorExecutor() {
-                            @Override
-                            protected DataXJobSubmit.InstanceType getExecMode() {
-                                return DataXJobSubmit.InstanceType.LOCAL;
-                            }
+                    jobConsumer = new DataXJobSingleProcessorExecutor() {
+                        @Override
+                        protected DataXJobSubmit.InstanceType getExecMode() {
+                            return DataXJobSubmit.InstanceType.LOCAL;
+                        }
 
-                            @Override
-                            protected String getClasspath() {
-                                return localDataXJobSubmit.getClasspath();
-                            }
+                        @Override
+                        protected String getClasspath() {
+                            return localDataXJobSubmit.getClasspath();
+                        }
 
-                            @Override
-                            protected boolean useRuntimePropEnvProps() {
-                                return false;
-                            }
+                        @Override
+                        protected boolean useRuntimePropEnvProps() {
+                            return false;
+                        }
 
-                            @Override
-                            protected String[] getExtraJavaSystemPrams() {
-                                return new String[]{
-                                        // "-D" + SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + SYSTEM_KEY_LOGBACK_PATH_VALUE
-                                        "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
-                            }
+                        @Override
+                        protected String[] getExtraJavaSystemPrams() {
+                            return new String[]{
+                                    // "-D" + SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + SYSTEM_KEY_LOGBACK_PATH_VALUE
+                                    "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
+                        }
 
-                            @Override
-                            protected String getIncrStateCollectAddress() {
-                                return ZkUtils.getFirstChildValue(
-                                        ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
-                            }
+                        @Override
+                        protected String getIncrStateCollectAddress() {
+                            return ZkUtils.getFirstChildValue(
+                                    ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
+                        }
 
-                            @Override
-                            protected String getMainClassName() {
-                                return localDataXJobSubmit.getMainClassName();
-                            }
+                        @Override
+                        protected String getMainClassName() {
+                            return localDataXJobSubmit.getMainClassName();
+                        }
 
-                            @Override
-                            protected File getWorkingDirectory() {
-                                return localDataXJobSubmit.getWorkingDirectory();
-                            }
-                        };
+                        @Override
+                        protected File getWorkingDirectory() {
+                            return localDataXJobSubmit.getWorkingDirectory();
+                        }
+                    };
 
-                        CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+                    CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
 
 //                        new CuratorDataXTaskMessage();
 //                        dataXJob.setJobId(taskContext.getTaskId());
 //                        dataXJob.setJobName(dataXfileName);
 //                        dataXJob.setDataXName(taskContext.getIndexName());
-                        jobConsumer.consumeMessage(dataXJob);
-                        success.set(true);
-                    } catch (Throwable e) {
-                        //  e.printStackTrace();
-                        success.set(false);
-                        if (this.hasCanceled) {
-                            logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
-                        } else {
-                            logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
-                            if (!(e instanceof DataXJobSingleProcessorException)) {
-                                throw new RuntimeException(e);
-                            }
+                    jobConsumer.consumeMessage(dataXJob);
+                    success.set(true);
+                } catch (Throwable e) {
+                    //  e.printStackTrace();
+                    success.set(false);
+                    if (this.hasCanceled) {
+                        logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
+                    } else {
+                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
+                        if (!(e instanceof DataXJobSingleProcessorException)) {
+                            throw new RuntimeException(e);
                         }
-                    } finally {
-                        complete.set(true);
-                        // shutdownExecutor();
                     }
+                } finally {
+                    complete.set(true);
+                    // shutdownExecutor();
+                }
                 //});
             }
 

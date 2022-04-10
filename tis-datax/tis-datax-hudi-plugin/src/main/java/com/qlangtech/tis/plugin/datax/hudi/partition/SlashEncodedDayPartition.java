@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class SlashEncodedDayPartition extends HudiTablePartition {
     public String partitionPathField;
 
     @Override
-    public void setProps(IPropertiesBuilder props, DataXHudiWriter hudiWriter) {
+    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         super.setProps(props, hudiWriter);
         setHiveSyncPartitionProps(props, partitionPathField, "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
     }

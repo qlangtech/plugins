@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ import java.util.List;
 public class OffPartition extends HudiTablePartition {
 
     @Override
-    public void setProps(IPropertiesBuilder props, DataXHudiWriter writer) {
+    public void setProps(IPropertiesBuilder props, IDataXHudiWriter writer) {
         //  props.setProperty("hoodie.datasource.write.partitionpath.field", null);
         // HoodieWriteConfig.KEYGENERATOR_TYPE
         // @see HoodieSparkKeyGeneratorFactory l78

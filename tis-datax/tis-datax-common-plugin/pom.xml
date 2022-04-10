@@ -26,11 +26,11 @@
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <packaging>tpi</packaging>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tis-datax-common-plugin</artifactId>
-
+    <packaging>tpi</packaging>
 
     <dependencies>
 

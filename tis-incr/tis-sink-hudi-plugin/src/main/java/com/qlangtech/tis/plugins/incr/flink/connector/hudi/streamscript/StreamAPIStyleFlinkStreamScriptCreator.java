@@ -23,9 +23,9 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.hudi.BatchOpMode;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +51,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
     }
 
     public class HudiStreamTemplateData extends AdapterStreamTemplateData {
-        private final DataXHudiWriter hudiWriter;
+        private final IDataXHudiWriter hudiWriter;
 
         public HudiStreamTemplateData(IStreamTemplateData data) {
             super(data);
@@ -75,7 +75,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             IHiveConnGetter hiveMeta = hudiWriter.getHiveConnMeta();
             Pair<HudiSelectedTab, HudiTableMeta> tableMeta = sinkFuncFactory.getTableMeta(tabName);
             HudiSelectedTab hudiTab = tableMeta.getLeft();
-            ITISFileSystem fs = hudiWriter.getFs().getFileSystem();
+            ITISFileSystem fs = hudiWriter.getFileSystem();
             IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, sinkFuncFactory.dumpTimeStamp, hiveMeta);
             // ITISFileSystem fs, IHiveConnGetter hiveConn, String tabName, String dumpTimeStamp
 
@@ -98,11 +98,19 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             script.appendLine("cfg.hiveSyncTable = %s", tabName);
             script.appendLine("cfg.hiveSyncMode = %s", HudiSinkFactory.HIVE_SYNC_MODE);
             script.appendLine("cfg.hiveSyncMetastoreUri = %s", hiveMeta.getMetaStoreUrls());
+
+
+            // CompactionConfig compact = sinkFuncFactory.compaction;
+            //   compact.triggerStrategy;
         }
     }
 
 
-    private void setPartitionRelevantProps(BlockScriptBuffer script, HudiSelectedTab hudiTab, DataXHudiWriter hudiWriter) {
+    private void setPartitionRelevantProps(
+            BlockScriptBuffer script, HudiSelectedTab hudiTab, IDataXHudiWriter hudiWriter) {
+        if (hudiTab.partition == null) {
+            throw new IllegalArgumentException("hudiTab.partition can not be null ");
+        }
         hudiTab.partition.setProps((key, val) -> {
             if (StringUtils.isEmpty(val)) {
                 return;

@@ -34,6 +34,8 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
+import io.debezium.config.CommonConnectorConfig;
+import io.debezium.connector.mysql.MySqlConnectorConfig;
 import org.apache.flink.api.common.JobExecutionResult;
 
 import java.util.Collections;
@@ -51,8 +53,6 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     private final FlinkCDCMySQLSourceFactory sourceFactory;
 
 
-    //   private IDataxProcessor dataXProcessor;
-
     public FlinkCDCMysqlSourceFunction(FlinkCDCMySQLSourceFactory sourceFactory) {
         this.sourceFactory = sourceFactory;
     }
@@ -67,10 +67,6 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-            //TabColIndexer colIndexer = new TabColIndexer(tabs);
-
-//            TISDeserializationSchema deserializationSchema
-//                    = new TISDeserializationSchema(new MySQLSourceValConvert(colIndexer));
 
             TISDeserializationSchema deserializationSchema = new TISDeserializationSchema();
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
@@ -82,6 +78,14 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                             , (dbHost, dbs, tbs, debeziumProperties) -> {
 
                                 DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
+
+                                debeziumProperties.setProperty(
+                                        CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
+                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
+
+                                debeziumProperties.setProperty(
+                                        MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
+                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
 
                                 String[] databases = dbs.toArray(new String[dbs.size()]);
 

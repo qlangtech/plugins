@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -45,7 +46,8 @@ public class TaskExec {
     private static final Logger logger = LoggerFactory.getLogger(TaskExec.class);
 
 
-    static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext, LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName) {
+    static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
+            , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, final List<String> dependencyTasks) {
         // final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -54,6 +56,11 @@ public class TaskExec {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
             // final ExecutorService dataXExecutor = jobContext.getContextInstance();
+
+            @Override
+            public List<String> getTaskDependencies() {
+                return dependencyTasks;
+            }
 
             @Override
             public void run() {

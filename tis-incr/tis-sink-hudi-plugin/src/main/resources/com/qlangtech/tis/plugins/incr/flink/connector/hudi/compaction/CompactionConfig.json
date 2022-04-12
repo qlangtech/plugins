@@ -18,18 +18,6 @@
         "val": "num_or_time"
       }
     ]
-  },
-  "asyncClean": {
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
   }
 }
 

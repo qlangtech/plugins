@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.description.Description;
 import org.apache.flink.configuration.description.HtmlFormatter;
 
@@ -55,6 +56,11 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
                 d = ((Duration) d).getSeconds();
             }
             helperContent.append("\n\n 单位：`秒`");
+        } else if (targetClazz == MemorySize.class) {
+            if (d != null) {
+                d = ((MemorySize) d).getKibiBytes();
+            }
+            helperContent.append("\n\n 单位：`kb`");
         } else if (targetClazz.isEnum()) {
             List<Enum> enums = EnumUtils.getEnumList((Class<Enum>) targetClazz);
             opts = enums.stream().map((e) -> new Option(e.name())).collect(Collectors.toList());

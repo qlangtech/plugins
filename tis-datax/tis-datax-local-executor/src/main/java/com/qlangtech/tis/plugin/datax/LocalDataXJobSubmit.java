@@ -26,16 +26,16 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.web.start.TisSubModule;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.web.start.TisSubModule;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.*;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -58,7 +58,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public IRemoteTaskTrigger createDataXJob(DataXJobSubmit.IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , IDataxProcessor dataxProcessor, String dataXfileName) {
+            , IDataxProcessor dataxProcessor, String dataXfileName, List<String> dependencyTasks) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
             File localExecutorLibDir = new File(Config.getLibDir(), "plugins/tis-datax-local-executor/WEB-INF/lib");
@@ -85,7 +85,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         logger.info("dataX Job:{},classpath:{},workingDir:{}", dataXfileName, this.classpath, workingDirectory.getPath());
 
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
-        return TaskExec.getRemoteJobTrigger(taskContext, this, dataXfileName);
+        return TaskExec.getRemoteJobTrigger(taskContext, this, dataXfileName, dependencyTasks);
     }
 
 
@@ -106,7 +106,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
             @Override
             public void destroy() {
-               // executorService.shutdownNow();
+                // executorService.shutdownNow();
             }
         };
     }

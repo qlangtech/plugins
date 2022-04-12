@@ -22,6 +22,8 @@ import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -34,6 +36,7 @@ import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * //@see org.apache.hudi.hive.MultiPartKeysValueExtractor
@@ -73,6 +76,11 @@ public class FieldValBasedPartition extends HudiTablePartition {
     public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+            return super.getPluginFormPropertyTypes(Optional.empty());
         }
 
         @Override

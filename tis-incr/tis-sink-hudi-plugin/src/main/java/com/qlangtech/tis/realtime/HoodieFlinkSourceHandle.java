@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.plugins.incr.flink.cdc.DTO2RowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.fs.IPath;
@@ -26,6 +26,7 @@ import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import org.apache.commons.collections.MapUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -47,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -60,6 +62,9 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
             , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
         FlinkStreamerConfig flinkCfg = null;
         Map<String, FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
+        if (MapUtils.isEmpty(tabStreamerCfg)) {
+            throw new IllegalStateException("tabStreamerCfg can not be null");
+        }
         HudiSinkFactory sinkFunc = (HudiSinkFactory) this.getSinkFuncFactory();
         IDataXHudiWriter dataXHudiWriter = HudiSinkFactory.getDataXHudiWriter(sinkFunc);
 
@@ -67,7 +72,8 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         try {
             for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
                 flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
-                        , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null");
+                        , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null,exist keys:"
+                                + tabStreamerCfg.keySet().stream().collect(Collectors.joining(",")));
                 this.createSchema(entry.getKey(), flinkCfg, sinkFunc, fs);
                 this.registerTable(env, flinkCfg
                         , entry.getKey(), entry.getValue());
@@ -79,7 +85,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
 
     @Override
     protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
-        return getAllTabColsMeta(dataxName, tabName);
+        return DTO2RowDataMapper.getAllTabColsMeta(dataxName, tabName);
     }
 
     /**
@@ -91,7 +97,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
     private void createSchema(String tableName, FlinkStreamerConfig flinkCfg, HudiSinkFactory sinkFunc, ITISFileSystem fs) {
         IPath schemaSourcePath = fs.getPath(flinkCfg.sourceAvroSchemaPath);
         if (fs.exists(schemaSourcePath)) {
-            logger.info("schemaSourcePath has been create,shall not be create again , path:{}", schemaSourcePath);
+            logger.info("schemaSourcePath has been create,shall not be create again,path:{}", schemaSourcePath);
             return;
         }
         HudiTableMeta.createSourceSchema(
@@ -156,8 +162,9 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         } else {
             Pipelines.clean(conf, pipeline);
         }
-
     }
+
+
 
 
 }

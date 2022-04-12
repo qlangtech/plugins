@@ -59,12 +59,7 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
     private transient TISSinkFactory sinkFuncFactory;
     private transient IncrStreamFactory streamFactory;
 
-    public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, String tabName) {
-        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(dataxName, tabName);
-        return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
-    }
-
-    protected static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+    public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
 
         if (!(sinKFactory instanceof IStreamTableCreator)) {
@@ -72,76 +67,6 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
                     + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
         }
         return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
-    }
-
-    private static FlinkCol mapFlinkCol(HdfsColMeta meta) {
-        return meta.type.accept(new DataType.TypeVisitor<FlinkCol>() {
-
-            @Override
-            public FlinkCol intType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.INT());
-            }
-
-            @Override
-            public FlinkCol smallIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.SMALLINT());
-            }
-
-            @Override
-            public FlinkCol tinyIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.TINYINT(), FlinkCol.Byte());
-            }
-
-            @Override
-            public FlinkCol floatType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.FLOAT());
-            }
-
-            @Override
-            public FlinkCol timeType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.TIME(3));
-            }
-
-            @Override
-            public FlinkCol bigInt(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BIGINT());
-            }
-
-            public FlinkCol decimalType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DECIMAL(type.columnSize, type.getDecimalDigits()));
-            }
-
-            @Override
-            public FlinkCol doubleType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DOUBLE());
-            }
-
-            @Override
-            public FlinkCol dateType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DATE(), FlinkCol.Date());
-            }
-
-            @Override
-            public FlinkCol timestampType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP(3), FlinkCol.DateTime());
-            }
-
-            @Override
-            public FlinkCol bitType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize), FlinkCol.Byte());
-            }
-
-            @Override
-            public FlinkCol blobType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BYTES(), FlinkCol.ByteBuffer());
-            }
-
-            @Override
-            public FlinkCol varcharType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.VARCHAR(type.columnSize));
-            }
-        });
-
     }
 
 

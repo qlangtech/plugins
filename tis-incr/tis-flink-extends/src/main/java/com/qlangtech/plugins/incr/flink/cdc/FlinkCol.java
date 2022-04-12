@@ -110,7 +110,7 @@ public class FlinkCol implements Serializable {
     }
 
 
-    private static class DateProcess extends BiFunction {
+    public static class DateProcess extends BiFunction {
         private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         @Override
@@ -128,7 +128,7 @@ public class FlinkCol implements Serializable {
         }
     }
 
-    private static class DateTimeProcess extends BiFunction {
+    public  static class DateTimeProcess extends BiFunction {
         private final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         @Override

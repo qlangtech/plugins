@@ -30,6 +30,7 @@ import com.tis.hadoop.rpc.StatusRpcClient;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -74,7 +75,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         EasyMock.replay(taskContext);
         //IJoinTaskContext taskContext
         //            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName
-        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME);
+        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME, Collections.emptyList());
         dataXJob.run();
         EasyMock.verify(taskContext);
     }

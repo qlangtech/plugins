@@ -34,6 +34,8 @@ import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.queue.DistributedQueue;
 
+import java.util.List;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-27 21:41
@@ -71,7 +73,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
-            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName) {
+            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName, final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
         DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();
@@ -87,6 +89,11 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
+            }
+
+            @Override
+            public List<String> getTaskDependencies() {
+                return dependencyTasks;
             }
 
             @Override

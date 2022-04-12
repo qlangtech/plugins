@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.PluginWrapper;
@@ -43,6 +44,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -87,8 +89,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer currentLimit;
 
-//    @FormField(ordinal = 7, validate = {Validator.require})
-//    public CompactionConfig compaction;
+    @FormField(ordinal = 7, validate = {Validator.require})
+    public CompactionConfig compaction;
 
     private transient IStreamTableCreator streamTableCreator;
 
@@ -158,12 +160,12 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
                     = reader.getSelectedTabs().stream()
                     .map((tab) -> (HudiSelectedTab) tab).collect(Collectors.toMap((tab) -> tab.getName(), (tab) -> tab));
 
-            List<File> dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
+            DataXCfgGenerator.GenerateCfgs dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
             Configuration cfg = null;
             Configuration paramCfg = null;
             String table = null;
             HudiTableMeta tableMeta = null;
-            for (File f : dataxCfgFile) {
+            for (File f : dataxCfgFile.getDataxFiles()) {
                 cfg = Configuration.from(f);
                 paramCfg = cfg.getConfiguration("job.content[0].writer.parameter");
                 if (paramCfg == null) {
@@ -219,7 +221,8 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
     }
 
 
-    /**h
+    /**
+     * h
      * ------------------------------------------------------------------------------
      * End implements IStreamTableCreator
      * ------------------------------------------------------------------------------

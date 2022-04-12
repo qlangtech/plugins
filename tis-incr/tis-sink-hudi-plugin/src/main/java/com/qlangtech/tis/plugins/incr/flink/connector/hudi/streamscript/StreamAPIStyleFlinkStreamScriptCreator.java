@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -98,6 +99,47 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             script.appendLine("cfg.hiveSyncTable = %s", tabName);
             script.appendLine("cfg.hiveSyncMode = %s", HudiSinkFactory.HIVE_SYNC_MODE);
             script.appendLine("cfg.hiveSyncMetastoreUri = %s", hiveMeta.getMetaStoreUrls());
+
+
+            CompactionConfig compaction = sinkFuncFactory.compaction;
+            if (compaction != null) {
+
+
+//                public String payloadClass;
+//
+//
+//                public Integer targetIOPerInMB;
+//
+//
+//                public String triggerStrategy;
+//
+//
+//                public Integer maxNumDeltaCommitsBefore;
+//
+//
+//                public Integer maxDeltaSecondsBefore;
+//
+//
+//                public Boolean asyncClean;
+//
+//
+//                public Integer retainCommits;
+//
+//
+//                public Integer archiveMinCommits;
+//
+//
+//                public Integer archiveMaxCommits;
+                script.appendLine("cfg.payloadClassName = %s", compaction.payloadClass);
+                script.appendLine("cfg.compactionTargetIo = %s", compaction.targetIOPerInMB);
+                script.appendLine("cfg.compactionTriggerStrategy = %s", compaction.triggerStrategy);
+                script.appendLine("cfg.compactionDeltaCommits = %s", compaction.maxNumDeltaCommitsBefore);
+                script.appendLine("cfg.compactionDeltaSeconds = %s", compaction.maxDeltaSecondsBefore);
+                script.appendLine("cfg.cleanAsyncEnabled = %s", compaction.asyncClean);
+                script.appendLine("cfg.cleanRetainCommits = %s", compaction.retainCommits);
+                script.appendLine("cfg.archiveMinCommits = %s", compaction.archiveMinCommits);
+                script.appendLine("cfg.archiveMaxCommits = %s", compaction.archiveMaxCommits);
+            }
 
 
             // CompactionConfig compact = sinkFuncFactory.compaction;

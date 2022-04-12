@@ -18,12 +18,14 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.hudi.configuration.FlinkOptions;
 
 /**
@@ -77,6 +79,9 @@ public class CompactionConfig implements Describable<CompactionConfig> {
 //                    .build()
 
 
+    private static final String KEY_archiveMinCommits = "archiveMinCommits";
+    private static final String KEY_archiveMaxCommits = "archiveMaxCommits";
+
     @TISExtension
     public static class DefaultDescriptor extends FlinkDescriptor<CompactionConfig> {
         public DefaultDescriptor() {
@@ -87,8 +92,22 @@ public class CompactionConfig implements Describable<CompactionConfig> {
             addFieldDescriptor("maxDeltaSecondsBefore", FlinkOptions.COMPACTION_DELTA_SECONDS);
             addFieldDescriptor("asyncClean", FlinkOptions.CLEAN_ASYNC_ENABLED);
             addFieldDescriptor("retainCommits", FlinkOptions.CLEAN_RETAIN_COMMITS);
-            addFieldDescriptor("archiveMinCommits", FlinkOptions.ARCHIVE_MIN_COMMITS);
-            addFieldDescriptor("archiveMaxCommits", FlinkOptions.ARCHIVE_MAX_COMMITS);
+            addFieldDescriptor(KEY_archiveMinCommits, FlinkOptions.ARCHIVE_MIN_COMMITS);
+            addFieldDescriptor(KEY_archiveMaxCommits, FlinkOptions.ARCHIVE_MAX_COMMITS);
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            //return super.validateAll(msgHandler, context, postFormVals);
+
+            int minCommit = Integer.parseInt(postFormVals.getField(KEY_archiveMinCommits));
+            int maxCommit = Integer.parseInt(postFormVals.getField(KEY_archiveMaxCommits));
+            if (maxCommit < minCommit) {
+                msgHandler.addFieldError(context, KEY_archiveMaxCommits, "不能小于'" + minCommit + "'");
+                msgHandler.addFieldError(context, KEY_archiveMinCommits, "不能大于'" + maxCommit + "'");
+                return false;
+            }
+            return true;
         }
 
         @Override

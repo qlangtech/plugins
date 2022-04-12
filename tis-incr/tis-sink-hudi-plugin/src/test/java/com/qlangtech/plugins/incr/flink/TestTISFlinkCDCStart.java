@@ -42,7 +42,6 @@ import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -58,7 +57,8 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-30 15:19
  **/
-public class TestTISFlinkCDCStart extends AbstractTestBase implements TISEasyMock {
+public class TestTISFlinkCDCStart  //extends AbstractTestBase
+        implements TISEasyMock {
     TargetResName dataxName = new TargetResName("hudi");
 
     @ClassRule(order = 100)

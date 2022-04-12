@@ -34,7 +34,6 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.IExecChainContext;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -59,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -320,11 +320,15 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @Override
     public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
 
-
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {
-                return "prep_" + tab.getName();
+                return IDataXBatchPost.getPreExecuteTaskName(tab);
+            }
+
+            @Override
+            public List<String> getTaskDependencies() {
+                return null;
             }
 
             @Override

@@ -22,6 +22,8 @@ import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -33,6 +35,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * // @see SlashEncodedDayPartitionValueExtractor
@@ -78,7 +81,10 @@ public class SlashEncodedDayPartition extends HudiTablePartition {
         public DefaultDescriptor() {
             super();
         }
-
+        @Override
+        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+            return super.getPluginFormPropertyTypes(Optional.empty());
+        }
         @Override
         public String getDisplayName() {
             return "slashEncodedDay";

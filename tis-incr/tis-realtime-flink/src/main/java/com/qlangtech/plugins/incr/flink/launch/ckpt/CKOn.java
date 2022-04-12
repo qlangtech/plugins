@@ -27,8 +27,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.flink.streaming.api.CheckpointingMode;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.ExecutionCheckpointingOptions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import java.time.Duration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -76,6 +80,35 @@ public class CKOn extends CheckpointFactory {
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean forceUnaligned;
 
+    @Override
+    public void setProps(StreamExecutionEnvironment env) {
+        env.enableCheckpointing(Duration.ofSeconds(this.ckpointInterval).toMillis());
+        CheckpointConfig cpCfg = env.getCheckpointConfig();
+        cpCfg.setCheckpointingMode(CheckpointingMode.valueOf(this.checkpointMode));
+        cpCfg.setCheckpointTimeout(Duration.ofSeconds(this.checkpointTimeout).toMillis());
+        cpCfg.setMaxConcurrentCheckpoints(maxConcurrentNum);
+        cpCfg.setMinPauseBetweenCheckpoints(Duration.ofSeconds(minPause).toMillis());
+        cpCfg.setTolerableCheckpointFailureNumber(maxFaildNum);
+        cpCfg.enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.valueOf(this.enableExternal));
+        cpCfg.enableUnalignedCheckpoints(this.enableUnaligned);
+        cpCfg.setForceUnalignedCheckpoints(forceUnaligned);
+//        // 每 ** ms 开始一次 checkpoint
+//        env.enableCheckpointing(10*1000);
+//        // 设置模式为精确一次 (这是默认值)
+//        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.AT_LEAST_ONCE);
+//        // 确认 checkpoints 之间的时间会进行 ** ms
+//        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
+//        // Checkpoint 必须在一分钟内完成，否则就会被抛弃
+        //  env.getCheckpointConfig().setCheckpointTimeout(60000);
+//        // 同一时间只允许一个 checkpoint 进行
+//        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
+//        // 开启在 job 中止后仍然保留的 externalized checkpoints
+//        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+//        // 允许在有更近 savepoint 时回退到 checkpoint
+//        env.getCheckpointConfig().setPreferCheckpointForRecovery(true);
+
+    }
+
     @TISExtension()
     public static class DefaultDescriptor extends FlinkDescriptor<CheckpointFactory> {
 
@@ -116,24 +149,5 @@ public class CKOn extends CheckpointFactory {
         }
     }
 
-    @Override
-    public void setProps(StreamExecutionEnvironment env) {
-        env.enableCheckpointing(this.ckpointInterval);
 
-//        // 每 ** ms 开始一次 checkpoint
-//        env.enableCheckpointing(10*1000);
-//        // 设置模式为精确一次 (这是默认值)
-//        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.AT_LEAST_ONCE);
-//        // 确认 checkpoints 之间的时间会进行 ** ms
-//        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);
-//        // Checkpoint 必须在一分钟内完成，否则就会被抛弃
-      //  env.getCheckpointConfig().setCheckpointTimeout(60000);
-//        // 同一时间只允许一个 checkpoint 进行
-//        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
-//        // 开启在 job 中止后仍然保留的 externalized checkpoints
-//        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-//        // 允许在有更近 savepoint 时回退到 checkpoint
-//        env.getCheckpointConfig().setPreferCheckpointForRecovery(true);
-
-    }
 }

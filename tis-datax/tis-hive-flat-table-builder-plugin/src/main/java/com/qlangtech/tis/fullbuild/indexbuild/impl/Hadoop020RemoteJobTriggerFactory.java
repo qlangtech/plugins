@@ -195,39 +195,39 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
                throw new UnsupportedOperationException();
             }
 
-            @Override
-            public RunningStatus getRunningStatus() {
-                try {
-                    ApplicationReport appReport = yarnClient.getApplicationReport(appid);
-                    YarnApplicationState appState = appReport.getYarnApplicationState();
-                    FinalApplicationStatus finalStatus = appReport.getFinalApplicationStatus();
-
-                    if (appState != YarnApplicationState.RUNNING && appState != YarnApplicationState.KILLED
-                            && appState != YarnApplicationState.FAILED && appState != YarnApplicationState.FINISHED) {
-                        logger.info("waitting:" + name + " ,build task wait launch,current:" + appState);
-                        // 等待任务开始
-                        return new RunningStatus(0, false, false);
-                    }
-
-                    if (appState == YarnApplicationState.RUNNING) {
-                        // 正在运行
-                        return new RunningStatus(appReport.getProgress(), false, false);
-                    }
-
-                    if (appState == YarnApplicationState.KILLED || appState == YarnApplicationState.FAILED
-                            || finalStatus != FinalApplicationStatus.SUCCEEDED) {
-                        logger.error("slice:" + name + " ,build result:" + appState + "\n finalStatus:" + finalStatus
-                                + "\ndiagnostics:" + appReport.getDiagnostics());
-                        // 完成了，但是失败了
-                        return new RunningStatus(appReport.getProgress(), true, false);
-                    } else {
-                        logger.info("core:" + name + " app (" + appid + ") is " + appState);
-                        return new RunningStatus(appReport.getProgress(), true, true);
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
+//            @Override
+//            public RunningStatus getRunningStatus() {
+//                try {
+//                    ApplicationReport appReport = yarnClient.getApplicationReport(appid);
+//                    YarnApplicationState appState = appReport.getYarnApplicationState();
+//                    FinalApplicationStatus finalStatus = appReport.getFinalApplicationStatus();
+//
+//                    if (appState != YarnApplicationState.RUNNING && appState != YarnApplicationState.KILLED
+//                            && appState != YarnApplicationState.FAILED && appState != YarnApplicationState.FINISHED) {
+//                        logger.info("waitting:" + name + " ,build task wait launch,current:" + appState);
+//                        // 等待任务开始
+//                        return new RunningStatus(0, false, false);
+//                    }
+//
+//                    if (appState == YarnApplicationState.RUNNING) {
+//                        // 正在运行
+//                        return new RunningStatus(appReport.getProgress(), false, false);
+//                    }
+//
+//                    if (appState == YarnApplicationState.KILLED || appState == YarnApplicationState.FAILED
+//                            || finalStatus != FinalApplicationStatus.SUCCEEDED) {
+//                        logger.error("slice:" + name + " ,build result:" + appState + "\n finalStatus:" + finalStatus
+//                                + "\ndiagnostics:" + appReport.getDiagnostics());
+//                        // 完成了，但是失败了
+//                        return new RunningStatus(appReport.getProgress(), true, false);
+//                    } else {
+//                        logger.info("core:" + name + " app (" + appid + ") is " + appState);
+//                        return new RunningStatus(appReport.getProgress(), true, true);
+//                    }
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
         };
     }
 

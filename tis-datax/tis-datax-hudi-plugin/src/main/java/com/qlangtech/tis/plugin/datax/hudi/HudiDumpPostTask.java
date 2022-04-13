@@ -28,7 +28,6 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -102,11 +101,6 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     @Override
     public String getTaskName() {
         return this.hudiTab.getName();
-    }
-
-    @Override
-    public RunningStatus getRunningStatus() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

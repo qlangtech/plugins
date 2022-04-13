@@ -41,7 +41,6 @@ import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -329,11 +328,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             @Override
             public List<String> getTaskDependencies() {
                 return null;
-            }
-
-            @Override
-            public RunningStatus getRunningStatus() {
-                throw new UnsupportedOperationException();
             }
 
             @Override

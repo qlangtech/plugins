@@ -26,7 +26,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.fullbuild.indexbuild.impl.AsynRemoteJobTrigger;
 import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
@@ -96,10 +95,10 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                 return dependencyTasks;
             }
 
-            @Override
-            public RunningStatus getRunningStatus() {
-                return RunningStatus.SUCCESS;
-            }
+//            @Override
+//            public RunningStatus getRunningStatus() {
+//                return RunningStatus.SUCCESS;
+//            }
 
             @Override
             public void cancel() {
@@ -108,8 +107,6 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
             }
         };
     }
-
-
 
 
     private DistributedQueue<CuratorDataXTaskMessage> getCuratorDistributedQueue() {

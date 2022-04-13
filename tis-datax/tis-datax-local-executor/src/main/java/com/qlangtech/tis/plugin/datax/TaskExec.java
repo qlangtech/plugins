@@ -24,7 +24,6 @@ import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
@@ -162,10 +161,10 @@ public class TaskExec {
                 this.hasCanceled = true;
             }
 
-            @Override
-            public RunningStatus getRunningStatus() {
-                return new RunningStatus(0, complete.get(), success.get());
-            }
+//            @Override
+//            public RunningStatus getRunningStatus() {
+//                return new RunningStatus(0, complete.get(), success.get());
+//            }
         };
     }
 }

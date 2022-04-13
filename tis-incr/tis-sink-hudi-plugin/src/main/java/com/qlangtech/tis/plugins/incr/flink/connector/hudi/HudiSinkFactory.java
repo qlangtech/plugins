@@ -165,7 +165,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
             Configuration paramCfg = null;
             String table = null;
             HudiTableMeta tableMeta = null;
-            for (File f : dataxCfgFile.getDataxFiles()) {
+            for (File f : dataxCfgFile.getDataXCfgFiles()) {
                 cfg = Configuration.from(f);
                 paramCfg = cfg.getConfiguration("job.content[0].writer.parameter");
                 if (paramCfg == null) {

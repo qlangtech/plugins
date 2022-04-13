@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -324,12 +323,14 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             public String getTaskName() {
                 return IDataXBatchPost.getPreExecuteTaskName(tab);
             }
+
             @Override
             public void run() {
                 // 创建hud schema
+
                 FileSystemFactory fsFactory = getFs();
                 IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(), execContext.getPartitionTimestamp(), getHiveConnMeta());
-                HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(), tab.getName(), dumpDir, (HudiSelectedTab) tab);
+                logger.info("create schema on path:{}", HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(), tab.getName(), dumpDir, (HudiSelectedTab) tab));
             }
         };
     }

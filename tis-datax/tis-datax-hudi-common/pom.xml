@@ -27,9 +27,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <properties>
-        <avro.version>1.11.0</avro.version>
-    </properties>
+
 
     <artifactId>tis-datax-hudi-common</artifactId>
     <packaging>tpi</packaging>

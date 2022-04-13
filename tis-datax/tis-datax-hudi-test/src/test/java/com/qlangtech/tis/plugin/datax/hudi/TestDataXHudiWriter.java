@@ -178,7 +178,7 @@ public class TestDataXHudiWriter {
         File dataxCfgDir = caseFolder.newFolder("dataxCfgDir");
         EasyMock.expect(processor.getDataxCfgDir(null)).andReturn(dataxCfgDir);
 
-        DataXCfgGenerator.GenerateCfgs genCfgs = new DataXCfgGenerator.GenerateCfgs();
+        DataXCfgGenerator.GenerateCfgs genCfgs = new DataXCfgGenerator.GenerateCfgs(dataxCfgDir);
         genCfgs.setGenTime(1);
         genCfgs.setGroupedChildTask(
                 Collections.singletonMap(tableFullTypes
@@ -284,7 +284,7 @@ public class TestDataXHudiWriter {
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
-            DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs();
+            DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs(dataXCfgDir);
             genCfg.setGenTime(HudiWriter.timestamp);
             genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
                     , Lists.newArrayList(WriterTemplate.TAB_customer_order_relation + "_0")));

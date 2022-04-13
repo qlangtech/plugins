@@ -324,12 +324,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             public String getTaskName() {
                 return IDataXBatchPost.getPreExecuteTaskName(tab);
             }
-
-            @Override
-            public List<String> getTaskDependencies() {
-                return null;
-            }
-
             @Override
             public void run() {
                 // 创建hud schema

@@ -32,7 +32,6 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTest;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
-import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
@@ -103,20 +102,13 @@ public class BaiscFlinkStreamScriptCreator {
 
         EasyMock.expect(dataXProcessor.getReader(null)).andReturn(dataXReader);
 
-        EasyMock.expect(dataXProcessor.getDataxCfgFileNames(null)).andReturn(Collections.singletonList(dataXCfg));
+       // EasyMock.expect(dataXProcessor.getDataxCfgFileNames(null)).andReturn(Collections.singletonList(dataXCfg));
 
         DataxProcessor.processorGetter = (dataXName) -> {
             Assert.assertEquals(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), dataXName);
             return dataXProcessor;
         };
         EasyMock.replay(dataXProcessor, dataXReader);
-//        IStreamTableCreator.IStreamTableMeta
-//                streamTableMeta = forTest.writer.getStreamTableMeta(HudiWriter.targetTableName);
-
-//        Assert.assertNotNull("streamTableMeta can not be null", streamTableMeta);
-//        streamTableMeta.getColsMeta();
-
-        // System.out.println(streamTableMeta.createFlinkTableDDL());
 
         HudiSinkFactory sinkFactory = new HudiSinkFactory();
         sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
@@ -128,17 +120,6 @@ public class BaiscFlinkStreamScriptCreator {
 
         mergeDataProcessor.processMergeData((IStreamIncrGenerateStrategy.AdapterStreamTemplateData) sinkFactory.decorateMergeData(
                 new TestStreamTemplateData(HdfsFileSystemFactoryTestUtils.testDataXName, targetTableName)));
-//        SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData
-//                = (SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData) sinkFactory.decorateMergeData(
-//                new TestStreamTemplateData(HdfsFileSystemFactoryTestUtils.testDataXName, targetTableName));
-////
-////
-//        StringBuffer createTabDdl = tplData.getSinkFlinkTableDDL(targetTableName);
-//
-//
-//        Assert.assertNotNull(createTabDdl);
-////
-//        System.out.println(createTabDdl);
 
 
         EasyMock.verify(dataXProcessor, dataXReader);

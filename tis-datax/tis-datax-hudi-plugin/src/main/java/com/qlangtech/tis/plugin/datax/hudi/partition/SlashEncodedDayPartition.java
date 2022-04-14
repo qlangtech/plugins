@@ -52,7 +52,8 @@ public class SlashEncodedDayPartition extends HudiTablePartition {
     @Override
     public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         super.setProps(props, hudiWriter);
-        setHiveSyncPartitionProps(props, partitionPathField, "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
+        setHiveSyncPartitionProps(props, hudiWriter, "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
     }
 
     @Override

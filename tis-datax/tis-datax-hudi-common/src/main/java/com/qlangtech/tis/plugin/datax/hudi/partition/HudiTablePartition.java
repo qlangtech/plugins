@@ -39,11 +39,11 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
      * //@see org.apache.hudi.DataSourceUtils +buildHiveSyncConfig()
      *
      * @param props
-     * @param field
+     * @param hudiWriter
      * @param partition_extractor_class
      */
-    protected static void setHiveSyncPartitionProps(IPropertiesBuilder props, String field, String partition_extractor_class) {
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS, field);
+    protected static void setHiveSyncPartitionProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter, String partition_extractor_class) {
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS, hudiWriter == null ? null : hudiWriter.getPartitionedBy());
         // "org.apache.hudi.hive.MultiPartKeysValueExtractor";
         // partition 分区值抽取类
         props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_EXTRACTOR_CLASS, partition_extractor_class);
@@ -74,7 +74,6 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
         if (StringUtils.isEmpty(hudiWriter.getPartitionedBy())) {
             throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
         }
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, hudiWriter.getPartitionedBy());
         setKeyGeneratorType(props, "SIMPLE");
     }
 

@@ -23,7 +23,7 @@
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
         <version>3.5.0</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>customer-plugin-test</artifactId>

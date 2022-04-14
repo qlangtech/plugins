@@ -292,19 +292,13 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     //private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs;
 
     @Override
-    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs genCfg) {
 
 //        if (generateCfgs == null) {
 //            generateCfgs = new AtomicReference<>();
 //        }
 //                = generateCfgs.updateAndGet((pre) -> {
 //            if (pre == null) {
-        if (dataXName == null) {
-            throw new IllegalStateException("prop dataXName can not be null");
-        }
-        DataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
-        DataXCfgGenerator.GenerateCfgs genCfg = DataXCfgGenerator.GenerateCfgs.readFromGen(dataxProcessor.getDataxCfgDir(null));
-        logger.info("create GenerateCfgs with genTime:" + genCfg.getGenTime());
         //  return pre;
         //}
         //  return pre;

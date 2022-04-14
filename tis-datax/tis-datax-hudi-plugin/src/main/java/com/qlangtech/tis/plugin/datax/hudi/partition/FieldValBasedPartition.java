@@ -56,8 +56,9 @@ public class FieldValBasedPartition extends HudiTablePartition {
         if (StringUtils.isEmpty(this.partitionPathField)) {
             throw new IllegalStateException("partitionPathField can not be empty");
         }
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
         setHiveSyncPartitionProps(props
-                , this.partitionPathField
+                , hudiWriter
                 , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
     }
 

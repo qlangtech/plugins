@@ -70,7 +70,7 @@ public class TestHudiSelectedTab {
 
 
         UploadPluginMeta pmeta = UploadPluginMeta.parse(
-                "dataxReader:require,targetDescriptorName_MySQL,subFormFieldName_selectedTabs,dataxName_hudi");
+                "dataxReader:require,targetDescriptorName_MySQL,targetDescriptorImpl_DataxMySQLReader,subFormFieldName_selectedTabs,dataxName_hudi");
 
         Optional<IPropertyType.SubFormFilter> subFormFilter = pmeta.getSubFormFilter();
         Assert.assertTrue(subFormFilter.isPresent());

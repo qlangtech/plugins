@@ -61,6 +61,7 @@ public class HudiConfig {
     public static File getHudiDependencyDir() {
         File hudiLibDir = getHudiPluginLibDir();
         File hudiDependencyDir = new File(hudiLibDir, "../../tis-datax-hudi-dependency");
+        hudiDependencyDir = hudiDependencyDir.toPath().normalize().toFile();
         if (!hudiDependencyDir.exists()) {
             throw new IllegalStateException("hudiDependencyDir is not exist:" + hudiDependencyDir.getAbsolutePath());
         }

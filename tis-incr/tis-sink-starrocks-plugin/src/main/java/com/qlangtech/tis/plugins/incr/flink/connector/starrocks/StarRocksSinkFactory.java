@@ -190,15 +190,6 @@ public class StarRocksSinkFactory extends TISSinkFactory {
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
             sinkFuncs.put(tableName, sinkFuncRef.get());
         }
-//        if (tabAlias == null || tabAlias.isEmpty()) {
-//            throw new IllegalStateException("has not set tables");
-//        }
-//        IDataxProcessor.TableAlias tableName = null;
-//        for (Map.Entry<String, IDataxProcessor.TableAlias> entry : tabAlias.entrySet()) {
-//            tableName = entry.getValue();
-//            break;
-//        }
-
 
         if (sinkFuncs.size() < 1) {
             throw new IllegalStateException("size of sinkFuncs can not be small than 1");

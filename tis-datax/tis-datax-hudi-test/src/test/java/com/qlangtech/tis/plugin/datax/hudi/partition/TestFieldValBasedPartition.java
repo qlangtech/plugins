@@ -29,14 +29,20 @@ public class TestFieldValBasedPartition extends BasicPartitionTest {
     @Test
     public void testPropsBuild() throws Exception {
 
+//        hoodie.datasource.hive_sync.partition_fields = pt
+//        hoodie.datasource.write.keygenerator.type = SIMPLE
+//        hoodie.datasource.write.partitionpath.field = testFiled
+//        hoodie.datasource.hive_sync.partition_extractor_class = org.apache.hudi.hive.MultiPartKeysValueExtractor
+
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
         String partitionField = "testFiled";
         fieldValBasedPartition.partitionPathField = partitionField;
         String propContentExpect
-                = "hoodie.datasource.write.partitionpath.field=pt\n" +
+                =
                 "hoodie.datasource.write.keygenerator.type=SIMPLE\n" +
-                "hoodie.datasource.hive_sync.partition_fields=" + partitionField + "\n" +
-                "hoodie.datasource.hive_sync.partition_extractor_class=org.apache.hudi.hive.MultiPartKeysValueExtractor";
+                        "hoodie.datasource.write.partitionpath.field=" + partitionField + "\n" +
+                        "hoodie.datasource.hive_sync.partition_fields=pt\n" +
+                        "hoodie.datasource.hive_sync.partition_extractor_class=org.apache.hudi.hive.MultiPartKeysValueExtractor";
         verifyPartitionPropsBuild(fieldValBasedPartition, propContentExpect);
 
         verifySQLDDLOfPartition(fieldValBasedPartition);

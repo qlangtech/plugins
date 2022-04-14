@@ -50,7 +50,7 @@ import com.qlangtech.tis.plugin.common.IWriterPluginMeta;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
+import com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -117,6 +117,7 @@ public class TestDataXHudiWriter {
         System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(HudiWriter.timestamp));
     }
 
+   // @Ignore
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
@@ -160,7 +161,11 @@ public class TestDataXHudiWriter {
 
         HudiSelectedTab hudiTab = new HudiSelectedTab();
         hudiTab.name = tableFullTypes;
-        hudiTab.partition = new OffPartition();
+        // hudiTab.partition = new OffPartition();
+        FieldValBasedPartition pt = new FieldValBasedPartition();
+        pt.partitionPathField = "tiny_c";
+        hudiTab.partition = pt;
+
         hudiTab.setCols(fullTypesCols);
         hudiTab.recordField = pk.get().getKey();
         hudiTab.sourceOrderingField = hudiTab.recordField;
@@ -176,7 +181,7 @@ public class TestDataXHudiWriter {
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;
         File dataxCfgDir = caseFolder.newFolder("dataxCfgDir");
-        EasyMock.expect(processor.getDataxCfgDir(null)).andReturn(dataxCfgDir);
+        //  EasyMock.expect(processor.getDataxCfgDir(null)).andReturn(dataxCfgDir);
 
         DataXCfgGenerator.GenerateCfgs genCfgs = new DataXCfgGenerator.GenerateCfgs(dataxCfgDir);
         genCfgs.setGenTime(1);
@@ -239,21 +244,15 @@ public class TestDataXHudiWriter {
             }
         };
 
-//        DBUtil.readerDataSourceFactoryGetter = new IDataSourceFactoryGetter(){
-//            @Override
-//            public DataSourceFactory getDataSourceFactory() {
-//                return dsFactory;
-//            }
-//            @Override
-//            public Integer getRowFetchSize() {
-//                return Integer.MAX_VALUE;
-//            }
-//        };
+
+        IRemoteTaskTrigger preExec = dataxWriter.createPreExecuteTask(execContext, hudiTab);
+        Assert.assertNotNull("preExec can not be null", preExec);
+        preExec.run();
 
         WriterTemplate.realExecuteDump(readerPluginMeta, writerMeta);
 
         MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(123));
-        HudiDumpPostTask postTask = (HudiDumpPostTask) dataxWriter.createPostTask(execContext, hudiTab);
+        HudiDumpPostTask postTask = (HudiDumpPostTask) dataxWriter.createPostTask(execContext, hudiTab, genCfgs);
         Assert.assertNotNull("postTask can not be null", postTask);
         postTask.run();
 
@@ -261,7 +260,7 @@ public class TestDataXHudiWriter {
     }
 
 
-    // @Ignore
+     @Ignore
     @Test
     public void testRealDump() throws Exception {
 
@@ -290,7 +289,7 @@ public class TestDataXHudiWriter {
                     , Lists.newArrayList(WriterTemplate.TAB_customer_order_relation + "_0")));
             genCfg.write2GenFile(dataXCfgDir);
 
-            EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);
+            //   EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);
             // EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
                 return houseTest.writer;
@@ -321,7 +320,7 @@ public class TestDataXHudiWriter {
 //            hudiWriter.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
 //            hudiWriter.createPostTask(execContext, tab);
             MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(123));
-            HudiDumpPostTask postTask = (HudiDumpPostTask) houseTest.writer.createPostTask(execContext, houseTest.tab);
+            HudiDumpPostTask postTask = (HudiDumpPostTask) houseTest.writer.createPostTask(execContext, houseTest.tab, genCfg);
             Assert.assertNotNull("postTask can not be null", postTask);
 
             postTask.run();

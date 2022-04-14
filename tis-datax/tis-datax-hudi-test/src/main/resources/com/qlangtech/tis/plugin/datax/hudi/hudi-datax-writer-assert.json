@@ -33,15 +33,14 @@
         "type": "4,-1,"
       }
     ],
-    "dataxName": "testDataX4465",
-    "fileName": "customer_order_relation",
-    "fileType": "avro",
-    "hudiBatchOp": "BULK_INSERT",
-    "hudiPartitionpathField": "kind",
-    "hudiRecordkey": "customerregister_id",
-    "hudiSourceOrderingField": "last_ver",
-    "hudiTabType": "COPY_ON_WRITE",
-    "shuffleParallelism": 999,
-    "writeMode": "insert"
+    "dataxName":"testDataX4465",
+    "fileName":"customer_order_relation",
+    "fileType":"avro",
+    "hudiBatchOp":"BULK_INSERT",
+    "hudiRecordkey":"customerregister_id",
+    "hudiSourceOrderingField":"last_ver",
+    "hudiTabType":"COPY_ON_WRITE",
+    "shuffleParallelism":3,
+    "writeMode":"append"
   }
 }

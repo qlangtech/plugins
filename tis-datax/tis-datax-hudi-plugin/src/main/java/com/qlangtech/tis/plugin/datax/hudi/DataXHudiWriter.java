@@ -59,7 +59,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -290,28 +289,26 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
     }
 
-    private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs;
+    //private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs;
 
     @Override
     public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab) {
 
-        if (generateCfgs == null) {
-            generateCfgs = new AtomicReference<>();
+//        if (generateCfgs == null) {
+//            generateCfgs = new AtomicReference<>();
+//        }
+//                = generateCfgs.updateAndGet((pre) -> {
+//            if (pre == null) {
+        if (dataXName == null) {
+            throw new IllegalStateException("prop dataXName can not be null");
         }
-
-        DataXCfgGenerator.GenerateCfgs genCfg
-                = generateCfgs.updateAndGet((pre) -> {
-            if (pre == null) {
-                if (dataXName == null) {
-                    throw new IllegalStateException("prop dataXName can not be null");
-                }
-                DataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
-                pre = DataXCfgGenerator.GenerateCfgs.readFromGen(dataxProcessor.getDataxCfgDir(null));
-                logger.info("create GenerateCfgs with genTime:" + pre.getGenTime());
-                return pre;
-            }
-            return pre;
-        });
+        DataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
+        DataXCfgGenerator.GenerateCfgs genCfg = DataXCfgGenerator.GenerateCfgs.readFromGen(dataxProcessor.getDataxCfgDir(null));
+        logger.info("create GenerateCfgs with genTime:" + genCfg.getGenTime());
+        //  return pre;
+        //}
+        //  return pre;
+        //});
         return new HudiDumpPostTask(execContext, (HudiSelectedTab) tab, this, genCfg);
     }
 

@@ -100,7 +100,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
     @Override
     public String getTaskName() {
-        return this.hudiTab.getName();
+        return "hudi_delta_" + this.hudiTab.getName();
     }
 
     @Override

@@ -144,6 +144,11 @@ public class K8SController implements IRCController {
         // this.api.deleteNamespacedReplicationControllerCall()
     }
 
+    @Override
+    public void stopInstance(TargetResName indexName) {
+        throw new UnsupportedOperationException();
+    }
+
 //    public void deploy(String indexName, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws Exception {
 //        if (timestamp < 1) {
 //            throw new IllegalArgumentException("argument timestamp can not small than 1");

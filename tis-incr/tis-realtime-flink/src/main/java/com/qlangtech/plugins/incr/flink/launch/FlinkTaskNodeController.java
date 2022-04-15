@@ -23,13 +23,14 @@ import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -51,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -60,10 +60,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.zip.CRC32;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -80,6 +78,7 @@ public class FlinkTaskNodeController implements IRCController {
     public static void main(String[] args) {
 
     }
+
 
     @Override
     public void checkUseable() {
@@ -106,10 +105,7 @@ public class FlinkTaskNodeController implements IRCController {
 
             // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
             String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
-            // File streamJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), timestamp);
-//            if (!streamJar.exists()) {
-//                throw new IllegalStateException("streamJar must be exist, path:" + streamJar.getAbsolutePath());
-//            }
+
             File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
             logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
@@ -119,56 +115,13 @@ public class FlinkTaskNodeController implements IRCController {
             // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
             request.setEntryClass(TISFlinkCDCStart.class.getName());
 
-
-//             new Manifest();
-//            Map<String, Attributes> entries = manifest.getEntries();
-//            Attributes attrs = new Attributes();
-//            attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
-//            // 传递App名称
-//            entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
-            //  JarFile jarFile = new JarFile(streamJar);
             Manifest manifest = this.createManifestCfgAttrs(collection, timestamp);
 
             try (JarOutputStream jaroutput = new JarOutputStream(
                     FileUtils.openOutputStream(streamUberJar, false), manifest)) {
 
                 jaroutput.flush();
-//                oJarFile.stream().forEach((f) -> {
-//                    try {
-//                        jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + f.getName()));
-//                        if (!f.isDirectory()) {
-//                            try (InputStream content = oJarFile.getInputStream(f)) {
-//                                jaroutput.write(IOUtils.toByteArray(content));
-//                            }
-//                        }
-//                        jaroutput.closeEntry();
-//                    } catch (IOException e) {
-//                        throw new RuntimeException(e);
-//                    }
-//                });
-
-
-//                // 保证组件服务可以成功加载
-//                jaroutput.putNextEntry(new ZipEntry(collection.getName() + "/" + Indexer.METAINF_ANNOTATIONS + TISExtension.class.getName()));
-//                ByteArrayOutputStream bytes = null;
-//                try (ObjectOutputStream output = new ObjectOutputStream(bytes = new ByteArrayOutputStream())) {
-//                    output.writeObject(SerAnnotatedElementUtils.create(collection));
-//                    output.writeObject(null);
-//                    output.flush();
-//                    jaroutput.write(bytes.toByteArray());
-//                }
-//                jaroutput.closeEntry();
-
-//                JarEntry entry = new JarEntry("META-INF/");
-//                entry.setTime(System.currentTimeMillis());
-//                jaroutput.putNextEntry(entry);
-//                jaroutput.closeEntry();
             }
-
-//            jarFile = new JarFile(streamUberJar);
-//            jarFile.stream().forEach((entry) -> {
-//                System.out.println("-----" + entry.getName());
-//            });
 
             request.setProgramArgs(collection.getName());
             request.setDependency(streamUberJar.getAbsolutePath());
@@ -176,8 +129,9 @@ public class FlinkTaskNodeController implements IRCController {
             long start = System.currentTimeMillis();
             JobID jobID = flinkClient.submitJar(restClient, request);
 
-            File incrJobFile = getIncrJobRecordFile(collection);
-            FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
+            FlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
+            incrJob.createNewJob(jobID);
+            //FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
         } finally {
             Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
@@ -220,23 +174,23 @@ public class FlinkTaskNodeController implements IRCController {
         return manifest;
     }
 
-    private File getIncrJobRecordFile(TargetResName collection) {
+
+    private FlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
         DataxProcessor processor = DataxProcessor.load(null, collection.getName());
-        // assertTrue("launchResult must success", launchResult.get());
-        // EasyMock.verify(jarLoader);
         File dataXWorkDir = processor.getDataXWorkDir(null);
-        return new File(dataXWorkDir, "incrJob.log");
+        return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log"));
     }
+
 
     @Override
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
-
-        JobID launchJobID = getLaunchJobID(collection);
-        if (launchJobID == null) {
-            return null;
+        FlinkIncrJobStatus incrJobStatus = this.getIncrJobStatus(collection);
+        if (incrJobStatus.getState() != IFlinkIncrJobStatus.State.RUNNING) {
+            // stop 或者压根没有创建
+            return new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus);
         }
-
+        JobID launchJobID = incrJobStatus.getLaunchJobID();
         try {
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
@@ -249,7 +203,7 @@ public class FlinkTaskNodeController implements IRCController {
                 }
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
                 JobDetailsInfo jobDetailsInfo = jobDetails.get(5, TimeUnit.SECONDS);
-                rcDeployment = new ExtendFlinkJobDeploymentDetails(factory.getClusterCfg(), jobDetailsInfo);
+                rcDeployment = new ExtendFlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus, jobDetailsInfo);
                 return rcDeployment;
             }
         } catch (TimeoutException e) {
@@ -278,83 +232,74 @@ public class FlinkTaskNodeController implements IRCController {
         }
     }
 
-    private JobID getLaunchJobID(TargetResName collection) {
-        try {
-            File incrJobFile = getIncrJobRecordFile(collection);
-            if (!incrJobFile.exists()) {
-                return null;
+//    private JobID getLaunchJobID(TargetResName collection) {
+//        try {
+//            File incrJobFile = getIncrJobRecordFile(collection);
+//            if (!incrJobFile.exists()) {
+//                return null;
+//            }
+//            return JobID.fromHexString(FileUtils.readFileToString(incrJobFile, TisUTF8.get()));
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+
+    @Override
+    public void stopInstance(TargetResName collection) {
+        FlinkIncrJobStatus status = getIncrJobStatus(collection);
+        // IncrJobStatus launchJobID = getIncrJobRecordFile(collection);  // getLaunchJobID(collection);
+        if (status.getLaunchJobID() == null) {
+            throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
+        }
+
+        StateBackendFactory stateBackend = factory.stateBackend;
+        StateBackendFactory.ISavePointSupport savePoint = null;
+
+        if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
+                || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
+            throw new IllegalStateException("app:" + collection.getName()
+                    + " is not support savePoint,stateFactoryClass:" + stateBackend.getClass().getName());
+        }
+
+        try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
+            CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
+            JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
+            if (s != null && !s.isTerminalState()) {
+                //job 任务没有终止，立即停止
+                String savepointDirectory = savePoint.createSavePointPath();
+                CompletableFuture<Acknowledge> result
+                        = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
+                result.get(5, TimeUnit.SECONDS);
+
+                status.stop(savepointDirectory);
+
             }
-            return JobID.fromHexString(FileUtils.readFileToString(incrJobFile, TisUTF8.get()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+        } catch (Exception e) {
+            throw new RuntimeException("appname:" + collection.getName(), e);
         }
     }
 
 
-//    private static void writeJarEntry(JarOutputStream jarOutput, String entryPath, File jarFile) {
-//
-//        try {
-//            byte[] data = FileUtils.readFileToByteArray(jarFile);
-//
-//            // ZipPath zipPath = fileObj.getZipPath();
-//            JarEntry entry = new JarEntry(entryPath);
-//            entry.setTime(System.currentTimeMillis());
-//            //byte[] data = fileObj.getOutputStream().toByteArray();
-//            entry.setSize(data.length);
-//            CRC32 crc = new CRC32();
-//            crc.update(data);
-//            entry.setCrc(crc.getValue());
-//            jarOutput.putNextEntry(entry);
-//            jarOutput.write(data);
-//            jarOutput.closeEntry();
-//        } catch (IOException e) {
-//            throw new RuntimeException(jarFile.getAbsolutePath(), e);
-//        }
-//    }
-
-//    private static SubModule $(String dir, String module) {
-//        return new SubModule(dir, module);
-//    }
-//
-//    private static class SubModule {
-//        private final String dir;
-//        private final String module;
-//
-//        public SubModule(String dir, String module) {
-//            this.dir = dir;
-//            this.module = module;
-//        }
-//
-//        public String getFullModuleName() {
-//            return dir + "/" + module;
-//        }
-//
-//        @Override
-//        public String toString() {
-//            return "SubModule{" +
-//                    "dir='" + dir + '\'' +
-//                    ", module='" + module + '\'' +
-//                    '}';
-//        }
-//    }
-
     @Override
     public void removeInstance(TargetResName collection) throws Exception {
         try {
-            JobID launchJobID = getLaunchJobID(collection);
-            if (launchJobID == null) {
+            FlinkIncrJobStatus status = getIncrJobStatus(collection);
+            if (status.getLaunchJobID() == null) {
                 throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
             }
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
-                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
+                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
                 JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
                 if (s != null && !s.isTerminalState()) {
                     //job 任务没有终止，立即停止
-                    CompletableFuture<Acknowledge> result = restClient.cancel(launchJobID);
+                    CompletableFuture<Acknowledge> result = restClient.cancel(status.getLaunchJobID());
                     result.get(5, TimeUnit.SECONDS);
                 }
-                File incrJobFile = getIncrJobRecordFile(collection);
-                FileUtils.forceDelete(incrJobFile);
+                status.cancel();
+//                File incrJobFile = getIncrJobRecordFile(collection);
+//                FileUtils.forceDelete(incrJobFile);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

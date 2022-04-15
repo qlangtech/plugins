@@ -41,12 +41,19 @@ import java.util.stream.Collectors;
 public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
 
     protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption) {
+        addFieldDescriptor(fieldName, configOption, Optional.empty());
+    }
+
+    protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption, Optional<String> appendHelper) {
         Description desc = configOption.description();
         HtmlFormatter htmlFormatter = new HtmlFormatter();
 
         Object d = configOption.defaultValue();
 
         StringBuffer helperContent = new StringBuffer(htmlFormatter.format(desc));
+        if (appendHelper.isPresent()) {
+            helperContent.append("\n\n").append(appendHelper.get());
+        }
 
         Class<?> targetClazz = getTargetClass(configOption);
 

@@ -1,41 +1,42 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.flink.client;
 
 import com.google.common.collect.Lists;
-import junit.framework.TestCase;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.RestOptions;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.File;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-11 09:23
  **/
-public class TestFlinkClient extends TestCase {
+public class TestFlinkClient {
 
+    @Test
     public void testSubmitJar() throws Exception {
         Configuration configuration = new Configuration();
         int port = 8081;
@@ -52,7 +53,7 @@ public class TestFlinkClient extends TestCase {
 //        File streamJar = new File("/tmp/TopSpeedWindowing.jar");
         File streamJar = new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-incr/tis-flink-cdc-plugin/target/tis-flink-cdc-plugin.jar");
 
-        assertTrue("streamJar must be exist", streamJar.exists());
+        Assert.assertTrue("streamJar must be exist", streamJar.exists());
         // EasyMock.expect(jarLoader.downLoad(EasyMock.anyString(), EasyMock.eq(true))).andReturn(streamJar);
         // flinkClient.setJarLoader(jarLoader);
 
@@ -67,7 +68,7 @@ public class TestFlinkClient extends TestCase {
         request.setUserClassPaths(classPaths);
 
         // EasyMock.replay(jarLoader);
-      //  AtomicBoolean launchResult = new AtomicBoolean();
+        //  AtomicBoolean launchResult = new AtomicBoolean();
         flinkClient.submitJar(restClient, request);
 
         //assertTrue("launchResult must success", launchResult.get());

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.JobID;
 import org.junit.Assert;
@@ -26,7 +27,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.util.Collections;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -52,12 +52,12 @@ public class TestFlinkIncrJobStatus {
         incrJobStatus.stop(savePointDir);
         Assert.assertEquals(FlinkIncrJobStatus.State.STOPED, incrJobStatus.getState());
 
-        Assert.assertTrue(CollectionUtils.isEqualCollection(Collections.singletonList(savePointDir), incrJobStatus.getSavepointPaths()));
+        assertSavepointEqual(incrJobStatus, savePointDir);
 
         // 重新加载
         incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
         Assert.assertEquals(FlinkIncrJobStatus.State.STOPED, incrJobStatus.getState());
-        Assert.assertTrue(CollectionUtils.isEqualCollection(Collections.singletonList(savePointDir), incrJobStatus.getSavepointPaths()));
+        assertSavepointEqual(incrJobStatus, savePointDir);
         Assert.assertEquals(jobid, incrJobStatus.getLaunchJobID());
 
         JobID relaunchJobid = JobID.fromHexString("ac99018a3dfd65fde538133d91ca58d6");
@@ -65,12 +65,12 @@ public class TestFlinkIncrJobStatus {
 
         Assert.assertEquals(relaunchJobid, incrJobStatus.getLaunchJobID());
         Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
-        Assert.assertTrue(CollectionUtils.isEqualCollection(Collections.singletonList(savePointDir), incrJobStatus.getSavepointPaths()));
+        assertSavepointEqual(incrJobStatus, savePointDir);
         // 重新加载
         incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
         Assert.assertEquals(relaunchJobid, incrJobStatus.getLaunchJobID());
         Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
-        Assert.assertTrue(CollectionUtils.isEqualCollection(Collections.singletonList(savePointDir), incrJobStatus.getSavepointPaths()));
+        assertSavepointEqual(incrJobStatus, savePointDir);
 
         incrJobStatus.cancel();
         Assert.assertNull(incrJobStatus.getLaunchJobID());
@@ -82,5 +82,18 @@ public class TestFlinkIncrJobStatus {
 
         Assert.assertTrue(CollectionUtils.isEmpty(incrJobStatus.getSavepointPaths()));
         Assert.assertEquals(FlinkIncrJobStatus.State.NONE, incrJobStatus.getState());
+    }
+
+    private void assertSavepointEqual(FlinkIncrJobStatus incrJobStatus, String savePointDir) {
+
+        for (IFlinkIncrJobStatus.FlinkSavepoint sp : incrJobStatus.getSavepointPaths()) {
+            if (sp.getPath().equals(savePointDir)) {
+                Assert.assertTrue(sp.getCreateTimestamp() > 0);
+                return;
+            }
+        }
+
+        Assert.fail("savePointDir:" + savePointDir + " can not match");
+        //  Assert.assertTrue(CollectionUtils.isEqualCollection(Collections.singletonList(savePointDir), incrJobStatus.getSavepointPaths()));
     }
 }

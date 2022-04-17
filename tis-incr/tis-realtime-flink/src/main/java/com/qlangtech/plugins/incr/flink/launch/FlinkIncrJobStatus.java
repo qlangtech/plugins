@@ -41,16 +41,26 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
 
     private final File incrJobFile;
     private JobID jobID;
-    private List<String> savepointPaths = Lists.newArrayList();
+    private List<FlinkSavepoint> savepointPaths = Lists.newArrayList();
     // 当前job的状态
     private State state;
+
+    public boolean containSavepoint(String path) {
+
+        for (FlinkSavepoint sp : savepointPaths) {
+            if (StringUtils.equals(path, sp.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
     public State getState() {
         return this.state;
     }
 
-    public List<String> getSavepointPaths() {
+    public List<FlinkSavepoint> getSavepointPaths() {
         return savepointPaths;
     }
 
@@ -68,7 +78,7 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
             for (int i = (lines.size() - 1); i >= 0; i--) {
                 line = lines.get(i);
                 if (StringUtils.indexOf(line, KEY_SAVEPOINT_DIR_PREFIX) > -1) {
-                    savepointPaths.add(line);
+                    savepointPaths.add(DftFlinkSavepoint.deSerialize(line));
                     if (state == null) {
                         state = State.STOPED;
                     }
@@ -93,7 +103,9 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
 
     public void createNewJob(JobID jobID) {
         try {
-            FileUtils.writeLines(incrJobFile, Collections.singletonList(jobID.toHexString()), false);
+            FileUtils.writeLines(incrJobFile
+                    , Lists.newArrayList("#" + this.getClass().getName(),
+                            jobID.toHexString()), false);
             this.savepointPaths = Lists.newArrayList();
             this.state = State.RUNNING;
             this.jobID = jobID;
@@ -109,8 +121,11 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
 
     public void stop(String savepointDirectory) {
         try {
-            FileUtils.writeLines(incrJobFile, Collections.singletonList(savepointDirectory), true);
-            this.savepointPaths.add(savepointDirectory);
+            DftFlinkSavepoint savepoint = new DftFlinkSavepoint(savepointDirectory);
+            //StringBuffer spInfo = new StringBuffer();
+            //spInfo.append(savepointDirectory).append(";").append(System.currentTimeMillis());
+            FileUtils.writeLines(incrJobFile, Collections.singletonList(savepoint.serialize()), true);
+            this.savepointPaths.add(savepoint);
             this.state = State.STOPED;
         } catch (IOException e) {
             throw new RuntimeException("savepointDirectory:" + savepointDirectory, e);
@@ -135,6 +150,28 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
             this.savepointPaths = Lists.newArrayList();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static class DftFlinkSavepoint extends FlinkSavepoint {
+        private final static String KEY_TUPLE_SPLIT = ";";
+
+        public DftFlinkSavepoint(String path) {
+            super(path, System.currentTimeMillis());
+        }
+
+        public String serialize() {
+            StringBuffer spInfo = new StringBuffer();
+            spInfo.append(this.getPath()).append(KEY_TUPLE_SPLIT).append(this.getCreateTimestamp());
+            return String.valueOf(spInfo);
+        }
+
+        public static FlinkSavepoint deSerialize(String seri) {
+            String[] tuple = StringUtils.split(seri, KEY_TUPLE_SPLIT);
+            if (tuple.length != 2) {
+                throw new IllegalStateException("param is not illegal:" + seri);
+            }
+            return new FlinkSavepoint(tuple[0], Long.parseLong(tuple[1]));
         }
     }
 

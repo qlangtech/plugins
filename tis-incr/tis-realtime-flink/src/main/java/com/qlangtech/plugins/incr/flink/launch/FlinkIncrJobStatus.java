@@ -95,7 +95,7 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
                 state = State.NONE;
                 // throw new IllegalStateException("job state can not be null");
             }
-            Collections.reverse(savepointPaths);
+           // Collections.reverse(savepointPaths);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

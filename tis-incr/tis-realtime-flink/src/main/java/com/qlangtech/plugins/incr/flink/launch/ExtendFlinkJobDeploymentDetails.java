@@ -74,12 +74,14 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
 
     public String getStatusColor() {
         switch (jobDetailsInfo.getJobStatus()) {
+            case FINISHED:
+                // 灰色
+                return "#858585";
             case FAILED:
             case FAILING:
                 return "error";
             case CREATED:
             case INITIALIZING:
-            case FINISHED:
                 return "success";
             case RUNNING:
                 return "processing";

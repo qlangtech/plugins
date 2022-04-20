@@ -72,7 +72,8 @@ public class TestTISFlinkCDCStart  //extends AbstractTestBase
     @Test
     public void testProcessFlinkSourceHandle() throws Throwable {
 
-        String table1 = "totalpayinfo";
+        //String table1 = "totalpayinfo";
+        String table1  ="instancedetail";
         String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
         File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
         pluginDir = pluginDir.toPath().normalize().toFile();

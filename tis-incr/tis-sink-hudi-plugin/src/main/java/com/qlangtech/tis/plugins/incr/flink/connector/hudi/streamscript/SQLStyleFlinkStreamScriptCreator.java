@@ -110,19 +110,10 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
 
                 @Override
                 protected void appendExtraColDef(List<ColWrapper> pks) {
-                    // super.appendExtraColDef(pks);
-                    // this.script.append(this.colEscapeChar()).append()
-                    //String pt = tabMeta.get
-                    //`partition` VARCHAR(20)
 
                     Objects.requireNonNull(tab.partition, "partition can not be null")
                             .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.getPartitionedBy()), this);
 
-                    //                    this.script.appendLine("\t,");
-                    //                    appendColName(dataXWriter.partitionedBy);
-                    //                    this.script
-                    //                            .append("VARCHAR(30)")
-                    //                            .returnLine();
                 }
 
                 @Override

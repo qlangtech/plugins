@@ -162,13 +162,13 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                     script.appendLine("cfg.hiveSyncPartitionExtractorClass = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS:
-                    script.appendLine("cfg.partitionPathField = %s", val);
+                    script.appendLine("cfg.partitionDefaultName = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE:
                     script.appendLine("cfg.keygenType = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD:
-                    script.appendLine("cfg.partitionDefaultName = %s", val);
+                    script.appendLine("cfg.partitionPathField = %s", val);
                     break;
                 default:
                     throw new IllegalStateException("key:" + key + " is illegal");

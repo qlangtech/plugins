@@ -69,7 +69,7 @@ public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
 
             @Override
             public FlinkCol smallIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.SMALLINT());
+                return new FlinkCol(meta.colName, DataTypes.SMALLINT(), new ShortConvert());
             }
 
             @Override
@@ -113,7 +113,7 @@ public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
 
             @Override
             public FlinkCol bitType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize), FlinkCol.Byte());
+                return new FlinkCol(meta.colName, DataTypes.BINARY(1), FlinkCol.Byte());
             }
 
             @Override
@@ -189,6 +189,7 @@ public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
         public Object deApply(Object o) {
             throw new UnsupportedOperationException();
         }
+
         @Override
         public Object apply(Object o) {
             java.nio.ByteBuffer buffer = (java.nio.ByteBuffer) o;

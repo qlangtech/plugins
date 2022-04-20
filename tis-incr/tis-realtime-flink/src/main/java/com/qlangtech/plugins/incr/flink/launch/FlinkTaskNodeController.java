@@ -164,7 +164,7 @@ public class FlinkTaskNodeController implements IRCController {
 //        request.setProgramArgs(collection.getName());
 //        request.setDependency(streamUberJar.getAbsolutePath());
 
-        long start = System.currentTimeMillis();
+        //long start = System.currentTimeMillis();
         //JobID jobID = flinkClient.submitJar(restClient, request);
 
 
@@ -182,11 +182,23 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
+//    public Map<String, Object> getAccumulators() {
+//        System.out.println("70122adf582205423101651f89dad92e");
+//        try (RestClusterClient restClient = factory.getFlinkCluster()) {
+//            CompletableFuture<Map<String, Object>> acc = restClient.getAccumulators(JobID.fromHexString("70122adf582205423101651f89dad92e"));
+//
+//            return acc.get(10, TimeUnit.SECONDS);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
         final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
         try (RestClusterClient restClient = factory.getFlinkCluster()) {
+
 
             FlinkClient flinkClient = new FlinkClient();
 
@@ -276,9 +288,10 @@ public class FlinkTaskNodeController implements IRCController {
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
         FlinkIncrJobStatus incrJobStatus = this.getIncrJobStatus(collection);
-        if (incrJobStatus.getState() != IFlinkIncrJobStatus.State.RUNNING) {
+        final FlinkJobDeploymentDetails noneStateDetail = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus);
+        if (incrJobStatus.getState() == IFlinkIncrJobStatus.State.NONE) {
             // stop 或者压根没有创建
-            return new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus);
+            return noneStateDetail;
         }
         JobID launchJobID = incrJobStatus.getLaunchJobID();
         try {
@@ -289,7 +302,7 @@ public class FlinkTaskNodeController implements IRCController {
 //                    return null;
 //                }
                 if (status == null) {
-                    return null;
+                    return noneStateDetail;
                 }
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
                 JobDetailsInfo jobDetailsInfo = jobDetails.get(5, TimeUnit.SECONDS);
@@ -364,7 +377,7 @@ public class FlinkTaskNodeController implements IRCController {
                 String savepointDirectory = savePoint.createSavePointPath();
                 CompletableFuture<String> result
                         = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
-                status.stop(result.get(7, TimeUnit.SECONDS));
+                status.stop(result.get(25, TimeUnit.SECONDS));
             }
 
         } catch (Exception e) {

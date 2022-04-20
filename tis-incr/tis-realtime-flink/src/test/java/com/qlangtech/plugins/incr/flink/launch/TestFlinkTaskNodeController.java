@@ -48,6 +48,12 @@ public class TestFlinkTaskNodeController {
         long timestamp = 20220325135114l;
         taskNodeController.deploy(collection, replicasSpec, timestamp);
 
+
+//        Map<String, Object> accumulators = taskNodeController.getAccumulators();
+//
+//        for (Map.Entry<String, Object> entry : accumulators.entrySet()) {
+//            System.out.println(entry.getKey());
+//        }
     }
 
 }

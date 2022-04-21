@@ -18,6 +18,7 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -121,7 +122,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
         public HudiLoggerAppender() {
             super();
-            this.loggerFactory = StaticLoggerBinder.getSingleton().getLoggerFactory();
+            this.loggerFactory = LogbackBinder.getSingleton().getLoggerFactory();
             this.mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
             this.taskId = System.getenv(IParamContext.KEY_TASK_ID);
             if (StringUtils.isEmpty(taskId)) {

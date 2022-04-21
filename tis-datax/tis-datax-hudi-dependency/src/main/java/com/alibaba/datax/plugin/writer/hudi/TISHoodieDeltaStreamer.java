@@ -29,7 +29,6 @@ import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
-import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,13 +37,17 @@ import org.apache.hudi.utilities.UtilHelpers;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.impl.StaticLoggerBinder;
 
 import java.io.Serializable;
 import java.util.Enumeration;
@@ -65,11 +68,12 @@ public class TISHoodieDeltaStreamer implements Serializable {
             allAppendersCount++;
         }
         System.out.println("===============allAppendersCount:" + allAppendersCount);
+        String logbackPath = null;
+        if (!Config.SYSTEM_KEY__LOGBACK_HUDI.equals(logbackPath = System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY))) {
+            throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' is illegal,logbackPath:" + logbackPath);
+        }
         LogManager.getRootLogger().addAppender(new HudiLoggerAppender());
 
-        if (StringUtils.isEmpty(System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY))) {
-            throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' can not be empty");
-        }
 
         String mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
         String taskId = System.getenv(IParamContext.KEY_TASK_ID);
@@ -118,12 +122,38 @@ public class TISHoodieDeltaStreamer implements Serializable {
     }
 
     private static class HudiLoggerAppender extends AppenderSkeleton {
-        private SimpleLayout layout = new SimpleLayout();
+        private final SimpleLayout layout = new SimpleLayout();
+        private final ILoggerFactory loggerFactory;
+
+        public HudiLoggerAppender() {
+            super();
+            this.loggerFactory = StaticLoggerBinder.getSingleton().getLoggerFactory();
+        }
 
         @Override
         protected void append(LoggingEvent event) {
+            Level level = event.getLevel();
+            if (level.isGreaterOrEqual(Level.INFO)) {
+                Logger logger = this.loggerFactory.getLogger(event.getLoggerName());
+                switch (level.toInt()) {
+                    case Level.INFO_INT:
+                        logger.info(event.getRenderedMessage());
+                        break;
+                    case Level.WARN_INT:
+                        logger.warn(event.getRenderedMessage());
+                        break;
+                    case Level.ERROR_INT:
+                    case Level.FATAL_INT:
+                        ThrowableInformation tinfo = event.getThrowableInformation();
+                        if (tinfo != null) {
+                            logger.error(event.getRenderedMessage(), tinfo.getThrowable());
+                        } else {
+                            logger.error(event.getRenderedMessage());
+                        }
+                }
+            }
 
-            System.out.println(NetUtils.getHost() + ",loggerName:" + event.getLoggerName() + "---------------:" + layout.format(event));
+            //  System.out.println(NetUtils.getHost() + ",loggerName:" + event.getLoggerName() + "---------------:" + layout.format(event));
         }
 
         @Override

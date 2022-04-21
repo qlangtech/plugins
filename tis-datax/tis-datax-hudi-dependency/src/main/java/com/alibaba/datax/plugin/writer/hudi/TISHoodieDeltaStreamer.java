@@ -36,12 +36,17 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hudi.utilities.UtilHelpers;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.spi.LoggingEvent;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
+import java.util.Enumeration;
 import java.util.Map;
 
 /**
@@ -53,6 +58,13 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
+        Enumeration allAppenders = LogManager.getRootLogger().getAllAppenders();
+        int allAppendersCount = 0;
+        while (allAppenders.hasMoreElements()) {
+            allAppendersCount++;
+        }
+        System.out.println("===============allAppendersCount:" + allAppendersCount);
+        LogManager.getRootLogger().addAppender(new HudiLoggerAppender());
 
         if (StringUtils.isEmpty(System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY))) {
             throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' can not be empty");
@@ -103,6 +115,26 @@ public class TISHoodieDeltaStreamer implements Serializable {
             jssc.stop();
         }
     }
+
+    private static class HudiLoggerAppender extends AppenderSkeleton {
+        private SimpleLayout layout = new SimpleLayout();
+
+        @Override
+        protected void append(LoggingEvent event) {
+            System.out.println("---------------:" + layout.format(event));
+        }
+
+        @Override
+        public void close() {
+
+        }
+
+        @Override
+        public boolean requiresLayout() {
+            return false;
+        }
+    }
+
 
     private static void setMockStub(String dataName) {
         if (HdfsFileSystemFactoryTestUtils.testDataXName.equalWithName(dataName)) {

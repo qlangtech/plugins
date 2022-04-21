@@ -39,7 +39,6 @@ import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.SimpleLayout;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -74,13 +73,6 @@ public class TISHoodieDeltaStreamer implements Serializable {
         }
         LogManager.getRootLogger().addAppender(new HudiLoggerAppender());
 
-
-        String mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
-        String taskId = System.getenv(IParamContext.KEY_TASK_ID);
-        MDC.put(IParamContext.KEY_TASK_ID, taskId);
-        if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
-            MDC.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
-        }
 
         System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS
                 , String.valueOf(Boolean.TRUE.booleanValue()));
@@ -122,16 +114,28 @@ public class TISHoodieDeltaStreamer implements Serializable {
     }
 
     private static class HudiLoggerAppender extends AppenderSkeleton {
-        private final SimpleLayout layout = new SimpleLayout();
+        //private final SimpleLayout layout = new SimpleLayout();
         private final ILoggerFactory loggerFactory;
+        final String mdcCollection;
+        final String taskId;
 
         public HudiLoggerAppender() {
             super();
             this.loggerFactory = StaticLoggerBinder.getSingleton().getLoggerFactory();
+            this.mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
+            this.taskId = System.getenv(IParamContext.KEY_TASK_ID);
+            if (StringUtils.isEmpty(taskId)) {
+                throw new IllegalArgumentException("taskId can not be empty");
+            }
         }
 
         @Override
         protected void append(LoggingEvent event) {
+
+            MDC.put(IParamContext.KEY_TASK_ID, taskId);
+            if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
+                MDC.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
+            }
             Level level = event.getLevel();
             if (level.isGreaterOrEqual(Level.INFO)) {
                 Logger logger = this.loggerFactory.getLogger(event.getLoggerName());

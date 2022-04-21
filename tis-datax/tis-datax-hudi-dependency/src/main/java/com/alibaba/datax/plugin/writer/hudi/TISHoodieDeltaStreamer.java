@@ -47,7 +47,6 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.slf4j.impl.StaticLoggerBinder;
 
 import java.io.Serializable;
 import java.util.Enumeration;

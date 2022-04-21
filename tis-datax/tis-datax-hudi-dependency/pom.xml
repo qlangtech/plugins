@@ -24,6 +24,7 @@
         <artifactId>tis-datax</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <version>3.5.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
@@ -39,6 +40,13 @@
         <finalName>${project.name}</finalName>
         <plugins>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes combine.self="override"></excludes>
+                </configuration>
+            </plugin>
 
             <!--   Build uber jar-->
             <plugin>
@@ -58,7 +66,6 @@
                             <artifactSet>
                                 <excludes>
                                     <exclude>log4j:log4j</exclude>
-                                    <!-- Bundled separately so that users can easily switch between ZK 3.4/3.5-->
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                     <exclude>org.codehaus.groovy:groovy-all</exclude>
                                     <exclude>org.scala-lang:scala-library</exclude>
@@ -68,9 +75,9 @@
                             </artifactSet>
                         </configuration>
                     </execution>
-
                 </executions>
             </plugin>
+
 
             <plugin>
                 <groupId>com.qlangtech.tis</groupId>

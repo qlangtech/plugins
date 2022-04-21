@@ -147,7 +147,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        handle.redirectError(logFile);
         // 测试用
 //        handle.redirectError(new File("error.log"));
-//        handle.redirectToLog(DataXHudiWriter.class.getName());
+        handle.redirectToLog(DataXHudiWriter.class.getName());
         // String tabName = this.getFileName();
 
         File hudiDependencyDir = HudiConfig.getHudiDependencyDir();

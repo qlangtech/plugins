@@ -58,6 +58,8 @@ import java.util.concurrent.CountDownLatch;
  **/
 public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
+    public static final String KEY_DELTA_STREM_DEBUG = "deltaStreamDebug";
+
     private static Logger logger = LoggerFactory.getLogger(HudiDumpPostTask.class);
 
     private final HudiSelectedTab hudiTab;
@@ -186,9 +188,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
         // https://hudi.apache.org/docs/tuning-guide/
 
-        handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS
-                , "-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI
-        //                + " -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888"
+        StringBuffer javaOpts = new StringBuffer("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
+
+        if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
+            // 测试中使用
+            javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
+        }
+
+        handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString()
         );
 //        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
 //        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");

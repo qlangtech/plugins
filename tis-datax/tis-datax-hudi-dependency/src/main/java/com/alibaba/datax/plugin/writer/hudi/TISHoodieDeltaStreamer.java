@@ -29,6 +29,7 @@ import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -121,7 +122,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
         @Override
         protected void append(LoggingEvent event) {
-            System.out.println("---------------:" + layout.format(event));
+
+            System.out.println(NetUtils.getHost() + ",loggerName:" + event.getLoggerName() + "---------------:" + layout.format(event));
         }
 
         @Override

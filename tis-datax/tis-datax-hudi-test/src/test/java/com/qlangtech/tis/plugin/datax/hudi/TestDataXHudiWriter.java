@@ -117,7 +117,7 @@ public class TestDataXHudiWriter {
         System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(HudiWriter.timestamp));
     }
 
-   // @Ignore
+    // @Ignore
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
@@ -177,6 +177,7 @@ public class TestDataXHudiWriter {
         tabs = dataxReader.getSelectedTabs();
 
         IExecChainContext execContext = EasyMock.createMock("execContext", IExecChainContext.class);
+        EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
         EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;
@@ -260,7 +261,7 @@ public class TestDataXHudiWriter {
     }
 
 
-     @Ignore
+    @Ignore
     @Test
     public void testRealDump() throws Exception {
 

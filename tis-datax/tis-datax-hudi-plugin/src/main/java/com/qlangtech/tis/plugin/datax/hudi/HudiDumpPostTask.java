@@ -142,9 +142,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
 
-        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
-        FileUtils.touch(logFile);
-        handle.redirectError(logFile);
+//        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
+//        FileUtils.touch(logFile);
+//        handle.redirectError(logFile);
         // 测试用
 //        handle.redirectError(new File("error.log"));
 //        handle.redirectToLog(DataXHudiWriter.class.getName());

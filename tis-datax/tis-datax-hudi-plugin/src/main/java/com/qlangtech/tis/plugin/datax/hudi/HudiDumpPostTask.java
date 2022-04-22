@@ -32,7 +32,6 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IParamContext;
-import com.qlangtech.tis.web.start.TisAppLaunchPort;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.launcher.SparkAppHandle;
@@ -147,7 +146,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        handle.redirectError(logFile);
         // 测试用
 //        handle.redirectError(new File("error.log"));
-      //  handle.redirectToLog(DataXHudiWriter.class.getName());
+        //  handle.redirectToLog(DataXHudiWriter.class.getName());
         // String tabName = this.getFileName();
 
         File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
@@ -189,10 +188,11 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         // https://hudi.apache.org/docs/tuning-guide/
 
         StringBuffer javaOpts = new StringBuffer("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
+        javaOpts.append("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
 
         //if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
-            // 测试中使用
-            javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
+        // 测试中使用
+        javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
         //}
 
         handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString()

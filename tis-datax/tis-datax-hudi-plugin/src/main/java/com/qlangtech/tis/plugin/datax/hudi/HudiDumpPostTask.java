@@ -188,7 +188,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         // https://hudi.apache.org/docs/tuning-guide/
 
         StringBuffer javaOpts = new StringBuffer("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
-        javaOpts.append("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
+        javaOpts.append(" -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
 
         //if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
         // 测试中使用

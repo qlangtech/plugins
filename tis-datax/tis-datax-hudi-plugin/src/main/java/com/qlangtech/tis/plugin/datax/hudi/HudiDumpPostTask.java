@@ -190,10 +190,10 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         StringBuffer javaOpts = new StringBuffer("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
         javaOpts.append(" -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
 
-        //if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
-        // 测试中使用
-        javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
-        //}
+        if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
+            // 测试中使用
+            javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
+        }
 
         handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString()
         );

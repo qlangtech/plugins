@@ -35,6 +35,7 @@ import org.slf4j.helpers.Util;
 import org.slf4j.spi.LoggerFactoryBinder;
 
 import java.net.URL;
+import java.util.Objects;
 
 public class LogbackBinder implements LoggerFactoryBinder {
     public static String REQUESTED_API_VERSION = "1.7.16";
@@ -68,7 +69,8 @@ public class LogbackBinder implements LoggerFactoryBinder {
                 (new ContextInitializer(this.defaultLoggerContext) {
                     public URL findURLOfDefaultConfigurationFile(boolean updateStatus) {
                         // super.findURLOfDefaultConfigurationFile(updateStatus);
-                        return LogbackBinder.this.getClass().getResource("/" + Config.SYSTEM_KEY__LOGBACK_HUDI);
+                        return Objects.requireNonNull(LogbackBinder.this.getClass().getResource("/" + Config.SYSTEM_KEY__LOGBACK_HUDI)
+                                , "resource can not be null:" + Config.SYSTEM_KEY__LOGBACK_HUDI);
                     }
                 }).autoConfig();
             } catch (JoranException var2) {

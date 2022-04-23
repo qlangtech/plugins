@@ -73,6 +73,11 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName) {
         DataxWriter dataxWriter = load(null, dataxName);
         if (!(dataxWriter instanceof BasicFSWriter)) {
+
+//            Class<?> superclass = dataxWriter.getClass().getSuperclass();
+//            StringBuffer buffer = new StringBuffer();
+//            buffer.append("superClass:").append(superclass.getName()).append(",classloader:").append(superclass.getClassLoader());
+
             throw new BasicHdfsWriterJob.JobPropInitializeException("datax Writer must be type of 'BasicFSWriter',but now is:" + dataxWriter.getClass());
         }
         return (TT) dataxWriter;

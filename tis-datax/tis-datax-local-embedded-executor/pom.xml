@@ -21,32 +21,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
+        <groupId>com.qlangtech.tis.plugins</groupId>
         <version>3.5.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>tis-datax-local-executor</artifactId>
     <packaging>tpi</packaging>
+
+    <groupId>com.qlangtech.tis.plugins</groupId>
+    <artifactId>tis-datax-local-embedded-executor</artifactId>
+
     <dependencies>
-
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-web-start-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-            <scope>compile</scope>
-        </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -71,18 +57,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-solrj-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-hadoop-rpc</artifactId>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
-
 
 </project>

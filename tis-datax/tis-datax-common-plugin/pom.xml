@@ -34,6 +34,17 @@
 
     <dependencies>
 
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>datax-core</artifactId>-->
+<!--            <version>${alibaba.datax.version}</version>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>datax-common</artifactId>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -49,32 +60,6 @@
             <artifactId>tis-plugin</artifactId>
             <scope>provided</scope>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--        </dependency>-->
-
-
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-datax-executor</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.qlangtech.tis</groupId>-->
-<!--                    <artifactId>tis-plugin</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.qlangtech.tis</groupId>-->
-<!--                    <artifactId>tis-hadoop-rpc</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.qlangtech.tis</groupId>-->
-<!--                    <artifactId>logback-flume-appender</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-solrj-client</artifactId>

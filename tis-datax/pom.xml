@@ -65,6 +65,7 @@
         <module>tis-datax-hudi-plugin</module>
         <module>tis-datax-hdfs-plugin</module>
         <module>tis-datax-hudi-common</module>
+        <module>tis-datax-local-embedded-executor</module>
     </modules>
 
     <dependencyManagement>

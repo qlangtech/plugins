@@ -57,7 +57,7 @@ import java.util.concurrent.CountDownLatch;
  **/
 public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
-    public static final String KEY_DELTA_STREM_DEBUG = "deltaStreamDebug";
+
 
     private static Logger logger = LoggerFactory.getLogger(HudiDumpPostTask.class);
 
@@ -69,6 +69,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     private final DataXHudiWriter hudiWriter;
     private final DataXCfgGenerator.GenerateCfgs generateCfgs;
     private final IExecChainContext execContext;
+
+
+    private SparkAppHandle sparkAppHandle;
 
     public HudiDumpPostTask(IExecChainContext execContext, HudiSelectedTab hudiTab, DataXHudiWriter hudiWriter, DataXCfgGenerator.GenerateCfgs generateCfgs) {
         if (hudiTab == null) {
@@ -190,7 +193,8 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         StringBuffer javaOpts = new StringBuffer("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY__LOGBACK_HUDI);
         javaOpts.append(" -D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=true");
 
-        if (this.execContext.getBoolean(KEY_DELTA_STREM_DEBUG)) {
+
+        if (Boolean.getBoolean(KEY_DELTA_STREM_DEBUG)) {
             // 测试中使用
             javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
         }
@@ -206,7 +210,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        SparkAppHandle sparkAppHandle = handle.startApplication(new SparkAppHandle.Listener() {
+        this.sparkAppHandle = handle.startApplication(new SparkAppHandle.Listener() {
             @Override
             public void stateChanged(SparkAppHandle sparkAppHandle) {
                 SparkAppHandle.State state = sparkAppHandle.getState();
@@ -230,6 +234,15 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
     }
 
+
+    @Override
+    public void cancel() {
+        try {
+            sparkAppHandle.kill();
+        } catch (Exception e) {
+            logger.warn(e.getMessage(), e);
+        }
+    }
 
     private void writeSourceProps(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) {
 

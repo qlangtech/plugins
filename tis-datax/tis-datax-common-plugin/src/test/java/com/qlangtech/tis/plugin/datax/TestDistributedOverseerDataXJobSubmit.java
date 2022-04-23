@@ -65,7 +65,8 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
 
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
         ref.set(StatusRpcClient.AssembleSvcCompsite.MOCK_PRC);
-        RpcServiceReference svcRef = new RpcServiceReference(ref);
+        RpcServiceReference svcRef = new RpcServiceReference(ref, () -> {
+        });
 
         Optional<DataXJobSubmit> jobSubmit = DataXJobSubmit.getDataXJobSubmit(DataXJobSubmit.InstanceType.DISTRIBUTE);
         assertTrue(jobSubmit.isPresent());

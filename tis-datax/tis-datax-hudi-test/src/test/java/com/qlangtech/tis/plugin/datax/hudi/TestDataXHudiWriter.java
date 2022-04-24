@@ -121,6 +121,7 @@ public class TestDataXHudiWriter {
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
+        System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
         String tableFullTypes = "full_types";
         TargetResName dbName = new TargetResName("hudi-data-test-mysql-ds");
 
@@ -177,7 +178,7 @@ public class TestDataXHudiWriter {
         tabs = dataxReader.getSelectedTabs();
 
         IExecChainContext execContext = EasyMock.createMock("execContext", IExecChainContext.class);
-        EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
+       // EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
         EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;

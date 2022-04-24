@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
-import java.util.Enumeration;
 import java.util.Map;
 
 /**
@@ -106,8 +105,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
             hadoopCfg.addResource(fs.getConf());
             hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
                     , ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
-            new HoodieDeltaStreamer(cfg, jssc
-                    , fs, jssc.hadoopConfiguration()).sync();
+            hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
+            new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
         } finally {
             jssc.stop();
         }

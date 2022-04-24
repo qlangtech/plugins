@@ -61,12 +61,12 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
-        Enumeration allAppenders = LogManager.getRootLogger().getAllAppenders();
-        int allAppendersCount = 0;
-        while (allAppenders.hasMoreElements()) {
-            allAppendersCount++;
-        }
-        System.out.println("===============allAppendersCount:" + allAppendersCount);
+//        Enumeration allAppenders = LogManager.getRootLogger().getAllAppenders();
+//        int allAppendersCount = 0;
+//        while (allAppenders.hasMoreElements()) {
+//            allAppendersCount++;
+//        }
+//        System.out.println("===============allAppendersCount:" + allAppendersCount);
         String logbackPath = null;
         if (!Config.SYSTEM_KEY__LOGBACK_HUDI.equals(logbackPath = System.getProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY))) {
             throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' is illegal,logbackPath:" + logbackPath);

@@ -60,7 +60,6 @@ import java.util.Objects;
  **/
 public class TisDataXHudiWriter extends HdfsWriter {
 
-    // public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
     private static final Logger logger = LoggerFactory.getLogger(TisDataXHudiWriter.class);
     public static final String KEY_HUDI_TABLE_NAME = "hudiTableName";
 
@@ -120,112 +119,22 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
         protected Path createTabDumpParentPath(ITISFileSystem fs) {
             return HudiDumpPostTask.createTabDumpParentPath(fs, getDumpDir()).unwrap(Path.class);
-//            Objects.requireNonNull(fs, "ITISFileSystem can not be null");
-//            IPath tabDumpDir = getDumpDir();
-//            return fs.getPath(tabDumpDir, "data").unwrap(Path.class);
         }
 
         @Override
         public void post() {
             super.post();
-
-
-//            DataXHudiWriter hudiPlugin = this.getHudiWriterPlugin();
-//            ITISFileSystem fs = this.getFileSystem();
-//            String tabName = this.getFileName();
-//            IPath fsSourcePropsPath = getSourcePropsPath();
-//
-//            IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(
-//                    fs, this.getHiveConnGetter(), this.getFileName(), this.getDumpTimeStamp(), this.tabMeta);
-//
-//            // 写csv文件属性元数据文件
-//            try (FSDataOutputStream write = this.hdfsHelper.getOutputStream(fsSourcePropsPath.unwrap(Path.class))) {
-//                // TypedProperties props = new TypedProperties();
-//                TypedPropertiesBuilder props = new TypedPropertiesBuilder();
-//
-//                String shuffleParallelism = String.valueOf(this.tabMeta.getShuffleParallelism());
-//                props.setProperty("hoodie.upsert.shuffle.parallelism", shuffleParallelism);
-//                props.setProperty("hoodie.insert.shuffle.parallelism", (shuffleParallelism));
-//                props.setProperty("hoodie.delete.shuffle.parallelism", (shuffleParallelism));
-//                props.setProperty("hoodie.bulkinsert.shuffle.parallelism", (shuffleParallelism));
-//                props.setProperty("hoodie.embed.timeline.server", "true");
-//                props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
-//
-//                // @see HoodieCompactionConfig.INLINE_COMPACT
-//                // props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");
-//                // BasicFSWriter writerPlugin = this.getWriterPlugin();
-////https://spark.apache.org/docs/3.2.1/sql-data-sources-csv.html
-//                props.setProperty("hoodie.deltastreamer.source.dfs.root", String.valueOf(this.tabDumpParentPath));
-//                props.setProperty("hoodie.deltastreamer.csv.header", Boolean.toString(CSV_FILE_USE_HEADER));
-//                props.setProperty("hoodie.deltastreamer.csv.sep", String.valueOf(CSV_Column_Separator));
-//                props.setProperty("hoodie.deltastreamer.csv.nullValue", CSV_NULL_VALUE);
-//                props.setProperty("hoodie.deltastreamer.csv.escape", String.valueOf(CSV_ESCAPE_CHAR));
-//                //  props.setProperty("hoodie.deltastreamer.csv.escapeQuotes", "false");
-//
-//
-//                props.setProperty("hoodie.deltastreamer.schemaprovider.source.schema.file", String.valueOf(fsSourceSchemaPath));
-//                props.setProperty("hoodie.deltastreamer.schemaprovider.target.schema.file", String.valueOf(fsSourceSchemaPath));
-//
-//                // please reference: DataSourceWriteOptions , HiveSyncConfig
-//                final IHiveConnGetter hiveMeta = getHiveConnGetter();
-//                props.setProperty("hoodie.datasource.hive_sync.database", hiveMeta.getDbName());
-//                props.setProperty("hoodie.datasource.hive_sync.table", tabName);
-//                if (StringUtils.isEmpty(hudiPlugin.partitionedBy)) {
-//                    throw new IllegalStateException("hudiPlugin.partitionedBy can not be empty");
-//                }
-//                props.setProperty("hoodie.datasource.hive_sync.partition_fields", hudiPlugin.partitionedBy);
-//                // "org.apache.hudi.hive.MultiPartKeysValueExtractor";
-//                // partition 分区值抽取类
-//                props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class"
-//                        , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
-//
-//                Optional<HiveUserToken> hiveUserToken = hiveMeta.getUserToken();
-//                if (hiveUserToken.isPresent()) {
-//                    HiveUserToken token = hiveUserToken.get();
-//                    props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
-//                    props.setProperty("hoodie.datasource.hive_sync.password", token.password);
-//                }
-//                props.setProperty("hoodie.datasource.hive_sync.jdbcurl", hiveMeta.getJdbcUrl());
-//                props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");
-//
-//                props.setProperty("hoodie.datasource.write.recordkey.field", tabMeta.getPkName());
-//                props.setProperty("hoodie.datasource.write.partitionpath.field", tabMeta.getPartitionpathField());
-//
-//
-//                props.store(write);
-//
-//            } catch (IOException e) {
-//                throw new RuntimeException("faild to write " + this.tabDumpParentPath + " CSV file metaData", e);
-//            }
-
-//            try {
-//                this.launchSparkRddConvert();
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
         }
 
-//        protected static IPath createFsSourceSchema(ITISFileSystem fs, String tabName, String dumpTimeStamp, HudiTableMeta hudiTabMeta) {
-//            return createFsSourceSchema(fs, tabName, dumpTimeStamp, hudiTabMeta.colMetas);
-//        }
 
         protected IPath getDumpDir() {
 
             return this.tabMeta.getDumpDir(this.getFileSystem(), this.getHiveConnGetter());
         }
-
-//        private IPath getSourcePropsPath() {
-//            ITISFileSystem fs = this.getFileSystem();
-//            return fs.getPath(getDumpDir(), "meta/" + this.getFileName() + "-source.properties");
-//        }
-
-
     }
 
 
     public static class Task extends TisDataXHdfsWriter.Task {
-        // ObjectWriter csvObjWriter = null;
-        // CustomCSVSchemaBuilder csvSchemaBuilder = null;
         private Schema avroSchema;
         private List<HdfsColMeta> colsMeta;
         private HudiTableMeta tabMeta;
@@ -255,45 +164,11 @@ public class TisDataXHudiWriter extends HdfsWriter {
         @Override
         public void prepare() {
             super.prepare();
-            // HudiTableMeta.getTableSourceSchema(this.);
-//            this.avroSchema = Objects.requireNonNull(
-//                    this.writerSliceConfig.getAttr(KEY_AVRO_SCHEMA), "schema can not be null");
-
-
             this.colsMeta = HdfsColMeta.getColsMeta(this.writerSliceConfig);
             if (CollectionUtils.isEmpty(this.colsMeta)) {
                 throw new IllegalStateException("colsMeta can not be empty");
             }
-
-//            this.csvSchemaBuilder = new CustomCSVSchemaBuilder(); //CsvSchema.builder();
-//            // this.csvSchemaBuilder.enableAlwaysQuoteStrings();
-//
-//            List<HdfsColMeta> colsMeta = HdfsColMeta.getColsMeta(this.writerSliceConfig);
-//            for (HdfsColMeta col : colsMeta) {
-//                csvSchemaBuilder.addColumn(col.colName, parseCsvType(col));
-//            }
-//            csvObjWriter = new CsvMapper().configure(CsvGenerator.Feature.ALWAYS_QUOTE_STRINGS, true)
-//                    .setSerializerFactory(new TISSerializerFactory(colsMeta))
-//                    .writerFor(Record.class)
-//                    .with(csvSchemaBuilder
-//                            .setUseHeader(CSVWriter.CSV_FILE_USE_HEADER)
-//                            .setColumnSeparator(CSVWriter.CSV_Column_Separator)
-//                            .setNullValue(CSVWriter.CSV_NULL_VALUE)
-//                            .setEscapeChar(CSVWriter.CSV_ESCAPE_CHAR).build());
         }
-
-
-//        private CsvSchema.ColumnType parseCsvType(HdfsColMeta col) {
-//            switch (col.csvType) {
-//                case STRING:
-//                    return CsvSchema.ColumnType.STRING;
-//                case BOOLEAN:
-//                    return CsvSchema.ColumnType.BOOLEAN;
-//                case NUMBER:
-//                    return CsvSchema.ColumnType.NUMBER;
-//            }
-//            throw new IllegalStateException("illegal csv type:" + col.csvType);
-//        }
 
 
         @Override
@@ -301,7 +176,6 @@ public class TisDataXHudiWriter extends HdfsWriter {
                 , Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
             try {
                 Path targetPath = new Path(config.getString(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.FILE_NAME));
-                //  DataFileWriter<GenericRecord> dataFileWriter = null;
                 GenericDatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(this.avroSchema);
                 datumWriter.getData().addLogicalTypeConversion(new Conversions.DecimalConversion());
                 datumWriter.getData().addLogicalTypeConversion(new TimeConversions.DateConversion());
@@ -312,10 +186,6 @@ public class TisDataXHudiWriter extends HdfsWriter {
                     dataFileWriter = dataFileWriter.create(this.avroSchema, output);
                     Record record = null;
                     while ((record = lineReceiver.getFromReader()) != null) {
-                        // sequenceWriter.write(record);
-//                        GenericRecord user1 = new GenericData.Record(this.avroSchema);
-//                        user1.put("name", "Alyssa");
-//                        user1.put("favorite_number", 256);
                         dataFileWriter.append(convertAvroRecord(record));
                     }
                     dataFileWriter.flush();
@@ -388,21 +258,6 @@ public class TisDataXHudiWriter extends HdfsWriter {
         protected void csvFileStartWrite(
                 RecordReceiver lineReceiver, Configuration config
                 , String fileName, TaskPluginCollector taskPluginCollector) {
-//            try {
-//
-//
-//                Path targetPath = new Path(config.getString(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.FILE_NAME));
-//                try (OutputStream output = getOutputStream(targetPath)) {
-//                    SequenceWriter sequenceWriter = csvObjWriter.writeValues(output);
-//                    Record record = null;
-//                    while ((record = lineReceiver.getFromReader()) != null) {
-//                        sequenceWriter.write(record);
-//                    }
-//                }
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-
             throw new UnsupportedOperationException();
         }
 
@@ -410,10 +265,5 @@ public class TisDataXHudiWriter extends HdfsWriter {
             return this.hdfsHelper.getOutputStream(targetPath);
         }
     }
-
-
-//    private static class CustomCSVSchemaBuilder extends CsvSchema.Builder {
-//
-//    }
 }
 

@@ -34,7 +34,7 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
+//import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.net.NetworkTopology;
 import org.apache.hadoop.net.Node;
 import org.apache.hadoop.net.NodeBase;
@@ -89,54 +89,55 @@ public final class HDFSFileSplitor implements IFileSplitor {
 
     @Override
     public List<IFileSplit> getSplits(IndexBuildConfig config) throws Exception {
-        List<FileStatus> files = getFiles(this.paramPath);
-        for (FileStatus file : files) {
-            if (file.isDirectory()) {
-                continue;
-            }
-            this.totalSize += file.getLen();
-        }
-        if (this.totalSize == 0L) {
-            throw new Exception("源文件大小为0！");
-        }
-        int numSplits = config.getDocMakerThreadCount() * 5;
-        logger.warn("[numSplits]==>" + numSplits);
-        long goalSize = this.totalSize / (numSplits == 0 ? 1 : numSplits);
-        logger.warn("[goalSize]==>" + goalSize);
-        long minSize = config.getMinSplitSize();
-        logger.warn("[minSize]==>" + minSize);
-        ArrayList<IFileSplit> splits = new ArrayList<IFileSplit>(numSplits);
-        NetworkTopology clusterMap = new NetworkTopology();
-        Path path;
-        for (FileStatus file : files) {
-            path = file.getPath();
-            long length = file.getLen();
-            BlockLocation[] blkLocations = this.fileSystem.getFileBlockLocations(file, 0L, length);
-            if ((length != 0L) && (isSplitable(this.fileSystem, path))) {
-                long blockSize = file.getBlockSize();
-                long splitSize = computeSplitSize(goalSize, minSize, blockSize);
-                logger.warn("[splitSize]==>" + splitSize);
-                long bytesRemaining = length;
-                while (bytesRemaining / splitSize > 1.1D) {
-                    String[] splitHosts = getSplitHosts(blkLocations, length - bytesRemaining, splitSize, clusterMap);
-                    splits.add(new HdfsFileSplit(new FileSplit(path, length - bytesRemaining, splitSize, splitHosts)));
-                    bytesRemaining -= splitSize;
-                }
-                if (bytesRemaining != 0L)
-                    splits.add(new HdfsFileSplit(new FileSplit(path, length - bytesRemaining, bytesRemaining, blkLocations[(blkLocations.length - 1)].getHosts())));
-            } else if (length != 0L) {
-                String[] splitHosts = getSplitHosts(blkLocations, 0L, length, clusterMap);
-                splits.add(new HdfsFileSplit(new FileSplit(path, 0L, length, splitHosts)));
-            } else {
-                splits.add(new HdfsFileSplit(new FileSplit(path, 0L, length, new String[0])));
-            }
-        }
-        int size = splits.size();
-        logger.warn(" 需要DUMP[" + this.totalSize / 1024L / 1024L + "]MB的源数据-->索引数据，切分数据为: " + size + " 份");
-        for (IFileSplit split : splits) {
-            logger.warn("split name=" + split.getPath() + ",offset=" + split.getStart());
-        }
-        return Collections.unmodifiableList(splits);
+        return Collections.emptyList();
+//        List<FileStatus> files = getFiles(this.paramPath);
+//        for (FileStatus file : files) {
+//            if (file.isDirectory()) {
+//                continue;
+//            }
+//            this.totalSize += file.getLen();
+//        }
+//        if (this.totalSize == 0L) {
+//            throw new Exception("源文件大小为0！");
+//        }
+//        int numSplits = config.getDocMakerThreadCount() * 5;
+//        logger.warn("[numSplits]==>" + numSplits);
+//        long goalSize = this.totalSize / (numSplits == 0 ? 1 : numSplits);
+//        logger.warn("[goalSize]==>" + goalSize);
+//        long minSize = config.getMinSplitSize();
+//        logger.warn("[minSize]==>" + minSize);
+//        ArrayList<IFileSplit> splits = new ArrayList<IFileSplit>(numSplits);
+//        NetworkTopology clusterMap = new NetworkTopology();
+//        Path path;
+//        for (FileStatus file : files) {
+//            path = file.getPath();
+//            long length = file.getLen();
+//            BlockLocation[] blkLocations = this.fileSystem.getFileBlockLocations(file, 0L, length);
+//            if ((length != 0L) && (isSplitable(this.fileSystem, path))) {
+//                long blockSize = file.getBlockSize();
+//                long splitSize = computeSplitSize(goalSize, minSize, blockSize);
+//                logger.warn("[splitSize]==>" + splitSize);
+//                long bytesRemaining = length;
+//                while (bytesRemaining / splitSize > 1.1D) {
+//                    String[] splitHosts = getSplitHosts(blkLocations, length - bytesRemaining, splitSize, clusterMap);
+//                    splits.add(new HdfsFileSplit(new FileSplit(path, length - bytesRemaining, splitSize, splitHosts)));
+//                    bytesRemaining -= splitSize;
+//                }
+//                if (bytesRemaining != 0L)
+//                    splits.add(new HdfsFileSplit(new FileSplit(path, length - bytesRemaining, bytesRemaining, blkLocations[(blkLocations.length - 1)].getHosts())));
+//            } else if (length != 0L) {
+//                String[] splitHosts = getSplitHosts(blkLocations, 0L, length, clusterMap);
+//                splits.add(new HdfsFileSplit(new FileSplit(path, 0L, length, splitHosts)));
+//            } else {
+//                splits.add(new HdfsFileSplit(new FileSplit(path, 0L, length, new String[0])));
+//            }
+//        }
+//        int size = splits.size();
+//        logger.warn(" 需要DUMP[" + this.totalSize / 1024L / 1024L + "]MB的源数据-->索引数据，切分数据为: " + size + " 份");
+//        for (IFileSplit split : splits) {
+//            logger.warn("split name=" + split.getPath() + ",offset=" + split.getStart());
+//        }
+//        return Collections.unmodifiableList(splits);
     }
 
     private String[] fakeRacks(BlockLocation[] blkLocations, int index) throws IOException {

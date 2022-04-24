@@ -21,7 +21,8 @@
 [INFO] |  |  +- org.apache.zookeeper:zookeeper:jar:3.4.14:compile
 [INFO] |  |  |  +- com.github.spotbugs:spotbugs-annotations:jar:3.1.9:compile
 [INFO] |  |  |  +- jline:jline:jar:0.9.94:compile
-[INFO] |  |  |  \- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |  |  +- org.apache.yetus:audience-annotations:jar:0.5.0:compile
+[INFO] |  |  |  \- io.netty:netty:jar:3.10.6.Final:compile
 [INFO] |  |  +- commons-lang:commons-lang:jar:2.6:compile
 [INFO] |  |  +- commons-codec:commons-codec:jar:1.13:compile
 [INFO] |  |  +- org.json:json:jar:20151123:provided
@@ -75,7 +76,8 @@
 [INFO] |  |  |     +- org.eclipse.jetty.http2:http2-client:jar:9.4.27.v20200227:test
 [INFO] |  |  |     +- org.eclipse.jetty.http2:http2-common:jar:9.4.27.v20200227:test
 [INFO] |  |  |     +- org.eclipse.jetty.http2:http2-hpack:jar:9.4.27.v20200227:test
-[INFO] |  |  |     \- org.eclipse.jetty.http2:http2-http-client-transport:jar:9.4.27.v20200227:test
+[INFO] |  |  |     +- org.eclipse.jetty.http2:http2-http-client-transport:jar:9.4.27.v20200227:test
+[INFO] |  |  |     \- org.xerial.snappy:snappy-java:jar:1.1.7.6:test
 [INFO] |  |  \- com.qlangtech.tis:tis-dag:jar:3.5.0:test
 [INFO] |  |     \- com.qlangtech.tis:tis-sql-parser:jar:3.5.0:provided
 [INFO] |  |        +- com.facebook.presto:presto-parser:jar:0.206:provided
@@ -152,9 +154,6 @@
 [INFO] |  |  +- commons-configuration:commons-configuration:jar:1.6:compile
 [INFO] |  |  |  +- commons-digester:commons-digester:jar:1.8:compile
 [INFO] |  |  |  \- commons-beanutils:commons-beanutils-core:jar:1.8.0:compile
-[INFO] |  |  +- org.apache.avro:avro:jar:1.7.4:compile
-[INFO] |  |  |  +- com.thoughtworks.paranamer:paranamer:jar:2.3:compile
-[INFO] |  |  |  \- org.xerial.snappy:snappy-java:jar:1.0.4.1:compile
 [INFO] |  |  +- com.google.code.gson:gson:jar:2.2.4:compile
 [INFO] |  |  +- org.apache.hadoop:hadoop-auth:jar:2.7.3:compile
 [INFO] |  |  |  \- org.apache.directory.server:apacheds-kerberos-codec:jar:2.0.0-M15:compile
@@ -180,8 +179,6 @@
 [INFO] |  |  |  +- org.codehaus.jettison:jettison:jar:1.1:compile
 [INFO] |  |  |  \- com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
 [INFO] |  |  \- com.sun.jersey.contribs:jersey-guice:jar:1.9:compile
-[INFO] |  +- org.apache.hadoop:hadoop-mapreduce-client-core:jar:2.7.3:compile
-[INFO] |  |  \- io.netty:netty:jar:3.6.2.Final:compile
 [INFO] |  +- com.alibaba.datax:plugin-unstructured-storage-util:jar:3.5.0:compile
 [INFO] |  |  +- net.sourceforge.javacsv:javacsv:jar:2.0:compile
 [INFO] |  |  +- org.anarres.lzo:lzo-core:jar:1.0.5:compile
@@ -200,6 +197,6 @@
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  1.852 s
-[INFO] Finished at: 2022-04-13T14:16:14+08:00
+[INFO] Total time:  3.150 s
+[INFO] Finished at: 2022-04-24T21:32:36+08:00
 [INFO] ------------------------------------------------------------------------

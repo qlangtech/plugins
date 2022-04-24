@@ -64,6 +64,10 @@
             <version>${alibaba.datax.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-mapreduce-client-core</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro</artifactId>
                 </exclusion>
@@ -99,6 +103,10 @@
             <artifactId>hdfswriter</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
+<!--                <exclusion>-->
+<!--                    <groupId>org.apache.hadoop</groupId>-->
+<!--                    <artifactId>hadoop-mapreduce-client-core</artifactId>-->
+<!--                </exclusion>-->
                 <exclusion>
                     <groupId>org.apache.hive</groupId>
                     <artifactId>hive-exec</artifactId>

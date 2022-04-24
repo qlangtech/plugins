@@ -26,7 +26,8 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.util.XStream2;
-import com.qlangtech.tis.web.start.TisAppLaunchPort;
+import com.qlangtech.tis.web.start.TisAppLaunch;
+import com.qlangtech.tis.web.start.TisSubModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
@@ -241,7 +242,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 }
                 logger.info("sysProps details:" + sysPropsDesc.toString());
                 // shall not have any exception here.
-                TisAppLaunchPort.getPort();
+                TisAppLaunch.getPort(TisSubModule.TIS_CONSOLE);
                 Config.getInstance();
 
             }

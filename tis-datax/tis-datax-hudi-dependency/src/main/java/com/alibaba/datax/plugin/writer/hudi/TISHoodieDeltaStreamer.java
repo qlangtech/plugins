@@ -105,7 +105,11 @@ public class TISHoodieDeltaStreamer implements Serializable {
             hadoopCfg.addResource(fs.getConf());
             hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
                     , ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
-            hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
+           // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
+
+            hadoopCfg.set("hive.metastore.fastpath", "false");
+
+
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
         } finally {
             jssc.stop();

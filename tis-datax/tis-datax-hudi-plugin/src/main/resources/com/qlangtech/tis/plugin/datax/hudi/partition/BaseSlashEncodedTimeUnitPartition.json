@@ -1,0 +1,9 @@
+{
+  "partitionPathField": {
+    "label": "分区字段",
+    "enum": "com.qlangtech.tis.plugin.datax.hudi.partition.BaseSlashEncodedTimeUnitPartition.getPtCandidateFields():uncache_true"
+  },
+  "inputDateformat": {
+    "placeholder": "yyyy-MM-dd HH:mm:ss"
+  }
+}

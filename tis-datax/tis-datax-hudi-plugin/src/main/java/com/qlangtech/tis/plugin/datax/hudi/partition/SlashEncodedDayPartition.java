@@ -18,23 +18,13 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.extension.PluginFormProperties;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.Option;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
-import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
-import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import com.qlangtech.tis.extension.*;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.HudiTimestampBasedKeyGenerator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.util.IPluginContext;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,48 +34,24 @@ import java.util.Optional;
  * @create: 2022-03-08 15:59
  **/
 @Public
-public class SlashEncodedDayPartition extends HudiTablePartition {
-
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String partitionPathField;
+public class SlashEncodedDayPartition extends BaseSlashEncodedTimeUnitPartition {
 
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        super.setProps(props, hudiWriter);
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
-        setHiveSyncPartitionProps(props, hudiWriter, "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor");
+    protected String getPartitionExtractorClass() {
+        return "org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor";
     }
 
-    @Override
-    public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
-        appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
-    }
-
-    public static List<Option> getPtCandidateFields() {
-        return HudiSelectedTab.getContextTableCols((cols) -> cols.stream()
-                .filter((col) -> {
-                    switch (col.getType().getCollapse()) {
-                        // case STRING:
-//                        case INT:
-//                        case Long:
-                        case Date:
-                            return true;
-                    }
-                    return false;
-                }));
-
+    protected String getKeyGeneratorOutputDateformat() {
+        return "yyyy/MM/dd";
     }
 
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
+    public static class DefaultDescriptor extends BaseDescriptor {
         public DefaultDescriptor() {
             super();
         }
-        @Override
-        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
-            return super.getPluginFormPropertyTypes(Optional.empty());
-        }
+
         @Override
         public String getDisplayName() {
             return "slashEncodedDay";

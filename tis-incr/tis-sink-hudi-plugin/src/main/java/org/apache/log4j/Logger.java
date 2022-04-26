@@ -35,4 +35,20 @@ public class Logger {
     public void warn(String warn) {
         logger.warn(warn);
     }
+
+    public void info(Object message) {
+        logger.info(String.valueOf(message));
+    }
+
+    public void debug(Object message) {
+        logger.trace(String.valueOf(message));
+    }
+
+    public void error(Object message) {
+        logger.error(String.valueOf(message));
+    }
+
+    public void error(Object message, Throwable t) {
+        logger.error(String.valueOf(message), t);
+    }
 }

@@ -64,7 +64,7 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
      * @param props
      * @param type
      */
-    protected void setKeyGeneratorType(IPropertiesBuilder props, String type) {
+    protected final void setKeyGeneratorType(IPropertiesBuilder props, String type) {
         // HoodieWriteConfig.KEYGENERATOR_TYPE
         props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, type);
     }

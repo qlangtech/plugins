@@ -19,6 +19,7 @@
 package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
+import com.gilt.logback.flume.tis.TisFlumeLogstashV1Appender;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -50,6 +51,7 @@ import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -71,6 +73,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' is illegal,logbackPath:" + logbackPath);
         }
         LogManager.getRootLogger().addAppender(new HudiLoggerAppender());
+        Objects.requireNonNull(TisFlumeLogstashV1Appender.instance, "flume remote logger can not be null");
 
 
         System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS
@@ -105,14 +108,19 @@ public class TISHoodieDeltaStreamer implements Serializable {
             hadoopCfg.addResource(fs.getConf());
             hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
                     , ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
-           // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
-
+            // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
+            // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
 
 
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
         } finally {
             jssc.stop();
+            try {
+                TisFlumeLogstashV1Appender.instance.stop();
+            } catch (Throwable e) {
+
+            }
         }
     }
 

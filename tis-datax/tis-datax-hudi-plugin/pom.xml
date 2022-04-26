@@ -103,6 +103,12 @@
             <version>${hudi.version}</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hudi</groupId>-->
+<!--            <artifactId>hudi-common</artifactId>-->
+<!--            <version>${hudi.version}</version>-->
+<!--        </dependency>-->
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

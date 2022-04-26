@@ -165,7 +165,11 @@ public class SelectedTab implements Describable<SelectedTab>, ISelectedTab, Iden
         DataSourceMeta dsMeta = (DataSourceMeta) plugin;
         List<ColumnMetaData> cols
                 = context.getContextAttr(KEY_TABLE_COLS, (key) -> dsMeta.getTableMetadata(context.getSubFormIdentityField()));
-        return func.apply(cols).map((c) -> c).collect(Collectors.toList());
+//        return func.apply(cols).map((c) -> new Option(c.getName() + "(" + c.getType().getCollapse().getLiteria() + ")", c.getValue()))
+//                .collect(Collectors.toList());
+
+        return func.apply(cols).map((c) -> c)
+                .collect(Collectors.toList());
 
 
     }
@@ -181,7 +185,7 @@ public class SelectedTab implements Describable<SelectedTab>, ISelectedTab, Iden
                 msgHandler.addFieldError(context, SelectedTab.KEY_FIELD_COLS, "请选择");
                 return false;
             }
-            return this.validateAll(msgHandler, context,tab);
+            return this.validateAll(msgHandler, context, tab);
         }
 
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {

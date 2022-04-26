@@ -31,12 +31,17 @@ import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.Compaction
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-24 11:02
  **/
 public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCreator {
+
+    private static final Logger logger = LoggerFactory.getLogger(StreamAPIStyleFlinkStreamScriptCreator.class);
+
     public StreamAPIStyleFlinkStreamScriptCreator(HudiSinkFactory hudiSinkFactory) {
         super(hudiSinkFactory);
     }
@@ -169,6 +174,12 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD:
                     script.appendLine("cfg.partitionPathField = %s", val);
+                    break;
+                case "hoodie.deltastreamer.keygen.timebased.timestamp.type":
+                case "hoodie.deltastreamer.keygen.timebased.input.dateformat":
+                case "hoodie.deltastreamer.keygen.timebased.output.dateformat":
+                case "hoodie.deltastreamer.keygen.timebased.timezone":
+                    logger.warn("unSupport deltaStream param:{} value:{}", key, val);
                     break;
                 default:
                     throw new IllegalStateException("key:" + key + " is illegal");

@@ -16,31 +16,21 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.common;
+package com.qlangtech.tis.plugin.datax.hudi.keygenerator;
 
+import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
+import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.trigger.util.JsonUtil;
-import com.qlangtech.tis.util.DescriptorsJSON;
-import org.junit.Assert;
+import org.apache.hudi.keygen.constant.KeyGeneratorType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-06-24 09:24
+ * @create: 2022-04-25 07:28
  **/
-public class PluginDesc {
+@Public
+public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> {
 
+    public abstract KeyGeneratorType getKeyGeneratorType();
 
-    public static <TT extends Describable> void testDescGenerate(Class<TT> clazz, String assertFileName) {
-        try {
-            TT plugin = clazz.newInstance();
-            // DescriptorsJSON descJson = new DescriptorsJSON(plugin.getDescriptor());
-            JsonUtil.assertJSONEqual(clazz, assertFileName
-                    , DescriptorsJSON.desc(plugin.getDescriptor()), (m, e, a) -> {
-                        Assert.assertEquals(m, e, a);
-                    });
-            //return plugin;
-        } catch (Exception e) {
-            throw new RuntimeException(assertFileName, e);
-        }
-    }
+    public abstract void setProps(IPropertiesBuilder props);
 }

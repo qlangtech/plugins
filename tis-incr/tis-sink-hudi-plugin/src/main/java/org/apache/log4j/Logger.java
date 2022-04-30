@@ -26,14 +26,29 @@ package org.apache.log4j;
  * @see org.apache.hudi.common.config.HoodieConfig
  **/
 public class Logger {
+
+    public static Logger getLogger(Class clazz) {
+        return LogManager.getLogger(clazz);
+    }
+
     private org.slf4j.Logger logger;
 
     public Logger(org.slf4j.Logger logger) {
         this.logger = logger;
     }
 
-    public void warn(String warn) {
-        logger.warn(warn);
+
+    public boolean isInfoEnabled() {
+        return true;
+    }
+
+    public boolean isDebugEnabled() {
+        return true;
+    }
+
+
+    public void warn(Object warn) {
+        logger.warn(String.valueOf(warn));
     }
 
     public void info(Object message) {

@@ -114,6 +114,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
 
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
+            LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync stop");
         } finally {
             jssc.stop();
             try {
@@ -121,6 +122,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             } catch (Throwable e) {
 
             }
+            System.exit(0);
         }
     }
 

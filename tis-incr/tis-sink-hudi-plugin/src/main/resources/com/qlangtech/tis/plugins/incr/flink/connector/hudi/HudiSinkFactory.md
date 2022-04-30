@@ -12,8 +12,22 @@
 
 Hudi Flink实时同步脚本支持两种类型：
 
-1. **SQL**:
+1. **SQL**: 敬请期待
 
 2. **StreamAPI**: HoodieFlinkStreamer
+
+## compaction
+
+Background activity to reconcile differential data structures within Hudi 
+
+e.g: moving updates from row based log files to columnar formats. Internally, compaction manifests as a special commit on the timeline
+
+About compaction conception: [https://hudi.apache.org/docs/compaction/](https://hudi.apache.org/docs/compaction/)
+
+Detailed configuration description: [https://hudi.apache.org/docs/configurations#Compaction-Configs](https://hudi.apache.org/docs/configurations#Compaction-Configs)
+
+## opType 
+
+Detailed description:[https://hudi.apache.org/docs/write_operations](https://hudi.apache.org/docs/write_operations)
 
 

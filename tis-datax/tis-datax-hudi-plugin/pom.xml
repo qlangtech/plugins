@@ -197,6 +197,17 @@
                 <plugins>
 
                     <plugin>
+                        <groupId>com.qlangtech.tis</groupId>
+                        <artifactId>maven-tpi-plugin</artifactId>
+                        <configuration>
+                            <!--hudi的相关依赖从tis-datax-hudi-dependency中加载，此处只是编译时支持就行-->
+                            <maskClasses>org.apache.hudi.</maskClasses>
+                        </configuration>
+                    </plugin>
+
+
+
+                    <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
                         <executions>

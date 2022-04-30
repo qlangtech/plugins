@@ -41,9 +41,9 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.starrocks.connector.flink.StarRocksSink;
-import com.starrocks.connector.flink.row.StarRocksSinkOP;
-import com.starrocks.connector.flink.table.StarRocksSinkOptions;
-import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
+import com.starrocks.connector.flink.row.sink.StarRocksSinkOP;
+import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
+import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.annotation.Public;
@@ -61,7 +61,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.starrocks.connector.flink.table.StarRocksSinkOptions.*;
+import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
 
 /**
  * https://docs.starrocks.com/zh-cn/main/loading/Flink-connector-starrocks

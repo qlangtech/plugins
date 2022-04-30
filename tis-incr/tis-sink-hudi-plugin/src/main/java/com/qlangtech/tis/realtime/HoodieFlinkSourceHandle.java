@@ -18,13 +18,13 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import org.apache.commons.collections.MapUtils;
 import org.apache.flink.configuration.Configuration;
@@ -151,6 +151,8 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
         }
 
         Configuration conf = org.apache.hudi.streamer.FlinkStreamerConfig.toFlinkConfig(cfg);
+        // 额外参数也要添加进来
+        conf.addAll(cfg);
         long ckpTimeout = env.getCheckpointConfig().getCheckpointTimeout();
         conf.setLong(FlinkOptions.WRITE_COMMIT_ACK_TIMEOUT, ckpTimeout);
 
@@ -163,8 +165,6 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
             Pipelines.clean(conf, pipeline);
         }
     }
-
-
 
 
 }

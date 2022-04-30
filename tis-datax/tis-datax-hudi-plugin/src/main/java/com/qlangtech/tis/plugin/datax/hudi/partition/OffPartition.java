@@ -25,8 +25,8 @@ import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import org.apache.hudi.keygen.constant.KeyGeneratorType;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,14 +41,18 @@ import java.util.Optional;
 public class OffPartition extends HudiTablePartition {
 
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter writer) {
+    public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter writer) {
         //  props.setProperty("hoodie.datasource.write.partitionpath.field", null);
         // HoodieWriteConfig.KEYGENERATOR_TYPE
         // @see HoodieSparkKeyGeneratorFactory l78
-        setKeyGeneratorType(props, "NON_PARTITION");
+        // setKeyGeneratorType(props, "NON_PARTITION");
         setHiveSyncPartitionProps(props, null, "org.apache.hudi.hive.NonPartitionedExtractor");
     }
 
+    @Override
+    protected String getWriteKeyGeneratorType() {
+        return KeyGeneratorType.NON_PARTITION.name();
+    }
 
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
@@ -65,10 +69,12 @@ public class OffPartition extends HudiTablePartition {
         public DefaultDescriptor() {
             super();
         }
+
         @Override
         public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
             return super.getPluginFormPropertyTypes(Optional.empty());
         }
+
         @Override
         public String getDisplayName() {
             return "off";

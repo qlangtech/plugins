@@ -20,6 +20,7 @@ package com.qlangtech;
 
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkIncrJobStatus;
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkTaskNodeController;
+import com.qlangtech.plugins.incr.flink.launch.TestTISFlinkCDCStreamFactory;
 import com.qlangtech.plugins.incr.flink.launch.ckpt.TestCheckpointFactory;
 import com.qlangtech.tis.plugins.flink.client.TestFlinkClient;
 import org.junit.runner.RunWith;
@@ -32,7 +33,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses(
-        {TestFlinkIncrJobStatus.class
+        {TestTISFlinkCDCStreamFactory.class,
+                TestFlinkIncrJobStatus.class
                 , TestFlinkTaskNodeController.class
                 , TestFlinkClient.class
                 , TestCheckpointFactory.class})

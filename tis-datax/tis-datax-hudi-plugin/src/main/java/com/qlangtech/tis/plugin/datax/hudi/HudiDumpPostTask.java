@@ -58,7 +58,6 @@ import java.util.concurrent.CountDownLatch;
 public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
 
-
     private static Logger logger = LoggerFactory.getLogger(HudiDumpPostTask.class);
 
     private final HudiSelectedTab hudiTab;
@@ -117,13 +116,25 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         try {
             this.writeSourceProps(fs, dumpDir, fsSourcePropsPath);
-            this.launchSparkRddConvert(fs, dumpDir, fsSourcePropsPath);
-        } catch (Exception e) {
+            SparkAppHandle handle = this.launchSparkRddConvert(fs, dumpDir, fsSourcePropsPath);
+            if (handle != null) {
+                try {
+                    handle.stop();
+                } catch (Throwable e) { }
+            }
+        } catch (Throwable e) {
+            if (this.sparkAppHandle != null) {
+                try {
+                    this.sparkAppHandle.kill();
+                } catch (Throwable ex) {
+                    logger.warn(ex.getMessage(), ex);
+                }
+            }
             throw new RuntimeException(e);
         }
     }
 
-    private void launchSparkRddConvert(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
+    private SparkAppHandle launchSparkRddConvert(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
 
         Map<String, String> env = Config.getInstance().getAllKV();
 
@@ -143,7 +154,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
-
+       // handle.directory();
 //        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
 //        FileUtils.touch(logFile);
 //        handle.redirectError(logFile);
@@ -232,13 +243,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             throw new TisException("spark app:" + sparkAppHandle.getAppId()
                     + " execute result not successful:" + sparkAppHandle.getState());
         }
+        return sparkAppHandle;
     }
 
 
     @Override
     public void cancel() {
         try {
-            sparkAppHandle.kill();
+            sparkAppHandle.stop();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
@@ -263,7 +275,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.insert.shuffle.parallelism", (shuffleParallelism));
             props.setProperty("hoodie.delete.shuffle.parallelism", (shuffleParallelism));
             props.setProperty("hoodie.bulkinsert.shuffle.parallelism", (shuffleParallelism));
-            props.setProperty("hoodie.embed.timeline.server", "true");
+            props.setProperty("hoodie.embed.timeline.server", "false");
             props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
 
             // @see HoodieCompactionConfig.INLINE_COMPACT

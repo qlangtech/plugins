@@ -42,6 +42,7 @@ import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -57,7 +58,7 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-30 15:19
  **/
-public class TestTISFlinkCDCStart  //extends AbstractTestBase
+public class TestTISFlinkCDCStart //extends AbstractTestBase
         implements TISEasyMock {
     TargetResName dataxName = new TargetResName("hudi");
 
@@ -73,7 +74,8 @@ public class TestTISFlinkCDCStart  //extends AbstractTestBase
     public void testProcessFlinkSourceHandle() throws Throwable {
 
         //String table1 = "totalpayinfo";
-        String table1  ="instancedetail";
+        // String table1  ="instancedetail";
+        String table1 = "base";
         String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
         File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
         pluginDir = pluginDir.toPath().normalize().toFile();

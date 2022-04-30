@@ -33,16 +33,16 @@ public class TestSlashEncodedDayPartition extends BasicPartitionTest {
     @Test
     public void testPropsBuild() throws Exception {
 
-        HudiTimestampBasedKeyGenerator keyGenerator = new HudiTimestampBasedKeyGenerator();
-        keyGenerator.timezone = TimeZone.getDefault().getID();
-        keyGenerator.timestampType = TimestampBasedAvroKeyGenerator.TimestampType.EPOCHMILLISECONDS.name();
-        keyGenerator.inputDateformat = "yyyy-MM-dd HH:mm:ss";
-        keyGenerator.outputDateformat = "yyyyMMdd";
+//        HudiTimestampBasedKeyGenerator keyGenerator = new HudiTimestampBasedKeyGenerator();
+//        keyGenerator.timezone = TimeZone.getDefault().getID();
+//        keyGenerator.timestampType = TimestampBasedAvroKeyGenerator.TimestampType.EPOCHMILLISECONDS.name();
+//        keyGenerator.inputDateformat = "yyyy-MM-dd HH:mm:ss";
+//        keyGenerator.outputDateformat = "yyyyMMdd";
 
         SlashEncodedDayPartition partition = new SlashEncodedDayPartition();
         String partitionField = "testFiled";
         partition.partitionPathField = partitionField;
-        partition.keyGenerator = keyGenerator;
+       // partition.keyGenerator = keyGenerator;
         String propContentExpect
                 =
                 "hoodie.datasource.write.keygenerator.type=SIMPLE\n" +

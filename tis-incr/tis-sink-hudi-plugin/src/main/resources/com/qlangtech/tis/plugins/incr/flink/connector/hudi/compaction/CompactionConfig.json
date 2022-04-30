@@ -18,6 +18,12 @@
         "val": "num_or_time"
       }
     ]
+  },
+  "maxNumDeltaCommitsBefore": {
+    "label": "Commit次数触发"
+  },
+  "maxDeltaSecondsBefore": {
+    "label": "时间触发"
   }
 }
 

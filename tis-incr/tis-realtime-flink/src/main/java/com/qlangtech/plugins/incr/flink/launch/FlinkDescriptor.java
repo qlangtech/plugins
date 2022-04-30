@@ -41,31 +41,34 @@ import java.util.stream.Collectors;
 public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
 
     protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption) {
-        addFieldDescriptor(fieldName, configOption, Optional.empty());
+        addFieldDescriptor(fieldName, configOption, new OverwriteProps());
     }
 
-    protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption, Optional<String> appendHelper) {
+    protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption, OverwriteProps overwriteProps) {
         Description desc = configOption.description();
         HtmlFormatter htmlFormatter = new HtmlFormatter();
 
-        Object d = configOption.defaultValue();
+        Object dftVal = configOption.defaultValue();
+        if (dftVal == null) {
+            dftVal = overwriteProps.dftVal;
+        }
 
         StringBuffer helperContent = new StringBuffer(htmlFormatter.format(desc));
-        if (appendHelper.isPresent()) {
-            helperContent.append("\n\n").append(appendHelper.get());
+        if (overwriteProps.appendHelper.isPresent()) {
+            helperContent.append("\n\n").append(overwriteProps.appendHelper.get());
         }
 
         Class<?> targetClazz = getTargetClass(configOption);
 
         List<Option> opts = null;
         if (targetClazz == Duration.class) {
-            if (d != null) {
-                d = ((Duration) d).getSeconds();
+            if (dftVal != null) {
+                dftVal = ((Duration) dftVal).getSeconds();
             }
             helperContent.append("\n\n 单位：`秒`");
         } else if (targetClazz == MemorySize.class) {
-            if (d != null) {
-                d = ((MemorySize) d).getKibiBytes();
+            if (dftVal != null) {
+                dftVal = ((MemorySize) dftVal).getKibiBytes();
             }
             helperContent.append("\n\n 单位：`kb`");
         } else if (targetClazz.isEnum()) {
@@ -75,7 +78,7 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
             opts = Lists.newArrayList(new Option("是", true), new Option("否", false));
         }
 
-        this.addFieldDescriptor(fieldName, d, helperContent.toString(), Optional.ofNullable(opts));
+        this.addFieldDescriptor(fieldName, dftVal, helperContent.toString(), Optional.ofNullable(opts));
     }
 
     private static Method getClazzMethod;
@@ -89,6 +92,21 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
             return (Class<?>) getClazzMethod.invoke(configOption);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static class OverwriteProps {
+        private Optional<String> appendHelper = Optional.empty();
+        Object dftVal;
+
+        public OverwriteProps setAppendHelper(String appendHelper) {
+            this.appendHelper = Optional.of(appendHelper);
+            return this;
+        }
+
+        public OverwriteProps setDftVal(Object dftVal) {
+            this.dftVal = dftVal;
+            return this;
         }
     }
 

@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -82,12 +83,12 @@ public class TestDataxMySQLReader extends BasicTest {
         KeyedPluginStore<DataxReader> subFieldStore = KeyedPluginStore.getPluginStore(subFieldKey);
 
 
-        File targetFile = readerStore.getTargetFile();
-        FileUtils.deleteQuietly(targetFile);
-        FileUtils.deleteQuietly(subFieldStore.getTargetFile());
+        XmlFile targetFile = readerStore.getTargetFile();
+        FileUtils.deleteQuietly(targetFile.getFile());
+        FileUtils.deleteQuietly(subFieldStore.getTargetFile().getFile());
 
         DataxMySQLReader dataxReader = (DataxMySQLReader) readerStore.getPlugin();
-        assertNull("targetFile:" + targetFile.getAbsolutePath(), dataxReader);
+        assertNull("targetFile:" + targetFile.getFile().getAbsolutePath(), dataxReader);
 
         List<Descriptor.ParseDescribable<DataxReader>> dlist = Lists.newArrayList();
 
@@ -236,7 +237,7 @@ public class TestDataxMySQLReader extends BasicTest {
         pluginContext.addDb(desc, dbName, context, true);
         EasyMock.replay(pluginContext, context);
         DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
-        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)));
+        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
             @Override

@@ -167,7 +167,8 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                     script.appendLine("cfg.hiveSyncPartitionExtractorClass = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS:
-                    script.appendLine("cfg.partitionDefaultName = %s", val);
+                   // script.appendLine("cfg.partitionDefaultName = %s", val);
+                    script.appendLine("cfg.hiveSyncPartitionFields = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE:
                     script.appendLine("cfg.keygenType = %s", val);
@@ -175,11 +176,16 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                 case IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD:
                     script.appendLine("cfg.partitionPathField = %s", val);
                     break;
+//                props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TYPE_FIELD_PROP, this.timestampType);
+//                props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_INPUT_DATE_FORMAT_PROP, this.inputDateformat);
+//                props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_OUTPUT_DATE_FORMAT_PROP, this.outputDateformat);
+//                props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TIMEZONE_FORMAT_PROP, this.timezone);
                 case "hoodie.deltastreamer.keygen.timebased.timestamp.type":
                 case "hoodie.deltastreamer.keygen.timebased.input.dateformat":
                 case "hoodie.deltastreamer.keygen.timebased.output.dateformat":
                 case "hoodie.deltastreamer.keygen.timebased.timezone":
-                    logger.warn("unSupport deltaStream param:{} value:{}", key, val);
+                    // logger.warn("unSupport deltaStream param:{} value:{}", key, val);
+                    script.appendLine("cfg.setString(%s , %s)", key, val);
                     break;
                 default:
                     throw new IllegalStateException("key:" + key + " is illegal");

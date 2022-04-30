@@ -16,30 +16,19 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.launch.ckpt;
+package com.qlangtech.plugins.incr.flink.launch;
 
-import com.qlangtech.plugins.incr.flink.launch.CheckpointFactory;
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import com.qlangtech.tis.plugin.common.PluginDesc;
+import org.junit.Test;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-01 16:21
+ * @create: 2022-04-30 12:59
  **/
-@Public
-public class CKOff extends CheckpointFactory {
-    @Override
-    public void setProps(StreamExecutionEnvironment env) {
+public class TestTISFlinkCDCStreamFactory {
 
-    }
-
-    @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<CheckpointFactory> {
-        @Override
-        public String getDisplayName() {
-            return "off";
-        }
+    @Test
+    public void testDescGenerate() {
+        PluginDesc.testDescGenerate(TISFlinkCDCStreamFactory.class, "flinkCDCStreamFactory-desc.json");
     }
 }

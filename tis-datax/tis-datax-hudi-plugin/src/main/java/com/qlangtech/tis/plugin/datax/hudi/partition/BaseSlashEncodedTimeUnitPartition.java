@@ -80,8 +80,7 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 
 
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        super.setProps(props, hudiWriter);
+    public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
         setHiveSyncPartitionProps(props, hudiWriter, getPartitionExtractorClass());
 //        if (keyGenerator == null) {
@@ -89,12 +88,14 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 //        }
 
         HudiTimestampBasedKeyGenerator keyGenerator = getHudiTimestampBasedKeyGenerator();
-
-
-        this.setKeyGeneratorType(props, keyGenerator.getKeyGeneratorType().name());
+      //  this.setKeyGeneratorType(props, keyGenerator.getKeyGeneratorType().name());
         keyGenerator.setProps(props);
     }
 
+    @Override
+    protected String getWriteKeyGeneratorType() {
+        return getHudiTimestampBasedKeyGenerator().getKeyGeneratorType().name();
+    }
 
     protected abstract String getPartitionExtractorClass();
 

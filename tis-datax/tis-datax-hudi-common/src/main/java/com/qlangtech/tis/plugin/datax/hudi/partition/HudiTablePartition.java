@@ -57,25 +57,30 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
                 .returnLine();
     }
 
-    /**
-     * HoodieWriteConfig.KEYGENERATOR_TYPE
-     * // @see HoodieSparkKeyGeneratorFactory l78
-     *
-     * @param props
-     * @param type
-     */
-    protected final void setKeyGeneratorType(IPropertiesBuilder props, String type) {
-        // HoodieWriteConfig.KEYGENERATOR_TYPE
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, type);
-    }
+//    /**
+//     * HoodieWriteConfig.KEYGENERATOR_TYPE
+//     * // @see HoodieSparkKeyGeneratorFactory l78
+//     *
+//     * @param props
+//     * @param type
+//     */
+//    private final void setKeyGeneratorType(IPropertiesBuilder props, String type) {
+//        // HoodieWriteConfig.KEYGENERATOR_TYPE
+//        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, type);
+//    }
 
 
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+    public final void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         if (StringUtils.isEmpty(hudiWriter.getPartitionedBy())) {
             throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
         }
-        setKeyGeneratorType(props, "SIMPLE");
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, getWriteKeyGeneratorType());
+        this.setExtraProps(props, hudiWriter);
     }
+
+    public abstract void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
+
+    protected abstract String getWriteKeyGeneratorType();
 
 
     public boolean isSupportPartition() {

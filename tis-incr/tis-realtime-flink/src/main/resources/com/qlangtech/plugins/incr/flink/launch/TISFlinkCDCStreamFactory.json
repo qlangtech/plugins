@@ -15,6 +15,13 @@
   },
   "restartStrategy": {
     "label": "重启策略",
+    "dftVal": "off",
     "enum": "com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory.allRestartStrategy()"
+  },
+  "checkpoint": {
+    "dftVal": "off"
+  },
+  "stateBackend": {
+    "dftVal": "off"
   }
 }

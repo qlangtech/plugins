@@ -12,14 +12,13 @@
     "dftVal": "streamApi",
     "enum": [
       {
-        "label": "SQL",
-        "val": "sql"
-      },
-      {
         "label": "StreamAPI",
         "val": "streamApi"
       }
     ]
+  },
+  "compaction": {
+    "dftVal": "default"
   },
   "opType": {
     "label": "操作类型",

@@ -37,7 +37,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -87,7 +86,7 @@ public class FileSystemState extends StateBackendFactory implements StateBackend
         public DefaultDescriptor() {
             super();
             this.addFieldDescriptor("checkpointDir", CheckpointingOptions.CHECKPOINTS_DIRECTORY
-                    , Optional.of("The scheme (hdfs://, file://, etc) is null. Please specify the file system scheme explicitly in the URI."));
+                    , (new OverwriteProps()).setAppendHelper("The scheme (hdfs://, file://, etc) is null. Please specify the file system scheme explicitly in the URI."));
             this.addFieldDescriptor("smallFileThreshold", CheckpointingOptions.FS_SMALL_FILE_THRESHOLD);
             this.addFieldDescriptor("writeBufferSize", CheckpointingOptions.FS_WRITE_BUFFER_SIZE);
         }

@@ -21,16 +21,17 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
-import com.starrocks.connector.flink.table.StarRocksSinkSemantic;
+import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import junit.framework.TestCase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -146,6 +147,18 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
 
         DataXDorisWriter dataXWriter = mock("dataXWriter", DataXDorisWriter.class);
+
+        EasyMock.expect(dataXWriter.getSeparator()).andReturn(new BasicDorisStarRocksWriter.Separator() {
+            @Override
+            public String getColumnSeparator() {
+                return COL_SEPARATOR_DEFAULT;
+            }
+            @Override
+            public String getRowDelimiter() {
+                return ROW_DELIMITER_DEFAULT;
+            }
+        });
+
         DorisSourceFactory sourceFactory = new DorisSourceFactory();
         sourceFactory.loadUrl = "[\"192.168.28.201:8030\"]";
         sourceFactory.userName = "root";
@@ -161,8 +174,8 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
         StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
-        sinkFactory.columnSeparator = "x01";
-        sinkFactory.rowDelimiter = "x02";
+//        sinkFactory.columnSeparator = "x01";
+//        sinkFactory.rowDelimiter = "x02";
         sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
         sinkFactory.sinkBatchFlushInterval = 2000l;
 

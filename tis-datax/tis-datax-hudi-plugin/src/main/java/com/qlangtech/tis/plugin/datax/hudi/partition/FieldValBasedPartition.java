@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hudi.keygen.constant.KeyGeneratorType;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,8 +52,7 @@ public class FieldValBasedPartition extends HudiTablePartition {
     public String partitionPathField;
 
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        super.setProps(props, hudiWriter);
+    public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         if (StringUtils.isEmpty(this.partitionPathField)) {
             throw new IllegalStateException("partitionPathField can not be empty");
         }
@@ -68,6 +68,10 @@ public class FieldValBasedPartition extends HudiTablePartition {
 
     }
 
+    @Override
+    protected String getWriteKeyGeneratorType() {
+        return KeyGeneratorType.SIMPLE.name();
+    }
 
     public static List<Option> getPtCandidateFields() {
         return HudiSelectedTab.getPartitionKeys();

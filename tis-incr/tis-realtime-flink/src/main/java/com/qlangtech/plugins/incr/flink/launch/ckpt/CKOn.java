@@ -114,23 +114,27 @@ public class CKOn extends CheckpointFactory {
 
         public DefaultDescriptor() {
             super();
-            this.addFieldDescriptor("ckpointInterval", ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL);
+
+
+            this.addFieldDescriptor("ckpointInterval"
+                    , ExecutionCheckpointingOptions.CHECKPOINTING_INTERVAL, new OverwriteProps().setDftVal(Duration.ofSeconds(200)));
             this.addFieldDescriptor("checkpointMode", ExecutionCheckpointingOptions.CHECKPOINTING_MODE);
             this.addFieldDescriptor("checkpointTimeout", ExecutionCheckpointingOptions.CHECKPOINTING_TIMEOUT);
             this.addFieldDescriptor("maxConcurrentNum", ExecutionCheckpointingOptions.MAX_CONCURRENT_CHECKPOINTS);
             this.addFieldDescriptor("minPause", ExecutionCheckpointingOptions.MIN_PAUSE_BETWEEN_CHECKPOINTS);
-            this.addFieldDescriptor("maxFaildNum", ExecutionCheckpointingOptions.TOLERABLE_FAILURE_NUMBER);
-            this.addFieldDescriptor("enableExternal", ExecutionCheckpointingOptions.EXTERNALIZED_CHECKPOINT);
+            this.addFieldDescriptor("maxFaildNum", ExecutionCheckpointingOptions.TOLERABLE_FAILURE_NUMBER, new OverwriteProps().setDftVal(0));
+            this.addFieldDescriptor("enableExternal", ExecutionCheckpointingOptions.EXTERNALIZED_CHECKPOINT
+                    , new OverwriteProps().setDftVal(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION));
             this.addFieldDescriptor("enableUnaligned", ExecutionCheckpointingOptions.ENABLE_UNALIGNED);
             this.addFieldDescriptor("forceUnaligned", ExecutionCheckpointingOptions.FORCE_UNALIGNED);
         }
 
         @Override
         public String getDisplayName() {
-            return "On";
+            return "on";
         }
 
-        private static final int MIN_INTERVAL = 200;
+        private static final int MIN_INTERVAL = 5;
 
         public boolean validateCkpointInterval(
                 IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {

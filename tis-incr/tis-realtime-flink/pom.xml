@@ -40,6 +40,11 @@
     <dependencies>
 
 
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+
         <!--只需要包里面的:com.qlangtech.plugins.incr.flink.TISFlinkCDCStart-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

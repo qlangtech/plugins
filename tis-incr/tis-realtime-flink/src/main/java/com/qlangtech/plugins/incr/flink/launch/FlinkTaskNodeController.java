@@ -132,20 +132,8 @@ public class FlinkTaskNodeController implements IRCController {
 
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
-//        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-//        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
-//        try (RestClusterClient restClient = factory.getFlinkCluster()) {
-//
-//            FlinkClient flinkClient = new FlinkClient();
 
-        // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
         File streamUberJar = getStreamUberJarFile(collection);
-        // JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
-        //request.setCache(true);
-        // request.setDependency(streamJar.getAbsolutePath());
-        //request.setParallelism(factory.parallelism);
-        // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
-        //request.setEntryClass(TISFlinkCDCStart.class.getName());
 
         Manifest manifest = this.createManifestCfgAttrs(collection, timestamp);
 
@@ -160,18 +148,6 @@ public class FlinkTaskNodeController implements IRCController {
                     FlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
                     incrJob.createNewJob(jobId);
                 });
-
-//        request.setProgramArgs(collection.getName());
-//        request.setDependency(streamUberJar.getAbsolutePath());
-
-        //long start = System.currentTimeMillis();
-        //JobID jobID = flinkClient.submitJar(restClient, request);
-
-
-        //FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
-//        } finally {
-//            Thread.currentThread().setContextClassLoader(currentClassLoader);
-//        }
     }
 
     private File getStreamUberJarFile(TargetResName collection) {
@@ -180,18 +156,6 @@ public class FlinkTaskNodeController implements IRCController {
         logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
         return streamUberJar;
     }
-
-
-//    public Map<String, Object> getAccumulators() {
-//        System.out.println("70122adf582205423101651f89dad92e");
-//        try (RestClusterClient restClient = factory.getFlinkCluster()) {
-//            CompletableFuture<Map<String, Object>> acc = restClient.getAccumulators(JobID.fromHexString("70122adf582205423101651f89dad92e"));
-//
-//            return acc.get(10, TimeUnit.SECONDS);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
@@ -202,25 +166,11 @@ public class FlinkTaskNodeController implements IRCController {
 
             FlinkClient flinkClient = new FlinkClient();
 
-            // File rootLibDir = new File("/Users/mozhenghua/j2ee_solution/project/plugins");
-            // String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
 
-            //File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
-//            logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
-            //request.setCache(true);
-            // request.setDependency(streamJar.getAbsolutePath());
             request.setParallelism(factory.parallelism);
-            // request.setEntryClass("com.qlangtech.plugins.incr.flink.TISFlinkCDCStart");
             request.setEntryClass(TISFlinkCDCStart.class.getName());
 
-            // Manifest manifest = this.createManifestCfgAttrs(collection, timestamp);
-
-//            try (JarOutputStream jaroutput = new JarOutputStream(
-//                    FileUtils.openOutputStream(streamUberJar, false), manifest)) {
-//
-//                jaroutput.flush();
-//            }
 
             request.setProgramArgs(collection.getName());
             request.setDependency(streamUberJar.getAbsolutePath());
@@ -231,9 +181,6 @@ public class FlinkTaskNodeController implements IRCController {
 
             afterSuccess.accept(jobID);
 
-//            FlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
-//            incrJob.createNewJob(jobID);
-            //FileUtils.write(incrJobFile, jobID.toHexString(), TisUTF8.get());
         } finally {
             Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
@@ -288,7 +235,13 @@ public class FlinkTaskNodeController implements IRCController {
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
         FlinkIncrJobStatus incrJobStatus = this.getIncrJobStatus(collection);
-        final FlinkJobDeploymentDetails noneStateDetail = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus);
+        final FlinkJobDeploymentDetails noneStateDetail
+                = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus){
+            @Override
+            public boolean isRunning() {
+                return false;
+            }
+        };
         if (incrJobStatus.getState() == IFlinkIncrJobStatus.State.NONE) {
             // stop 或者压根没有创建
             return noneStateDetail;

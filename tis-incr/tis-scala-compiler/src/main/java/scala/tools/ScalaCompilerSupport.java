@@ -41,7 +41,7 @@ import java.util.*;
  */
 public class ScalaCompilerSupport {
 
-    public static final String KEY_SCALA_SOURCE_ROOT_DIR   = "src/main/scala";
+    public static final String KEY_SCALA_SOURCE_ROOT_DIR = "src/main/scala";
 
     private static final Logger logger = LoggerFactory.getLogger(ScalaCompilerSupport.class);
 
@@ -53,7 +53,8 @@ public class ScalaCompilerSupport {
 
     /**
      * 开始编译scala 脚本
-     *https://docs.scala-lang.org/overviews/compiler-options/index.html
+     * https://docs.scala-lang.org/overviews/compiler-options/index.html
+     *
      * @param sourceRoot
      * @param dependencyDBNodesClasspaths
      * @param loggerListener
@@ -243,7 +244,9 @@ public class ScalaCompilerSupport {
         JavaMainCaller jcmd = getScalaCommand();
         jcmd.redirectToLog();
         if (!classpathElements.isEmpty()) {
-            jcmd.addJvmArgs("-classpath", MainHelper.toMultiPath(classpathElements));
+            String claspath = MainHelper.toMultiPath(classpathElements);
+            getLog().info("classpath:{}", claspath);
+            jcmd.addJvmArgs("-classpath", claspath);
         }
         jcmd.addArgs("-d", outputDir.getAbsolutePath());
         // jcmd.addArgs("-sourcepath", sourceDir.getAbsolutePath());

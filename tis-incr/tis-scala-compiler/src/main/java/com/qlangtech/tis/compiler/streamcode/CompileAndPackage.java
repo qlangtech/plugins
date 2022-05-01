@@ -159,7 +159,7 @@ public class CompileAndPackage implements ICompileAndPackage {
         }
 
         File pkgJar = new File(pluginLibDir, StreamContextConstant.getIncrStreamJarName(appName));
-        FileUtils.forceDelete(pkgJar);
+        FileUtils.deleteQuietly(pkgJar);
         // 将stream code打包
         FileObjectsContext.packageJar(
                 pkgJar
@@ -168,7 +168,7 @@ public class CompileAndPackage implements ICompileAndPackage {
 
         // 继续打一个tpi包
         File tpi = new File(pluginDir.getParentFile(), pluginDir.getName() + PluginManager.PACAKGE_TPI_EXTENSION);
-        FileUtils.forceDelete(tpi);
+        FileUtils.deleteQuietly(tpi);
         File f = null;
         Path pluginRootPath = pluginDir.toPath();
         try (JarOutputStream jaroutput = new JarOutputStream(

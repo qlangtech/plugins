@@ -29,6 +29,7 @@ import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -370,8 +371,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 BasicDataXRdbmsReader rdbmsReader = readerDescribable.getInstance();
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
+                logger.warn(e.getMessage(), e);
                 // msgHandler.addErrorMessage(context, );
-                msgHandler.addFieldError(context, BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME, "数据源连接不正常," + e.getMessage());
+                msgHandler.addFieldError(context, BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME, "数据源连接不正常," + TisException.getErrMsg(e));
                 return false;
             }
 

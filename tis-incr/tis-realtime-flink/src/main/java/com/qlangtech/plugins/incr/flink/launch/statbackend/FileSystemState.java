@@ -86,7 +86,9 @@ public class FileSystemState extends StateBackendFactory implements StateBackend
         public DefaultDescriptor() {
             super();
             this.addFieldDescriptor("checkpointDir", CheckpointingOptions.CHECKPOINTS_DIRECTORY
-                    , (new OverwriteProps()).setAppendHelper("The scheme (hdfs://, file://, etc) is null. Please specify the file system scheme explicitly in the URI."));
+                    , (new OverwriteProps())
+                            .setAppendHelper("The scheme (hdfs://, file://, etc) is null. Please specify the file system scheme explicitly in the URI.")
+                            .setDftVal("file:///opt/data/savepoint"));
             this.addFieldDescriptor("smallFileThreshold", CheckpointingOptions.FS_SMALL_FILE_THRESHOLD);
             this.addFieldDescriptor("writeBufferSize", CheckpointingOptions.FS_WRITE_BUFFER_SIZE);
         }

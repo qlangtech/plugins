@@ -26,7 +26,9 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -40,6 +42,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.utils.TisMetaProps;
 import com.starrocks.connector.flink.StarRocksSink;
 import com.starrocks.connector.flink.row.sink.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
@@ -124,7 +127,10 @@ public class StarRocksSinkFactory extends TISSinkFactory {
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
-        return new CompileAndPackage();
+        TisMetaProps metaProps = Config.getMetaProps();
+        return new CompileAndPackage(Lists.newArrayList(
+                new PluginWrapper.Dependency("tis-sink-starrocks-plugin", metaProps.getVersion(), false)
+                , new PluginWrapper.Dependency("tis-datax-doris-plugin", metaProps.getVersion(), false)));
     }
 
     @Override

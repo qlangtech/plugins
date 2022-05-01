@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-//import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonIgnore;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-25 13:09
@@ -47,14 +45,14 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
         this.jobDetailsInfo = jobDetailsInfo;
     }
 
-//    public ExtendFlinkJobDeploymentDetails(JobDetailsInfo jobDetailsInfo) {
-//        this.jobDetailsInfo = jobDetailsInfo;
-//    }
+    @Override
+    public boolean isRunning() {
+        return getJobStatus() == JobStatus.RUNNING;
+    }
 
     public String getJobId() {
         return jobDetailsInfo.getJobId().toHexString();
     }
-
 
     public String getName() {
         return jobDetailsInfo.getName();

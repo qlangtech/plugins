@@ -36,6 +36,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
 
 /**
@@ -81,21 +82,35 @@ public class DefaultDataxProcessor extends DataxProcessor {
 
     @Override
     public String getFlinkStreamGenerateTemplateFileName() {
-        return writerPluginOverwrite((s) -> s.getFlinkStreamGenerateTemplateFileName());
+
+        return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTemplateFileName()
+                , () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTemplateFileName());
+
+//        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
+//        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
+//        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
+//            return ((IStreamIncrGenerateStrategy) sinKFactory).getFlinkStreamGenerateTemplateFileName();
+//        }
+//
+//        return super.getFlinkStreamGenerateTemplateFileName();
     }
 
     @Override
     public IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
-        return writerPluginOverwrite((s) -> s.decorateMergeData(mergeData));
+        return writerPluginOverwrite((d) -> d.decorateMergeData(mergeData), () -> mergeData);
     }
 
-    private <T> T writerPluginOverwrite(Function<IStreamIncrGenerateStrategy, T> func) {
-        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
-        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
-        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
-            return func.apply(((IStreamIncrGenerateStrategy) sinKFactory));
+    private <T> T writerPluginOverwrite(Function<IStreamIncrGenerateStrategy, T> func, Callable<T> unmatchCreator) {
+        try {
+            TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
+            Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
+            if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
+                return func.apply(((IStreamIncrGenerateStrategy) sinKFactory));
+            }
+            return unmatchCreator.call();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return func.apply(this);
     }
 
 

@@ -31,6 +31,7 @@ import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellEvaluate;
@@ -103,11 +104,10 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
 
     public static List<Option> getHistoryBatch() {
-
-        HudiSinkFactory sink = (HudiSinkFactory) GroovyShellEvaluate.pluginThreadLocal.get();
-        if (sink != null) {
+        Describable sink = GroovyShellEvaluate.pluginThreadLocal.get();
+        if (sink != null && sink instanceof HudiSinkFactory) {
             try {
-                IDataXHudiWriter dataXWriter = getDataXHudiWriter(sink);
+                IDataXHudiWriter dataXWriter = getDataXHudiWriter((HudiSinkFactory) sink);
                 return HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
@@ -222,7 +222,7 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
 
 
     /**
-     * h
+     *
      * ------------------------------------------------------------------------------
      * End implements IStreamTableCreator
      * ------------------------------------------------------------------------------

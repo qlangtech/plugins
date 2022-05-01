@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
@@ -37,9 +38,9 @@ import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.easymock.EasyMock;
+import org.junit.Assert;
 
 import java.sql.Types;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,8 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
          "storage_format" = "DEFAULT"
          );
          * */
+
+        String dataXName = "testDataX";
 
         String tableName = "totalpayinfo";
         String colEntityId = "entity_id";
@@ -145,20 +148,6 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader);
 
-
-        DataXDorisWriter dataXWriter = mock("dataXWriter", DataXDorisWriter.class);
-
-        EasyMock.expect(dataXWriter.getSeparator()).andReturn(new BasicDorisStarRocksWriter.Separator() {
-            @Override
-            public String getColumnSeparator() {
-                return COL_SEPARATOR_DEFAULT;
-            }
-            @Override
-            public String getRowDelimiter() {
-                return ROW_DELIMITER_DEFAULT;
-            }
-        });
-
         DorisSourceFactory sourceFactory = new DorisSourceFactory();
         sourceFactory.loadUrl = "[\"192.168.28.201:8030\"]";
         sourceFactory.userName = "root";
@@ -167,9 +156,37 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         sourceFactory.port = 9030;
         sourceFactory.nodeDesc = "192.168.28.201";
 
-        EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
+        DataXDorisWriter dataXWriter = new DataXDorisWriter() {
+            @Override
+            public Separator getSeparator() {
+                return new BasicDorisStarRocksWriter.Separator() {
+                    @Override
+                    public String getColumnSeparator() {
+                        return COL_SEPARATOR_DEFAULT;
+                    }
 
-        dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
+                    @Override
+                    public String getRowDelimiter() {
+                        return ROW_DELIMITER_DEFAULT;
+                    }
+                };
+            }
+
+            @Override
+            public DorisSourceFactory getDataSourceFactory() {
+                return sourceFactory;
+            }
+        }; //mock("dataXWriter", DataXDorisWriter.class);
+
+        dataXWriter.dataXName = dataXName;
+        DataxWriter.dataxWriterGetter = (xName) -> {
+            Assert.assertEquals(dataXName, xName);
+            return dataXWriter;
+        };
+
+        // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
+
+        //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
 
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 

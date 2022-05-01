@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
@@ -31,8 +32,8 @@ import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -141,6 +142,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             throw new IllegalArgumentException("param sparkConn can not be null");
         }
         return ISparkConnGetter.getConnGetter(this.sparkConn);
+    }
+
+    @Override
+    public ExecutePhaseRange getPhaseRange() {
+        return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN);
     }
 
     public Connection getConnection() {

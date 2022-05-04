@@ -19,7 +19,7 @@
 package com.qlangtech.tis.config.spark.impl;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
+//import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.extension.Descriptor;
@@ -67,9 +67,9 @@ public class DefaultSparkConnGetter extends ParamsConfig implements ISparkConnGe
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             // return HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals);
-            String masterAddress = postFormVals.getField(KEY_MASTER_ADDRESS);
+          //  String masterAddress = postFormVals.getField(KEY_MASTER_ADDRESS);
 
-            File sparkHome = HudiConfig.getSparkHome();
+           // File sparkHome = HudiConfig.getSparkHome();
 
             return true;
         }

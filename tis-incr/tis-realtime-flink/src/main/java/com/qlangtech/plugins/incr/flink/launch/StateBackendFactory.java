@@ -32,7 +32,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  **/
 @Public
 public abstract class StateBackendFactory implements Describable<StateBackendFactory> {
-    public static final String OFF = "off";
+   // public static final String OFF = "off";
 
     public abstract void setProps(StreamExecutionEnvironment env);
 

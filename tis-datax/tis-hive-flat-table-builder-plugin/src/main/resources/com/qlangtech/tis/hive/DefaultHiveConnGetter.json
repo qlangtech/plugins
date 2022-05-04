@@ -10,25 +10,8 @@
   "dbName": {
     "help": "Hive 数据库使用的库名，请在执行任务前先创建完成"
   },
-  "useUserToken": {
-    "dftVal": false,
-    "label": "非匿名登录",
-    "help": "当选择为'是', 用户需要填写用户名和密码",
-    "enum": [
-      {
-        "label": "是",
-        "val": true
-      },
-      {
-        "label": "否",
-        "val": false
-      }
-    ]
-  },
-  "userName": {
-    "label": "用户名"
-  },
-  "password": {
-    "密码": "密码"
+  "userToken": {
+    "dftVal": "off",
+    "help": "当选择为'on', 用户需要填写用户名和密码"
   }
 }

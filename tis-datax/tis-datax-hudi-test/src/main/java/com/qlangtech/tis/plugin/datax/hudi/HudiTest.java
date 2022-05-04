@@ -22,7 +22,6 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
-import com.qlangtech.tis.config.spark.impl.DefaultSparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
@@ -94,9 +93,19 @@ public class HudiTest {
 
 
     public static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
-        final DefaultSparkConnGetter sparkConnGetter = new DefaultSparkConnGetter();
-        sparkConnGetter.name = "default";
-        sparkConnGetter.master = "spark://sparkmaster:7077";
+        final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
+            @Override
+            public String getSparkMaster() {
+                return "spark://sparkmaster:7077";
+            }
+
+            @Override
+            public String identityValue() {
+                return "default";
+            }
+        };
+//        sparkConnGetter.name = "default";
+//        sparkConnGetter.master = "spark://sparkmaster:7077";
 
         DataXHudiWriter writer = new DataXHudiWriter() {
             @Override

@@ -18,8 +18,8 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
-import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.IHiveUserToken;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -79,7 +79,7 @@ public class HiveDBUtils {
         return getInstance(hiveHost, defaultDbName, Optional.empty());
     }
 
-    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
@@ -100,12 +100,12 @@ public class HiveDBUtils {
 //        }
 //    }
 
-    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -124,9 +124,9 @@ public class HiveDBUtils {
         hiveDatasource.setLogAbandoned(true);
         hiveDatasource.setRemoveAbandonedTimeout(300 * 30);
         if (userToken.isPresent()) {
-            HiveUserToken ut = userToken.get();
-            hiveDatasource.setUsername(ut.userName);
-            hiveDatasource.setPassword(ut.password);
+            IHiveUserToken ut = userToken.get();
+            hiveDatasource.setUsername(ut.getUserName());
+            hiveDatasource.setPassword(ut.getPassword());
         }
         // 测试空闲的连接是否有效
         hiveDatasource.setTestWhileIdle(true);

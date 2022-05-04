@@ -55,11 +55,15 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
             , IDataxProcessor dataxProcessor, String dataXfileName, List<String> dependencyTasks) {
 
-        final DataxExecutor dataxExecutor = new DataxExecutor(statusRpc, InstanceType.EMBEDDED, -1);
+
         CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), dataXfileName);
         Integer jobId = jobDTO.getJobId();
         String jobName = jobDTO.getJobName();
         String dataXName = jobDTO.getDataXName();
+
+
+        final DataxExecutor dataxExecutor
+                = new DataxExecutor(statusRpc, InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
 
         if (uberClassLoader == null) {
             uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());

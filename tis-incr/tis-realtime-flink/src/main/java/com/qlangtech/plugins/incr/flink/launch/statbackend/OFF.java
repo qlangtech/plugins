@@ -40,7 +40,7 @@ public class OFF extends StateBackendFactory {
     public static class DefaultDescriptor extends FlinkDescriptor<StateBackendFactory> {
         @Override
         public String getDisplayName() {
-            return StateBackendFactory.OFF;
+            return SWITCH_OFF;
         }
     }
 }

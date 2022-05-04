@@ -39,7 +39,7 @@ public class CKOff extends CheckpointFactory {
     public static class DefaultDescriptor extends Descriptor<CheckpointFactory> {
         @Override
         public String getDisplayName() {
-            return "off";
+            return SWITCH_OFF;
         }
     }
 }

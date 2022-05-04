@@ -81,7 +81,7 @@ public class SparkSubmitParams implements Describable<SparkSubmitParams> {
 
         @Override
         public String getDisplayName() {
-            return "On";
+            return SWITCH_ON;
         }
     }
 }

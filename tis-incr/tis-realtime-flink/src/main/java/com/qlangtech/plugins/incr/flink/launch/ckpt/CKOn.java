@@ -131,7 +131,7 @@ public class CKOn extends CheckpointFactory {
 
         @Override
         public String getDisplayName() {
-            return "on";
+            return SWITCH_ON;
         }
 
         private static final int MIN_INTERVAL = 5;

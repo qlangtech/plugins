@@ -1,57 +1,34 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.offline.flattable;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.config.hive.HiveUserToken;
-import com.qlangtech.tis.dump.INameWithPathGetter;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fs.FSHistoryFileUtils;
-import com.qlangtech.tis.fs.ITISFileSystemFactory;
-import com.qlangtech.tis.fs.ITableBuildTask;
-import com.qlangtech.tis.fs.ITaskContext;
-import com.qlangtech.tis.fullbuild.IFullBuildContext;
-import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
-import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
-import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
-//import com.qlangtech.tis.fullbuild.taskflow.hive.HiveTaskFactory;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
-import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.offline.FlatTableBuilder;
-import com.qlangtech.tis.plugin.ValidatorCommons;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
-import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Objects;
-import java.util.Optional;
+
+//import com.qlangtech.tis.fullbuild.taskflow.hive.HiveTaskFactory;
+
 //
 ///**
 // * HIVE 宽表构建task
@@ -63,11 +40,12 @@ import java.util.Optional;
 @Public
 public class HiveFlatTableBuilder  //extends FlatTableBuilder
 {
-//
+    //
 //
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
     public static final String KEY_DB_NAME = "dbName";
-//
+
+    //
 //    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
 //    public String name;
 //
@@ -167,24 +145,28 @@ public class HiveFlatTableBuilder  //extends FlatTableBuilder
 //        }
 //    }
 //
-    public static boolean validateHiveAvailable(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
-        String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
-        String dbName = postFormVals.getField(KEY_DB_NAME);
+    public static boolean validateHiveAvailable(IControlMsgHandler msgHandler, Context context, DefaultHiveConnGetter params) {
+//        String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
+//        String dbName = postFormVals.getField(KEY_DB_NAME);
 
-        boolean useUserToken = Boolean.parseBoolean(postFormVals.getField(DefaultHiveConnGetter.KEY_USE_USERTOKEN));
-        HiveUserToken userToken = null;
-        if (useUserToken) {
-            userToken = new HiveUserToken(
-                    postFormVals.getField(DefaultHiveConnGetter.KEY_USER_NAME), postFormVals.getField(DefaultHiveConnGetter.KEY_PASSWORD));
-            if (StringUtils.isBlank(userToken.userName)) {
-                msgHandler.addFieldError(context, DefaultHiveConnGetter.KEY_USER_NAME, ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
-                return false;
-            }
-        }
+        String hiveAddress = params.hiveAddress;
+        String dbName = params.dbName;
+
+//        boolean useUserToken = Boolean.parseBoolean(postFormVals.getField(DefaultHiveConnGetter.KEY_USE_USERTOKEN));
+//        HiveUserToken userToken = null;
+//        if (useUserToken) {
+//            userToken = new HiveUserToken(
+//                    postFormVals.getField(DefaultHiveConnGetter.KEY_USER_NAME), postFormVals.getField(DefaultHiveConnGetter.KEY_PASSWORD));
+//            if (StringUtils.isBlank(userToken.userName)) {
+//                msgHandler.addFieldError(context, DefaultHiveConnGetter.KEY_USER_NAME, ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
+//                return false;
+//            }
+//        }
 
         Connection conn = null;
         try {
-            conn = HiveDBUtils.getInstance(hiveAddress, dbName, Optional.ofNullable(userToken)).createConnection();
+
+            conn = HiveDBUtils.getInstance(hiveAddress, dbName, params.getUserToken()).createConnection();
         } catch (Throwable e) {
             Throwable[] throwables = ExceptionUtils.getThrowables(e);
             for (Throwable t : throwables) {

@@ -77,7 +77,7 @@ public class OffPartition extends HudiTablePartition {
 
         @Override
         public String getDisplayName() {
-            return "off";
+            return SWITCH_OFF;
         }
     }
 }

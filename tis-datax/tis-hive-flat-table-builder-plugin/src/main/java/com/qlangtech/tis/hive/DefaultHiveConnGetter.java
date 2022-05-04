@@ -21,8 +21,8 @@ package com.qlangtech.tis.hive;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.IHiveUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -60,9 +60,9 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     private static final Logger logger = LoggerFactory.getLogger(DefaultHiveConnGetter.class);
 
     public static final String KEY_HIVE_ADDRESS = "hiveAddress";
-    public static final String KEY_USE_USERTOKEN = "useUserToken";
-    public static final String KEY_USER_NAME = "userName";
-    public static final String KEY_PASSWORD = "password";
+    // public static final String KEY_USE_USERTOKEN = "useUserToken";
+//    public static final String KEY_USER_NAME = "userName";
+//    public static final String KEY_PASSWORD = "password";
     public static final String KEY_META_STORE_URLS = "metaStoreUrls";
     public static final String KEY_DB_NAME = "dbName";
 
@@ -84,14 +84,14 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             hiveAddress;
 
 
-    @FormField(ordinal = 4, validate = {Validator.require}, type = FormFieldType.ENUM)
-    public boolean useUserToken;
+//    @FormField(ordinal = 4, validate = {Validator.require}, type = FormFieldType.ENUM)
+//    public boolean useUserToken;
 
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
-    public String userName;
+    @FormField(ordinal = 5, validate = {Validator.require})
+    public HiveUserToken userToken;
 
-    @FormField(ordinal = 6, type = FormFieldType.PASSWORD, validate = {})
-    public String password;
+//    @FormField(ordinal = 6, type = FormFieldType.PASSWORD, validate = {})
+//    public String password;
 
     @Override
     public String getDbName() {
@@ -140,9 +140,10 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     }
 
     @Override
-    public Optional<HiveUserToken> getUserToken() {
-        return this.useUserToken
-                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
+    public Optional<IHiveUserToken> getUserToken() {
+//        return this.useUserToken
+//                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
+        return Optional.ofNullable(this.userToken.createToken());
     }
 
 
@@ -170,17 +171,19 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             return true;
         }
 
-        @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            return this.verify(msgHandler, context, postFormVals);
-        }
+//        @Override
+//        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            return this.verify(msgHandler, context, postFormVals);
+//        }
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            String metaUrls = postFormVals.getField(KEY_META_STORE_URLS);
-            String dbName = postFormVals.getField(KEY_DB_NAME);
-            if (!this.validateMetaStoreUrls(msgHandler, context, KEY_META_STORE_URLS, metaUrls)) {
+            DefaultHiveConnGetter params = (DefaultHiveConnGetter)postFormVals.newInstance(this, msgHandler);
+
+//            String metaUrls = postFormVals.getField(KEY_META_STORE_URLS);
+//            String dbName = postFormVals.getField(KEY_DB_NAME);
+            if (!this.validateMetaStoreUrls(msgHandler, context, KEY_META_STORE_URLS, params.getMetaStoreUrls())) {
                 return false;
             }
 
@@ -188,11 +191,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             try {
                 Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
                 HiveConf conf = new HiveConf(new Configuration(false), HiveConf.class);
-                conf.set(HiveConf.ConfVars.METASTOREURIS.varname, metaUrls);
+                conf.set(HiveConf.ConfVars.METASTOREURIS.varname, params.getMetaStoreUrls());
                 Hive hive = Hive.get(conf);
-                Database database = hive.getDatabase(dbName);
+                Database database = hive.getDatabase(params.getDbName());
                 if (database == null) {
-                    msgHandler.addFieldError(context, KEY_DB_NAME, "DB:" + dbName + " 请先在库中创建");
+                    msgHandler.addFieldError(context, KEY_DB_NAME, "DB:" + params.getDbName() + " 请先在库中创建");
                     return false;
                 }
             } catch (Exception e) {
@@ -206,7 +209,9 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                 } catch (Throwable e) { }
             }
 
-            if (!HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals)) {
+
+
+            if (!HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, params)) {
                 return false;
             }
             return super.verify(msgHandler, context, postFormVals);

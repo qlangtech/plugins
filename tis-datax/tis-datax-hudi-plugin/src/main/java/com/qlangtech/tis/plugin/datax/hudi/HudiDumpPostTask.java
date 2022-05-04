@@ -20,8 +20,8 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
-import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.IHiveUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -154,7 +154,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
-       // handle.directory();
+        // handle.directory();
 //        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
 //        FileUtils.touch(logFile);
 //        handle.redirectError(logFile);
@@ -309,11 +309,11 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //            props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class"
 //                    , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
 
-            Optional<HiveUserToken> hiveUserToken = hiveMeta.getUserToken();
+            Optional<IHiveUserToken> hiveUserToken = hiveMeta.getUserToken();
             if (hiveUserToken.isPresent()) {
-                HiveUserToken token = hiveUserToken.get();
-                props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
-                props.setProperty("hoodie.datasource.hive_sync.password", token.password);
+                IHiveUserToken token = hiveUserToken.get();
+                props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
+                props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
             }
             props.setProperty("hoodie.datasource.hive_sync.jdbcurl", hiveMeta.getJdbcUrl());
             props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");

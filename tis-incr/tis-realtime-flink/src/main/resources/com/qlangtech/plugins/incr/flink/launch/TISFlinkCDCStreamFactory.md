@@ -36,7 +36,7 @@ Detailed description:[restart-strategies](https://nightlies.apache.org/flink/fli
 
 There are 4 types of restart-strategy:
 
-1. `none`: No restart strategy.
+1. `off`: No restart strategy.
 2. `fixed-delay`: Fixed delay restart strategy. More details can be found [here](https://nightlies.apache.org/flink/flink-docs-master/docs/ops/state/task_failure_recovery/#fixed-delay-restart-strategy).
 3. `failure-rate`: Failure rate restart strategy. More details can be found [here](https://nightlies.apache.org/flink/flink-docs-master/docs/ops/state/task_failure_recovery#failure-rate-restart-strategy).
 4. `exponential-delay`: Exponential delay restart strategy. More details can be found [here](https://nightlies.apache.org/flink/flink-docs-master/docs/ops/state/task_failure_recovery#exponential-delay-restart-strategy).

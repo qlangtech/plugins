@@ -236,8 +236,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ParseDescribable<Describable> fs = null;
             try {
-                fs = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-                HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.getInstance();
+               // fs =
+                FileSystemFactory hdfsFactory = postFormVals.newInstance(this, msgHandler);// this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+              //  HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.getInstance();
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 hdfs.listChildren(hdfs.getPath("/"));
                 msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) fs.getInstance()).hdfsAddress + "连接正常");

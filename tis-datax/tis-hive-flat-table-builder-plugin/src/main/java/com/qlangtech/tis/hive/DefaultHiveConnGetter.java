@@ -143,6 +143,9 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     public Optional<IHiveUserToken> getUserToken() {
 //        return this.useUserToken
 //                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
+        if (this.userToken == null) {
+            throw new IllegalStateException("hive userToken can not be null");
+        }
         return Optional.ofNullable(this.userToken.createToken());
     }
 
@@ -179,7 +182,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            DefaultHiveConnGetter params = (DefaultHiveConnGetter)postFormVals.newInstance(this, msgHandler);
+            DefaultHiveConnGetter params = (DefaultHiveConnGetter) postFormVals.newInstance(this, msgHandler);
 
 //            String metaUrls = postFormVals.getField(KEY_META_STORE_URLS);
 //            String dbName = postFormVals.getField(KEY_DB_NAME);
@@ -208,7 +211,6 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                     Hive.closeCurrent();
                 } catch (Throwable e) { }
             }
-
 
 
             if (!HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, params)) {

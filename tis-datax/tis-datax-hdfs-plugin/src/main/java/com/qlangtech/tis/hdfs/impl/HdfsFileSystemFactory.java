@@ -30,7 +30,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -43,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -114,7 +112,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             return conf;
         } catch (Exception e) {
             throw new RuntimeException("hdfsAddress:" + hdfsAddress, e);
-        }finally {
+        } finally {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
@@ -187,6 +185,11 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                                 @Override
                                 public FSDataOutputStream create(Path f, FsPermission permission
                                         , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
+
+                                    if (f.getName().indexOf("hoodie.properties") > -1) {
+                                        throw new IllegalStateException("not support:" + f.getName());
+                                    }
+
                                     return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
                                 }
 
@@ -236,9 +239,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ParseDescribable<Describable> fs = null;
             try {
-               // fs =
+                // fs =
                 FileSystemFactory hdfsFactory = postFormVals.newInstance(this, msgHandler);// this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-              //  HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.getInstance();
+                //  HdfsFileSystemFactory hdfsFactory = (HdfsFileSystemFactory) fs.getInstance();
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 hdfs.listChildren(hdfs.getPath("/"));
                 msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) fs.getInstance()).hdfsAddress + "连接正常");

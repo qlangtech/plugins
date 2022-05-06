@@ -148,6 +148,13 @@
 
         <plugins>
             <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <maskClasses>org.apache.log4j.</maskClasses>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <executions>
                     <execution>

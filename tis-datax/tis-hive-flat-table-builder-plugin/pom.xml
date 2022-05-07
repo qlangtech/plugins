@@ -74,7 +74,7 @@
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-plugin</artifactId>
+            <artifactId>tis-datax-hdfs-reader-writer-plugin</artifactId>
         </dependency>
 
 

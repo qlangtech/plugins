@@ -64,6 +64,7 @@
         <module>tis-datax-hudi-test</module>
         <module>tis-datax-hudi-plugin</module>
         <module>tis-datax-hdfs-plugin</module>
+        <module>tis-datax-hdfs-reader-writer-plugin</module>
         <module>tis-datax-hudi-common</module>
         <module>tis-datax-local-embedded-executor</module>
     </modules>
@@ -74,6 +75,12 @@
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-datax-hdfs-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-hdfs-reader-writer-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

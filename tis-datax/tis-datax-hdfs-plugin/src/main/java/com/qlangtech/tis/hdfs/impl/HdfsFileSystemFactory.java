@@ -186,9 +186,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                                 public FSDataOutputStream create(Path f, FsPermission permission
                                         , boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
 
-                                    if (f.getName().indexOf("hoodie.properties") > -1) {
-                                        throw new IllegalStateException("not support:" + f.getName());
-                                    }
+//                                    if (f.getName().indexOf("hoodie.properties") > -1) {
+//                                        throw new IllegalStateException("not support:" + f.getName());
+//                                    }
 
                                     return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
                                 }

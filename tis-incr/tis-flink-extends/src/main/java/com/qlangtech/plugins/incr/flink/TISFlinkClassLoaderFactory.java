@@ -237,8 +237,9 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 for (Map.Entry<Object, Object> pluginDesc : sysProps.entrySet()) {
                     Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
                     String val = (String) pluginDesc.getValue();
-                    System.setProperty(TISFlinkCDCStart.convertCfgPropertyKey(name.toString(), false), val);
-                    sysPropsDesc.append("\n").append(name.toString()).append("->").append(val);
+                    String key = TISFlinkCDCStart.convertCfgPropertyKey(name.toString(), false);
+                    System.setProperty(key, val);
+                    sysPropsDesc.append("\n").append(key).append("->").append(val);
                 }
                 logger.info("sysProps details:" + sysPropsDesc.toString());
                 // shall not have any exception here.

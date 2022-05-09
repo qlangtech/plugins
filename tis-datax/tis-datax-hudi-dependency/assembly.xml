@@ -53,7 +53,7 @@
     <dependencySet>
       <scope>provided</scope>
       <includes>
-       <include>org.apache.hudi:hudi-utilities-bundle_${scala.binary.version}</include>
+       <include>org.apache.hudi:tis-hudi-utilities-bundle_${scala.binary.version}</include>
       </includes>
 
       <outputDirectory>/lib</outputDirectory>

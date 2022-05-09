@@ -37,6 +37,11 @@ public class HdfsDataOutputStream extends TISFSDataOutputStream {
     }
 
     @Override
+    public void close() throws IOException {
+        super.close();
+    }
+
+    @Override
     public long getPos() throws IOException {
         return ((FSDataOutputStream) this.out).getPos();
     }

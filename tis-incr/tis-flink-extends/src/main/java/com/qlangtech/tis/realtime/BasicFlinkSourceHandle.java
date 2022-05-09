@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
@@ -28,17 +27,16 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.extension.TISExtensible;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -90,7 +88,12 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
             }
         });
 
-        SinkFuncs sinkFunction = new SinkFuncs(env, sinks);
+        SinkFuncs<DTO> sinkFunction = new SinkFuncs<DTO>(env, sinks) {
+            @Override
+            protected DataStream<DTO> streamMap(DataStream<DTO> sourceStream) {
+                return sourceStream;
+            }
+        };
 
         this.processTableStream(env, tab2OutputTag, sinkFunction);
         return executeFlinkJob(dataxName, env);

@@ -23,6 +23,8 @@ import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.*;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
+import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -31,8 +33,6 @@ import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
-import org.apache.hudi.keygen.constant.KeyGeneratorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-04-25 07:31
- * @see org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator
+ * see org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator
  **/
 @Public
 public class HudiTimestampBasedKeyGenerator extends HudiKeyGenerator {

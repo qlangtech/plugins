@@ -190,7 +190,7 @@
         <dependency>
             <groupId>org.apache.hudi</groupId>
 
-            <artifactId>hudi-utilities-bundle_${scala.binary.version}</artifactId>
+            <artifactId>tis-hudi-utilities-bundle_${scala.binary.version}</artifactId>
             <!--            <artifactId>hudi-utilities_${scala.binary.version}</artifactId>-->
             <version>${hudi.version}</version>
             <scope>provided</scope>

@@ -288,6 +288,7 @@ public class HudiTableMeta {
                 throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMetas.size());
             }
             IOUtils.write(schema.toString(true), schemaWriter, TisUTF8.get());
+            schemaWriter.flush();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

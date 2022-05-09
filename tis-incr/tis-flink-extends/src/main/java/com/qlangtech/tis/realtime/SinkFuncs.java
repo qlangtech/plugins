@@ -32,29 +32,31 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-16 12:32
  **/
-public class SinkFuncs {
-    private transient final Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFunction;
+public abstract class SinkFuncs<TRANSFER_OBJ> {
+    private transient final Map<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction;
     public transient final StreamExecutionEnvironment env;
 
-    public SinkFuncs(StreamExecutionEnvironment env, Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFunction) {
+    public SinkFuncs(StreamExecutionEnvironment env, Map<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction) {
         this.sinkFunction = sinkFunction;
         this.env = env;
     }
 
+    protected abstract DataStream<TRANSFER_OBJ> streamMap(DataStream<DTO> sourceStream);
+
     public void add2Sink(String originTableName, DataStream<DTO> sourceStream) {
 
         if (sinkFunction.size() < 2) {
-            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
-                sourceStream.addSink(entry.getValue()).name(entry.getKey().getTo());
+            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+                streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
             }
         } else {
             if (StringUtils.isEmpty(originTableName)) {
                 throw new IllegalArgumentException("param originTableName can not be null");
             }
             boolean hasMatch = false;
-            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 if (originTableName.equals(entry.getKey().getFrom())) {
-                    sourceStream.addSink(entry.getValue()).name(entry.getKey().getTo());
+                    streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
                     hasMatch = true;
                     break;
                 }

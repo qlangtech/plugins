@@ -66,15 +66,11 @@
         </dependency>
 
 
-
-
-
         <!--        <dependency>-->
         <!--            <groupId>javax.servlet</groupId>-->
         <!--            <artifactId>javax.servlet-api</artifactId>-->
         <!--            <version>3.1.0</version>-->
         <!--        </dependency>-->
-
 
 
         <!--        <dependency>-->
@@ -97,15 +93,9 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-client-common</artifactId>
-            <version>${hudi.version}</version>
-        </dependency>
-
 <!--        <dependency>-->
 <!--            <groupId>org.apache.hudi</groupId>-->
-<!--            <artifactId>hudi-common</artifactId>-->
+<!--            <artifactId>hudi-client-common</artifactId>-->
 <!--            <version>${hudi.version}</version>-->
 <!--        </dependency>-->
 
@@ -204,7 +194,6 @@
                             <maskClasses>org.apache.hudi.</maskClasses>
                         </configuration>
                     </plugin>
-
 
 
                     <plugin>

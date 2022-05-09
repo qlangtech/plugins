@@ -16,22 +16,27 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.hudi.keygenerator;
+package com.qlangtech.tis.plugins.incr.flink.connector.mysql;
 
-import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
-//import org.apache.hudi.keygen.constant.KeyGeneratorType;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.data.RowData;
+
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-04-25 07:28
+ * @create: 2022-05-07 20:11
  **/
-@Public
-public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> {
-
-    public abstract KeyGeneratorType getKeyGeneratorType();
-
-    public abstract void setProps(IPropertiesBuilder props);
+public class MySQLSinkFactory extends TISSinkFactory {
+    @Override
+    public ICompileAndPackage getCompileAndPackageManager() {
+        return null;
+    }
+    @Override
+    public Map<IDataxProcessor.TableAlias, SinkFunction<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
+        return null;
+    }
 }

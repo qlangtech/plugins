@@ -19,22 +19,20 @@
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hudi.keygen.constant.KeyGeneratorType;
 
 import java.util.List;
 import java.util.Optional;

@@ -120,6 +120,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
             throw new RuntimeException(e);
         } finally {
             jssc.stop();
+            // logger appender queue中的消息都排除
+            Thread.sleep(3000);
             try {
                 TisFlumeLogstashV1Appender.instance.stop();
             } catch (Throwable e) {

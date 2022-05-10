@@ -17,8 +17,8 @@
  */
 
 import com.qlangtech.tis.hdfs.impl.TestHdfsFileSystemFactory;
-import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
-import com.qlangtech.tis.plugin.datax.TestDataXHdfsWriter;
+//import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
+//import com.qlangtech.tis.plugin.datax.TestDataXHdfsWriter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -34,8 +34,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestHdfsFileSystemFactory.class);
 
         //suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
-        suite.addTestSuite(TestDataXHdfsReader.class);
-        suite.addTestSuite(TestDataXHdfsWriter.class);
+//        suite.addTestSuite(TestDataXHdfsReader.class);
+//        suite.addTestSuite(TestDataXHdfsWriter.class);
 
 //        suite.addTestSuite(TestHiveInsertFromSelectParser.class);
 //        suite.addTestSuite(TestHiveDBUtils.class);

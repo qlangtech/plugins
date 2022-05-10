@@ -98,6 +98,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
         setMockStub(dataName);
 
         BasicFSWriter writerPlugin = BasicFSWriter.getWriterPlugin(dataName);
+        boolean success = false;
         try {
             if (!(writerPlugin instanceof IHiveConn)) {
                 throw new IllegalStateException("instance writerPlugin:"
@@ -111,10 +112,9 @@ public class TISHoodieDeltaStreamer implements Serializable {
             // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
-
-
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
             LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync stop");
+            success = true;
         } finally {
             jssc.stop();
             try {
@@ -122,7 +122,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             } catch (Throwable e) {
 
             }
-            System.exit(0);
+            System.exit(success ? 0 : 1);
         }
     }
 

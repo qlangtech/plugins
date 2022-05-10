@@ -23,15 +23,18 @@ import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IParamContext;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.launcher.SparkAppHandle;
@@ -48,6 +51,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 /**
  * Hudi 文件导入完成之后，开始执行同步工作
@@ -179,6 +185,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         if (!hasAddJar[0]) {
             throw new IllegalStateException("path must contain jars:" + addedJars.getAbsolutePath());
         }
+
+        addManifestCfgJar(handle);
+
         handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
         // ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
         handle.setMaster(sparkConnGetter.getSparkMaster());
@@ -244,6 +253,25 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                     + " execute result not successful:" + sparkAppHandle.getState());
         }
         return sparkAppHandle;
+    }
+
+    /**
+     * 将本地的配置映射到manifest中，可以让远端同步本地的配置及jar资源
+     *
+     * @param handle
+     * @throws Exception
+     */
+    private File addManifestCfgJar(SparkLauncher handle) throws Exception {
+        File manifestJar = new File(Config.getPluginCfgDir(), IFullBuildContext.NAME_APP_DIR + "/"
+                + execContext.getIndexName() + "/hudi_delta_stream/" + PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId()) + ".jar");
+        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
+        try (JarOutputStream jaroutput = new JarOutputStream(
+                FileUtils.openOutputStream(manifestJar, false), manifest)) {
+            jaroutput.putNextEntry(new ZipEntry(PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId())));
+            jaroutput.flush();
+        }
+        handle.addJar(String.valueOf(manifestJar.toPath().normalize()));
+        return manifestJar;
     }
 
 

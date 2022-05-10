@@ -237,7 +237,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 for (Map.Entry<Object, Object> pluginDesc : sysProps.entrySet()) {
                     Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
                     String val = (String) pluginDesc.getValue();
-                    String key = TISFlinkCDCStart.convertCfgPropertyKey(name.toString(), false);
+                    String key = PluginAndCfgsSnapshot.convertCfgPropertyKey(name.toString(), false);
                     System.setProperty(key, val);
                     sysPropsDesc.append("\n").append(key).append("->").append(val);
                 }
@@ -262,7 +262,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //    }
 
     private static String getTisAppName(URL lib, Manifest manifest) {
-        Attributes tisAppName = manifest.getAttributes(TISFlinkCDCStart.TIS_APP_NAME);
+        Attributes tisAppName = manifest.getAttributes(PluginAndCfgsSnapshot.TIS_APP_NAME);
         String appName = null;
         //  Attributes pluginInventory = manifest.getAttributes("plugin_inventory");
         if (tisAppName == null) {

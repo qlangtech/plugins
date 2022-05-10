@@ -29,17 +29,12 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
-import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import com.qlangtech.tis.util.XStream2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobID;
@@ -53,14 +48,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
@@ -135,7 +128,7 @@ public class FlinkTaskNodeController implements IRCController {
 
         File streamUberJar = getStreamUberJarFile(collection);
 
-        Manifest manifest = this.createManifestCfgAttrs(collection, timestamp);
+        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(collection, timestamp);
 
         try (JarOutputStream jaroutput = new JarOutputStream(
                 FileUtils.openOutputStream(streamUberJar, false), manifest)) {
@@ -186,42 +179,42 @@ public class FlinkTaskNodeController implements IRCController {
         }
     }
 
-    private Manifest createManifestCfgAttrs(TargetResName collection, long timestamp) throws Exception {
-
-        Manifest manifest = new Manifest();
-        Map<String, Attributes> entries = manifest.getEntries();
-        Attributes attrs = new Attributes();
-        attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
-        // 传递App名称
-        entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
-
-        final Attributes cfgAttrs = new Attributes();
-        // 传递Config变量
-        Config.getInstance().visitKeyValPair((e) -> {
-            if (Config.KEY_TIS_HOST.equals(e.getKey())) {
-                // tishost为127.0.0.1会出错
-                return;
-            }
-            cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
-        });
-        cfgAttrs.put(new Attributes.Name(
-                TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
-        entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
-
-        //=====================================================================
-        if (!CenterResource.notFetchFromCenterRepository()) {
-            throw new IllegalStateException("must not fetchFromCenterRepository");
-        }
-        //"globalPluginStore"  "pluginMetas"  "appLastModifyTimestamp"
-        XStream2.PluginMeta flinkPluginMeta
-                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + collection.getName()
-                , Config.getMetaProps().getVersion());
-        PluginAndCfgsSnapshot localSnapshot
-                = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(collection, flinkPluginMeta);
-
-        localSnapshot.attachPluginCfgSnapshot2Manifest(manifest);
-        return manifest;
-    }
+//    private Manifest createManifestCfgAttrs(TargetResName collection, long timestamp) throws Exception {
+//
+//        Manifest manifest = new Manifest();
+//        Map<String, Attributes> entries = manifest.getEntries();
+//        Attributes attrs = new Attributes();
+//        attrs.put(new Attributes.Name(collection.getName()), String.valueOf(timestamp));
+//        // 传递App名称
+//        entries.put(TISFlinkCDCStart.TIS_APP_NAME, attrs);
+//
+//        final Attributes cfgAttrs = new Attributes();
+//        // 传递Config变量
+//        Config.getInstance().visitKeyValPair((e) -> {
+//            if (Config.KEY_TIS_HOST.equals(e.getKey())) {
+//                // tishost为127.0.0.1会出错
+//                return;
+//            }
+//            cfgAttrs.put(new Attributes.Name(TISFlinkCDCStart.convertCfgPropertyKey(e.getKey(), true)), e.getValue());
+//        });
+//        cfgAttrs.put(new Attributes.Name(
+//                TISFlinkCDCStart.convertCfgPropertyKey(Config.KEY_TIS_HOST, true)), NetUtils.getHost());
+//        entries.put(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, cfgAttrs);
+//
+//        //=====================================================================
+//        if (!CenterResource.notFetchFromCenterRepository()) {
+//            throw new IllegalStateException("must not fetchFromCenterRepository");
+//        }
+//        //"globalPluginStore"  "pluginMetas"  "appLastModifyTimestamp"
+//        XStream2.PluginMeta flinkPluginMeta
+//                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + collection.getName()
+//                , Config.getMetaProps().getVersion());
+//        PluginAndCfgsSnapshot localSnapshot
+//                = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(collection, flinkPluginMeta);
+//
+//        localSnapshot.attachPluginCfgSnapshot2Manifest(manifest);
+//        return manifest;
+//    }
 
 
     private FlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
@@ -236,7 +229,7 @@ public class FlinkTaskNodeController implements IRCController {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
         FlinkIncrJobStatus incrJobStatus = this.getIncrJobStatus(collection);
         final FlinkJobDeploymentDetails noneStateDetail
-                = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus){
+                = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus) {
             @Override
             public boolean isRunning() {
                 return false;

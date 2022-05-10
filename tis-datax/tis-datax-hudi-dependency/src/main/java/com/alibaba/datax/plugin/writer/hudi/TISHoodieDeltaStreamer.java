@@ -112,6 +112,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
+            TISHadoopFileSystemGetter.initializeDir = true;
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
             LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync success");
             success = true;

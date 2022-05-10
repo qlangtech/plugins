@@ -20,6 +20,8 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.order.center.IParamContext;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,6 +30,7 @@ import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -42,12 +45,17 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
     public FileSystem getHadoopFileSystem(String path) {
 
         if (!initializeDir) {
+            // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
             File dataDir = Config.getDataDir(false);
             try {
                 FileUtils.forceMkdir(dataDir);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+
+            Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
+            URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(taskId));
+            System.out.println("dddddd" + resource);
             initializeDir = true;
         }
 

@@ -33,7 +33,6 @@ import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.util.HeteroEnum;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,14 +46,9 @@ import java.util.stream.Collectors;
  **/
 public class TISFlinkCDCStart {
     // static final String dataxName = "mysql_elastic";
-    public static final String TIS_APP_NAME = "tis_app_name";
+    // public static final String TIS_APP_NAME = "tis_app_name";
     private static final Logger logger = LoggerFactory.getLogger(TISFlinkCDCStart.class);
 
-    public static String convertCfgPropertyKey(String key, boolean serialize) {
-        return serialize ?
-                StringUtils.replace(key, ".", "_")
-                : StringUtils.replace(key, "_", ".");
-    }
 
     public static void main(String[] args) throws Exception {
 

@@ -113,8 +113,11 @@ public class TISHoodieDeltaStreamer implements Serializable {
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
-            LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync stop");
+            LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync success");
             success = true;
+        } catch (Exception e) {
+            LOG.error("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName, e);
+            throw new RuntimeException(e);
         } finally {
             jssc.stop();
             try {

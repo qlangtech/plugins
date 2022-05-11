@@ -58,21 +58,22 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                 throw new RuntimeException(e);
             }
 
-            try {
+          //  try {
                // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
                 URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(123));
-                System.out.println("dddddd:" + resource);
-                LOG.info("dddddddddddddddddddd:" + resource);
-                initializeDir = true;
-            } catch (Exception ee) {
-                Map<String, String> getenv = System.getenv();
-                Properties properties = System.getProperties();
-
-                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
-                         "system props:\n" +
-                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
-                        , ee);
-            }
+               // System.out.println("dddddd:" + resource);
+               // LOG.info("dddddddddddddddddddd:" + resource);
+            throw new IllegalStateException("dddddddddddddddddddd:" + resource);
+              //  initializeDir = true;
+//            } catch (Exception ee) {
+//                Map<String, String> getenv = System.getenv();
+//                Properties properties = System.getProperties();
+//
+//                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
+//                         "system props:\n" +
+//                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
+//                        , ee);
+//            }
         }
 
         FileSystemFactory fsFactory = FileSystemFactory.getFsFactory(HUDI_FILESYSTEM_NAME);

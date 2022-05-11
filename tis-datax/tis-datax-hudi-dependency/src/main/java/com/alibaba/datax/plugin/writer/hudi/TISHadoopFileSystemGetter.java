@@ -27,6 +27,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +43,7 @@ import java.util.stream.Collectors;
  **/
 public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
     private Configuration configuration;
-
+    private static final Logger LOG = LoggerFactory.getLogger(TISHadoopFileSystemGetter.class);
     static boolean initializeDir = false;
 
     @Override
@@ -60,6 +62,7 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
                 URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(123));
                 System.out.println("dddddd:" + resource);
+                LOG.info("dddddddddddddddddddd:" + resource);
                 initializeDir = true;
             } catch (Exception ee) {
                 Map<String, String> getenv = System.getenv();

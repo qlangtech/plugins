@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -62,7 +63,12 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                 initializeDir = true;
             } catch (Exception ee) {
                 Map<String, String> getenv = System.getenv();
-                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")), ee);
+                Properties properties = System.getProperties();
+
+                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
+                         "system props:\n" +
+                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
+                        , ee);
             }
         }
 

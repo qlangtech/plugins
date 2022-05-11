@@ -57,9 +57,9 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
             }
 
             try {
-                Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
-                URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(taskId));
-                System.out.println("dddddd" + resource);
+               // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
+                URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(123));
+                System.out.println("dddddd:" + resource);
                 initializeDir = true;
             } catch (Exception ee) {
                 Map<String, String> getenv = System.getenv();

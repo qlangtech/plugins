@@ -185,8 +185,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         if (!hasAddJar[0]) {
             throw new IllegalStateException("path must contain jars:" + addedJars.getAbsolutePath());
         }
-
-        addManifestCfgJar(handle);
+        handle.addJar(String.valueOf(addManifestCfgJar().toPath().normalize()));
 
         handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
         // ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
@@ -258,10 +257,10 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     /**
      * 将本地的配置映射到manifest中，可以让远端同步本地的配置及jar资源
      *
-     * @param handle
+     *
      * @throws Exception
      */
-    private File addManifestCfgJar(SparkLauncher handle) throws Exception {
+    private File addManifestCfgJar() throws Exception {
         File manifestJar = new File(Config.getPluginCfgDir(), IFullBuildContext.NAME_APP_DIR + "/"
                 + execContext.getIndexName() + "/hudi_delta_stream/" + PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId()) + ".jar");
         Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
@@ -270,7 +269,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             jaroutput.putNextEntry(new ZipEntry(PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId())));
             jaroutput.flush();
         }
-        handle.addJar(String.valueOf(manifestJar.toPath().normalize()));
+
         return manifestJar;
     }
 

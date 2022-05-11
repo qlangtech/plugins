@@ -31,6 +31,8 @@ import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,10 +55,15 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                 throw new RuntimeException(e);
             }
 
-            Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
-            URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(taskId));
-            System.out.println("dddddd" + resource);
-            initializeDir = true;
+            try {
+                Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
+                URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(taskId));
+                System.out.println("dddddd" + resource);
+                initializeDir = true;
+            } catch (Exception ee) {
+                Map<String, String> getenv = System.getenv();
+                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",")), ee);
+            }
         }
 
         FileSystemFactory fsFactory = FileSystemFactory.getFsFactory(HUDI_FILESYSTEM_NAME);

@@ -128,7 +128,7 @@ public class FlinkTaskNodeController implements IRCController {
 
         File streamUberJar = getStreamUberJarFile(collection);
 
-        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(collection, timestamp);
+        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(collection, timestamp, Optional.empty());
 
         try (JarOutputStream jaroutput = new JarOutputStream(
                 FileUtils.openOutputStream(streamUberJar, false), manifest)) {

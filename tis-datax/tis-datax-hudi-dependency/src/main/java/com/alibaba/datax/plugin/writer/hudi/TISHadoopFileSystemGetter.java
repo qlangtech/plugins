@@ -20,9 +20,9 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -32,10 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -49,31 +47,49 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
     @Override
     public FileSystem getHadoopFileSystem(String path) {
 
-        if (!initializeDir) {
-            // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
-            File dataDir = Config.getDataDir(false);
-            try {
-                FileUtils.forceMkdir(dataDir);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            if (!initializeDir) {
+                // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
+                File dataDir = Config.getDataDir(false);
+                try {
+                    FileUtils.forceMkdir(dataDir);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
-          //  try {
-               // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
+                //  try {
+                // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
                 URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(123));
-               // System.out.println("dddddd:" + resource);
-               // LOG.info("dddddddddddddddddddd:" + resource);
-            throw new IllegalStateException("dddddddddddddddddddd:" + resource);
-              //  initializeDir = true;
-//            } catch (Exception ee) {
-//                Map<String, String> getenv = System.getenv();
-//                Properties properties = System.getProperties();
-//
-//                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
-//                         "system props:\n" +
-//                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
-//                        , ee);
-//            }
+                resource = new URL(StringUtils.substringBefore(resource.toString(), "!"));
+//                File mainifest = new File(().toURI());
+//                if (!mainifest.exists()) {
+//                    throw new IllegalStateException("mainifest file can is not exist:" + mainifest.getAbsolutePath());
+//                }
+
+                try (InputStream mainifest = resource.openStream()) {
+                    PluginAndCfgsSnapshot remoteSnapshot
+                            = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
+                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName());
+                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                }
+
+
+                // System.out.println("dddddd:" + resource);
+                // LOG.info("dddddddddddddddddddd:" + resource);
+                // throw new IllegalStateException("dddddddddddddddddddd:" + resource);
+                //  initializeDir = true;
+                //            } catch (Exception ee) {
+                //                Map<String, String> getenv = System.getenv();
+                //                Properties properties = System.getProperties();
+                //
+                //                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
+                //                         "system props:\n" +
+                //                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
+                //                        , ee);
+                //            }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         FileSystemFactory fsFactory = FileSystemFactory.getFsFactory(HUDI_FILESYSTEM_NAME);

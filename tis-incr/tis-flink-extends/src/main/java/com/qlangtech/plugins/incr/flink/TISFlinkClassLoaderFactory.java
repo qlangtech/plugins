@@ -19,15 +19,12 @@
 package com.qlangtech.plugins.incr.flink;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.util.XStream2;
-import com.qlangtech.tis.web.start.TisAppLaunch;
-import com.qlangtech.tis.web.start.TisSubModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
@@ -42,11 +39,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.jar.Attributes;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
@@ -83,7 +78,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     JarFile jar = new JarFile(new File(cp.toURI()));
                     Manifest manifest = jar.getManifest();
 
-                    tisAppName = getTisAppName(cp, manifest);
+                    tisAppName = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), manifest);
                     //  String entryPrefix = tisAppName + "/";
 
                     File pluginLibDir = Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName, true);
@@ -146,8 +141,14 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
             @Override
             public URLClassLoader createClassLoader(URL[] libraryURLs) {
                 try {
+
+                    PluginAndCfgsSnapshot cfgSnapshot = null;//= getTisAppName();
+                    for (URL url : libraryURLs) {
+                        cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), url.openStream());
+                    }
+                    Objects.requireNonNull(cfgSnapshot, "cfgSnapshot can not be null,libraryURLs size:" + libraryURLs.length);
                     //  boolean tisInitialized = TIS.initialized;
-                    PluginAndCfgsSnapshot cfgSnapshot = getTisAppName(libraryURLs);
+                    // PluginAndCfgsSnapshot cfgSnapshot = getTisAppName();
                     logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
                     // TIS.clean();
                     // 这里只需要类不需要配置文件了
@@ -212,71 +213,5 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //        }
 //    }
 
-    private static PluginAndCfgsSnapshot getTisAppName(URL[] libraryURLs) throws IOException {
-        if (libraryURLs.length != 1) {
-            throw new IllegalStateException("length of libraryURLs must be 1 , but now is:" + libraryURLs.length);
-        }
-        PluginAndCfgsSnapshot pluginAndCfgsSnapshot = null;
-        String appName = null;
-        for (URL lib : libraryURLs) {
-            try (JarInputStream jarReader = new JarInputStream(lib.openStream())) {
-                Manifest manifest = jarReader.getManifest();
-                appName = getTisAppName(lib, manifest);
 
-                // KeyedPluginStore.PluginMetas.KEY_GLOBAL_PLUGIN_STORE;
-                //Attributes pluginMetas = manifest.getAttributes(Config.KEY_PLUGIN_METAS);
-                // processPluginMetas(pluginMetas);
-
-                pluginAndCfgsSnapshot = PluginAndCfgsSnapshot.setLocalPluginAndCfgsSnapshot(PluginAndCfgsSnapshot.deserializePluginAndCfgsSnapshot(new TargetResName(appName), manifest));
-
-                Attributes sysProps = manifest.getAttributes(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS);
-                Config.setConfig(null);
-                // @see TISFlinkCDCStreamFactory 在这个类中进行配置信息的加载
-                System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS, String.valueOf(true));
-                StringBuffer sysPropsDesc = new StringBuffer();
-                for (Map.Entry<Object, Object> pluginDesc : sysProps.entrySet()) {
-                    Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
-                    String val = (String) pluginDesc.getValue();
-                    String key = PluginAndCfgsSnapshot.convertCfgPropertyKey(name.toString(), false);
-                    System.setProperty(key, val);
-                    sysPropsDesc.append("\n").append(key).append("->").append(val);
-                }
-                logger.info("sysProps details:" + sysPropsDesc.toString());
-                // shall not have any exception here.
-                TisAppLaunch.getPort(TisSubModule.TIS_CONSOLE);
-                Config.getInstance();
-
-            }
-            if (pluginAndCfgsSnapshot == null) {
-                throw new IllegalStateException("param appName can not be null,in lib:" + lib.toString());
-            }
-        }
-
-        return pluginAndCfgsSnapshot;
-    }
-
-//    private static void processPluginMetas(Attributes pluginMetas) {
-//        pluginMetas.getValue(KeyedPluginStore.PluginMetas.KEY_GLOBAL_PLUGIN_STORE);
-//        pluginMetas.getValue(KeyedPluginStore.PluginMetas.KEY_PLUGIN_META);
-//        pluginMetas.getValue(KeyedPluginStore.PluginMetas.KEY_APP_LAST_MODIFY_TIMESTAMP);
-//    }
-
-    private static String getTisAppName(URL lib, Manifest manifest) {
-        Attributes tisAppName = manifest.getAttributes(PluginAndCfgsSnapshot.TIS_APP_NAME);
-        String appName = null;
-        //  Attributes pluginInventory = manifest.getAttributes("plugin_inventory");
-        if (tisAppName == null) {
-            throw new IllegalStateException("tisAppName can not be empty in lib:" + lib);
-        }
-
-        aa:
-        for (Map.Entry<Object, Object> pluginDesc : tisAppName.entrySet()) {
-            Attributes.Name name = (Attributes.Name) pluginDesc.getKey();
-            String val = (String) pluginDesc.getValue();
-            appName = name.toString();
-            break aa;
-            //  pluginManager.dynamicLoadPlugin(String.valueOf(pluginDesc.getKey()));
-        }
-        return appName;
-    }
 }

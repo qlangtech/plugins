@@ -40,6 +40,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -156,7 +157,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                             = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
                             , Config.getMetaProps().getVersion());
                     // 服务端不需要配置文件，只需要能够加载到类就行了
-                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), flinkPluginMeta);
+                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Optional.empty(), flinkPluginMeta);
                     cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);
 
 //                    for (XStream2.PluginMeta update : shallUpdate) {

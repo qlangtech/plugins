@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -59,8 +60,9 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
 
                 //  try {
                 // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
-                URL resource = TISHadoopFileSystemGetter.class.getResource("/" + PluginAndCfgsSnapshot.getTaskEntryName(123));
-                resource = new URL(StringUtils.substringBefore(resource.toString(), "!"));
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
+                resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
 //                File mainifest = new File(().toURI());
 //                if (!mainifest.exists()) {
 //                    throw new IllegalStateException("mainifest file can is not exist:" + mainifest.getAbsolutePath());
@@ -69,7 +71,7 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                 try (InputStream mainifest = resource.openStream()) {
                     PluginAndCfgsSnapshot remoteSnapshot
                             = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
-                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName());
+                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
                     remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
                 }
 

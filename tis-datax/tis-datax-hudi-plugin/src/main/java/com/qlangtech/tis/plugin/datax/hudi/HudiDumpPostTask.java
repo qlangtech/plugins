@@ -51,9 +51,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 
 /**
  * Hudi 文件导入完成之后，开始执行同步工作
@@ -257,18 +254,26 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     /**
      * 将本地的配置映射到manifest中，可以让远端同步本地的配置及jar资源
      *
-     *
      * @throws Exception
      */
     private File addManifestCfgJar() throws Exception {
         File manifestJar = new File(Config.getPluginCfgDir(), IFullBuildContext.NAME_APP_DIR + "/"
-                + execContext.getIndexName() + "/hudi_delta_stream/" + PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId()) + ".jar");
-        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
-        try (JarOutputStream jaroutput = new JarOutputStream(
-                FileUtils.openOutputStream(manifestJar, false), manifest)) {
-            jaroutput.putNextEntry(new ZipEntry(PluginAndCfgsSnapshot.getTaskEntryName(this.execContext.getTaskId())));
-            jaroutput.flush();
+                + execContext.getIndexName() + "/hudi_delta_stream/"
+                + execContext.getTaskId() + "/" + PluginAndCfgsSnapshot.getTaskEntryName() + ".jar");
+
+        if (!manifestJar.exists()) {
+            PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
+                    , new TargetResName(execContext.getIndexName()), -1, Optional.of((meta) -> {
+                        // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
+                        return !(meta.getPluginName().indexOf("hudi") > -1);
+                    }));
         }
+//        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
+//        try (JarOutputStream jaroutput = new JarOutputStream(
+//                FileUtils.openOutputStream(manifestJar, false), manifest)) {
+//            jaroutput.putNextEntry(new ZipEntry(PluginAndCfgsSnapshot.getTaskEntryName()));
+//            jaroutput.flush();
+//        }
 
         return manifestJar;
     }

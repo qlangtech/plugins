@@ -50,32 +50,35 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
 
         try {
             if (!initializeDir) {
-                // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
-                File dataDir = Config.getDataDir(false);
-                try {
-                    FileUtils.forceMkdir(dataDir);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                synchronized (TISHadoopFileSystemGetter.class) {
+                    if (!initializeDir) {
+                        // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
+                        File dataDir = Config.getDataDir(false);
+                        try {
+                            FileUtils.forceMkdir(dataDir);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
 
-                //  try {
-                // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
-                resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
+                        //  try {
+                        // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
+                        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                        URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
+                        resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
 //                File mainifest = new File(().toURI());
 //                if (!mainifest.exists()) {
 //                    throw new IllegalStateException("mainifest file can is not exist:" + mainifest.getAbsolutePath());
 //                }
 
-                try (InputStream mainifest = resource.openStream()) {
-                    PluginAndCfgsSnapshot remoteSnapshot
-                            = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
-                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
-                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                        try (InputStream mainifest = resource.openStream()) {
+                            PluginAndCfgsSnapshot remoteSnapshot
+                                    = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
+                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
+                            remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                        }
+                        initializeDir = true;
+                    }
                 }
-
-
                 // System.out.println("dddddd:" + resource);
                 // LOG.info("dddddddddddddddddddd:" + resource);
                 // throw new IllegalStateException("dddddddddddddddddddd:" + resource);

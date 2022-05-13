@@ -37,6 +37,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -117,6 +118,8 @@ public class TestDataXHudiWriter {
         System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(HudiWriter.timestamp));
     }
 
+
+
     // @Ignore
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
@@ -178,7 +181,7 @@ public class TestDataXHudiWriter {
         tabs = dataxReader.getSelectedTabs();
 
         IExecChainContext execContext = EasyMock.createMock("execContext", IExecChainContext.class);
-       // EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
+        // EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
         EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;

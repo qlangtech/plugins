@@ -18,11 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.HudiTimestampBasedKeyGenerator;
-import org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
 import org.junit.Test;
-
-import java.util.TimeZone;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -42,7 +38,7 @@ public class TestSlashEncodedDayPartition extends BasicPartitionTest {
         SlashEncodedDayPartition partition = new SlashEncodedDayPartition();
         String partitionField = "testFiled";
         partition.partitionPathField = partitionField;
-       // partition.keyGenerator = keyGenerator;
+        // partition.keyGenerator = keyGenerator;
         String propContentExpect
                 =
                 "hoodie.datasource.write.keygenerator.type=SIMPLE\n" +

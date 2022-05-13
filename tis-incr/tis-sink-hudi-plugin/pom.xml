@@ -31,6 +31,7 @@
     <artifactId>tis-sink-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
 
+
     <dependencies>
 
         <dependency>
@@ -106,11 +107,11 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-common</artifactId>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.hadoop</groupId>-->
+        <!--            <artifactId>hadoop-common</artifactId>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
 
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
@@ -125,6 +126,15 @@
         <!--        </dependency>-->
 
     </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
 
 
 </project>

@@ -42,6 +42,9 @@ Find more [here](https://hudi.apache.org/docs/concepts/).
 
 ## shuffleParallelism
 
+For any Hudi job using Spark, parallelism equals to the number of spark partitions that should be generated for a particular stage in the DAG
+[detail](https://hudi.apache.org/docs/faq/#how-to-tune-shuffle-parallelism-of-hudi-jobs-)
+
 ## sparkConn
 
 指定Spark服务端连接地址
@@ -54,6 +57,4 @@ Spark服务端执行`HoodieDeltaStreamer`对内存有一定要求，太小容易
 * Takes one of these values : UPSERT (default), INSERT (use when input is  purely new data/inserts to gain speed)
 * Default: `BULK_INSERT`
 * Possible Values: `UPSERT`, `INSERT`, `BULK_INSERT`
-
-## partitionedBy
 

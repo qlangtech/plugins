@@ -215,8 +215,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
         }
 
-        handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString()
-        );
+        handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString());
 //        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
 //        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
 //        handle.addSparkArg("--driver-memory", "1024M");

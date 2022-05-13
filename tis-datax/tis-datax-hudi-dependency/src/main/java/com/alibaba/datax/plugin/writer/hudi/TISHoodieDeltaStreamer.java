@@ -62,6 +62,15 @@ public class TISHoodieDeltaStreamer implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(TISHoodieDeltaStreamer.class);
 
     public static void main(String[] args) throws Exception {
+
+//        if (1 == 1) {
+//            try {
+//                throw new IllegalStateException("xxxxxx");
+//            } finally {
+//                System.exit(1);
+//            }
+//        }
+
 //        Enumeration allAppenders = LogManager.getRootLogger().getAllAppenders();
 //        int allAppendersCount = 0;
 //        while (allAppenders.hasMoreElements()) {
@@ -120,10 +129,10 @@ public class TISHoodieDeltaStreamer implements Serializable {
             LOG.error("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName, e);
             throw new RuntimeException(e);
         } finally {
-            jssc.stop();
-            // logger appender queue中的消息都排除
-            Thread.sleep(3000);
             try {
+                jssc.stop();
+                // logger appender queue中的消息都排除
+                Thread.sleep(3000);
                 TisFlumeLogstashV1Appender.instance.stop();
             } catch (Throwable e) {
 

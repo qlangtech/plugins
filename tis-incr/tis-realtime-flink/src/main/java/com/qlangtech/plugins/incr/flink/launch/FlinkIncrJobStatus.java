@@ -98,7 +98,7 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
                 state = State.NONE;
                 // throw new IllegalStateException("job state can not be null");
             }
-           // Collections.reverse(savepointPaths);
+            // Collections.reverse(savepointPaths);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -155,6 +155,8 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
             throw new RuntimeException(e);
         }
     }
+
+
 
     private static class DftFlinkSavepoint extends FlinkSavepoint {
         private final static String KEY_TUPLE_SPLIT = ";";

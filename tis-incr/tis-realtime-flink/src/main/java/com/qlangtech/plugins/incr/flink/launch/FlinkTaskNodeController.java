@@ -346,17 +346,18 @@ public class FlinkTaskNodeController implements IRCController {
             if (status.getLaunchJobID() == null) {
                 throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
             }
+
+            JobID jobID = status.getLaunchJobID();
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
-                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
+                // 先删除掉，可能cluster中
+                status.cancel();
+                CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
                 JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
                 if (s != null && !s.isTerminalState()) {
                     //job 任务没有终止，立即停止
-                    CompletableFuture<Acknowledge> result = restClient.cancel(status.getLaunchJobID());
+                    CompletableFuture<Acknowledge> result = restClient.cancel(jobID);
                     result.get(5, TimeUnit.SECONDS);
                 }
-                status.cancel();
-//                File incrJobFile = getIncrJobRecordFile(collection);
-//                FileUtils.forceDelete(incrJobFile);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

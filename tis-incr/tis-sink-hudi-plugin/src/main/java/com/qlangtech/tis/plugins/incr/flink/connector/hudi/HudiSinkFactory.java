@@ -44,17 +44,17 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
+import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.utils.TisMetaProps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
  * @create: 2022-02-14 14:39
  **/
 @Public
-public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreator {
+public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTableCreator {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-Hudi-Sink";
     public static final String HIVE_SYNC_MODE = "hms";
 
@@ -122,8 +122,10 @@ public class HudiSinkFactory extends TISSinkFactory implements IStreamTableCreat
         return (IDataXHudiWriter) DataxWriter.load(null, sink.dataXName);
     }
 
+
+
     @Override
-    public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
         IDataXHudiWriter hudiWriter = getDataXHudiWriter(this);
 
         if (!IExtraHadoopFileSystemGetter.HUDI_FILESYSTEM_NAME.equals(hudiWriter.getFsName())) {

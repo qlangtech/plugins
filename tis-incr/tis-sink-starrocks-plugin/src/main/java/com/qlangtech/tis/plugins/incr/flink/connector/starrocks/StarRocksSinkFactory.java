@@ -38,7 +38,8 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -73,7 +74,7 @@ import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
  * @create: 2021-10-31 20:11
  **/
 @Public
-public class StarRocksSinkFactory extends TISSinkFactory {
+public class StarRocksSinkFactory extends BasicTISSinkFactory {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
 
@@ -134,9 +135,9 @@ public class StarRocksSinkFactory extends TISSinkFactory {
     }
 
     @Override
-    public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFuncs = Maps.newHashMap();
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
         IDataxProcessor.TableAlias tableName = null;
         // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
         BasicDorisStarRocksWriter dataXWriter = (BasicDorisStarRocksWriter) dataxProcessor.getWriter(null);
@@ -194,7 +195,7 @@ public class StarRocksSinkFactory extends TISSinkFactory {
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-            sinkFuncs.put(tableName, sinkFuncRef.get());
+            sinkFuncs.put(tableName, new DTOSinkFunc(tableName, sinkFuncRef.get()));
         }
 
         if (sinkFuncs.size() < 1) {

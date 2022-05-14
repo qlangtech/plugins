@@ -56,6 +56,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -100,7 +101,8 @@ public class FlinkTaskNodeController implements IRCController {
         try {
 
             for (String savepointPath : targetPod) {
-                if (status.getState() == IFlinkIncrJobStatus.State.STOPED
+                if ((status.getState() == IFlinkIncrJobStatus.State.STOPED
+                        || !((FlinkJobDeploymentDetails) getRCDeployment(collection)).isRunning())
                         && status.containSavepoint(savepointPath)) {
                     File streamUberJar = getStreamUberJarFile(collection);
                     if (!streamUberJar.exists()) {
@@ -119,8 +121,10 @@ public class FlinkTaskNodeController implements IRCController {
         } catch (Exception e) {
             throw new RuntimeException(collection.getName(), e);
         }
+
         throw new IllegalStateException("targetPod length:" + targetPod.length
-                + "jobid:" + status.getLaunchJobID() + ",status:" + status.getState());
+                + "，jobid:" + status.getLaunchJobID() + ",status:" + status.getState()
+                + ",stored path:" + status.getSavepointPaths().stream().map((p) -> p.getPath()).collect(Collectors.joining(",")));
     }
 
     @Override
@@ -248,6 +252,7 @@ public class FlinkTaskNodeController implements IRCController {
 //                    return null;
 //                }
                 if (status == null) {
+                    incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
                     return noneStateDetail;
                 }
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
@@ -262,7 +267,9 @@ public class FlinkTaskNodeController implements IRCController {
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1) {
-                return null;
+                //return null;
+                incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
+                return noneStateDetail;
             }
 //            if (cause instanceof RestClientException) {
 //                //cause.getStackTrace()

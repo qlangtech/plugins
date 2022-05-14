@@ -33,7 +33,8 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
@@ -54,7 +55,7 @@ import java.util.stream.Collectors;
  * @create: 2021-11-18 12:05
  **/
 @Public
-public class ClickHouseSinkFactory extends TISSinkFactory {
+public class ClickHouseSinkFactory extends BasicTISSinkFactory {
     public static final String DISPLAY_NAME_FLINK_SINK = "Flink-ClickHouse-Sink";
 
 
@@ -130,8 +131,8 @@ public class ClickHouseSinkFactory extends TISSinkFactory {
     }
 
     @Override
-    public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFuncs = Maps.newHashMap();
+    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
         IDataxProcessor.TableAlias tableName = null;
         DataXClickhouseWriter dataXWriter = (DataXClickhouseWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
@@ -178,7 +179,7 @@ public class ClickHouseSinkFactory extends TISSinkFactory {
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-            sinkFuncs.put(tableName, sinkFuncRef.get());
+            sinkFuncs.put(tableName, new DTOSinkFunc(tableName, sinkFuncRef.get()));
         }
 
 

@@ -33,10 +33,8 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -69,7 +67,7 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
 
 
     @Override
-    public final JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
+    public JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
             , IDataxProcessor dataXProcessor) throws Exception {
         StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
 
@@ -79,7 +77,7 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
         //Key
         Map<String, DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
 
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinks
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
@@ -88,14 +86,8 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
             }
         });
 
-        SinkFuncs<DTO> sinkFunction = new SinkFuncs<DTO>(env, sinks) {
-            @Override
-            protected DataStream<DTO> streamMap(DataStream<DTO> sourceStream) {
-                return sourceStream;
-            }
-        };
 
-        this.processTableStream(env, tab2OutputTag, sinkFunction);
+        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
         return executeFlinkJob(dataxName, env);
     }
 
@@ -105,7 +97,7 @@ public abstract class BasicFlinkSourceHandle implements IConsumerHandle<List<Rea
      * @param
      */
     protected abstract void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction);
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction);
 
 
     private Map<String, DTOStream> createTab2OutputTag(

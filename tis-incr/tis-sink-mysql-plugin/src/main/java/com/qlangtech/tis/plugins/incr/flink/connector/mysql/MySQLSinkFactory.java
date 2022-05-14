@@ -35,6 +35,7 @@ public class MySQLSinkFactory extends TISSinkFactory {
     public ICompileAndPackage getCompileAndPackageManager() {
         return null;
     }
+
     @Override
     public Map<IDataxProcessor.TableAlias, SinkFunction<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
         return null;

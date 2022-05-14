@@ -54,6 +54,12 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-scala-compiler</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-extends</artifactId>
+            <version>3.5.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
 

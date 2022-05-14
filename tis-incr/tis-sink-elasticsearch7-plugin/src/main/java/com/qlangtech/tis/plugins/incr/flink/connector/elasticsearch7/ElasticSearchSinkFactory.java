@@ -33,13 +33,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureHandler;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * @create: 2021-09-28 19:45
  **/
 @Public
-public class ElasticSearchSinkFactory extends TISSinkFactory {
+public class ElasticSearchSinkFactory extends BasicTISSinkFactory {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-ElasticSearch-Sink";
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSinkFactory.class);
     // bulk.flush.max.actions
@@ -77,7 +77,7 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
 
 
     @Override
-    public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
@@ -197,7 +197,7 @@ public class ElasticSearchSinkFactory extends TISSinkFactory {
         for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
             tableMapper.setFrom(selectedTab.getName());
         }
-        return Collections.singletonMap(tableMapper, sinkBuilder.build());
+        return Collections.singletonMap(tableMapper, new DTOSinkFunc(tableMapper, sinkBuilder.build()));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {

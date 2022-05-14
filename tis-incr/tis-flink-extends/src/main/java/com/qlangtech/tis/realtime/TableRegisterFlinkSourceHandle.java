@@ -24,6 +24,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -54,7 +55,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     @Override
     protected void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
 
         StreamTableEnvironment tabEnv = StreamTableEnvironment.create(
                 env, EnvironmentSettings.newInstance()

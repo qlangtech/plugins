@@ -22,41 +22,43 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * <TRANSFER_OBJ/> 可以是用：
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-16 12:32
+ * @see DTO
  **/
-public abstract class SinkFuncs<TRANSFER_OBJ> {
-    private transient final Map<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction;
-    public transient final StreamExecutionEnvironment env;
+public final class SinkFuncs<TRANSFER_OBJ> {
 
-    public SinkFuncs(StreamExecutionEnvironment env, Map<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction) {
+    private transient final Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction;
+    // public transient final StreamExecutionEnvironment env;
+
+    public SinkFuncs(Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction) {
         this.sinkFunction = sinkFunction;
-        this.env = env;
     }
 
-    protected abstract DataStream<TRANSFER_OBJ> streamMap(DataStream<DTO> sourceStream);
 
     public void add2Sink(String originTableName, DataStream<DTO> sourceStream) {
 
         if (sinkFunction.size() < 2) {
-            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
-                streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
+            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+                entry.getValue().add2Sink(sourceStream);
+                return;
             }
         } else {
             if (StringUtils.isEmpty(originTableName)) {
                 throw new IllegalArgumentException("param originTableName can not be null");
             }
             boolean hasMatch = false;
-            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 if (originTableName.equals(entry.getKey().getFrom())) {
-                    streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
+                    entry.getValue().add2Sink(sourceStream);
+                    // streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
                     hasMatch = true;
                     break;
                 }

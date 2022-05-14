@@ -25,6 +25,8 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.SinkFuncs;
+import com.qlangtech.tis.realtime.TabSinkFunc;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
@@ -70,7 +72,7 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
     }
 
     @Override
-    protected void processTableStream(StreamExecutionEnvironment env, Map<String, DTOStream> streamMap, SinkFuncs sinkFunction) {
+    protected void processTableStream(StreamExecutionEnvironment env, Map<String, DTOStream> streamMap, SinkFuncs<DTO> sinkFunction) {
 
 //    @Override
 //    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {

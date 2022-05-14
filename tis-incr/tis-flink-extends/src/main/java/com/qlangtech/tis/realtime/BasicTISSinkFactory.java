@@ -18,38 +18,31 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.google.common.collect.Maps;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-02-18 12:19
+ * @create: 2022-05-13 23:01
  **/
-public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle {
+public abstract class BasicTISSinkFactory extends TISSinkFactory {
 
-    /**
-     * 处理各个表对应的数据流
-     *
-     * @param
-     */
     @Override
-    protected final void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
-        Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
-        for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
-            streamMap.put(e.getKey(), e.getValue().getStream());
-        }
-        this.processTableStream(streamMap, sinkFunction);
-    }
+    public abstract Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor);
 
-    /**
-     * 处理各个表对应的数据流
-     *
-     * @param
-     */
-    protected abstract void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs<DTO> sinkFunction);
+    public final static class DTOSinkFunc extends TabSinkFunc<DTO> {
+        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction) {
+            super(tab, sinkFunction);
+        }
+
+        @Override
+        protected DataStream<DTO> streamMap(DataStream<DTO> sourceStream) {
+            return sourceStream;
+        }
+    }
 }

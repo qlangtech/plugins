@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -58,8 +59,8 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
     private static final Logger logger = LoggerFactory.getLogger(HoodieFlinkSourceHandle.class);
 
     @Override
-    protected void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs sinkFunction) {
+    protected final void processTableStream(StreamExecutionEnvironment env
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
         FlinkStreamerConfig flinkCfg = null;
         Map<String, FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
         if (MapUtils.isEmpty(tabStreamerCfg)) {

@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
@@ -266,7 +267,7 @@ public class FlinkTaskNodeController implements IRCController {
                     + ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            if (StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1) {
+            if (isNotFoundException(cause)) {
                 //return null;
                 incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
                 return noneStateDetail;
@@ -286,6 +287,10 @@ public class FlinkTaskNodeController implements IRCController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static boolean isNotFoundException(Throwable cause) {
+        return StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1;
     }
 
 //    private JobID getLaunchJobID(TargetResName collection) {
@@ -341,8 +346,9 @@ public class FlinkTaskNodeController implements IRCController {
 
     @Override
     public void removeInstance(TargetResName collection) throws Exception {
+        FlinkIncrJobStatus status = getIncrJobStatus(collection);
         try {
-            FlinkIncrJobStatus status = getIncrJobStatus(collection);
+
             if (status.getLaunchJobID() == null) {
                 throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
             }
@@ -350,7 +356,6 @@ public class FlinkTaskNodeController implements IRCController {
             JobID jobID = status.getLaunchJobID();
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
                 // 先删除掉，可能cluster中
-                status.cancel();
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
                 JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
                 if (s != null && !s.isTerminalState()) {
@@ -358,8 +363,17 @@ public class FlinkTaskNodeController implements IRCController {
                     CompletableFuture<Acknowledge> result = restClient.cancel(jobID);
                     result.get(5, TimeUnit.SECONDS);
                 }
+                status.cancel();
             }
         } catch (Exception e) {
+            Throwable[] throwables = ExceptionUtils.getThrowables(e);
+            for (Throwable cause : throwables) {
+                if (isNotFoundException(cause)) {
+                    logger.warn(cause.getMessage() + ":" + collection.getName());
+                    status.cancel();
+                    return;
+                }
+            }
             throw new RuntimeException(e);
         }
     }

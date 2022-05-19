@@ -60,6 +60,8 @@ import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 /**
+ * 增量任务提交到Flink集群网关
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-20 13:39
  **/
@@ -79,15 +81,16 @@ public class FlinkTaskNodeController implements IRCController {
     @Override
     public void checkUseable() {
         FlinkCluster cluster = factory.getClusterCfg();
-        try {
-            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
-                // restClient.getClusterId();
-                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
-                Collection<JobStatusMessage> jobStatus = status.get();
-            }
-        } catch (Exception e) {
-            throw new TisException("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
-        }
+        cluster.checkUseable();
+//        try {
+//            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
+//                // restClient.getClusterId();
+//                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
+//                Collection<JobStatusMessage> jobStatus = status.get();
+//            }
+//        } catch (Exception e) {
+//            throw new TisException("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
+//        }
     }
 
     /**

@@ -230,6 +230,8 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @TISExtension(ordinal = 0)
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {
+
+
         @Override
         public String getDisplayName() {
             return "HDFS";

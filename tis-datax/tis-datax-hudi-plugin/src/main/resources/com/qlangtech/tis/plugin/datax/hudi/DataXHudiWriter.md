@@ -1,3 +1,8 @@
+## fsName
+分布式文件系统源引用，
+
+`注`：实例名称必须为**hudi_hdfs**
+
 ## partitionedBy
 
 Field in the table to use for determining hive partition columns, [详细](https://hudi.apache.org/docs/configurations#hoodiedatasourcehive_syncpartition_fields)

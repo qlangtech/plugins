@@ -14,7 +14,7 @@ Hudi Flink实时同步脚本支持两种类型：
 
 1. **SQL**: 敬请期待
 
-2. **StreamAPI**: HoodieFlinkStreamer
+2. **StreamAPI**: HoodieFlinkStreamer(推荐)
 
 ## compaction
 

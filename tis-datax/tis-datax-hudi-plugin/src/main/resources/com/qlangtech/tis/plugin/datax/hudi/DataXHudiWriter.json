@@ -1,4 +1,6 @@
 {
+  "sparkSubmitParam": {
+  },
   "partitionedBy": {
     "label": "分区字段",
     "dftVal": "pt"

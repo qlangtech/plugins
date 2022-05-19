@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype;
 
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -43,7 +42,8 @@ public class SqlType extends ScriptType {
         return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
     }
 
-    @TISExtension
+    // 暂时先不用
+    // @TISExtension
     public static class DefaultDescriptor extends Descriptor<ScriptType> {
         @Override
         public String getDisplayName() {

@@ -31,7 +31,7 @@
     "help": "描述：写入数据的字段，不支持对部分列写入。为与hive中表关联，需要指定表中所有字段名和字段类型，其中：name指定字段名，type指定字段类型。 "
   },
   "writeMode": {
-    "dftVal": "nonConflict",
+    "dftVal": "append",
     "enum": [
       {
         "val": "append",

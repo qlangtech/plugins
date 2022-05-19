@@ -153,12 +153,12 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 //            ParseDescribable<Describable> paramsConfigParseDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
 //            FlinkCluster flinkCluster = paramsConfigParseDescribable.getInstance();
 
-            try {
-                flinkCluster.checkUseable();
-            } catch (TisException e) {
-                msgHandler.addErrorMessage(context, e.getMessage());
-                return false;
-            }
+            //try {
+            flinkCluster.checkUseable();
+//            } catch (TisException e) {
+//               // msgHandler.addErrorMessage(context, e.getMessage());
+//                return false;
+//            }
 
 //            JobManagerAddress jobManagerAddress = flinkCluster.getJobManagerAddress();
 //

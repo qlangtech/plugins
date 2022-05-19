@@ -38,6 +38,60 @@ public class TestFlinkIncrJobStatus {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
+    public void testTriggerSavePoint() throws Exception {
+        File incrJobFile = folder.newFile();
+        //主动发起一个 savepoint 但不执行stop
+        String savePointDir = "file:///opt/data/savepoint/savepoint_20220519182209246";
+        FlinkIncrJobStatus incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
+        JobID jobid = JobID.fromHexString("ac99018a3dfd65fde538133d91ca58d7");
+        incrJobStatus.createNewJob(jobid);
+
+        incrJobStatus.addSavePoint(savePointDir, IFlinkIncrJobStatus.State.RUNNING);
+        Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
+        assertSavepointEqual(incrJobStatus, savePointDir);
+
+        // 重新加载
+        incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
+        Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
+        assertSavepointEqual(incrJobStatus, savePointDir);
+    }
+
+    @Test
+    public void testDiscardSavePoint() throws Exception {
+        File incrJobFile = folder.newFile();
+        //主动发起一个 savepoint 但不执行stop
+
+        FlinkIncrJobStatus incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
+        JobID jobid = JobID.fromHexString("ac99018a3dfd65fde538133d91ca58d7");
+        incrJobStatus.createNewJob(jobid);
+
+        String savePointDir = "file:///opt/data/savepoint/savepoint_20220519182209246";
+        incrJobStatus.stop(savePointDir);
+        Assert.assertEquals(FlinkIncrJobStatus.State.STOPED, incrJobStatus.getState());
+        assertSavepointEqual(incrJobStatus, savePointDir);
+
+        // 重新加载
+        incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
+        try {
+            incrJobStatus.discardSavepoint(savePointDir);
+            Assert.fail("must be faild,current stat is stoped can not discardSavepoint() can not be invoked");
+        } catch (Exception e) {
+
+        }
+        jobid = JobID.fromHexString("ac99018a3dfd65fde538133d91ca9999");
+        incrJobStatus.relaunch(jobid);
+        incrJobStatus.discardSavepoint(savePointDir);
+        Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
+        Assert.assertEquals(0, incrJobStatus.getSavepointPaths().size());
+
+        // 重新加载
+        incrJobStatus = new FlinkIncrJobStatus(incrJobFile);
+        Assert.assertEquals(FlinkIncrJobStatus.State.RUNNING, incrJobStatus.getState());
+        Assert.assertEquals(0, incrJobStatus.getSavepointPaths().size());
+
+    }
+
+    @Test
     public void testCreateNewJob() throws Exception {
 
         File incrJobFile = folder.newFile();
@@ -82,6 +136,8 @@ public class TestFlinkIncrJobStatus {
 
         Assert.assertTrue(CollectionUtils.isEmpty(incrJobStatus.getSavepointPaths()));
         Assert.assertEquals(FlinkIncrJobStatus.State.NONE, incrJobStatus.getState());
+
+
     }
 
     private void assertSavepointEqual(FlinkIncrJobStatus incrJobStatus, String savePointDir) {

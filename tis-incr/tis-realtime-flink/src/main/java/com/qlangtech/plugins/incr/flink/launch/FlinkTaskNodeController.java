@@ -41,14 +41,12 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
-import org.apache.flink.runtime.client.JobStatusMessage;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -308,9 +306,42 @@ public class FlinkTaskNodeController implements IRCController {
 //        }
 //    }
 
+    /**
+     * 创建一个Savepoint
+     *
+     * @param collection
+     */
+    @Override
+    public void triggerSavePoint(TargetResName collection) {
+        processFlinkJob(collection, (restClient, savePoint, status) -> {
+            String savepointDirectory = savePoint.createSavePointPath();
+            CompletableFuture<String> result
+                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory);
+            status.addSavePoint(result.get(25, TimeUnit.SECONDS), IFlinkIncrJobStatus.State.RUNNING);
+        });
+    }
 
     @Override
-    public void stopInstance(TargetResName collection) {
+    public void discardSavepoint(TargetResName collection, String savepointPath) {
+//        FlinkIncrJobStatus status = getIncrJobStatus(resName);
+//        status.discardSavepoint(savepointPath);
+
+
+        processFlinkJob(collection, (restClient, savePoint, status) -> {
+
+            CompletableFuture<Acknowledge> result = restClient.disposeSavepoint(savepointPath);
+
+            result.get(25, TimeUnit.SECONDS);
+            // String savepointDirectory = savePoint.createSavePointPath();
+            status.discardSavepoint(savepointPath);
+//            CompletableFuture<String> result
+//                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory);
+            //status.addSavePoint(result.get(25, TimeUnit.SECONDS), IFlinkIncrJobStatus.State.RUNNING);
+        });
+
+    }
+
+    private void processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
         FlinkIncrJobStatus status = getIncrJobStatus(collection);
         // IncrJobStatus launchJobID = getIncrJobRecordFile(collection);  // getLaunchJobID(collection);
         if (status.getState() != IFlinkIncrJobStatus.State.RUNNING) {
@@ -334,16 +365,35 @@ public class FlinkTaskNodeController implements IRCController {
             CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
             JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);
             if (s != null && !s.isTerminalState()) {
+
+                jobFunc.apply(restClient, savePoint, status);
                 //job 任务没有终止，立即停止
-                String savepointDirectory = savePoint.createSavePointPath();
-                CompletableFuture<String> result
-                        = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
-                status.stop(result.get(25, TimeUnit.SECONDS));
+//                String savepointDirectory = savePoint.createSavePointPath();
+//                CompletableFuture<String> result
+//                        = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
+//                status.stop(result.get(25, TimeUnit.SECONDS));
             }
 
         } catch (Exception e) {
             throw new RuntimeException("appname:" + collection.getName(), e);
         }
+    }
+
+    private interface FlinkJobFunc {
+        public void apply(RestClusterClient restClient
+                , StateBackendFactory.ISavePointSupport savePoint, FlinkIncrJobStatus status) throws Exception;
+    }
+
+
+    @Override
+    public void stopInstance(TargetResName collection) {
+        processFlinkJob(collection, (restClient, savePoint, status) -> {
+            //job 任务没有终止，立即停止
+            String savepointDirectory = savePoint.createSavePointPath();
+            CompletableFuture<String> result
+                    = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
+            status.stop(result.get(25, TimeUnit.SECONDS));
+        });
     }
 
 

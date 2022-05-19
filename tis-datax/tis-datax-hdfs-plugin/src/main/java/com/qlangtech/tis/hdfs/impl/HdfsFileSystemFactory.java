@@ -19,7 +19,6 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -33,6 +32,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +76,17 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         return this.name;
     }
 
+    public static String dftHdfsSiteContent() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "\n" +
+                "<configuration>\n" +
+                "    <property>\n" +
+                "        <name></name>\n" +
+                "        <value></value>\n" +
+                "    </property>\n" +
+                "</configuration> ";
+    }
+
     @Override
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
@@ -94,6 +105,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             try (InputStream input = new ByteArrayInputStream(hdfsSiteContent.getBytes(TisUTF8.get()))) {
                 conf.addResource(input);
             }
+            // 支持重连？
+            conf.setInt(DFSConfigKeys.DFS_CLIENT_FAILOVER_MAX_ATTEMPTS_KEY, -1);
+            // conf.setBoolean(DFSConfigKeys.DFS_CLIENT_RETRY_POLICY_ENABLED_KEY, false);
             conf.set(FsPermission.UMASK_LABEL, "000");
             // fs.defaultFS
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
@@ -101,7 +115,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             //https://segmentfault.com/q/1010000008473574
             Logger.info("userHostname:{}", userHostname);
             if (userHostname != null && userHostname) {
-                conf.set("dfs.client.use.datanode.hostname", "true");
+                conf.setBoolean(DFSConfigKeys.DFS_CLIENT_USE_DN_HOSTNAME, true);
             }
 
             conf.set("fs.defaultFS", hdfsAddress);
@@ -244,6 +258,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 hdfs.listChildren(hdfs.getPath("/"));
                 msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) hdfsFactory).hdfsAddress + "连接正常");
+                hdfs.close();
                 return true;
             } catch (Exception e) {
                 Logger.warn(e.getMessage(), e);

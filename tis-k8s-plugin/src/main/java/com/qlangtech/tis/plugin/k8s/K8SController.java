@@ -149,7 +149,11 @@ public class K8SController implements IRCController {
         throw new UnsupportedOperationException();
     }
 
-//    public void deploy(String indexName, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws Exception {
+    @Override
+    public void triggerSavePoint(TargetResName collection) {
+        throw new UnsupportedOperationException();
+    }
+    //    public void deploy(String indexName, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws Exception {
 //        if (timestamp < 1) {
 //            throw new IllegalArgumentException("argument timestamp can not small than 1");
 //        }

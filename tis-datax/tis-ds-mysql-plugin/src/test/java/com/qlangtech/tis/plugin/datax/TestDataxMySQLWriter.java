@@ -1,34 +1,29 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
-import com.facebook.presto.sql.SqlFormatter;
-import com.facebook.presto.sql.parser.ParsingOptions;
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Expression;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.IDataxContext;
-import com.qlangtech.tis.datax.IDataxGlobalCfg;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
@@ -37,20 +32,20 @@ import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
-import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * @author: baisui 百岁
@@ -60,7 +55,7 @@ public class TestDataxMySQLWriter extends BasicTest {
     public static String mysqlJdbcUrl = "jdbc:mysql://192.168.28.200:3306/baisuitestWriterdb?useUnicode=yes&characterEncoding=utf8";
     public static String dbWriterName = "baisuitestWriterdb";
 
-    public static String dataXName ="testDataXName";
+    public static String dataXName = "testDataXName";
 
     public void testFieldCount() throws Exception {
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
@@ -71,6 +66,85 @@ public class TestDataxMySQLWriter extends BasicTest {
         assertEquals(8, pluginFormPropertyTypes.getKVTuples().size());
 
     }
+
+    public void testGenerateCreateDDL() {
+        DataxMySQLWriter writer = new DataxMySQLWriter();
+        writer.autoCreateTable = true;
+        DataxReader.dataxReaderThreadLocal.set(new DataxReader(){
+            @Override
+            public <T extends ISelectedTab> List<T> getSelectedTabs() {
+                return null;
+            }
+
+            @Override
+            public IGroupChildTaskIterator getSubTasks() {
+                return null;
+            }
+
+            @Override
+            public String getTemplate() {
+                return null;
+            }
+        });
+
+        StringBuffer ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+            ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+            col.setPk(true);
+            col.setName("id3");
+            col.setType(DataXReaderColType.Long.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setName("col4");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+            col = new ISelectedTab.ColMeta();
+            col.setName("col5");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+
+            col = new ISelectedTab.ColMeta();
+            col.setPk(true);
+            col.setName("col6");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+        }));
+
+        assertNotNull(ddl);
+        // System.out.println(ddl);
+
+        assertEquals(
+                StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataxMySQLWriter.class, "create-application-ddl.sql"))
+                ,StringUtils.trimToEmpty( ddl.toString()));
+    }
+
+    private IDataxProcessor.TableMap getTabApplication(
+            Consumer<List<ISelectedTab.ColMeta>>... colsProcess) {
+
+        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
+        ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+        col.setPk(true);
+        col.setName("user_id");
+        col.setType(DataXReaderColType.Long.dataType);
+        sourceCols.add(col);
+
+        col = new ISelectedTab.ColMeta();
+        col.setName("user_name");
+        col.setType(DataXReaderColType.STRING.dataType);
+        sourceCols.add(col);
+
+        for (Consumer<List<ISelectedTab.ColMeta>> p : colsProcess) {
+            p.accept(sourceCols);
+        }
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
+        tableMap.setFrom("application");
+        tableMap.setTo("application");
+        //tableMap.setSourceCols(sourceCols);
+        return tableMap;
+    }
+
 
     public void testTempateGenerate() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);

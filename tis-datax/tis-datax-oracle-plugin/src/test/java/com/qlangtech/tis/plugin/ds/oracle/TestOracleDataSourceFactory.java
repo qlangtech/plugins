@@ -50,15 +50,15 @@ public class TestOracleDataSourceFactory extends TestCase {
 
         // System.out.println("SELECT NULL AS table_cat,\n       c.owner AS table_schem,\n       c.table_name,\n       c.column_name,\n       c.position AS key_seq,\n       c.constraint_name AS pk_name\nFROM all_cons_columns c, all_constraints k\nWHERE k.constraint_type = 'P'\n  AND k.table_name = :1\n  AND k.owner like :2 escape '/'\n  AND k.constraint_name = c.constraint_name \n  AND k.table_name = c.table_name \n  AND k.owner = c.owner \nORDER BY column_name\n");
 
-        String createDDL = IOUtils.loadResourceFromClasspath(TestOracleDataSourceFactory.class, "create-sql-instancedetail.sql");
-        System.out.println(createDDL);
+//        String createDDL = IOUtils.loadResourceFromClasspath(TestOracleDataSourceFactory.class, "create-sql-instancedetail.sql");
+//        System.out.println(createDDL);
 
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
         assertTrue(tablesInDB.size() > 1);
        // tablesInDB.forEach((tab) -> System.out.println(tab));
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("instancedetail"));
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("BM"));
 
         assertTrue(cols.size() > 0);
 

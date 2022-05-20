@@ -25,7 +25,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -34,6 +33,8 @@ import org.apache.commons.lang.StringUtils;
 import java.sql.*;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+
+import static oracle.jdbc.OracleTypes.*;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -122,15 +123,62 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         }
     }
 
+    protected DataType createColDataType(String colName, int dbColType, int colSize) throws SQLException {
+        // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
+        return new DataType(convert2JdbcType(dbColType), colSize);
+    }
+
+    private int convert2JdbcType(int dbColType) {
+        switch (dbColType) {
+//            case OracleTypes.ARRAY:
+//            case OracleTypes.BIGINT:
+            case BIT:// = -7;
+                return Types.BIT;
+            case TINYINT: // = -6;
+                return Types.TINYINT;
+            case SMALLINT: // = 5;
+                return Types.SMALLINT;
+            case INTEGER: // = 4;
+                return Types.INTEGER;
+            case BIGINT: // = -5;
+                return Types.BIGINT;
+            case FLOAT: // = 6;
+                return Types.FLOAT;
+            case REAL: // = 7;
+                return Types.REAL;
+            case DOUBLE: // = 8;
+                return Types.DOUBLE;
+            case NUMERIC: // = 2;
+            case DECIMAL: // = 3;
+                //https://wenku.baidu.com/view/7f973fd54593daef5ef7ba0d4a7302768e996f35.html
+                return Types.DECIMAL;
+            case CHAR: // = 1;
+                return Types.CHAR;
+            case VARCHAR: // = 12;
+                return Types.VARCHAR;
+            case LONGVARCHAR: // = -1;
+                return Types.LONGVARCHAR;
+            case DATE: // = 91;
+                return Types.DATE;
+            case TIME: //= 92;
+                return Types.TIME;
+            case TIMESTAMP: // = 93;
+                return Types.TIMESTAMP;
+            case PLSQL_BOOLEAN: // = 252;
+                return Types.BOOLEAN;
+            default:
+                return dbColType;
+        }
+    }
 
     @Override
     protected DataType getDataType(String keyName, ResultSet cols) throws SQLException {
         DataType type = super.getDataType(keyName, cols);
         // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
         if (type.type == Types.DECIMAL) {
-            int decimalDigits = cols.getInt("decimal_digits");
+            int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
             if (decimalDigits < 1) {
-                return new DataType(Types.INTEGER);
+                return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER);
             }
         }
         return type;

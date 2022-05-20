@@ -60,7 +60,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
     @Override
     public void initWriterTable(String targetTabName, List jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+        InitWriterTable.process(this.dataXName, this, targetTabName, jdbcUrls);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
                 if (!pks.isEmpty()) {
-                    script.append("  PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
+                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
                             .collect(Collectors.joining(","))).append(")").append("\n");
                 }
             }

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.common;
@@ -49,12 +49,8 @@ public class InitWriterTable {
      * @param
      * @throws Exception
      */
-    public static void process(String dataXName, String tableName, List<String> jdbcUrls) throws Exception {
-        if (StringUtils.isEmpty(dataXName)) {
-            throw new IllegalArgumentException("param dataXName can not be null");
-        }
-        BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
-                = (BasicDataXRdbmsWriter<BasicDataSourceFactory>) DataxWriter.load(null, dataXName);
+    public static void process(String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
+            , String tableName, List<String> jdbcUrls) throws Exception {
 
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
         boolean autoCreateTable = dataXWriter.autoCreateTable;
@@ -85,5 +81,52 @@ public class InitWriterTable {
                 }
             }
         }
+
+    }
+
+
+    /**
+     * 初始化表RDBMS的表，如果表不存在就创建表
+     *
+     * @param
+     * @throws Exception
+     */
+    public static void process(String dataXName, String tableName, List<String> jdbcUrls) throws Exception {
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalArgumentException("param dataXName can not be null");
+        }
+        BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
+                = (BasicDataXRdbmsWriter<BasicDataSourceFactory>) DataxWriter.load(null, dataXName);
+
+        Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
+        process(dataXName, dataXWriter, tableName, jdbcUrls);
+//        boolean autoCreateTable = dataXWriter.autoCreateTable;
+//        if (autoCreateTable) {
+//            DataxProcessor processor = DataxProcessor.load(null, dataXName);
+//
+//            File createDDL = new File(processor.getDataxCreateDDLDir(null)
+//                    , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+//            if (!createDDL.exists()) {
+//                throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
+//            }
+//
+//            BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
+//            String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
+//            for (String jdbcUrl : jdbcUrls) {
+//                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
+//                    List<String> tabs = Lists.newArrayList();
+//                    dsFactory.refectTableInDB(tabs, conn);
+//                    if (!tabs.contains(tableName)) {
+//                        // 表不存在
+//                        try (Statement statement = conn.createStatement()) {
+//                            logger.info("create table:{}\n   script:{}", tableName, createScript);
+//                            statement.execute(createScript);
+//                        }
+//                    } else {
+//                        logger.info("table:{} already exist ,skip the create table step", tableName);
+//                    }
+//                }
+//            }
+//        }
     }
 }

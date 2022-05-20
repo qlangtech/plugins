@@ -30,6 +30,7 @@ import ru.ivi.opensource.flinkclickhousesink.applied.Sink;
 import java.sql.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -113,6 +114,7 @@ public class TISClickHouseSink extends RichSinkFunction<DTO> {
 
     private String convertCSV(DTO dto) {
         final Map<String, Object> afterVals = dto.getAfter();
+        Objects.requireNonNull(afterVals, "afterVals can not be null");
         StringBuffer result = new StringBuffer("(");
         int size = colsMeta.size();
         int index = 0;

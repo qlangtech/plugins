@@ -164,7 +164,7 @@ public class ClickHouseSinkFactory extends BasicTISSinkFactory {
                                 + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
                     }
                     /**
-                     * 需要先初始化表starrocks目标库中的表
+                     * 需要先初始化表ClickHouse目标库中的表
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 

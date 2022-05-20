@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
@@ -92,10 +93,10 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
                 .andReturn(StreamExecutionEnvironment.getExecutionEnvironment());
 
 
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFuncts = Collections.singletonMap(new IDataxProcessor.TableAlias(table1), null);
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncts = Collections.singletonMap(new IDataxProcessor.TableAlias(table1), null);
         HudiSinkFactory sinkFactory = new HudiSinkFactory() {
             @Override
-            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+            public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
                 //  return super.createSinkFunction(dataxProcessor);
                 return sinkFuncts;
             }

@@ -150,6 +150,11 @@ public class K8SController implements IRCController {
     }
 
     @Override
+    public void discardSavepoint(TargetResName resName, String savepointPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void triggerSavePoint(TargetResName collection) {
         throw new UnsupportedOperationException();
     }

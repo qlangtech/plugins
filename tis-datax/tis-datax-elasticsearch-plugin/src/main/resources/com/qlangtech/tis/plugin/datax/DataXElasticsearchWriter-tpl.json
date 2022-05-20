@@ -5,7 +5,6 @@
     "accessId": "${writer.userName}",
     "accessKey": "${writer.password}",
     "index": "${writer.index}",
-#if($writer.containType)    "type": "${writer.type}", #end
 #if($writer.containCleanup)    "cleanup": ${writer.cleanup}, #end
 #if($writer.containTrySize)    "trySize": ${writer.trySize}, #end
 #if($writer.containSplitter)  "timeout": ${writer.timeout}, #end

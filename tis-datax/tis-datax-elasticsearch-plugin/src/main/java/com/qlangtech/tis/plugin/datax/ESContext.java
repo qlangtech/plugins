@@ -67,9 +67,9 @@ public class ESContext implements IDataxContext {
         return this.writer.index;
     }
 
-    public String getType() {
-        return this.writer.type;
-    }
+//    public String getType() {
+//        return this.writer.type;
+//    }
 
     public String getColumn() {
         JSONArray cols = this.mapper.getSchemaCols();
@@ -146,9 +146,9 @@ public class ESContext implements IDataxContext {
         return StringUtils.isNotBlank(this.writer.index);
     }
 
-    public boolean isContainType() {
-        return StringUtils.isNotBlank(this.writer.type);
-    }
+//    public boolean isContainType() {
+//        return StringUtils.isNotBlank(this.writer.type);
+//    }
 
     public boolean isContainSplitter() {
         return StringUtils.isNotBlank(this.writer.splitter);

@@ -72,8 +72,8 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String index;
-    @FormField(ordinal = 16, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
-    public String type;
+//    @FormField(ordinal = 16, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
+//    public String type;
 
 //    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String column;
@@ -169,10 +169,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
                 300000,
                 false,
                 false));
+        String type = null;
         try {
             esClient.createIndex(this.getIndexName()
-                    , this.type
-                    , esClient.genMappings(schemaCols, this.type, (columnList) -> {
+                    , type
+                    , esClient.genMappings(schemaCols, type, (columnList) -> {
                     }), this.settings, false);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -39,8 +39,8 @@
     <artifactId>tis-datax-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
-
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
+<!--        <spark.dist.dir.name>spark-${spark2.version}-bin-without-hadoop</spark.dist.dir.name>-->
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
 
     </properties>
@@ -217,6 +217,9 @@
                                                dest="${project.build.directory}/${project.build.finalName}"
                                                overwrite="true"
                                                compression="gzip"/>
+                                        <delete>
+                                            <fileset dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/jars" includes="hive*.jar"/>
+                                        </delete>
                                         <!--                                        <chmod dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/bin" perm="ugo+rx"-->
                                         <!--                                               includes="**/*"/>-->
                                     </target>

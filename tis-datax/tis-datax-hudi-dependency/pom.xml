@@ -59,10 +59,19 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <finalName>${project.artifactId}-dist-${project.version}</finalName>
-
                             <artifactSet>
                                 <excludes>
                                     <exclude>log4j:log4j</exclude>
@@ -110,6 +119,13 @@
         <!--            <groupId>org.scala-lang</groupId>-->
         <!--            <artifactId>scala-library</artifactId>-->
         <!--            <version>${scala.version}</version>-->
+        <!--        </dependency>-->
+
+        <!-- 由于使用了spark-without-hadoop的版本 里面没有slf4j的依赖所以需要slf4j的依赖-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.slf4j</groupId>-->
+        <!--            <artifactId>slf4j-api</artifactId>-->
         <!--        </dependency>-->
 
         <dependency>
@@ -186,6 +202,12 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>org.apache.hudi</groupId>
@@ -201,11 +223,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-exec</artifactId>
-            <scope>provided</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hive</groupId>-->
+<!--            <artifactId>hive-exec</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
 
     </dependencies>

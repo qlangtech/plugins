@@ -44,6 +44,9 @@ public class HudiConfig {
             throw new IllegalStateException("config prop sparkPackageName can not be null");
         }
         sparkDistDirName = bundle.getString("sparkDistDirName");
+        if (StringUtils.indexOf(sparkDistDirName, "$") > -1) {
+            throw new IllegalStateException("sparkDistDirName is illegal:" + sparkDistDirName);
+        }
 
         File hudiLibDir = getHudiPluginLibDir();
         File hudiPluginDir = new File(hudiLibDir, "../..");

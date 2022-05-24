@@ -162,7 +162,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        FileUtils.touch(logFile);
 //        handle.redirectError(logFile);
         // 测试用
-//        handle.redirectError(new File("error.log"));
+        handle.redirectError(new File("error.log"));
         //  handle.redirectToLog(DataXHudiWriter.class.getName());
         // String tabName = this.getFileName();
 
@@ -282,6 +282,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     public void cancel() {
         try {
             sparkAppHandle.stop();
+            sparkAppHandle.kill();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
         }
@@ -346,8 +347,13 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                 props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
                 props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
             }
-            props.setProperty("hoodie.datasource.hive_sync.jdbcurl", hiveMeta.getJdbcUrl());
-            props.setProperty("hoodie.datasource.hive_sync.mode", "jdbc");
+            if (StringUtils.isEmpty(hiveMeta.getMetaStoreUrls())) {
+                throw new IllegalStateException("hiveMeta:" + hiveMeta.identityValue() + " metaStoreUrls can not be empty");
+            }
+            // props.setProperty("hoodie.datasource.hive_sync.jdbcurl", hiveMeta.getMetaStoreUrls());
+            props.setProperty("hoodie.datasource.hive_sync.metastore.uris", hiveMeta.getMetaStoreUrls());
+
+            props.setProperty("hoodie.datasource.hive_sync.mode", "hms");
 
             props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.recordField);
             //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);

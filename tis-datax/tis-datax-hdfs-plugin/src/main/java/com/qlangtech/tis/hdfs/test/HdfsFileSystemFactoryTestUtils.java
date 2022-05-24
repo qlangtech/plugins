@@ -58,16 +58,21 @@ public class HdfsFileSystemFactoryTestUtils {
         formData.addProp("name", "testhiveConn");
         formData.addProp("hiveAddress", "hiveserver:10000");
 
-        formData.addProp("useUserToken", "true");
+        //formData.addProp("useUserToken", "true");
         formData.addProp("dbName", "default");
-        formData.addProp("password", "hive");
-        formData.addProp("userName", "hive");
+//        formData.addProp("password", "hive");
+//        formData.addProp("userName", "hive");
         formData.addProp("metaStoreUrls", "thrift://hiveserver:9083");
+
+        Descriptor.FormData userToken = new Descriptor.FormData();
+        userToken.addProp("userName", "root");
+        userToken.addProp("password", "123456");
+        formData.addSubForm("userToken", "com.qlangtech.tis.hive.impl.OffHiveUserToken", userToken);
 
 
         Descriptor.ParseDescribable<Describable> parseDescribable
                 = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
-       //IHiveConnGetter
+        //IHiveConnGetter
         Assert.assertNotNull(parseDescribable.getInstance());
 
         Assert.assertNotNull(parseDescribable.getInstance());

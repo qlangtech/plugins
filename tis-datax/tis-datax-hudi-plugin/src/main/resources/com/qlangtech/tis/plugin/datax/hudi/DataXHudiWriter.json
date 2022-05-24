@@ -77,5 +77,6 @@
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter.getDftTemplate()"
-  }
+  },
+  "fsName": {}
 }

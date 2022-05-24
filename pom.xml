@@ -73,7 +73,9 @@
                 <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>
             -->
         <!--    <hive.version>1.2.1</hive.version>    -->
-        <hive.version>2.3.1</hive.version>
+<!--        <hive.version>2.3.1</hive.version>-->
+
+        <hive.version>2.1.1</hive.version>
 
 
         <maven-tpi-plugin.classpathDependentExcludes>
@@ -220,14 +222,14 @@
                         <groupId>org.apache.hive</groupId>
                         <artifactId>hive-ant</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-metastore</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-shims</artifactId>
-                    </exclusion>
+<!--                    <exclusion>-->
+<!--                        <groupId>org.apache.hive</groupId>-->
+<!--                        <artifactId>hive-metastore</artifactId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>org.apache.hive</groupId>-->
+<!--                        <artifactId>hive-shims</artifactId>-->
+<!--                    </exclusion>-->
                     <exclusion>
                         <groupId>org.apache.calcite</groupId>
                         <artifactId>calcite-core</artifactId>

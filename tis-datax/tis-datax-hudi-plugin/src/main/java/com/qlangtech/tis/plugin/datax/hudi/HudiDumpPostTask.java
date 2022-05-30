@@ -308,7 +308,8 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.delete.shuffle.parallelism", (shuffleParallelism));
             props.setProperty("hoodie.bulkinsert.shuffle.parallelism", (shuffleParallelism));
             props.setProperty("hoodie.embed.timeline.server", "false");
-            props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
+            //props.setProperty("hoodie.filesystem.view.type", "EMBEDDED_KV_STORE");
+            props.setProperty("hoodie.filesystem.view.type", "MEMORY");
 
             // @see HoodieCompactionConfig.INLINE_COMPACT
             // props.setProperty("hoodie.compact.inline", (hudiTabType == HudiWriteTabType.MOR) ? "true" : "false");

@@ -81,7 +81,7 @@ public class CompileAndPackage implements ICompileAndPackage {
      * @throws Exception
      */
     @Override
-    public void process(Context context, IControlMsgHandler msgHandler
+    public File process(Context context, IControlMsgHandler msgHandler
             , String appName, Map<IDBNodeMeta, List<String>> dbNameMap, File sourceRoot, FileObjectsContext xmlConfigs) throws Exception {
         if (xmlConfigs == null) {
             throw new IllegalArgumentException("param xmlConfigs can not be null");
@@ -97,7 +97,7 @@ public class CompileAndPackage implements ICompileAndPackage {
         if (this.streamScriptCompile(sourceRoot, dbNameMap.keySet())) {
             msgHandler.addErrorMessage(context, "增量脚本编译失败");
             msgHandler.addFieldError(context, "incr_script_compile_error", "error");
-            return;
+            return null;
         }
         /**
          * *********************************************************************************
@@ -191,6 +191,7 @@ public class CompileAndPackage implements ICompileAndPackage {
             }
         }
 
+        return tpi;
 
 //        FileObjectsContext.packageJar(
 //

@@ -33,7 +33,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.net.URL;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.Optional;
 
 /**
@@ -52,6 +55,7 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
             if (!initializeDir) {
                 synchronized (TISHadoopFileSystemGetter.class) {
                     if (!initializeDir) {
+
                         // 初始化过程会在spark远端执行，此时dataDir可能还没有初始化，需要有一个初始化目录的过程
                         File dataDir = Config.getDataDir(false);
                         try {
@@ -60,40 +64,34 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                             throw new RuntimeException(e);
                         }
 
-                        //  try {
-                        // Integer taskId = Integer.parseInt(System.getenv(IParamContext.KEY_TASK_ID));
-                        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                        URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
-                        resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
-//                File mainifest = new File(().toURI());
-//                if (!mainifest.exists()) {
-//                    throw new IllegalStateException("mainifest file can is not exist:" + mainifest.getAbsolutePath());
-//                }
+                        File nodeExcludeLock = new File(dataDir, "initial.lock");
+                        FileUtils.touch(nodeExcludeLock);
+                        RandomAccessFile raf = new RandomAccessFile(nodeExcludeLock, "rw");
+                        try (FileChannel channel = raf.getChannel()) {
+                            // 服务器节点级别的排他
+                            try (FileLock fileLock = channel.tryLock()) {
+                                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                                URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
+                                resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
 
-                        try (InputStream mainifest = resource.openStream()) {
-                            PluginAndCfgsSnapshot remoteSnapshot
-                                    = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
-                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
-                            remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                                try (InputStream mainifest = resource.openStream()) {
+                                    PluginAndCfgsSnapshot remoteSnapshot
+                                            = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
+                                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
+                                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                                }
+                            }
                         }
+
+
+
+
                         initializeDir = true;
                     }
                 }
-                // System.out.println("dddddd:" + resource);
-                // LOG.info("dddddddddddddddddddd:" + resource);
-                // throw new IllegalStateException("dddddddddddddddddddd:" + resource);
-                //  initializeDir = true;
-                //            } catch (Exception ee) {
-                //                Map<String, String> getenv = System.getenv();
-                //                Properties properties = System.getProperties();
-                //
-                //                throw new RuntimeException(getenv.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n")) +
-                //                         "system props:\n" +
-                //                        properties.entrySet().stream().map((e) -> e.getKey() + ":" + e.getValue()).collect(Collectors.joining(",\n"))
-                //                        , ee);
-                //            }
             }
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -111,10 +109,12 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
         }
         try {
             return new Path(path).getFileSystem(configuration);
-        } catch (ClassCastException e) {
+        } catch (
+                ClassCastException e) {
             throw new RuntimeException(Configuration.class.getClassLoader()
                     + ",cast from:" + fsFactory.getConfiguration().getClass().getClassLoader(), e);
-        } catch (IOException e) {
+        } catch (
+                IOException e) {
             throw new RuntimeException("path:" + path, e);
         }
     }

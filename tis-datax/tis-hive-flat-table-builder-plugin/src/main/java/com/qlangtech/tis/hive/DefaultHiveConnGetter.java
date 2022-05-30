@@ -38,6 +38,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.thrift.TException;
@@ -114,7 +116,9 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 
     @Override
     public IHiveMetaStore createMetaStoreClient() {
+        final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+            Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
             HiveConf c = new HiveConf();
             c.set(HiveConf.ConfVars.METASTOREURIS.varname, this.metaStoreUrls);
             final IMetaStoreClient storeClient = Hive.get(c, false).getMSC();
@@ -122,8 +126,18 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                 @Override
                 public HiveTable getTable(String database, String tableName) {
                     try {
+                        // storeClient.getta
                         Table table = storeClient.getTable(database, tableName);
-                        return new HiveTable(table.getTableName());
+                        StorageDescriptor storageDesc = table.getSd();
+                        return new HiveTable(table.getTableName()) {
+                            @Override
+                            public String getStorageLocation() {
+                                return storageDesc.getLocation();
+                            }
+                        };
+                    } catch (NoSuchObjectException e) {
+                        logger.warn(database + "." + tableName + " is not exist in hive:" + metaStoreUrls);
+                        return null;
                     } catch (TException e) {
                         throw new RuntimeException(e);
                     }
@@ -134,8 +148,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                     storeClient.close();
                 }
             };
-        } catch (Exception e) {
+        } catch (
+                Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
     }
 

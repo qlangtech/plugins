@@ -20,8 +20,11 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.datax.hudi.BatchOpMode;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
@@ -34,6 +37,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-24 11:02
@@ -41,6 +48,12 @@ import org.slf4j.LoggerFactory;
 public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(StreamAPIStyleFlinkStreamScriptCreator.class);
+
+    /**
+     * 需要将路径中的时间戳抽取出来
+     * hdfs://namenode/user/admin/default/20220530153950/instancedetail/hudi
+     */
+    private static final Pattern PATTERN_EXEC_TIMESTAMP = Pattern.compile("/(\\d{14})/");
 
     public StreamAPIStyleFlinkStreamScriptCreator(HudiSinkFactory hudiSinkFactory) {
         super(hudiSinkFactory);
@@ -58,6 +71,8 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
 
     public class HudiStreamTemplateData extends AdapterStreamTemplateData {
         private final IDataXHudiWriter hudiWriter;
+
+        private final AtomicReference<String> dumpTimeStamp = new AtomicReference<>();
 
         public HudiStreamTemplateData(IStreamTemplateData data) {
             super(data);
@@ -82,7 +97,12 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             Pair<HudiSelectedTab, HudiTableMeta> tableMeta = sinkFuncFactory.getTableMeta(tabName);
             HudiSelectedTab hudiTab = tableMeta.getLeft();
             ITISFileSystem fs = hudiWriter.getFileSystem();
-            IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, sinkFuncFactory.dumpTimeStamp, hiveMeta);
+
+
+            final String dumpTimeStamp = getDumpTimeStamp(tabName, hiveMeta);
+
+
+            IPath dumpDir = HudiTableMeta.getDumpDir(fs, tabName, dumpTimeStamp, hiveMeta);
             // ITISFileSystem fs, IHiveConnGetter hiveConn, String tabName, String dumpTimeStamp
 
             script.appendLine("// table " + tabName + " relevant Flink config");
@@ -150,6 +170,28 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             // CompactionConfig compact = sinkFuncFactory.compaction;
             //   compact.triggerStrategy;
         }
+
+        private String getDumpTimeStamp(String tabName, IHiveConnGetter hiveMeta) {
+            return dumpTimeStamp.updateAndGet((pre) -> {
+                if (pre != null) {
+                    return pre;
+                }
+                try (IHiveMetaStore metaStore = hiveMeta.createMetaStoreClient()) {
+                    HiveTable table = metaStore.getTable(hiveMeta.getDbName(), tabName);
+                    if (table == null && hudiSinkFactory.baseOnBach) {
+                        throw new TisException("没有发现可用的批量导入记录，请先触发批量导入，或者您可以尝试将`baseOnBach`设置成`否`");
+                    }
+                    Matcher matcher = PATTERN_EXEC_TIMESTAMP.matcher(table.getStorageLocation());
+                    if (matcher.find()) {
+                        return matcher.group(1);
+                    } else {
+                        throw new IllegalStateException("storageLocation:" + table.getStorageLocation() + " not the pattern of:" + PATTERN_EXEC_TIMESTAMP);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(tabName, e);
+                }
+            });
+        }
     }
 
 
@@ -167,7 +209,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                     script.appendLine("cfg.hiveSyncPartitionExtractorClass = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS:
-                   // script.appendLine("cfg.partitionDefaultName = %s", val);
+                    // script.appendLine("cfg.partitionDefaultName = %s", val);
                     script.appendLine("cfg.hiveSyncPartitionFields = %s", val);
                     break;
                 case IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE:

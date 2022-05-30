@@ -28,7 +28,7 @@ import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.JobLog;
-import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
+//import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -66,51 +66,51 @@ public class TestHiveFlatTableBuilder extends TestCase {
         this.flatTableBuilderStore = TIS.getPluginStore(FlatTableBuilder.class);
     }
 
-    public void testTotalpaySummary() throws Exception {
-        HiveFlatTableBuilder flatTableBuilder = (HiveFlatTableBuilder) flatTableBuilderStore.getPlugin();
-
-
-//        ISqlTask nodeMeta, boolean isFinalNode
-//            , ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus
-
-        IFs2Table fs2Table = new MockFs2Table();
-        IJoinTaskStatus joinTaskStatus = EasyMock.createMock("joinTaskStatus", IJoinTaskStatus.class);
-        joinTaskStatus.setComplete(true);
-        joinTaskStatus.createJobStatus(EasyMock.anyInt());
-        JobLog jobLog = new JobLog();
-        EasyMock.expect(joinTaskStatus.getJoblog(EasyMock.anyInt())).andReturn(jobLog).anyTimes();
-        joinTaskStatus.setStart();
-
-
-        IJoinTaskContext joinTaskContext = EasyMock.createMock("joinTaskContext", IJoinTaskContext.class);
-
-        Map<IDumpTable, ITabPartition> dateParams = Maps.newHashMap();
-        EasyMock.expect(joinTaskContext.getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS)).andReturn(dateParams).anyTimes();
-        Map<String, Boolean> taskWorkStatus = Maps.newHashMap();
-        EasyMock.expect(joinTaskContext.getAttribute(AdapterTask.KEY_TASK_WORK_STATUS)).andReturn(taskWorkStatus);
-        ERRules erRules = EasyMock.createMock("erRules", ERRules.class);
-
-        EasyMock.expect(joinTaskContext.getAttribute("er_rules")).andReturn(erRules);
-
-        EasyMock.replay(joinTaskStatus, joinTaskContext, erRules);
-
-        MockTemplateContext tplContext = new MockTemplateContext(joinTaskContext);
-        flatTableBuilder.startTask((context) -> {
-            try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("groupby_totalpay.sql")) {
-                //     try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("totalpay_summary.sql")) {
-                ISqlTask sqlTask = new DefaultSqlTask(IOUtils.toString(input, TisUTF8.get()));
-
-//                ISqlTask nodeMeta, boolean isFinalNode
-//            , ITemplateContext tplContext, ITaskContext taskContext, //
-//                        IJoinTaskStatus joinTaskStatus
-
-                DataflowTask joinTask = flatTableBuilder.createTask(sqlTask, true, tplContext, context, joinTaskStatus);
-                joinTask.run();
-            }
-        });
-
-
-    }
+//    public void testTotalpaySummary() throws Exception {
+//        HiveFlatTableBuilder flatTableBuilder = (HiveFlatTableBuilder) flatTableBuilderStore.getPlugin();
+//
+//
+////        ISqlTask nodeMeta, boolean isFinalNode
+////            , ITemplateContext tplContext, ITaskContext taskContext, IFs2Table fs2Table, IJoinTaskStatus joinTaskStatus
+//
+//        IFs2Table fs2Table = new MockFs2Table();
+//        IJoinTaskStatus joinTaskStatus = EasyMock.createMock("joinTaskStatus", IJoinTaskStatus.class);
+//        joinTaskStatus.setComplete(true);
+//        joinTaskStatus.createJobStatus(EasyMock.anyInt());
+//        JobLog jobLog = new JobLog();
+//        EasyMock.expect(joinTaskStatus.getJoblog(EasyMock.anyInt())).andReturn(jobLog).anyTimes();
+//        joinTaskStatus.setStart();
+//
+//
+//        IJoinTaskContext joinTaskContext = EasyMock.createMock("joinTaskContext", IJoinTaskContext.class);
+//
+//        Map<IDumpTable, ITabPartition> dateParams = Maps.newHashMap();
+//        EasyMock.expect(joinTaskContext.getAttribute(ExecChainContextUtils.PARTITION_DATA_PARAMS)).andReturn(dateParams).anyTimes();
+//        Map<String, Boolean> taskWorkStatus = Maps.newHashMap();
+//      //  EasyMock.expect(joinTaskContext.getAttribute(AdapterTask.KEY_TASK_WORK_STATUS)).andReturn(taskWorkStatus);
+//        ERRules erRules = EasyMock.createMock("erRules", ERRules.class);
+//
+//        EasyMock.expect(joinTaskContext.getAttribute("er_rules")).andReturn(erRules);
+//
+//        EasyMock.replay(joinTaskStatus, joinTaskContext, erRules);
+//
+//        MockTemplateContext tplContext = new MockTemplateContext(joinTaskContext);
+//        flatTableBuilder.startTask((context) -> {
+//            try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("groupby_totalpay.sql")) {
+//                //     try (InputStream input = TestHiveFlatTableBuilder.class.getResourceAsStream("totalpay_summary.sql")) {
+//                ISqlTask sqlTask = new DefaultSqlTask(IOUtils.toString(input, TisUTF8.get()));
+//
+////                ISqlTask nodeMeta, boolean isFinalNode
+////            , ITemplateContext tplContext, ITaskContext taskContext, //
+////                        IJoinTaskStatus joinTaskStatus
+//
+//                DataflowTask joinTask = flatTableBuilder.createTask(sqlTask, true, tplContext, context, joinTaskStatus);
+//                joinTask.run();
+//            }
+//        });
+//
+//
+//    }
 
     private static class MockFs2Table implements IFs2Table {
         @Override

@@ -24,6 +24,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -32,6 +34,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.GroovyShellEvaluate;
@@ -52,6 +55,7 @@ import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.utils.TisMetaProps;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
@@ -80,8 +84,11 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
     @FormField(ordinal = 3, validate = {Validator.require})
     public ScriptType scriptType;
 
+    //    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String dumpTimeStamp;
+
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String dumpTimeStamp;
+    public Boolean baseOnBach;
 
     @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
     public String opType;
@@ -104,11 +111,25 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
 
 
     public static List<Option> getHistoryBatch() {
-        Describable sink = GroovyShellEvaluate.pluginThreadLocal.get();
-        if (sink != null && sink instanceof HudiSinkFactory) {
+
+        Map<Class<? extends Descriptor>, Describable> pluginThreadLocal
+                = GroovyShellEvaluate.pluginThreadLocal.get();
+
+        Describable sink = null;
+        if ((sink = pluginThreadLocal.get(DefaultSinkFunctionDescriptor.class)) != null
+                && sink instanceof HudiSinkFactory) {
             try {
                 IDataXHudiWriter dataXWriter = getDataXHudiWriter((HudiSinkFactory) sink);
-                return HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
+                IHiveConnGetter hiveMeta = dataXWriter.getHiveConnMeta();
+                try (IHiveMetaStore metaStoreClient = hiveMeta.createMetaStoreClient()) {
+                    //  metaStoreClient.getTable();
+                }
+
+
+                List<Option> batchs = HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
+                if (!CollectionUtils.isEmpty(batchs)) {
+                    return batchs;
+                }
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
             }
@@ -121,7 +142,6 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
     public static IDataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
         return (IDataXHudiWriter) DataxWriter.load(null, sink.dataXName);
     }
-
 
 
     @Override
@@ -197,7 +217,6 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
      * start implements IStreamTableCreator
      * ------------------------------------------------------------------------------
      */
-
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
         return getStreamTableCreator().getStreamTableMeta(tableName);
@@ -224,7 +243,6 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
 
 
     /**
-     *
      * ------------------------------------------------------------------------------
      * End implements IStreamTableCreator
      * ------------------------------------------------------------------------------

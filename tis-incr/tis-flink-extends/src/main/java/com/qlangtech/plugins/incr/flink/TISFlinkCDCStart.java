@@ -80,8 +80,10 @@ public class TISFlinkCDCStart {
         TargetResName name = new TargetResName(dataxName);
         final String streamSourceHandlerClass = name.getStreamSourceHandlerClass();
         // final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
+       // TIS.get().extensionLists.clear(BasicFlinkSourceHandle.class);
         ExtensionList<BasicFlinkSourceHandle> flinkSourceHandles = TIS.get().getExtensionList(BasicFlinkSourceHandle.class);
+        flinkSourceHandles.removeExtensions();
+        logger.info("start to load extendsion of "+ BasicFlinkSourceHandle.class.getSimpleName());
         List<String> candidatePluginClasses = Lists.newArrayList();
         Optional<BasicFlinkSourceHandle> handle = flinkSourceHandles.stream().filter((p) -> {
             candidatePluginClasses.add(p.getClass().getName());

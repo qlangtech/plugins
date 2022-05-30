@@ -19,18 +19,26 @@
 package com.qlangtech.plugins.incr.flink;
 //import org.apache.flink.test.util.AbstractTestBase;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
+import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.java.FileObjectsContext;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.extension.RestartRequiredException;
+import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -38,16 +46,19 @@ import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.stream.generate.StreamComponentCodeGenerator;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.XStream2;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
@@ -66,9 +77,81 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     @BeforeClass
     public static void beforeClass() {
         CenterResource.setNotFetchFromCenterRepository();
+    }
+
+    /**
+     * 测试 动态更新uber tpi包，动态生效
+     *
+     * @throws Throwable
+     */
+    @Test
+    public void testFlinkSourceHandleDynamicUpdate() throws Throwable {
+
+        // /opt/data/tis/cfg_repo/streamscript/hudi3/20220527113451
+
+        HudiSinkFactory sinkFactory = new HudiSinkFactory();
+        ICompileAndPackage compileAndPkg = sinkFactory.getCompileAndPackageManager();
+
+        Context context = mock("context", Context.class);
+        IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
+
+//        Context context, IControlMsgHandler msgHandler
+//                , String appName, Map< IDBNodeMeta, List<String>> dbNameMap, File sourceRoot, FileObjectsContext xmlConfigs
+
+
+        File sourceRoot = folder.newFolder("sourceRoot"); // new File("/opt/data/tis/cfg_repo/streamscript/hudi3/20220527113451");
+        // /opt/data/tis/cfg_repo/streamscript/hudi3/20220527113451/src/main/scala/com/qlangtech/tis/realtime/transfer/hudi3/Hudi3Listener.scala
+        this.replay();
+        dynamicLoadUberTpi("Hudi3SourceHandle_source1.scala", compileAndPkg, context, msgHandler, sourceRoot);
+
+
+        BasicFlinkSourceHandle hudiHandle
+                = TISFlinkCDCStart.createFlinkSourceHandle(dataxName.getName());
+
+        Assert.assertNotNull(hudiHandle);
+
+        Long ver = (Long) MethodUtils.invokeExactMethod(hudiHandle, "getVer", null);
+        Assert.assertEquals("the first version compare", new Long(1), ver);
+        // System.out.println(ver);
+
+
+//        ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
+//                + "/" + dataxName.getName() + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(dataxName.getName()));
+        ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
+        dynamicLoadUberTpi("Hudi3SourceHandle_source2.scala", compileAndPkg, context, msgHandler, sourceRoot);
+
+        hudiHandle
+                = TISFlinkCDCStart.createFlinkSourceHandle(dataxName.getName());
+        Assert.assertNotNull(hudiHandle);
+
+        ver = (Long) MethodUtils.invokeExactMethod(hudiHandle, "getVer", null);
+        Assert.assertEquals("the second version compare", new Long(2), ver);
+
+        this.verifyAll();
+    }
+
+    private void dynamicLoadUberTpi(String resourceName, ICompileAndPackage compileAndPkg
+            , Context context, IControlMsgHandler msgHandler, File sourceRoot) throws Exception, RestartRequiredException {
+        FileUtils.write(new File(sourceRoot, "src/main/scala/com/qlangtech/tis/realtime/transfer/"
+                        + dataxName.getName() + "/" + UnderlineUtils.getJavaName(dataxName.getName()) + "Listener.scala")
+                , IOUtils.loadResourceFromClasspath(TestTISFlinkCDCStart.class, resourceName), TisUTF8.get(), false);
+
+        FileObjectsContext objsContext = new FileObjectsContext();
+        File pkgTpi = compileAndPkg.process(context, msgHandler, dataxName.getName(), Maps.newHashMap(), sourceRoot, objsContext);
+
+        Assert.assertTrue("pkgTpi.exists()", pkgTpi.exists());
+
+        XStream2.PluginMeta flinkPluginMeta
+                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
+                , Config.getMetaProps().getVersion());
+
+        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.getPluginName(), pkgTpi, true, null);
     }
 
     @Test
@@ -77,11 +160,16 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
         //String table1 = "totalpayinfo";
         // String table1  ="instancedetail";
         String table1 = "base";
-        String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
-        File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
-        pluginDir = pluginDir.toPath().normalize().toFile();
+        //  String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
+        //   File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
+        //  pluginDir = pluginDir.toPath().normalize().toFile();
 
-        TIS.get().pluginManager.dynamicLoad(shortName, pluginDir, true, null);
+
+        XStream2.PluginMeta flinkPluginMeta
+                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
+                , Config.getMetaProps().getVersion());
+
+        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.getPluginName(), flinkPluginMeta.getPluginPackageFile(), true, null);
         // IDataxProcessor processor = this.mock("dataXprocess", IDataxProcessor.class);
 
         BasicFlinkSourceHandle hudiHandle

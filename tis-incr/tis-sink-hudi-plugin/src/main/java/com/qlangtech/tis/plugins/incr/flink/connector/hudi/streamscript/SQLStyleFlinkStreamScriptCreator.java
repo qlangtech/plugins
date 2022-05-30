@@ -142,7 +142,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                         sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + hudiSinkFactory.getDataXName() + "',");
                         sub.appendLine("'connector' = 'hudi',");
                         sub.appendLine("'path' = '" + HudiTableMeta.getHudiDataDir(
-                                dataXWriter.getFileSystem(), tableName, hudiSinkFactory.dumpTimeStamp, dataXWriter.getHiveConnMeta()) + "',");
+                                dataXWriter.getFileSystem(), tableName, "", dataXWriter.getHiveConnMeta()) + "',");
                         sub.appendLine("'table.type' = '" + tabMeta.getHudiTabType().getValue() + "',");
 
                         //                        IPath fsSourceSchemaPath = HudiTableMeta.createFsSourceSchema(

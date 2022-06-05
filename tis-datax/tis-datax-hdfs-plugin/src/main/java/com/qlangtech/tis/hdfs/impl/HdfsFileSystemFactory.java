@@ -19,16 +19,20 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
+import com.qlangtech.tis.kerberos.KerberosCfg;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -65,6 +69,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @FormField(ordinal = 7, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
+
+    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, validate = {})
+    public String kerberos;
+
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String hdfsSiteContent;
@@ -122,6 +130,13 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             conf.set("hadoop.job.ugi", "admin");
             // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
             conf.setBoolean("fs.hdfs.impl.disable.cache", false);
+
+            if (StringUtils.isNotEmpty(this.kerberos)) {
+                Logger.info("kerberos has been enabled,name:" + this.kerberos);
+                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
+                kerberosCfg.setConfiguration(conf);
+            }
+
             conf.reloadConfiguration();
             return conf;
         } catch (Exception e) {
@@ -244,7 +259,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @TISExtension(ordinal = 0)
     public static class DefaultDescriptor extends Descriptor<FileSystemFactory> {
-
+        public DefaultDescriptor() {
+            super();
+            this.registerSelectOptions(IKerberos.IDENTITY, () -> ParamsConfig.getItems(IKerberos.IDENTITY));
+        }
 
         @Override
         public String getDisplayName() {

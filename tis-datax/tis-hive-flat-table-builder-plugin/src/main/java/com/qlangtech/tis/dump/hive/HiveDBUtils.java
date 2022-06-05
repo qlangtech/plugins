@@ -18,12 +18,16 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserToken;
+import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
+import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
+import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
+import com.qlangtech.tis.kerberos.KerberosCfg;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingStatement;
 import org.apache.commons.lang.StringUtils;
@@ -79,7 +83,7 @@ public class HiveDBUtils {
         return getInstance(hiveHost, defaultDbName, Optional.empty());
     }
 
-    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
@@ -100,12 +104,12 @@ public class HiveDBUtils {
 //        }
 //    }
 
-    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
+    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<IHiveUserToken> userToken) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -123,10 +127,30 @@ public class HiveDBUtils {
         hiveDatasource.setRemoveAbandoned(true);
         hiveDatasource.setLogAbandoned(true);
         hiveDatasource.setRemoveAbandonedTimeout(300 * 30);
+
+        if (StringUtils.isBlank(hiveHost)) {
+            throw new IllegalStateException("hivehost can not be null");
+        }
+        // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
+        StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
+
         if (userToken.isPresent()) {
-            IHiveUserToken ut = userToken.get();
-            hiveDatasource.setUsername(ut.getUserName());
-            hiveDatasource.setPassword(ut.getPassword());
+            userToken.get().accept(new IHiveUserTokenVisitor() {
+                @Override
+                public void visit(DefaultHiveUserToken ut) {
+                    hiveDatasource.setUsername(ut.userName);
+                    hiveDatasource.setPassword(ut.password);
+                }
+
+                @Override
+                public void visit(KerberosUserToken token) {
+                    KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+                    jdbcUrl.append(";principal=")
+                            .append(kerberosCfg.principal)
+                            .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+                }
+            });
+
         }
         // 测试空闲的连接是否有效
         hiveDatasource.setTestWhileIdle(true);
@@ -134,7 +158,7 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        hiveJdbcUrl = IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName;
+        hiveJdbcUrl = jdbcUrl.toString();
         hiveDatasource.setUrl(hiveJdbcUrl);
         log.info("hiveJdbcUrl:" + hiveJdbcUrl);
         return hiveDatasource;

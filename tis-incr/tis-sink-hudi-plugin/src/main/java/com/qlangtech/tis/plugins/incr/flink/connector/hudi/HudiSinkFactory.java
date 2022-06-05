@@ -110,34 +110,34 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
     }
 
 
-    public static List<Option> getHistoryBatch() {
-
-        Map<Class<? extends Descriptor>, Describable> pluginThreadLocal
-                = GroovyShellEvaluate.pluginThreadLocal.get();
-
-        Describable sink = null;
-        if ((sink = pluginThreadLocal.get(DefaultSinkFunctionDescriptor.class)) != null
-                && sink instanceof HudiSinkFactory) {
-            try {
-                IDataXHudiWriter dataXWriter = getDataXHudiWriter((HudiSinkFactory) sink);
-                IHiveConnGetter hiveMeta = dataXWriter.getHiveConnMeta();
-                try (IHiveMetaStore metaStoreClient = hiveMeta.createMetaStoreClient()) {
-                    //  metaStoreClient.getTable();
-                }
-
-
-                List<Option> batchs = HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
-                if (!CollectionUtils.isEmpty(batchs)) {
-                    return batchs;
-                }
-            } catch (Exception e) {
-                logger.warn(e.getMessage(), e);
-            }
-        }
-
-        return Lists.newArrayList(new Option(IParamContext.getCurrentTimeStamp()));
-
-    }
+//    public static List<Option> getHistoryBatch() {
+//
+//        Map<Class<? extends Descriptor>, Describable> pluginThreadLocal
+//                = GroovyShellEvaluate.pluginThreadLocal.get();
+//
+//        Describable sink = null;
+//        if ((sink = pluginThreadLocal.get(DefaultSinkFunctionDescriptor.class)) != null
+//                && sink instanceof HudiSinkFactory) {
+//            try {
+//                IDataXHudiWriter dataXWriter = getDataXHudiWriter((HudiSinkFactory) sink);
+//                IHiveConnGetter hiveMeta = dataXWriter.getHiveConnMeta();
+//                try (IHiveMetaStore metaStoreClient = hiveMeta.createMetaStoreClient()) {
+//                    //  metaStoreClient.getTable();
+//                }
+//
+//
+//                List<Option> batchs = HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
+//                if (!CollectionUtils.isEmpty(batchs)) {
+//                    return batchs;
+//                }
+//            } catch (Exception e) {
+//                logger.warn(e.getMessage(), e);
+//            }
+//        }
+//
+//        return Lists.newArrayList(new Option(IParamContext.getCurrentTimeStamp()));
+//
+//    }
 
     public static IDataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
         return (IDataXHudiWriter) DataxWriter.load(null, sink.dataXName);

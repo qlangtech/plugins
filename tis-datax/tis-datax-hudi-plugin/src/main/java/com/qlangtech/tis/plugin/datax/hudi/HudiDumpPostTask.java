@@ -20,8 +20,11 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
+import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserToken;
+import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
+import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
+import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -332,7 +335,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.datasource.hive_sync.table", this.hudiTab.getName());
 
             if (this.hudiTab.partition == null) {
-                throw new IllegalStateException("hudiPlugin.partitionedBy can not be empty");
+                throw new IllegalStateException(this.hudiTab.getName() + " relevant hudiPlugin.partitionedBy can not be empty");
             }
 
             this.hudiTab.partition.setProps(props, this.hudiWriter);
@@ -342,11 +345,24 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //            props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class"
 //                    , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
 
-            Optional<IHiveUserToken> hiveUserToken = hiveMeta.getUserToken();
+            Optional<HiveUserToken> hiveUserToken = hiveMeta.getUserToken();
             if (hiveUserToken.isPresent()) {
-                IHiveUserToken token = hiveUserToken.get();
-                props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
-                props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
+                hiveUserToken.get().accept(new IHiveUserTokenVisitor() {
+                    @Override
+                    public void visit(KerberosUserToken token) {
+
+                    }
+
+                    @Override
+                    public void visit(DefaultHiveUserToken token) {
+                        props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
+                        props.setProperty("hoodie.datasource.hive_sync.password", token.password);
+                    }
+                });
+
+//
+//                IHiveUserToken token = hiveUserToken.get();
+
             }
             if (StringUtils.isEmpty(hiveMeta.getMetaStoreUrls())) {
                 throw new IllegalStateException("hiveMeta:" + hiveMeta.identityValue() + " metaStoreUrls can not be empty");

@@ -25,5 +25,17 @@
     "style": "codemirror",
     "mode": "application/xml",
     "dftVal": "com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory.dftHdfsSiteContent()"
+  },
+  "kerberos": {
+    "help": "开启kerberos客户端认证",
+    "creator": {
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "kerberos"
+        }
+      ],
+      "label": "配置"
+    }
   }
 }

@@ -21,8 +21,10 @@ package com.qlangtech.tis.hive;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserToken;
+import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
+import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -119,9 +121,21 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
-            HiveConf c = new HiveConf();
-            c.set(HiveConf.ConfVars.METASTOREURIS.varname, this.metaStoreUrls);
-            final IMetaStoreClient storeClient = Hive.get(c, false).getMSC();
+            HiveConf hiveCfg = new HiveConf();
+            hiveCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, this.metaStoreUrls);
+
+            Optional<HiveUserToken> userToken = getUserToken();
+            if (userToken.isPresent()) {
+                HiveUserToken hiveToken = userToken.get();
+                hiveToken.accept(new IHiveUserTokenVisitor() {
+                    @Override
+                    public void visit(KerberosUserToken token) {
+                        token.getKerberosCfg().setConfiguration(hiveCfg);
+                    }
+                });
+            }
+
+            final IMetaStoreClient storeClient = Hive.get(hiveCfg, false).getMSC();
             return new IHiveMetaStore() {
                 @Override
                 public HiveTable getTable(String database, String tableName) {
@@ -156,20 +170,49 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         }
     }
 
-    @Override
-    public Optional<IHiveUserToken> getUserToken() {
+    // @Override
+    public Optional<HiveUserToken> getUserToken() {
 //        return this.useUserToken
 //                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
         if (this.userToken == null) {
             throw new IllegalStateException("hive userToken can not be null");
         }
-        return Optional.ofNullable(this.userToken.createToken());
+        return Optional.ofNullable(this.userToken);
     }
 
 
     @Override
     public String getJdbcUrl() {
         return IHiveConnGetter.HIVE2_JDBC_SCHEMA + this.hiveAddress;
+
+//        Objects.requireNonNull(userToken, "userToken can not be null").accept(new IHiveUserTokenVisitor() {
+//            @Override
+//            public void visit(DefaultHiveUserToken token) {
+//
+//            }
+//
+//            @Override
+//            public void visit(KerberosUserToken token) {
+//                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+//                jdbcUrl.append(";principal=")
+//                        .append(kerberosCfg.principal)
+//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+//            }
+//        });
+//
+//        if (userToken.isPresent()) {
+//            userToken.get().accept(new IHiveUserTokenVisitor() {
+//                @Override
+//                public void visit(DefaultHiveUserToken ut) {
+//                    hiveDatasource.setUsername(ut.userName);
+//                    hiveDatasource.setPassword(ut.password);
+//                }
+//
+//
+//            });
+//
+//        }
+
     }
 
     @TISExtension()

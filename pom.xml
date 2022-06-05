@@ -60,11 +60,10 @@
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
-
-
     </modules>
 
     <properties>
+        <spark2.version>2.4.4</spark2.version>
         <hudi.version>0.10.1</hudi.version>
         <!--        <revision>2.3.0</revision>-->
 

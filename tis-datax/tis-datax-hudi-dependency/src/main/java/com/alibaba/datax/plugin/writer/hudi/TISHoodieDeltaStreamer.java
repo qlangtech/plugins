@@ -20,8 +20,11 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
 import com.gilt.logback.flume.tis.TisFlumeLogstashV1Appender;
+import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
+import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
@@ -52,6 +55,7 @@ import org.slf4j.MDC;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -116,12 +120,23 @@ public class TISHoodieDeltaStreamer implements Serializable {
             Configuration hadoopCfg = jssc.hadoopConfiguration();
             FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();
             hadoopCfg.addResource(fs.getConf());
+            IHiveConnGetter hiveConnMeta = ((IHiveConn) writerPlugin).getHiveConnMeta();
             hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
-                    , ((IHiveConn) writerPlugin).getHiveConnMeta().getMetaStoreUrls());
+                    , hiveConnMeta.getMetaStoreUrls());
             // hadoopCfg.set(HiveConf.ConfVars.METASTORE_FASTPATH.varname, "false");
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
             TISHadoopFileSystemGetter.initializeDir = true;
+            Optional<HiveUserToken> userToken = hiveConnMeta.getUserToken();
+            if (userToken.isPresent()) {
+                HiveUserToken hiveToken = userToken.get();
+                hiveToken.accept(new IHiveUserTokenVisitor() {
+                    @Override
+                    public void visit(KerberosUserToken token) {
+                        token.getKerberosCfg().setConfiguration(hadoopCfg);
+                    }
+                });
+            }
             new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
             LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync success");
             success = true;

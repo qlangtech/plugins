@@ -37,7 +37,7 @@
         <tag>HEAD</tag>
     </scm>
     <properties>
-        <spark2.version>2.4.4</spark2.version>
+
     </properties>
     <modules>
         <module>tis-datax-common-plugin</module>

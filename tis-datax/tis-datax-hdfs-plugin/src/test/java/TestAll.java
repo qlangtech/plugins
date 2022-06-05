@@ -16,22 +16,25 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.hdfs.impl.TestHdfsFileSystemFactory;
+import com.qlangtech.tis.kerberos.TestKerberosCfg;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
+
 //import com.qlangtech.tis.plugin.datax.TestDataXHdfsReader;
 //import com.qlangtech.tis.plugin.datax.TestDataXHdfsWriter;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-22 16:19
  **/
-public class TestAll extends TestCase {
+@RunWith(Suite.class)
+@Suite.SuiteClasses({TestKerberosCfg.class})
+public class TestAll {
 
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestHdfsFileSystemFactory.class);
+//    public static Test suite() {
+//        TestSuite suite = new TestSuite();
+//        suite.addTestSuite(TestHdfsFileSystemFactory.class);
+
 
         //suite.addTestSuite(TestHiveRemoveHistoryDataTask.class);
 //        suite.addTestSuite(TestDataXHdfsReader.class);
@@ -40,6 +43,6 @@ public class TestAll extends TestCase {
 //        suite.addTestSuite(TestHiveInsertFromSelectParser.class);
 //        suite.addTestSuite(TestHiveDBUtils.class);
         // suite.addTestSuite(TestYarnTableDumpFactory.class);
-        return suite;
-    }
+//        return suite;
+//    }
 }

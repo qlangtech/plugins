@@ -37,7 +37,6 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -120,12 +119,11 @@ public class TestDataXHudiWriter {
     }
 
 
-
     // @Ignore
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
-       // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
+        // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
         String tableFullTypes = "full_types";
         TargetResName dbName = new TargetResName("hudi-data-test-mysql-ds");
 
@@ -172,8 +170,8 @@ public class TestDataXHudiWriter {
         hudiTab.partition = pt;
 
         hudiTab.setCols(fullTypesCols);
-        hudiTab.recordField = pk.get().getKey();
-        hudiTab.sourceOrderingField = hudiTab.recordField;
+        hudiTab.recordField = Lists.newArrayList(pk.get().getKey());
+        hudiTab.sourceOrderingField = hudiTab.recordField.get(0);
         List<HudiSelectedTab> tabs = Collections.singletonList(hudiTab);
         dataxReader.selectedTabs = tabs;
 //        List<Descriptor.ParseDescribable<HudiSelectedTab>> dlist = Lists.newArrayList();

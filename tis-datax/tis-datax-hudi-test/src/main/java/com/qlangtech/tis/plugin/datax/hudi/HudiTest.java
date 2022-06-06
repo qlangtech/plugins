@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -85,7 +86,7 @@ public class HudiTest {
         tab.name = WriterTemplate.TAB_customer_order_relation;
         tab.partition = partition;
         tab.sourceOrderingField = "last_ver";
-        tab.recordField = "customerregister_id";
+        tab.recordField = Lists.newArrayList("customerregister_id");
 
 
         return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(tab)), tab);

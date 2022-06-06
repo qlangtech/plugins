@@ -28,8 +28,10 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -43,7 +45,7 @@ public class HudiSelectedTab extends SelectedTab {
 
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String recordField;
+    public List<String> recordField;
 
     @FormField(ordinal = 2, validate = {Validator.require})
     public HudiTablePartition partition;
@@ -51,6 +53,13 @@ public class HudiSelectedTab extends SelectedTab {
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String sourceOrderingField;
 
+
+    public String getLiteriaRecordFields() {
+        if (CollectionUtils.isEmpty(recordField)) {
+            throw new IllegalStateException("recordField can not be empty");
+        }
+        return this.recordField.stream().collect(Collectors.joining(","));
+    }
 
     /**
      * 主键候选字段
@@ -103,11 +112,17 @@ public class HudiSelectedTab extends SelectedTab {
                 success = false;
             }
 
-            if (!tab.containCol(tab.recordField)) {
-                msgHandler.addFieldError(context, KEY_RECORD_FIELD
-                        , "'" + tab.recordField + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
-                success = false;
+            if (tab.recordField != null) {
+                for (String field : tab.recordField) {
+                    if (!tab.containCol(field)) {
+                        msgHandler.addFieldError(context, KEY_RECORD_FIELD
+                                , "'" + field + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");
+                        success = false;
+                        break;
+                    }
+                }
             }
+
 
             return success;
         }

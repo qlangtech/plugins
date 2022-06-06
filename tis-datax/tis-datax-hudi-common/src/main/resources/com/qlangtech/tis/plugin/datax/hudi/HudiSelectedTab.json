@@ -5,6 +5,7 @@
   },
   "recordField": {
     "label": "主键",
+    "enumMode": "multiple",
     "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPrimaryKeys():uncache_true"
   },
   "sourceOrderingField": {

@@ -372,7 +372,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
             props.setProperty("hoodie.datasource.hive_sync.mode", "hms");
 
-            props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.recordField);
+            props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.getLiteriaRecordFields());
             //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
 
             props.store(write);

@@ -27,7 +27,9 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.AttrValMap;
+import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.easymock.EasyMock;
@@ -42,6 +44,18 @@ import java.util.Stack;
  * @create: 2022-03-14 11:46
  **/
 public class TestHudiSelectedTab {
+
+
+    @Test
+    public void testDescGenerate() {
+        HudiSelectedTab hudiTab = new HudiSelectedTab();
+        DescriptorsJSON descJson = new DescriptorsJSON(hudiTab.getDescriptor());
+
+        JsonUtil.assertJSONEqual(HudiSelectedTab.class, "hudi-selected-tab-descriptor.json"
+                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+                    Assert.assertEquals(m, e, a);
+                });
+    }
 
     /**
      * recordField 中选择了 base_id 但是在 col中没有选择该列 <br/>

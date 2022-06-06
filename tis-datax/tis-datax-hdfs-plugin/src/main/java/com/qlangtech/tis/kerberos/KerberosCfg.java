@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.kerberos;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
@@ -26,6 +27,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.ITmpFileStore;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -33,6 +35,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,7 +57,7 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
 
     @Override
     public String getStoreFileName() {
-        return this.keytabPath;
+        return this.name + "_" + this.keytabPath;
     }
 
     public File getKeyTabPath() {
@@ -102,8 +106,8 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
             throw new IllegalStateException("prop principal can not be null");
         }
 
-        File keytab = new File(keytabPath);
-        if (StringUtils.isEmpty(keytabPath) || !keytab.exists()) {
+        File keytab = this.getKeyTabPath();
+        if (!keytab.exists()) {
             throw new IllegalStateException("keytabPath can is not exist:" + keytabPath);
         }
         try {
@@ -130,9 +134,29 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+        private static final Pattern PATTERN_Principal = Pattern.compile(".+?/.+?@.+?");
+
         @Override
         public String getDisplayName() {
             return IKerberos.IDENTITY;
+        }
+
+        /**
+         * format must be : username/fully.qualified.domain.name@YOUR_REALM.COM
+         *
+         * @param msgHandler
+         * @param context
+         * @param fieldName
+         * @param value
+         * @return
+         */
+        public boolean validatePrincipal(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Matcher matcher = PATTERN_Principal.matcher(value);
+            if (!matcher.matches()) {
+                msgHandler.addFieldError(context, fieldName, "格式必须为:" + PATTERN_Principal.toString());
+                return false;
+            }
+            return true;
         }
     }
 

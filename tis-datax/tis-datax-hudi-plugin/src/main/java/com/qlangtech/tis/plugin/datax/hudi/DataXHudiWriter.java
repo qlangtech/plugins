@@ -347,7 +347,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         public String getRecordField() {
-            return this.hudiTab.recordField;
+            return this.hudiTab.getLiteriaRecordFields();
         }
 
 //        public String getPartitionPathField() {

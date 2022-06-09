@@ -3,13 +3,10 @@
     "label": "分区策略",
     "dftVal": "off"
   },
-  "recordField": {
-    "label": "主键",
-    "enumMode": "multiple",
-    "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPrimaryKeys():uncache_true"
-  },
   "sourceOrderingField": {
     "label": "去重字段",
     "enum": "com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.getPartitionKeys():uncache_true"
+  },
+  "keyGenerator": {
   }
 }

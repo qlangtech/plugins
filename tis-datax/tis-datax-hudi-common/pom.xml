@@ -37,6 +37,28 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hudi-common-shade</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hudi</groupId>
+                    <artifactId>hudi-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hudi</groupId>
+                    <artifactId>hudi-client-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hudi</groupId>
+                    <artifactId>hudi-spark-common_${scala.binary.version}</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>

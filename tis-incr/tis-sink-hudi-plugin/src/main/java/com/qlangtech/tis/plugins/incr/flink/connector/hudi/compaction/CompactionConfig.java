@@ -38,28 +38,28 @@ public class CompactionConfig implements Describable<CompactionConfig> {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String payloadClass;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer targetIOPerInMB;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String triggerStrategy;
 
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer maxNumDeltaCommitsBefore;
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer maxDeltaSecondsBefore;
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean asyncClean;
 
-    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer retainCommits;
 
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer archiveMinCommits;
 
-    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer archiveMaxCommits;
 
 //            HoodieCompactionConfig.newBuilder()

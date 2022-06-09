@@ -19,20 +19,17 @@
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
+import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorOptions;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
-import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,30 +43,33 @@ import java.util.Optional;
 @Public
 public class FieldValBasedPartition extends HudiTablePartition {
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String partitionPathField;
+//    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String partitionPathField;
 
     @Override
     public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        if (StringUtils.isEmpty(this.partitionPathField)) {
+
+        if (CollectionUtils.isEmpty(keyGenerator.getPartitionPathFields())) {
             throw new IllegalStateException("partitionPathField can not be empty");
         }
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
+
+        // props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, keyGenerator.getLiteriaPartitionPathFields());
+        props.setProperty(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key(), keyGenerator.getLiteriaPartitionPathFields());
         setHiveSyncPartitionProps(props
                 , hudiWriter
                 , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
+
     }
 
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
         appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
-
     }
 
-    @Override
-    protected String getWriteKeyGeneratorType() {
-        return KeyGeneratorType.SIMPLE.name();
-    }
+//    @Override
+//    protected String getWriteKeyGeneratorType() {
+//        return KeyGeneratorType.SIMPLE.name();
+//    }
 
     public static List<Option> getPtCandidateFields() {
         return HudiSelectedTab.getPartitionKeys();

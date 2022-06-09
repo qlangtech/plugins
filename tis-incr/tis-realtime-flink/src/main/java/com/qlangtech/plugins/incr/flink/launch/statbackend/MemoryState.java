@@ -40,10 +40,10 @@ public class MemoryState extends StateBackendFactory {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean latencyTrackEnable;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER,advance = true, validate = {Validator.integer, Validator.require})
     public Integer trackSampleInterval;
 
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER,advance = true, validate = {Validator.integer, Validator.require})
     public Integer trackHistorySize;
 
     @Override

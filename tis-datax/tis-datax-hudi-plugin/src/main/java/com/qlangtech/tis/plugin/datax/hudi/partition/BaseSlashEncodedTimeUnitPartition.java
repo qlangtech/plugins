@@ -24,12 +24,10 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
-import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
-import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.HudiTimestampBasedKeyGenerator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -44,8 +42,6 @@ import java.util.Optional;
  **/
 public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartition {
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String partitionPathField;
 
 //    @FormField(ordinal = 2, validate = {Validator.require})
 //    public HudiKeyGenerator keyGenerator;
@@ -60,7 +56,7 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 //            "hoodie.deltastreamer.keygen.timebased.input.dateformat";
 
     // format 可以填写多个，并且用逗号分割
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, advance = true, validate = {})
     public String inputDateformat;
 
     //    public static final String TIMESTAMP_INPUT_DATE_FORMAT_LIST_DELIMITER_REGEX_PROP = "hoodie.deltastreamer.keygen.timebased.input.dateformat.list.delimiter.regex";
@@ -75,27 +71,28 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
     //    //still keeping this prop for backward compatibility so that functionality for existing users does not break.
 //    public static final String TIMESTAMP_TIMEZONE_FORMAT_PROP =
 //            "hoodie.deltastreamer.keygen.timebased.timezone";
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String timezone;
 
 
     @Override
     public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.partitionPathField);
+
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.keyGenerator.getLiteriaPartitionPathFields());
         setHiveSyncPartitionProps(props, hudiWriter, getPartitionExtractorClass());
 //        if (keyGenerator == null) {
 //            throw new IllegalStateException("keyGenerator can not be null");
 //        }
 
         HudiTimestampBasedKeyGenerator keyGenerator = getHudiTimestampBasedKeyGenerator();
-      //  this.setKeyGeneratorType(props, keyGenerator.getKeyGeneratorType().name());
+        //  this.setKeyGeneratorType(props, keyGenerator.getKeyGeneratorType().name());
         keyGenerator.setProps(props);
     }
 
-    @Override
-    protected String getWriteKeyGeneratorType() {
-        return getHudiTimestampBasedKeyGenerator().getKeyGeneratorType().name();
-    }
+//    @Override
+//    protected String getWriteKeyGeneratorType() {
+//        return getHudiTimestampBasedKeyGenerator().getKeyGeneratorType().name();
+//    }
 
     protected abstract String getPartitionExtractorClass();
 
@@ -114,21 +111,6 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
         appendPartitionsOnSQLDDL(pts, createTableSqlBuilder);
-    }
-
-    public static List<Option> getPtCandidateFields() {
-        return HudiSelectedTab.getContextTableCols((cols) -> cols.stream()
-                .filter((col) -> {
-                    switch (col.getType().getCollapse()) {
-                        // case STRING:
-                        case INT:
-                        case Long:
-                        case Date:
-                            return true;
-                    }
-                    return false;
-                }));
-
     }
 
 

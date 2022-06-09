@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.*;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
 import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
@@ -31,16 +31,12 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -63,6 +59,15 @@ public class HudiTimestampBasedKeyGenerator extends HudiKeyGenerator {
         return KeyGeneratorType.TIMESTAMP;
     }
 
+    @Override
+    public List<String> getRecordFields() {
+        return Collections.singletonList(this.recordField);
+    }
+
+    @Override
+    public List<String> getPartitionPathFields() {
+        return Collections.singletonList(this.partitionPathField);
+    }
 
     //    // One value from TimestampType above
 //    public static final String TIMESTAMP_TYPE_FIELD_PROP = "hoodie.deltastreamer.keygen.timebased.timestamp.type";
@@ -113,33 +118,33 @@ public class HudiTimestampBasedKeyGenerator extends HudiKeyGenerator {
         desc.addFieldDescriptor("timezone", TimeZone.getDefault().getID(), "格式化时间时区", Optional.of(timeZones));
     }
 
-    @TISExtension
-    public static class DefaultDescriptor extends Descriptor<HudiKeyGenerator> {
-        public DefaultDescriptor() {
-            super();
-            addFieldDesc(this);
-        }
-
-        @Override
-        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
-            return super.getPluginFormPropertyTypes(Optional.empty());
-        }
-
-
-        @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            ParseDescribable<Describable> i = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            HudiTimestampBasedKeyGenerator keyGenerator = i.getInstance();
-
-            return validateForm(msgHandler, context, keyGenerator);
-        }
-
-
-        @Override
-        public String getDisplayName() {
-            return KeyGeneratorType.TIMESTAMP.name();
-        }
-    }
+//    @TISExtension
+//    public static class DefaultDescriptor extends Descriptor<HudiKeyGenerator> {
+//        public DefaultDescriptor() {
+//            super();
+//            addFieldDesc(this);
+//        }
+//
+//        @Override
+//        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+//            return super.getPluginFormPropertyTypes(Optional.empty());
+//        }
+//
+//
+//        @Override
+//        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+//            ParseDescribable<Describable> i = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//            HudiTimestampBasedKeyGenerator keyGenerator = i.getInstance();
+//
+//            return validateForm(msgHandler, context, keyGenerator);
+//        }
+//
+//
+//        @Override
+//        public String getDisplayName() {
+//            return KeyGeneratorType.TIMESTAMP.name();
+//        }
+//    }
 
     public static boolean validateForm(IControlMsgHandler msgHandler, Context context, HudiTimestampBasedKeyGenerator keyGenerator) {
         TimestampBasedAvroKeyGenerator.TimestampType timestampType

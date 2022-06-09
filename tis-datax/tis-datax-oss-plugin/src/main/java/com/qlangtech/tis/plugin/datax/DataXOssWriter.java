@@ -80,7 +80,7 @@ public class DataXOssWriter extends DataxWriter {
     @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {})
     public Integer maxFileSize;
 
-    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

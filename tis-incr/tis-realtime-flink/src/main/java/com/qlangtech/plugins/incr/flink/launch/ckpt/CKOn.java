@@ -23,6 +23,7 @@ import com.qlangtech.plugins.incr.flink.launch.CheckpointFactory;
 import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -50,26 +51,26 @@ public class CKOn extends CheckpointFactory {
     public String checkpointMode;
 
     // ExecutionCheckpointingOptions.CHECKPOINTING_TIMEOUT
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer checkpointTimeout;
     //    ExecutionCheckpointingOptions.MAX_CONCURRENT_CHECKPOINTS;
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer maxConcurrentNum;
 
     // ExecutionCheckpointingOptions.MIN_PAUSE_BETWEEN_CHECKPOINTS;
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer minPause;
 
     // ExecutionCheckpointingOptions.TOLERABLE_FAILURE_NUMBER)
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer maxFaildNum;
 
     //  ExecutionCheckpointingOptions.EXTERNALIZED_CHECKPOINT)
-    @FormField(ordinal = 7, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 7, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String enableExternal;
 
     //  ExecutionCheckpointingOptions.ENABLE_UNALIGNED
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean enableUnaligned;
 //    ExecutionCheckpointingOptions.CHECKPOINT_ID_OF_IGNORED_IN_FLIGHT_DATA
 //            checkpointIdOfIgnoredInFlightData
@@ -77,7 +78,7 @@ public class CKOn extends CheckpointFactory {
     //    ExecutionCheckpointingOptions.ALIGNED_CHECKPOINT_TIMEOUT
 //    alignedCheckpointTimeout
     // ExecutionCheckpointingOptions.FORCE_UNALIGNED
-    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean forceUnaligned;
 
     @Override

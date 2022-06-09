@@ -29,6 +29,7 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
@@ -84,9 +85,15 @@ public class HudiTest {
             }
         };
         tab.name = WriterTemplate.TAB_customer_order_relation;
-        tab.partition = partition;
+
+        SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
+        simpleKeyGenerator.setPartition(partition);
+        simpleKeyGenerator.recordField = "customerregister_id";
+       // simpleKeyGenerator.partitionPathField =
+        tab.keyGenerator = simpleKeyGenerator;
+       // tab.partition = partition;
         tab.sourceOrderingField = "last_ver";
-        tab.recordField = Lists.newArrayList("customerregister_id");
+        //tab.recordField =
 
 
         return new HudiTest(writer, WriterTemplate.createCustomer_order_relationTableMap(Optional.of(tab)), tab);

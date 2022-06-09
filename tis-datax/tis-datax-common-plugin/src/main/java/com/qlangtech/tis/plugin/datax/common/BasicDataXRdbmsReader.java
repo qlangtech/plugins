@@ -66,7 +66,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     @FormField(ordinal = 98, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer fetchSize;
 
-    @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 99, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     @SubForm(desClazz = SelectedTab.class

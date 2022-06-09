@@ -40,7 +40,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-01 10:05
  **/
-public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware , FileSystemFactoryGetter {
+public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware, FileSystemFactoryGetter {
 
     protected static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
 
@@ -49,13 +49,13 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fileType;
 
-    @FormField(ordinal = 15, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String writeMode;
     @FormField(ordinal = 20, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String fieldDelimiter;
     @FormField(ordinal = 25, type = FormFieldType.ENUM, validate = {})
     public String compress;
-    @FormField(ordinal = 30, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 30, type = FormFieldType.ENUM, advance = true, validate = {})
     public String encoding;
 
 

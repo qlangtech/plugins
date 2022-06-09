@@ -25,13 +25,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,31 +43,23 @@ public class HudiSelectedTab extends SelectedTab {
     public static final String KEY_SOURCE_ORDERING_FIELD = "sourceOrderingField";
 
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-    public List<String> recordField;
+//    @FormField(ordinal = 2, validate = {Validator.require})
+//    public HudiTablePartition partition;
 
     @FormField(ordinal = 2, validate = {Validator.require})
-    public HudiTablePartition partition;
+    public HudiKeyGenerator keyGenerator;
+
+    public HudiTablePartition getPartition() {
+        if (keyGenerator == null) {
+            throw new IllegalStateException("keyGenerator can not be null");
+        }
+        return this.keyGenerator.getPartition();
+    }
+
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String sourceOrderingField;
 
-
-    public String getLiteriaRecordFields() {
-        if (CollectionUtils.isEmpty(recordField)) {
-            throw new IllegalStateException("recordField can not be empty");
-        }
-        return this.recordField.stream().collect(Collectors.joining(","));
-    }
-
-    /**
-     * 主键候选字段
-     *
-     * @return
-     */
-    public static List<Option> getPrimaryKeys() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream().filter((col) -> col.isPk()));
-    }
 
     /**
      * 分区键候选字段
@@ -112,8 +103,8 @@ public class HudiSelectedTab extends SelectedTab {
                 success = false;
             }
 
-            if (tab.recordField != null) {
-                for (String field : tab.recordField) {
+            if (tab.keyGenerator != null) {
+                for (String field : tab.keyGenerator.getRecordFields()) {
                     if (!tab.containCol(field)) {
                         msgHandler.addFieldError(context, KEY_RECORD_FIELD
                                 , "'" + field + "'需要在" + SelectedTab.KEY_FIELD_COLS + "中被选中");

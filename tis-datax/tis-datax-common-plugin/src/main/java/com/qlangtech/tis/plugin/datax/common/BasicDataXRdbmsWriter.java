@@ -57,7 +57,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     // 目标源中是否自动创建表，这样会方便不少
     public boolean autoCreateTable;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     public String dataXName;

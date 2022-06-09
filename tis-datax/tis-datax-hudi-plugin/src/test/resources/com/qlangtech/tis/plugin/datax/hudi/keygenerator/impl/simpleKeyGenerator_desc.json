@@ -1,0 +1,50 @@
+{
+  "com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator": {
+    "attrs": [
+      {
+        "describable": false,
+        "eprops": {
+          "dftVal": [
+            "user_id"
+          ],
+          "enum": [
+            {
+              "label": "user_id",
+              "val": "user_id"
+            }
+          ],
+          "enumMode": "default",
+          "label": "主键"
+        },
+        "key": "recordField",
+        "ord": 1,
+        "pk": false,
+        "required": true,
+        "type": 5
+      },
+      {
+        "describable": false,
+        "eprops": {
+          "enum": [
+            {
+              "label": "user_id",
+              "val": "user_id"
+            }
+          ],
+          "enumMode": "default",
+          "label": "分区字段"
+        },
+        "key": "partitionPathField",
+        "ord": 1,
+        "pk": false,
+        "required": true,
+        "type": 5
+      }
+    ],
+    "displayName": "SIMPLE",
+    "extendPoint": "com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator",
+    "impl": "com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator",
+    "implUrl": "http://tis.pub/docs/guide/plugin/plugins/#simplekeygenerator",
+    "veriflable": false
+  }
+}

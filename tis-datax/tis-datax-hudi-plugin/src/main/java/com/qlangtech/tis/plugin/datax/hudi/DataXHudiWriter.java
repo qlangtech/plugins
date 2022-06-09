@@ -100,14 +100,14 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return this.fsName;
     }
 
-    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer shuffleParallelism;
 
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
     public String batchOp;
 
 
-    @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, advance = true, validate = {Validator.require})
     public String template;
 
 
@@ -344,10 +344,16 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                         + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
             }
             this.hudiTab = (HudiSelectedTab) tab;
+            if (this.hudiTab == null) {
+                throw new IllegalArgumentException("param hudiTab can not be null");
+            }
         }
 
         public String getRecordField() {
-            return this.hudiTab.getLiteriaRecordFields();
+            if (this.hudiTab.keyGenerator == null) {
+                throw new IllegalStateException("keyGenerator can not be null");
+            }
+            return this.hudiTab.keyGenerator.getLiteriaRecordFields();
         }
 
 //        public String getPartitionPathField() {

@@ -50,6 +50,7 @@ import com.qlangtech.tis.plugin.common.IWriterPluginMeta;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator;
 import com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -166,12 +167,17 @@ public class TestDataXHudiWriter {
         hudiTab.name = tableFullTypes;
         // hudiTab.partition = new OffPartition();
         FieldValBasedPartition pt = new FieldValBasedPartition();
-        pt.partitionPathField = "tiny_c";
-        hudiTab.partition = pt;
+        SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
+        simpleKeyGenerator.partitionPathField = "tiny_c";
+        simpleKeyGenerator.recordField = pk.get().getKey();
+        pt.setKeyGenerator(simpleKeyGenerator);
+
+        // pt.partitionPathField = "tiny_c";
+        hudiTab.keyGenerator = simpleKeyGenerator;// .partition = pt;
 
         hudiTab.setCols(fullTypesCols);
-        hudiTab.recordField = Lists.newArrayList(pk.get().getKey());
-        hudiTab.sourceOrderingField = hudiTab.recordField.get(0);
+        // hudiTab.recordField = Lists.newArrayList(pk.get().getKey());
+        hudiTab.sourceOrderingField = pk.get().getKey();
         List<HudiSelectedTab> tabs = Collections.singletonList(hudiTab);
         dataxReader.selectedTabs = tabs;
 //        List<Descriptor.ParseDescribable<HudiSelectedTab>> dlist = Lists.newArrayList();

@@ -18,15 +18,25 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.plugins.org.apache.hudi.config.HoodieWriteConfig;
+import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorOptions;
+
+//import com.qlangtech.plugins.org.apache.hudi.DataSourceWriteOptions;
+
+
 /**
  * //@see HoodieWriteConfig
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-23 14:48
  **/
 @FunctionalInterface
 public interface IPropertiesBuilder {
-    String KEY_HOODIE_PARTITIONPATH_FIELD = "hoodie.datasource.write.partitionpath.field";
-    String KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE =  "hoodie.datasource.write.keygenerator.type";
+
+    // DataSourceWriteOptions.HIVE_PARTITION_FIELDS.key()
+    // DataSourceWriteOptions.HIVE_PARTITION_FIELDS()
+    String KEY_HOODIE_PARTITIONPATH_FIELD = KeyGeneratorOptions.PARTITIONPATH_FIELD_OPT_KEY;  //"hoodie.datasource.write.partitionpath.field";
+    String KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE = HoodieWriteConfig.KEYGENERATOR_TYPE.key();// "hoodie.datasource.write.keygenerator.type";
     String KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields";
     String KEY_HOODIE_DATASOURCE_HIVE_SYNC_PARTITION_EXTRACTOR_CLASS = "hoodie.datasource.hive_sync.partition_extractor_class";
 

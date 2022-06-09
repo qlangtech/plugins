@@ -93,7 +93,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, validate = {})
     public String csvReaderConfig;
 
-    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     public String dataXName;

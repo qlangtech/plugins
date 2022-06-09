@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Option;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.flink.configuration.ConfigOption;
@@ -48,10 +49,8 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
         Description desc = configOption.description();
         HtmlFormatter htmlFormatter = new HtmlFormatter();
 
-        Object dftVal = configOption.defaultValue();
-        if (dftVal == null) {
-            dftVal = overwriteProps.dftVal;
-        }
+        Object dftVal = overwriteProps.processDftVal(configOption.defaultValue());
+
 
         StringBuffer helperContent = new StringBuffer(htmlFormatter.format(desc));
         if (overwriteProps.appendHelper.isPresent()) {
@@ -78,7 +77,8 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
             opts = Lists.newArrayList(new Option("是", true), new Option("否", false));
         }
 
-        this.addFieldDescriptor(fieldName, dftVal, helperContent.toString(), Optional.ofNullable(opts));
+        this.addFieldDescriptor(fieldName, dftVal, helperContent.toString()
+                , overwriteProps.opts.isPresent() ? overwriteProps.opts : Optional.ofNullable(opts));
     }
 
     private static Method getClazzMethod;
@@ -92,21 +92,6 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
             return (Class<?>) getClazzMethod.invoke(configOption);
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public static class OverwriteProps {
-        private Optional<String> appendHelper = Optional.empty();
-        Object dftVal;
-
-        public OverwriteProps setAppendHelper(String appendHelper) {
-            this.appendHelper = Optional.of(appendHelper);
-            return this;
-        }
-
-        public OverwriteProps setDftVal(Object dftVal) {
-            this.dftVal = dftVal;
-            return this;
         }
     }
 

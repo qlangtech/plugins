@@ -119,6 +119,14 @@
             <artifactId>netty-all</artifactId>
             <version>4.1.17.Final</version>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-test-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
 
         <!--        <dependency>-->
         <!--            <groupId>org.apache.spark</groupId>-->

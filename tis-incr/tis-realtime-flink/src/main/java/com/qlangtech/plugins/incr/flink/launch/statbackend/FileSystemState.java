@@ -23,6 +23,7 @@ import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -54,10 +55,10 @@ public class FileSystemState extends StateBackendFactory implements StateBackend
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean enableSavePoint;
 
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, advance = true,validate = {Validator.integer, Validator.require})
     public Integer smallFileThreshold;
 
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer writeBufferSize;
 
     @Override

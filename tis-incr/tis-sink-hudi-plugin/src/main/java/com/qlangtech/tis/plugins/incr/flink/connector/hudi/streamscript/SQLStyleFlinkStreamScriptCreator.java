@@ -111,7 +111,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 @Override
                 protected void appendExtraColDef(List<ColWrapper> pks) {
 
-                    Objects.requireNonNull(tab.partition, "partition can not be null")
+                    Objects.requireNonNull(tab.getPartition(), "partition can not be null")
                             .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.getPartitionedBy()), this);
 
                 }
@@ -128,7 +128,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     //                                'hive_sync.mode' = 'hms',
                     //                                'hive_sync.metastore.uris' = 'thrift://ip:9083' -- ip 替换成 HMS 的地址
                     //                       );
-                    if (tab.partition.isSupportPartition()) {
+                    if (tab.getPartition().isSupportPartition()) {
                         this.script.block("PARTITIONED BY", (sub) -> {
                             // (`partition`)
                             sub.appendLine("`" + dataXWriter.getPartitionedBy() + "`");
@@ -138,7 +138,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     if (StringUtils.isEmpty(hudiSinkFactory.getDataXName())) {
                         throw new IllegalStateException("prop of dataXName can not be empty");
                     }
-                    this.script.block(!tab.partition.isSupportPartition(), "WITH", (sub) -> {
+                    this.script.block(!tab.getPartition().isSupportPartition(), "WITH", (sub) -> {
                         sub.appendLine("'" + DataxUtils.DATAX_NAME + "' = '" + hudiSinkFactory.getDataXName() + "',");
                         sub.appendLine("'connector' = 'hudi',");
                         sub.appendLine("'path' = '" + HudiTableMeta.getHudiDataDir(

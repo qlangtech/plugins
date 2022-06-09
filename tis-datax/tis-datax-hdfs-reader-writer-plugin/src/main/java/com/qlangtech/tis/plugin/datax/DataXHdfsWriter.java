@@ -49,7 +49,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     @Override

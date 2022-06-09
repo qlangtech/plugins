@@ -49,10 +49,10 @@ public class OffPartition extends HudiTablePartition {
         setHiveSyncPartitionProps(props, null, "org.apache.hudi.hive.NonPartitionedExtractor");
     }
 
-    @Override
-    protected String getWriteKeyGeneratorType() {
-        return KeyGeneratorType.NON_PARTITION.name();
-    }
+//    @Override
+//    protected String getWriteKeyGeneratorType() {
+//        return KeyGeneratorType.NON_PARTITION.name();
+//    }
 
     @Override
     public void addPartitionsOnSQLDDL(List<String> pts, CreateTableSqlBuilder createTableSqlBuilder) {
@@ -64,20 +64,20 @@ public class OffPartition extends HudiTablePartition {
         return false;
     }
 
-    @TISExtension
-    public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
-        public DefaultDescriptor() {
-            super();
-        }
-
-        @Override
-        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
-            return super.getPluginFormPropertyTypes(Optional.empty());
-        }
-
-        @Override
-        public String getDisplayName() {
-            return SWITCH_OFF;
-        }
-    }
+//    @TISExtension
+//    public static class DefaultDescriptor extends Descriptor<HudiTablePartition> {
+//        public DefaultDescriptor() {
+//            super();
+//        }
+//
+//        @Override
+//        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+//            return super.getPluginFormPropertyTypes(Optional.empty());
+//        }
+//
+//        @Override
+//        public String getDisplayName() {
+//            return SWITCH_OFF;
+//        }
+//    }
 }

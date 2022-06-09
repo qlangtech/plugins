@@ -16,22 +16,18 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.hudi.keygenerator;
+package org.apache.hadoop.fs;
 
-import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
-//import org.apache.hudi.keygen.constant.KeyGeneratorType;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-04-25 07:28
+ * @create: 2022-06-08 15:03
  **/
-@Public
-public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> {
-
-    public abstract KeyGeneratorType getKeyGeneratorType();
-
-    public abstract void setProps(IPropertiesBuilder props);
+public class FSDataInputStream extends InputStream {
+    @Override
+    public int read() throws IOException {
+        throw new UnsupportedOperationException();
+    }
 }

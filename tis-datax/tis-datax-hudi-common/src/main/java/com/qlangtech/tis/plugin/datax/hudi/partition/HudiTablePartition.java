@@ -23,6 +23,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -34,6 +35,14 @@ import java.util.stream.Collectors;
  **/
 @Public
 public abstract class HudiTablePartition implements Describable<HudiTablePartition> {
+
+    protected transient HudiKeyGenerator keyGenerator;
+
+    public void setKeyGenerator(HudiKeyGenerator keyGenerator) {
+        this.keyGenerator = keyGenerator;
+    }
+
+
 
     /**
      * //@see org.apache.hudi.DataSourceUtils +buildHiveSyncConfig()
@@ -74,13 +83,13 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
         if (StringUtils.isEmpty(hudiWriter.getPartitionedBy())) {
             throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
         }
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, getWriteKeyGeneratorType());
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, keyGenerator.getKeyGeneratorType().name());
         this.setExtraProps(props, hudiWriter);
     }
 
     public abstract void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
 
-    protected abstract String getWriteKeyGeneratorType();
+   // protected abstract String getWriteKeyGeneratorType();
 
 
     public boolean isSupportPartition() {

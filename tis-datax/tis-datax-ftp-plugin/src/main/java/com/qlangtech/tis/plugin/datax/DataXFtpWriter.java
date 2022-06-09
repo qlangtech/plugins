@@ -72,7 +72,7 @@ public class DataXFtpWriter extends DataxWriter {
     @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {})
     public Boolean header;
 
-    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

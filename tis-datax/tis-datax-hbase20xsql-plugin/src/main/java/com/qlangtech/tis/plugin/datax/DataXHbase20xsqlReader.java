@@ -47,7 +47,7 @@ public class DataXHbase20xsqlReader extends DataxReader {
     @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
     public String querySql;
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

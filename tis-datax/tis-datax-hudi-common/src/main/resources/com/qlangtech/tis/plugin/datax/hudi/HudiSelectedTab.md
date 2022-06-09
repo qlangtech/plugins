@@ -8,21 +8,11 @@ Default: 'ts' holding unix timestamp of record Default: ts
 
 详细说明：[hoodie.datasource.write.recordkey.field](https://hudi.apache.org/docs/configurations/#hoodiedatasourcewriterecordkeyfield-1)
 
-## partition
+## keyGenerator
 
-HDFS Path contain hive partition values for the keys it is partitioned on. This mapping is not straight forward and
-requires a pluggable implementation to extract the partition value from HDFS path.
+Every record in Hudi is uniquely identified by a primary key, which is a pair of record key and partition path where the record belongs to. Using primary keys, Hudi can impose a) partition level uniqueness integrity constraint b) enable fast updates and deletes on records. One should choose the partitioning scheme wisely as it could be a determining factor for your ingestion and query latency.
 
-**e.g** Hive table partitioned by datestr=yyyy-mm-dd and hdfs path /app/hoodie/dataset1/YYYY=[yyyy]/MM=[mm]/DD=[dd]
+详细说明：[https://hudi.apache.org/docs/key_generation/#complexkeygenerator](https://hudi.apache.org/docs/key_generation/#complexkeygenerator)
 
-There are some types of partition strategies :
 
-- **fieldValBased**: base on Hudi class `org.apache.hudi.hive.MultiPartKeysValueExtractor` that Partition Key extractor treating each value delimited by slash as separate key.
-- **off**: no partition mechanism on Hudi table
-- **slashEncodedDay** :
-   base on hudi class `org.apache.hudi.hive.SlashEncodedDayPartitionValueExtractor`
-   HDFS Path contain hive partition values for the keys it is partitioned on. 
-   This mapping is not straight forward and requires a pluggable implementation to extract the partition value from HDFS path.
-   
-   This implementation extracts `datestr=yyyy-mm-dd` from path of type `/yyyy/mm/dd`
 

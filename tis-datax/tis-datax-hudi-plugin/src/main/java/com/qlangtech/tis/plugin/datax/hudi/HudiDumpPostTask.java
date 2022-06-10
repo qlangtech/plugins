@@ -334,11 +334,11 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             props.setProperty("hoodie.datasource.hive_sync.database", hiveMeta.getDbName());
             props.setProperty("hoodie.datasource.hive_sync.table", this.hudiTab.getName());
 
-            if (this.hudiTab.getPartition() == null) {
+            if (this.hudiTab.getKeyGenerator() == null) {
                 throw new IllegalStateException(this.hudiTab.getName() + " relevant hudiPlugin.partitionedBy can not be empty");
             }
 
-            this.hudiTab.getPartition().setProps(props, this.hudiWriter);
+            this.hudiTab.getKeyGenerator().setProps(props, this.hudiWriter);
 //            props.setProperty("hoodie.datasource.hive_sync.partition_fields", hudiPlugin.partitionedBy);
 //            // "org.apache.hudi.hive.MultiPartKeysValueExtractor";
 //            // partition 分区值抽取类

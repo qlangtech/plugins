@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -26,7 +27,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
-import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
@@ -49,17 +49,21 @@ public class HudiSelectedTab extends SelectedTab {
     @FormField(ordinal = 2, validate = {Validator.require})
     public HudiKeyGenerator keyGenerator;
 
-    public HudiTablePartition getPartition() {
+    public HudiKeyGenerator getKeyGenerator() {
         if (keyGenerator == null) {
             throw new IllegalStateException("keyGenerator can not be null");
         }
-        return this.keyGenerator.getPartition();
+        return this.keyGenerator;
     }
 
 
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public String sourceOrderingField;
 
+
+    public static String getDftKeyGenerator() {
+        return KeyGeneratorType.NON_PARTITION.name();
+    }
 
     /**
      * 分区键候选字段

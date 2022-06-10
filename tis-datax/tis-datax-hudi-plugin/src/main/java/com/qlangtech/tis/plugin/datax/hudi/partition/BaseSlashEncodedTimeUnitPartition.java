@@ -20,18 +20,12 @@ package com.qlangtech.tis.plugin.datax.hudi.partition;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
-import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.HudiTimestampBasedKeyGenerator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +41,8 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 //    public HudiKeyGenerator keyGenerator;
 
 
-    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String timestampType;
+//    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public String timestampType;
 //    public static final String INPUT_TIME_UNIT =
 //            "hoodie.deltastreamer.keygen.timebased.timestamp.scalar.time.unit";
 //    //This prop can now accept list of input date formats.
@@ -56,8 +50,8 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 //            "hoodie.deltastreamer.keygen.timebased.input.dateformat";
 
     // format 可以填写多个，并且用逗号分割
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, advance = true, validate = {})
-    public String inputDateformat;
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, advance = true, validate = {})
+//    public String inputDateformat;
 
     //    public static final String TIMESTAMP_INPUT_DATE_FORMAT_LIST_DELIMITER_REGEX_PROP = "hoodie.deltastreamer.keygen.timebased.input.dateformat.list.delimiter.regex";
 //    public static final String TIMESTAMP_INPUT_TIMEZONE_FORMAT_PROP = "hoodie.deltastreamer.keygen.timebased.input.timezone";
@@ -71,8 +65,8 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
     //    //still keeping this prop for backward compatibility so that functionality for existing users does not break.
 //    public static final String TIMESTAMP_TIMEZONE_FORMAT_PROP =
 //            "hoodie.deltastreamer.keygen.timebased.timezone";
-    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
-    public String timezone;
+//    @FormField(ordinal = 5, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
+//    public String timezone;
 
 
     @Override
@@ -84,9 +78,9 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 //            throw new IllegalStateException("keyGenerator can not be null");
 //        }
 
-        HudiTimestampBasedKeyGenerator keyGenerator = getHudiTimestampBasedKeyGenerator();
+        // HudiTimestampBasedKeyGenerator keyGenerator = getHudiTimestampBasedKeyGenerator();
         //  this.setKeyGeneratorType(props, keyGenerator.getKeyGeneratorType().name());
-        keyGenerator.setProps(props);
+        // keyGenerator.setProps(props);
     }
 
 //    @Override
@@ -96,14 +90,14 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
 
     protected abstract String getPartitionExtractorClass();
 
-    private HudiTimestampBasedKeyGenerator getHudiTimestampBasedKeyGenerator() {
-        HudiTimestampBasedKeyGenerator keyGenerator = new HudiTimestampBasedKeyGenerator();
-        keyGenerator.timestampType = this.timestampType;
-        keyGenerator.outputDateformat = getKeyGeneratorOutputDateformat();
-        keyGenerator.timezone = this.timezone;
-        keyGenerator.inputDateformat = this.inputDateformat;
-        return keyGenerator;
-    }
+//    private HudiTimestampBasedKeyGenerator getHudiTimestampBasedKeyGenerator() {
+//        HudiTimestampBasedKeyGenerator keyGenerator = new HudiTimestampBasedKeyGenerator();
+//        keyGenerator.timestampType = this.timestampType;
+//        keyGenerator.outputDateformat = getKeyGeneratorOutputDateformat();
+//        keyGenerator.timezone = this.timezone;
+//        keyGenerator.inputDateformat = this.inputDateformat;
+//        return keyGenerator;
+//    }
 
 
     protected abstract String getKeyGeneratorOutputDateformat();
@@ -117,7 +111,7 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
     protected static abstract class BaseDescriptor extends Descriptor<HudiTablePartition> {
         public BaseDescriptor() {
             super();
-            HudiTimestampBasedKeyGenerator.addFieldDesc(this);
+            // HudiTimestampBasedKeyGenerator.addFieldDesc(this);
         }
 
         @Override
@@ -128,10 +122,11 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
         @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            ParseDescribable<Describable> i = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            BaseSlashEncodedTimeUnitPartition dayPartition = i.getInstance();
-            HudiTimestampBasedKeyGenerator timestampBasedKeyGenerator = dayPartition.getHudiTimestampBasedKeyGenerator();
-            return HudiTimestampBasedKeyGenerator.validateForm(msgHandler, context, timestampBasedKeyGenerator);
+//            ParseDescribable<Describable> i = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+//            BaseSlashEncodedTimeUnitPartition dayPartition = i.getInstance();
+//            HudiTimestampBasedKeyGenerator timestampBasedKeyGenerator = dayPartition.getHudiTimestampBasedKeyGenerator();
+//            return HudiTimestampBasedKeyGenerator.validateForm(msgHandler, context, timestampBasedKeyGenerator);
+            return true;
         }
 
     }

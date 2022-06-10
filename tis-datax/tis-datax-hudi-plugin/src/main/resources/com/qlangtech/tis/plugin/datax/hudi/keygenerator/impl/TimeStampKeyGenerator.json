@@ -4,5 +4,11 @@
   },
   "partitionPathFields": {
     "disable": true
+  },
+  "inputDateformat": {
+    "help": "Input date format"
+  },
+  "outputDateformat": {
+    "help": "Output date format"
   }
 }

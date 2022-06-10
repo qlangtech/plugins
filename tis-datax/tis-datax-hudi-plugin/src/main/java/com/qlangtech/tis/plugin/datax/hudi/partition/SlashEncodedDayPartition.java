@@ -18,14 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
-import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.*;
-import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.HudiTimestampBasedKeyGenerator;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.util.IPluginContext;
-
-import java.util.Optional;
+import com.qlangtech.tis.extension.TISExtension;
 
 /**
  * // @see SlashEncodedDayPartitionValueExtractor

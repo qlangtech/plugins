@@ -19,9 +19,9 @@
 package com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl;
 
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 
 import java.util.Collections;
@@ -33,6 +33,7 @@ import java.util.List;
  **/
 public class SimpleKeyGenerator extends HudiKeyGenerator {
     private static final KeyGeneratorType genType = KeyGeneratorType.SIMPLE;
+
 
     @Override
     public List<String> getRecordFields() {
@@ -50,8 +51,8 @@ public class SimpleKeyGenerator extends HudiKeyGenerator {
     }
 
     @Override
-    public void setProps(IPropertiesBuilder props) {
-
+    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+        super.setProps(props, hudiWriter);
     }
 
     @TISExtension

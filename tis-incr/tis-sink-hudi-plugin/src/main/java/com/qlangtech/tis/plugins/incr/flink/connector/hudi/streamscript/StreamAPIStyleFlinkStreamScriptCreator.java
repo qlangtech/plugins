@@ -204,10 +204,10 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
 
     private void setPartitionRelevantProps(
             BlockScriptBuffer script, HudiSelectedTab hudiTab, IDataXHudiWriter hudiWriter) {
-        if (hudiTab.getPartition() == null) {
+        if (hudiTab.getKeyGenerator() == null) {
             throw new IllegalArgumentException("hudiTab.partition can not be null ");
         }
-        hudiTab.getPartition().setProps((key, val) -> {
+        hudiTab.getKeyGenerator().setProps((key, val) -> {
 
             if (StringUtils.isEmpty(val)) {
                 return;

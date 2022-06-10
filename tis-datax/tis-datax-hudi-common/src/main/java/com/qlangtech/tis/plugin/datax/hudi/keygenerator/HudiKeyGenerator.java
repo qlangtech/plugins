@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.hudi.keygenerator;
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.plugins.org.apache.hudi.common.config.ConfigProperty;
 import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorOptions;
+import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
@@ -28,12 +29,13 @@ import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Option;
-import com.qlangtech.tis.org.apache.hudi.keygen.constant.KeyGeneratorType;
+
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -85,13 +87,13 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
     @FormField(ordinal = 5, validate = {Validator.require})
     public HudiTablePartition partition;
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
+    @FormField(ordinal = 20, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean encodePartitionPath;
 
-    @FormField(ordinal = 7, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
+    @FormField(ordinal = 21, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean hiveStylePartitioning;
 
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
+    @FormField(ordinal = 22, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean consistentLogicalTimestampEnabled;
 
 
@@ -162,7 +164,14 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
 
     public abstract KeyGeneratorType getKeyGeneratorType();
 
-    public abstract void setProps(IPropertiesBuilder props);
+    //  public abstract void setProps(IPropertiesBuilder props);
+
+    //public abstract void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
+
+    //@Override
+    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+        this.partition.setProps(props, hudiWriter);
+    }
 
 
     protected static class BasicHudiKeyGeneratorDescriptor extends Descriptor<HudiKeyGenerator> {

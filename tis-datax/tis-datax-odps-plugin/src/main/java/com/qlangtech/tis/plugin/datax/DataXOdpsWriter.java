@@ -43,7 +43,7 @@ public class DataXOdpsWriter extends DataxWriter {
     @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String tunnelServer;
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

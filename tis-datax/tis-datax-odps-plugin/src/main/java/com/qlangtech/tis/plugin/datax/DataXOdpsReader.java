@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class DataXOdpsReader extends DataxReader {
     private static final String DATAX_NAME = "ODPS";
 
-    @FormField(ordinal = 0, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

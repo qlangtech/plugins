@@ -78,7 +78,7 @@ public class DataXFtpReader extends DataxReader {
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {})
     public String csvReaderConfig;
 
-    @FormField(ordinal = 16, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 16, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

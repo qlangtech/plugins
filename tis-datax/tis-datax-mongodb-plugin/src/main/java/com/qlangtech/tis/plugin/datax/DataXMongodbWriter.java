@@ -69,7 +69,7 @@ public class DataXMongodbWriter extends DataxWriter
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
     public String upsertInfo;
 
-    @FormField(ordinal = 11, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 11, type = FormFieldType.TEXTAREA,advance = false, validate = {Validator.require})
     public String template;
 
     public String dataXName;

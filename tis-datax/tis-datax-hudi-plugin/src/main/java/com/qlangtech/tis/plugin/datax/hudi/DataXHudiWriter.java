@@ -107,7 +107,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     public String batchOp;
 
 
-    @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, advance = true, validate = {Validator.require})
+    @FormField(ordinal = 100, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
 

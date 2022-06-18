@@ -71,7 +71,7 @@ public class DataXCassandraWriter extends DataxWriter {
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer batchSize;
 
-    @FormField(ordinal = 12, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 12, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

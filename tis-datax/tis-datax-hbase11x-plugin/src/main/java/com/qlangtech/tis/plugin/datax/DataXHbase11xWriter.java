@@ -34,7 +34,7 @@ public class DataXHbase11xWriter extends DataxWriter {
         @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = { })
     public String column;
 
-    @FormField(ordinal = 5, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {

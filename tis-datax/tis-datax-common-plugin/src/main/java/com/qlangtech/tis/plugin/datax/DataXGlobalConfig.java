@@ -48,7 +48,7 @@ public class DataXGlobalConfig extends ParamsConfig implements IDataxGlobalCfg {
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public float errorLimitPercentage;
 
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, advance = true ,validate = {Validator.require})
+    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, advance = false ,validate = {Validator.require})
     public String template;
 
     @Override

@@ -54,7 +54,7 @@ public class DataXHiveWriter extends BasicFSWriter {
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = true , validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
     public String template;
 
     @Override

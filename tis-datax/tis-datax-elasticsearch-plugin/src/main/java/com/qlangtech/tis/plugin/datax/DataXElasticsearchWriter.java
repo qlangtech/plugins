@@ -114,7 +114,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public Boolean dynamic;
 
 
-    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, advance = true, validate = {Validator.require})
+    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public IHttpToken getToken() {

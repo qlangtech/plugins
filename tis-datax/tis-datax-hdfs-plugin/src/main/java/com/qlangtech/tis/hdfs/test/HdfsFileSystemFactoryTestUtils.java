@@ -41,7 +41,7 @@ public class HdfsFileSystemFactoryTestUtils {
     public static HdfsFileSystemFactory getFileSystemFactory() {
         HdfsFileSystemFactory fsFactory = new HdfsFileSystemFactory();
         fsFactory.name = FS_NAME;
-        fsFactory.setHdfsAddress(DEFAULT_HDFS_ADDRESS);
+        // fsFactory.setHdfsAddress(DEFAULT_HDFS_ADDRESS);
         fsFactory.userHostname = true;
         fsFactory.setHdfsSiteContent(IOUtils.loadResourceFromClasspath(
                 HdfsFileSystemFactoryTestUtils.class, "hdfs/hdfsSiteContent.xml"));

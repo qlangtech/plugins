@@ -72,7 +72,7 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
     @Override
     public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
 
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.keyGenerator.getLiteriaPartitionPathFields());
+        //props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.keyGenerator.getLiteriaPartitionPathFields());
         setHiveSyncPartitionProps(props, hudiWriter, getPartitionExtractorClass());
 //        if (keyGenerator == null) {
 //            throw new IllegalStateException("keyGenerator can not be null");

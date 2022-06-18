@@ -20,6 +20,7 @@ package com.qlangtech.tis.hdfs.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.config.Utils;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -42,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -56,21 +58,22 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     private static final Logger Logger = LoggerFactory.getLogger(HdfsFileSystemFactory.class);
 
-    private static final String KEY_FIELD_HDFS_ADDRESS = "hdfsAddress";
+    // private static final String KEY_FIELD_HDFS_ADDRESS = "hdfsAddress";
+    private static final String KEY_FIELD_HDFS_SITE_CONTENT = "hdfsSiteContent";
 
     @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
     public String name;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public Boolean userHostname;
 
-    @FormField(ordinal = 4, validate = {Validator.require, Validator.url})
-    public String hdfsAddress;
+//    @FormField(ordinal = 4, validate = {Validator.require, Validator.url})
+//    public String hdfsAddress;
 
     @FormField(ordinal = 7, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
 
-    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, validate = {})
+    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, advance = true, validate = {})
     public String kerberos;
 
 
@@ -98,10 +101,20 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @Override
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
+            Configuration cfg = getConfiguration();
+            String hdfsAddress = getFSAddress();
+            if (StringUtils.isEmpty(hdfsAddress)) {
+                throw new IllegalStateException("hdfsAddress can not be null");
+            }
             fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(
-                    hdfsAddress, getConfiguration()), hdfsAddress, this.rootDir);
+                    hdfsAddress, cfg), hdfsAddress, this.rootDir);
         }
         return fileSystem;
+    }
+
+    @Override
+    public void setConfigFile(File cfgDir) {
+        Utils.setHadoopConfig2Local(cfgDir, "hdfs-site.xml", hdfsSiteContent);
     }
 
     @Override
@@ -119,14 +132,14 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             conf.set(FsPermission.UMASK_LABEL, "000");
             // fs.defaultFS
             conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
-            conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
+            // conf.set(FileSystem.FS_DEFAULT_NAME_KEY, hdfsAddress);
             //https://segmentfault.com/q/1010000008473574
             Logger.info("userHostname:{}", userHostname);
             if (userHostname != null && userHostname) {
                 conf.setBoolean(DFSConfigKeys.DFS_CLIENT_USE_DN_HOSTNAME, true);
             }
 
-            conf.set("fs.defaultFS", hdfsAddress);
+            // conf.set(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY, hdfsAddress);
             conf.set("hadoop.job.ugi", "admin");
             // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
             conf.setBoolean("fs.hdfs.impl.disable.cache", false);
@@ -140,7 +153,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             conf.reloadConfiguration();
             return conf;
         } catch (Exception e) {
-            throw new RuntimeException("hdfsAddress:" + hdfsAddress, e);
+            throw new RuntimeException(e);
         } finally {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
         }
@@ -148,12 +161,12 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @Override
     public String getFSAddress() {
-        return this.hdfsAddress;
+        return getConfiguration().get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY);
     }
-
-    public void setHdfsAddress(String hdfsAddress) {
-        this.hdfsAddress = hdfsAddress;
-    }
+//
+//    public void setHdfsAddress(String hdfsAddress) {
+//        this.hdfsAddress = hdfsAddress;
+//    }
 
     public String getHdfsSiteContent() {
         return hdfsSiteContent;
@@ -271,16 +284,26 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            String hdfsAddress = null;
             try {
                 FileSystemFactory hdfsFactory = postFormVals.newInstance(this, msgHandler);
+                Configuration conf = hdfsFactory.getConfiguration();
+                hdfsAddress = conf.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY);
+                if (StringUtils.isEmpty(hdfsAddress)) {
+                    msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT
+                            , "必须要包含属性'" + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "'");
+                    return false;
+                }
+
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 hdfs.listChildren(hdfs.getPath("/"));
-                msgHandler.addActionMessage(context, "hdfs连接:" + ((HdfsFileSystemFactory) hdfsFactory).hdfsAddress + "连接正常");
+                msgHandler.addActionMessage(context, "hdfs连接:" + hdfsAddress + "连接正常");
                 hdfs.close();
                 return true;
             } catch (Exception e) {
                 Logger.warn(e.getMessage(), e);
-                msgHandler.addFieldError(context, KEY_FIELD_HDFS_ADDRESS, "请检查连接地址，服务端是否能正常,错误:" + e.getMessage());
+                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,"
+                        + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "=" + hdfsAddress + ",错误:" + e.getMessage());
                 return false;
             }
         }

@@ -66,6 +66,14 @@
         </dependency>
 
 
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-yarn_${scala.binary.version}</artifactId>
+            <version>${spark2.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
         <!--        <dependency>-->
         <!--            <groupId>javax.servlet</groupId>-->
         <!--            <artifactId>javax.servlet-api</artifactId>-->

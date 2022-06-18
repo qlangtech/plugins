@@ -100,17 +100,21 @@ public class TimeStampKeyGenerator extends HudiKeyGenerator {
 //    public static final String TIMESTAMP_OUTPUT_TIMEZONE_FORMAT_PROP = "hoodie.deltastreamer.keygen.timebased.output.timezone";
 
     //    static final String DATE_TIME_PARSER_PROP = "hoodie.deltastreamer.keygen.datetime.parser.class";
+//    @Override
+//    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+//        super.setProps(props, hudiWriter);
+//
+//    }
+
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        super.setProps(props, hudiWriter);
+    protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
         props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TYPE_FIELD_PROP, this.timestampType);
         props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_INPUT_DATE_FORMAT_PROP, this.inputDateformat);
         props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_OUTPUT_DATE_FORMAT_PROP, this.outputDateformat);
         props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TIMEZONE_FORMAT_PROP, this.timezone);
     }
 
-
-//    @Override
+    //    @Override
 //    public void setProps(IPropertiesBuilder props) {
 //
 //    }

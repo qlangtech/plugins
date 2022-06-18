@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
 import org.apache.spark.launcher.SparkLauncher;
 
 /**
@@ -38,16 +39,29 @@ public class SparkSubmitParams implements Describable<SparkSubmitParams> {
 //        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
 //        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require})
     public String driverMemory;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require})
     public String executorMemory;
+
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require})
+    public Integer executorCores;
+
+    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String deployMode;
 
 
     public void setHandle(SparkLauncher handle) {
         handle.setConf(SparkLauncher.DRIVER_MEMORY, driverMemory);
         handle.setConf(SparkLauncher.EXECUTOR_MEMORY, executorMemory);
+        handle.setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(this.executorCores));
+        if (StringUtils.isEmpty(this.deployMode)) {
+            throw new IllegalStateException("param deployMode can not be empty");
+        }
+        handle.setConf(SparkLauncher.DEPLOY_MODE, this.deployMode);
+        // https://blog.csdn.net/chouchi1749/article/details/100742442
+        // handle.setConf("spark.eventLog.enabled", "false");
     }
 
 
@@ -65,6 +79,22 @@ public class SparkSubmitParams implements Describable<SparkSubmitParams> {
             if (validateMemory(msgHandler, context, fieldName, value)) {
                 return false;
             }
+            return true;
+        }
+
+        public boolean validateExecutorCores(
+                IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int cpuCores = Integer.parseInt(value);
+            if (cpuCores < 1) {
+                msgHandler.addFieldError(context, fieldName, "必须大于0");
+                return false;
+            }
+            int maxCpuCores = 16;
+            if (cpuCores > maxCpuCores) {
+                msgHandler.addFieldError(context, fieldName, "必须小于" + cpuCores);
+                return false;
+            }
+
             return true;
         }
 

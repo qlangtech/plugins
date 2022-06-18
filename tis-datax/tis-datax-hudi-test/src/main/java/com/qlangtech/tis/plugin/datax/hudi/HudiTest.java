@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -34,6 +33,7 @@ import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -89,9 +89,9 @@ public class HudiTest {
         SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
         simpleKeyGenerator.setPartition(partition);
         simpleKeyGenerator.recordField = "customerregister_id";
-       // simpleKeyGenerator.partitionPathField =
+        // simpleKeyGenerator.partitionPathField =
         tab.keyGenerator = simpleKeyGenerator;
-       // tab.partition = partition;
+        // tab.partition = partition;
         tab.sourceOrderingField = "last_ver";
         //tab.recordField =
 
@@ -103,7 +103,7 @@ public class HudiTest {
     public static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
         final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
             @Override
-            public String getSparkMaster() {
+            public String getSparkMaster(File cfgDir) {
                 return "spark://sparkmaster:7077";
             }
 

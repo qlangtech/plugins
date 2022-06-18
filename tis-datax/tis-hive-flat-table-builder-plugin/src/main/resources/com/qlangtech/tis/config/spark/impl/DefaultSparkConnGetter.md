@@ -1,4 +1,4 @@
-## master
+## connStrategy
 
 客户端连接Spark服务端可选择以下连接方式之一：
 

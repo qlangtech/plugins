@@ -29,7 +29,6 @@ import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Option;
-
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -40,6 +39,7 @@ import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -118,7 +118,6 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
     }
 
     public final String getLiteriaRecordFields() {
-
         if (CollectionUtils.isEmpty(getRecordFields())) {
             throw new IllegalStateException("recordField can not be empty");
         }
@@ -166,11 +165,25 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
 
     //  public abstract void setProps(IPropertiesBuilder props);
 
-    //public abstract void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
+    protected abstract void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
 
     //@Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        this.partition.setProps(props, hudiWriter);
+    public final void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, this.getKeyGeneratorType().name());
+
+        List<String> psPathFields = getPartitionPathFields();
+        if (CollectionUtils.isNotEmpty(psPathFields)) {
+            props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, this.getLiteriaPartitionPathFields());
+        }
+
+        List<String> recordFields = getRecordFields();
+        if (CollectionUtils.isEmpty(recordFields)) {
+            throw new IllegalStateException("recordFields can not be empty");
+        }
+        props.setProperty(IPropertiesBuilder.RECORDKEY_FIELD_NAME.key(), this.getLiteriaRecordFields());
+
+        this.setKeyGenProps(props, hudiWriter);
+        Objects.requireNonNull(this.partition, "partition can not be null").setProps(props, hudiWriter);
     }
 
 

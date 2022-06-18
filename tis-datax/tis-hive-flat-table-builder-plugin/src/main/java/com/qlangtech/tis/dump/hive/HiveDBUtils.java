@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
 import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
 import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -40,7 +41,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -80,10 +80,10 @@ public class HiveDBUtils {
 
 
     public static HiveDBUtils getInstance(String hiveHost, String defaultDbName) {
-        return getInstance(hiveHost, defaultDbName, Optional.empty());
+        return getInstance(hiveHost, defaultDbName, new OffHiveUserToken());
     }
 
-    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, HiveUserToken userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
@@ -104,12 +104,12 @@ public class HiveDBUtils {
 //        }
 //    }
 
-    private HiveDBUtils(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    private HiveDBUtils(String hiveHost, String defaultDbName, HiveUserToken userToken) {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, Optional<HiveUserToken> userToken) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, HiveUserToken userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -134,24 +134,24 @@ public class HiveDBUtils {
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
         StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
 
-        if (userToken.isPresent()) {
-            userToken.get().accept(new IHiveUserTokenVisitor() {
-                @Override
-                public void visit(DefaultHiveUserToken ut) {
-                    hiveDatasource.setUsername(ut.userName);
-                    hiveDatasource.setPassword(ut.password);
-                }
+        // if (userToken.isPresent()) {
+        userToken.accept(new IHiveUserTokenVisitor() {
+            @Override
+            public void visit(DefaultHiveUserToken ut) {
+                hiveDatasource.setUsername(ut.userName);
+                hiveDatasource.setPassword(ut.password);
+            }
 
-                @Override
-                public void visit(KerberosUserToken token) {
-                    KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
-                    jdbcUrl.append(";principal=")
-                            .append(kerberosCfg.principal)
-                            .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-                }
-            });
+            @Override
+            public void visit(KerberosUserToken token) {
+                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+                jdbcUrl.append(";principal=")
+                        .append(kerberosCfg.principal)
+                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+            }
+        });
 
-        }
+        //}
         // 测试空闲的连接是否有效
         hiveDatasource.setTestWhileIdle(true);
         if (StringUtils.isBlank(hiveHost)) {

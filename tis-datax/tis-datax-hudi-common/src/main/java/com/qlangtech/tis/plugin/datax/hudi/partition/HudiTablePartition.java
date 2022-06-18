@@ -36,12 +36,11 @@ import java.util.stream.Collectors;
 @Public
 public abstract class HudiTablePartition implements Describable<HudiTablePartition> {
 
-    protected transient HudiKeyGenerator keyGenerator;
-
-    public void setKeyGenerator(HudiKeyGenerator keyGenerator) {
-        this.keyGenerator = keyGenerator;
-    }
-
+//    protected transient HudiKeyGenerator keyGenerator;
+//
+//    public void setKeyGenerator(HudiKeyGenerator keyGenerator) {
+//        this.keyGenerator = keyGenerator;
+//    }
 
 
     /**
@@ -83,13 +82,16 @@ public abstract class HudiTablePartition implements Describable<HudiTablePartiti
         if (StringUtils.isEmpty(hudiWriter.getPartitionedBy())) {
             throw new IllegalStateException("hudiWriter.partitionedBy can not be empty");
         }
-        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, keyGenerator.getKeyGeneratorType().name());
+//        if (keyGenerator == null) {
+//            throw new IllegalStateException("keyGenerator can not be null");
+//        }
+//        props.setProperty(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE, keyGenerator.getKeyGeneratorType().name());
         this.setExtraProps(props, hudiWriter);
     }
 
     public abstract void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter);
 
-   // protected abstract String getWriteKeyGeneratorType();
+    // protected abstract String getWriteKeyGeneratorType();
 
 
     public boolean isSupportPartition() {

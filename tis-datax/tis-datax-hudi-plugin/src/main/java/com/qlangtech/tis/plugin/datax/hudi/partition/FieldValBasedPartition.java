@@ -49,12 +49,12 @@ public class FieldValBasedPartition extends HudiTablePartition {
     @Override
     public void setExtraProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
 
-        if (CollectionUtils.isEmpty(keyGenerator.getPartitionPathFields())) {
-            throw new IllegalStateException("partitionPathField can not be empty");
-        }
+//        if (CollectionUtils.isEmpty(keyGenerator.getPartitionPathFields())) {
+//            throw new IllegalStateException("partitionPathField can not be empty");
+//        }
 
         // props.setProperty(IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD, keyGenerator.getLiteriaPartitionPathFields());
-        props.setProperty(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key(), keyGenerator.getLiteriaPartitionPathFields());
+        //props.setProperty(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key(), keyGenerator.getLiteriaPartitionPathFields());
         setHiveSyncPartitionProps(props
                 , hudiWriter
                 , "org.apache.hudi.hive.MultiPartKeysValueExtractor");

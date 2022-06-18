@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.junit.Assert;
 
@@ -49,12 +50,13 @@ public class BasicPartitionTest {
         Assert.assertEquals("\n\t,`pt` VARCHAR(30)\n", createTableSqlBuilder.script.toString());
     }
 
-    public void verifyPartitionPropsBuild(HudiTablePartition partition, String propContentExpect) throws IOException {
+    public void verifyPartitionPropsBuild(
+            HudiKeyGenerator keyGenerator, String propContentExpect) throws IOException {
         TypedPropertiesBuilder propBuilder = new TypedPropertiesBuilder();
         DataXHudiWriter hudiWriter = new DataXHudiWriter();
         hudiWriter.partitionedBy = "pt";
 
-        partition.setProps(propBuilder, hudiWriter);
+        keyGenerator.setProps(propBuilder, hudiWriter);
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             propBuilder.store(out);

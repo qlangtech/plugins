@@ -50,9 +50,14 @@ public class SimpleKeyGenerator extends HudiKeyGenerator {
         return genType;
     }
 
+//    @Override
+//    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+//        super.setProps(props, hudiWriter);
+//    }
+
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        super.setProps(props, hudiWriter);
+    protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+
     }
 
     @TISExtension

@@ -48,9 +48,14 @@ public class ComplexKeyGenerator extends HudiKeyGenerator {
         return genType;
     }
 
+//    @Override
+//    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+//        this.partition.setProps(props, hudiWriter);
+//    }
+
     @Override
-    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        this.partition.setProps(props, hudiWriter);
+    protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+
     }
 
     @TISExtension

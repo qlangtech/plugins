@@ -170,7 +170,7 @@ public class TestDataXHudiWriter {
         SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
         simpleKeyGenerator.partitionPathField = "tiny_c";
         simpleKeyGenerator.recordField = pk.get().getKey();
-        pt.setKeyGenerator(simpleKeyGenerator);
+       // pt.setKeyGenerator(simpleKeyGenerator);
 
         // pt.partitionPathField = "tiny_c";
         hudiTab.keyGenerator = simpleKeyGenerator;// .partition = pt;

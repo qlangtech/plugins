@@ -38,6 +38,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import org.apache.hudi.utilities.UtilHelpers;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.hudi.utilities.deltastreamer.SchedulerConfGenerator;
@@ -53,9 +54,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.ServiceLoader;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -67,6 +69,24 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
     public static void main(String[] args) throws Exception {
 
+        ServiceLoader<IExtraHadoopFileSystemGetter> fsGetter
+                = ServiceLoader.load(IExtraHadoopFileSystemGetter.class, TISHoodieDeltaStreamer.class.getClassLoader());
+        IExtraHadoopFileSystemGetter fs = null;
+        Iterator<IExtraHadoopFileSystemGetter> it = fsGetter.iterator();
+        while (it.hasNext()) {
+            fs = it.next();
+            break;
+        }
+        Objects.requireNonNull(fs, "fs can not be null");
+        FileSystem f = fs.getHadoopFileSystem("/");
+        //        fsGetter.forEach((fs) -> {
+//            try {
+//                fs.getHadoopFileSystem("/").close();
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        });
+//
 //        if (1 == 1) {
 //            try {
 //                throw new IllegalStateException("xxxxxx");
@@ -118,8 +138,9 @@ public class TISHoodieDeltaStreamer implements Serializable {
                         + writerPlugin.getClass().getName() + " must be type of " + IHiveConn.class.getSimpleName());
             }
             Configuration hadoopCfg = jssc.hadoopConfiguration();
-            FileSystem fs = writerPlugin.getFs().getFileSystem().unwrap();
-            hadoopCfg.addResource(fs.getConf());
+            //writerPlugin.getFs().getFileSystem().unwrap();
+
+            hadoopCfg.addResource(f.getConf());
             IHiveConnGetter hiveConnMeta = ((IHiveConn) writerPlugin).getHiveConnMeta();
             hadoopCfg.set(HiveConf.ConfVars.METASTOREURIS.varname
                     , hiveConnMeta.getMetaStoreUrls());
@@ -127,17 +148,16 @@ public class TISHoodieDeltaStreamer implements Serializable {
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
             TISHadoopFileSystemGetter.initializeDir = true;
-            Optional<HiveUserToken> userToken = hiveConnMeta.getUserToken();
-            if (userToken.isPresent()) {
-                HiveUserToken hiveToken = userToken.get();
-                hiveToken.accept(new IHiveUserTokenVisitor() {
-                    @Override
-                    public void visit(KerberosUserToken token) {
-                        token.getKerberosCfg().setConfiguration(hadoopCfg);
-                    }
-                });
-            }
-            new HoodieDeltaStreamer(cfg, jssc, fs, hadoopCfg).sync();
+            HiveUserToken userToken = hiveConnMeta.getUserToken();
+//            if (userToken.isPresent()) {
+            userToken.accept(new IHiveUserTokenVisitor() {
+                @Override
+                public void visit(KerberosUserToken token) {
+                    token.getKerberosCfg().setConfiguration(hadoopCfg);
+                }
+            });
+            //}
+            new HoodieDeltaStreamer(cfg, jssc, f, hadoopCfg).sync();
             LOG.info("dataXName:" + dataName + ",targetTableName:" + cfg.targetTableName + " sync success");
             success = true;
         } catch (Throwable e) {
@@ -165,8 +185,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
         public HudiLoggerAppender() {
             super();
             this.loggerFactory = LogbackBinder.getSingleton().getLoggerFactory();
-            this.mdcCollection = System.getenv(TISCollectionUtils.KEY_COLLECTION);
-            this.taskId = System.getenv(IParamContext.KEY_TASK_ID);
+            this.mdcCollection = System.getProperty(TISCollectionUtils.KEY_COLLECTION);
+            this.taskId = System.getProperty(IParamContext.KEY_TASK_ID);
             if (StringUtils.isEmpty(taskId)) {
                 throw new IllegalArgumentException("taskId can not be empty");
             }

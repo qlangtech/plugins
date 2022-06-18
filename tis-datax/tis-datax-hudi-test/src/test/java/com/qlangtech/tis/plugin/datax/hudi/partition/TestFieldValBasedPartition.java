@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator;
 import org.junit.Test;
 
 /**
@@ -33,17 +34,22 @@ public class TestFieldValBasedPartition extends BasicPartitionTest {
 //        hoodie.datasource.write.keygenerator.type = SIMPLE
 //        hoodie.datasource.write.partitionpath.field = testFiled
 //        hoodie.datasource.hive_sync.partition_extractor_class = org.apache.hudi.hive.MultiPartKeysValueExtractor
+        String partitionField = "testFiled";
+        SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
+        simpleKeyGenerator.recordField = "user_id";
+        simpleKeyGenerator.partitionPathField = partitionField;
 
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
-        String partitionField = "testFiled";
-        fieldValBasedPartition.partitionPathField = partitionField;
+
+        simpleKeyGenerator.setPartition(fieldValBasedPartition);
+        // fieldValBasedPartition.partitionPathField = partitionField;
         String propContentExpect
                 =
                 "hoodie.datasource.write.keygenerator.type=SIMPLE\n" +
                         "hoodie.datasource.write.partitionpath.field=" + partitionField + "\n" +
                         "hoodie.datasource.hive_sync.partition_fields=pt\n" +
                         "hoodie.datasource.hive_sync.partition_extractor_class=org.apache.hudi.hive.MultiPartKeysValueExtractor";
-        verifyPartitionPropsBuild(fieldValBasedPartition, propContentExpect);
+        verifyPartitionPropsBuild(simpleKeyGenerator, propContentExpect);
 
         verifySQLDDLOfPartition(fieldValBasedPartition);
     }

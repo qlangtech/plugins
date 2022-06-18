@@ -116,7 +116,6 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
             script.appendLine("cfg.sourceOrderingField = %s", hudiTab.sourceOrderingField);
             //  script.appendLine("cfg.recordKeyField = %s", hudiTab.recordField);
 
-            script.appendLine("cfg.recordKeyField = %s", hudiTab.keyGenerator.getLiteriaRecordFields());
 
             // cfg.partitionPathField =
             setPartitionRelevantProps(script, hudiTab, hudiWriter);
@@ -219,6 +218,8 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                 script.appendLine("cfg.hiveSyncPartitionFields = %s", val);
             } else if (key.equals(IPropertiesBuilder.KEY_HOODIE_DATASOURCE_WRITE_KEYGENERATOR_TYPE)) {
                 script.appendLine("cfg.keygenType = %s", val);
+            } else if (key.equals(IPropertiesBuilder.RECORDKEY_FIELD_NAME.key())) {
+                script.appendLine("cfg.recordKeyField = %s", val);
             } else if (key.equals(
                     IPropertiesBuilder.KEY_HOODIE_PARTITIONPATH_FIELD)) {
                 // case KeyGeneratorOptions.PARTITIONPATH_FIELD_OPT_KEY:

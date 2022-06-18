@@ -20,12 +20,14 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
 import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
 import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -40,6 +42,7 @@ import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 import org.slf4j.Logger;
@@ -54,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.jar.Manifest;
 
 /**
  * Hudi 文件导入完成之后，开始执行同步工作
@@ -143,7 +147,9 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     private SparkAppHandle launchSparkRddConvert(ITISFileSystem fs, IPath dumpDir, IPath fsSourcePropsPath) throws Exception {
 
         Map<String, String> env = Config.getInstance().getAllKV();
-
+        File sparkHome = HudiConfig.getSparkHome();
+        File sparkCfgDir = new File(sparkHome, "conf");
+        this.hudiWriter.getFs().setConfigFile(sparkCfgDir);
         String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
         final String taskId = MDC.get(IParamContext.KEY_TASK_ID);
         if (StringUtils.isEmpty(taskId)) {
@@ -153,6 +159,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         if (StringUtils.isNotEmpty(mdcCollection)) {
             env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
         }
+        env.put(IYarnConfig.ENV_YARN_CONF_DIR, String.valueOf(sparkCfgDir.toPath().normalize()));
 
         logger.info("environment props ===========================");
         for (Map.Entry<String, String> entry : env.entrySet()) {
@@ -170,7 +177,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         // String tabName = this.getFileName();
 
         File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
-        File sparkHome = HudiConfig.getSparkHome();
+
 
         File resJar = FileUtils.listFiles(hudiDependencyDir, new String[]{"jar"}, false)
                 .stream().findFirst().orElseThrow(
@@ -189,10 +196,23 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
         // ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
-        handle.setMaster(sparkConnGetter.getSparkMaster());
+        final String sparkMaster = sparkConnGetter.getSparkMaster(sparkCfgDir);
+        handle.setMaster(sparkMaster);
         handle.setSparkHome(String.valueOf(sparkHome.toPath().normalize()));
         handle.setMainClass("com.alibaba.datax.plugin.writer.hudi.TISHoodieDeltaStreamer");
 
+        if (ISparkConnGetter.KEY_CONN_YARN.equalsIgnoreCase(sparkMaster)) {
+            // 此时使用yarn方式连接
+            // 由于在 @see org.apache.hudi.utilities.UtilHelpers 中将spark.eventLog.enabled开启，所以必须要设置hdfs log dir
+            String fsDefault = this.hudiWriter.getFs().getFSAddress();
+            boolean endWithSlash = StringUtils.endsWith(fsDefault, "/");
+            fsDefault = fsDefault + (endWithSlash ? StringUtils.EMPTY : "/") + "tmp/spark-events";
+            IPath eventDir = fs.getPath(fsDefault);
+            if (!fs.exists(eventDir)) {
+                fs.mkdirs(eventDir);
+            }
+            handle.setConf("spark.eventLog.dir", fsDefault);
+        }
 
         handle.addAppArgs("--table-type", this.hudiWriter.getHudiTableType().getValue()
                 , "--source-class", "org.apache.hudi.utilities.sources.AvroDFSSource"
@@ -223,6 +243,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
 //        handle.addSparkArg("--driver-memory", "1024M");
 //        handle.addSparkArg("--executor-memory", "2G");
+        //spark.eventLog.dir               hdfs://namenode:8021/directory
 
         this.hudiWriter.sparkSubmitParam.setHandle(handle);
 
@@ -234,14 +255,15 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                 SparkAppHandle.State state = sparkAppHandle.getState();
                 if (state.isFinal()) {
                     // finalState[0] = state;
-                    System.out.println("Info:" + state + ",appId:" + sparkAppHandle.getAppId());
+                    // System.out.println("Info:" + state + ",appId:" + sparkAppHandle.getAppId());
+                    logger.info("spark job stateChanged Info:" + sparkAppHandle.getAppId() + ":" + sparkAppHandle.getState());
                     countDownLatch.countDown();
                 }
             }
 
             @Override
             public void infoChanged(SparkAppHandle sparkAppHandle) {
-                System.out.println("Info:" + sparkAppHandle.getState().toString());
+                logger.info("spark job infoChanged change Info:" + sparkAppHandle.getAppId() + ":" + sparkAppHandle.getState());
             }
         });
 
@@ -264,11 +286,18 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                 + execContext.getTaskId() + "/" + PluginAndCfgsSnapshot.getTaskEntryName() + ".jar");
 
         if (!manifestJar.exists()) {
-            PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
+            Map<String, String> extraEnvProps = Maps.newHashMap();
+            extraEnvProps.put(IParamContext.KEY_TASK_ID, String.valueOf(execContext.getTaskId()));
+            extraEnvProps.put(TISCollectionUtils.KEY_COLLECTION, execContext.getIndexName());
+            Pair<PluginAndCfgsSnapshot, Manifest> manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
                     , new TargetResName(execContext.getIndexName()), -1, Optional.of((meta) -> {
                         // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
                         return !(meta.getPluginName().indexOf("hudi") > -1);
-                    }));
+                    }), extraEnvProps);
+            if (manifest.getLeft().appLastModifyTimestamp < 1) {
+                throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"
+                        + manifest.getLeft().appLastModifyTimestamp);
+            }
         }
 //        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
 //        try (JarOutputStream jaroutput = new JarOutputStream(
@@ -345,25 +374,25 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //            props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class"
 //                    , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
 
-            Optional<HiveUserToken> hiveUserToken = hiveMeta.getUserToken();
-            if (hiveUserToken.isPresent()) {
-                hiveUserToken.get().accept(new IHiveUserTokenVisitor() {
-                    @Override
-                    public void visit(KerberosUserToken token) {
+            HiveUserToken hiveUserToken = hiveMeta.getUserToken();
+            // if (hiveUserToken.isPresent()) {
+            hiveUserToken.accept(new IHiveUserTokenVisitor() {
+                @Override
+                public void visit(KerberosUserToken token) {
 
-                    }
+                }
 
-                    @Override
-                    public void visit(DefaultHiveUserToken token) {
-                        props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
-                        props.setProperty("hoodie.datasource.hive_sync.password", token.password);
-                    }
-                });
+                @Override
+                public void visit(DefaultHiveUserToken token) {
+                    props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
+                    props.setProperty("hoodie.datasource.hive_sync.password", token.password);
+                }
+            });
 
 //
 //                IHiveUserToken token = hiveUserToken.get();
 
-            }
+            //  }
             if (StringUtils.isEmpty(hiveMeta.getMetaStoreUrls())) {
                 throw new IllegalStateException("hiveMeta:" + hiveMeta.identityValue() + " metaStoreUrls can not be empty");
             }
@@ -372,7 +401,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
             props.setProperty("hoodie.datasource.hive_sync.mode", "hms");
 
-            props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.keyGenerator.getLiteriaRecordFields());
+            //   props.setProperty("hoodie.datasource.write.recordkey.field", this.hudiTab.keyGenerator.getLiteriaRecordFields());
             //  props.setProperty("hoodie.datasource.write.partitionpath.field", hudiWriter.partitionedBy);
 
             props.store(write);

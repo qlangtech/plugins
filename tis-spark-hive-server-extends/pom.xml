@@ -92,20 +92,25 @@
                             <artifactSet>
                                 <includes>
                                     <include>org.apache.spark:spark-hive-thriftserver_2.11</include>
+                                    <include>org.apache.spark:spark-hive_2.11</include>
+<!--                                    <include>org.spark-project.hive:hive-exec</include>-->
+<!--                                    <include>org.spark-project.hive:hive-metastore</include>-->
+<!--                                    <include>org.spark-project.hive:hive-cli</include>-->
+<!--                                    <include>org.spark-project.hive:hive-jdbc</include>-->
                                 </includes>
                             </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>org.apache.spark:spark-hive-thriftserver_2.11</artifact>
-                                    <includes>
-                                        <include>org/apache/hive/**</include>
-                                        <include>org/apache/spark/**</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>org/apache/spark/sql/hive/thriftserver/HiveThriftServer2*</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
+                            <!--                            <filters>-->
+                            <!--                                <filter>-->
+                            <!--                                    <artifact>org.apache.spark:spark-hive-thriftserver_2.11</artifact>-->
+                            <!--                                    <includes>-->
+                            <!--                                        <include>org/apache/hive/**</include>-->
+                            <!--                                        <include>org/apache/spark/**</include>-->
+                            <!--                                    </includes>-->
+                            <!--                                    <excludes>-->
+                            <!--                                        <exclude>org/apache/spark/sql/hive/thriftserver/HiveThriftServer2*</exclude>-->
+                            <!--                                    </excludes>-->
+                            <!--                                </filter>-->
+                            <!--                            </filters>-->
                         </configuration>
                     </execution>
                 </executions>

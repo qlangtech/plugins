@@ -18,8 +18,10 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl;
 
+import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 
 import java.util.Collections;
@@ -53,6 +55,11 @@ public class NonePartitionKeyGenerator extends HudiKeyGenerator {
 //    public void setProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
 //
 //    }
+
+    @Override
+    protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
+
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicHudiKeyGeneratorDescriptor {

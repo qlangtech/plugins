@@ -84,14 +84,11 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                         }
 
 
-
-
                         initializeDir = true;
                     }
                 }
             }
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -109,12 +106,10 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
         }
         try {
             return new Path(path).getFileSystem(configuration);
-        } catch (
-                ClassCastException e) {
+        } catch (ClassCastException e) {
             throw new RuntimeException(Configuration.class.getClassLoader()
                     + ",cast from:" + fsFactory.getConfiguration().getClass().getClassLoader(), e);
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("path:" + path, e);
         }
     }

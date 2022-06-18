@@ -18,7 +18,11 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.partition;
 
+import com.qlangtech.plugins.org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.TimeStampKeyGenerator;
 import org.junit.Test;
+
+import java.util.TimeZone;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,14 +34,23 @@ public class TestSlashEncodedDayPartition extends BasicPartitionTest {
     public void testPropsBuild() throws Exception {
 
 //        HudiTimestampBasedKeyGenerator keyGenerator = new HudiTimestampBasedKeyGenerator();
-//        keyGenerator.timezone = TimeZone.getDefault().getID();
-//        keyGenerator.timestampType = TimestampBasedAvroKeyGenerator.TimestampType.EPOCHMILLISECONDS.name();
-//        keyGenerator.inputDateformat = "yyyy-MM-dd HH:mm:ss";
-//        keyGenerator.outputDateformat = "yyyyMMdd";
+//        keyGenerator.timezone =
+
+        String partitionField = "testFiled";
+        TimeStampKeyGenerator timeStampKeyGenerator = new TimeStampKeyGenerator();
+        timeStampKeyGenerator.recordField = "user_id";
+        timeStampKeyGenerator.partitionPathField = partitionField;
+        timeStampKeyGenerator.timezone = TimeZone.getDefault().getID();
+        timeStampKeyGenerator.timestampType = TimestampBasedAvroKeyGenerator.TimestampType.EPOCHMILLISECONDS.name();
+        timeStampKeyGenerator.inputDateformat = "yyyy-MM-dd HH:mm:ss";
+        timeStampKeyGenerator.outputDateformat = "yyyyMMdd";
 
         SlashEncodedDayPartition partition = new SlashEncodedDayPartition();
-        String partitionField = "testFiled";
-        partition.partitionPathField = partitionField;
+
+        timeStampKeyGenerator.setPartition(partition);
+
+
+        //partition.partitionPathField = partitionField;
         // partition.keyGenerator = keyGenerator;
         String propContentExpect
                 =
@@ -50,7 +63,7 @@ public class TestSlashEncodedDayPartition extends BasicPartitionTest {
                         "hoodie.deltastreamer.keygen.timebased.input.dateformat=yyyy-MM-dd HH:mm:ss\n" +
                         "hoodie.deltastreamer.keygen.timebased.output.dateformat=yyyyMMdd\n" +
                         "hoodie.deltastreamer.keygen.timebased.timezone=Asia/Shanghai";
-        verifyPartitionPropsBuild(partition, propContentExpect);
+        verifyPartitionPropsBuild(timeStampKeyGenerator, propContentExpect);
 
         verifySQLDDLOfPartition(partition);
     }

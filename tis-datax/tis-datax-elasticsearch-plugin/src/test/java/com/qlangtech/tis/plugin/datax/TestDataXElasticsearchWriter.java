@@ -120,7 +120,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         dataXWriter.endpoint = "aliyun-bj-endpoint";
         dataXWriter.alias = "application2";
         dataXWriter.index = "application";
-        dataXWriter.type = "specific_type";
+        // dataXWriter.type = "specific_type";
         dataXWriter.cleanup = true;
         dataXWriter.batchSize = 9999;
         dataXWriter.trySize = 22;
@@ -267,6 +267,10 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         public TestAliyunToken(String accessKeyId, String sccessKeySecret) {
             this.accessKeyId = accessKeyId;
             this.sccessKeySecret = sccessKeySecret;
+        }
+        @Override
+        public String identityValue() {
+            return null;
         }
 
         @Override

@@ -25,6 +25,7 @@ import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
 import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -50,7 +51,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -124,16 +124,16 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             HiveConf hiveCfg = new HiveConf();
             hiveCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, this.metaStoreUrls);
 
-            Optional<HiveUserToken> userToken = getUserToken();
-            if (userToken.isPresent()) {
-                HiveUserToken hiveToken = userToken.get();
-                hiveToken.accept(new IHiveUserTokenVisitor() {
-                    @Override
-                    public void visit(KerberosUserToken token) {
-                        token.getKerberosCfg().setConfiguration(hiveCfg);
-                    }
-                });
-            }
+            HiveUserToken userToken = getUserToken();
+            //if (userToken.isPresent()) {
+            // HiveUserToken hiveToken = userToken.get();
+            userToken.accept(new IHiveUserTokenVisitor() {
+                @Override
+                public void visit(KerberosUserToken token) {
+                    token.getKerberosCfg().setConfiguration(hiveCfg);
+                }
+            });
+            //}
 
             final IMetaStoreClient storeClient = Hive.get(hiveCfg, false).getMSC();
             return new IHiveMetaStore() {
@@ -171,13 +171,14 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     }
 
     // @Override
-    public Optional<HiveUserToken> getUserToken() {
+    public HiveUserToken getUserToken() {
 //        return this.useUserToken
 //                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
         if (this.userToken == null) {
-            throw new IllegalStateException("hive userToken can not be null");
+            // throw new IllegalStateException("hive userToken can not be null");
+            return new OffHiveUserToken();
         }
-        return Optional.ofNullable(this.userToken);
+        return this.userToken;
     }
 
 

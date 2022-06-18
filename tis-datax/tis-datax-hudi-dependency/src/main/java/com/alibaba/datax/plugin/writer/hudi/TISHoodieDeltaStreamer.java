@@ -172,7 +172,9 @@ public class TISHoodieDeltaStreamer implements Serializable {
             } catch (Throwable e) {
 
             }
-            System.exit(success ? 0 : 1);
+            if (!success) {
+                System.exit(1);
+            }
         }
     }
 

@@ -23,7 +23,7 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -132,13 +132,13 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-extends</artifactId>
-            <version>3.5.0</version>
+            <version>3.6.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
-            <version>3.5.0</version>
+            <version>3.6.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <!--    <parent>-->
@@ -38,11 +38,12 @@
 
     <artifactId>tis-datax-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
+
     <properties>
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
-<!--        <spark.dist.dir.name>spark-${spark2.version}-bin-without-hadoop</spark.dist.dir.name>-->
+        <!--        <spark.dist.dir.name>spark-${spark2.version}-bin-without-hadoop</spark.dist.dir.name>-->
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
-
+        <classifier>hudi_${hudi.version};spark_${spark2.version};hive_${hive.version};hadoop_${hadoop-version}</classifier>
     </properties>
     <build>
         <resources>
@@ -51,6 +52,10 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+
+        <plugins>
+
+        </plugins>
     </build>
 
     <dependencies>
@@ -101,11 +106,6 @@
             </exclusions>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hudi</groupId>-->
-<!--            <artifactId>hudi-client-common</artifactId>-->
-<!--            <version>${hudi.version}</version>-->
-<!--        </dependency>-->
 
 
         <dependency>
@@ -135,58 +135,6 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>
         </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>org.apache.spark</groupId>-->
-        <!--            <artifactId>spark-sql_${scala.binary.version}</artifactId>-->
-        <!--            <version>${spark2.version}</version>-->
-        <!--        </dependency>-->
-
-
-        <!--        <dependency>-->
-        <!--            <groupId>org.apache.hive</groupId>-->
-        <!--            <artifactId>hive-exec</artifactId>-->
-        <!--            <scope>test</scope>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>ant</groupId>-->
-        <!--                    <artifactId>ant</artifactId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--        </dependency>-->
-
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.alibaba.datax</groupId>-->
-        <!--            <artifactId>hdfswriter</artifactId>-->
-        <!--            <version>${alibaba.datax.version}</version>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>com.alibaba.datax</groupId>-->
-        <!--                    <artifactId>datax-common</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>com.alibaba.datax</groupId>-->
-        <!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>org.apache.hive</groupId>-->
-        <!--                    <artifactId>hive-serde</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>org.apache.hive</groupId>-->
-        <!--                    <artifactId>hive-service</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>org.apache.hive</groupId>-->
-        <!--                    <artifactId>hive-common</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>org.apache.hive.hcatalog</groupId>-->
-        <!--                    <artifactId>hive-hcatalog-core</artifactId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--        </dependency>-->
 
 
     </dependencies>
@@ -234,7 +182,9 @@
                                                overwrite="true"
                                                compression="gzip"/>
                                         <delete>
-                                            <fileset dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/jars" includes="hive*.jar"/>
+                                            <fileset
+                                                    dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/jars"
+                                                    includes="hive*.jar"/>
                                         </delete>
                                         <!--                                        <chmod dir="${project.build.directory}/${project.build.finalName}/${spark.dist.dir.name}/bin" perm="ugo+rx"-->
                                         <!--                                               includes="**/*"/>-->

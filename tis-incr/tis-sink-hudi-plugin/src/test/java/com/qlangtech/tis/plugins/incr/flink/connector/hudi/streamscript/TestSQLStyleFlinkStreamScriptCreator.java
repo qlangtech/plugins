@@ -56,7 +56,7 @@ public class TestSQLStyleFlinkStreamScriptCreator extends BaiscFlinkStreamScript
     public void testFlinkSqlTableDDLCreateWithFieldValBasedPartition() throws Exception {
 
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
-        fieldValBasedPartition.partitionPathField = "kind";
+       // fieldValBasedPartition.partitionPathField = "kind";
 
         validateGenerateScript(sqlType, fieldValBasedPartition, (mdata) -> {
             SQLStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData

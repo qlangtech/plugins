@@ -33,7 +33,7 @@
     <url>http://maven.apache.org</url>
 
     <properties>
-
+        <classifier>hive_${hive.version};hadoop_${hadoop-version}</classifier>
     </properties>
     <build>
         <plugins>

@@ -31,13 +31,16 @@
     <artifactId>tis-sink-hudi-plugin</artifactId>
     <packaging>tpi</packaging>
 
+    <properties>
+        <classifier>hudi_${hudi.version};spark_${spark2.version};hive_${hive.version};hadoop_${hadoop-version}</classifier>
+    </properties>
 
     <dependencies>
 
         <dependency>
             <groupId>org.apache.hudi</groupId>
-<!--            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>-->
-            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_2.3.1</artifactId>
+            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_${hive.version}</artifactId>
+            <!--            <artifactId>tis-hudi-flink-bundle_${scala.binary.version}_hive_2.3.1</artifactId>-->
             <version>${hudi.version}</version>
         </dependency>
 

@@ -22,7 +22,6 @@ import com.qlangtech.tis.fs.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +29,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+
+//import org.apache.hadoop.hdfs.client.HdfsDataInputStream;
 
 /**
  * 相关的类是:TisAbstractDirectory
@@ -208,16 +209,16 @@ public class HdfsFileSystem implements ITISFileSystem {
 
         @Override
         public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-            ((HdfsDataInputStream) this.in).readFully(position, buffer, offset, length);
+            ((org.apache.hadoop.fs.FSDataInputStream) this.in).readFully(position, buffer, offset, length);
         }
 
         @Override
         public void seek(long position) {
-            try {
-                ((HdfsDataInputStream) this.in).seek(position);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            //try {
+            ((FSDataInputStream) this.in).seek(position);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
         }
     }
 

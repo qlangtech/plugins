@@ -111,7 +111,7 @@ public class BaiscFlinkStreamScriptCreator {
         EasyMock.replay(dataXProcessor, dataXReader);
 
         HudiSinkFactory sinkFactory = new HudiSinkFactory();
-        sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
+      //  sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
         sinkFactory.scriptType = scriptType;
         sinkFactory.currentLimit = 2000;
         //String groupName, String keyVal, Class<T> pluginClass

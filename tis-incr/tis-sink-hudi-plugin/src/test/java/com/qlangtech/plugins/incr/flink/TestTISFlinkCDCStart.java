@@ -189,7 +189,7 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
                 return sinkFuncts;
             }
         };
-        sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
+      //  sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
         sinkFactory.currentLimit = 200;
         sinkFactory.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));
 

@@ -38,6 +38,7 @@
     </scm>
     <properties>
 
+
     </properties>
     <modules>
         <module>tis-datax-common-plugin</module>

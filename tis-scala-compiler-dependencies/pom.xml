@@ -26,7 +26,7 @@
         <version>3.5.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <properties/>
     <artifactId>tis-scala-compiler-dependencies</artifactId>
 
     <build>

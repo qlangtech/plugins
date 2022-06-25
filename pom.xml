@@ -81,7 +81,7 @@
         <spark2.version>2.4.4</spark2.version>
         <hudi.version>0.10.1</hudi.version>
         <!--        <revision>2.3.0</revision>-->
-
+        <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
         <hadoop-version>2.7.3</hadoop-version>
         <!--
                 <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>

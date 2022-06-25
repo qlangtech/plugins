@@ -40,7 +40,6 @@
     <packaging>tpi</packaging>
 
     <properties>
-        <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
         <!--        <spark.dist.dir.name>spark-${spark2.version}-bin-without-hadoop</spark.dist.dir.name>-->
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
         <classifier>hudi_${hudi.version};spark_${spark2.version};hive_${hive.version};hadoop_${hadoop-version}</classifier>

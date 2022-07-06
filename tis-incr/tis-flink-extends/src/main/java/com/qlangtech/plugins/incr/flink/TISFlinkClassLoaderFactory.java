@@ -26,7 +26,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
-import com.qlangtech.tis.util.XStream2;
+import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
@@ -76,7 +76,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     , classLoaderResolveOrder);
             try {
                 //
-                XStream2.PluginMeta flinkPluginMeta = null;
+                PluginMeta flinkPluginMeta = null;
                 String tisAppName = null;
                 for (URL cp : libraryURLs) {
                     // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
@@ -90,8 +90,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //                    File pluginLibDir = Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName, true);
 //                    appPluginDir = new File(pluginLibDir, "../..");
 //                    appPluginDir = appPluginDir.toPath().normalize().toFile();
-                    flinkPluginMeta = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName
-                            , Config.getMetaProps().getVersion());
+                    flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName
+                            , Config.getMetaProps().getVersion(), Optional.empty());
                     break;
                 }
 
@@ -106,7 +106,6 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 pluginManager.dynamicLoad(shotName, flinkPluginMeta.getPluginPackageFile(), true, null);
 //                ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
 //                        + "/" + tisAppName + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(tisAppName));
-
 
 
                 return FlinkUserCodeClassLoaders.create(
@@ -170,9 +169,9 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                             logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
                             // TIS.clean();
                             // 这里只需要类不需要配置文件了
-                            XStream2.PluginMeta flinkPluginMeta
-                                    = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
-                                    , Config.getMetaProps().getVersion());
+                            PluginMeta flinkPluginMeta
+                                    = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
+                                    , Config.getMetaProps().getVersion(), Optional.empty());
                             // 服务端不需要配置文件，只需要能够加载到类就行了
                             PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Optional.empty(), flinkPluginMeta);
                             cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);

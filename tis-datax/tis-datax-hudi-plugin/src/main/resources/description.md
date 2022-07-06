@@ -7,15 +7,6 @@
 
 配合TIS提供的各种Source Connnector组件（MySQL，PostgreSQL，SqlServer等）快速实现各种数据源`批量`入湖
 
-依赖组件:
-
- | 组件名称| 版本    |
- | -------- | -----  |
- | Apache Hudi     | ${hudi.version} |
- | Apache Spark   |  ${spark.dist.dir.name} |
- | Apache Hive     | ${hive.version}  |
- | Apache Hadoop  | ${hadoop-version} | 
-
 
 
 

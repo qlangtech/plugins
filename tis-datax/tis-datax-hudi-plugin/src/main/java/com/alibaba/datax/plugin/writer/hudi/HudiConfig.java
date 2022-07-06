@@ -18,11 +18,15 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 /**
@@ -72,7 +76,17 @@ public class HudiConfig {
     }
 
     private static File getHudiPluginLibDir() {
-        return Config.getPluginLibDir("tis-datax-hudi-plugin");
+        Optional<PluginClassifier> classifier = null;
+        String hudiDataXPlugin = "tis-datax-hudi-plugin";
+        for (PluginWrapper p : TIS.get().getPluginManager().activePlugins) {
+            if (hudiDataXPlugin.equals(p.getShortName())) {
+                classifier = p.getClassifier();
+                if (classifier.isPresent()) {
+                    return Config.getPluginLibDir(classifier.get().getTPIPluginName(hudiDataXPlugin));
+                }
+            }
+        }
+        throw new IllegalStateException("can not find plugin:" + hudiDataXPlugin);
     }
 
     public static File getSparkHome() {

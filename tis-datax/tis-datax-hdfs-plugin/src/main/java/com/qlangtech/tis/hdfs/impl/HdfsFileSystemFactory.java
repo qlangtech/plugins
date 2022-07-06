@@ -92,7 +92,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 "\n" +
                 "<configuration>\n" +
                 "    <property>\n" +
-                "        <name></name>\n" +
+                "        <name>" + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "</name>\n" +
                 "        <value></value>\n" +
                 "    </property>\n" +
                 "</configuration> ";

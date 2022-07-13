@@ -65,7 +65,7 @@
         <profile>
             <id>aliyun-emr</id>
             <properties>
-                <spark2.version>3.2.1</spark2.version>
+                <spark2.version>3.1.2</spark2.version>
                 <hadoop-version>3.2.1</hadoop-version>
                 <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop3.2</spark.dist.dir.name>
                 <hudi.version>0.10.1</hudi.version>

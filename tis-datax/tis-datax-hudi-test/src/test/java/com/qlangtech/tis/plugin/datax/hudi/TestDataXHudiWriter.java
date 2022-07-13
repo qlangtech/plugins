@@ -40,6 +40,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -50,8 +51,8 @@ import com.qlangtech.tis.plugin.common.IWriterPluginMeta;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator;
-import com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition;
+import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.NonePartitionKeyGenerator;
+import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -108,6 +109,7 @@ public class TestDataXHudiWriter {
 
     @BeforeClass
     public static void start() throws Exception {
+        // System.setProperty(Config.KEY_LOG_DIR, com.qlangtech.tis.manage.common.Config.getLogDir().getAbsolutePath());
         CenterResource.setNotFetchFromCenterRepository();
 //        dataDir = folder.newFolder("data");
 //        Config.setDataDir(dataDir.getAbsolutePath());
@@ -124,7 +126,8 @@ public class TestDataXHudiWriter {
     @Test
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
-        // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
+        System.out.println(Config.getAssembleHost());
+       // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
         String tableFullTypes = "full_types";
         TargetResName dbName = new TargetResName("hudi-data-test-mysql-ds");
 
@@ -165,15 +168,18 @@ public class TestDataXHudiWriter {
 
         HudiSelectedTab hudiTab = new HudiSelectedTab();
         hudiTab.name = tableFullTypes;
-        // hudiTab.partition = new OffPartition();
-        FieldValBasedPartition pt = new FieldValBasedPartition();
-        SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
-        simpleKeyGenerator.partitionPathField = "tiny_c";
-        simpleKeyGenerator.recordField = pk.get().getKey();
-       // pt.setKeyGenerator(simpleKeyGenerator);
-
+        // hudiTab. = new OffPartition();
+        //FieldValBasedPartition pt = new FieldValBasedPartition();
+        // SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
+//        simpleKeyGenerator.partitionPathField = "tiny_c";
+//        simpleKeyGenerator.recordField = pk.get().getKey();
+//        simpleKeyGenerator.partition = new OffPartition();
+        // pt.setKeyGenerator(simpleKeyGenerator);
+        NonePartitionKeyGenerator nonePartition = new NonePartitionKeyGenerator();
+        nonePartition.recordFields = Lists.newArrayList(pk.get().getKey());
+        nonePartition.partition = new OffPartition();
         // pt.partitionPathField = "tiny_c";
-        hudiTab.keyGenerator = simpleKeyGenerator;// .partition = pt;
+        hudiTab.keyGenerator = nonePartition;// .partition = pt;
 
         hudiTab.setCols(fullTypesCols);
         // hudiTab.recordField = Lists.newArrayList(pk.get().getKey());
@@ -188,7 +194,7 @@ public class TestDataXHudiWriter {
         IExecChainContext execContext = EasyMock.createMock("execContext", IExecChainContext.class);
         // EasyMock.expect(execContext.getBoolean(HudiDumpPostTask.KEY_DELTA_STREM_DEBUG)).andReturn(true);
 
-        EasyMock.expect(execContext.getTaskId()).andReturn(taskId);
+        EasyMock.expect(execContext.getTaskId()).andReturn(taskId).anyTimes();
         EasyMock.expect(execContext.getIndexName()).andReturn(HdfsFileSystemFactoryTestUtils.testDataXName.getName()).anyTimes();
         EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);

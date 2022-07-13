@@ -73,7 +73,7 @@ public class YarnConnStrategy extends SparkConnStrategy {
 //            throw new RuntimeException(e);
 //        }
 
-        return ISparkConnGetter.KEY_CONN_YARN;
+        return IYarnConfig.KEY_DISPLAY_NAME;
     }
 
     public static String dftYarnSiteContent() {

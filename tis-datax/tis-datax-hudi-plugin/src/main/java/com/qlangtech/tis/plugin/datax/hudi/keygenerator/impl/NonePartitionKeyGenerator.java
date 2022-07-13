@@ -23,6 +23,7 @@ import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
+import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +59,9 @@ public class NonePartitionKeyGenerator extends HudiKeyGenerator {
 
     @Override
     protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-
+        if (this.partition == null) {
+            this.partition = new OffPartition();
+        }
     }
 
     @TISExtension

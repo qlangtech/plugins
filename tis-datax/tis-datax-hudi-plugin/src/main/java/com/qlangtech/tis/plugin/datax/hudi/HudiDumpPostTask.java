@@ -24,8 +24,8 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
-import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -40,6 +40,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -167,6 +168,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         }
         logger.info("=============================================");
         SparkLauncher handle = new SparkLauncher(env);
+        //handle.setSparkHome()
         // handle.directory();
 //        File logFile = new File(TisAppLaunchPort.getAssebleTaskDir(), "full-" + taskId + ".log");
 //        FileUtils.touch(logFile);
@@ -178,14 +180,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         File hudiDependencyDir = HudiConfig.getHudiDependencyDir();
 
-
-        File resJar = FileUtils.listFiles(hudiDependencyDir, new String[]{"jar"}, false)
+        final String[] jarExtend = new String[]{"jar"};
+        File resJar = FileUtils.listFiles(hudiDependencyDir, jarExtend, false)
                 .stream().findFirst().orElseThrow(
                         () -> new IllegalStateException("must have resJar hudiDependencyDir:" + hudiDependencyDir.getAbsolutePath()));
 
         File addedJars = new File(hudiDependencyDir, "lib");
         boolean[] hasAddJar = new boolean[1];
-        FileUtils.listFiles(addedJars, new String[]{"jar"}, false).forEach((jar) -> {
+        FileUtils.listFiles(addedJars, jarExtend, false).forEach((jar) -> {
             handle.addJar(String.valueOf(jar.toPath().normalize()));
             hasAddJar[0] = true;
         });
@@ -196,12 +198,13 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         handle.setAppResource(String.valueOf(resJar.toPath().normalize()));
         // ISparkConnGetter sparkConnGetter = writerPlugin.getSparkConnGetter();
+        logger.info("sparkCfgDir:{}", sparkCfgDir.getAbsolutePath());
         final String sparkMaster = sparkConnGetter.getSparkMaster(sparkCfgDir);
         handle.setMaster(sparkMaster);
         handle.setSparkHome(String.valueOf(sparkHome.toPath().normalize()));
         handle.setMainClass("com.alibaba.datax.plugin.writer.hudi.TISHoodieDeltaStreamer");
 
-        if (ISparkConnGetter.KEY_CONN_YARN.equalsIgnoreCase(sparkMaster)) {
+        if (IYarnConfig.KEY_DISPLAY_NAME.equalsIgnoreCase(sparkMaster)) {
             // 此时使用yarn方式连接
             // 由于在 @see org.apache.hudi.utilities.UtilHelpers 中将spark.eventLog.enabled开启，所以必须要设置hdfs log dir
             String fsDefault = this.hudiWriter.getFs().getFSAddress();
@@ -235,9 +238,12 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         if (Boolean.getBoolean(KEY_DELTA_STREM_DEBUG)) {
             // 测试中使用
-            javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
-        }
+            // javaOpts.append(" -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=18888");
+            javaOpts.append(" -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=18888");
 
+        }
+        // handle.addSparkArg()
+        // handle.setConf(SparkLauncher.EXECUTOR_EXTRA_JAVA_OPTIONS, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=28888");
         handle.setConf(SparkLauncher.DRIVER_EXTRA_JAVA_OPTIONS, javaOpts.toString());
 //        handle.setConf(SparkLauncher.DRIVER_MEMORY, "4G");
 //        handle.setConf(SparkLauncher.EXECUTOR_MEMORY, "6G");
@@ -292,7 +298,12 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             Pair<PluginAndCfgsSnapshot, Manifest> manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
                     , new TargetResName(execContext.getIndexName()), -1, Optional.of((meta) -> {
                         // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
-                        return !(meta.getPluginName().indexOf("hudi") > -1);
+                        boolean collect = !(meta.getPluginName().indexOf("hudi") > -1);
+                        if (collect) {
+                            // 与增量无关
+                            collect = !meta.getPluginName().startsWith(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH);
+                        }
+                        return collect;
                     }), extraEnvProps);
             if (manifest.getLeft().appLastModifyTimestamp < 1) {
                 throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"
@@ -378,14 +389,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             // if (hiveUserToken.isPresent()) {
             hiveUserToken.accept(new IHiveUserTokenVisitor() {
                 @Override
-                public void visit(KerberosUserToken token) {
+                public void visit(IKerberosUserToken token) {
 
                 }
 
                 @Override
-                public void visit(DefaultHiveUserToken token) {
-                    props.setProperty("hoodie.datasource.hive_sync.username", token.userName);
-                    props.setProperty("hoodie.datasource.hive_sync.password", token.password);
+                public void visit(IUserNamePasswordHiveUserToken token) {
+                    props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
+                    props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
                 }
             });
 

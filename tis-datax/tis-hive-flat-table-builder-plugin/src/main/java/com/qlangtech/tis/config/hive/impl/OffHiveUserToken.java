@@ -16,25 +16,31 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.config.spark;
+package com.qlangtech.tis.config.hive.impl;
 
-import com.qlangtech.tis.extension.Describable;
-
-import java.io.File;
+import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
 
 /**
- * Spark 的连接策略
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-06-14 17:10
+ * @create: 2022-05-03 09:33
  **/
-public abstract class SparkConnStrategy implements Describable<SparkConnStrategy> {
+@Public
+public class OffHiveUserToken extends HiveUserToken implements IOffHiveUserToken {
 
-    /**
-     *
-     * @param cfgDir
-     * @return
-     */
-    public abstract String getSparkMaster(File cfgDir);
+    @Override
+    public void accept(IHiveUserTokenVisitor visitor) {
+        visitor.visit(this);
+    }
 
+    @TISExtension
+    public static class DefaultDesc extends Descriptor<HiveUserToken> {
+        @Override
+        public String getDisplayName() {
+            return SWITCH_OFF;
+        }
+    }
 }

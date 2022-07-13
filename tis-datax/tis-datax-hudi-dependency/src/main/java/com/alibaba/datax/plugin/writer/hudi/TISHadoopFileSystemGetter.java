@@ -37,7 +37,6 @@ import java.io.RandomAccessFile;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -77,7 +76,7 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                                 try (InputStream mainifest = resource.openStream()) {
                                     PluginAndCfgsSnapshot remoteSnapshot
                                             = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
-                                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Optional.empty());
+                                    PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(remoteSnapshot.getAppName());
                                     remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
                                 }
                             }

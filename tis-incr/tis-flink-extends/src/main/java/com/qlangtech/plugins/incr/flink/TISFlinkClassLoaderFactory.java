@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink;
 
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.extension.ITPIArtifact;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
@@ -103,10 +104,10 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 }
                 final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName;
                 ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
-                pluginManager.dynamicLoad(shotName, flinkPluginMeta.getPluginPackageFile(), true, null);
+
+                pluginManager.dynamicLoad(ITPIArtifact.create(shotName), flinkPluginMeta.getPluginPackageFile(), true, null);
 //                ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
 //                        + "/" + tisAppName + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(tisAppName));
-
 
                 return FlinkUserCodeClassLoaders.create(
                         classLoaderResolveOrder,
@@ -173,7 +174,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                                     = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
                                     , Config.getMetaProps().getVersion(), Optional.empty());
                             // 服务端不需要配置文件，只需要能够加载到类就行了
-                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getLocalPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Optional.empty(), flinkPluginMeta);
+                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), flinkPluginMeta);
                             cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);
 
                         }

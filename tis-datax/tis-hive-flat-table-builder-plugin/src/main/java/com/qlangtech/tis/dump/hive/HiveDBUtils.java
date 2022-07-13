@@ -21,9 +21,7 @@ import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.DefaultHiveUserToken;
-import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
-import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
+import com.qlangtech.tis.config.hive.impl.*;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -137,13 +135,13 @@ public class HiveDBUtils {
         // if (userToken.isPresent()) {
         userToken.accept(new IHiveUserTokenVisitor() {
             @Override
-            public void visit(DefaultHiveUserToken ut) {
-                hiveDatasource.setUsername(ut.userName);
-                hiveDatasource.setPassword(ut.password);
+            public void visit(IUserNamePasswordHiveUserToken ut) {
+                hiveDatasource.setUsername(ut.getUserName());
+                hiveDatasource.setPassword(ut.getPassword());
             }
 
             @Override
-            public void visit(KerberosUserToken token) {
+            public void visit(IKerberosUserToken token) {
                 KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
                 jdbcUrl.append(";principal=")
                         .append(kerberosCfg.principal)

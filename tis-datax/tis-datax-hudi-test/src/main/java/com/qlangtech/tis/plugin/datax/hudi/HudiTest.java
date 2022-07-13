@@ -20,8 +20,10 @@ package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
+import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
+import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
@@ -101,10 +103,29 @@ public class HudiTest {
 
 
     public static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
+        //ISparkConnGetter
+//        final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
+//            @Override
+//            public String getSparkMaster(File cfgDir) {
+//                return "spark://sparkmaster:7077";
+//            }
+//
+//            @Override
+//            public String identityValue() {
+//                return "default";
+//            }
+//        };
+
         final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
             @Override
             public String getSparkMaster(File cfgDir) {
-                return "spark://sparkmaster:7077";
+
+                File sparkHome = HudiConfig.getSparkHome();
+                File sparkCfgDir = new File(sparkHome, "conf");
+
+                com.qlangtech.tis.config.Utils.setHadoopConfig2Local(sparkCfgDir, IYarnConfig.FILE_NAME_YARN_SITE
+                        , IOUtils.loadResourceFromClasspath(HudiTest.class, IYarnConfig.FILE_NAME_YARN_SITE));
+                return IYarnConfig.KEY_DISPLAY_NAME;
             }
 
             @Override
@@ -112,6 +133,7 @@ public class HudiTest {
                 return "default";
             }
         };
+
 //        sparkConnGetter.name = "default";
 //        sparkConnGetter.master = "spark://sparkmaster:7077";
 
@@ -146,6 +168,8 @@ public class HudiTest {
         SparkSubmitParams sparkSubmitParams = new SparkSubmitParams();
         sparkSubmitParams.driverMemory = "1G";
         sparkSubmitParams.executorMemory = "2G";
+        sparkSubmitParams.executorCores = 2;
+        sparkSubmitParams.deployMode = "cluster";
         writer.sparkSubmitParam = sparkSubmitParams;
 
 

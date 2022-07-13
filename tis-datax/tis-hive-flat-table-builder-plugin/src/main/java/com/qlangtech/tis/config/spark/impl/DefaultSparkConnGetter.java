@@ -30,8 +30,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 import java.io.File;
 
-//import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-04 19:40

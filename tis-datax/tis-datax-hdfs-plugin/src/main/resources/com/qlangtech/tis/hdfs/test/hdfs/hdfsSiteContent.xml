@@ -2,6 +2,10 @@
 
 <configuration>
     <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://192.168.28.200</value>
+    </property>
+    <property>
         <name>dfs.nameservices</name>
         <value>namenode</value>
     </property>

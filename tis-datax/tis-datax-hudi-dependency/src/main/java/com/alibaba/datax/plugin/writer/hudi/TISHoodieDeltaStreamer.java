@@ -24,7 +24,7 @@ import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
@@ -152,7 +152,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
 //            if (userToken.isPresent()) {
             userToken.accept(new IHiveUserTokenVisitor() {
                 @Override
-                public void visit(KerberosUserToken token) {
+                public void visit(IKerberosUserToken token) {
                     token.getKerberosCfg().setConfiguration(hadoopCfg);
                 }
             });

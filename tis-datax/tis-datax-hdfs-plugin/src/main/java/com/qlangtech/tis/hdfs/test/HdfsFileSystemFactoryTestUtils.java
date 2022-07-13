@@ -67,13 +67,14 @@ public class HdfsFileSystemFactoryTestUtils {
         Descriptor.FormData userToken = new Descriptor.FormData();
         userToken.addProp("userName", "root");
         userToken.addProp("password", "123456");
-        formData.addSubForm("userToken", "com.qlangtech.tis.hive.impl.OffHiveUserToken", userToken);
+        //OffHiveUserToken.class.getName()
+        formData.addSubForm("userToken", "com.qlangtech.tis.config.hive.impl.OffHiveUserToken", userToken);
 
 
         Descriptor.ParseDescribable<Describable> parseDescribable
                 = hiveConnGetter.newInstance(HdfsFileSystemFactoryTestUtils.testDataXName.getName(), formData);
         //IHiveConnGetter
-        Assert.assertNotNull(parseDescribable.getInstance());
+        //Assert.assertNotNull(parseDescribable.getInstance());
 
         Assert.assertNotNull(parseDescribable.getInstance());
         return parseDescribable.getInstance();

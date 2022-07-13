@@ -24,7 +24,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.KerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
 import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
@@ -129,7 +129,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             // HiveUserToken hiveToken = userToken.get();
             userToken.accept(new IHiveUserTokenVisitor() {
                 @Override
-                public void visit(KerberosUserToken token) {
+                public void visit(IKerberosUserToken token) {
                     token.getKerberosCfg().setConfiguration(hiveCfg);
                 }
             });

@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
@@ -92,7 +93,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //                    appPluginDir = new File(pluginLibDir, "../..");
 //                    appPluginDir = appPluginDir.toPath().normalize().toFile();
                     flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName
-                            , Config.getMetaProps().getVersion(), Optional.empty());
+                            , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
                     break;
                 }
 
@@ -105,7 +106,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName;
                 ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
 
-                pluginManager.dynamicLoad(ITPIArtifact.create(shotName), flinkPluginMeta.getPluginPackageFile(), true, null);
+                pluginManager.dynamicLoad(ITPIArtifact.create(shotName, flinkPluginMeta.classifier), flinkPluginMeta.getPluginPackageFile(), true, null);
 //                ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
 //                        + "/" + tisAppName + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(tisAppName));
 
@@ -172,7 +173,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                             // 这里只需要类不需要配置文件了
                             PluginMeta flinkPluginMeta
                                     = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
-                                    , Config.getMetaProps().getVersion(), Optional.empty());
+                                    , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
                             // 服务端不需要配置文件，只需要能够加载到类就行了
                             PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), flinkPluginMeta);
                             cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);

@@ -20,8 +20,8 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.util.Configuration;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
@@ -31,9 +31,7 @@ import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -47,7 +45,6 @@ import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.utils.TisMetaProps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
@@ -226,10 +223,20 @@ public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTable
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
-        TisMetaProps metaProps = Config.getMetaProps();
-        return new CompileAndPackage(Lists.newArrayList(
-                new PluginWrapper.Dependency("tis-sink-hudi-plugin", metaProps.getVersion(), false)
-                , new PluginWrapper.Dependency("tis-datax-hudi-plugin", metaProps.getVersion(), false)));
+//        TisMetaProps metaProps = Config.getMetaProps();
+//        return new CompileAndPackage(Lists.newArrayList(
+//                new PluginWrapper.Dependency("tis-sink-hudi-plugin", metaProps.getVersion(), false)
+//                , new PluginWrapper.Dependency("tis-datax-hudi-plugin", metaProps.getVersion(), false)));
+//        UberClassLoader uberClassLoader = TIS.get().getPluginManager().uberClassLoader;
+//        uberClassLoader.
+        // com.alibaba.datax.plugin.writer.hudi;HudiConfig
+        // HudiSinkFactory
+        return new CompileAndPackage(Sets.newHashSet(
+                //  "tis-sink-hudi-plugin"
+                HudiSinkFactory.class
+                // "tis-datax-hudi-plugin"
+                , "com.alibaba.datax.plugin.writer.hudi.HudiConfig"
+        ));
     }
 
 

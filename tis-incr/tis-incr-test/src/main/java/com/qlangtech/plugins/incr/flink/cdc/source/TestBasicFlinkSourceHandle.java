@@ -25,11 +25,9 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.SinkFuncs;
-import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
@@ -79,12 +77,14 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implement
         sinkFunction.add2Sink(tabName, streamMap.get(tabName).getStream());
         if (tabEnv == null) {
 
-            tabEnv = StreamTableEnvironment.create(
-                    env,
-                    EnvironmentSettings.newInstance()
-                            .useBlinkPlanner()
-                            .inStreamingMode()
-                            .build());
+//            tabEnv = StreamTableEnvironment.create(
+//                    env,
+//                    EnvironmentSettings.newInstance()
+//                            .useBlinkPlanner()
+//                            .inStreamingMode()
+//                            .build());
+
+            tabEnv = StreamTableEnvironment.create(env);
         }
 
         createTemporaryView(streamMap);

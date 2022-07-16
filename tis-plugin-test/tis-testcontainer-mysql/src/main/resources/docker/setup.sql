@@ -109,3 +109,19 @@ CREATE TABLE `instancedetail` (
   KEY `idx_oid_eid` (`order_id`,`entity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE `stu` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '',
+  `name` varchar(20) NOT NULL COMMENT '',
+  `school` varchar(20) NOT NULL COMMENT '',
+  `nickname` varchar(20) NOT NULL COMMENT '',
+  `age` int(11) NOT NULL COMMENT '',
+  `class_num` int(11) NOT NULL COMMENT '班级人数',
+  `score` decimal(4,2) NOT NULL COMMENT '成绩',
+  `phone` bigint(20) NOT NULL COMMENT '电话号码',
+  `email` varchar(64) DEFAULT NULL COMMENT '',
+  `ip` varchar(32) DEFAULT NULL COMMENT '',
+  `address` text COMMENT '',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1100002 DEFAULT CHARSET=utf8;
+

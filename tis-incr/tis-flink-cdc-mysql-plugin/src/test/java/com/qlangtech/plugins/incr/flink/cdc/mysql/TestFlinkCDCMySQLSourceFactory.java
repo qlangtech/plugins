@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,6 +63,61 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     @Before
     public void setUp() throws Exception {
         CenterResource.setNotFetchFromCenterRepository();
+    }
+
+
+    @Test
+    public void testStuBinlogConsume() throws Exception {
+
+        System.out.println(  this.getClass().getResource("/scala/Predef.class") );
+
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        mysqlCDCFactory.startupOptions = "latest";
+        final String tabName = "stu";
+
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+            @Override
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+            }
+
+            @Override
+            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws MQConsumeException, InterruptedException {
+                  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
+                Thread.sleep(1000);
+
+
+                BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
+                Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
+                dataSourceFactory.visitFirstConnection((conn) -> {
+
+                    Statement statement = conn.createStatement();
+                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
+                            "VALUES (1100001,'doTun','beida','jasper',81,26,45.54,14597415152,'xxx@hotmail.com','192.192.192.192','极乐世界f座 630103');");
+                    statement.close();
+                });
+
+                sleepForAWhile();
+                CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
+                waitForSnapshotStarted(snapshot);
+                List<TestRow> rows = fetchRows(snapshot, 1, false);
+                for (TestRow rr : rows) {
+                    System.out.println("------------" + rr.getInt("id"));
+                   // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
+
+                }
+            }
+
+            @Override
+            protected String getColEscape() {
+                return "`";
+            }
+        };
+
+        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+
     }
 
 

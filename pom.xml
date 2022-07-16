@@ -78,20 +78,14 @@
     </profiles>
 
     <properties>
+        <scala.version>2.11.1</scala.version>
+        <scala.binary.version>2.11</scala.binary.version>
         <spark2.version>2.4.4</spark2.version>
         <hudi.version>0.10.1</hudi.version>
         <!--        <revision>2.3.0</revision>-->
         <spark.dist.dir.name>spark-${spark2.version}-bin-hadoop2.7</spark.dist.dir.name>
         <hadoop-version>2.7.3</hadoop-version>
-        <!--
-                <hive-exec-fix.version>1.1.1-fix</hive-exec-fix.version>
-            -->
-        <!--    <hive.version>1.2.1</hive.version>    -->
-        <!--        <hive.version>2.3.1</hive.version>-->
-
         <hive.version>2.3.1</hive.version>
-
-
         <maven-tpi-plugin.classpathDependentExcludes>
             commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:logback-classic,org.apache.logging.log4j:*
         </maven-tpi-plugin.classpathDependentExcludes>

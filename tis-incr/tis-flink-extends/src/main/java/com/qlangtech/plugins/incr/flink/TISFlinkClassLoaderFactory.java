@@ -48,6 +48,7 @@ import java.nio.channels.FileLock;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -101,12 +102,14 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     throw new IllegalStateException("param tisAppName can not be empty");
                 }
                 if (flinkPluginMeta == null || !flinkPluginMeta.getPluginPackageFile().exists()) {
-                    throw new IllegalStateException("appPluginDir can not be empty,path:" + flinkPluginMeta.getPluginPackageFile().getAbsolutePath());
+                    throw new IllegalStateException("appPluginDir can not be empty,path:"
+                            + flinkPluginMeta.getPluginPackageFile().getAbsolutePath());
                 }
                 final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName;
                 ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
 
-                pluginManager.dynamicLoad(ITPIArtifact.create(shotName, flinkPluginMeta.classifier), flinkPluginMeta.getPluginPackageFile(), true, null);
+                pluginManager.dynamicLoad(ITPIArtifact.create(shotName, flinkPluginMeta.classifier)
+                        , flinkPluginMeta.getPluginPackageFile(), true, null);
 //                ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
 //                        + "/" + tisAppName + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(tisAppName));
 
@@ -198,8 +201,9 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //                    } else {
 //                        TIS.clean();
 //                    }
-
-                    return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), cfgSnapshot.getPluginNames()), libraryURLs, this.getParentClassLoader()
+                    final Set<String> relativePluginNames = cfgSnapshot.getPluginNames();
+                    logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
+                    return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames), libraryURLs, this.getParentClassLoader()
                             , this.alwaysParentFirstPatterns, this.classLoadingExceptionHandler);
                 } catch (Throwable e) {
                     throw new RuntimeException(e);

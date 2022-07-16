@@ -49,7 +49,9 @@ public class TestStreamAPIStyleFlinkStreamScriptCreator extends BaiscFlinkStream
     @Test
     public void testStreamScriptGenerateWithFieldValBasedPartition () throws Exception {
         FieldValBasedPartition fieldValBasedPartition = new FieldValBasedPartition();
-        fieldValBasedPartition.partitionPathField = "kind";
+      //  fieldValBasedPartition.partitionPathField = "kind";
+
+//        fieldValBasedPartition.
 
         validateGenerateScript(streamApiType, fieldValBasedPartition,(mdata) -> {
             StreamAPIStyleFlinkStreamScriptCreator.HudiStreamTemplateData tplData

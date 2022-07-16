@@ -20,7 +20,6 @@ package com.qlangtech.plugins.incr.flink;
 //import org.apache.flink.test.util.AbstractTestBase;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
@@ -39,6 +38,7 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -48,11 +48,10 @@ import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.sql.parser.stream.generate.StreamComponentCodeGenerator;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.XStream2;
+import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -65,6 +64,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -147,11 +147,13 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
 
         Assert.assertTrue("pkgTpi.exists()", pkgTpi.exists());
 
-        XStream2.PluginMeta flinkPluginMeta
-                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
-                , Config.getMetaProps().getVersion());
+        PluginMeta flinkPluginMeta
+                = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
+                , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
 
-        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.getPluginName(), pkgTpi, true, null);
+        // ITPIArtifactMatch match = ITPIArtifact.create(flinkPluginMeta.getPluginName(), flinkPluginMeta.classifier);
+
+        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.createPluginMatcher(), pkgTpi, true, null);
     }
 
     @Test
@@ -159,17 +161,19 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
 
         //String table1 = "totalpayinfo";
         // String table1  ="instancedetail";
-        String table1 = "base";
+       // String table1 = "base";
+        String table1 = "stu";
         //  String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
         //   File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");
         //  pluginDir = pluginDir.toPath().normalize().toFile();
 
 
-        XStream2.PluginMeta flinkPluginMeta
-                = new XStream2.PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
-                , Config.getMetaProps().getVersion());
+        PluginMeta flinkPluginMeta
+                = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()
+                , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
 
-        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.getPluginName(), flinkPluginMeta.getPluginPackageFile(), true, null);
+        TIS.get().pluginManager.dynamicLoad(flinkPluginMeta.createPluginMatcher()
+                , flinkPluginMeta.getPluginPackageFile(), true, null);
         // IDataxProcessor processor = this.mock("dataXprocess", IDataxProcessor.class);
 
         BasicFlinkSourceHandle hudiHandle
@@ -189,7 +193,7 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
                 return sinkFuncts;
             }
         };
-      //  sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
+        //  sinkFactory.dumpTimeStamp = String.valueOf(HudiWriter.timestamp);
         sinkFactory.currentLimit = 200;
         sinkFactory.setKey(new KeyedPluginStore.Key(null, HdfsFileSystemFactoryTestUtils.testDataXName.getName(), null));
 

@@ -238,7 +238,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
     private com.qlangtech.tis.plugin.ds.DataType map2JdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
         int colSize = (int) Long.min(Integer.MAX_VALUE, type.getLength());
-        DataType tisType = new DataType(jdbcType(keyName, type), colSize);
+        DataType tisType = new DataType(jdbcType(keyName, type), type.getName(), colSize);
         // type.getType()
         tisType.setDecimalDigits(type.getDecimal());
         return tisType;

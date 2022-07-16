@@ -90,6 +90,14 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             }
 
             @Override
+            public DataType intType(DataType type) {
+                if (type.isUnsigned()) {
+                    return new DataType(Types.BIGINT, type.typeName, type.columnSize);
+                }
+                return null;
+            }
+
+            @Override
             public DataType doubleType(DataType type) {
                 return null;
             }
@@ -118,7 +126,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             public DataType varcharType(DataType type) {
                 if (type.columnSize < 1) {
                     // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
-                    DataType n = new DataType(Types.VARCHAR, 2000);
+                    DataType n = new DataType(Types.VARCHAR, type.typeName, 2000);
                     n.setDecimalDigits(type.getDecimalDigits());
                     return n;
                 }

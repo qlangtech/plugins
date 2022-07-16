@@ -125,7 +125,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     protected DataType createColDataType(String colName, int dbColType, int colSize) throws SQLException {
         // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-        return new DataType(convert2JdbcType(dbColType), colSize);
+        return new DataType(convert2JdbcType(dbColType), StringUtils.EMPTY, colSize);
     }
 
     private int convert2JdbcType(int dbColType) {

@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  * @create: 2022-02-14 14:39
  **/
 @Public
-public class HudiSinkFactory extends BasicTISSinkFactory implements IStreamTableCreator {
+public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStreamTableCreator {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-Hudi-Sink";
     public static final String HIVE_SYNC_MODE = "hms";
 

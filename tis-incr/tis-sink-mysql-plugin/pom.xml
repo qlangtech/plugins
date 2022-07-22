@@ -23,23 +23,106 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
-        <version>3.5.0</version>
+        <version>3.6.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tis-sink-mysql-plugin</artifactId>
     <packaging>tpi</packaging>
 
-    <properties>
-        <flinkx.version>1.12-SNAPSHOT</flinkx.version>
-    </properties>
 
     <dependencies>
+
         <dependency>
-            <groupId>com.dtstack.flinkx</groupId>
-            <artifactId>flinkx-connector-mysql</artifactId>
-            <version>${flinkx.version}</version>
+            <groupId>com.dtstack.chunjun</groupId>
+            <artifactId>chunjun-core</artifactId>
+            <version>${chunjun.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-clients_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-runtime_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-table-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-hadoop-compatibility_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-yarn_${scala.binary.version}</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.flink</groupId>
+                    <artifactId>flink-queryable-state-runtime_${scala.binary.version}</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-dependency</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-ds-mysql-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-chunjun-dependency</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>com.dtstack.chunjun</groupId>
+            <version>${chunjun.version}</version>
+            <artifactId>chunjun-connector-mysql</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.alibaba</groupId>
+                    <artifactId>druid</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>mysql</groupId>
+                    <artifactId>mmysql-connector-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -61,7 +144,56 @@
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-cdc-mysql-plugin</artifactId>
+            <version>3.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-incr-test</artifactId>
+        </dependency>
     </dependencies>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <maskClasses>com.google.gson.</maskClasses>
+                </configuration>
+            </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-surefire-plugin</artifactId>-->
+            <!--                <version>3.0.0-M7</version>-->
+            <!--                <configuration>-->
+
+            <!--                    <classpathDependencyExcludes>-->
+            <!--                        <classpathDependencyExclude>log4j:log4j</classpathDependencyExclude>-->
+            <!--                        <classpathDependencyExclude>org.slf4j:slf4j-log4j12</classpathDependencyExclude>-->
+            <!--                        <classpathDependencyExclude>org.apache.logging.log4j:log4j-slf4j-impl</classpathDependencyExclude>-->
+
+            <!--                        <classpathDependencyExclude>commons-logging:commons-logging</classpathDependencyExclude>-->
+            <!--                        &lt;!&ndash;-->
+            <!--                         <classpathDependencyExclude>commons-lang:commons-lang</classpathDependencyExclude>-->
+            <!--                         &ndash;&gt;-->
+            <!--                        <classpathDependencyExclude>org.apache.tomcat:tomcat-catalina</classpathDependencyExclude>-->
+            <!--                    </classpathDependencyExcludes>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
+
+        </plugins>
+
+    </build>
 
 </project>

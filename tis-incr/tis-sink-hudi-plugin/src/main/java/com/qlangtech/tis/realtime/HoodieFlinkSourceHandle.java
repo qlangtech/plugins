@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-23 11:18
  **/
-public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle {
+public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
     private static final Logger logger = LoggerFactory.getLogger(HoodieFlinkSourceHandle.class);
 
     @Override

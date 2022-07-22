@@ -8,7 +8,7 @@ import java.util.Map
 
 
 @TISExtension
-class HudiSourceHandle extends BasicFlinkSourceHandle {
+class HudiSourceHandle extends BasicFlinkSourceHandle[DTO] {
   override protected def processTableStream(env: StreamExecutionEnvironment, tab2OutputTag: util.Map[String, DTOStream], sinkFunction: SinkFuncs): Unit = {
   }
 }

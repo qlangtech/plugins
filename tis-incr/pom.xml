@@ -37,12 +37,8 @@
         <tag>HEAD</tag>
     </scm>
     <properties>
-        <!--        -->
-
-        <!--        <flink.cdc.version>2.0.2</flink.cdc.version>-->
         <flink.cdc.version>2.1.0</flink.cdc.version>
-
-
+        <chunjun.version>1.12.5</chunjun.version>
     </properties>
 
     <modules>
@@ -66,9 +62,9 @@
         <module>tis-sink-clickhouse-plugin</module>
 
         <module>tis-sink-hudi-plugin</module>
-<!--        <module>tis-sink-mysql-plugin</module>-->
 
-
+<!--        <module>tis-chunjun-dependency</module>-->
+        <module>tis-sink-mysql-plugin</module>
 
     </modules>
 

@@ -38,7 +38,7 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
 //        }
 //    }
 
-    private transient java.sql.Driver driver;
+    private transient com.mysql.jdbc.Driver driver;
 
     @Override
     public Connection getConnection(String jdbcUrl) throws SQLException {

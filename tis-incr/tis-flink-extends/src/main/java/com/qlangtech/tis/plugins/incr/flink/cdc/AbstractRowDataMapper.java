@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
-import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableCreator;
@@ -44,10 +43,10 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-18 12:04
  **/
-public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
-    private final List<FlinkCol> cols;
+public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData> {
+    protected final List<FlinkCol> cols;
 
-    public DTO2RowDataMapper(List<FlinkCol> cols) {
+    public AbstractRowDataMapper(List<FlinkCol> cols) {
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalArgumentException("param cols can not be empty");
         }
@@ -56,6 +55,13 @@ public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
 
     public static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, String tabName) {
         IStreamTableCreator.IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
+        // return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+
+        return getAllTabColsMeta(streamTableMeta);
+    }
+
+    public static List<FlinkCol> getAllTabColsMeta(IStreamTableCreator.IStreamTableMeta streamTableMeta) {
+        //IStreamTableCreator.IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
         return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 
@@ -131,18 +137,33 @@ public final class DTO2RowDataMapper implements MapFunction<DTO, RowData> {
 
     @Override
     public RowData map(DTO dto) throws Exception {
-        GenericRowData row = new GenericRowData(DTO2RowMapper.getKind(dto), cols.size());
+        RowData row = createRowData(dto);
         int index = 0;
         Map<String, Object> vals
                 = (dto.getEventType() == DTO.EventType.DELETE ? dto.getBefore() : dto.getAfter());
+        if (vals == null) {
+            throw new IllegalStateException("incr data of " + dto.getTableName() + " can not be null");
+        }
         Object val = null;
         for (FlinkCol col : cols) {
             val = vals.get(col.name);
             //col.type
-            row.setField(index++, (val == null) ? null : col.processVal(val));
+            // row.setField(index++, (val == null) ? null : col.processVal(val));
+            setRowDataVal(index++, row, (val == null) ? null : col.processVal(val));
         }
         return row;
     }
+
+    protected abstract void setRowDataVal(int index, RowData row, Object value);
+//    {
+//        GenericRowData rowData = (GenericRowData) row;
+//        rowData.setField(index, value);
+//    }
+
+    protected abstract RowData createRowData(DTO dto);
+//    {
+//        return new GenericRowData(DTO2RowMapper.getKind(dto), cols.size());
+//    }
 
     static class ShortConvert extends FlinkCol.DateProcess {
         @Override

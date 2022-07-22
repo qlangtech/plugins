@@ -35,7 +35,7 @@ public abstract class TabSinkFunc<TRANSFER_OBJ> {
     // public transient final StreamExecutionEnvironment env;
 
     private transient final SinkFunction<TRANSFER_OBJ> sinkFunction;
-    private transient final IDataxProcessor.TableAlias tab;
+    protected transient final IDataxProcessor.TableAlias tab;
 
     public TabSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<TRANSFER_OBJ> sinkFunction) {
         this.sinkFunction = sinkFunction;

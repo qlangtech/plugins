@@ -55,6 +55,7 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
 
     @BeforeClass
     public static void startContainers() {
+
         LOG.info("Starting containers...");
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         LOG.info("Containers are started.");

@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.data.RowData;
 
 import java.util.Map;
 
@@ -30,10 +31,10 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-05-13 23:01
  **/
-public abstract class BasicTISSinkFactory extends TISSinkFactory {
+public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
     @Override
-    public abstract Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor);
+    public abstract Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor);
 
     public final static class DTOSinkFunc extends TabSinkFunc<DTO> {
         public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction) {
@@ -43,6 +44,12 @@ public abstract class BasicTISSinkFactory extends TISSinkFactory {
         @Override
         protected DataStream<DTO> streamMap(DataStream<DTO> sourceStream) {
             return sourceStream;
+        }
+    }
+
+    public static abstract class RowDataSinkFunc extends TabSinkFunc<RowData> {
+        public RowDataSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<RowData> sinkFunction) {
+            super(tab, sinkFunction);
         }
     }
 }

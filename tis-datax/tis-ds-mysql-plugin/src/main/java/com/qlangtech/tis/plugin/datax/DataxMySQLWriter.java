@@ -18,17 +18,23 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
+import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
@@ -267,7 +273,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends RdbmsWriterDescriptor {
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
         public DefaultDescriptor() {
             super();
         }
@@ -277,9 +283,29 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             return true;
         }
 
+        protected IDataXPluginMeta.EndType getEndType() {
+            return EndType.MySQL;
+        }
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
+        }
+
+        @Override
+        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+
+            final String targetClass = MySQLSelectedTab.class.getName();
+
+            Descriptor newSubDescriptor = Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
+                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+
+            SuFormProperties rewriteSubFormProperties = SuFormProperties.copy(
+                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), MySQLSelectedTab.class))
+                    , MySQLSelectedTab.class
+                    , newSubDescriptor
+                    , subformProps);
+            return rewriteSubFormProperties;
+
         }
     }
 }

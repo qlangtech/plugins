@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -108,7 +109,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
-        cm.setType(new DataType(Types.VARCHAR, 6));
+        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
@@ -118,7 +119,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR, 32));
+        cm.setType(new DataType(Types.VARCHAR, "VARCHAR" , 32));
         cm.setPk(true);
         cols.add(cm);
 
@@ -204,7 +205,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
         this.replay();
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = new DTO();
@@ -220,8 +221,11 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         after.put(updateDate, "2021-12-9");
         d.setAfter(after);
         assertEquals(1, sinkFunction.size());
-        for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFunction.entrySet()) {
-            env.fromElements(new DTO[]{d}).addSink(entry.getValue());
+        for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFunction.entrySet()) {
+
+            entry.getValue().add2Sink(env.fromElements(new DTO[]{d}));
+
+           // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
             break;
         }
 

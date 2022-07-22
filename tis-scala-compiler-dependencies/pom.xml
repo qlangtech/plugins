@@ -21,9 +21,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>tis</artifactId>
-        <groupId>com.qlangtech.tis</groupId>
-        <version>3.5.0</version>
+        <groupId>com.qlangtech.tis.plugins</groupId>
+        <artifactId>tis-plugin-parent</artifactId>
+        <version>3.6.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <properties/>
@@ -41,6 +42,15 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <tarLongFileMode>posix</tarLongFileMode>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>tisasm</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -55,6 +65,13 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-builder-api</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>

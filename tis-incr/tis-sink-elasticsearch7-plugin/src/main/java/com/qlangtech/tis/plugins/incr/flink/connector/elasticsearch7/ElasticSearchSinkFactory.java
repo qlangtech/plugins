@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * @create: 2021-09-28 19:45
  **/
 @Public
-public class ElasticSearchSinkFactory extends BasicTISSinkFactory {
+public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-ElasticSearch-Sink";
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSinkFactory.class);
     // bulk.flush.max.actions

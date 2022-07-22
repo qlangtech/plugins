@@ -29,7 +29,7 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-18 12:19
  **/
-public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle {
+public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
 
     /**
      * 处理各个表对应的数据流
@@ -39,11 +39,16 @@ public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle {
     @Override
     protected final void processTableStream(StreamExecutionEnvironment env
             , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
+        Map<String, DataStream<DTO>> streamMap = convert(tab2OutputTag);
+        this.processTableStream(streamMap, sinkFunction);
+    }
+
+    static Map<String, DataStream<DTO>> convert(Map<String, DTOStream> tab2OutputTag) {
         Map<String, DataStream<DTO>> streamMap = Maps.newHashMap();
         for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
             streamMap.put(e.getKey(), e.getValue().getStream());
         }
-        this.processTableStream(streamMap, sinkFunction);
+        return streamMap;
     }
 
     /**

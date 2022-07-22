@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  * @create: 2021-11-18 12:05
  **/
 @Public
-public class ClickHouseSinkFactory extends BasicTISSinkFactory {
+public class ClickHouseSinkFactory extends BasicTISSinkFactory<DTO> {
     public static final String DISPLAY_NAME_FLINK_SINK = "Flink-ClickHouse-Sink";
 
 

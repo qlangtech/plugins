@@ -1,0 +1,7 @@
+{
+  "updateKey": {
+    "enumMode": "multiple",
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.BasicUpdate.getDeftRecordKeys():uncache_true",
+    "enum": "com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.BasicUpdate.getPrimaryKeys():uncache_true"
+  }
+}

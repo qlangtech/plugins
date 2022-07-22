@@ -1,0 +1,18 @@
+{
+  "semantic": {
+    "dftVal": "at-least-once",
+    "enum": [
+      {
+        "label": "Exactly-Once",
+        "val": "exactly-once"
+      },
+      {
+        "label": "At-Least-Once",
+        "val": "at-least-once"
+      }
+    ]
+  },
+  "batchSize": {
+    "dftVal": 1
+  }
+}

@@ -69,8 +69,6 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     @Test
     public void testStuBinlogConsume() throws Exception {
 
-        System.out.println(  this.getClass().getResource("/scala/Predef.class") );
-
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
         final String tabName = "stu";

@@ -74,7 +74,7 @@ import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
  * @create: 2021-10-31 20:11
  **/
 @Public
-public class StarRocksSinkFactory extends BasicTISSinkFactory {
+public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
 

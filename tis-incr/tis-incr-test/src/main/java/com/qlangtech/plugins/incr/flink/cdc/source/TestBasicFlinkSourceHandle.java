@@ -38,7 +38,7 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-12-18 10:57
  **/
-public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle implements Serializable, IResultRows {
+public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> implements Serializable, IResultRows {
     protected final String tabName;
 
     protected StreamTableEnvironment tabEnv;

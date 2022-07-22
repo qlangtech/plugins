@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-18 11:50
  **/
-public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHandle {
+public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
 
 
     @Override

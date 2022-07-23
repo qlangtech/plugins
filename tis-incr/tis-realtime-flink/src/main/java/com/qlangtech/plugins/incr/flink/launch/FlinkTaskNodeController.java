@@ -31,10 +31,13 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.trigger.jst.ILogListener;
+import com.qlangtech.tis.util.PluginMeta;
+import com.qlangtech.tis.util.RobustReflectionConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -47,7 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -133,11 +137,23 @@ public class FlinkTaskNodeController implements IRCController {
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
         File streamUberJar = getStreamUberJarFile(collection);
+        Manifest manifest = null;
 
-        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(collection, timestamp, Optional.empty());
+        try {
+            RobustReflectionConverter.usedPluginInfo.remove();
+            // 先收集plugmeta，特别是通过dataXWriter的dataSource关联的元数据
+            DataxProcessor processor = DataxProcessor.load(null, collection.getName());
+            TISSinkFactory incrSinKFactory = TISSinkFactory.getIncrSinKFactory(collection.getName());
+            incrSinKFactory.createSinkFunction(processor);
+            Set<PluginMeta> pluginMetas = RobustReflectionConverter.usedPluginInfo.get();
+            manifest = PluginAndCfgsSnapshot.createFlinkIncrJobManifestCfgAttrs(collection, timestamp, pluginMetas);
+        } finally {
+            RobustReflectionConverter.usedPluginInfo.remove();
+        }
 
         try (JarOutputStream jaroutput = new JarOutputStream(
-                FileUtils.openOutputStream(streamUberJar, false), manifest)) {
+                FileUtils.openOutputStream(streamUberJar, false)
+                , Objects.requireNonNull(manifest, "manifest can not be null"))) {
             jaroutput.flush();
         }
 

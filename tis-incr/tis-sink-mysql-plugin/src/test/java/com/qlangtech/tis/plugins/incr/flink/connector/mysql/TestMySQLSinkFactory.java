@@ -33,9 +33,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.DataxMySQLWriter;
 import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.InsertType;
 import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.ReplaceType;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.UpdateType;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
@@ -60,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -68,6 +67,19 @@ import java.util.Map;
 public class TestMySQLSinkFactory extends MySqlSourceTestBase
         implements TISEasyMock {
 
+    String dataXName = "testDataX";
+
+    String tableName = "totalpayinfo";
+
+    String colEntityId = "entity_id";
+    String colNum = "num";
+    String colId = "id";
+    String colCreateTime = "create_time";
+    String updateTime = "update_time";
+    String updateDate = "update_date";
+    String starTime = "start_time";
+
+    String pk = "88888888887";
 
     @BeforeClass
     public static void preInit() {
@@ -106,17 +118,7 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
          * */
 
         try {
-            String dataXName = "testDataX";
 
-            String tableName = "totalpayinfo";
-
-            String colEntityId = "entity_id";
-            String colNum = "num";
-            String colId = "id";
-            String colCreateTime = "create_time";
-            String updateTime = "update_time";
-            String updateDate = "update_date";
-            String starTime = "start_time";
 
             String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
 
@@ -219,24 +221,27 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
             Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-            DTO d = new DTO();
-            d.setEventType(DTO.EventType.ADD);
-            d.setTableName(tableName);
-            Map<String, Object> after = Maps.newHashMap();
-            after.put(colEntityId, "334556");
-            after.put(colNum, 5);
-            String pk = "88888888887";
-            after.put(colId, pk);
-            after.put(colCreateTime, 20211113115959l);
-            //  after.put(updateTime, "2021-12-17T09:21:20Z");
-            after.put(updateTime, "2021-12-17 09:21:20");
-            after.put(starTime, "2021-12-18 09:21:20");
-            after.put(updateDate, "2021-12-09");
-            d.setAfter(after);
+            DTO d = createDTO(DTO.EventType.ADD);
+            DTO update = createDTO(DTO.EventType.UPDATE, (after) -> {
+                after.put(colNum, 999);
+            });
+//            d.setEventType(DTO.EventType.ADD);
+//            d.setTableName(tableName);
+//            Map<String, Object> after = Maps.newHashMap();
+//            after.put(colEntityId, "334556");
+//            after.put(colNum, 5);
+//            String pk = "88888888887";
+//            after.put(colId, pk);
+//            after.put(colCreateTime, 20211113115959l);
+//            //  after.put(updateTime, "2021-12-17T09:21:20Z");
+//            after.put(updateTime, "2021-12-17 09:21:20");
+//            after.put(starTime, "2021-12-18 09:21:20");
+//            after.put(updateDate, "2021-12-09");
+//            d.setAfter(after);
             Assert.assertEquals(1, sinkFunction.size());
             for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
-                entry.getValue().add2Sink(env.fromElements(new DTO[]{d}));
+                entry.getValue().add2Sink(env.fromElements(new DTO[]{d, update}));
                 // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
                 break;
             }
@@ -269,5 +274,28 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
             Thread.sleep(14000);
             throw new RuntimeException(e);
         }
+    }
+
+    private DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
+        DTO d = new DTO();
+        d.setEventType(eventType);
+        d.setTableName(tableName);
+        Map<String, Object> after = Maps.newHashMap();
+        after.put(colEntityId, "334556");
+        after.put(colNum, 5);
+        after.put(colId, pk);
+        after.put(colCreateTime, 20211113115959l);
+        //  after.put(updateTime, "2021-12-17T09:21:20Z");
+        after.put(updateTime, "2021-12-17 09:21:20");
+        after.put(starTime, "2021-12-18 09:21:20");
+        after.put(updateDate, "2021-12-09");
+        d.setAfter(after);
+        if (eventType != DTO.EventType.ADD) {
+            d.setBefore(Maps.newHashMap(after));
+            for (Consumer<Map<String, Object>> c : consumer) {
+                c.accept(after);
+            }
+        }
+        return d;
     }
 }

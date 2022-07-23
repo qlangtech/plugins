@@ -21,8 +21,14 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.CenterResource;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.util.PluginMeta;
+import com.qlangtech.tis.util.RobustReflectionConverter;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,6 +40,17 @@ public class TestFlinkTaskNodeController {
     public static void beforeClass() {
         CenterResource.setNotFetchFromCenterRepository();
     }
+
+    @Test
+    public void testGetterIncrSinkFactory() {
+
+        TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory("mysql_mysql");
+
+        Assert.assertNotNull(incrSinkFactory);
+        Set<PluginMeta> pluginMetas = RobustReflectionConverter.usedPluginInfo.get();
+        Assert.assertTrue(pluginMetas.size() > 0);
+    }
+
 
     @Test
     public void testDeploy() throws Exception {

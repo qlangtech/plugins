@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink;
 
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.ITPIArtifact;
 import com.qlangtech.tis.extension.PluginManager;
@@ -178,7 +179,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                                     = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
                                     , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
                             // 服务端不需要配置文件，只需要能够加载到类就行了
-                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), flinkPluginMeta);
+                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
                             cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);
 
                         }

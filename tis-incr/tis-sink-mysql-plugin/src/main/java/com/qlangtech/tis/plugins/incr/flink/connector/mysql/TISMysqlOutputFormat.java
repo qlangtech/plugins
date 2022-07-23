@@ -19,36 +19,30 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.mysql;
 
 import com.dtstack.chunjun.connector.mysql.sink.MysqlOutputFormat;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.plugin.datax.DataxMySQLWriter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-07-22 13:08
  **/
 public final class TISMysqlOutputFormat extends MysqlOutputFormat {
-    private final String dataXName;
+    private final DataSourceFactory dsFactory;
 
-    public TISMysqlOutputFormat(String dataXName) {
+    public TISMysqlOutputFormat(DataSourceFactory dsFactory) {
         super();
-        if (StringUtils.isEmpty(dataXName)) {
-            throw new IllegalArgumentException("param dataXName can not be null");
+        if (dsFactory == null) {
+            throw new IllegalArgumentException("param dsFactory can not be null");
         }
-        this.dataXName = dataXName;
+        this.dsFactory = dsFactory;
     }
 
     @Override
     protected Connection getConnection() throws SQLException {
-        if (StringUtils.isEmpty(this.dataXName)) {
-            throw new IllegalStateException("param dataXName can not be null");
-        }
-        DataxMySQLWriter dataXWriter = (DataxMySQLWriter) DataxWriter.load(null, dataXName);
-        DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
+        DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
         return dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
     }
 }

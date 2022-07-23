@@ -203,6 +203,7 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
         Map<String, Object> conn = Maps.newHashMap();
         conn.put("jdbcUrl", jdbcUrl);
         conn.put("table", Lists.newArrayList(targetTabName));
+        conn.put("schema", dbName);
         params.put("connection", Lists.newArrayList(conn));
         writer.setParameter(params);
         content.setWriter(writer);
@@ -212,8 +213,9 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
         MysqlSinkFactory sinkFactory = new MysqlSinkFactory(syncConf) {
             @Override
             protected JdbcOutputFormatBuilder getBuilder() {
-                return new JdbcOutputFormatBuilder(new TISMysqlOutputFormat(dataXWriter.dataXName));
+                return new JdbcOutputFormatBuilder(new TISMysqlOutputFormat(dataXWriter.getDataSourceFactory()));
             }
+
             protected DataStreamSink<RowData> createOutput(
                     DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
                 JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;

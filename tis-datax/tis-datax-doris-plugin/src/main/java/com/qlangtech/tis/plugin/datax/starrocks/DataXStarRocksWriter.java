@@ -36,5 +36,10 @@ public class DataXStarRocksWriter extends BasicDorisStarRocksWriter {
         public String getDisplayName() {
             return StarRocksSourceFactory.DISPLAY_NAME;
         }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.StarRocks;
+        }
     }
 }

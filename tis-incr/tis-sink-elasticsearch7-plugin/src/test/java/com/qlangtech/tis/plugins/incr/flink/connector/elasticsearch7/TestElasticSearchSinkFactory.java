@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.compress.utils.Lists;
@@ -83,7 +84,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
-        cm.setType(new DataType(Types.VARCHAR, 6));
+        cm.setType(new DataType(Types.VARCHAR, "varchar" ,6));
         cols.add(cm);
 
         cm = new ISelectedTab.ColMeta();
@@ -93,7 +94,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR, 32));
+        cm.setType(new DataType(Types.VARCHAR,"varchar" ,32));
         cm.setPk(true);
         cols.add(cm);
 
@@ -126,7 +127,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
         this.replay();
 
         ElasticSearchSinkFactory clickHouseSinkFactory = new ElasticSearchSinkFactory();
-        Map<IDataxProcessor.TableAlias, SinkFunction<DTO>>
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>>
                 sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
@@ -144,7 +145,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
         d.setAfter(after);
         Assert.assertEquals(1, sinkFuncs.size());
 
-        for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<DTO>> entry : sinkFuncs.entrySet()) {
+        for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFuncs.entrySet()) {
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             runElasticSearchSinkTest(
                     "elasticsearch-sink-test-json-index", entry.getValue());
@@ -169,14 +170,14 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
 
     private void runElasticSearchSinkTest(
             String index,
-            SinkFunction<DTO> sinkFunc)
+            TabSinkFunc<DTO> sinkFunc)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         DataStreamSource<DTO> source =
                 env.addSource(new TestDataSourceFunction());
-
-        source.addSink(sinkFunc);
+        sinkFunc.add2Sink(source);
+       // source.addSink();
 
         env.execute("Elasticsearch Sink Test");
 

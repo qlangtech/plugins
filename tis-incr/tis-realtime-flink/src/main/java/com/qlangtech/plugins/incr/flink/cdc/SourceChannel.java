@@ -19,20 +19,17 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,7 +40,15 @@ import java.util.stream.Collectors;
 public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     private final List<ReaderSource> sourceFunction;
-    private final Set<String> focusTabs = Sets.newHashSet();
+    private Set<String> focusTabs = null;// = Sets.newHashSet();
+    private Map<String, DTOStream> tab2OutputTag = null;
+
+    @Override
+    public Map<String, DTOStream> getTab2OutputTag(
+            //        Function<String, List<com.qlangtech.plugins.incr.flink.cdc.FlinkCol>> colsCreator
+    ) {
+        return Objects.requireNonNull(tab2OutputTag);
+    }
 
     public SourceChannel(List<ReaderSource> sourceFunction) {
         this.sourceFunction = sourceFunction;
@@ -56,7 +61,8 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     //https://ververica.github.io/flink-cdc-connectors/master/
     public static List<ReaderSource> getSourceFunction(
-            BasicDataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+            BasicDataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator
+            , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
@@ -135,11 +141,17 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         return this.focusTabs;
     }
 
-    public void addFocusTab(String tab) {
-        if (StringUtils.isEmpty(tab)) {
-            throw new IllegalArgumentException("param tab can not be null");
+    public void setFocusTabs(List<ISelectedTab> tabs, Function<String, DTOStream> dtoStreamCreator) {
+
+        if (CollectionUtils.isEmpty(tabs)) {
+            throw new IllegalArgumentException("param tabs can not be null");
         }
-        this.focusTabs.add(tab);
+        this.focusTabs = tabs.stream().map((t) -> t.getName()).collect(Collectors.toSet());
+        this.tab2OutputTag
+                = tabs.stream().collect(
+                Collectors.toMap(
+                        (tab) -> tab.getName()
+                        , (tab) -> dtoStreamCreator.apply(tab.getName())));
     }
 
 

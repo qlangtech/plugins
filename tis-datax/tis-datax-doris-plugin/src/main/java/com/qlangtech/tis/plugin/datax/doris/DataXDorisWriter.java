@@ -1,40 +1,27 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.doris;
 
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IDataxContext;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
-import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * reference: https://github.com/DorisDB/DataX/blob/master/doriswriter/doc/doriswriter.md
@@ -179,34 +166,14 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter {
             super();
         }
 
-//        @Override
-//        protected int getMaxBatchSize() {
-//            return Integer.MAX_VALUE;
-//        }
-//
-//        @Override
-//        public boolean isSupportTabCreate() {
-//            return true;
-//        }
-//
-//        public boolean validateLoadProps(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            try {
-//                JSON.parseObject(value);
-//                return true;
-//            } catch (Exception e) {
-//                msgHandler.addFieldError(context, fieldName, e.getMessage());
-//                return false;
-//            }
-//        }
-//
-//        @Override
-//        protected EndType getEndType() {
-//            return EndType.StarRocks;
-//        }
-
         @Override
         public String getDisplayName() {
             return DorisSourceFactory.NAME_DORIS;
+        }
+
+        @Override
+        protected EndType getEndType() {
+            return EndType.Doris;
         }
     }
 }

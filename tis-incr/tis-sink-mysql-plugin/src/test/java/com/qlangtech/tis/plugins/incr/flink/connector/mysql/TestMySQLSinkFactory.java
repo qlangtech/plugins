@@ -249,7 +249,7 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
             env.execute("testJob");
             Thread.sleep(14000);
             DBConfig dbConfig = dsFactory.getDbConfig();
-            dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
+            dbConfig.vistDbURL(false, (dbName, dbHost ,jdbcUrl) -> {
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
 
                     Statement statement = conn.createStatement();

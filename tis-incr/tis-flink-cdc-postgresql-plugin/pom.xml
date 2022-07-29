@@ -30,7 +30,8 @@
 
 
     <artifactId>tis-flink-cdc-postgresql-plugin</artifactId>
-    <packaging>tpi</packaging>
+<!-- 先不开放使用
+<packaging>tpi</packaging>-->
 
     <dependencies>
 
@@ -50,6 +51,8 @@
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+
 
         <dependency>
             <groupId>com.ververica</groupId>

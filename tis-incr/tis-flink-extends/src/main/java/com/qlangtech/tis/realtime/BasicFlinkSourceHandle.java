@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
@@ -29,20 +28,16 @@ import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -54,6 +49,14 @@ public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerH
 
     private transient TISSinkFactory sinkFuncFactory;
     private transient IncrStreamFactory streamFactory;
+
+    protected String getDataXName() {
+        String name = this.sinkFuncFactory.dataXName;
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalStateException("dataXName can not be empty");
+        }
+        return name;
+    }
 
     public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
@@ -102,23 +105,31 @@ public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerH
 
     private Map<String, DTOStream> createTab2OutputTag(
             AsyncMsg<List<ReaderSource>> asyncMsg, StreamExecutionEnvironment env, TargetResName dataxName) throws java.io.IOException {
-        Map<String, DTOStream> tab2OutputTag
-                = asyncMsg.getFocusTabs().stream().collect(
-                Collectors.toMap(
-                        (tab) -> tab
-                        , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
-                        }, getTabColMetas(dataxName, tab))));
+//        Map<String, DTOStream> tab2OutputTag
+//                = asyncMsg.getFocusTabs().stream().collect(
+//                Collectors.toMap(
+//                        (tab) -> tab
+//                        , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
+//                        }, getTabColMetas(dataxName, tab))));
 
-        List<SingleOutputStreamOperator<DTO>> mainDataStream = Lists.newArrayList();
+
+        Map<String, DTOStream> tab2OutputTag = asyncMsg.getTab2OutputTag();
+
+        // List<SingleOutputStreamOperator> mainDataStream = Lists.newArrayList();
         for (ReaderSource sourceFunc : asyncMsg.getSource()) {
-            mainDataStream.add(getSourceStream(env, tab2OutputTag, sourceFunc));
+
+            //sourceFunc.rowType
+            // mainDataStream.add();
+
+            sourceFunc.getSourceStream(env, tab2OutputTag);
+            // mainDataStream.add(getSourceStream(env, tab2OutputTag, sourceFunc));
         }
 
-        for (SingleOutputStreamOperator<DTO> mainStream : mainDataStream) {
-            for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
-                e.getValue().addStream(mainStream);
-            }
-        }
+//        for (SingleOutputStreamOperator<DTO> mainStream : mainDataStream) {
+//            for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
+//                e.getValue().addStream(mainStream);
+//            }
+//        }
         return tab2OutputTag;
     }
 
@@ -135,15 +146,18 @@ public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerH
     }
 
 
-    private SingleOutputStreamOperator<DTO> getSourceStream(
-            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputStream, ReaderSource sourceFunc) {
-
-        return env.addSource(sourceFunc.sourceFunc)
-                .name(sourceFunc.tokenName)
-                .setParallelism(1)
-                .process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-                        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue().outputTag))));
-    }
+//    private SingleOutputStreamOperator<DTO> getSourceStream(
+//            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputStream, ReaderSource sourceFunc) {
+//
+//
+//
+//
+//        return env.addSource(sourceFunc.sourceFunc)
+//                .name(sourceFunc.tokenName)
+//                .setParallelism(1)
+//                .process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
+//                        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue().outputTag))));
+//    }
 
 
     public TISSinkFactory getSinkFuncFactory() {

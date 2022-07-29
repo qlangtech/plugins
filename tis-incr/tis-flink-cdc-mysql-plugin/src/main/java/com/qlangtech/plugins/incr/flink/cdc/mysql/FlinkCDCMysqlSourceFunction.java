@@ -31,6 +31,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
@@ -89,7 +90,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
 
                                 String[] databases = dbs.toArray(new String[dbs.size()]);
 
-                                return Collections.singletonList(new ReaderSource(
+                                return Collections.singletonList(ReaderSource.createDTOSource(
                                         dbHost + ":" + dsFactory.port + ":" + dbs.stream().collect(Collectors.joining("_")),
                                         MySqlSource.<DTO>builder()
                                                 .hostname(dbHost)
@@ -105,9 +106,9 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                                                 .build())
                                 );
                             }));
-            for (ISelectedTab tab : tabs) {
-                sourceChannel.addFocusTab(tab.getName());
-            }
+            //for (ISelectedTab tab : tabs) {
+            sourceChannel.setFocusTabs(tabs, DTOStream::createDispatched);
+            //}
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

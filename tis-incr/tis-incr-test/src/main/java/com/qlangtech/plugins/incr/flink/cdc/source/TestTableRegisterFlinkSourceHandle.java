@@ -18,15 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.source;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.ColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
@@ -53,11 +52,11 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
     private final Map<String, TableResult> sourceTableQueryResult = Maps.newHashMap();
     private final String tabName;
     int tableCount;
-    private List<HdfsColMeta> cols;
+    private List<ColMeta> cols;
 
     Map<String, FlinkCol> flinkColMap;
 
-    public TestTableRegisterFlinkSourceHandle(String tabName, List<HdfsColMeta> cols) {
+    public TestTableRegisterFlinkSourceHandle(String tabName, List<ColMeta> cols) {
         this.tabName = tabName;
         this.cols = Objects.requireNonNull(cols, "param cols can not be null");
     }

@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import org.apache.flink.types.RowKind;
 
@@ -47,7 +46,7 @@ public class TestRow {
     }
 
 
-    boolean willbeDelete = false;
+    public boolean willbeDelete = false;
 
     public TestRow(RowKind kind, RowVals vals) {
         this.kind = kind;
@@ -70,18 +69,18 @@ public class TestRow {
         return vals.getInputStream(key);
     }
 
-    public List<String> getValsList(List<HdfsColMeta> keys) throws Exception {
+    public List<String> getValsList(List<ColMeta> keys) throws Exception {
         return getValsList(keys, (rowVals, key, val) -> val);
     }
 
-    public List<String> getValsList(List<HdfsColMeta> keys, ValProcessor processor) throws Exception {
+    public List<String> getValsList(List<ColMeta> keys, ValProcessor processor) throws Exception {
         return getValsList(Optional.empty(), keys, processor);
     }
 
-    public List<String> getValsList(Optional<RowKind> updateVal, List<HdfsColMeta> keys, ValProcessor processor) throws Exception {
+    public List<String> getValsList(Optional<RowKind> updateVal, List<ColMeta> keys, ValProcessor processor) throws Exception {
         RowKind rowKind = updateVal.isPresent() ? updateVal.get() : this.kind;
         List<String> valsEnum = Lists.newArrayList(rowKind.shortString());
-        for (HdfsColMeta key : keys) {
+        for (ColMeta key : keys) {
             Object val = null;
             if (rowKind != RowKind.INSERT) {
                 RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());

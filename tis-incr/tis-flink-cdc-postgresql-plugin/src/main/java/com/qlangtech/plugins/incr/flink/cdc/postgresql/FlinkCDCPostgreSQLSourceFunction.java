@@ -31,6 +31,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
@@ -96,13 +97,13 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
                                             .debeziumProperties(debeziumProperties)
                                             .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
                                             .build();
-                                    return new ReaderSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
+                                    return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
                                 }).collect(Collectors.toList());
 
                             }));
-            for (ISelectedTab tab : tabs) {
-                sourceChannel.addFocusTab(tab.getName());
-            }
+           // for (ISelectedTab tab : tabs) {
+                sourceChannel.setFocusTabs(tabs, DTOStream::createDispatched);
+            //}
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

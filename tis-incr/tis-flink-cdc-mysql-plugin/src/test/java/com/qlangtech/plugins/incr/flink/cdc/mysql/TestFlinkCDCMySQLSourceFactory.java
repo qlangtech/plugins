@@ -81,7 +81,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
             @Override
             protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws MQConsumeException, InterruptedException {
+                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
                   super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);
@@ -231,7 +231,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                         PreparedStatement statement = conn.prepareStatement(insertBase);
                         AtomicInteger ci = new AtomicInteger();
                         cols.stream().filter((c) -> vals.notNull(c.getName())).forEach((col) -> {
-                            col.type.accept(new DataType.TypeVisitor<Void>() {
+                            col.getType().accept(new DataType.TypeVisitor<Void>() {
                                 @Override
                                 public Void bigInt(DataType type) {
                                     try {

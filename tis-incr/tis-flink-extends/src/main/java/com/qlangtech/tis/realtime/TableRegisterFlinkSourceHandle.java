@@ -82,7 +82,8 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     protected void registerTable(StreamTableEnvironment tabEnv
             , String tabName, DTOStream dtoDataStream) {
         Schema.Builder scmBuilder = Schema.newBuilder();
-        List<FlinkCol> cols = dtoDataStream.cols;
+
+        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()),tabName);
         String[] fieldNames = new String[cols.size()];
         TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
         int i = 0;

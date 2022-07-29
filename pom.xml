@@ -58,6 +58,7 @@
 
         <module>tis-kafka-plugin</module>
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
+        <module>tis-plugin-test/tis-testcontainer-postgresql</module>
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
     </modules>
@@ -78,7 +79,7 @@
     </profiles>
 
     <properties>
-        <scala.version>2.11.1</scala.version>
+        <scala.version>2.11.12</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <spark2.version>2.4.4</spark2.version>
         <hudi.version>0.10.1</hudi.version>
@@ -87,7 +88,7 @@
         <hadoop-version>2.7.3</hadoop-version>
         <hive.version>2.3.1</hive.version>
         <maven-tpi-plugin.classpathDependentExcludes>
-            commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:logback-classic,org.apache.logging.log4j:*
+            commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:*,org.apache.logging.log4j:*
         </maven-tpi-plugin.classpathDependentExcludes>
         <maven-tpi-plugin.version>${project.version}</maven-tpi-plugin.version>
         <tis.version>${project.version}</tis.version>

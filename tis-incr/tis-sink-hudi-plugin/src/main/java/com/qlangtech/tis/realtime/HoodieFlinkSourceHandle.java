@@ -136,8 +136,8 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
         RowType rowType =
                 (RowType) AvroSchemaConverter.convertToDataType(StreamerUtil.getSourceSchema(cfg))
                         .getLogicalType();
-
-        DTO2RowDataMapper toRowMapper = new DTO2RowDataMapper(dtoDataStream.cols);
+        DTO2RowDataMapper toRowMapper
+                = new DTO2RowDataMapper(this.getTabColMetas(new TargetResName(this.getDataXName()), tabName));
 
         DataStream<RowData> dataStream = Objects.requireNonNull(dtoDataStream.getStream(), "source stream can not be null")
                 .map(toRowMapper, InternalTypeInfo.of(rowType))

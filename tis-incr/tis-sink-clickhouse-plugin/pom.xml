@@ -33,16 +33,32 @@
     <dependencies>
 
         <dependency>
-            <groupId>ru.ivi.opensource</groupId>
-            <artifactId>flink-clickhouse-sink</artifactId>
-            <version>1.3.3</version>
+            <groupId>com.dtstack.chunjun</groupId>
+            <artifactId>chunjun-connector-clickhouse</artifactId>
+            <version>${chunjun.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-streaming-java_2.11</artifactId>
+                    <groupId>com.alibaba</groupId>
+                    <artifactId>druid</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>ru.ivi.opensource</groupId>-->
+        <!--            <artifactId>flink-clickhouse-sink</artifactId>-->
+        <!--            <version>1.3.3</version>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>org.apache.flink</groupId>-->
+        <!--                    <artifactId>flink-streaming-java_2.11</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-dependency</artifactId>
@@ -51,7 +67,7 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-clickhouse-plugin</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
+
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -61,12 +77,12 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-scala-compiler</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-flink-extends</artifactId>-->
-<!--            <version>3.5.0</version>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-flink-extends</artifactId>-->
+        <!--            <version>3.5.0</version>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

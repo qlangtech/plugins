@@ -134,7 +134,7 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
                 throw new IllegalStateException("dsFactory can not be null");
             }
             DBConfig dbConfig = dsFactory.getDbConfig();
-            dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
+            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
                 try {
                     Optional<ISelectedTab> selectedTab = tabs.stream()
                             .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();

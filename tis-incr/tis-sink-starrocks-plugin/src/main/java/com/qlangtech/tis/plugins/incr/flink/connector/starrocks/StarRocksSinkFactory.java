@@ -170,7 +170,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
             final IDataxProcessor.TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
-            dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {
+            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
                 try {
                     Optional<ISelectedTab> selectedTab = tabs.stream()
                             .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();

@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.OutputTag;
 
 import java.io.Serializable;
@@ -31,25 +32,66 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-27 10:19
  **/
-public class DTOStream implements Serializable {
-    public final OutputTag<DTO> outputTag;
-    private transient DataStream<DTO> stream;
-    public transient List<FlinkCol> cols;
+public abstract class DTOStream<T> implements Serializable {
 
-    public DTOStream(OutputTag<DTO> outputTag, List<FlinkCol> cols) {
-        this.outputTag = outputTag;
-        this.cols = cols;
+    protected transient DataStream<T> stream;
+  //  public transient List<FlinkCol> cols;
+
+    private DTOStream(//List<FlinkCol> cols
+    ) {
+       // this.cols = cols;
     }
 
-    public DataStream<DTO> getStream() {
+    public DataStream<T> getStream() {
         return this.stream;
     }
 
-    public void addStream(SingleOutputStreamOperator<DTO> mainStream) {
-        if (stream == null) {
-            stream = mainStream.getSideOutput(outputTag);
-        } else {
-            stream = stream.union(mainStream.getSideOutput(outputTag));
+    public abstract void addStream(SingleOutputStreamOperator<T> mainStream);
+
+    public static DTOStream createDispatched(String table) {
+        return new DispatchedDTOStream(new OutputTag<DTO>(table) {
+        });
+    }
+
+    public static DTOStream createRowData(String table) {
+        return new RowDataDTOStream();
+    }
+
+    /**
+     * binlog监听，可将同一个Stream中的不同表重新分区，将每个表成为独立的Stream
+     */
+    public static class DispatchedDTOStream extends DTOStream<DTO> {
+        public final OutputTag<DTO> outputTag;
+
+        public DispatchedDTOStream(OutputTag<DTO> outputTag) {
+            super();
+            this.outputTag = outputTag;
+        }
+
+        public void addStream(SingleOutputStreamOperator<DTO> mainStream) {
+            if (stream == null) {
+                stream = mainStream.getSideOutput(outputTag);
+            } else {
+                stream = stream.union(mainStream.getSideOutput(outputTag));
+            }
+        }
+    }
+
+    /**
+     * 利用pull的方式拉取增量数据，每个流本来就是独立的不需要分流
+     */
+    private static class RowDataDTOStream extends DTOStream<RowData> {
+        public RowDataDTOStream() {
+            super();
+        }
+
+        @Override
+        public void addStream(SingleOutputStreamOperator<RowData> mainStream) {
+            if (stream == null) {
+                stream = mainStream;
+            } else {
+                stream = stream.union(mainStream);
+            }
         }
     }
 }

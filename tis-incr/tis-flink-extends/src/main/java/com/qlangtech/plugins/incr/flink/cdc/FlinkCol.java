@@ -37,8 +37,7 @@ public class FlinkCol implements Serializable {
 
     public BiFunction process;
 
-    public FlinkCol(String name, DataType type
-    ) {
+    public FlinkCol(String name, DataType type) {
         this(name, type, new NoOpProcess());
     }
 
@@ -128,7 +127,7 @@ public class FlinkCol implements Serializable {
         }
     }
 
-    public  static class DateTimeProcess extends BiFunction {
+    public static class DateTimeProcess extends BiFunction {
         private final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         @Override

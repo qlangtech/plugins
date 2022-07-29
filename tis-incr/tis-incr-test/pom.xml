@@ -132,13 +132,13 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-extends</artifactId>
-            <version>3.6.0</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
-            <version>3.6.0</version>
+            <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

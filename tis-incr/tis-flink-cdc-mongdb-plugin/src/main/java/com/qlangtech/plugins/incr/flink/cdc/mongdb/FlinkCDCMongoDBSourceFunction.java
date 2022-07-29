@@ -31,6 +31,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.DataXMongodbReader;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mongodb.MongoDBSource;
@@ -123,12 +124,12 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
 //                    .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
 //                    .build();
 
-            sourceFunctions.add(new ReaderSource(dsFactory.address + "_" + dsFactory.dbName + "_" + mongoReader.collectionName, source));
+            sourceFunctions.add( ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName + "_" + mongoReader.collectionName, source));
 
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
-            for (ISelectedTab tab : tabs) {
-                sourceChannel.addFocusTab(tab.getName());
-            }
+          //  for (ISelectedTab tab : tabs) {
+                sourceChannel.setFocusTabs(tabs, DTOStream::createDispatched);
+            //}
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

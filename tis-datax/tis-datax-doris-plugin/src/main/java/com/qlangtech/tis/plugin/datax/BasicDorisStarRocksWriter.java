@@ -272,9 +272,10 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        protected EndType getEndType() {
-            return EndType.StarRocks;
-        }
+        protected abstract EndType getEndType();
+//        {
+//            return EndType.StarRocks;
+//        }
 
 //        @Override
 //        public String getDisplayName() {

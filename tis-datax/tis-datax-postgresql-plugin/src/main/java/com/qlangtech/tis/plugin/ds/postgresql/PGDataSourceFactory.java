@@ -90,6 +90,12 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         ResultSet result = null;
         try {
             statement = conn.createStatement();
+            if (StringUtils.isEmpty(this.tabSchema)) {
+                throw new IllegalStateException("prop tabSchema can not be null");
+            }
+            if (StringUtils.isEmpty(this.dbName)) {
+                throw new IllegalStateException("prop dbName can not be null");
+            }
             result = statement.executeQuery(
                     "SELECT table_name FROM information_schema.tables  WHERE table_schema = '" + this.tabSchema + "' and table_catalog='" + this.dbName + "'");
 

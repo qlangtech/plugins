@@ -34,8 +34,19 @@ public class RunInterval extends Polling {
 
     public static final String DISPLAY_NAME = "RunInterval";
 
-    @FormField(type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+//        params.put("polling", true);
+//        params.put("pollingInterval", 3000);
+//        params.put("increColumn", "id");
+//        params.put("startLocation", 0);
+
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String incrColumn;
+
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer pollingInterval;
+
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String startLocation;
 
     @TISExtension
     public static class DftDesc extends Descriptor<Polling> {

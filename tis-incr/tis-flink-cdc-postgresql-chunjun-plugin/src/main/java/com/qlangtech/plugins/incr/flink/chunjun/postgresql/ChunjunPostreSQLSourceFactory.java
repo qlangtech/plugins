@@ -18,11 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.datax.IncrSourceSelectedTabExtend;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.table.data.RowData;
 
@@ -52,7 +55,7 @@ public class ChunjunPostreSQLSourceFactory extends MQListenerFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDescriptor {
+    public static class DefaultDescriptor extends BaseDescriptor implements IIncrSourceSelectedTabExtendFactory {
         @Override
         public String getDisplayName() {
             return DESC_NAME;
@@ -61,6 +64,11 @@ public class ChunjunPostreSQLSourceFactory extends MQListenerFactory {
         @Override
         public Optional<IDataXPluginMeta.EndType> getTargetType() {
             return Optional.of(IDataXPluginMeta.EndType.Postgres);
+        }
+
+        @Override
+        public Descriptor<IncrSourceSelectedTabExtend> getSelectedTableExtendDescriptor() {
+            return TIS.get().getDescriptor(SelectedTabPropsExtends.class);
         }
     }
 }

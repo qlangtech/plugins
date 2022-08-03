@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -345,7 +346,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 
         @Override
         public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context
-                , SuFormProperties props, IPropertyType.SubFormFilter filter, Map<String, JSONObject> formData) {
+                , BaseSubFormProperties props, IPropertyType.SubFormFilter filter, Map<String, JSONObject> formData) {
 
             Integer maxReaderTabCount = Integer.MAX_VALUE;
             try {

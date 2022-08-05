@@ -147,7 +147,7 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
                      * 需要先初始化表MySQL目标库中的表
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
-
+// FIXME 这里不能用 MySQLSelectedTab
                     sinkFuncRef.set(createSinkFunction(dbName, targetTabName, (MySQLSelectedTab) selectedTab.get(), jdbcUrl, dsFactory, dataXWriter));
 
                 } catch (Throwable e) {
@@ -197,6 +197,7 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
             col.put("type", parseType(cm));
             cols.add(col);
         }
+
 
         params.put(ConfigConstant.KEY_COLUMN, cols);
         params.put("fullColumn", tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql;
 
+import com.qlangtech.plugins.incr.flink.chunjun.SelectedTabPropsExtends;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -25,6 +26,9 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSourceSelectedTabExtend;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.table.data.RowData;
@@ -39,6 +43,12 @@ public class ChunjunPostreSQLSourceFactory extends MQListenerFactory {
 
     private static final String DESC_NAME = "Flink-Chunjun-PostgreSQL";
     private transient IConsumerHandle<RowData, JobExecutionResult> consumerHandle;
+
+    @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer fetchSize;
+
+    @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer queryTimeOut;
 
     public IConsumerHandle getConsumerHandle() {
         return this.consumerHandle;

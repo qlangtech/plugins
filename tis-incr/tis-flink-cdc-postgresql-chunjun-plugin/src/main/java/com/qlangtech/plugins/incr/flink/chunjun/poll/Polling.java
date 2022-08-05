@@ -20,10 +20,13 @@ package com.qlangtech.plugins.incr.flink.chunjun.poll;
 
 import com.qlangtech.tis.extension.Describable;
 
+import java.util.Map;
+
 /**
  * 针对chunjun的增量拉取策略
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-07-28 15:36
  **/
-public class Polling implements Describable<Polling> {
+public abstract class Polling implements Describable<Polling> {
+    public abstract void setParams(Map<String, Object> params) ;
 }

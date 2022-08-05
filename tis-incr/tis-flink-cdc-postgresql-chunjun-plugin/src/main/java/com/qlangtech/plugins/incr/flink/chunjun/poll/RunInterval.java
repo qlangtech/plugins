@@ -21,10 +21,17 @@ package com.qlangtech.plugins.incr.flink.chunjun.poll;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,8 +52,42 @@ public class RunInterval extends Polling {
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer pollingInterval;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
     public String startLocation;
+
+    @Override
+    public void setParams(Map<String, Object> params) {
+        // polling
+        params.put("polling", true);
+        params.put("pollingInterval", pollingInterval);
+        params.put("increColumn", incrColumn);
+        if(StringUtils.isNotEmpty(startLocation)){
+            params.put("startLocation", startLocation);
+        }
+    }
+
+    /**
+     * 分区键候选字段
+     *
+     * @return
+     */
+    public static List<Option> getCols() {
+        return SelectedTab.getContextTableCols((cols) -> cols.stream()
+                .filter((col) -> {
+//                    switch (col.getType().getCollapse()) {
+//                        case DataXReaderColType.INT:
+//                        case DataXReaderColType.Long:
+//                        case DataXReaderColType.Date:
+//                            return true;
+//                    }
+//                    DataXReaderColType type = col.getType().getCollapse();
+//                    if (type == DataXReaderColType.INT || type == DataXReaderColType.Long || type == DataXReaderColType.Date) {
+//                        return true;
+//                    }
+
+                    return true;
+                }));
+    }
 
     @TISExtension
     public static class DftDesc extends Descriptor<Polling> {

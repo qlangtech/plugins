@@ -29,6 +29,7 @@ import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.plugins.incr.flink.chunjun.SelectedTabPropsExtends;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -84,7 +86,7 @@ public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult>
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
         sourceFactory.getDbConfig().vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             for (ISelectedTab tab : tabs) {
-                SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, tab);
+                SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab);
 
                 AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
                 PostgresqlSourceFactory pgSourceFactory = new ExtendPostgresqlSourceFactory(conf, null, sourceFactory) {
@@ -133,7 +135,7 @@ public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult>
 
     }
 
-    private SyncConf createSyncConf(BasicDataSourceFactory sourceFactory, String jdbcUrl, String dbName, ISelectedTab tab) {
+    private SyncConf createSyncConf(BasicDataSourceFactory sourceFactory, String jdbcUrl, String dbName, SelectedTab tab) {
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
@@ -147,6 +149,9 @@ public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult>
         Map<String, Object> params = Maps.newHashMap();
         params.put("username", sourceFactory.getUserName());
         params.put("password", sourceFactory.getPassword());
+
+        params.put("queryTimeOut", PostgreSQLSourceFunction.this.sourceFactory.queryTimeOut);
+        params.put("fetchSize", PostgreSQLSourceFunction.this.sourceFactory.fetchSize);
 
         //tab.getIncrMode().set(params);
 
@@ -169,11 +174,15 @@ public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult>
         //  conn.put("schema", dbName);
         params.put("connection", Lists.newArrayList(conn));
 
+        SelectedTabPropsExtends tabExtend = tab.getIncrProps();
+        // tabExtend.polling.setParams(params);
+        tabExtend.setParams(params);
+
         // polling
-        params.put("polling", true);
-        params.put("pollingInterval", 3000);
-        params.put("increColumn", "id");
-        params.put("startLocation", 0);
+//        params.put("polling", true);
+//        params.put("pollingInterval", 3000);
+//        params.put("increColumn", "id");
+//        params.put("startLocation", 0);
 
         reader.setParameter(params);
         content.setReader(reader);

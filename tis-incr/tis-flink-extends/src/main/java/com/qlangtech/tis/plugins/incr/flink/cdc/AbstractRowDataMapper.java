@@ -29,7 +29,10 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.table.api.DataTypes;
-import org.apache.flink.table.data.*;
+import org.apache.flink.table.data.DecimalData;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
+import org.apache.flink.table.data.TimestampData;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -99,7 +102,16 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             }
 
             public FlinkCol decimalType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DECIMAL(type.columnSize, type.getDecimalDigits()), new DecimalConvert(type));
+                try {
+                    int precision = type.columnSize;
+                    Integer scale = type.getDecimalDigits();
+                    if (precision < 1) {
+                        precision = 38;
+                    }
+                    return new FlinkCol(meta.colName, DataTypes.DECIMAL(precision, scale), new DecimalConvert(precision, scale));
+                } catch (Exception e) {
+                    throw new RuntimeException("colName:" + meta.colName + ",type:" + type.toString(), e);
+                }
             }
 
             @Override
@@ -219,10 +231,14 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     }
 
     static class DecimalConvert extends BiFunction {
-        private final DataType type;
+        //  private final DataType type;
 
-        public DecimalConvert(DataType type) {
-            this.type = type;
+        final int precision;// = type.columnSize;
+        final int scale;// = type.getDecimalDigits();
+
+        public DecimalConvert(int precision, int scale) {
+            this.precision = precision;
+            this.scale = scale;
         }
 
         @Override
@@ -232,8 +248,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public Object apply(Object o) {
-
-            return DecimalData.fromBigDecimal((BigDecimal) o, type.columnSize, type.getDecimalDigits());
+            return DecimalData.fromBigDecimal((BigDecimal) o, precision, scale);
         }
     }
 

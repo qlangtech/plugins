@@ -45,7 +45,7 @@ import java.util.Objects;
  **/
 @Public
 @TISExtensible
-public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
+public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
 
     private transient TISSinkFactory sinkFuncFactory;
     private transient IncrStreamFactory streamFactory;
@@ -80,7 +80,7 @@ public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerH
         //Key
         Map<String, DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinks
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
@@ -100,7 +100,7 @@ public abstract class BasicFlinkSourceHandle<TRANSFER_OBJ> implements IConsumerH
      * @param
      */
     protected abstract void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<TRANSFER_OBJ> sinkFunction);
+            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<SINK_TRANSFER_OBJ> sinkFunction);
 
 
     private Map<String, DTOStream> createTab2OutputTag(

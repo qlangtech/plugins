@@ -24,7 +24,7 @@ CREATE TABLE full_types (
     real_c REAL,
     double_precision DOUBLE PRECISION,
     numeric_c NUMERIC(10, 5),
-    decimal_c DECIMAL(10, 1),
+    decimal_c DECIMAL(10, 5),
     boolean_c BOOLEAN,
     text_c TEXT,
     char_c CHAR,

@@ -63,11 +63,12 @@
 
         <module>tis-sink-hudi-plugin</module>
 
-<!--        <module>tis-chunjun-dependency</module>-->
+        <!--        <module>tis-chunjun-dependency</module>-->
         <module>tis-sink-mysql-plugin</module>
         <module>tis-sink-doris-plugin</module>
         <module>tis-flink-cdc-postgresql-chunjun-plugin</module>
         <module>tis-oracle-chunjun-plugin</module>
+        <module>tis-chunjun-base-plugin</module>
 
 
     </modules>
@@ -86,60 +87,11 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.dtstack.chunjun</groupId>
-                <artifactId>chunjun-core</artifactId>
-                <version>${chunjun.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-clients_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-runtime_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-table-common</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-hadoop-compatibility_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-yarn_${scala.binary.version}</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.flink</groupId>
-                        <artifactId>flink-queryable-state-runtime_${scala.binary.version}</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-chunjun-base-plugin</artifactId>
+                <version>${project.version}</version>
             </dependency>
+
         </dependencies>
 
 

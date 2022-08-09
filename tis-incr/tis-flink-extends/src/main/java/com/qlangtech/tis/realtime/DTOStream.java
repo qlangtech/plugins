@@ -18,28 +18,29 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.OutputTag;
 
-import java.io.Serializable;
-import java.util.List;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-27 10:19
  **/
-public abstract class DTOStream<T> implements Serializable {
+public abstract class DTOStream<T> {
 
     protected transient DataStream<T> stream;
-  //  public transient List<FlinkCol> cols;
+    public transient final Class<T> clazz;
+    //  public transient List<FlinkCol> cols;
 
-    private DTOStream(//List<FlinkCol> cols
-    ) {
-       // this.cols = cols;
+//    private DTOStream(//List<FlinkCol> cols
+//    ) {
+//        // this.cols = cols;
+//    }
+
+    private DTOStream(Class<T> clazz) {
+        this.clazz = clazz;
     }
 
     public DataStream<T> getStream() {
@@ -54,7 +55,7 @@ public abstract class DTOStream<T> implements Serializable {
     }
 
     public static DTOStream createRowData(String table) {
-        return new RowDataDTOStream();
+        return new RowDataDTOStream(table);
     }
 
     /**
@@ -64,7 +65,7 @@ public abstract class DTOStream<T> implements Serializable {
         public final OutputTag<DTO> outputTag;
 
         public DispatchedDTOStream(OutputTag<DTO> outputTag) {
-            super();
+            super(DTO.class);
             this.outputTag = outputTag;
         }
 
@@ -81,8 +82,11 @@ public abstract class DTOStream<T> implements Serializable {
      * 利用pull的方式拉取增量数据，每个流本来就是独立的不需要分流
      */
     private static class RowDataDTOStream extends DTOStream<RowData> {
-        public RowDataDTOStream() {
-            super();
+        private final String table;
+
+        public RowDataDTOStream(String table) {
+            super(RowData.class);
+            this.table = table;
         }
 
         @Override

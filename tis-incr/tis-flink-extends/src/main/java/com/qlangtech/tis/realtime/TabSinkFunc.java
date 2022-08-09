@@ -30,14 +30,14 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
  * @create: 2021-11-16 12:32
  * @see com.qlangtech.tis.realtime.transfer.DTO
  **/
-public abstract class TabSinkFunc<TRANSFER_OBJ> {
+public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     // private transient final Map<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction;
     // public transient final StreamExecutionEnvironment env;
 
-    private transient final SinkFunction<TRANSFER_OBJ> sinkFunction;
+    private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final IDataxProcessor.TableAlias tab;
 
-    public TabSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<TRANSFER_OBJ> sinkFunction) {
+    public TabSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction) {
         this.sinkFunction = sinkFunction;
         this.tab = tab;
         //  this.env = env;
@@ -49,9 +49,9 @@ public abstract class TabSinkFunc<TRANSFER_OBJ> {
      * @param sourceStream
      * @return
      */
-    protected abstract DataStream<TRANSFER_OBJ> streamMap(DataStream<DTO> sourceStream);
+    protected abstract DataStream<SINK_TRANSFER_OBJ> streamMap(DTOStream sourceStream);
 
-    public void add2Sink(DataStream<DTO> sourceStream) {
+    public void add2Sink(DTOStream sourceStream) {
 
         this.streamMap(sourceStream).addSink(sinkFunction).name(tab.getTo());
 

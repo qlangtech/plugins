@@ -16,31 +16,24 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.chunjun.poll;
+package com.qlangtech.plugins.incr.flink.chunjun.postgresql;
 
-import com.qlangtech.tis.extension.Descriptor;
+import junit.framework.TestCase;
 
-import java.util.Map;
+import java.sql.Time;
 
 /**
- * 只执行一次
- *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-07-28 15:40
+ * @create: 2022-08-08 15:23
  **/
-public class RunOnce extends Polling {
+public class Test extends TestCase {
 
-    public static final String DISPLAY_NAME = "RunOnce";
+    public void test() {
+        Time time = Time.valueOf("18:00:22");
+        long time1 = time.getTime();
+        System.out.println(time + " ," + time1);
 
-    @Override
-    public void setParams(Map<String, Object> params) {
-        params.put("polling", false);
-    }
-
-    public static class DftDesc extends Descriptor<Polling> {
-        @Override
-        public String getDisplayName() {
-            return DISPLAY_NAME;
-        }
+         time = new Time(time1);
+        System.out.println(time);
     }
 }

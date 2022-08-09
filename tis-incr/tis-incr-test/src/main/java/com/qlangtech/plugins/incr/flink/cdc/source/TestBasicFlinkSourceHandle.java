@@ -76,7 +76,7 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
 
 //    @Override
 //    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {
-        sinkFunction.add2Sink(tabName, streamMap.get(tabName).getStream());
+        sinkFunction.add2Sink(tabName, streamMap.get(tabName));
         if (tabEnv == null) {
 
             tabEnv = StreamTableEnvironment.create(

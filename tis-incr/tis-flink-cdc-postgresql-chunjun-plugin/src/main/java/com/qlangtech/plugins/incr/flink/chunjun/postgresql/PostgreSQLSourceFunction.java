@@ -65,9 +65,9 @@ import java.util.stream.Collectors;
  * @create: 2022-07-27 08:32
  **/
 public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult> {
-    final ChunjunPostreSQLSourceFactory sourceFactory;
+    final ChunjunPostgreSQLSourceFactory sourceFactory;
 
-    public PostgreSQLSourceFunction(ChunjunPostreSQLSourceFactory sourceFactory) {
+    public PostgreSQLSourceFunction(ChunjunPostgreSQLSourceFactory sourceFactory) {
         this.sourceFactory = sourceFactory;
     }
 
@@ -175,6 +175,9 @@ public class PostgreSQLSourceFunction implements IMQListener<JobExecutionResult>
         params.put("connection", Lists.newArrayList(conn));
 
         SelectedTabPropsExtends tabExtend = tab.getIncrProps();
+        if (tabExtend == null) {
+            throw new IllegalStateException("tabExtend can not be null");
+        }
         // tabExtend.polling.setParams(params);
         tabExtend.setParams(params);
 

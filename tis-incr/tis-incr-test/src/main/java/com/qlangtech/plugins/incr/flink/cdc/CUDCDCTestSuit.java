@@ -394,7 +394,7 @@ public abstract class CUDCDCTestSuit {
 
     private BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
         BasicDataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName);
-        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
+
 
         BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {
             @Override
@@ -408,40 +408,55 @@ public abstract class CUDCDCTestSuit {
             }
         };
 
-        SelectedTab baseTab = new SelectedTab(tabName);
-        baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
+        SelectedTab baseTab = createSelectedTab(tabName, dataSourceFactory);
         dataxReader.selectedTabs = Collections.singletonList(baseTab);
         return dataxReader;
     }
 
+    protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
+        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
+        SelectedTab baseTab = new SelectedTab(tabName);
+        baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
+        return baseTab;
+    }
+
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
+
+    protected TestRow.ValProcessor getExpectValProcessor() {
+        return (rowVals, key, val) -> {
+            if (keyColBlob.equals(key)) {
+                ByteArrayInputStream inputStream
+                        = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
+                inputStream.reset();
+                return IOUtils.toString(inputStream, TisUTF8.get());
+            } else {
+                return val;
+            }
+        };
+    }
+
+    protected TestRow.ValProcessor getActualValProcessor(String tabName, IResultRows consumerHandle) {
+        return (rowVals, key, val) -> {
+            try {
+                if (keyColBlob.equals(key)) {
+                    byte[] buffer = (byte[]) val;
+                    // buffer.reset();
+                    return new String(buffer);
+                } else {
+                    return consumerHandle.deColFormat(tabName, key, val);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("colKey:" + key + ",val:" + val, e);
+            }
+        };
+    }
+
 
     protected void assertTestRow(String tabName, RowKind updateVal, IResultRows consumerHandle, TestRow expect, TestRow actual) {
         try {
             assertEqualsInOrder(
-                    expect.getValsList(Optional.of(updateVal), cols, (rowVals, key, val) -> {
-                        if (keyColBlob.equals(key)) {
-                            ByteArrayInputStream inputStream
-                                    = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
-                            inputStream.reset();
-                            return IOUtils.toString(inputStream, TisUTF8.get());
-                        } else {
-                            return val;
-                        }
-                    }) //
-                    , actual.getValsList(cols, (rowVals, key, val) -> {
-                        try {
-                            if (keyColBlob.equals(key)) {
-                                byte[] buffer = (byte[]) val;
-                                // buffer.reset();
-                                return new String(buffer);
-                            } else {
-                                return consumerHandle.deColFormat(tabName, key, val);
-                            }
-                        } catch (Exception e) {
-                            throw new RuntimeException("colKey:" + key + ",val:" + val, e);
-                        }
-                    }));
+                    expect.getValsList(Optional.of(updateVal), cols, getExpectValProcessor()) //
+                    , actual.getValsList(cols, getActualValProcessor(tabName, consumerHandle)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

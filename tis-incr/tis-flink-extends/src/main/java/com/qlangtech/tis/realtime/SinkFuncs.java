@@ -43,7 +43,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
     }
 
 
-    public void add2Sink(String originTableName, DataStream<DTO> sourceStream) {
+    public void add2Sink(String originTableName, DTOStream sourceStream) {
 
         if (sinkFunction.size() < 2) {
             for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {

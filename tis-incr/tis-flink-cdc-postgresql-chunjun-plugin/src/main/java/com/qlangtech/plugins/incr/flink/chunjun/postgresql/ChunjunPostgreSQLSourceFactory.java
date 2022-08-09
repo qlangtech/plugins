@@ -39,7 +39,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-07-27 08:06
  **/
-public class ChunjunPostreSQLSourceFactory extends MQListenerFactory {
+public class ChunjunPostgreSQLSourceFactory extends MQListenerFactory {
 
     private static final String DESC_NAME = "Flink-Chunjun-PostgreSQL";
     private transient IConsumerHandle<RowData, JobExecutionResult> consumerHandle;

@@ -34,12 +34,14 @@ import com.qlangtech.tis.plugin.datax.DataxMySQLWriter;
 import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.ReplaceType;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
 import org.easymock.EasyMock;
@@ -241,7 +243,10 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
             Assert.assertEquals(1, sinkFunction.size());
             for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
-                entry.getValue().add2Sink(env.fromElements(new DTO[]{d, update}));
+                DTOStream sourceStream =  DTOStream.createDispatched(entry.getKey().getFrom());
+                sourceStream.addStream(env.fromElements(new DTO[]{d, update}));
+
+                entry.getValue().add2Sink(sourceStream);
                 // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
                 break;
             }

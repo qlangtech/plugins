@@ -161,8 +161,8 @@ public class MySQLSinkFactory extends BasicTISSinkFactory<RowData> implements IS
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
             sinkFunc = sinkFuncRef.get();
 
-            sinkFuncs.put(tableName, new ChunjunRowDataSinkFunc(
-                    tableName, sinkFunc.getRight(), this.getStreamTableMeta(tableName.getFrom()), sinkFunc.getLeft()));
+            sinkFuncs.put(tableName, new RowDataSinkFunc(tableName //, sinkFunc.getRight()
+                    , sinkFunc.getLeft(), this.getStreamTableMeta(tableName.getFrom())));
         }
 
         if (sinkFuncs.size() < 1) {

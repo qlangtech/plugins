@@ -35,14 +35,14 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.dtstack.chunjun</groupId>
-            <artifactId>chunjun-core</artifactId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-chunjun-base-plugin</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-dependency</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-flink-dependency</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -68,6 +68,10 @@
                 <exclusion>
                     <groupId>mysql</groupId>
                     <artifactId>mysql-connector-java</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.dtstack.chunjun</groupId>
+                    <artifactId>chunjun-connector-jdbc-base</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

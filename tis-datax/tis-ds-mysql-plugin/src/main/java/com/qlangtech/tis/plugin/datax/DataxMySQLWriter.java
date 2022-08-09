@@ -181,8 +181,18 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             private String convertType(ISelectedTab.ColMeta col) {
                 DataType type = col.getType();
                 switch (type.type) {
+                    case Types.CHAR: {
+                        String keyChar = "CHAR";
+                        if (type.columnSize < 1) {
+                            return keyChar;
+                        }
+                        return keyChar + "(" + type.columnSize + ")";
+                    }
                     case Types.BIT:
                     case Types.BOOLEAN:
+                        return "BOOLEAN";
+                    case Types.REAL:
+                        return "REAL";
                     case Types.TINYINT:
                         return "TINYINT";
                     case Types.SMALLINT:
@@ -196,7 +206,13 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.DOUBLE:
                         return "DOUBLE";
                     case Types.DECIMAL:
-                        return "DECIMAL";
+                    case Types.NUMERIC: {
+                        if (type.columnSize > 0) {
+                            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                        } else {
+                            return "DECIMAL";
+                        }
+                    }
                     case Types.DATE:
                         return "DATE";
                     case Types.TIME:
@@ -208,8 +224,12 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.LONGVARBINARY:
                     case Types.VARBINARY:
                         return "BLOB";
-                    case Types.VARCHAR:
+                    case Types.VARCHAR: {
+                        if (type.columnSize > Short.MAX_VALUE) {
+                            return "TEXT";
+                        }
                         return "VARCHAR(" + type.columnSize + ")";
+                    }
                     default:
                         return "TINYTEXT";
                 }
@@ -286,6 +306,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         protected IDataXPluginMeta.EndType getEndType() {
             return EndType.MySQL;
         }
+
         @Override
         public String getDisplayName() {
             return DATAX_NAME;

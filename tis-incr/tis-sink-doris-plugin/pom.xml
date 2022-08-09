@@ -33,15 +33,14 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.dtstack.chunjun</groupId>
-            <artifactId>chunjun-core</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-dependency</artifactId>
+            <artifactId>tis-chunjun-base-plugin</artifactId>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-flink-dependency</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.dtstack.chunjun</groupId>
@@ -51,6 +50,10 @@
                 <exclusion>
                     <groupId>com.alibaba</groupId>
                     <artifactId>druid</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.dtstack.chunjun</groupId>
+                    <artifactId>chunjun-connector-jdbc-base</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>mysql</groupId>

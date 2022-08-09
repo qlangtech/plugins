@@ -18,8 +18,6 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
 
@@ -39,7 +37,7 @@ public abstract class RowDataFlinkSourceHandle extends BasicFlinkSourceHandle<Ro
     @Override
     protected final void processTableStream(StreamExecutionEnvironment env
             , Map<String, DTOStream> tab2OutputTag, SinkFuncs<RowData> sinkFunction) {
-        this.processTableStream(DefaultFlinkSourceHandle.convert(tab2OutputTag), sinkFunction);
+        this.processTableStream((tab2OutputTag), sinkFunction);
     }
 
     /**
@@ -47,5 +45,5 @@ public abstract class RowDataFlinkSourceHandle extends BasicFlinkSourceHandle<Ro
      *
      * @param
      */
-    protected abstract void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs<RowData> sinkFunction);
+    protected abstract void processTableStream(Map<String, DTOStream> streamMap, SinkFuncs<RowData> sinkFunction);
 }

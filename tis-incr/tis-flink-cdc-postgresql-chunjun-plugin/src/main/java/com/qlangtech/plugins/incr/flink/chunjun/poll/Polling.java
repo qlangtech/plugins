@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.poll;
 
 import com.qlangtech.tis.extension.Describable;
 
+import java.sql.Time;
 import java.util.Map;
 
 /**
@@ -29,4 +30,6 @@ import java.util.Map;
  **/
 public abstract class Polling implements Describable<Polling> {
     public abstract void setParams(Map<String, Object> params) ;
+
+
 }

@@ -100,7 +100,7 @@ public class TestRow {
         return vals.getObj(key);
     }
 
-    interface ValProcessor {
+    public interface ValProcessor {
         Object process(RowVals<Object> rowVals, String key, Object val) throws Exception;
     }
 

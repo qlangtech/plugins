@@ -27,6 +27,8 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.mysql.UpdateMode;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
+import java.util.Objects;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-07-18 11:51
@@ -40,7 +42,7 @@ public class MySQLSelectedTab extends SelectedTab {
     public UpdateMode incrMode;
 
     public UpdateMode getIncrMode() {
-        return incrMode;
+        return Objects.requireNonNull(incrMode, "incrMode can not be null");
     }
 
     @TISExtension

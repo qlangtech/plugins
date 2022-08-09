@@ -18,9 +18,6 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl;
 
-import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -31,7 +28,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**

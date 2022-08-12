@@ -42,6 +42,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Memoizer;
+import com.qlangtech.tis.util.impl.AttrVals;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -346,7 +347,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 
         @Override
         public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context
-                , BaseSubFormProperties props, IPropertyType.SubFormFilter filter, Map<String, JSONObject> formData) {
+                , BaseSubFormProperties props, IPropertyType.SubFormFilter filter, AttrVals formData) {
 
             Integer maxReaderTabCount = Integer.MAX_VALUE;
             try {

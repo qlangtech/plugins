@@ -19,8 +19,6 @@
 package com.qlangtech.tis.plugin.datax.hudi;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.assemble.FullbuildPhase;
@@ -46,10 +44,10 @@ import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -231,20 +229,25 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                 return rewriteSubFormProperties;
             }
 
-            String overwriteSubField = IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
-                    , DataXHudiWriter.class.getSimpleName() + "."
-                            + subformProps.getSubFormFieldName() + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX, true);
-            JSONObject subField = JSON.parseObject(overwriteSubField);
-            final String targetClass = subField.getString(SubForm.FIELD_DES_CLASS);
-
-            Descriptor newSubDescriptor = Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
-                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
             rewriteSubFormProperties = SuFormProperties.copy(
                     filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), newSubDescriptor.clazz))
                     , newSubDescriptor.clazz
                     , newSubDescriptor
                     , subformProps);
             return rewriteSubFormProperties;
+        }
+
+        @Override
+        public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
+//            String overwriteSubField = IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
+//                    , DataXHudiWriter.class.getSimpleName() + "."
+//                            + subformProps.getSubFormFieldName() + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX, true);
+//            JSONObject subField = JSON.parseObject(overwriteSubField);
+//            final String targetClass = subField.getString(SubForm.FIELD_DES_CLASS);
+            Class targetClass = com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.class;
+            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
+                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
         }
 
 //        @Override

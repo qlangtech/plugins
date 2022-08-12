@@ -31,7 +31,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.DataxMySQLWriter;
-import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
+import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.ReplaceType;
 import com.qlangtech.tis.realtime.DTOStream;
@@ -41,7 +41,6 @@ import com.qlangtech.tis.test.TISEasyMock;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
 import org.easymock.EasyMock;
@@ -138,7 +137,7 @@ public class TestMySQLSinkFactory extends MySqlSourceTestBase
             };
             IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
-            MySQLSelectedTab totalpayinfo = mock(tableName, MySQLSelectedTab.class);
+            SinkTabPropsExtends totalpayinfo = mock(tableName, SinkTabPropsExtends.class);
             EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).times(2);
             //InsertType updateMode = new InsertType();
 

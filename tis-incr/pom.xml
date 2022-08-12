@@ -66,9 +66,10 @@
         <!--        <module>tis-chunjun-dependency</module>-->
         <module>tis-sink-mysql-plugin</module>
         <module>tis-sink-doris-plugin</module>
-        <module>tis-flink-cdc-postgresql-chunjun-plugin</module>
+        <module>tis-flink-chunjun-postgresql-plugin</module>
         <module>tis-oracle-chunjun-plugin</module>
         <module>tis-chunjun-base-plugin</module>
+        <module>tis-flink-chunjun-greenplum-plugin</module>
 
 
     </modules>

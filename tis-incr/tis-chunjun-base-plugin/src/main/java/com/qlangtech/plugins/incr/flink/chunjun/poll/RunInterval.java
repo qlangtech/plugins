@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -84,12 +85,8 @@ public class RunInterval extends Polling {
 //                        case DataXReaderColType.Date:
 //                            return true;
 //                    }
-//                    DataXReaderColType type = col.getType().getCollapse();
-//                    if (type == DataXReaderColType.INT || type == DataXReaderColType.Long || type == DataXReaderColType.Date) {
-//                        return true;
-//                    }
-
-                    return true;
+                    DataXReaderColType type = col.getType().getCollapse();
+                    return (type != DataXReaderColType.STRING && type != DataXReaderColType.Bytes);
                 }));
     }
 

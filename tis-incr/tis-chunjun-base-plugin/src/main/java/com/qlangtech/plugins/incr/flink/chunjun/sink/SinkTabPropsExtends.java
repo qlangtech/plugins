@@ -43,6 +43,11 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
         return Objects.requireNonNull(incrMode, "incrMode can not be null");
     }
 
+    @Override
+    public boolean isSource() {
+        return false;
+    }
+
     @TISExtension
     public static class DefaultDescriptor extends BaseDescriptor {
 
@@ -69,5 +74,7 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
 ////            }
 //            return success;
 //        }
+
+
     }
 }

@@ -32,7 +32,7 @@ public class ChunjunGreenplumSourceFactory extends ChunjunSourceFactory {
 
     @Override
     public IMQListener create() {
-        return new GreenplumSourceFunction(this);
+        return new GreenplumSourceFunction(ChunjunGreenplumSourceFactory.this);
     }
 
     @TISExtension()

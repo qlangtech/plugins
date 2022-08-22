@@ -51,6 +51,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public SourceChannel(List<ReaderSource> sourceFunction) {
+        if (CollectionUtils.isEmpty(sourceFunction)) {
+            throw new IllegalArgumentException("param sourceFunction can not be empty");
+        }
         this.sourceFunction = sourceFunction;
     }
 

@@ -60,7 +60,14 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-chunjun-base-plugin</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-incr-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-scala-compiler</artifactId>
+        </dependency>
 
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
@@ -79,10 +86,7 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-incr-test</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -90,6 +94,7 @@
             <version>42.2.19</version>
             <scope>test</scope>
         </dependency>
+
 
     </dependencies>
 

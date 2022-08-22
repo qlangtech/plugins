@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl;
 
+import com.dtstack.chunjun.sink.WriteMode;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugins.incr.flink.connector.mysql.UpdateMode;
 import org.apache.commons.lang.StringUtils;
@@ -28,17 +29,17 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class InsertType extends UpdateMode {
 
-    private static final String INSERT = "insert";
+    private static final WriteMode INSERT = WriteMode.INSERT;
 
     @Override
     protected String getMode() {
-        return INSERT;
+        return INSERT.getMode();
     }
 
     @TISExtension
     public static final class DftDescriptor extends BasicUpdate.BasicDescriptor {
         public String getDisplayName() {
-            return StringUtils.capitalize(INSERT);
+            return StringUtils.capitalize(INSERT.getMode());
         }
     }
 }

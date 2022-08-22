@@ -47,7 +47,7 @@ public abstract class DTOStream<T> {
         return this.stream;
     }
 
-    public abstract void addStream(SingleOutputStreamOperator<T> mainStream);
+    public abstract DTOStream<T> addStream(SingleOutputStreamOperator<T> mainStream);
 
     public static DTOStream createDispatched(String table) {
         return new DispatchedDTOStream(new OutputTag<DTO>(table) {
@@ -69,12 +69,13 @@ public abstract class DTOStream<T> {
             this.outputTag = outputTag;
         }
 
-        public void addStream(SingleOutputStreamOperator<DTO> mainStream) {
+        public DTOStream<DTO> addStream(SingleOutputStreamOperator<DTO> mainStream) {
             if (stream == null) {
                 stream = mainStream.getSideOutput(outputTag);
             } else {
                 stream = stream.union(mainStream.getSideOutput(outputTag));
             }
+            return this;
         }
     }
 
@@ -90,12 +91,13 @@ public abstract class DTOStream<T> {
         }
 
         @Override
-        public void addStream(SingleOutputStreamOperator<RowData> mainStream) {
+        public DTOStream<RowData> addStream(SingleOutputStreamOperator<RowData> mainStream) {
             if (stream == null) {
                 stream = mainStream;
             } else {
                 stream = stream.union(mainStream);
             }
+            return this;
         }
     }
 }

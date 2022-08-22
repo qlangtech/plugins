@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
@@ -37,7 +38,6 @@ import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import junit.framework.TestCase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
@@ -119,7 +119,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR, "VARCHAR" , 32));
+        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
         cm.setPk(true);
         cols.add(cm);
 
@@ -223,9 +223,9 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         assertEquals(1, sinkFunction.size());
         for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFunction.entrySet()) {
 
-            entry.getValue().add2Sink(env.fromElements(new DTO[]{d}));
+            entry.getValue().add2Sink(DTOStream.createDispatched(tableName).addStream(env.fromElements(new DTO[]{d})));
 
-           // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
+            // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
             break;
         }
 

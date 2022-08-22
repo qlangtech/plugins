@@ -19,7 +19,9 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.realtime.transfer.DTO;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
@@ -36,11 +38,33 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
 
     private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final IDataxProcessor.TableAlias tab;
+    private transient final int sinkTaskParallelism;
 
-    public TabSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction) {
+
+    private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
+
+    /**
+     * @param tab
+     * @param sinkFunction
+     */
+    public TabSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction, int sinkTaskParallelism) {
         this.sinkFunction = sinkFunction;
         this.tab = tab;
+        if (sinkTaskParallelism < 1) {
+            throw new IllegalArgumentException("param sinkTaskParallelism can not small than 1");
+        }
+        this.sinkTaskParallelism = sinkTaskParallelism;
         //  this.env = env;
+    }
+
+    public void setSourceFilter(String name, FilterFunction<SINK_TRANSFER_OBJ> sourceFilter) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("param name can not be empty");
+        }
+        if (sourceFilter == null) {
+            throw new IllegalArgumentException("param sourceFilter can not be empty");
+        }
+        this.sourceFilter = Pair.of(name, sourceFilter);
     }
 
     /**
@@ -53,7 +77,18 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
 
     public void add2Sink(DTOStream sourceStream) {
 
-        this.streamMap(sourceStream).addSink(sinkFunction).name(tab.getTo());
+        DataStream<SINK_TRANSFER_OBJ> source = this.streamMap(sourceStream);
+
+        if (sourceFilter != null) {
+            source = source.filter(this.sourceFilter.getRight()).name(this.sourceFilter.getLeft());
+        }
+        if (this.sinkTaskParallelism < 1) {
+            throw new IllegalStateException("sinkTaskParallelism can not small than 1");
+        }
+        source.addSink(sinkFunction).name(tab.getTo()).setParallelism(this.sinkTaskParallelism);
+//        .filter((obj) -> {
+//            return true;
+//        })
 
 //        if (sinkFunction.size() < 2) {
 //            for (Map.Entry<IDataxProcessor.TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {

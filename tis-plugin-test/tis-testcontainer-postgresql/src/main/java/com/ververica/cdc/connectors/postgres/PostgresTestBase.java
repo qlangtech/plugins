@@ -80,7 +80,7 @@ public abstract class PostgresTestBase extends AbstractTestBase {
                 POSTGERS_CONTAINER.getPassword());
     }
 
-    protected BasicDataSourceFactory createPgSourceFactory(TargetResName dataxName) {
+    public static BasicDataSourceFactory createPgSourceFactory(TargetResName dataxName) {
         PostgreSQLContainer<?> postgersContainer = POSTGERS_CONTAINER;
         Descriptor pgDataSourceFactory = TIS.get().getDescriptor("PGDataSourceFactory");
         Assert.assertNotNull(pgDataSourceFactory);

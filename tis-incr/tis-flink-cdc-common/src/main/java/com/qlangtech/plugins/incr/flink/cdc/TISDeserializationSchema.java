@@ -86,7 +86,11 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
                 //out.collect(dto);
                 this.extractAfterRow(dto, value, valueSchema);
                 // TODO: 需要判断这条记录是否要处理
-                dto.setEventType(DTO.EventType.UPDATE);
+                dto.setEventType(DTO.EventType.UPDATE_BEFORE);
+                out.collect(dto);
+
+                dto = dto.colone();
+                dto.setEventType(DTO.EventType.UPDATE_AFTER);
                 out.collect(dto);
             }
         } else {

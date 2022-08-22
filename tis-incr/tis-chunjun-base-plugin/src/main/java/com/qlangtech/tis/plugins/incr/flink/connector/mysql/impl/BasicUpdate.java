@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
  * @create: 2022-07-18 10:40
  **/
 public abstract class BasicUpdate extends UpdateMode {
+
+    public static final String KEY_UNIQUE_KEY = "uniqueKey";
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public List<String> updateKey;
 
@@ -44,7 +46,7 @@ public abstract class BasicUpdate extends UpdateMode {
         if (CollectionUtils.isEmpty(updateKey)) {
             throw new IllegalStateException("collection of 'updateKey' can not be null");
         }
-        params.put("uniqueKey", this.updateKey);
+        params.put(KEY_UNIQUE_KEY, this.updateKey);
     }
 
     /**

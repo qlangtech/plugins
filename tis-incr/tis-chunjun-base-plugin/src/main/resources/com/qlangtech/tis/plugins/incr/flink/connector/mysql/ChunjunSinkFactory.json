@@ -14,5 +14,13 @@
   },
   "batchSize": {
     "dftVal": 1
+  },
+  "flushIntervalMills": {
+    "dftVal": 10000,
+    "help": "\"the flush interval mills, over this time, asynchronous threads will flush data. The default value is 10s."
+  },
+  "parallelism": {
+    "dftVal": 1,
+    "help": "sink 并行度"
   }
 }

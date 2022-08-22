@@ -29,6 +29,7 @@ import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
+import com.dtstack.chunjun.sink.SinkFactory;
 import com.dtstack.chunjun.util.TableUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -53,12 +54,14 @@ import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.RowType;
 
@@ -78,6 +81,7 @@ import java.util.stream.Collectors;
  **/
 public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> implements IStreamTableCreator {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Chunjun-Sink-";
+    public static final String KEY_FULL_COLS = "fullColumn";
     //    描述：sink 端是否支持二阶段提交
 //    注意：
 //    如果此参数为空，默认不开启二阶段提交，即 sink 端不支持 exactly_once 语义；
@@ -93,6 +97,13 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 //    默认值：1
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public int batchSize;
+
+    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public int flushIntervalMills;
+
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer parallelism;
+
     private transient Map<String, SelectedTab> selTabs;
 
 
@@ -118,8 +129,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
 
-            AtomicReference<Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter>> sinkFuncRef = new AtomicReference<>();
-            Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter> sinkFunc = null;
+            AtomicReference<Pair<SinkFunction<RowData>, JdbcColumnConverter>> sinkFuncRef = new AtomicReference<>();
+            Pair<SinkFunction<RowData>, JdbcColumnConverter> sinkFunc = null;
             final IDataxProcessor.TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
@@ -154,9 +165,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
             }
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
             sinkFunc = sinkFuncRef.get();
-
+            if (this.parallelism == null) {
+                throw new IllegalStateException("param parallelism can not be null");
+            }
             sinkFuncs.put(tableName, new RowDataSinkFunc(tableName //, sinkFunc.getRight()
-                    , sinkFunc.getLeft(), this.getStreamTableMeta(tableName.getFrom())));
+                    , sinkFunc.getLeft(), this.getStreamTableMeta(tableName.getFrom()), this.parallelism));
         }
 
         if (sinkFuncs.size() < 1) {
@@ -165,7 +178,17 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         return sinkFuncs;
     }
 
-    private Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter> createSinkFunction(
+    /**
+     * @param dbName
+     * @param targetTabName
+     * @param tab
+     * @param jdbcUrl
+     * @param dsFactory
+     * @param dataXWriter
+     * @return
+     * @see JdbcSinkFactory
+     */
+    private Pair<SinkFunction<RowData>, JdbcColumnConverter> createSinkFunction(
             String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
         SyncConf syncConf = new SyncConf();
@@ -180,8 +203,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
         ((SinkTabPropsExtends) tab.getIncrSinkProps()).getIncrMode().set(params);
 
-        List<Map<String, String>> cols = Lists.newArrayList();
-        Map<String, String> col = null;
+        List<Map<String, Object>> cols = Lists.newArrayList();
+        Map<String, Object> col = null;
         // com.dtstack.chunjun.conf.FieldConf.getField(List)
 
         for (ISelectedTab.ColMeta cm : tab.getCols()) {
@@ -193,27 +216,43 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
 
         params.put(ConfigConstant.KEY_COLUMN, cols);
-        params.put("fullColumn", tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        params.put("batchSize", this.batchSize);
+        params.put("flushIntervalMills", this.flushIntervalMills);
+        params.put("semantic", this.semantic);
         Map<String, Object> conn = Maps.newHashMap();
         conn.put("jdbcUrl", jdbcUrl);
         conn.put("table", Lists.newArrayList(targetTabName));
         conn.put("schema", dbName);
         params.put("connection", Lists.newArrayList(conn));
-        writer.setParameter(params);
+        setParameter(dsFactory, dataXWriter, writer, params, targetTabName);
         content.setWriter(writer);
         jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
         syncConf.setJob(jobConf);
-        Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter> sinkFunc
+        Pair<SinkFunction<RowData>, JdbcColumnConverter> sinkFunc
                 = createChunjunSinkFunction(jdbcUrl, dsFactory, dataXWriter, syncConf);
         return sinkFunc;
 
     }
 
-    private Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter> createChunjunSinkFunction(
+    protected void setParameter(BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter
+            , OperatorConf writer, Map<String, Object> params, final String targetTabName) {
+        writer.setParameter(params);
+    }
+
+    private Pair<SinkFunction<RowData>, JdbcColumnConverter> createChunjunSinkFunction(
             String jdbcUrl, BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
-        AtomicReference<Pair<DtOutputFormatSinkFunction<RowData>, JdbcColumnConverter>> ref = new AtomicReference<>();
-        // new MysqlDialect()
-        JdbcSinkFactory sinkFactory = new JdbcSinkFactory(syncConf, createJdbcDialect(syncConf)) {
+        AtomicReference<Pair<SinkFunction<RowData>, JdbcColumnConverter>> ref = new AtomicReference<>();
+
+        SinkFactory sinkFactory = createSinkFactory(jdbcUrl, dsFactory, dataXWriter, syncConf, ref);
+        sinkFactory.createSink(null);
+        return Objects.requireNonNull(ref.get(), "sinkFunction can not be null");
+    }
+
+    protected SinkFactory createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
+            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf
+            , AtomicReference<Pair<SinkFunction<RowData>, JdbcColumnConverter>> ref) {
+        return new JdbcSinkFactory(syncConf, createJdbcDialect(syncConf)) {
             @Override
             public void initCommonConf(ChunJunCommonConf commonConf) {
                 super.initCommonConf(commonConf);
@@ -225,6 +264,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 return new JdbcOutputFormatBuilder(createChunjunOutputFormat(dataXWriter.getDataSourceFactory()));
             }
 
+            @Override
             protected DataStreamSink<RowData> createOutput(
                     DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
                 JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
@@ -246,11 +286,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 return null;
             }
         };
-        sinkFactory.createSink(null);
-        return Objects.requireNonNull(ref.get(), "sinkFunction can not be null");
     }
 
-    protected abstract void initChunjunJdbcConf(JdbcConf jdbcConf);
 
     protected abstract JdbcDialect createJdbcDialect(SyncConf syncConf);
 
@@ -303,13 +340,14 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-    protected abstract String parseType(ISelectedTab.ColMeta cm);
+    protected abstract Object parseType(ISelectedTab.ColMeta cm);
 
 
     protected final <TT extends BaseSinkFunctionDescriptor> Class<TT> getExpectDescClass() {
         return (Class<TT>) BasicChunjunSinkDescriptor.class;
     }
 
+    protected abstract void initChunjunJdbcConf(JdbcConf jdbcConf);
 
     protected static abstract class BasicChunjunSinkDescriptor extends BaseSinkFunctionDescriptor implements IIncrSelectedTabExtendFactory {
         @Override
@@ -322,11 +360,28 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
             return super.validateAll(msgHandler, context, postFormVals);
         }
 
+        public boolean validateFlushIntervalMills(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            // return validateFileDelimiter(msgHandler, context, fieldName, value);
+            int interval = Integer.parseInt(value);
+            if (interval < 1000) {
+                msgHandler.addFieldError(context, fieldName, "不能小于1秒");
+                return false;
+            }
+            return true;
+        }
+
+        public boolean validateParallelism(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int val = Integer.parseInt(value);
+            if (val < 1) {
+                msgHandler.addFieldError(context, fieldName, "并发度不能小于1");
+                return false;
+            }
+            return true;
+        }
+
         @Override
         public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(SinkTabPropsExtends.class);
         }
     }
-
-
 }

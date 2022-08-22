@@ -40,11 +40,13 @@ public final class DTO2RowDataMapper extends AbstractRowDataMapper {
         return super.map(dto);
     }
 
+    @Override
     protected void setRowDataVal(int index, RowData row, Object value) {
         GenericRowData rowData = (GenericRowData) row;
         rowData.setField(index, value);
     }
 
+    @Override
     protected GenericRowData createRowData(DTO dto) {
         return new GenericRowData(DTO2RowMapper.getKind(dto), cols.size());
     }

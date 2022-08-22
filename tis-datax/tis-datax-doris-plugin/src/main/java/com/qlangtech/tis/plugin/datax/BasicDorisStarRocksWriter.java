@@ -35,8 +35,9 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -72,7 +73,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
     public Separator getSeparator() {
-        JSONObject props = JSON.parseObject(loadProps);
+        JSONObject props = getLoadProps();
         return new Separator() {
             @Override
             public String getColumnSeparator() {
@@ -84,6 +85,10 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 return StringUtils.defaultIfBlank(props.getString(Separator.ROW_DELIMITER), ROW_DELIMITER_DEFAULT);
             }
         };
+    }
+
+    public JSONObject getLoadProps() {
+        return JSON.parseObject(loadProps);
     }
 
 
@@ -165,7 +170,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
-                        return convertType(this.meta);
+                        return convertType(this.meta).token;
                     }
 
                     @Override
@@ -177,64 +182,82 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
                 };
             }
 
-            protected String convertType(ISelectedTab.ColMeta col) {
+            protected DorisType convertType(ISelectedTab.ColMeta col) {
                 DataType type = col.getType();
-                return type.accept(new DataType.TypeVisitor<String>() {
-                    @Override
-                    public String bigInt(DataType type) {
-                        return "BIGINT";
-                    }
-
-                    @Override
-                    public String doubleType(DataType type) {
-                        return "DOUBLE";
-                    }
-
-                    @Override
-                    public String dateType(DataType type) {
-                        return "DATE";
-                    }
-
-                    @Override
-                    public String timestampType(DataType type) {
-                        return "DATETIME";
-                    }
-
-                    @Override
-                    public String bitType(DataType type) {
-                        return "TINYINT";
-                    }
-
-                    @Override
-                    public String blobType(DataType type) {
-                        return varcharType(type);
-                    }
-
-                    @Override
-                    public String varcharType(DataType type) {
-                        return "VARCHAR(" + Math.min(type.columnSize, 65000) + ")";
-                    }
-
-                    @Override
-                    public String intType(DataType type) {
-                        return "INT";
-                    }
-
-                    @Override
-                    public String floatType(DataType type) {
-                        return "FLOAT";
-                    }
-
-                    @Override
-                    public String decimalType(DataType type) {
-                        return "DECIMAL(" + type.columnSize + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")";
-                    }
-                });
+                return type.accept(columnTokenRecognise);
             }
+
+
         };
         return createTableSqlBuilder.build();
     }
 
+    public static class DorisType implements Serializable {
+        public final DataType type;
+        final String token;
+
+        public DorisType(DataType type, String token) {
+            this.type = type;
+            this.token = token;
+        }
+    }
+
+    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise
+            = new DataType.TypeVisitor<DorisType>() {
+        @Override
+        public DorisType bigInt(DataType type) {
+            return new DorisType(type, "BIGINT");
+        }
+
+        @Override
+        public DorisType doubleType(DataType type) {
+            return new DorisType(type, "DOUBLE");
+        }
+
+        @Override
+        public DorisType dateType(DataType type) {
+            return new DorisType(type, "DATE");
+        }
+
+        @Override
+        public DorisType timestampType(DataType type) {
+            return new DorisType(type, "DATETIME");
+        }
+
+        @Override
+        public DorisType bitType(DataType type) {
+            return new DorisType(type, "TINYINT");
+        }
+
+        @Override
+        public DorisType blobType(DataType type) {
+            return varcharType(type);
+        }
+
+        @Override
+        public DorisType varcharType(DataType type) {
+            return new DorisType(type, "VARCHAR(" + Math.min(type.columnSize, 65000) + ")");
+        }
+
+        @Override
+        public DorisType intType(DataType type) {
+            return new DorisType(type, "INT");
+        }
+
+        @Override
+        public DorisType floatType(DataType type) {
+            return new DorisType(type, "FLOAT");
+        }
+
+        @Override
+        public DorisType decimalType(DataType type) {
+            return new DorisType(type, "DECIMAL(" + type.columnSize + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
+        }
+    };
+
+//    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
+//        return columnTokenRecognise;
+//    }
 
     protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
         public BaseDescriptor() {

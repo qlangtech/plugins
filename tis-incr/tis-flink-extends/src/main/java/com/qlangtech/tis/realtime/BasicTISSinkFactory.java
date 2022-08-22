@@ -42,8 +42,17 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      * (RowData,DTO) -> DTO
      */
     public final static class DTOSinkFunc extends TabSinkFunc<DTO> {
-        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction) {
-            super(tab, sinkFunction);
+
+        /**
+         * @param tab
+         * @param sinkFunction
+         * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
+         */
+        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction, boolean supportUpset, int sinkTaskParallelism) {
+            super(tab, sinkFunction, sinkTaskParallelism);
+            if (supportUpset) {
+                this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent());
+            }
         }
 
         @Override
@@ -65,8 +74,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         final IStreamTableCreator.IStreamTableMeta streamTableMeta;
 
         public RowDataSinkFunc(IDataxProcessor.TableAlias tab
-                , SinkFunction<RowData> sinkFunction, IStreamTableCreator.IStreamTableMeta streamTableMeta) {
-            super(tab, sinkFunction);
+                , SinkFunction<RowData> sinkFunction, IStreamTableCreator.IStreamTableMeta streamTableMeta, int sinkTaskParallelism) {
+            super(tab, sinkFunction, sinkTaskParallelism);
             this.streamTableMeta = streamTableMeta;
         }
 

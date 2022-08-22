@@ -56,8 +56,10 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
         switch (dto.getEvent()) {
             case DELETE:
                 return RowKind.DELETE;
-            case UPDATE:
+            case UPDATE_AFTER:
                 return RowKind.UPDATE_AFTER;
+            case UPDATE_BEFORE:
+                return RowKind.UPDATE_BEFORE;
             case ADD:
                 return RowKind.INSERT;
             default:

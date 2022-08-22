@@ -391,50 +391,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         return (filtered.toString());
     }
 
-//    @Override
-//    public List<ColumnMetaData> getTableMetadata(final String table) {
-//        if (StringUtils.isBlank(table)) {
-//            throw new IllegalArgumentException("param table can not be null");
-//        }
-//        List<ColumnMetaData> columns = new ArrayList<>();
-//        try {
-//
-//            final DBConfig dbConfig = getDbConfig();
-//            dbConfig.vistDbName((config, ip, dbname) -> {
-//                visitConnection(config, ip, dbname, config.getUserName(), config.getPassword(), (conn) -> {
-//                    DatabaseMetaData metaData1 = null;
-//                    ResultSet primaryKeys = null;
-//                    ResultSet columns1 = null;
-//                    try {
-//                        metaData1 = conn.getMetaData();
-//                        primaryKeys = metaData1.getPrimaryKeys(null, null, table);
-//                        columns1 = metaData1.getColumns(null, null, table, null);
-//                        Set<String> pkCols = Sets.newHashSet();
-//                        while (primaryKeys.next()) {
-//                            // $NON-NLS-1$
-//                            String columnName = primaryKeys.getString("COLUMN_NAME");
-//                            pkCols.add(columnName);
-//                        }
-//                        int i = 0;
-//                        String colName = null;
-//                        while (columns1.next()) {
-//                            columns.add(new ColumnMetaData((i++), (colName = columns1.getString("COLUMN_NAME"))
-//                                    , columns1.getInt("DATA_TYPE"), pkCols.contains(colName)));
-//                        }
-//
-//                    } finally {
-//                        closeResultSet(columns1);
-//                        closeResultSet(primaryKeys);
-//                    }
-//                });
-//                return true;
-//            });
-//            return columns;
-//
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+
 
 
     private void closeResultSet(Connection rs) {

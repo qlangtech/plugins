@@ -211,7 +211,7 @@ public abstract class CUDCDCTestSuit {
                             // System.out.println("########################");
 
                         }
-
+                        System.out.println("start to test update");
 
                         // 执行更新
                         for (TestRow exceptRow : exampleRows) {
@@ -244,7 +244,7 @@ public abstract class CUDCDCTestSuit {
 
                             }
                         }
-
+                        System.out.println("start to test delete");
                         // 执行删除
                         for (TestRow r : exampleRows) {
                             if (!r.execDelete()) {

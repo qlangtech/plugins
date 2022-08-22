@@ -82,7 +82,7 @@ public class KafkaAsyncMsg implements AsyncMsg {
     public DTO getContent() throws IOException {
         DTO dto = new DTO();
         dto.setDbName(this.ticdcEventKey.getScm());
-        dto.setEventType(this.update ? DTO.EventType.UPDATE : DTO.EventType.ADD);
+        dto.setEventType(this.update ? DTO.EventType.UPDATE_AFTER : DTO.EventType.ADD);
         dto.setTableName(this.tableName);
         Map<String, Object> after = Maps.newHashMap();
         Map<String, Object> before = Maps.newHashMap();

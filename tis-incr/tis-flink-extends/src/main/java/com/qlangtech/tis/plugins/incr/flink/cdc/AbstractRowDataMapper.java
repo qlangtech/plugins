@@ -152,7 +152,8 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         RowData row = createRowData(dto);
         int index = 0;
         Map<String, Object> vals
-                = (dto.getEventType() == DTO.EventType.DELETE ? dto.getBefore() : dto.getAfter());
+                = (dto.getEventType() == DTO.EventType.DELETE || dto.getEventType() == DTO.EventType.UPDATE_BEFORE)
+                ? dto.getBefore() : dto.getAfter();
         if (vals == null) {
             throw new IllegalStateException("incr data of " + dto.getTableName() + " can not be null");
         }

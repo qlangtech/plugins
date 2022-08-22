@@ -65,6 +65,7 @@ import java.util.stream.Collectors;
 public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-ElasticSearch-Sink";
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSinkFactory.class);
+    private static final int DEFAULT_PARALLELISM = 1;// parallelism
     // bulk.flush.max.actions
     @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
     public Integer bulkFlushMaxActions;
@@ -197,7 +198,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
             tableMapper.setFrom(selectedTab.getName());
         }
-        return Collections.singletonMap(tableMapper, new DTOSinkFunc(tableMapper, sinkBuilder.build()));
+        return Collections.singletonMap(tableMapper, new DTOSinkFunc(tableMapper, sinkBuilder.build(), true, DEFAULT_PARALLELISM));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {

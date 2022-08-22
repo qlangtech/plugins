@@ -77,7 +77,7 @@ import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
 public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
-
+    private static final int DEFAULT_PARALLELISM = 1;
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = Validator.require)
     public String sinkSemantic;
@@ -195,7 +195,9 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
             Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-            sinkFuncs.put(tableName, new DTOSinkFunc(tableName, sinkFuncRef.get()));
+            DTOSinkFunc sinkFunc = new DTOSinkFunc(tableName, sinkFuncRef.get(), true, DEFAULT_PARALLELISM);
+//            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
+            sinkFuncs.put(tableName, sinkFunc);
         }
 
         if (sinkFuncs.size() < 1) {
@@ -251,7 +253,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         switch (evt) {
             case DELETE:
                 return StarRocksSinkOP.DELETE;
-            case UPDATE:
+            case UPDATE_AFTER:
             default:
                 return StarRocksSinkOP.UPSERT;
         }

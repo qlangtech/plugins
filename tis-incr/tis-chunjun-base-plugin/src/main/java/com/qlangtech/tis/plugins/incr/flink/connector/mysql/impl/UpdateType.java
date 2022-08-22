@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl;
 
+import com.dtstack.chunjun.sink.WriteMode;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.commons.lang.StringUtils;
 
@@ -26,17 +27,17 @@ import org.apache.commons.lang.StringUtils;
  * @create: 2022-07-18 10:08
  **/
 public class UpdateType extends BasicUpdate {
-    private static final String UPDATE = "update";
+    //  private static final String UPDATE = "update";
 
     @Override
     protected String getMode() {
-        return UPDATE;
+        return WriteMode.UPDATE.getMode();
     }
 
     @TISExtension
     public static final class DftDescriptor extends BasicDescriptor {
         public String getDisplayName() {
-            return StringUtils.capitalize(UPDATE);
+            return StringUtils.capitalize(WriteMode.UPDATE.getMode());
         }
     }
 }

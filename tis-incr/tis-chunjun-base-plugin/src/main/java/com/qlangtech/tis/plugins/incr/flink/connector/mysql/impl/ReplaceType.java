@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl;
 
+import com.dtstack.chunjun.sink.WriteMode;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.commons.lang.StringUtils;
 
@@ -27,17 +28,17 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class ReplaceType extends BasicUpdate {
 
-    private static final String REPLACE = "replace";
+    // private static final String REPLACE = "replace";
 
     @Override
     protected String getMode() {
-        return REPLACE;
+        return WriteMode.REPLACE.getMode();
     }
 
     @TISExtension
     public static final class DftDescriptor extends BasicDescriptor {
         public String getDisplayName() {
-            return StringUtils.capitalize(REPLACE);
+            return StringUtils.capitalize(WriteMode.REPLACE.getMode());
         }
     }
 }

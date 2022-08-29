@@ -19,7 +19,8 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -27,6 +28,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +53,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction, boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);
             if (supportUpset) {
-                this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent());
+                this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent.DTOFilter());
             }
         }
 
@@ -71,12 +73,17 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      * (RowData,DTO) -> RowData
      */
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
-        final IStreamTableCreator.IStreamTableMeta streamTableMeta;
+        final List<IColMetaGetter> colsMeta;
 
         public RowDataSinkFunc(IDataxProcessor.TableAlias tab
-                , SinkFunction<RowData> sinkFunction, IStreamTableCreator.IStreamTableMeta streamTableMeta, int sinkTaskParallelism) {
+                , SinkFunction<RowData> sinkFunction, List<IColMetaGetter> colsMeta
+                , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);
-            this.streamTableMeta = streamTableMeta;
+            this.colsMeta = colsMeta;
+            if (supportUpset) {
+                this.setSourceFilter("skipUpdateBeforeEvent"
+                        , new FilterUpdateBeforeEvent.RowDataFilter());
+            }
         }
 
         @Override
@@ -84,7 +91,9 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             if (sourceStream.clazz == DTO.class) {
                 // return sourceStream.stream;
                 return sourceStream.stream.map(new DTO2RowDataMapper(
-                        DTO2RowDataMapper.getAllTabColsMeta(this.streamTableMeta))).name(tab.getFrom() + "_dto2Rowdata");
+                        DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)))
+                        .name(tab.getFrom() + "_dto2Rowdata")
+                        .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
                 return sourceStream.stream;
             }

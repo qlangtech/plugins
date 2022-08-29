@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink.chunjun.source;
@@ -37,7 +37,6 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -73,6 +72,7 @@ public abstract class ChunjunSourceFunction
     private SourceFunction<RowData> createSourceFunction(SyncConf conf, BasicDataSourceFactory sourceFactory) {
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
         JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, sourceFunc);
+        Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();
         return Objects.requireNonNull(sourceFunc.get(), "SourceFunction<RowData> shall present");
     }
@@ -125,7 +125,8 @@ public abstract class ChunjunSourceFunction
 //                };
 //                pgSourceFactory.createSource();
 
-                sourceFuncs.add(ReaderSource.createRowDataSource(dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
+                sourceFuncs.add(ReaderSource.createRowDataSource(
+                        dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
             }
         });
 
@@ -216,75 +217,10 @@ public abstract class ChunjunSourceFunction
         return syncConf;
     }
 
-    protected String parseType(ISelectedTab.ColMeta cm) {
-        // https://dtstack.github.io/chunjun/documents/7d23239f-9f24-5889-af9c-fc412d788060
-        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-            @Override
-            public String bigInt(DataType type) {
-                return "BIGINT";
-            }
-
-            @Override
-            public String doubleType(DataType type) {
-                return "DOUBLE PRECISION";
-            }
-
-            @Override
-            public String dateType(DataType type) {
-                return "DATE";
-            }
-
-            @Override
-            public String timestampType(DataType type) {
-                return "TIMESTAMP";
-            }
-
-            @Override
-            public String bitType(DataType type) {
-                return "BOOL";
-            }
-
-            @Override
-            public String blobType(DataType type) {
-                return "BYTEA";
-            }
-
-            @Override
-            public String varcharType(DataType type) {
-                return "VARCHAR";
-            }
-
-            @Override
-            public String intType(DataType type) {
-                return "INT";
-            }
-
-            @Override
-            public String floatType(DataType type) {
-                return "FLOAT";
-            }
-
-            @Override
-            public String decimalType(DataType type) {
-                return "DECIMAL";
-            }
-
-            @Override
-            public String timeType(DataType type) {
-                return "TIME";
-            }
-
-            @Override
-            public String tinyIntType(DataType dataType) {
-                return smallIntType(null);
-            }
-
-            @Override
-            public String smallIntType(DataType dataType) {
-                return "SMALLINT";
-            }
-        });
+    protected final String parseType(ISelectedTab.ColMeta cm) {
+        return cm.getType().getS();
     }
+
 
     @Override
     public String getTopic() {

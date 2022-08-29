@@ -25,7 +25,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
@@ -78,15 +77,21 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
     }
 
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
 
+        PGDataSourceFactory ds = this.getDataSourceFactory();
         // 多个主键
         boolean multiPk = tableMapper.getSourceCols().stream().filter((col) -> col.isPk()).count() > 1;
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected String getCreateTableName() {
+                return colEscapeChar() + ds.tabSchema + colEscapeChar()
+                        + "." + colEscapeChar() + super.getCreateTableName() + colEscapeChar();
+            }
 
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
@@ -95,7 +100,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 //                            .collect(Collectors.joining(","))).append(")").append("\n");
 //                }
                 if (multiPk) {
-                    this.script.append(", CONSTRAINT ").append("uk_" + getCreateTableName() + "_unique_" + pks.stream().map((c) -> c.getName()).collect(Collectors.joining("_")))
+                    this.script.append(", CONSTRAINT ").append("uk_" + tableMapper.getTo() + "_unique_" + pks.stream().map((c) -> c.getName()).collect(Collectors.joining("_")))
                             .append(" UNIQUE(")
                             .append(pks.stream().map((c) -> c.getName()).collect(Collectors.joining(","))).append(")");
                 }

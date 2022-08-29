@@ -31,7 +31,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 
 import java.sql.Types;
 
@@ -41,6 +41,10 @@ import java.sql.Types;
  **/
 public class ChunjunGreenplumSinkFactory extends ChunjunSinkFactory {
 
+    @Override
+    protected boolean supportUpsetDML() {
+        return false;
+    }
 
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {

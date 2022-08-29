@@ -33,7 +33,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.InsertType;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;

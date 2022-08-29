@@ -84,9 +84,8 @@ public abstract class PostgresTestBase extends AbstractTestBase {
         PostgreSQLContainer<?> postgersContainer = POSTGERS_CONTAINER;
         Descriptor pgDataSourceFactory = TIS.get().getDescriptor("PGDataSourceFactory");
         Assert.assertNotNull(pgDataSourceFactory);
-
         Descriptor.FormData formData = new Descriptor.FormData();
-        formData.addProp("tabSchema", "default");
+        formData.addProp("tabSchema", "public");
         formData.addProp("name", "postgreSql");
         formData.addProp("dbName", postgersContainer.getDatabaseName());
         // formData.addProp("nodeDesc", mySqlContainer.getHost());

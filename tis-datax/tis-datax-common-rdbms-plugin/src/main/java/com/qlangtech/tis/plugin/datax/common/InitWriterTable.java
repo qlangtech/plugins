@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
@@ -71,13 +72,27 @@ public class InitWriterTable {
                     dsFactory.refectTableInDB(tabs, conn);
                     if (!tabs.contains(tableName)) {
                         // 表不存在
-                        try (Statement statement = conn.createStatement()) {
-                            logger.info("create table:{}\n   script:{}", tableName, createScript);
-                            statement.execute(createScript);
+                        boolean success = false;
+                        try {
+                            try (Statement statement = conn.createStatement()) {
+                                logger.info("create table:{}\n   script:{}", tableName, createScript);
+                                success = statement.execute(createScript);
+                            }
+                        } catch (SQLException e) {
+                            throw new RuntimeException(createScript, e);
                         }
+//                        if (!success) {
+//                            throw new IllegalStateException("table:" + tableName + " have not been create successful");
+//                        }
                     } else {
                         logger.info("table:{} already exist ,skip the create table step", tableName);
                     }
+//                    tabs = Lists.newArrayList();
+//                    dsFactory.refectTableInDB(tabs, conn);
+//                    tabs.stream().filter((t) -> t.indexOf(tableName) > -1).forEach((tab) -> {
+//                        System.out.println(tab);
+//                    });
+
                 }
             }
         }

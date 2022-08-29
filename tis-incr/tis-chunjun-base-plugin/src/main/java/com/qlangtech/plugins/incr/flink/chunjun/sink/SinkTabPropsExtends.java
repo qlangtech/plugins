@@ -23,7 +23,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.UpdateMode;
+import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 
 import java.util.Objects;
 

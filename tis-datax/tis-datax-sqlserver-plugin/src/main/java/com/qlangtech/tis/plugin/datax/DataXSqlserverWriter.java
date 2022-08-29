@@ -62,7 +62,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
 
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }

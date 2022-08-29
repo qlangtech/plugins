@@ -41,6 +41,7 @@ import java.sql.Types;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 //import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
@@ -104,7 +105,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     }
 
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
@@ -123,9 +124,17 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 String ddl = resultSet.getString(2);
                 script.append(ddl);
             });
-            return script;
+            return new CreateTableSqlBuilder.CreateDDL(script, null) {
+                @Override
+                public String getSelectAllScript() {
+                    //return super.getSelectAllScript();
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
 
+        // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
+        final AtomicInteger timestampCount = new AtomicInteger();
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
@@ -214,8 +223,13 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                         return "DATE";
                     case Types.TIME:
                         return "TIME";
-                    case Types.TIMESTAMP:
-                        return "TIMESTAMP";
+                    case Types.TIMESTAMP: {
+                        if (timestampCount.getAndIncrement() < 1) {
+                            return "TIMESTAMP";
+                        } else {
+                            return "DATETIME";
+                        }
+                    }
                     case Types.BLOB:
                     case Types.BINARY:
                     case Types.LONGVARBINARY:

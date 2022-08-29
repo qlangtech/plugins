@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.qlangtech.plugins.incr.flink.cdc.TestRow;
 
 import java.sql.PreparedStatement;
+import java.util.concurrent.Callable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,16 +34,20 @@ public class RowValsUpdate extends RowVals<RowValsUpdate.UpdatedColVal> {
         super.put(key, new UpdatedColVal(val));
     }
 
-    static class UpdatedColVal {
+    static class UpdatedColVal implements Callable<Object> {
         public final TestRow.ColValSetter updateStrategy;
         public Object updatedVal;
 
+        @Override
+        public Object call() throws Exception {
+            throw new UnsupportedOperationException();
+        }
 
         public UpdatedColVal(TestRow.ColValSetter updateStrategy) {
             this.updateStrategy = updateStrategy;
         }
 
-        public void setPrepColVal(PreparedStatement statement, int colIndex, RowVals<Object> vals) throws Exception {
+        public void setPrepColVal(PreparedStatement statement, int colIndex, RowValsExample vals) throws Exception {
             this.updatedVal = updateStrategy.setPrepColVal(statement, colIndex, vals);
         }
     }

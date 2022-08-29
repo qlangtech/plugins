@@ -20,17 +20,11 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.source;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
-import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
-import com.qlangtech.plugins.incr.flink.cdc.RowVals;
-import com.qlangtech.plugins.incr.flink.cdc.TestRow;
-import com.qlangtech.plugins.incr.flink.chunjun.poll.RunInterval;
-import com.qlangtech.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
+import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -44,9 +38,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -75,80 +66,83 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
     public void testPullCDC() throws Exception {
         System.out.println("====");
 
+        CDCTestSuitParams suitParams = (new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder())
+                .setTabName(tabNameFull_types).build();
 
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
 
-            protected TestRow.ValProcessor getExpectValProcessor() {
-                return (rowVals, key, val) -> {
-                    if ("time_c".equals(key)) {
-                        return "time_c";
-                    }
-                    if ("timestamp3_c".equals(key) || "timestamp6_c".equals(key)) {
-                        return ((Timestamp) val).toLocalDateTime();
-                    }
-                    if (key_bytea_c.equals(key)) {
-                        return new String((byte[]) val);
-                    } else {
-                        return val;
-                    }
-                };
-            }
-
-            protected TestRow.ValProcessor getActualValProcessor(String tabName, IResultRows consumerHandle) {
-                return (rowVals, key, val) -> {
-
-                    if ("time_c".equals(key)) {
-                        return "time_c";
-                    }
-                    if ("timestamp3_c".equals(key) || "timestamp6_c".equals(key)) {
-                        return ((LocalDateTime) val);
-                    }
-
-                    if (val instanceof BigDecimal) {
-                        return ((BigDecimal) val).setScale(BIG_DECIMAL_SCALA);
-                    }
-                    try {
-                        if (key_bytea_c.equals(key)) {
-                            byte[] buffer = (byte[]) val;
-                            // buffer.reset();
-                            return new String(buffer);
-                        } else {
-                            return consumerHandle.deColFormat(tabName, key, val);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException("colKey:" + key + ",val:" + val, e);
-                    }
-                };
-            }
+//            @Override
+//            protected TestRow.ValProcessor getExpectValProcessor() {
+//                return (rowVals, key, val) -> {
+//                    if ("time_c".equals(key)) {
+//                        return "time_c";
+//                    }
+//                    if ("timestamp3_c".equals(key) || "timestamp6_c".equals(key)) {
+//                        return ((Timestamp) val).toLocalDateTime();
+//                    }
+//                    if (key_bytea_c.equals(key)) {
+//                        return new String((byte[]) val);
+//                    } else {
+//                        return val;
+//                    }
+//                };
+//            }
+//            @Override
+//            protected TestRow.ValProcessor getActualValProcessor(String tabName, IResultRows consumerHandle) {
+//                return (rowVals, key, val) -> {
+//
+//                    if ("time_c".equals(key)) {
+//                        return "time_c";
+//                    }
+//                    if ("timestamp3_c".equals(key) || "timestamp6_c".equals(key)) {
+//                        return ((LocalDateTime) val);
+//                    }
+//
+//                    if (val instanceof BigDecimal) {
+//                        return ((BigDecimal) val).setScale(BIG_DECIMAL_SCALA);
+//                    }
+//                    try {
+//                        if (key_bytea_c.equals(key)) {
+//                            byte[] buffer = (byte[]) val;
+//                            // buffer.reset();
+//                            return new String(buffer);
+//                        } else {
+//                            return consumerHandle.deColFormat(tabName, key, val);
+//                        }
+//                    } catch (Exception e) {
+//                        throw new RuntimeException("colKey:" + key + ",val:" + val, e);
+//                    }
+//                };
+//            }
 
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return TestChunjunPostreSQLSourceFactory.this.createPgSourceFactory(dataxName);
             }
 
-            @Override
-            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
-                SelectedTab selectedTab = super.createSelectedTab(tabName, dataSourceFactory);
-                SelectedTabPropsExtends incrTabExtend = new SelectedTabPropsExtends();
-                RunInterval polling = new RunInterval();
-                polling.useMaxFunc = true;
-                polling.incrColumn = getPrimaryKeyName();
-                polling.pollingInterval = 4999;
-                incrTabExtend.polling = polling;
-                selectedTab.setIncrSourceProps(incrTabExtend);
-                return selectedTab;
-            }
+//            @Override
+//            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
+//                SelectedTab selectedTab = super.createSelectedTab(tabName, dataSourceFactory);
+//                SelectedTabPropsExtends incrTabExtend = new SelectedTabPropsExtends();
+//                RunInterval polling = new RunInterval();
+//                polling.useMaxFunc = true;
+//                polling.incrColumn = getPrimaryKeyName(selectedTab);
+//                polling.pollingInterval = 4999;
+//                incrTabExtend.polling = polling;
+//                selectedTab.setIncrSourceProps(incrTabExtend);
+//                return selectedTab;
+//            }
 
-            @Override
-            protected String getPrimaryKeyName() {
-                return tabNameFull_types_pk;
-            }
+//            @Override
+//            protected String getPrimaryKeyName() {
+//                return tabNameFull_types_pk;
+//            }
 
             protected List<TestRow> createExampleTestRows() throws Exception {
                 List<TestRow> exampleRows = Lists.newArrayList();
                 Date now = new Date();
                 TestRow row = null;
-                Map<String, Object> vals = null;
+                Map<String, RowValsExample.RowVal> vals = null;
                 int insertCount = 1;
 
 //                CREATE TABLE full_types (
@@ -183,27 +177,28 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
 
                 for (int i = 1; i <= insertCount; i++) {
                     vals = Maps.newHashMap();
-                    vals.put(this.getPrimaryKeyName(), i);
-                    vals.put(key_bytea_c, "bytea_c_val".getBytes());
-                    vals.put("small_c", (short) 2);
-                    vals.put("int_c", 32768);
-                    vals.put("big_c", 2147483648l);
-                    vals.put("real_c", 5.5f);
-                    vals.put("double_precision", 6.6d);
-                    vals.put("numeric_c", new BigDecimal("123.12345").setScale(BIG_DECIMAL_SCALA));
-                    vals.put("decimal_c", BigDecimal.valueOf(4044443, BIG_DECIMAL_SCALA));
-                    vals.put("boolean_c", true);
-                    vals.put("text_c", "Hello moto");
-                    vals.put("char_c", "b");
-                    vals.put("character_c", "abf");
-                    vals.put("character_varying_c", "abcd..xyzkkkkk");
+                    vals.put(tabNameFull_types_pk, RowValsExample.RowVal.$(i));
+                    vals.put(key_bytea_c, RowValsExample.RowVal.stream("bytea_c_val"));
+                    vals.put("small_c", RowValsExample.RowVal.$((short) 2));
+                    vals.put("int_c", RowValsExample.RowVal.$(32768));
+                    vals.put("big_c", RowValsExample.RowVal.$(2147483648l));
+                    vals.put("real_c", RowValsExample.RowVal.$(5.5f));
+                    vals.put("double_precision", RowValsExample.RowVal.$(6.6d));
+                    vals.put("numeric_c", RowValsExample.RowVal.decimal(12312345, BIG_DECIMAL_SCALA));
+                    vals.put("decimal_c", RowValsExample.RowVal.decimal(4044443, BIG_DECIMAL_SCALA));
+                    vals.put("boolean_c", RowValsExample.RowVal.$(true));
+                    vals.put("text_c", RowValsExample.RowVal.$("Hello moto"));
+                    vals.put("char_c", RowValsExample.RowVal.$("b"));
+                    vals.put("character_c", RowValsExample.RowVal.$("abf"));
+                    vals.put("character_varying_c", RowValsExample.RowVal.$("abcd..xyzkkkkk"));
                     vals.put("timestamp3_c", parseTimestamp("2022-07-29 18:00:22"));
                     vals.put("timestamp6_c", parseTimestamp("2020-07-17 18:00:22"));
                     vals.put("date_c", parseDate("2020-07-17"));
-                    vals.put("time_c", java.sql.Time.valueOf("18:00:22"));
-                    vals.put("default_numeric_c", BigDecimal.valueOf(500).setScale(BIG_DECIMAL_SCALA));
+                    vals.put("time_c", RowValsExample.RowVal.$(java.sql.Time.valueOf("18:00:22")));
+                    vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0) // BigDecimal.valueOf(500).setScale(BIG_DECIMAL_SCALA)
+                    );
 
-                    row = new TestRow(RowKind.INSERT, new RowVals(vals));
+                    row = new TestRow(RowKind.INSERT, new RowValsExample(vals));
                     row.idVal = i;
                     exampleRows.add(row);
                 }
@@ -292,7 +287,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
 
         ChunjunPostgreSQLSourceFactory pgListener = new ChunjunPostgreSQLSourceFactory();
 
-        cdcTestSuit.startTest(pgListener, tabNameFull_types);
+        cdcTestSuit.startTest(pgListener);
 
 
     }

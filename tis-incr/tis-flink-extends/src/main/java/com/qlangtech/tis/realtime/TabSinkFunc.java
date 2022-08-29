@@ -38,7 +38,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
 
     private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final IDataxProcessor.TableAlias tab;
-    private transient final int sinkTaskParallelism;
+    protected transient final int sinkTaskParallelism;
 
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
@@ -80,7 +80,9 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
         DataStream<SINK_TRANSFER_OBJ> source = this.streamMap(sourceStream);
 
         if (sourceFilter != null) {
-            source = source.filter(this.sourceFilter.getRight()).name(this.sourceFilter.getLeft());
+            source = source.filter(this.sourceFilter.getRight())
+                    .name(this.sourceFilter.getLeft())
+                    .setParallelism(this.sinkTaskParallelism);
         }
         if (this.sinkTaskParallelism < 1) {
             throw new IllegalStateException("sinkTaskParallelism can not small than 1");

@@ -87,7 +87,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
         });
 
-        StringBuffer ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
             ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
             col.setPk(true);
             col.setName("id3");

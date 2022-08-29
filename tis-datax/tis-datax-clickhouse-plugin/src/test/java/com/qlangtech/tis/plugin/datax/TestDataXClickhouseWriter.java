@@ -264,7 +264,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 
         ClickHouseTest dataXWriter = createDataXWriter();
 
-        StringBuffer createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
         assertNull(createDDL);
 
         dataXWriter.writer.autoCreateTable = true;

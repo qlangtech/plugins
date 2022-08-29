@@ -64,12 +64,27 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     protected String getRefectTablesSql() {
         if (allAuthorized != null && allAuthorized) {
-            return "SELECT owner ||'.'|| table_name FROM all_tables";
+            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE instr(table_name,'.') < 1";
         } else {
-            return "SELECT '" + StringUtils.upperCase(this.userName) + "' ||'.'||  (TABLE_NAME) FROM user_tables";
+            return "SELECT '" + StringUtils.upperCase(this.userName) + "' ||'.'||  (TABLE_NAME) FROM user_tables WHERE instr(TABLE_NAME,'.') < 1";
         }
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                "asServiceName=" + asServiceName +
+                ", allAuthorized=" + allAuthorized +
+                ", name='" + name + '\'' +
+                ", dbName='" + dbName + '\'' +
+                ", userName='" + userName + '\'' +
+                ", password='********" + '\'' +
+                ", nodeDesc='" + nodeDesc + '\'' +
+                ", port=" + port +
+                ", encode='" + encode + '\'' +
+                ", extraParams='" + extraParams + '\'' +
+                '}';
+    }
 
     @Override
     protected ResultSet getColumnsMeta(String table, DatabaseMetaData metaData1) throws SQLException {
@@ -123,9 +138,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         }
     }
 
-    protected DataType createColDataType(String colName, int dbColType, int colSize) throws SQLException {
+    //
+    @Override
+    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
         // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-        return new DataType(convert2JdbcType(dbColType), StringUtils.EMPTY, colSize);
+        return new DataType(convert2JdbcType(dbColType), typeName, colSize);
     }
 
     private int convert2JdbcType(int dbColType) {
@@ -173,14 +190,29 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     protected DataType getDataType(String keyName, ResultSet cols) throws SQLException {
+
+//        int columnCount = cols.getMetaData().getColumnCount();
+//        String colName = null;
+//        for (int i = 1; i <= columnCount; i++) {
+//            colName = cols.getMetaData().getColumnName(i);
+//            System.out.print(colName + ":" + cols.getString(colName) + ",");
+//        }
+//        System.out.println();
+
         DataType type = super.getDataType(keyName, cols);
         // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
-        if (type.type == Types.DECIMAL) {
+        if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
             int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
             if (decimalDigits < 1) {
                 return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER);
             }
         }
+
+        if ("DATE".equalsIgnoreCase(type.typeName)) {
+            return new DataType(Types.DATE, type.typeName, type.columnSize);
+        }
+
+
         return type;
     }
 
@@ -191,7 +223,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+        return DriverManager.getConnection(jdbcUrl
+                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
     }
 
 

@@ -29,6 +29,7 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -74,7 +75,7 @@ public class TestDataXDorisWriter extends TestCase {
         DataXDorisWriter writer = new DataXDorisWriter();
         writer.autoCreateTable = true;
 
-        StringBuffer ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
             ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
             col.setPk(true);
             col.setName("id3");

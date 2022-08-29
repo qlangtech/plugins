@@ -20,7 +20,9 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -51,7 +53,8 @@ public class ColMeta {
             @Override
             public Void bigInt(DataType type) {
                 try {
-                    statement.setLong(statementIndex, (Long) r.get(getName()));
+
+                    statement.setLong(statementIndex, (Long) r.getObj(getName()));
                 } catch (Exception e) {
                     throw new RuntimeException("colName:" + getName(), e);
                 }
@@ -61,7 +64,7 @@ public class ColMeta {
             @Override
             public Void doubleType(DataType type) {
                 try {
-                    statement.setDouble(statementIndex, (Double) r.get(getName()));
+                    statement.setDouble(statementIndex, (Double) r.getObj(getName()));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -71,7 +74,7 @@ public class ColMeta {
             @Override
             public Void dateType(DataType type) {
                 try {
-                    statement.setDate(statementIndex, (java.sql.Date) r.get(getName()));
+                    statement.setDate(statementIndex, (java.sql.Date) r.getObj(getName()));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -81,9 +84,9 @@ public class ColMeta {
             @Override
             public Void timestampType(DataType type) {
                 try {
-                    statement.setTimestamp(statementIndex, (java.sql.Timestamp) r.get(getName()));
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    statement.setTimestamp(statementIndex, (java.sql.Timestamp) r.getObj(getName()));
+                } catch (Exception e) {
+                    throw new RuntimeException("colName:" + getName(), e);
                 }
                 return null;
             }
@@ -91,7 +94,7 @@ public class ColMeta {
             @Override
             public Void bitType(DataType type) {
                 try {
-                    statement.setBoolean(statementIndex, (Boolean) r.get(getName()));
+                    statement.setBoolean(statementIndex, (Boolean) r.getObj(getName()));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -101,9 +104,16 @@ public class ColMeta {
             @Override
             public Void blobType(DataType type) {
                 try {
-                    statement.setBytes(statementIndex, (byte[]) r.get(getName()));
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                    Object val = r.getObj(getName());
+                    byte[] byteVal = null;
+                    if (val instanceof ByteArrayInputStream) {
+                        byteVal = IOUtils.toByteArray((ByteArrayInputStream) val);
+                    } else {
+                        byteVal = (byte[]) val;
+                    }
+                    statement.setBytes(statementIndex, byteVal);
+                } catch (Exception e) {
+                    throw new RuntimeException("colName:" + getName(), e);
                 }
                 return null;
             }
@@ -122,8 +132,8 @@ public class ColMeta {
             public Void intType(DataType type) {
                 try {
                     statement.setInt(statementIndex, r.getInt(getName()));
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
+                } catch (Exception e) {
+                    throw new RuntimeException("colName:" + getName(), e);
                 }
                 return null;
             }
@@ -131,7 +141,7 @@ public class ColMeta {
             @Override
             public Void floatType(DataType type) {
                 try {
-                    statement.setFloat(statementIndex, (Float) r.get(getName()));
+                    statement.setFloat(statementIndex, (Float) r.getObj(getName()));
                 } catch (Exception e) {
                     throw new RuntimeException("colName:" + getName(), e);
                 }
@@ -151,7 +161,7 @@ public class ColMeta {
             @Override
             public Void timeType(DataType type) {
                 try {
-                    statement.setTime(statementIndex, (java.sql.Time) r.get(getName()));
+                    statement.setTime(statementIndex, (java.sql.Time) r.getObj(getName()));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -161,7 +171,7 @@ public class ColMeta {
             @Override
             public Void tinyIntType(DataType dataType) {
                 try {
-                    statement.setShort(statementIndex, (Short) r.get(getName()));
+                    statement.setShort(statementIndex, (Short) r.getObj(getName()));
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -170,7 +180,7 @@ public class ColMeta {
 
             @Override
             public Void smallIntType(DataType dataType) {
-                Object val = r.get(getName());
+                Object val = r.getObj(getName());
                 try {
                     statement.setShort(statementIndex, (Short) val);
                 } catch (Exception e) {

@@ -19,10 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
-import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
-import com.qlangtech.plugins.incr.flink.cdc.RowVals;
-import com.qlangtech.plugins.incr.flink.cdc.TestRow;
+import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
@@ -65,15 +62,19 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CenterResource.setNotFetchFromCenterRepository();
     }
 
+    @Override
+    protected CDCTestSuitParams.Builder suitParamBuilder() {
+        return new CDCTestSuitParams.Builder();
+    }
 
     @Test
     public void testStuBinlogConsume() throws Exception {
 
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
-        final String tabName = "stu";
-
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        // final String tabName = "stu";
+        CDCTestSuitParams suitParams = tabParamMap.get(tabStu); //new CDCTestSuitParams(tabName);
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
@@ -82,7 +83,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
-                  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+                super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);
 
@@ -100,10 +101,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sleepForAWhile();
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
                 waitForSnapshotStarted(snapshot);
-                List<TestRow> rows = fetchRows(snapshot, 1, false);
-                for (TestRow rr : rows) {
-                    System.out.println("------------" + rr.getInt("id"));
-                   // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
+                List<AssertRow> rows = fetchRows(snapshot, 1,  null ,false);
+                for (AssertRow rr : rows) {
+                    System.out.println("------------" + rr.getObj("id"));
+                    // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
 
                 }
             }
@@ -114,7 +115,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
         };
 
-        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+        cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
 
@@ -123,9 +124,9 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     public void testBinlogConsume() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
-        final String tabName = "base";
-
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        // final String tabName = "base";
+        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);//new CDCTestSuitParams("base");
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
@@ -137,7 +138,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
         };
 
-        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+        cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
 
@@ -145,9 +146,9 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
-        final String tabName = "base";
-
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        //  final String tabName = "base";
+        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);// new CDCTestSuitParams(tabName);
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
@@ -164,7 +165,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
         };
 
-        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+        cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
 
@@ -177,10 +178,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
-        final String tabName = "instancedetail";
+        // final String tabName = "instancedetail";
 
-
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        CDCTestSuitParams suitParams = tabParamMap.get(tabInstanceDetail);//new CDCTestSuitParams(tabName);
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
@@ -219,7 +220,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                     startProcessConn(conn);
 
                     for (TestRow t : exampleRows) {
-                        RowVals<Object> vals = t.vals;
+                        RowValsExample vals = t.vals;
                         final String insertBase
                                 = "insert into " + createTableName(tabName) + "("
                                 + cols.stream().filter((c) -> vals.notNull(c.getName())).map((col) -> getColEscape() + col.getName() + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
@@ -376,9 +377,9 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                         System.out.println("wait to show insert rows");
                         waitForSnapshotStarted(snapshot);
 
-                        List<TestRow> rows = fetchRows(snapshot, 1, false);
-                        for (TestRow rr : rows) {
-                            System.out.println("------------" + rr.get("instance_id"));
+                        List<AssertRow> rows = fetchRows(snapshot, 1, t, false);
+                        for (AssertRow rr : rows) {
+                            System.out.println("------------" + rr.getObj("instance_id"));
                             assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
                         }
 
@@ -387,7 +388,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
         };
 
-        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+        cdcTestSuit.startTest(mysqlCDCFactory);
     }
 
 

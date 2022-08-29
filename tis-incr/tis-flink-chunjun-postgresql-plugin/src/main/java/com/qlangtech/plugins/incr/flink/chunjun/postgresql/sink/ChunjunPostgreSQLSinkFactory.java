@@ -22,16 +22,20 @@ import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
-import com.dtstack.chunjun.connector.postgresql.dialect.PostgresqlDialect;
+import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.PostgreSQLSourceFunction;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -41,7 +45,14 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new PostgresqlDialect();
+
+        JdbcConf jdbcConf = JdbcSinkFactory.getJdbcConf(syncConf);
+        return new TISPostgresqlDialect(jdbcConf);
+    }
+
+    @Override
+    protected boolean supportUpsetDML() {
+        return true;
     }
 
     @Override
@@ -50,73 +61,24 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
+    protected void setSchema(Map<String, Object> conn, String dbName, BasicDataSourceFactory dsFactory) {
+        if (!(dsFactory instanceof BasicDataSourceFactory.ISchemaSupported)) {
+            throw new IllegalStateException("dsFactory:" + dsFactory.name
+                    + " must be type of " + BasicDataSourceFactory.ISchemaSupported.class);
+        }
+        BasicDataSourceFactory.ISchemaSupported schemaSupported = (BasicDataSourceFactory.ISchemaSupported) dsFactory;
+        super.setSchema(conn, schemaSupported.getDBSchema(), dsFactory);
+    }
+
+    /**
+     * https://dtstack.github.io/chunjun/documents/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@postgresql@postgres-sink
+     *
+     * @param cm
+     * @return
+     */
+    @Override
     protected String parseType(ISelectedTab.ColMeta cm) {
-        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-            @Override
-            public String bigInt(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String doubleType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String dateType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String timestampType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String bitType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String blobType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String varcharType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String intType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String floatType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String decimalType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String timeType(DataType type) {
-                return null;
-            }
-
-            @Override
-            public String tinyIntType(DataType dataType) {
-                return null;
-            }
-
-            @Override
-            public String smallIntType(DataType dataType) {
-                return null;
-            }
-        });
+        return PostgreSQLSourceFunction.typeMapper(cm);
     }
 
     @Override
@@ -130,7 +92,7 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @TISExtension
-    public static class DftDesc extends BasicChunjunSinkDescriptor{
+    public static class DftDesc extends BasicChunjunSinkDescriptor {
         @Override
         protected IDataXPluginMeta.EndType getTargetType() {
             return IDataXPluginMeta.EndType.Postgres;

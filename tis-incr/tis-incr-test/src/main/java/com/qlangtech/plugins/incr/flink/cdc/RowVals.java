@@ -25,19 +25,20 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-15 15:12
  **/
-public class RowVals<T> {
+public class RowVals<T extends Callable<Object>> {
     private final Map<String, T> vals;
 
-    public RowVals() {
+    protected RowVals() {
         this(Maps.newTreeMap());
     }
 
-    public RowVals(Map<String, T> vals) {
+    protected RowVals(Map<String, T> vals) {
         this.vals = vals;
     }
 
@@ -46,22 +47,50 @@ public class RowVals<T> {
     }
 
     public Integer getInt(String key) {
-        return (Integer) vals.get(key);
+        try {
+            return (Integer) vals.get(key).call();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
     }
 
     public String getString(String key) {
-        return (String) vals.get(key);
+        try {
+            return (String) vals.get(key).call();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
     }
 
     public BigDecimal getBigDecimal(String key) {
-        return (BigDecimal) vals.get(key);
+        try {
+            return (BigDecimal) vals.get(key).call();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
     }
 
     public InputStream getInputStream(String key) {
-        return (InputStream) vals.get(key);
+        try {
+            return (InputStream) vals.get(key).call();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
     }
 
     public Object getObj(String key) {
+        try {
+            T t = vals.get(key);
+            if (t == null) {
+                return null;
+            }
+            return t.call();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
+    }
+
+    public T getV(String key) {
         return vals.get(key);
     }
 
@@ -72,6 +101,7 @@ public class RowVals<T> {
     public boolean isEmpty() {
         return vals.isEmpty();
     }
+
 
     public void put(String key, T val) {
         this.vals.put(key, val);

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -26,11 +26,15 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -59,12 +63,135 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
     }
 
+    /**
+     * https://docs.oracle.com/cd/B28359_01/server.111/b28318/sqlplsql.htm#CNCPT1732
+     *
+     * @param tableMapper
+     * @return
+     */
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
-        StringBuffer createDDL = new StringBuffer();
+        CreateTableSqlBuilder.CreateDDL createDDL = null;
+
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected void appendExtraColDef(List<ColWrapper> pks) {
+                if (pks.isEmpty()) {
+                    return;
+                }
+                script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
+                        .append(pks.stream().map((pk) -> wrapWithEscape(pk.getName()))
+                        .collect(Collectors.joining(","))).append(")").append("\n");
+            }
+
+            @Override
+            protected void appendTabMeta(List<ColWrapper> pks) {
+            }
+
+            @Override
+            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+                return new ColWrapper(c) {
+                    @Override
+                    public String getMapperType() {
+                        return convertType(this.meta);
+                    }
+                };
+            }
+
+            //            @Override
+//            protected String convertType(ISelectedTab.ColMeta col) {
+//                switch (col.getType()) {
+//                    case Long:
+//                        return "bigint(20)";
+//                    case INT:
+//                        return "int(11)";
+//                    case Double:
+//                        return "decimal(18,2)";
+//                    case Date:
+//                        return "date";
+//                    case STRING:
+//                    case Boolean:
+//                    case Bytes:
+//                    default:
+//                        return "varchar(50)";
+//                }
+//            }
+
+            /**
+             * https://docs.oracle.com/database/121/SQLRF/sql_elements001.htm#SQLRF30020
+             * https://docs.oracle.com/cd/B28359_01/server.111/b28318/datatype.htm
+             * @param col
+             * @return
+             */
+            private String convertType(ISelectedTab.ColMeta col) {
+                DataType type = col.getType();
+                switch (type.type) {
+                    case Types.CHAR: {
+                        String keyChar = "CHAR";
+                        if (type.columnSize < 1) {
+                            return keyChar;
+                        }
+                        return keyChar + "(" + type.columnSize + ")";
+                    }
+                    case Types.BIT:
+                    case Types.BOOLEAN:
+                        return "NUMBER(1,0)";
+                    case Types.REAL: {
+                        if (type.columnSize > 0 && type.getDecimalDigits() > 0) {
+                            return "NUMBER(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                        }
+                        return "BINARY_FLOAT";
+                    }
+                    case Types.TINYINT:
+                    case Types.SMALLINT:
+                        return "SMALLINT";
+                    case Types.INTEGER:
+                    case Types.BIGINT:
+                        return "INTEGER";
+                    case Types.FLOAT:
+                        return "BINARY_FLOAT";
+                    case Types.DOUBLE:
+                        return "BINARY_DOUBLE";
+                    case Types.DECIMAL:
+                    case Types.NUMERIC: {
+                        if (type.columnSize > 0) {
+                            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                        } else {
+                            return "DECIMAL";
+                        }
+                    }
+                    case Types.DATE:
+                        return "DATE";
+                    case Types.TIME:
+                        return "TIMESTAMP(0)";
+                        // return "TIME";
+                    case Types.TIMESTAMP:
+                        return "TIMESTAMP";
+                    case Types.BLOB:
+                    case Types.BINARY:
+                    case Types.LONGVARBINARY:
+                    case Types.VARBINARY:
+                        return "BLOB";
+                    case Types.VARCHAR: {
+                        if (type.columnSize > Short.MAX_VALUE) {
+                            return "CLOB";
+                        }
+                        return "VARCHAR2(" + type.columnSize + " CHAR)";
+                    }
+                    default:
+                        return "TINYTEXT";
+                }
+            }
+
+            @Override
+            protected char colEscapeChar() {
+                return '"';
+            }
+        };
+        createDDL = createTableSqlBuilder.build();
         return createDDL;
     }
 

@@ -31,7 +31,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 
 /**
  * https://dtstack.github.io/chunjun/documents/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@clickhouse@clickhouse-sink
@@ -43,6 +43,11 @@ public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
         return new ClickhouseDialect();
+    }
+
+    @Override
+    protected boolean supportUpsetDML() {
+        return true;
     }
 
     @Override

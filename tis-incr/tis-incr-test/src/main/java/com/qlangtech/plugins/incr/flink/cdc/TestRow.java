@@ -18,24 +18,30 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.google.common.collect.Lists;
 import org.apache.flink.types.RowKind;
+import org.junit.Test;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-01-15 15:12
  **/
-public class TestRow {
-    private final RowKind kind;
-    public final RowVals<Object> vals;
+public class TestRow extends BasicRow {
+
+    public final RowValsExample vals;
     public Object idVal;
     public final RowValsUpdate updateVals = new RowValsUpdate();
+
+
+    public List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> getUpdateValsCols() {
+        List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = updateVals.getCols();
+        return cols;
+    }
 
     boolean execUpdate() {
         return !updateVals.isEmpty();
@@ -48,8 +54,8 @@ public class TestRow {
 
     public boolean willbeDelete = false;
 
-    public TestRow(RowKind kind, RowVals vals) {
-        this.kind = kind;
+    public TestRow(RowKind kind, RowValsExample vals) {
+        super(kind);
         this.vals = vals;
     }
 
@@ -69,40 +75,43 @@ public class TestRow {
         return vals.getInputStream(key);
     }
 
-    public List<String> getValsList(List<ColMeta> keys) throws Exception {
-        return getValsList(keys, (rowVals, key, val) -> val);
-    }
+//    public List<String> getValsList(List<ColMeta> keys) throws Exception {
+//        return getValsList(keys, (rowVals, key, val) -> val);
+//    }
 
-    public List<String> getValsList(List<ColMeta> keys, ValProcessor processor) throws Exception {
-        return getValsList(Optional.empty(), keys, processor);
-    }
+//    @Override
+//    public Object getObj(String key) {
+//        return null;
+//    }
 
-    public List<String> getValsList(Optional<RowKind> updateVal, List<ColMeta> keys, ValProcessor processor) throws Exception {
-        RowKind rowKind = updateVal.isPresent() ? updateVal.get() : this.kind;
-        List<String> valsEnum = Lists.newArrayList(rowKind.shortString());
-        for (ColMeta key : keys) {
-            Object val = null;
-            if (rowKind != RowKind.INSERT) {
-                RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());
-                if (uptColVal != null) {
-                    val = uptColVal.updatedVal;
-                }
-            }
-            if (val == null) {
-                val = vals.getObj(key.getName());
-            }
-            valsEnum.add(key.getName() + ":" + processor.process(vals, key.getName(), val));
+
+    @Test
+    protected Object getUpdateVal(ColMeta key) {
+        Object val = null;
+        RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());
+        if (uptColVal != null) {
+            val = uptColVal.updatedVal;
         }
-        return valsEnum;
+        return val;
     }
 
-    public Object get(String key) {
+    @Override
+    public Object getObj(String key) {
         return vals.getObj(key);
     }
+//    public Object getObj(String key) {
+//        return vals.getObj(key);
+//    }
 
-    public interface ValProcessor {
-        Object process(RowVals<Object> rowVals, String key, Object val) throws Exception;
+    @Override
+    public Object getSerializeVal(String key) {
+        return vals.getV(key).getExpect();
     }
+
+    //    @FunctionalInterface
+//    public interface ValProcessor {
+//        Object process(RowVals rowVals, String key, Object val) throws Exception;
+//    }
 
     @Override
     public String toString() {
@@ -128,6 +137,6 @@ public class TestRow {
          * @return newVal
          * @throws Exception
          */
-        public Object setPrepColVal(PreparedStatement statement, int parameterIndex, RowVals<Object> ovals) throws Exception;
+        public Object setPrepColVal(PreparedStatement statement, int parameterIndex, RowValsExample ovals) throws Exception;
     }
 }

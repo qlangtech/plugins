@@ -44,10 +44,10 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.BasicUpdate;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.BasicUpdate;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -69,6 +69,11 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected boolean supportUpsetDML() {
+        return false;
     }
 
     @Override
@@ -110,7 +115,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     @Override
     protected SinkFactory createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf
-            , AtomicReference<Pair<SinkFunction<RowData>, JdbcColumnConverter>> ref) {
+            , AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref) {
 
         return new DorisSinkFactory(syncConf) {
 
@@ -151,7 +156,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
                 SinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
 
-                ref.set(Pair.of(sinkFunction, null));
+                ref.set(Triple.of(sinkFunction, null, null));
 
 
                 return null;

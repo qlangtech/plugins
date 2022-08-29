@@ -90,7 +90,7 @@ public class TestDataXSqlserverWriter extends TestCase {
 
         DataXSqlserverWriter writer = getDataXSqlserverWriter();
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        StringBuffer createDDL = writer.generateCreateDDL(tableMap.get());
+        CreateTableSqlBuilder.CreateDDL createDDL = writer.generateCreateDDL(tableMap.get());
         assertNull(createDDL);
 
         writer.autoCreateTable = true;

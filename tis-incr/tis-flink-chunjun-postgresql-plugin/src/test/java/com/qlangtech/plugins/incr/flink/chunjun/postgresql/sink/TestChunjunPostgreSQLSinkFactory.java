@@ -18,20 +18,20 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IDataxContext;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpdateType;
 import com.ververica.cdc.connectors.postgres.PostgresTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.postgresql.osgi.PGDataSourceFactory;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,11 +44,45 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     public static void initialize() throws Exception {
         PostgresTestBase.startContainers();
         pgDSFactory = PostgresTestBase.createPgSourceFactory(new TargetResName(dataXName));
+
+
+//        pgDSFactory.visitFirstConnection((conn) -> {
+//            try (Statement stat = conn.createStatement()) {
+//                stat.execute("CREATE TABLE public.\"tis_user\" ( entity_id   VARCHAR(6))");
+//            }
+//
+//            ResultSet tableRs = conn.getMetaData().getTables(null, "default", "tis_user", null);
+//            // cataLog和schema需要为空，不然pg不能反射到表的存在
+//            // ResultSet tableRs = dbConn.getMetaData().getTables(null, null, tableName, null);
+//            String colName = null;
+//            if (tableRs.next()) {
+//                ResultSetMetaData metaData = tableRs.getMetaData();
+//
+//                for (int i = 1; i <= metaData.getColumnCount(); i++) {
+//                    colName = metaData.getColumnName(i);
+//                    System.out.println(colName + ":" + tableRs.getString(colName));
+//                }
+//            }
+//        });
+    }
+
+    @Override
+    protected ISelectedTab.ColMeta createUpdateTime() {
+        ISelectedTab.ColMeta cm = super.createUpdateTime();
+        cm.setPk(false);
+        return cm;
     }
 
     @Override
     protected BasicDataSourceFactory getDsFactory() {
         return pgDSFactory;
+    }
+
+    @Override
+    protected UpdateMode createIncrMode() {
+        UpdateType updateMode = new UpdateType();
+        updateMode.updateKey = Lists.newArrayList(colId);
+        return updateMode;
     }
 
     @Override
@@ -58,16 +92,16 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
 
     @Override
     protected BasicDataXRdbmsWriter createDataXWriter() {
-        return new BasicDataXRdbmsWriter(){
-            @Override
-            public void initWriterTable(String targetTabName, List jdbcUrls) throws Exception {
 
-            }
+        DataXPostgresqlWriter pgDataXWriter = new DataXPostgresqlWriter() {
             @Override
-            public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-                return null;
+            public PGDataSourceFactory getDataSourceFactory() {
+                return (PGDataSourceFactory) pgDSFactory;
             }
         };
+        pgDataXWriter.autoCreateTable = true;
+        // pgDataXWriter.generateCreateDDL()
+        return pgDataXWriter;
     }
 
     @Test

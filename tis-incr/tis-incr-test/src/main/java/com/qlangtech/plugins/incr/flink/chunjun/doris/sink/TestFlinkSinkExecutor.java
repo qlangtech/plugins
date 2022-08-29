@@ -26,19 +26,20 @@ import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactor
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.impl.ReplaceType;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.ReplaceType;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -50,12 +51,12 @@ import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
+import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
@@ -79,9 +80,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     String colEntityId = "entity_id";
     String colNum = "num";
-    String colId = "id";
+    protected String colId = "id";
     String colCreateTime = "create_time";
-    String updateTime = "update_time";
+    protected String updateTime = "update_time";
     String updateDate = "update_date";
     String starTime = "start_time";
 
@@ -159,75 +160,18 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             File ddlDir = folder.newFolder("ddl");
             String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
-            FileUtils.write(new File(ddlDir, tabSql)
-                    , IOUtils.loadResourceFromClasspath(this.getClass(), tabSql), TisUTF8.get());
+
 
             EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
 
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
             };
-            IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
+            IDataxReader dataxReader = createDataxReader();
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
 
 
-            SinkTabPropsExtends sinkExt = new SinkTabPropsExtends();
-            sinkExt.tabName = tableName;
-
-
-            //  EasyMock.expect(sinkExt.tabName).andReturn(tableName).times(2);
-            //InsertType updateMode = new InsertType();
-
-            ReplaceType updateMode = new ReplaceType();
-            updateMode.updateKey = Lists.newArrayList(colId, updateTime);
-            // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
-            sinkExt.incrMode = updateMode;
-            List<ISelectedTab.ColMeta> metaCols = Lists.newArrayList();
-            ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
-            cm.setName(colEntityId);
-            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(colNum);
-            cm.setType(new DataType(Types.INTEGER));
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(colId);
-            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
-            cm.setPk(true);
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(colCreateTime);
-            cm.setType(new DataType(Types.BIGINT));
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(updateTime);
-            cm.setPk(true);
-            cm.setType(new DataType(Types.TIMESTAMP));
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(updateDate);
-            cm.setType(new DataType(Types.DATE));
-            metaCols.add(cm);
-
-            cm = new ISelectedTab.ColMeta();
-            cm.setName(starTime);
-            cm.setType(new DataType(Types.TIMESTAMP));
-            metaCols.add(cm);
-
-            SelectedTab totalpayInfo = new SelectedTab() {
-                @Override
-                public List<ColMeta> getCols() {
-                    return metaCols;
-                }
-            };
-            totalpayInfo.setIncrSinkProps(sinkExt);
-            totalpayInfo.name = tableName;
+            SelectedTab totalpayInfo = createSelectedTab();
 
 
 //            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
@@ -239,6 +183,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName(dataXName), MYSQL_CONTAINER);
             BasicDataXRdbmsWriter dataXWriter = createDataXWriter();
 
+
             dataXWriter.autoCreateTable = true;
             dataXWriter.dataXName = dataXName;
             // dataXWriter.maxBatchRows = 100;
@@ -246,6 +191,12 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                 Assert.assertEquals(dataXName, xName);
                 return dataXWriter;
             };
+
+            // Assert.assertTrue("autoCreateTable must be true", dataXWriter.autoCreateTable);
+            CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
+            Assert.assertNotNull("createDDL can not be empty", createDDL);
+            log.info("create table ddl:\n{}", createDDL);
+            FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
 
             // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 
@@ -299,8 +250,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                 DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 
                 ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-                        , env.fromElements(new DTO[]{add, updateBefore, updateAfter
-                        }));
+                        , env.fromElements(new DTO[]{add, updateBefore, updateAfter}).setParallelism(1));
 
                 readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
 
@@ -317,30 +267,35 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             Thread.sleep(9000);
 
 
-            DBConfig dbConfig = this.getDsFactory().getDbConfig();
+            // DBConfig dbConfig = this.getDsFactory().getDbConfig();
 
-            String[] jdbcUrls = new String[1];
-            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-                jdbcUrls[0] = jdbcUrl;
-            });
+//            String[] jdbcUrls = new String[1];
+//            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
+//                jdbcUrls[0] = jdbcUrl;
+//            });
 
-            try (Connection conn = this.getDsFactory().getConnection(jdbcUrls[0])) {
+            this.getDsFactory().visitFirstConnection((conn) -> {
                 try (Statement statement = conn.createStatement()) {
-                    try (ResultSet resultSet = statement.executeQuery("select * from " + tableName + " where id=" + pk)) {
+                    // + " where id='" + pk + "'"
+                    try (ResultSet resultSet = statement.executeQuery(createDDL.getSelectAllScript())) {
                         if (resultSet.next()) {
                             StringBuffer rowDesc = new StringBuffer();
                             for (String col : colNames) {
                                 Object obj = resultSet.getObject(col);
                                 rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
                             }
-                            Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
                             System.out.println("test_output==>" + rowDesc.toString());
+                            Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
                         } else {
                             Assert.fail("have not find row with id=" + pk);
                         }
                     }
                 }
-            }
+            });
+
+//            try (Connection conn = this.getDsFactory().getConnection(jdbcUrls[0])) {
+//
+//            }
 
 //            DBConfig dbConfig = dsFactory.getDbConfig();
 //            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
@@ -359,6 +314,84 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             Thread.sleep(14000);
             throw new RuntimeException(e);
         }
+    }
+
+    protected DataxReader createDataxReader() {
+        return mock("dataxReader", DataxReader.class);
+    }
+
+
+    protected SelectedTab createSelectedTab() {
+        SinkTabPropsExtends sinkExt = new SinkTabPropsExtends();
+        sinkExt.tabName = tableName;
+
+
+        //  EasyMock.expect(sinkExt.tabName).andReturn(tableName).times(2);
+        //InsertType updateMode = new InsertType();
+
+        UpdateMode updateMode = createIncrMode();
+        // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
+        sinkExt.incrMode = updateMode;
+        List<ISelectedTab.ColMeta> metaCols = Lists.newArrayList();
+        ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
+        cm.setName(colEntityId);
+        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
+        metaCols.add(cm);
+
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(colNum);
+        cm.setType(new DataType(Types.INTEGER));
+        metaCols.add(cm);
+
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(colId);
+        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
+        cm.setPk(true);
+        metaCols.add(cm);
+
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(colCreateTime);
+        cm.setType(new DataType(Types.BIGINT));
+        metaCols.add(cm);
+
+        cm = createUpdateTime();
+        metaCols.add(cm);
+
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(updateDate);
+        cm.setType(new DataType(Types.DATE));
+        metaCols.add(cm);
+
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(starTime);
+        cm.setType(new DataType(Types.TIMESTAMP));
+        metaCols.add(cm);
+
+        SelectedTab totalpayInfo = new SelectedTab() {
+            @Override
+            public List<ColMeta> getCols() {
+                return metaCols;
+            }
+        };
+        totalpayInfo.setIncrSinkProps(sinkExt);
+        totalpayInfo.name = tableName;
+        return totalpayInfo;
+    }
+
+    protected ISelectedTab.ColMeta createUpdateTime() {
+        ISelectedTab.ColMeta cm;
+        cm = new ISelectedTab.ColMeta();
+        cm.setName(updateTime);
+        cm.setPk(true);
+        cm.setType(new DataType(Types.TIMESTAMP));
+        return cm;
+    }
+
+    @NotNull
+    protected UpdateMode createIncrMode() {
+        ReplaceType updateMode = new ReplaceType();
+        updateMode.updateKey = Lists.newArrayList(colId, updateTime);
+        return updateMode;
     }
 
     protected abstract ChunjunSinkFactory getSinkFactory();

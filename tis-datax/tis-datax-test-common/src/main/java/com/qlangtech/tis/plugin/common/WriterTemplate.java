@@ -263,6 +263,11 @@ public class WriterTemplate {
         IDataxProcessor.TableMap tableMap
                 = new IDataxProcessor.TableMap(tab.isPresent() ? tab.get() : new ISelectedTab() {
             @Override
+            public String getName() {
+                return TAB_customer_order_relation;
+            }
+
+            @Override
             public List<ColMeta> getCols() {
                 return createColMetas();
             }

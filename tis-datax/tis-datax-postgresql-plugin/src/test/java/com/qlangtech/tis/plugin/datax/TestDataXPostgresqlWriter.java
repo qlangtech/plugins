@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.Optional;
 
@@ -61,6 +62,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
     }
 
 
+    @Test
     public void testTemplateGenerate() throws Exception {
 
         DataXPostgresqlWriter dataXWriter = getDataXPostgresqlWriter();
@@ -100,6 +102,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
     }
 
 
+    @Test
     public void testAutoCreateDDL() {
         DataXPostgresqlWriter dataXPostgresqlWriter = getDataXPostgresqlWriter();
         dataXPostgresqlWriter.autoCreateTable = true;
@@ -109,7 +112,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
 
         IDataxProcessor.TableMap tableMapper = WriterTemplate.createCustomer_order_relationTableMap();
 
-        StringBuffer createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXPostgresqlWriter.generateCreateDDL(tableMapper);
         Assert.assertNotNull(createDDL);
         // 多主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());

@@ -165,7 +165,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                     });
                 }
             };
-            return flinkTableDdlBuilder.build();
+            return flinkTableDdlBuilder.build().getDDLScript();
         }
     }
 

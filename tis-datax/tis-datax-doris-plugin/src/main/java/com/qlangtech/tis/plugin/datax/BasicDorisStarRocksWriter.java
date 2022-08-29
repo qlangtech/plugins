@@ -113,7 +113,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
@@ -189,6 +189,7 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
         };
+
         return createTableSqlBuilder.build();
     }
 

@@ -22,31 +22,47 @@ import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
+import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
+import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
+import com.qlangtech.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugins.incr.flink.connector.mysql.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+
+import java.util.Map;
 
 /**
+ * https://dtstack.github.io/chunjun/documents/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@oracle@oracle-sink
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-14 21:44
+ * @see com.dtstack.chunjun.connector.oracle.sink.OracleSinkFactory
  **/
 public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return null;
+        return new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf));
+    }
+
+    @Override
+    protected boolean supportUpsetDML() {
+        return true;
     }
 
     @Override
     protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        return null;
+        return new TISJdbcOutputFormat(dsFactory);
     }
 
     @Override
-    protected String parseType(ISelectedTab.ColMeta cm) {
-        return null;
+    protected void setSchema(Map<String, Object> conn, String dbName, BasicDataSourceFactory dsFactory) {
+        //super.setSchema(conn, dbName, dsFactory);
     }
 
     @Override
@@ -55,8 +71,83 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
+    protected String parseType(ISelectedTab.ColMeta cm) {
+        return typeMap(cm);
+    }
+
+    public static String typeMap(ISelectedTab.ColMeta cm) {
+        return cm.getType().getS();
+//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
+//            @Override
+//            public String bigInt(DataType type) {
+//                return "INTEGER";
+//            }
+//
+//            @Override
+//            public String doubleType(DataType type) {
+//                return "BINARY_DOUBLE";
+//            }
+//
+//            @Override
+//            public String dateType(DataType type) {
+//                return "DATE";
+//            }
+//
+//            @Override
+//            public String timestampType(DataType type) {
+//                return "TIMESTAMP";
+//            }
+//
+//            @Override
+//            public String bitType(DataType type) {
+//                return "NUMBER";
+//            }
+//
+//            @Override
+//            public String blobType(DataType type) {
+//                return "BLOB";
+//            }
+//
+//            @Override
+//            public String varcharType(DataType type) {
+//                return "VARCHAR";
+//            }
+//
+//            @Override
+//            public String intType(DataType type) {
+//                return "INTEGER";
+//            }
+//
+//            @Override
+//            public String floatType(DataType type) {
+//                return "BINARY_FLOAT";
+//            }
+//
+//            @Override
+//            public String decimalType(DataType type) {
+//                return "DECIMAL";
+//            }
+//
+//            @Override
+//            public String timeType(DataType type) {
+//                return "TIMESTAMP";
+//            }
+//
+//            @Override
+//            public String tinyIntType(DataType dataType) {
+//                return "SMALLINT";
+//            }
+//
+//            @Override
+//            public String smallIntType(DataType dataType) {
+//                return this.tinyIntType(dataType);
+//            }
+//        });
+    }
+
+    @Override
     public ICompileAndPackage getCompileAndPackageManager() {
-        return null;
+        return new CompileAndPackage(Sets.newHashSet(ChunjunOracleSinkFactory.class));
     }
 
     @TISExtension

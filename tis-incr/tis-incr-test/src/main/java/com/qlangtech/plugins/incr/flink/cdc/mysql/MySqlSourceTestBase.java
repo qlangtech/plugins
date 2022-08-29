@@ -18,11 +18,16 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
+import com.google.common.collect.ImmutableMap;
+import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.test.util.AbstractTestBase;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.rules.TestRule;
@@ -30,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.lifecycle.Startables;
 
+import java.text.NumberFormat;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -52,6 +59,33 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
                             .withUsername("flinkuser")
                             .withPassword("flinkpw")
                             .withLogConsumer(new TISLoggerConsumer(LOG));
+
+    public static BasicDataSourceFactory createDataSource(TargetResName dataxName) {
+        return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+    }
+
+    static String tabStu = "stu";
+    static String tabBase = "base";
+    static final String tabInstanceDetail = "instancedetail";
+
+    public Map<String, CDCTestSuitParams> tabParamMap;
+
+    @Before
+    public void initializeTabParamMap() {
+
+        ImmutableMap.Builder<String, CDCTestSuitParams> builder = ImmutableMap.builder();
+        builder.put(tabStu, suitParamBuilder().setTabName(tabStu).build());
+
+        builder.put(tabBase, suitParamBuilder().setTabName(tabBase) //
+                .build());
+
+        builder.put(tabInstanceDetail, suitParamBuilder().setTabName(tabInstanceDetail).build());
+
+        tabParamMap = builder.build();
+
+    }
+
+    protected abstract CDCTestSuitParams.Builder suitParamBuilder();
 
     @BeforeClass
     public static void startContainers() {

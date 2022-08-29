@@ -71,7 +71,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     }
 
     @Override
-    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }

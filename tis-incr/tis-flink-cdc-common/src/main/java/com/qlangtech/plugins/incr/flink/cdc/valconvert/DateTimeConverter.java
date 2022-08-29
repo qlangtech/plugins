@@ -26,8 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.DateTimeException;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -60,7 +63,9 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
     public DateTimeFormatter datetimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
     protected DateTimeFormatter timestampFormatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    protected ZoneId timestampZoneId = ZoneId.systemDefault();
+    protected static ZoneId timestampZoneId = ZoneId.systemDefault();
+
+
 
     public static void setDatetimeConverters(String convertType, Properties debeziumProperties) {
         debeziumProperties.put("converters", "datetime");

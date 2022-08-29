@@ -18,12 +18,12 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
@@ -68,80 +68,86 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 
-    private static FlinkCol mapFlinkCol(HdfsColMeta meta) {
-        return meta.type.accept(new DataType.TypeVisitor<FlinkCol>() {
+    public static List<FlinkCol> getAllTabColsMeta(List<IColMetaGetter> colsMeta) {
+        //IStreamTableCreator.IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
+        return colsMeta.stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+    }
+
+    public static FlinkCol mapFlinkCol(IColMetaGetter meta) {
+        return meta.getType().accept(new DataType.TypeVisitor<FlinkCol>() {
 
             @Override
             public FlinkCol intType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.INT());
+                return new FlinkCol(meta.getName(), DataTypes.INT());
             }
 
             @Override
             public FlinkCol smallIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.SMALLINT(), new ShortConvert());
+                return new FlinkCol(meta.getName(), DataTypes.SMALLINT(), new ShortConvert());
             }
 
             @Override
             public FlinkCol tinyIntType(DataType dataType) {
-                return new FlinkCol(meta.colName, DataTypes.TINYINT(), new ShortConvert());
+                return new FlinkCol(meta.getName(), DataTypes.TINYINT(), new ShortConvert());
             }
 
             @Override
             public FlinkCol floatType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.FLOAT());
+                return new FlinkCol(meta.getName(), DataTypes.FLOAT());
             }
 
             @Override
             public FlinkCol timeType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.TIME(3));
+                return new FlinkCol(meta.getName(), DataTypes.TIME(3));
             }
 
             @Override
             public FlinkCol bigInt(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BIGINT());
+                return new FlinkCol(meta.getName(), DataTypes.BIGINT(), new LongConvert());
             }
 
             public FlinkCol decimalType(DataType type) {
+                int precision = type.columnSize;
+                Integer scale = type.getDecimalDigits();
+                if (precision < 1 || precision > 38) {
+                    precision = 38;
+                }
                 try {
-                    int precision = type.columnSize;
-                    Integer scale = type.getDecimalDigits();
-                    if (precision < 1) {
-                        precision = 38;
-                    }
-                    return new FlinkCol(meta.colName, DataTypes.DECIMAL(precision, scale), new DecimalConvert(precision, scale));
+
+                    return new FlinkCol(meta.getName(), DataTypes.DECIMAL(precision, scale), new DecimalConvert(precision, scale));
                 } catch (Exception e) {
-                    throw new RuntimeException("colName:" + meta.colName + ",type:" + type.toString(), e);
+                    throw new RuntimeException("colName:" + meta.getName() + ",type:" + type.toString() + ",precision:" + precision + ",scale:" + scale, e);
                 }
             }
 
             @Override
             public FlinkCol doubleType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DOUBLE());
+                return new FlinkCol(meta.getName(), DataTypes.DOUBLE());
             }
 
             @Override
             public FlinkCol dateType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.DATE(), new DateConvert());
+                return new FlinkCol(meta.getName(), DataTypes.DATE(), new DateConvert());
             }
 
             @Override
             public FlinkCol timestampType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP(3), new TimestampDataConvert());
+                return new FlinkCol(meta.getName(), DataTypes.TIMESTAMP(3), new TimestampDataConvert());
             }
 
             @Override
             public FlinkCol bitType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BINARY(1), FlinkCol.Byte());
+                return new FlinkCol(meta.getName(), DataTypes.BINARY(1), FlinkCol.Byte());
             }
 
             @Override
             public FlinkCol blobType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.BYTES(), new BinaryRawValueDataConvert());
+                return new FlinkCol(meta.getName(), DataTypes.BYTES(), new BinaryRawValueDataConvert());
             }
 
             @Override
             public FlinkCol varcharType(DataType type) {
-                return new FlinkCol(meta.colName, DataTypes.VARCHAR(type.columnSize), new StringConvert());
+                return new FlinkCol(meta.getName(), DataTypes.VARCHAR(type.columnSize), new StringConvert());
             }
         });
 
@@ -250,6 +256,24 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         @Override
         public Object apply(Object o) {
             return DecimalData.fromBigDecimal((BigDecimal) o, precision, scale);
+        }
+    }
+
+    static class LongConvert extends BiFunction {
+        @Override
+        public Object deApply(Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof Long) {
+                return o;
+            }
+            if (o instanceof Integer) {
+                return ((Integer) o).longValue();
+            }
+            return Long.parseLong(String.valueOf(o));
         }
     }
 

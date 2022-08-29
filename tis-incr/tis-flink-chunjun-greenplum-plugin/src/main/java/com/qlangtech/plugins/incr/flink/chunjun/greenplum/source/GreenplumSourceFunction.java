@@ -23,6 +23,7 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -60,4 +61,8 @@ public class GreenplumSourceFunction extends ChunjunSourceFunction {
         };
     }
 
+//    @Override
+//    protected String parseType(ISelectedTab.ColMeta cm) {
+//        return null;
+//    }
 }

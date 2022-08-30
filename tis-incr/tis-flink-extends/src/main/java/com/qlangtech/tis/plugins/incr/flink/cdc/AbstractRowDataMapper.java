@@ -141,6 +141,11 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             }
 
             @Override
+            public FlinkCol boolType(DataType dataType) {
+                return new FlinkCol(meta.getName(), DataTypes.BOOLEAN());
+            }
+
+            @Override
             public FlinkCol blobType(DataType type) {
                 return new FlinkCol(meta.getName(), DataTypes.BYTES(), new BinaryRawValueDataConvert());
             }

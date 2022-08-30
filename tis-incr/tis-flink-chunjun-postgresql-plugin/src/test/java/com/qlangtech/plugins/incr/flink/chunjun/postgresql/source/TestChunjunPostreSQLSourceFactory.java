@@ -61,6 +61,15 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
         initializePostgresTable("column_type_test");
     }
 
+//    @Test
+//    public void testTime() throws Exception {
+//        RowValsExample.RowVal time = RowValsExample.RowVal.time(("9:00:22"));
+//        time.getExpect();
+//        Time t = (Time) time.call();
+//
+//        System.out.println(time.getAssertActual(SqlDateTimeUtils.unixTimeToLocalTime((int) t.getTime())));
+//    }
+
 
     @Test
     public void testPullCDC() throws Exception {
@@ -194,7 +203,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
                     vals.put("timestamp3_c", parseTimestamp("2022-07-29 18:00:22"));
                     vals.put("timestamp6_c", parseTimestamp("2020-07-17 18:00:22"));
                     vals.put("date_c", parseDate("2020-07-17"));
-                    vals.put("time_c", RowValsExample.RowVal.$(java.sql.Time.valueOf("18:00:22")));
+                    vals.put("time_c", RowValsExample.RowVal.time(("9:00:22")));
                     vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0) // BigDecimal.valueOf(500).setScale(BIG_DECIMAL_SCALA)
                     );
 

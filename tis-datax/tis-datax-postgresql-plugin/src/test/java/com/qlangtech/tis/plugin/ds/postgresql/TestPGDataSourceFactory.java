@@ -19,10 +19,12 @@
 package com.qlangtech.tis.plugin.ds.postgresql;
 
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import junit.framework.TestCase;
 
-import java.util.List;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Time;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,17 +46,41 @@ public class TestPGDataSourceFactory extends TestCase {
         dsFactory.nodeDesc = "192.168.28.201";
         dsFactory.tabSchema = "public";
 
-        String instancedetail = "instancedetail";
-        List<String> tables = dsFactory.getTablesInDB();
-        assertEquals(1, tables.size());
-        tables.contains(instancedetail);
+        dsFactory.visitAllConnection((conn) -> {
 
+            Time t = Time.valueOf("18:22:00");
+//            try (PreparedStatement statement = conn.prepareStatement("insert into time_test(id,time_c) values(?,?)")) {
+//
+//                statement.setInt(1, 1);
+//                statement.setTime(2, t);
+//
+//                statement.executeUpdate();
+//            }
 
-        List<ColumnMetaData> tableMetadata = dsFactory.getTableMetadata(instancedetail);
-        assertTrue(tableMetadata.size() > 0);
+            try (Statement statement = conn.createStatement()) {
+                try (ResultSet resultSet = statement.executeQuery("select id,time_c from time_test")) {
+                    while (resultSet.next()) {
+                        System.out.print(resultSet.getObject(1));
+                        System.out.print("=");
+                        System.out.print(resultSet.getObject(2));
+                        System.out.println();
+                    }
+                }
+            }
 
-        for (ColumnMetaData col : tableMetadata) {
-            System.out.println(col.getKey() + "  " + col.getType());
-        }
+        });
+
+//        String instancedetail = "instancedetail";
+//        List<String> tables = dsFactory.getTablesInDB();
+//        assertEquals(1, tables.size());
+//        tables.contains(instancedetail);
+//
+//
+//        List<ColumnMetaData> tableMetadata = dsFactory.getTableMetadata(instancedetail);
+//        assertTrue(tableMetadata.size() > 0);
+//
+//        for (ColumnMetaData col : tableMetadata) {
+//            System.out.println(col.getKey() + "  " + col.getType());
+//        }
     }
 }

@@ -21,15 +21,15 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -51,6 +51,27 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
                 @Override
                 public String getAssertActual(Object val) {
                     return String.valueOf(val);
+                }
+            };
+        }
+
+        public static RowVal time(String s) {
+            final Time t = Time.valueOf(s);
+
+            // 为什么要如此处理时间 请查阅： https://github.com/qlangtech/plugins/issues/22
+            //Locale locale = ;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+            return new RowVal(t) {
+                @Override
+                public String getExpect() {
+                    return (formatter.format(SqlDateTimeUtils.unixTimeToLocalTime((int) t.getTime())));
+                }
+
+                @Override
+                public String getAssertActual(Object val) {
+                    LocalTime v = (LocalTime) val;
+                    return formatter.format(v);
+                    //  return String.valueOf(((Time) val).getTime());
                 }
             };
         }
@@ -175,4 +196,14 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
         final Date date = Date.from(zdt.toInstant());
         return date;
     }
+
+//    private static Date localTimeToDate(final java.time.LocalTime val) {
+//        if (null == val) {
+//            return null;
+//        }
+//
+//        // final ZonedDateTime zdt = val..atZone(timestampZoneId);
+//        final Date date = Date.from(val..toInstant());
+//        return date;
+//    }
 }

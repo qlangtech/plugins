@@ -23,10 +23,7 @@ import com.qlangtech.plugins.incr.flink.cdc.ColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
-import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
@@ -38,7 +35,6 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.junit.Assert;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -104,24 +100,25 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
         return this.sourceTableQueryResult;
     }
 
-    @Override
-    public TISSinkFactory getSinkFuncFactory() {
-        return new TISSinkFactory() {
-            @Override
-            public <SinkFunc> Map<IDataxProcessor.TableAlias, SinkFunc> createSinkFunction(IDataxProcessor dataxProcessor) {
-                return Collections.emptyMap();
-            }
+//    @Override
+//    public TISSinkFactory getSinkFuncFactory() {
+//        super.getSinkFuncFactory();
+//        return new TISSinkFactory() {
+//            @Override
+//            public <SinkFunc> Map<IDataxProcessor.TableAlias, SinkFunc> createSinkFunction(IDataxProcessor dataxProcessor) {
+//                return Collections.emptyMap();
+//            }
+//
+//            @Override
+//            public ICompileAndPackage getCompileAndPackageManager() {
+//                throw new UnsupportedOperationException();
+//            }
+//        };
+//    }
 
-            @Override
-            public ICompileAndPackage getCompileAndPackageManager() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
-
     @Override
-    protected void registerTable(StreamTableEnvironment tabEnv, String tabName, DTOStream dtoDataStream) {
-        super.registerTable(tabEnv, tabName, dtoDataStream);
+    protected void registerTable(StreamTableEnvironment tabEnv, String tabName, DTOStream sourceStream) {
+        super.registerTable(tabEnv, tabName, sourceStream);
         if (tableCount++ > 1) {
             throw new IllegalStateException("testCase just test 1 table,pre:" + this.tabName + ",new:" + tabName);
         }

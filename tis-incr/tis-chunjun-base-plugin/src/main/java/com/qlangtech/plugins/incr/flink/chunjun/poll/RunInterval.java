@@ -64,6 +64,9 @@ public class RunInterval extends Polling {
         // polling
         params.put("polling", true);
         params.put("pollingInterval", this.pollingInterval);
+        if (StringUtils.isEmpty(this.incrColumn)) {
+            throw new IllegalStateException("param incrColumn can not be null ");
+        }
         params.put("increColumn", this.incrColumn);
         if (StringUtils.isNotEmpty(this.startLocation)) {
             params.put("startLocation", this.startLocation);

@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -101,7 +102,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sleepForAWhile();
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
                 waitForSnapshotStarted(snapshot);
-                List<AssertRow> rows = fetchRows(snapshot, 1,  null ,false);
+                List<AssertRow> rows = fetchRows(snapshot, 1, null, false);
                 for (AssertRow rr : rows) {
                     System.out.println("------------" + rr.getObj("id"));
                     // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
@@ -160,8 +161,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName) {
-                return new TestTableRegisterFlinkSourceHandle(tabName, cols);
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
             }
         };
 
@@ -194,8 +197,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName) {
-                return new TestTableRegisterFlinkSourceHandle(tabName, cols);
+            protected IResultRows createConsumerHandle(String tabName,TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
             }
 
             @Override

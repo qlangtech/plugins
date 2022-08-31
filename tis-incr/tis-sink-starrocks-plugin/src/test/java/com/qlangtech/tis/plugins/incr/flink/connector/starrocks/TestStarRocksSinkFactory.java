@@ -35,12 +35,17 @@ import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
-import junit.framework.TestCase;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
+import java.io.File;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
@@ -50,11 +55,39 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-12 09:54
  **/
-public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
+public class TestStarRocksSinkFactory implements TISEasyMock {
+
+    private static final int DORIS_FE_PORT = 9030;
+    private static final int DORIS_FE_LOAD_PORT = 8030;
+    private static final int DORIS_BE_PORT = 9050;
+    private static final int DORIS_BE_LOAD_PORT = 8040;
+    private static final String DORIS_FE_SERVICE = "doris-fe_1";
+    private static final String DORIS_BE_SERVICE = "doris-be_1";
+
+    @ClassRule
+    public static DockerComposeContainer environment =
+            new DockerComposeContainer(new File("src/test/resources/compose-starrocks-test.yml"))
+                    .withExposedService(DORIS_FE_SERVICE, DORIS_FE_PORT)
+                    .withExposedService(DORIS_FE_SERVICE, DORIS_FE_LOAD_PORT)
+                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_PORT)
+                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_LOAD_PORT);
+
+    // docker run -d -p 1521:1521 -e ORACLE_PASSWORD=test -e ORACLE_DATABASE=tis gvenzl/oracle-xe:18.4.0-slim
+    public static final DockerImageName STARROCKS_DOCKER_IMAGE_NAME = DockerImageName.parse(
+            "tis/starrocks"
+            // "registry.cn-hangzhou.aliyuncs.com/tis/oracle-xe:18.4.0-slim"
+    );
+
+    @BeforeClass
+    public static void initialize() {
+        GenericContainer starRocksContainer = new GenericContainer(STARROCKS_DOCKER_IMAGE_NAME);
+        starRocksContainer.start();
+    }
+
 
     public void testGetConfigOption() {
         String desc = StarRocksSinkFactory.desc("sinkSemantic");
-        assertNotNull(desc);
+        Assert.assertNotNull(desc);
     }
 
     public void testDescriptorsJSONGenerate() {
@@ -63,7 +96,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         JsonUtil.assertJSONEqual(StarRocksSinkFactory.class, "starrocks-sink-factory.json"
                 , descJson.getDescriptorsJSON(), (m, e, a) -> {
-                    assertEquals(m, e, a);
+                    Assert.assertEquals(m, e, a);
                 });
 
     }
@@ -144,6 +177,8 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         cols.add(cm);
 
         EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).times(2);
+
+
         selectedTabs.add(totalpayinfo);
         EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs);
 
@@ -209,7 +244,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = new DTO();
-        d.setEventType(DTO.EventType.DELETE);
+        d.setEventType(DTO.EventType.ADD);
         d.setTableName(tableName);
         Map<String, Object> after = Maps.newHashMap();
         after.put(colEntityId, "334556");
@@ -220,7 +255,7 @@ public class TestStarRocksSinkFactory extends TestCase implements TISEasyMock {
         after.put(starTime, "2021-12-18 09:21:20");
         after.put(updateDate, "2021-12-9");
         d.setAfter(after);
-        assertEquals(1, sinkFunction.size());
+        Assert.assertEquals(1, sinkFunction.size());
         for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFunction.entrySet()) {
 
             entry.getValue().add2Sink(DTOStream.createDispatched(tableName).addStream(env.fromElements(new DTO[]{d})));

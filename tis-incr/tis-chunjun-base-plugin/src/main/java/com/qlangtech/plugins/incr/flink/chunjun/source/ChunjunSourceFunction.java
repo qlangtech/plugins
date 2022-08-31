@@ -106,25 +106,7 @@ public abstract class ChunjunSourceFunction
         sourceFactory.getDbConfig().vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             for (ISelectedTab tab : tabs) {
                 SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab);
-
                 SourceFunction<RowData> sourceFunc = createSourceFunction(conf, sourceFactory);
-
-//                AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-//                JdbcSourceFactory pgSourceFactory = new PostgreSQLSourceFunction.ExtendPostgresqlSourceFactory(conf, null, sourceFactory) {
-//
-//
-//                    protected DataStream<RowData> createInput(
-//                            InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
-//                        Preconditions.checkNotNull(sourceName);
-//                        Preconditions.checkNotNull(inputFormat);
-//                        DtInputFormatSourceFunction<RowData> function =
-//                                new DtInputFormatSourceFunction<>(inputFormat, getTypeInformation());
-//                        sourceFunc.set(function);
-//                        return null;
-//                    }
-//                };
-//                pgSourceFactory.createSource();
-
                 sourceFuncs.add(ReaderSource.createRowDataSource(
                         dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
             }
@@ -132,9 +114,7 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
-            //for (ISelectedTab tab : tabs) {
             sourceChannel.setFocusTabs(tabs, DTOStream::createRowData);
-            //}
             return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

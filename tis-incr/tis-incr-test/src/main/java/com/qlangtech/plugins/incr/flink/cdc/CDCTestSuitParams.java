@@ -46,6 +46,10 @@ public class CDCTestSuitParams {
         return new Builder();
     }
 
+    public static Builder.ChunjunSuitParamsBuilder chunjunBuilder() {
+        return new Builder.ChunjunSuitParamsBuilder();
+    }
+
     public static class Builder {
         protected String tabName;
 //        private TestRow.ValProcessor rewriteExpectValProcessor;
@@ -78,10 +82,17 @@ public class CDCTestSuitParams {
         }
 
         public static class ChunjunSuitParamsBuilder extends Builder {
+            private String incrColumn = CUDCDCTestSuit.key_update_time;
+
+            public ChunjunSuitParamsBuilder setIncrColumn(String incrColumn) {
+                this.incrColumn = incrColumn;
+                return this;
+            }
+
             //        @Override
-    //        public CDCTestSuitParams build() {
-    //            return super.build();
-    //        }
+            //        public CDCTestSuitParams build() {
+            //            return super.build();
+            //        }
             @Override
             protected CDCTestSuitParams createParams() {
                 CDCTestSuitParams params = super.createParams();
@@ -89,7 +100,7 @@ public class CDCTestSuitParams {
                     SelectedTabPropsExtends incrTabExtend = new SelectedTabPropsExtends();
                     RunInterval polling = new RunInterval();
                     polling.useMaxFunc = true;
-                    polling.incrColumn = cdcTestSuit.getPrimaryKeyName(tab);
+                    polling.incrColumn = this.incrColumn;//CUDCDCTestSuit.key_update_time; //cdcTestSuit.getPrimaryKeyName(tab);
                     polling.pollingInterval = 4999;
                     incrTabExtend.polling = polling;
                     tab.setIncrSourceProps(incrTabExtend);

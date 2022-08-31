@@ -21,9 +21,11 @@ package com.qlangtech.tis.realtime;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
@@ -37,11 +39,13 @@ import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
 import org.apache.flink.types.Row;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -76,14 +80,14 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     @Override
     protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
-        return getAllTabColsMeta(dataxName, tabName);
+        return getAllTabColsMeta(this.getSinkFuncFactory(), tabName);
     }
 
     protected void registerTable(StreamTableEnvironment tabEnv
-            , String tabName, DTOStream dtoDataStream) {
+            , String tabName, DTOStream sourceStream) {
         Schema.Builder scmBuilder = Schema.newBuilder();
 
-        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()),tabName);
+        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), tabName);
         String[] fieldNames = new String[cols.size()];
         TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
         int i = 0;
@@ -102,15 +106,32 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         Schema schema = scmBuilder.build();
 
         TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
-        DataStream<Row> rowStream = dtoDataStream.getStream()
-                .map(new DTO2RowMapper(cols), outputType).name(tabName).uid("uid_" + tabName);
+
+
+        DataStream<Row> rowStream = null;
+        if (sourceStream.clazz == DTO.class) {
+            // return sourceStream.stream;
+//            return sourceStream.stream.map(new DTO2RowDataMapper(
+//                    DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)))
+//                    .name(tab.getFrom() + "_dto2Rowdata")
+//                    .setParallelism(this.sinkTaskParallelism);
+            rowStream = sourceStream.getStream()
+                    .map(new DTO2RowMapper(cols), outputType)
+                    .name(tabName).uid("uid_" + tabName);
+        } else if (sourceStream.clazz == RowData.class) {
+            //return sourceStream.stream;
+            rowStream = sourceStream.getStream()
+                    .map(new RowData2RowMapper(cols), outputType)
+                    .name(tabName).uid("uid_" + tabName);
+        }
+        Objects.requireNonNull(rowStream, "rowStream can not be null");
 
         Table table = tabEnv.fromChangelogStream(rowStream, schema, ChangelogMode.all());
         tabEnv.createTemporaryView(tabName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
     }
 
-    private static List<FlinkCol> getAllTabColsMeta(TargetResName dataxName, String tabName) {
-        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(dataxName, tabName);
+    private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, String tabName) {
+        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
         return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 

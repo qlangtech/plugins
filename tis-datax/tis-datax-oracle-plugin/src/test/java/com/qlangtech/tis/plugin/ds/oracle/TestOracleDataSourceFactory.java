@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.ds.oracle;
@@ -21,13 +21,16 @@ package com.qlangtech.tis.plugin.ds.oracle;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.ExtensionList;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import junit.framework.TestCase;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Time;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,7 +60,7 @@ public class TestOracleDataSourceFactory extends TestCase {
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
         assertTrue(tablesInDB.size() > 1);
-       // tablesInDB.forEach((tab) -> System.out.println(tab));
+        // tablesInDB.forEach((tab) -> System.out.println(tab));
         List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("BM"));
 
         assertTrue(cols.size() > 0);
@@ -65,7 +68,24 @@ public class TestOracleDataSourceFactory extends TestCase {
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.isPk() + " " + col.getType());
         }
+    }
 
+    public void testSqlTime() {
+        OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
+        dsFactory.visitAllConnection((conn) -> {
+
+//            PreparedStatement statement = conn.prepareStatement("insert into \"time_test\" ( \"id\" , \"time_c\") values(?,?)");
+//
+//            statement.setInt(1, 1234);
+//            statement.setTime(2, Time.valueOf("18:01:01"));
+//            statement.executeUpdate();
+
+            Statement statement1 = conn.createStatement();
+            ResultSet resultSet = statement1.executeQuery("select \"id\" , \"time_c\" from  \"time_test\"");
+            while(resultSet.next()){
+                System.out.println(resultSet.getObject(1)+","+resultSet.getObject(2));
+            }
+        });
     }
 
     public static OracleDataSourceFactory createOracleDataSourceFactory() {

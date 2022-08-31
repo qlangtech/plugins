@@ -27,6 +27,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IStreamTableCreator;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -74,6 +75,7 @@ public abstract class CUDCDCTestSuit {
     protected final TargetResName dataxName = new TargetResName("x");
     static String keyCol_text = "col_text";
     public static String keyStart_time = "start_time";
+    public static String key_update_time = "update_time";
     static String keyBaseId = "base_id";
     String keyColBlob = "col_blob";
 
@@ -207,21 +209,20 @@ public abstract class CUDCDCTestSuit {
                                 continue;
                             }
 
-                            List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();//pdateVals.getCols();
+                            List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
 
                             String updateSql = String.format("UPDATE " + createTableName(tabName) + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
                                     , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(",")), exceptRow.getIdVal());
 
-                            statement = conn.prepareStatement(updateSql);
-
-                            int colIndex = 1;
-                            for (Map.Entry<String, RowValsUpdate.UpdatedColVal> col : cols) {
-                                col.getValue().setPrepColVal(statement, colIndex++, exceptRow.vals);
+                            try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
+                                int colIndex = 1;
+                                for (Map.Entry<String, RowValsUpdate.UpdatedColVal> col : cols) {
+                                    col.getValue().setPrepColVal(updateStatement, colIndex++, exceptRow.vals);
+                                }
+                                Assert.assertTrue(updateSql, executePreparedStatement(conn, updateStatement) > 0);
                             }
 
-                            Assert.assertTrue(updateSql, executePreparedStatement(conn, statement) > 0);
-
-                            statement.close();
+                            //  statement.close();
                             sleepForAWhile();
 
                             waitForSnapshotStarted(snapshot);
@@ -287,15 +288,19 @@ public abstract class CUDCDCTestSuit {
     protected List<TestRow> createExampleTestRows() throws Exception {
         List<TestRow> exampleRows = Lists.newArrayList();
         Date now = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.MINUTE, 1);
+        final Date updateDate = calendar.getTime();
         TestRow row = null;
         Map<String, RowValsExample.RowVal> vals = null;
         int insertCount = 5;
         for (int i = 1; i <= insertCount; i++) {
             vals = Maps.newHashMap();
             vals.put(keyBaseId, RowValsExample.RowVal.$(i));
-            vals.put("start_time", parseTimestamp(timeFormat.get().format(now)));
+            vals.put(keyStart_time, parseTimestamp(timeFormat.get().format(now)));
             vals.put("update_date", parseDate(dateFormat.get().format(now)));
-            vals.put("update_time", parseTimestamp(timeFormat.get().format(now)));
+            vals.put(key_update_time, parseTimestamp(timeFormat.get().format(now)));
             vals.put("price", RowValsExample.RowVal.decimal(199, 2));
             vals.put("json_content", RowValsExample.RowVal.json("{\"name\":\"baisui#" + i + "\"}"));
             vals.put("col_blob", RowValsExample.RowVal.stream("Hello world"));
@@ -317,6 +322,12 @@ public abstract class CUDCDCTestSuit {
             statement.setTimestamp(index, parseTimestamp(v).getVal());
             return v;
         });
+        row.updateVals.put(key_update_time, (statement, index, ovals) -> {
+            String v = timeFormat.get().format(updateDate);
+            statement.setTimestamp(index, parseTimestamp(v).getVal());
+            return v;
+        });
+
 
         row = exampleRows.get(4);
         row.updateVals.put(keyCol_text, (statement, index, ovals) -> {
@@ -329,6 +340,11 @@ public abstract class CUDCDCTestSuit {
             statement.setTimestamp(index, parseTimestamp(v).getVal());
             return v;
         });
+        row.updateVals.put(key_update_time, (statement, index, ovals) -> {
+            String v = timeFormat.get().format(updateDate);
+            statement.setTimestamp(index, parseTimestamp(v).getVal());
+            return v;
+        });
 
         row = exampleRows.get(0);
         row.updateVals.put(keyCol_text, (statement, index, ovals) -> {
@@ -338,6 +354,11 @@ public abstract class CUDCDCTestSuit {
         });
         row.updateVals.put(keyStart_time, (statement, index, ovals) -> {
             String v = "2012-11-12 11:11:35";
+            statement.setTimestamp(index, parseTimestamp(v).getVal());
+            return v;
+        });
+        row.updateVals.put(key_update_time, (statement, index, ovals) -> {
+            String v = timeFormat.get().format(updateDate);
             statement.setTimestamp(index, parseTimestamp(v).getVal());
             return v;
         });
@@ -385,21 +406,44 @@ public abstract class CUDCDCTestSuit {
         return consumerHandle;
     }
 
-    protected IResultRows createConsumerHandle(String tabName) {
+    private IResultRows createConsumerHandle(String tabName) {
+        // TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
+        TISSinkFactory sinkFuncFactory = new StubSinkFactory();
+        sinkFuncFactory.dataXName = dataxName.getName();
+
+        return createConsumerHandle(tabName, sinkFuncFactory);
+    }
+
+    private class StubSinkFactory extends TISSinkFactory implements IStreamTableCreator {
+        @Override
+        public IStreamTableMeta getStreamTableMeta(String tableName) {
+            return new IStreamTableMeta() {
+                @Override
+                public List<HdfsColMeta> getColsMeta() {
+                    if (CollectionUtils.isEmpty(cols)) {
+                        throw new IllegalStateException("cols can not be null");
+                    }
+                    return cols.stream().map(c -> c.meta).collect(Collectors.toList());
+
+                    // throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        @Override
+        public ICompileAndPackage getCompileAndPackageManager() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+            return Collections.emptyMap();
+        }
+    }
+
+
+    protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
         TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
-
-        TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
-            @Override
-            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-                return Collections.emptyMap();
-            }
-
-            @Override
-            public ICompileAndPackage getCompileAndPackageManager() {
-                throw new UnsupportedOperationException();
-            }
-        };
-
         sourceHandle.setSinkFuncFactory(sinkFuncFactory);
         return sourceHandle;
     }

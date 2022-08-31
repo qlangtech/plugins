@@ -44,7 +44,7 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor
 {
 
     @Test
-    public void testStartRocksWrite() throws Exception {
+    public void testMySQLWrite() throws Exception {
         super.testSinkSync();
     }
 

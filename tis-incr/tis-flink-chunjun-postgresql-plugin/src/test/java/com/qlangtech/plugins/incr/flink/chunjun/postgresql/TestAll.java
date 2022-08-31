@@ -18,22 +18,18 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql;
 
-import junit.framework.TestCase;
-
-import java.sql.Time;
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactory;
+import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.TestChunjunPostreSQLSourceFactory;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-08 15:23
  **/
-public class Test extends TestCase {
 
-    public void test() {
-        Time time = Time.valueOf("18:00:22");
-        long time1 = time.getTime();
-        System.out.println(time + " ," + time1);
+@RunWith(Suite.class)
+@Suite.SuiteClasses({TestChunjunPostgreSQLSinkFactory.class, TestChunjunPostreSQLSourceFactory.class})
+public class TestAll {
 
-         time = new Time(time1);
-        System.out.println(time);
-    }
 }

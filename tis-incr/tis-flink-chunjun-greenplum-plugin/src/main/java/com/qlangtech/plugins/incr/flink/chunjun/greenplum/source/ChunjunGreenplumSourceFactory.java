@@ -32,14 +32,14 @@ public class ChunjunGreenplumSourceFactory extends ChunjunSourceFactory {
 
     @Override
     public IMQListener create() {
-        return new GreenplumSourceFunction(ChunjunGreenplumSourceFactory.this);
+        return new GreenplumSourceFunction(this);
     }
 
-    @TISExtension()
-    public static class DefaultDescriptor extends BaseChunjunDescriptor {
-        @Override
-        protected IDataXPluginMeta.EndType getSourceType() {
-            return IDataXPluginMeta.EndType.Greenplum;
-        }
-    }
+//    @TISExtension()
+//    public static class DefaultDescriptor extends BaseChunjunDescriptor {
+//        @Override
+//        protected IDataXPluginMeta.EndType getSourceType() {
+//            return IDataXPluginMeta.EndType.Greenplum;
+//        }
+//    }
 }

@@ -51,6 +51,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
     private static final String tabNameFull_types = "full_types";
     private static final String tabNameFull_types_pk = "id";
     private static final String key_bytea_c = "bytea_c";
+    private static final String key_timestamp6_c = "timestamp6_c";
     private static final int BIG_DECIMAL_SCALA = 5;
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
@@ -75,8 +76,10 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
     public void testPullCDC() throws Exception {
         System.out.println("====");
 
-        CDCTestSuitParams suitParams = (new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder())
-                .setTabName(tabNameFull_types).build();
+        CDCTestSuitParams suitParams = //
+                (new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder())
+                        .setIncrColumn(key_timestamp6_c)
+                        .setTabName(tabNameFull_types).build();
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
 
@@ -201,7 +204,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
                     vals.put("character_c", RowValsExample.RowVal.$("abf"));
                     vals.put("character_varying_c", RowValsExample.RowVal.$("abcd..xyzkkkkk"));
                     vals.put("timestamp3_c", parseTimestamp("2022-07-29 18:00:22"));
-                    vals.put("timestamp6_c", parseTimestamp("2020-07-17 18:00:22"));
+                    vals.put(key_timestamp6_c, parseTimestamp("2020-07-17 18:00:22"));
                     vals.put("date_c", parseDate("2020-07-17"));
                     vals.put("time_c", RowValsExample.RowVal.time(("9:00:22")));
                     vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0) // BigDecimal.valueOf(500).setScale(BIG_DECIMAL_SCALA)

@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -68,7 +69,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
     @Override
     protected final CDCTestSuitParams.Builder suitParamBuilder() {
-        return new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder();
+        return CDCTestSuitParams.chunjunBuilder();//.Builder.ChunjunSuitParamsBuilder();
     }
 
 //    protected abstract TestRow.ValProcessor rewriteExpectValProcessor(TestRow.ValProcessor valProcess);
@@ -189,9 +190,9 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
     }
 
 
-    private static CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder chunjunSuitParamBuilder() {
-        return new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder();
-    }
+//    private static CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder chunjunSuitParamBuilder() {
+//        return new CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder();
+//    }
 
     protected abstract MQListenerFactory createMySQLCDCFactory();
 
@@ -235,7 +236,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
     //protected abstract void overwriteSelectedTab(CUDCDCTestSuit cdcTestSuit, String tabName, BasicDataSourceFactory dataSourceFactory, SelectedTab tab);
 
-    @Test
+   // @Test
     public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
         // mysqlCDCFactory.startupOptions = "latest";
@@ -259,8 +260,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName) {
-                return new TestTableRegisterFlinkSourceHandle(tabName, cols);
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
             }
         };
 
@@ -273,7 +276,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
      *
      * @throws Exception
      */
-    @Test
+   // @Test
     public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
         //  mysqlCDCFactory.startupOptions = "latest";
@@ -299,8 +302,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName) {
-                return new TestTableRegisterFlinkSourceHandle(tabName, cols);
+            protected IResultRows createConsumerHandle(String tabName,TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
             }
 
             @Override

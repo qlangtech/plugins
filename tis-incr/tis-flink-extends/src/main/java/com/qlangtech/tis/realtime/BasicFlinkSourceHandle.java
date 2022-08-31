@@ -61,6 +61,17 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
     public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
 
+//        if (!(sinKFactory instanceof IStreamTableCreator)) {
+//            throw new IllegalStateException("writer:"
+//                    + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
+//        }
+//        return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
+        return getStreamTableMeta(sinKFactory, tabName);
+    }
+
+    public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
+//        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
+
         if (!(sinKFactory instanceof IStreamTableCreator)) {
             throw new IllegalStateException("writer:"
                     + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
@@ -161,7 +172,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
 
 
     public TISSinkFactory getSinkFuncFactory() {
-        return sinkFuncFactory;
+        return this.sinkFuncFactory;
     }
 
     public void setSinkFuncFactory(TISSinkFactory sinkFuncFactory) {

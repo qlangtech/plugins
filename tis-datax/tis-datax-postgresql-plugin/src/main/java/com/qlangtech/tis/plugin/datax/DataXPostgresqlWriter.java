@@ -88,9 +88,8 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
             @Override
-            protected String getCreateTableName() {
-                return colEscapeChar() + ds.tabSchema + colEscapeChar()
-                        + "." + colEscapeChar() + super.getCreateTableName() + colEscapeChar();
+            protected CreateTableName getCreateTableName() {
+                return new CreateTableName(ds.tabSchema, tableMapper.getTo(), this);
             }
 
             @Override

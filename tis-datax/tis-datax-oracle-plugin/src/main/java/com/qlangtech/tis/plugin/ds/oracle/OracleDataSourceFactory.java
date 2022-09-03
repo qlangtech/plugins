@@ -45,8 +45,12 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     public static final String ORACLE = "Oracle";
 
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean asServiceName;
+//    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public Boolean asServiceName;
+//
+
+    @FormField(validate = Validator.require)
+    public ConnEntity connEntity;
 
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean allAuthorized;
@@ -57,9 +61,15 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
+    public String getDbName() {
+        return "default";
+    }
+
+    @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") + dbName;
-        return jdbcUrl;
+//        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") + dbName;
+//        return jdbcUrl;
+        return this.connEntity.buidJdbcUrl(ip, this.port);
     }
 
     protected String getRefectTablesSql() {
@@ -73,7 +83,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     @Override
     public String toString() {
         return "{" +
-                "asServiceName=" + asServiceName +
+                // "asServiceName=" + asServiceName +
                 ", allAuthorized=" + allAuthorized +
                 ", name='" + name + '\'' +
                 ", dbName='" + dbName + '\'' +
@@ -223,8 +233,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+//        return DriverManager.getConnection(jdbcUrl
+//                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
+
         return DriverManager.getConnection(jdbcUrl
-                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
+                , StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
     }
 
 

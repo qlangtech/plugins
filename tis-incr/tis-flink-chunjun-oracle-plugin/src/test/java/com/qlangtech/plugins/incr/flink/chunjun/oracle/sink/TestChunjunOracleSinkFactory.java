@@ -26,6 +26,8 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
+import com.qlangtech.tis.plugin.ds.oracle.impl.ServiceNameConnEntity;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpdateType;
@@ -66,9 +68,19 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
         oracleDS.password = oracleContainer.getPassword();
         oracleDS.port = oracleContainer.getOraclePort();
 
-        oracleDS.asServiceName = !oracleContainer.isUsingSid();
+        //oracleDS.asServiceName = !oracleContainer.isUsingSid();
 
-        oracleDS.dbName = oracleDS.asServiceName ? oracleContainer.getDatabaseName() : oracleContainer.getSid();
+        if (oracleContainer.isUsingSid()) {
+            SIDConnEntity sidConn = new SIDConnEntity();
+            sidConn.sid = oracleContainer.getSid();
+            oracleDS.connEntity = sidConn;
+        } else {
+            ServiceNameConnEntity serviceConn = new ServiceNameConnEntity();
+            serviceConn.serviceName = oracleContainer.getDatabaseName();
+            oracleDS.connEntity = serviceConn;
+        }
+
+       // oracleDS.dbName = oracleDS.asServiceName ? oracleContainer.getDatabaseName() : oracleContainer.getSid();
         oracleDS.nodeDesc = oracleContainer.getHost();//.getJdbcUrl()
 
         oracleDS.allAuthorized = true;

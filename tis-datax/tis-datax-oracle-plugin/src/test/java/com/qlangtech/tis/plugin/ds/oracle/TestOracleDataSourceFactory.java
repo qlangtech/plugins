@@ -24,13 +24,12 @@ import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
 import junit.framework.TestCase;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Time;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,8 +81,8 @@ public class TestOracleDataSourceFactory extends TestCase {
 
             Statement statement1 = conn.createStatement();
             ResultSet resultSet = statement1.executeQuery("select \"id\" , \"time_c\" from  \"time_test\"");
-            while(resultSet.next()){
-                System.out.println(resultSet.getObject(1)+","+resultSet.getObject(2));
+            while (resultSet.next()) {
+                System.out.println(resultSet.getObject(1) + "," + resultSet.getObject(2));
             }
         });
     }
@@ -91,12 +90,15 @@ public class TestOracleDataSourceFactory extends TestCase {
     public static OracleDataSourceFactory createOracleDataSourceFactory() {
         OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
         dsFactory.name = "xe";
-        dsFactory.dbName = "xe";
+       // dsFactory.dbName = "xe";
         dsFactory.userName = "system";
         dsFactory.password = "oracle";
         dsFactory.nodeDesc = "192.168.28.201";
         dsFactory.port = 1521;
-        dsFactory.asServiceName = false;
+
+        SIDConnEntity connEntity = new SIDConnEntity();
+        connEntity.sid = "xe";
+        dsFactory.connEntity = connEntity;
         return dsFactory;
     }
 }

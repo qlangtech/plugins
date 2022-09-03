@@ -31,8 +31,10 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.RowKind;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -67,14 +69,20 @@ public class TestChunjunOracleSourceFactory {
     public static void initialize() throws Exception {
         TestChunjunOracleSinkFactory.initialize();
         oracleDS = Objects.requireNonNull(TestChunjunOracleSinkFactory.oracleDS, "oracleDS can not be null");
-        initializePostgresTable("column_type_test");
+        initializeOracleTable("column_type_test");
+        List<String> tables = oracleDS.getTablesInDB();
+        String full_types = "full_types";
+        Optional<String> find = tables.stream().filter((tab) -> {
+            return full_types.equals(StringUtils.substringAfter(tab, "."));
+        }).findFirst();
+        Assert.assertTrue("table must present:" + full_types, find.isPresent());
     }
 
     /**
      * Executes a JDBC statement using the default jdbc config without autocommitting the
      * connection.
      */
-    protected static void initializePostgresTable(String sqlFile) {
+    protected static void initializeOracleTable(String sqlFile) {
         final String ddlFile = String.format("ddl/%s.sql", sqlFile);
         final URL ddlTestFile = TestChunjunOracleSourceFactory.class.getClassLoader().getResource(ddlFile);
         assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
@@ -257,7 +265,7 @@ public class TestChunjunOracleSourceFactory {
                     vals = Maps.newHashMap();
                     vals.put(tabNameFull_types_pk, RowValsExample.RowVal.$((long) i));
                     vals.put(key_bytea_c, RowValsExample.RowVal.stream("bytea_c_val"));
-                    vals.put("small_c", RowValsExample.RowVal.$( 2l));
+                    vals.put("small_c", RowValsExample.RowVal.$(2l));
                     vals.put("int_c", RowValsExample.RowVal.$(32768l));
                     vals.put("big_c", RowValsExample.RowVal.$(2147483648l));
                     vals.put("real_c", RowValsExample.RowVal.$(5.5f));

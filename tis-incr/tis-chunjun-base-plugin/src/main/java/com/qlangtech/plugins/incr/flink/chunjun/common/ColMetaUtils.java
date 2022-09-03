@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +36,16 @@ public class ColMetaUtils {
     public static List<TableCols.ColMeta> getColMetas(DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
         return meta.stream().map((col) -> {
-            return new TableCols.ColMeta(col.getName(), col.getType());
+            return createColMeta(col);
         }).collect(Collectors.toList());
+    }
+
+    private static TableCols.ColMeta createColMeta(ColumnMetaData col) {
+        return new TableCols.ColMeta(col.getName(), col.getType());
+    }
+
+    public static Map<String, TableCols.ColMeta> getColMetasMap(DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
+        List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
+        return meta.stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> createColMeta(c)));
     }
 }

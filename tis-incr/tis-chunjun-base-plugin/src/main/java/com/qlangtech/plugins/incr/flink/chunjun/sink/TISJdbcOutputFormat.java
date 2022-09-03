@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -45,8 +46,8 @@ public class TISJdbcOutputFormat extends JdbcOutputFormat {
     }
 
     @Override
-    protected List<TableCols.ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetas(this.dsFactory, dbConn, jdbcConf);
+    protected Map<String, TableCols.ColMeta> getTableMetaData() {
+        return ColMetaUtils.getColMetasMap(this.dsFactory, dbConn, jdbcConf);
     }
 
     @Override

@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dtstack.chunjun.conf.FieldConf;
 import com.dtstack.chunjun.conf.OperatorConf;
 import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.doris.options.DorisConfBuilder;
@@ -26,28 +27,31 @@ import com.dtstack.chunjun.connector.doris.options.DorisKeys;
 import com.dtstack.chunjun.connector.doris.options.LoadConf;
 import com.dtstack.chunjun.connector.doris.sink.DorisHttpOutputFormatBuilder;
 import com.dtstack.chunjun.connector.doris.sink.DorisSinkFactory;
+import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
-import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
-import com.dtstack.chunjun.sink.SinkFactory;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.BasicUpdate;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -57,8 +61,8 @@ import org.apache.flink.util.Preconditions;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -72,14 +76,52 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
+    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     protected boolean supportUpsetDML() {
         return false;
     }
 
+    private transient List<IColMetaGetter> colsMeta;
+
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        throw new UnsupportedOperationException();
+    protected List<IColMetaGetter> getColsMeta(IDataxProcessor.TableAlias tableName
+            , BasicDataSourceFactory dsFactory, CreateChunjunSinkFunctionResult sinkFunc) {
+        //return super.getColsMeta(tableName, dsFactory, sinkFunc);
+
+        if (colsMeta == null) {
+
+            Map<String, TableCols.ColMeta> colsMap = Maps.newHashMap();
+            dsFactory.visitFirstConnection((conn) -> {
+                colsMap.putAll(ColMetaUtils.getColMetasMap(dsFactory, conn, new JdbcConf() {
+                    @Override
+                    public String getTable() {
+                        return tableName.getTo();
+                    }
+                }));
+            });
+            // 为了保证RowData创建的字段顺序( 由FieldConfig顺序决定 )
+            DorisSinkFactory sinkFactory = (DorisSinkFactory) sinkFunc.getSinkFactory();
+            colsMeta = Lists.newArrayList();
+            for (FieldConf field : sinkFactory.options.getColumn()) {
+                colsMeta.add(Objects.requireNonNull(colsMap.get(field.getName())
+                        , "fileName:" + field.getName() + " relevant colMeta can not be null"));
+            }
+            if (CollectionUtils.isEmpty(colsMeta)) {
+                throw new IllegalStateException("colsMeta can not be empty,tableName:" + tableName.toString());
+            }
+        }
+        return colsMeta;
     }
+
+
+//    @Override
+//    protected List<IColMetaGetter> getColsMeta(Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> sinkFunc) {
+//        return sinkFunc.getRight().colsMeta.stream().collect(Collectors.toList());
+//    }
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
@@ -113,11 +155,12 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected SinkFactory createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf
-            , AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref) {
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
+            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
 
-        return new DorisSinkFactory(syncConf) {
+        final CreateChunjunSinkFunctionResult createSinkResult = new CreateChunjunSinkFunctionResult();
+
+        createSinkResult.setSinkFactory(new DorisSinkFactory(syncConf) {
 
             @Override
             protected DorisConfBuilder createDorisConfBuilder(OperatorConf parameter, LoadConf loadConf) {
@@ -149,19 +192,21 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
             @Override
             protected DataStreamSink<RowData> createOutput(DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
-
+                // JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
                 //Preconditions.checkNotNull(dataSet);
                 Preconditions.checkNotNull(outputFormat);
 
                 SinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
 
-                ref.set(Triple.of(sinkFunction, null, null));
+                createSinkResult.setSinkFunction(sinkFunction);
+//                ref.set(Triple.of(sinkFunction, null, null));
 
 
                 return null;
             }
-        };
+        });
+        return createSinkResult;
     }
 
 

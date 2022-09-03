@@ -16,23 +16,20 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.connector.starrocks.TestStarRocksSinkFactory;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
+
+import com.dtstack.chunjun.connector.clickhouse.dialect.ClickhouseDialect;
+import com.dtstack.chunjun.converter.RawTypeConverter;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-12 16:05
+ * @create: 2022-09-02 09:04
  **/
+public class TISClickhouseDialect extends ClickhouseDialect {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestStarRocksSinkFactory.class})
-public class TestAll {
-
-
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestStarRocksSinkFactory.class);
-//        return suite;
-//    }
+    @Override
+    public RawTypeConverter getRawTypeConverter() {
+        return (colMeta) -> AbstractRowDataMapper.mapFlinkCol(colMeta).type;
+    }
 }

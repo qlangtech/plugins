@@ -31,7 +31,10 @@
     <artifactId>tis-sink-starrocks-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
+<!--       -->
         <flink.connector.starrocks.version>1.2.2_flink-1.13_${scala.binary.version}</flink.connector.starrocks.version>
+<!--        <flink.connector.starrocks.version>tis_v1.2.3</flink.connector.starrocks.version>-->
+
     </properties>
     <build>
         <resources>

@@ -54,7 +54,8 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-29 16:55
  **/
-public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> extends AbstractTestBase implements TISEasyMock {
+public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
+        extends AbstractTestBase implements TISEasyMock {
     public void testLoadDescriptorLoad() {
         List<Descriptor<TISSinkFactory>> descriptors = TISSinkFactory.sinkFactory.descriptors();
         Assert.assertEquals(1, descriptors.size());
@@ -176,7 +177,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable> exte
 
         DataStreamSource<DTO> source =
                 env.addSource(new TestDataSourceFunction());
-        sinkFunc.add2Sink(source);
+       // sinkFunc.add2Sink(source);
        // source.addSink();
 
         env.execute("Elasticsearch Sink Test");

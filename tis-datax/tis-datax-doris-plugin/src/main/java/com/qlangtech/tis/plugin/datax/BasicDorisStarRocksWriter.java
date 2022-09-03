@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 14:46
  **/
-public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
+public abstract class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadProps;
@@ -113,84 +113,94 @@ public class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
         // https://doris.apache.org/master/zh-CN/sql-reference/sql-statements/Data%20Definition/CREATE%20TABLE.html#create-table
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
-            @Override
-            protected void appendExtraColDef(List<ColWrapper> pks) {
+        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
+
+        return createTableSqlBuilder.build();
+    }
+
+    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper);
+
+
+
+    protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
+        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper) {
+            super(tableMapper);
+        }
+
+        @Override
+        protected void appendExtraColDef(List<ColWrapper> pks) {
 //                if (pk != null) {
 //                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 //                }
+        }
+
+        protected abstract String getUniqueKeyToken();
+
+
+        @Override
+        protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<ISelectedTab.ColMeta> cols) {
+            // 将主键排在最前面
+            List<ColWrapper> result = Lists.newArrayList(pks);
+            cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
+                result.add(createColWrapper(c));
+            });
+            return result;
+        }
+
+        @Override
+        protected void appendTabMeta(List<ColWrapper> pks) {
+            script.append(" ENGINE=olap").append("\n");
+            if (pks.size() > 0) {
+                script.append(getUniqueKeyToken() + "(").append(pks.stream()
+                        .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
+                        .collect(Collectors.joining(","))).append(")\n");
             }
-
-
-            @Override
-            protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<ISelectedTab.ColMeta> cols) {
-                // 将主键排在最前面
-                List<ColWrapper> result = Lists.newArrayList(pks);
-                cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
-                    result.add(createColWrapper(c));
-                });
-                return result;
-            }
-
-            @Override
-            protected void appendTabMeta(List<ColWrapper> pks) {
-                script.append(" ENGINE=olap").append("\n");
-                if (pks.size() > 0) {
-                    script.append("PRIMARY KEY(").append(pks.stream()
-                            .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
-                            .collect(Collectors.joining(","))).append(")\n");
-                }
-                script.append("DISTRIBUTED BY HASH(");
-                if (pks.size() > 0) {
-                    script.append(pks.stream()
-                            .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
-                            .collect(Collectors.joining(",")));
+            script.append("DISTRIBUTED BY HASH(");
+            if (pks.size() > 0) {
+                script.append(pks.stream()
+                        .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
+                        .collect(Collectors.joining(",")));
+            } else {
+                List<ISelectedTab.ColMeta> cols = this.getCols();
+                Optional<ISelectedTab.ColMeta> firstCol = cols.stream().findFirst();
+                if (firstCol.isPresent()) {
+                    script.append(firstCol.get().getName());
                 } else {
-                    List<ISelectedTab.ColMeta> cols = this.getCols();
-                    Optional<ISelectedTab.ColMeta> firstCol = cols.stream().findFirst();
-                    if (firstCol.isPresent()) {
-                        script.append(firstCol.get().getName());
-                    } else {
-                        throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
+                    throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
+                }
+            }
+            script.append(")\n");
+            script.append("BUCKETS 10\n");
+            script.append("PROPERTIES(\"replication_num\" = \"1\")");
+        }
+
+        @Override
+        protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            return new ColWrapper(c) {
+                @Override
+                public String getMapperType() {
+                    return convertType(this.meta).token;
+                }
+
+                @Override
+                protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
+                    if (this.meta.isPk()) {
+                        ddlScript.append(" NOT NULL");
                     }
                 }
-                script.append(")\n");
-                script.append("BUCKETS 10\n");
-                script.append("PROPERTIES(\"replication_num\" = \"1\")");
-            }
+            };
+        }
 
-            @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
-                return new ColWrapper(c) {
-                    @Override
-                    public String getMapperType() {
-                        return convertType(this.meta).token;
-                    }
-
-                    @Override
-                    protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                        if (this.meta.isPk()) {
-                            ddlScript.append(" NOT NULL");
-                        }
-                    }
-                };
-            }
-
-            protected DorisType convertType(ISelectedTab.ColMeta col) {
-                DataType type = col.getType();
-                return type.accept(columnTokenRecognise);
-            }
-
-
-        };
-
-        return createTableSqlBuilder.build();
+        protected DorisType convertType(ISelectedTab.ColMeta col) {
+            DataType type = col.getType();
+            return type.accept(columnTokenRecognise);
+        }
     }
 
     public static class DorisType implements Serializable {

@@ -83,7 +83,9 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     public Connection getConnection(String jdbcUrl) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToEmpty(this.userName));
-        props.put("password", StringUtils.trimToEmpty(password));
+        if(StringUtils.isNotEmpty(this.password)){
+            props.put("password", StringUtils.trimToEmpty(this.password));
+        }
         try {
             return mysql5Driver.connect(jdbcUrl, props);
         } catch (SQLException e) {

@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -144,7 +145,8 @@ public class TestChunjunClickhouseSinkFactory
             File ddlDir = folder.newFolder("ddl");
 
             FileUtils.write(new File(ddlDir, tableName + ".sql")
-                    , IOUtils.loadResourceFromClasspath(TestChunjunClickhouseSinkFactory.class, "totalpay-create-ddl.sql"), TisUTF8.get());
+                    , IOUtils.loadResourceFromClasspath(
+                            TestChunjunClickhouseSinkFactory.class, "totalpay-create-ddl.sql"), TisUTF8.get());
 
             EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
 
@@ -184,7 +186,7 @@ public class TestChunjunClickhouseSinkFactory
 
             EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();
             selectedTabs.add(totalpayinfo);
-            EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(2);
+            EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).times(1);
 
             EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
 
@@ -235,9 +237,9 @@ public class TestChunjunClickhouseSinkFactory
             // d.setTableName(tableName);
             //  Map<String, Object> after = Maps.newHashMap();
             String colIdVal = "334556";
+            d.setField(2, StringData.fromString(colIdVal));
             d.setField(0, StringData.fromString("123dsf124325253dsf123"));
             d.setField(1, StringData.fromString("5"));
-            d.setField(2, StringData.fromString(colIdVal));
             d.setField(3, 20211113115959l);
             //after.put(colNum, );
             // after.put(colId, "123dsf124325253dsf123");
@@ -274,15 +276,16 @@ public class TestChunjunClickhouseSinkFactory
             try {
                 try (Connection conn = sourceFactory.getConnection(jdbcUrls[0])) {
                     Statement statement = conn.createStatement();
-                    //
-                    ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName + " where id='" + colIdVal + "'");
+                    //+ " where id='" + colIdVal + "'"
+                    ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName );
                     if (resultSet.next()) {
-                        StringBuffer rowDesc = new StringBuffer();
-                        for (String col : colNames) {
-                            Object obj = resultSet.getObject(col);
-                            rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
-                        }
-                        System.out.println("test_output==>" + rowDesc.toString());
+                        IResultRows.printRow(resultSet);
+//                        StringBuffer rowDesc = new StringBuffer();
+//                        for (String col : colNames) {
+//                            Object obj = resultSet.getObject(col);
+//                            rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
+//                        }
+//                        System.out.println("test_output==>" + rowDesc.toString());
                         Assert.assertEquals(colIdVal, resultSet.getString(colId));
                     } else {
                         Assert.fail("have not find row with id=" + colIdVal);

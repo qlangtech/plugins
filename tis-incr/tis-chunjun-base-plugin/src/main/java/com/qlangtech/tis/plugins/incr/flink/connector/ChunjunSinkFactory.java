@@ -45,10 +45,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -56,7 +53,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -128,8 +124,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
 
-            AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> sinkFuncRef = new AtomicReference<>();
-            Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> sinkFunc = null;
+            AtomicReference<CreateChunjunSinkFunctionResult> sinkFuncRef = new AtomicReference<>();
+            CreateChunjunSinkFunctionResult sinkFunc = null;
             final IDataxProcessor.TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
@@ -152,7 +148,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 // FIXME 这里不能用 MySQLSelectedTab
-                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, (SelectedTab) selectedTab.get(), jdbcUrl, dsFactory, dataXWriter));
+                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName
+                            , (SelectedTab) selectedTab.get(), jdbcUrl, dsFactory, dataXWriter));
 
                 } catch (Throwable e) {
                     exceptionLoader.set(new Object[]{jdbcUrl, e});
@@ -168,8 +165,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 throw new IllegalStateException("param parallelism can not be null");
             }
 
-            sinkFuncs.put(tableName, new RowDataSinkFunc(tableName //, sinkFunc.getRight()
-                    , sinkFunc.getLeft(), sinkFunc.getRight().colsMeta.stream().map((c) -> c).collect(Collectors.toList()), supportUpsetDML()
+            sinkFuncs.put(tableName, new RowDataSinkFunc(tableName
+                    , sinkFunc.getSinkFunction(), this.getColsMeta(tableName, dsFactory, sinkFunc), supportUpsetDML()
                     , this.parallelism));
         }
 
@@ -177,6 +174,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
             throw new IllegalStateException("size of sinkFuncs can not be small than 1");
         }
         return sinkFuncs;
+    }
+
+    protected List<IColMetaGetter> getColsMeta(IDataxProcessor.TableAlias tableName, BasicDataSourceFactory dsFactory
+            , CreateChunjunSinkFunctionResult sinkFunc) {
+        return sinkFunc.getOutputFormat().colsMeta.stream().collect(Collectors.toList());
     }
 
     protected abstract boolean supportUpsetDML();
@@ -191,7 +193,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      * @return
      * @see JdbcSinkFactory
      */
-    private Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> createSinkFunction(
+    private CreateChunjunSinkFunctionResult createSinkFunction(
             String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
         SyncConf syncConf = new SyncConf();
@@ -232,7 +234,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         content.setWriter(writer);
         jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
         syncConf.setJob(jobConf);
-        Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> sinkFunc
+        CreateChunjunSinkFunctionResult sinkFunc
                 = createChunjunSinkFunction(jdbcUrl, dsFactory, dataXWriter, syncConf);
         return sinkFunc;
 
@@ -247,19 +249,69 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         writer.setParameter(params);
     }
 
-    private Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> createChunjunSinkFunction(
+    private CreateChunjunSinkFunctionResult createChunjunSinkFunction(
             String jdbcUrl, BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
-        AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref = new AtomicReference<>();
+        // AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref = new AtomicReference<>();
 
-        SinkFactory sinkFactory = createSinkFactory(jdbcUrl, dsFactory, dataXWriter, syncConf, ref);
-        sinkFactory.createSink(null);
-        return Objects.requireNonNull(ref.get(), "sinkFunction can not be null");
+        CreateChunjunSinkFunctionResult sinkFactory = createSinkFactory(jdbcUrl, dsFactory, dataXWriter, syncConf);
+        sinkFactory.initialize();
+        return Objects.requireNonNull(sinkFactory, "create result can not be null");
     }
 
-    protected SinkFactory createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf
-            , AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref) {
-        return new JdbcSinkFactory(syncConf, createJdbcDialect(syncConf)) {
+
+    public static class CreateChunjunSinkFunctionResult {
+        SinkFunction<RowData> sinkFunction;
+        JdbcColumnConverter columnConverter;
+        JdbcOutputFormat outputFormat;
+        SinkFactory sinkFactory;
+
+        public void initialize() {
+            sinkFactory.createSink(null);
+        }
+
+        public SinkFunction<RowData> getSinkFunction() {
+            return sinkFunction;
+        }
+
+        public void setSinkFunction(SinkFunction<RowData> sinkFunction) {
+            this.sinkFunction = sinkFunction;
+        }
+
+//        public CreateChunjunSinkFunctionResult(SinkFactory sinkFactory, SinkFunction<RowData> sinkFunction) {
+//            this.sinkFunction = sinkFunction;
+//            this.sinkFactory = sinkFactory;
+//        }
+
+        public JdbcColumnConverter getColumnConverter() {
+            return columnConverter;
+        }
+
+        public void setColumnConverter(JdbcColumnConverter columnConverter) {
+            this.columnConverter = columnConverter;
+        }
+
+        public JdbcOutputFormat getOutputFormat() {
+            return outputFormat;
+        }
+
+        public void setOutputFormat(JdbcOutputFormat outputFormat) {
+            this.outputFormat = outputFormat;
+        }
+
+        public SinkFactory getSinkFactory() {
+            return sinkFactory;
+        }
+
+        public void setSinkFactory(SinkFactory sinkFactory) {
+            this.sinkFactory = sinkFactory;
+        }
+    }
+
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
+            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
+        final CreateChunjunSinkFunctionResult createResult = new CreateChunjunSinkFunctionResult();
+
+        createResult.setSinkFactory(new JdbcSinkFactory(syncConf, createJdbcDialect(syncConf)) {
             @Override
             public void initCommonConf(ChunJunCommonConf commonConf) {
                 super.initCommonConf(commonConf);
@@ -289,10 +341,17 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 JdbcColumnConverter rowConverter = (JdbcColumnConverter) jdbcDialect.getColumnConverter(rowType, jdbcConf);
                 DtOutputFormatSinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
-                ref.set(Triple.of(sinkFunction, rowConverter, routputFormat));
+
+                createResult.setColumnConverter(rowConverter);
+                createResult.setSinkFunction(sinkFunction);
+                createResult.setOutputFormat(routputFormat);
+                //   ref.set(Triple.of(sinkFunction, rowConverter, routputFormat));
                 return null;
             }
-        };
+        });
+
+
+        return createResult;
     }
 
 

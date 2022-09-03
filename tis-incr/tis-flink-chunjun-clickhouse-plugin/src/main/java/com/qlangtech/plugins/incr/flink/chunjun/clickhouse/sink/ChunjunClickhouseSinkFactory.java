@@ -19,7 +19,6 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.conf.SyncConf;
-import com.dtstack.chunjun.connector.clickhouse.dialect.ClickhouseDialect;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
@@ -42,7 +41,7 @@ import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
     @Override
     protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new ClickhouseDialect();
+        return new TISClickhouseDialect();
     }
 
     @Override

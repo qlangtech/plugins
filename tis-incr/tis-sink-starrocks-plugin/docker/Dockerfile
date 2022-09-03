@@ -10,7 +10,7 @@ FROM apache/incubator-doris:build-env-ldb-toolchain-latest
 WORKDIR /opt/
 
 
-EXPOSE 8030 9030
+EXPOSE 8030 9030 8040
 
 ADD ./StarRocks-2.3.1.tar.gz .
 ADD ./run.sh .

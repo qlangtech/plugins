@@ -19,34 +19,44 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
+import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
-import com.qlangtech.tis.trigger.util.JsonUtil;
-import com.qlangtech.tis.util.DescriptorsJSON;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.io.FileUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.easymock.EasyMock;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestRule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,52 +65,32 @@ import java.util.Map;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-12 09:54
  **/
-public class TestStarRocksSinkFactory implements TISEasyMock {
+public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements TISEasyMock {
+    private static final Logger log = LoggerFactory.getLogger(TestStarRocksSinkFactory.class);
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+    @ClassRule(order = 100)
+    public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
 
-    private static final int DORIS_FE_PORT = 9030;
-    private static final int DORIS_FE_LOAD_PORT = 8030;
-    private static final int DORIS_BE_PORT = 9050;
-    private static final int DORIS_BE_LOAD_PORT = 8040;
-    private static final String DORIS_FE_SERVICE = "doris-fe_1";
-    private static final String DORIS_BE_SERVICE = "doris-be_1";
+//    @Test
+//    public void testGetConfigOption() {
+//        String desc = StarRocksSinkFactory.desc("sinkSemantic");
+//        Assert.assertNotNull(desc);
+//    }
+//
+//    @Test
+//    public void testDescriptorsJSONGenerate() {
+//        StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
+//        DescriptorsJSON descJson = new DescriptorsJSON(sinkFactory.getDescriptor());
+//
+//        JsonUtil.assertJSONEqual(StarRocksSinkFactory.class, "starrocks-sink-factory.json"
+//                , descJson.getDescriptorsJSON(), (m, e, a) -> {
+//                    Assert.assertEquals(m, e, a);
+//                });
+//
+//    }
 
-    @ClassRule
-    public static DockerComposeContainer environment =
-            new DockerComposeContainer(new File("src/test/resources/compose-starrocks-test.yml"))
-                    .withExposedService(DORIS_FE_SERVICE, DORIS_FE_PORT)
-                    .withExposedService(DORIS_FE_SERVICE, DORIS_FE_LOAD_PORT)
-                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_PORT)
-                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_LOAD_PORT);
-
-    // docker run -d -p 1521:1521 -e ORACLE_PASSWORD=test -e ORACLE_DATABASE=tis gvenzl/oracle-xe:18.4.0-slim
-    public static final DockerImageName STARROCKS_DOCKER_IMAGE_NAME = DockerImageName.parse(
-            "tis/starrocks"
-            // "registry.cn-hangzhou.aliyuncs.com/tis/oracle-xe:18.4.0-slim"
-    );
-
-    @BeforeClass
-    public static void initialize() {
-        GenericContainer starRocksContainer = new GenericContainer(STARROCKS_DOCKER_IMAGE_NAME);
-        starRocksContainer.start();
-    }
-
-
-    public void testGetConfigOption() {
-        String desc = StarRocksSinkFactory.desc("sinkSemantic");
-        Assert.assertNotNull(desc);
-    }
-
-    public void testDescriptorsJSONGenerate() {
-        StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
-        DescriptorsJSON descJson = new DescriptorsJSON(sinkFactory.getDescriptor());
-
-        JsonUtil.assertJSONEqual(StarRocksSinkFactory.class, "starrocks-sink-factory.json"
-                , descJson.getDescriptorsJSON(), (m, e, a) -> {
-                    Assert.assertEquals(m, e, a);
-                });
-
-    }
-
+    @Test
     public void testStartRocksWrite() throws Exception {
 
         /**
@@ -133,12 +123,19 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         String updateDate = "update_date";
         String starTime = "start_time";
 
-        IDataxProcessor dataxProcessor = mock("dataxProcessor", IDataxProcessor.class);
+        DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
+        String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
+        File ddlDir = folder.newFolder("ddl");
+        DataxProcessor.processorGetter = (name) -> {
+            return dataxProcessor;
+        };
+        EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+
 
         IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
         List<ISelectedTab> selectedTabs = Lists.newArrayList();
         SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
-        EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).times(1);
+        EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).anyTimes();
         List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
@@ -176,7 +173,7 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         cm.setType(new DataType(Types.TIMESTAMP));
         cols.add(cm);
 
-        EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).times(2);
+        EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();
 
 
         selectedTabs.add(totalpayinfo);
@@ -184,15 +181,9 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
 
         EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader);
 
-        DorisSourceFactory sourceFactory = new DorisSourceFactory();
-        sourceFactory.loadUrl = "[\"192.168.28.201:8030\"]";
-        sourceFactory.userName = "root";
-        sourceFactory.dbName = "tis";
-        // sourceFactory.password = "";
-        sourceFactory.port = 9030;
-        sourceFactory.nodeDesc = "192.168.28.201";
+        DorisSourceFactory sourceFactory = createSourceFactory();
 
-        DataXDorisWriter dataXWriter = new DataXDorisWriter() {
+        DataXStarRocksWriter dataXWriter = new DataXStarRocksWriter() {
             @Override
             public Separator getSeparator() {
                 return new BasicDorisStarRocksWriter.Separator() {
@@ -215,6 +206,8 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         }; //mock("dataXWriter", DataXDorisWriter.class);
 
         dataXWriter.dataXName = dataXName;
+        dataXWriter.autoCreateTable = true;
+
         DataxWriter.dataxWriterGetter = (xName) -> {
             Assert.assertEquals(dataXName, xName);
             return dataXWriter;
@@ -231,6 +224,8 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
 //        sinkFactory.rowDelimiter = "x02";
         sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
         sinkFactory.sinkBatchFlushInterval = 2000l;
+        sinkFactory.sinkMaxRetries = 0l;
+        // sinkFactory.sinkBatchMaxRows=1l;
 
         System.out.println("sinkFactory.sinkBatchFlushInterval:" + sinkFactory.sinkBatchFlushInterval);
 
@@ -240,8 +235,14 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
         this.replay();
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
 
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayinfo));
+        Assert.assertNotNull("createDDL can not be empty", createDDL);
+        log.info("create table ddl:\n{}", createDDL);
+        FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
+
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+        String pkVal = "88888888887";
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = new DTO();
         d.setEventType(DTO.EventType.ADD);
@@ -249,7 +250,7 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         Map<String, Object> after = Maps.newHashMap();
         after.put(colEntityId, "334556");
         after.put(colNum, "5");
-        after.put(colId, "88888888887");
+        after.put(colId, pkVal);
         after.put(colCreateTime, "20211113115959");
         after.put(updateTime, "2021-12-17T09:21:20Z");
         after.put(starTime, "2021-12-18 09:21:20");
@@ -257,17 +258,45 @@ public class TestStarRocksSinkFactory implements TISEasyMock {
         d.setAfter(after);
         Assert.assertEquals(1, sinkFunction.size());
         for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFunction.entrySet()) {
+            DTOStream sourceStream = DTOStream.createDispatched(tableName);
+            ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d}));
 
-            entry.getValue().add2Sink(DTOStream.createDispatched(tableName).addStream(env.fromElements(new DTO[]{d})));
+            readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
+
+            entry.getValue().add2Sink(sourceStream);
 
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
             break;
         }
 
         env.execute("testJob");
-        Thread.sleep(14000);
+        Thread.sleep(10000);
+
+        sourceFactory.visitFirstConnection((conn) -> {
+            // boolean findVal = false;
+            try (Statement statement = conn.createStatement()) {
+
+                //+ " where " + colId + "='" + pkVal + "'"
+
+                try (ResultSet resultSet
+                             = statement.executeQuery(
+                        createDDL.getSelectAllScript())) {
+                    if (resultSet.next()) {
+                        IResultRows.printRow(resultSet);
+                        String actualPkVal = resultSet.getString(colId);
+                        Assert.assertEquals(pkVal, actualPkVal);
+                        //  findVal = true;
+                        System.out.println("have find a record of " + colId + ":" + actualPkVal);
+                    } else {
+                        Assert.fail("must find starrock record with colId:" + pkVal);
+                    }
+                }
+            }
+
+        });
 
         this.verifyAll();
     }
+
 
 }

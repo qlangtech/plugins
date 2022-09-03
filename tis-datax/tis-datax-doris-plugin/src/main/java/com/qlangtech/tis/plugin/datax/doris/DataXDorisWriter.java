@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.doris;
 
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -32,6 +33,18 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
  **/
 @Public
 public class DataXDorisWriter extends BasicDorisStarRocksWriter {
+
+
+    @Override
+    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
+        return new BasicCreateTableSqlBuilder(tableMapper) {
+            @Override
+            protected String getUniqueKeyToken() {
+                return "UNIQUE KEY";
+            }
+        };
+    }
+
 
 //    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})
 //    public String loadProps;

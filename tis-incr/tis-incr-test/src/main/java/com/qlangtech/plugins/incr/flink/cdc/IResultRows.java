@@ -23,6 +23,9 @@ import org.apache.flink.table.api.TableResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.CloseableIterator;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,6 +34,18 @@ import java.util.Objects;
  * @create: 2022-02-28 17:28
  **/
 public interface IResultRows {
+
+    public static void printRow(ResultSet resultSet) throws SQLException {
+        StringBuffer rowDesc = new StringBuffer();
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        String col = null;
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            col = metaData.getColumnName(i);
+            Object obj = resultSet.getObject(col);
+            rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
+        }
+        System.out.println("test_output==>" + rowDesc.toString());
+    }
 
     IConsumerHandle getConsumerHandle();
 

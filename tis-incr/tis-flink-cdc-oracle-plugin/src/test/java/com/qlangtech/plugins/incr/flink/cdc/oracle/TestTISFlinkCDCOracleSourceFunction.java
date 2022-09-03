@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
+import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
 import com.qlangtech.plugins.incr.flink.cdc.oracle.utils.OracleTestUtils;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
@@ -75,7 +76,9 @@ public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
         // debezium
         final String tabName = "DEBEZIUM.BASE";
 
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        CDCTestSuitParams suitParams = CDCTestSuitParams.createBuilder().setTabName(tabName).build();
+
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return createMySqlDataSourceFactory(dataxName);
@@ -101,7 +104,7 @@ public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
             }
         };
 
-        cdcTestSuit.startTest(mysqlCDCFactory, tabName);
+        cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
 

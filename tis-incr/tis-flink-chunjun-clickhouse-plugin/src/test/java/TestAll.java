@@ -16,20 +16,15 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.chunjun.postgresql;
-
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink.TestChunjunPostgreSQLSinkFactory;
-import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.TestChunjunPostreSQLSourceFactory;
+import com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink.TestChunjunClickhouseSinkFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-08-08 15:23
+ * @create: 2022-09-02 09:01
  **/
-
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestChunjunPostgreSQLSinkFactory.class, TestChunjunPostreSQLSourceFactory.class})
+@Suite.SuiteClasses({TestChunjunClickhouseSinkFactory.class})
 public class TestAll {
-
 }

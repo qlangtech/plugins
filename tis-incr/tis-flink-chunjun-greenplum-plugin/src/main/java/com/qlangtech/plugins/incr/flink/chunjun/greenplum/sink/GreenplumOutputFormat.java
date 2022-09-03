@@ -25,7 +25,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -45,8 +45,8 @@ public class GreenplumOutputFormat extends PostgresOutputFormat {
     }
 
     @Override
-    protected List<TableCols.ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetas(this.dsFactory, this.dbConn, this.jdbcConf);
+    protected Map<String, TableCols.ColMeta> getTableMetaData() {
+        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
     }
 
     @Override

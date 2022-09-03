@@ -22,6 +22,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,18 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             }
             tabs.add(tablesResult.getString(3));
         }
+    }
+
+    @Override
+    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+
+        if (Types.VARCHAR == dbColType) {
+            if (colSize < 1) {
+                colSize = Short.MAX_VALUE;
+            }
+        }
+
+        return new DataType(dbColType, typeName, colSize);
     }
 
     public final String getJdbcUrl() {

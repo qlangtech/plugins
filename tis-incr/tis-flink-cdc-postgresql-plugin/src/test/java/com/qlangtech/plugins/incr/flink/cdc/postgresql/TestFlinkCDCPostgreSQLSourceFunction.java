@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
+import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
@@ -57,7 +58,9 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
 
         final String tabName = "base";
 
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit() {
+        CDCTestSuitParams suitParam = CDCTestSuitParams.createBuilder().setTabName(tabName).build();
+
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return createPGDataSourceFactory(dataxName);
@@ -89,7 +92,7 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
             }
         };
 
-        cdcTestSuit.startTest(pgCDCFactory, tabName);
+        cdcTestSuit.startTest(pgCDCFactory);
 
     }
 

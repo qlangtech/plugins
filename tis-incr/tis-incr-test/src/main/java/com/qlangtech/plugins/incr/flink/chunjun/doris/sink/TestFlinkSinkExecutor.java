@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -57,9 +58,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.sql.Types;
+import java.sql.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -279,12 +278,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                     // + " where id='" + pk + "'"
                     try (ResultSet resultSet = statement.executeQuery(createDDL.getSelectAllScript())) {
                         if (resultSet.next()) {
-                            StringBuffer rowDesc = new StringBuffer();
-                            for (String col : colNames) {
-                                Object obj = resultSet.getObject(col);
-                                rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
-                            }
-                            System.out.println("test_output==>" + rowDesc.toString());
+                            IResultRows.printRow(resultSet);
                             Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
                         } else {
                             Assert.fail("have not find row with id=" + pk);

@@ -117,7 +117,7 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         assertEquals(
                 StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataxMySQLWriter.class, "create-application-ddl.sql"))
-                ,StringUtils.trimToEmpty( ddl.toString()));
+                ,StringUtils.trimToEmpty( ddl.getDDLScript().toString()));
     }
 
     private IDataxProcessor.TableMap getTabApplication(

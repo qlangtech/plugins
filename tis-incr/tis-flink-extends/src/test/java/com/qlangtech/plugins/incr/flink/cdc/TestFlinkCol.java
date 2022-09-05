@@ -16,26 +16,22 @@
  * limitations under the License.
  */
 
-import org.apache.commons.io.FileUtils;
+package com.qlangtech.plugins.incr.flink.cdc;
 
-import java.io.File;
-import java.util.jar.JarFile;
-
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-28 12:29
+ * @create: 2022-09-05 14:33
  **/
-public class Test {
+public class TestFlinkCol {
 
-    @org.junit.Test
-    public void test() throws Exception {
-
-        System.out.println(FileUtils.getTempDirectory());
-
-        JarFile jarFile = new JarFile(new File("/Users/mozhenghua/j2ee_solution/project/tis-solr/tis-console/target/tis.jar"));
-        jarFile.stream().forEach((e) -> {
-            System.out.println(e.getName());
-        });
+    @Test
+    public void testDate() {
+        FlinkCol.DateProcess process = new FlinkCol.DateProcess();
+        Assert.assertNotNull(process.apply("2021-12-09"));
+        Assert.assertNotNull(process.apply("2021-12-9"));
+        Assert.assertNotNull(process.apply("2021-2-9"));
     }
 }

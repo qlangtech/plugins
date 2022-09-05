@@ -18,8 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.source;
 
-//import com.qlangtech.plugins.incr.flink.chunjun.poll.Polling;
-
 import com.qlangtech.plugins.incr.flink.chunjun.poll.Polling;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;

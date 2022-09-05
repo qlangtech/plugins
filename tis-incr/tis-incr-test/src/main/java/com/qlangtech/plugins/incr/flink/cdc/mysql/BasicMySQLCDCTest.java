@@ -80,9 +80,6 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
     @Test
     public void testStuBinlogConsume() throws Exception {
 
-//        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
-//        mysqlCDCFactory.startupOptions = "latest";
-
 
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
 
@@ -94,28 +91,6 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
-
-//            @Override
-//            protected TestRow.ValProcessor getExpectValProcessor() {
-//                TestRow.ValProcessor valProcess = super.getExpectValProcessor();
-//                if (suitParam.rewriteExpectValProcessor != null) {
-//                    return suitParam.rewriteExpectValProcessor.apply(valProcess);
-//                } else {
-//                    return valProcess;
-//                }
-//                // return rewriteExpectValProcessor(valProcess);
-//            }
-
-//            @Override
-//            protected TestRow.ValProcessor getActualValProcessor(String tabName, IResultRows consumerHandle) {
-//                TestRow.ValProcessor valProcess = super.getActualValProcessor(tabName, consumerHandle);
-//                if (suitParam.rewriteActualValProcessor != null) {
-//                    return suitParam.rewriteActualValProcessor.apply(tabName, valProcess);
-//                } else {
-//                    return valProcess;
-//                }
-//                // return rewriteActualValProcessor(tabName, valProcess);
-//            }
 
             @Override
             protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
@@ -236,7 +211,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
     //protected abstract void overwriteSelectedTab(CUDCDCTestSuit cdcTestSuit, String tabName, BasicDataSourceFactory dataSourceFactory, SelectedTab tab);
 
-   // @Test
+    // @Test
     public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
         // mysqlCDCFactory.startupOptions = "latest";
@@ -276,7 +251,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
      *
      * @throws Exception
      */
-   // @Test
+    // @Test
     public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
         //  mysqlCDCFactory.startupOptions = "latest";
@@ -302,7 +277,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName,TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;

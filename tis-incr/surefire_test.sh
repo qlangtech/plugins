@@ -1,4 +1,4 @@
-mvn test -DoutputDirectory=../../../surefire -Dmaven.test.failure.ignore=true  -pl\
+mvn test -DreportsDirectory=/tmp/surefire -Dmaven.test.failure.ignore=false  -pl\
  tis-flink-chunjun-postgresql-plugin\
 ,tis-flink-chunjun-clickhouse-plugin\
 ,tis-flink-chunjun-doris-plugin\

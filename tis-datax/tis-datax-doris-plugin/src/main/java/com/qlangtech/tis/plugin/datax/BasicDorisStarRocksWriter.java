@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 14:46
  **/
-public abstract class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<DorisSourceFactory> {
+public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> extends BasicDataXRdbmsWriter<DS> {
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String loadProps;
@@ -125,7 +125,6 @@ public abstract class BasicDorisStarRocksWriter extends BasicDataXRdbmsWriter<Do
     }
 
     protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper);
-
 
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {

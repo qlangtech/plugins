@@ -55,7 +55,7 @@ public class TISPostgresqlDialect extends PostgresqlDialect {
 
     @Override
     public RawTypeConverter getRawTypeConverter() {
-        return (colMeta) -> AbstractRowDataMapper.mapFlinkCol(colMeta).type;
+        return (colMeta) -> AbstractRowDataMapper.mapFlinkCol(colMeta, -1).type;
     }
 
 

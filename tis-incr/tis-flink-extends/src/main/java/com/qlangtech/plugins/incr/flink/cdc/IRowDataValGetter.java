@@ -18,18 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import org.apache.flink.table.data.RowData;
+import java.io.Serializable;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-01 11:26
+ * @create: 2022-09-05 15:10
  **/
-public interface DeFunction {
-    /**
-     * 逆向操作
-     *
-     * @param o
-     * @return
-     */
-    public default Object deApply(Object o) {
-        throw new UnsupportedOperationException();
-    }
+@FunctionalInterface
+public interface IRowDataValGetter extends Serializable {
+    public Object getVal(RowData rowData);//, int colIndex
 }

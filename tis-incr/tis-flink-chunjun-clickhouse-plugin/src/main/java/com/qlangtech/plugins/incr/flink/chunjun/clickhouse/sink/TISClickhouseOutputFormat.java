@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
@@ -51,7 +52,7 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     }
 
     @Override
-    protected Map<String,TableCols.ColMeta> getTableMetaData() {
+    protected Map<String, ColMeta> getTableMetaData() {
         return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
     }
 }

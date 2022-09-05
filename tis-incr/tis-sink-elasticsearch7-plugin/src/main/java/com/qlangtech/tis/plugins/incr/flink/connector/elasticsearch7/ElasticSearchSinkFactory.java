@@ -107,39 +107,6 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
          * 初始化索引Schema
          *******************************************************/
         dataXWriter.initialIndex(esSchema);
-//        JSONArray schemaCols = esSchema.getSchemaCols();
-//        ESClient esClient = new ESClient();
-//        esClient.createClient(token.getEndpoint(),
-//                token.getAccessKeyId(),
-//                token.getAccessKeySecret(),
-//                false,
-//                300000,
-//                false,
-//                false);
-//        try {
-//            esClient.createIndex(dataXWriter.getIndexName()
-//                    , dataXWriter.type
-//                    , esClient.genMappings(schemaCols, dataXWriter.type, (columnList) -> {
-//                    }), dataXWriter.settings, false);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        } finally {
-//            try {
-//                esClient.closeJestClient();
-//            } catch (Throwable e) {
-//
-//            }
-//        }
-        //if (!) {
-        // throw new IllegalStateException("create index or mapping failed indexName:" + dataXWriter.getIndexName());
-        //}
-
-
-//        Map<String, String> config = new HashMap<>();
-//        config.put("cluster.name", "my-cluster-name");
-//// This instructs the sink to emit after every element, otherwise they would be buffered
-//        config.put("bulk.flush.max.actions", "1");
-
         List<HttpHost> transportAddresses = new ArrayList<>();
         transportAddresses.add(HttpHost.create(token.getEndpoint()));
 
@@ -163,32 +130,11 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
             sinkBuilder.setBulkFlushInterval(this.bulkFlushIntervalMs);
         }
 
-//        new RestClientBuilder.HttpClientConfigCallback() {
-//            @Override
-//            public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-//                return httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-//            }
-//        }
-
         sinkBuilder.setFailureHandler(new DefaultActionRequestFailureHandler());
         if (StringUtils.isNotEmpty(token.getAccessKeyId())
                 || StringUtils.isNotEmpty(token.getAccessKeySecret())) {
             // 如果用户设置了accessKey 或者accessSecret
             sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(token.getAccessKeyId(), token.getAccessKeySecret()));
-//            sinkBuilder.setRestClientFactory(new RestClientFactory() {
-//                @Override
-//                public void configureRestClientBuilder(RestClientBuilder restClientBuilder) {
-//                    final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-//                    credentialsProvider.setCredentials(AuthScope.ANY,
-//                            new UsernamePasswordCredentials(token.getAccessKeyId(), token.getAccessKeySecret()));
-//                    restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
-//                        @Override
-//                        public HttpAsyncClientBuilder customizeHttpClient(HttpAsyncClientBuilder httpAsyncClientBuilder) {
-//                            return httpAsyncClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-//                        }
-//                    });
-//                }
-//            });
         }
 
 
@@ -198,7 +144,8 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
             tableMapper.setFrom(selectedTab.getName());
         }
-        return Collections.singletonMap(tableMapper, new DTOSinkFunc(tableMapper, sinkBuilder.build(), true, DEFAULT_PARALLELISM));
+        return Collections.singletonMap(tableMapper
+                , new DTOSinkFunc(tableMapper, sinkBuilder.build(), true, DEFAULT_PARALLELISM));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {

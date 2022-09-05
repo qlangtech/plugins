@@ -18,8 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.common;
 
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
+import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
@@ -33,18 +33,20 @@ import java.util.stream.Collectors;
  * @create: 2022-08-26 09:40
  **/
 public class ColMetaUtils {
-    public static List<TableCols.ColMeta> getColMetas(DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
+    public static List<ColMeta> getColMetas(
+            DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
         return meta.stream().map((col) -> {
             return createColMeta(col);
         }).collect(Collectors.toList());
     }
 
-    private static TableCols.ColMeta createColMeta(ColumnMetaData col) {
-        return new TableCols.ColMeta(col.getName(), col.getType());
+    private static ColMeta createColMeta(ColumnMetaData col) {
+        return new ColMeta(col.getName(), col.getType(), col.isPk());
     }
 
-    public static Map<String, TableCols.ColMeta> getColMetasMap(DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
+    public static Map<String, ColMeta> getColMetasMap(
+            DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
         return meta.stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> createColMeta(c)));
     }

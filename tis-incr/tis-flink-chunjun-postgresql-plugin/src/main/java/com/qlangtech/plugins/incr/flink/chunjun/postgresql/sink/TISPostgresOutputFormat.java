@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
@@ -44,7 +45,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     }
 
     @Override
-    protected Map<String, TableCols.ColMeta> getTableMetaData() {
+    protected Map<String, ColMeta> getTableMetaData() {
         return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
     }
 

@@ -33,20 +33,26 @@ import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.types.AtomicDataType;
+import org.apache.flink.table.types.logical.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-18 12:04
  **/
-public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData> {
+public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>, Serializable {
     protected final List<FlinkCol> cols;
 
     public AbstractRowDataMapper(List<FlinkCol> cols) {
@@ -65,45 +71,70 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
     public static List<FlinkCol> getAllTabColsMeta(IStreamTableCreator.IStreamTableMeta streamTableMeta) {
         //IStreamTableCreator.IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
-        return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+        final AtomicInteger colIndex = new AtomicInteger();
+        return streamTableMeta.getColsMeta()
+                .stream()
+                .map((c) -> mapFlinkCol(c, colIndex.getAndDecrement()))
+                .collect(Collectors.toList());
     }
 
     public static List<FlinkCol> getAllTabColsMeta(List<IColMetaGetter> colsMeta) {
         //IStreamTableCreator.IStreamTableMeta streamTableMeta = BasicFlinkSourceHandle.getStreamTableMeta(dataxName, tabName);
-        return colsMeta.stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
+
+        final AtomicInteger colIndex = new AtomicInteger();
+        return colsMeta.stream()
+                .map((c) -> mapFlinkCol(c, colIndex.getAndIncrement()))
+                .collect(Collectors.toList());
     }
 
-    public static FlinkCol mapFlinkCol(IColMetaGetter meta) {
+    public static FlinkCol mapFlinkCol(IColMetaGetter meta, int colIndex) {
+
+        final boolean nullable = !meta.isPk();
+
         return meta.getType().accept(new DataType.TypeVisitor<FlinkCol>() {
 
             @Override
             public FlinkCol intType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.INT());
+                return new FlinkCol(meta.getName()
+                        , new AtomicDataType(new IntType(nullable)), new IntegerConvert()
+                        , (rowData) -> rowData.getInt(colIndex));
             }
 
             @Override
             public FlinkCol smallIntType(DataType dataType) {
-                return new FlinkCol(meta.getName(), DataTypes.SMALLINT(), new ShortConvert());
+                return new FlinkCol(meta.getName(),
+                        new AtomicDataType(new SmallIntType(nullable))
+                        //DataTypes.SMALLINT()
+                        , new ShortConvert(), (rowData) -> rowData.getShort(colIndex));
             }
 
             @Override
             public FlinkCol tinyIntType(DataType dataType) {
-                return new FlinkCol(meta.getName(), DataTypes.TINYINT(), new ShortConvert());
+                return new FlinkCol(meta.getName(),
+                        new AtomicDataType(new TinyIntType(nullable))
+                        //         , DataTypes.TINYINT()
+                        , new ShortConvert(), (rowData) -> rowData.getShort(colIndex));
             }
 
             @Override
             public FlinkCol floatType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.FLOAT());
+                return new FlinkCol(meta.getName()
+                        , DataTypes.FLOAT()
+                        , (rowData) -> rowData.getFloat(colIndex));
             }
 
             @Override
             public FlinkCol timeType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.TIME(3));
+                return new FlinkCol(meta.getName(), DataTypes.TIME(3)
+                        , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L)));
             }
 
             @Override
             public FlinkCol bigInt(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.BIGINT(), new LongConvert());
+                return new FlinkCol(meta.getName()
+                        , new AtomicDataType(new BigIntType(nullable))
+                        // , DataTypes.BIGINT()
+                        , new LongConvert(), (rowData) -> rowData.getLong(colIndex));
             }
 
             public FlinkCol decimalType(DataType type) {
@@ -114,7 +145,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 }
                 try {
 
-                    return new FlinkCol(meta.getName(), DataTypes.DECIMAL(precision, scale), new DecimalConvert(precision, scale));
+                    return new FlinkCol(meta.getName(), DataTypes.DECIMAL(precision, scale)
+                            , new DecimalConvert(precision, scale)
+                            , (rowData) -> rowData.getDecimal(colIndex, -1, -1));
                 } catch (Exception e) {
                     throw new RuntimeException("colName:" + meta.getName() + ",type:" + type.toString() + ",precision:" + precision + ",scale:" + scale, e);
                 }
@@ -122,41 +155,55 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
             @Override
             public FlinkCol doubleType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.DOUBLE());
+                return new FlinkCol(meta.getName()
+                        , DataTypes.DOUBLE()
+                        , (rowData) -> rowData.getDouble(colIndex));
             }
 
             @Override
             public FlinkCol dateType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.DATE(), new DateConvert());
+                return new FlinkCol(meta.getName(), DataTypes.DATE(), new DateConvert()
+                        , (rowData) -> Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(colIndex))));
             }
 
             @Override
             public FlinkCol timestampType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.TIMESTAMP(3), new TimestampDataConvert());
+                return new FlinkCol(meta.getName(), DataTypes.TIMESTAMP(3)
+                        , new TimestampDataConvert()
+                        , (rowData) -> rowData.getTimestamp(colIndex, -1).toTimestamp());
             }
 
             @Override
             public FlinkCol bitType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.BINARY(1), FlinkCol.Byte());
+                return new FlinkCol(meta.getName(), DataTypes.BINARY(1)
+                        , FlinkCol.Byte()
+                        , (rowData) -> rowData.getByte(colIndex));
             }
 
             @Override
             public FlinkCol boolType(DataType dataType) {
-                return new FlinkCol(meta.getName(), DataTypes.BOOLEAN());
+                return new FlinkCol(meta.getName(), DataTypes.BOOLEAN()
+                        , (rowData) -> rowData.getBoolean(colIndex));
             }
 
             @Override
             public FlinkCol blobType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.BYTES(), new BinaryRawValueDataConvert());
+                return new FlinkCol(meta.getName(), DataTypes.BYTES()
+                        , new BinaryRawValueDataConvert()
+                        , (rowData) -> rowData.getBinary(colIndex));
             }
 
             @Override
             public FlinkCol varcharType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.VARCHAR(type.columnSize), new StringConvert());
+                return new FlinkCol(meta.getName()
+                        , new AtomicDataType(new VarCharType(nullable, type.columnSize))
+                        //, DataTypes.VARCHAR(type.columnSize)
+                        , new StringConvert()
+                        , (rowData) -> String.valueOf(rowData.getString(colIndex)));
             }
         });
-
     }
+
 
     @Override
     public RowData map(DTO dto) throws Exception {
@@ -189,11 +236,21 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 //        return new GenericRowData(DTO2RowMapper.getKind(dto), cols.size());
 //    }
 
-    static class ShortConvert extends FlinkCol.DateProcess {
+    static class ShortConvert extends BiFunction {
         @Override
         public Object apply(Object o) {
             Short s = (Short) o;
             return s.intValue();
+        }
+    }
+
+    static class IntegerConvert extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof String) {
+                return Integer.parseInt((String) o);
+            }
+            return o;
         }
     }
 
@@ -205,7 +262,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
-    private static final ZoneId sysDefaultZone = ZoneId.systemDefault();
+    //  private static final ZoneId sysDefaultZone = ZoneId.systemDefault();
 
     static class TimestampDataConvert extends FlinkCol.DateTimeProcess {
         @Override

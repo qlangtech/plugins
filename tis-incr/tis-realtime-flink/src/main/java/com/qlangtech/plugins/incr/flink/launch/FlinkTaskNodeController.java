@@ -373,7 +373,7 @@ public class FlinkTaskNodeController implements IRCController {
 
         if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
                 || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
-            throw new IllegalStateException("app:" + collection.getName()
+            throw new TisException("app:" + collection.getName()
                     + " is not support savePoint,stateFactoryClass:" + stateBackend.getClass().getName());
         }
 

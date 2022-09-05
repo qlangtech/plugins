@@ -33,7 +33,7 @@ import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-import com.qlangtech.tis.plugin.ds.doris.TestDorisSourceFactory;
+import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
@@ -187,11 +187,29 @@ public class TestDataXStarRocksWriter extends TestCase {
         }
     }
 
+    public static StarRocksSourceFactory geSourceFactory() {
+        StarRocksSourceFactory dataSourceFactory = new StarRocksSourceFactory() {
+//            @Override
+//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
+//                throw new UnsupportedOperationException();
+//            }
+        };
+
+        dataSourceFactory.dbName = "employees";
+        dataSourceFactory.password = "123456";
+        dataSourceFactory.userName = "root";
+        dataSourceFactory.nodeDesc = "192.168.28.202";
+        dataSourceFactory.port = 9030;
+        dataSourceFactory.encode = "utf8";
+        dataSourceFactory.loadUrl = "[\"172.28.17.100:8030\", \"172.28.17.100:8030\"]";
+        return dataSourceFactory;
+    }
+
     private class CreateDorisWriter {
-        private DorisSourceFactory dsFactory;
+        private StarRocksSourceFactory dsFactory;
         private DataXStarRocksWriter writer;
 
-        public DorisSourceFactory getDsFactory() {
+        public StarRocksSourceFactory getDsFactory() {
             return dsFactory;
         }
 
@@ -200,10 +218,10 @@ public class TestDataXStarRocksWriter extends TestCase {
         }
 
         public CreateDorisWriter invoke() {
-            dsFactory = TestDorisSourceFactory.getDorisSourceFactory();
+            dsFactory = geSourceFactory();
             writer = new DataXStarRocksWriter() {
                 @Override
-                public DorisSourceFactory getDataSourceFactory() {
+                public StarRocksSourceFactory getDataSourceFactory() {
                     return dsFactory;
                 }
 

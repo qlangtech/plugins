@@ -32,7 +32,7 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
  * @see com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter
  **/
 @Public
-public class DataXDorisWriter extends BasicDorisStarRocksWriter {
+public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFactory> {
 
 
     @Override

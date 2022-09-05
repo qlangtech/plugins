@@ -44,10 +44,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.BasicUpdate;
@@ -94,7 +91,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
         if (colsMeta == null) {
 
-            Map<String, TableCols.ColMeta> colsMap = Maps.newHashMap();
+            Map<String, ColMeta> colsMap = Maps.newHashMap();
             dsFactory.visitFirstConnection((conn) -> {
                 colsMap.putAll(ColMetaUtils.getColMetasMap(dsFactory, conn, new JdbcConf() {
                     @Override

@@ -16,20 +16,16 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc;
+import com.qlangtech.tis.plugins.incr.flink.connector.sink.TestMySQLSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.source.TestMySQLSourceFactory;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-01 11:26
+ * @create: 2022-09-04 10:48
  **/
-public interface DeFunction {
-    /**
-     * 逆向操作
-     *
-     * @param o
-     * @return
-     */
-    public default Object deApply(Object o) {
-        throw new UnsupportedOperationException();
-    }
+@RunWith(Suite.class)
+@Suite.SuiteClasses({TestMySQLSinkFactory.class, TestMySQLSourceFactory.class})
+public class TestAll {
 }

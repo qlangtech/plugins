@@ -18,9 +18,8 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -50,7 +49,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
          * @param sinkFunction
          * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
          */
-        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction, boolean supportUpset, int sinkTaskParallelism) {
+        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction
+                , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent.DTOFilter());
@@ -62,7 +62,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             if (sourceStream.clazz == DTO.class) {
                 return sourceStream.stream;
             } else if (sourceStream.clazz == RowData.class) {
-                throw new UnsupportedOperationException("rowData -> DTO is not support");
+                throw new UnsupportedOperationException("RowData -> DTO is not support");
             }
 
             throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
@@ -73,10 +73,10 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      * (RowData,DTO) -> RowData
      */
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
-        final List<IColMetaGetter> colsMeta;
+        final List<FlinkCol> colsMeta;
 
         public RowDataSinkFunc(IDataxProcessor.TableAlias tab
-                , SinkFunction<RowData> sinkFunction, List<IColMetaGetter> colsMeta
+                , SinkFunction<RowData> sinkFunction, List<FlinkCol> colsMeta
                 , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);
             this.colsMeta = colsMeta;
@@ -89,9 +89,10 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {
             if (sourceStream.clazz == DTO.class) {
-                // return sourceStream.stream;
                 return sourceStream.stream.map(new DTO2RowDataMapper(
-                        DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)))
+                        this.colsMeta
+                        //   DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)
+                ))
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
@@ -100,24 +101,4 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
         }
     }
-
-//    /**
-//     * RowData -> DTO
-//     */
-//    public final static class RowData2DTOSinkFunc extends TabSinkFunc<RowData, DTO> {
-//        public RowData2DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction) {
-//            super(tab, sinkFunction);
-//        }
-//
-//        @Override
-//        protected DataStream<DTO> streamMap(DataStream<RowData> sourceStream) {
-//            throw new UnsupportedOperationException();
-//        }
-//    }
-//
-//    public static abstract class RowDataSinkFunc extends TabSinkFunc<DTO, RowData> {
-//        public RowDataSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<RowData> sinkFunction) {
-//            super(tab, sinkFunction);
-//        }
-//    }
 }

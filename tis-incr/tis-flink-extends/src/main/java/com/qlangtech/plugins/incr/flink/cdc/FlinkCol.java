@@ -18,6 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 
 import java.io.Serializable;
@@ -33,18 +35,28 @@ public class FlinkCol implements Serializable {
     public final String name;
     public final DataType type;
 
+    private final IRowDataValGetter rowDataValGetter;
+
     private boolean pk;
 
     public BiFunction process;
 
-    public FlinkCol(String name, DataType type) {
-        this(name, type, new NoOpProcess());
+    public FlinkCol(String name, DataType type, IRowDataValGetter rowDataValGetter) {
+        this(name, type, new NoOpProcess(), rowDataValGetter);
     }
 
-    public FlinkCol(String name, DataType type, BiFunction process) {
+    public Object getRowDataVal(RowData row) {
+        return rowDataValGetter.getVal(row);
+    }
+
+    public FlinkCol(String name, DataType type, BiFunction process, IRowDataValGetter rowDataValGetter) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("param name can not be null");
+        }
         this.name = name;
         this.type = type;
         this.process = process;
+        this.rowDataValGetter = rowDataValGetter;
     }
 
     public boolean isPk() {
@@ -110,7 +122,7 @@ public class FlinkCol implements Serializable {
 
 
     public static class DateProcess extends BiFunction {
-        private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
 
         @Override
         public Object apply(Object o) {
@@ -129,6 +141,7 @@ public class FlinkCol implements Serializable {
 
     public static class DateTimeProcess extends BiFunction {
         private final static DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        private final static DateTimeFormatter datetimeFormatter_with_zone = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
         @Override
         public Object deApply(Object o) {
@@ -139,7 +152,8 @@ public class FlinkCol implements Serializable {
         public Object apply(Object o) {
             if (o instanceof String) {
                 // com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter
-                return LocalDateTime.parse((String) o, datetimeFormatter);
+                String val = (String) o;
+                return LocalDateTime.parse(val, val.contains("T") ? datetimeFormatter_with_zone : datetimeFormatter);
             }
             return (LocalDateTime) o;
         }

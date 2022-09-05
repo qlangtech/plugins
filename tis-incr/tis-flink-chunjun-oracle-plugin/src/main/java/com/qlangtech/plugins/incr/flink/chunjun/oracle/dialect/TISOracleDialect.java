@@ -56,7 +56,7 @@ public class TISOracleDialect extends OracleDialect {
     public RawTypeConverter getRawTypeConverter() {
         //return OracleRawTypeConverter::apply;
         //DataType apply(ColMeta type);
-        return (colMeta) -> AbstractRowDataMapper.mapFlinkCol(colMeta).type;
+        return (colMeta) -> AbstractRowDataMapper.mapFlinkCol(colMeta, -1).type;
     }
 
     @Override

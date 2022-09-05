@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
  * @create: 2021-11-29 10:08
  **/
 @Public
-public class DataXStarRocksWriter extends BasicDorisStarRocksWriter {
+public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSourceFactory> {
 
 
     @Override

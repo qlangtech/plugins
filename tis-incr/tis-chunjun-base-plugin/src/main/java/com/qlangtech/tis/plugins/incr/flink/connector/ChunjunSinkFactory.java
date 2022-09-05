@@ -47,6 +47,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -166,7 +167,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
             }
 
             sinkFuncs.put(tableName, new RowDataSinkFunc(tableName
-                    , sinkFunc.getSinkFunction(), this.getColsMeta(tableName, dsFactory, sinkFunc), supportUpsetDML()
+                    , sinkFunc.getSinkFunction()
+                    , AbstractRowDataMapper.getAllTabColsMeta(this.getColsMeta(tableName, dsFactory, sinkFunc))
+                    , supportUpsetDML()
                     , this.parallelism));
         }
 

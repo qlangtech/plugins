@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -42,6 +43,7 @@ import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.data.RowData;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -181,7 +183,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
 
         EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader);
 
-        DorisSourceFactory sourceFactory = createSourceFactory();
+        StarRocksSourceFactory sourceFactory = createSourceFactory();
 
         DataXStarRocksWriter dataXWriter = new DataXStarRocksWriter() {
             @Override
@@ -200,7 +202,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
             }
 
             @Override
-            public DorisSourceFactory getDataSourceFactory() {
+            public StarRocksSourceFactory getDataSourceFactory() {
                 return sourceFactory;
             }
         }; //mock("dataXWriter", DataXDorisWriter.class);
@@ -219,7 +221,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
 
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
-        StarRocksSinkFactory sinkFactory = new StarRocksSinkFactory();
+        StarRocksSinkFactory2 sinkFactory = new StarRocksSinkFactory2();
 //        sinkFactory.columnSeparator = "x01";
 //        sinkFactory.rowDelimiter = "x02";
         sinkFactory.sinkSemantic = StarRocksSinkSemantic.AT_LEAST_ONCE.getName();
@@ -241,7 +243,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
         log.info("create table ddl:\n{}", createDDL);
         FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
         String pkVal = "88888888887";
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DTO d = new DTO();
@@ -257,7 +259,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
         after.put(updateDate, "2021-12-9");
         d.setAfter(after);
         Assert.assertEquals(1, sinkFunction.size());
-        for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFunction.entrySet()) {
+        for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
             DTOStream sourceStream = DTOStream.createDispatched(tableName);
             ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d}));
 

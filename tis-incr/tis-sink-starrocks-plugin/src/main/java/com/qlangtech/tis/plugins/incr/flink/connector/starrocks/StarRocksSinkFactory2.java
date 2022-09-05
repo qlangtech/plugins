@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
@@ -37,21 +38,23 @@ import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.TisMetaProps;
 import com.starrocks.connector.flink.StarRocksSink;
-import com.starrocks.connector.flink.row.sink.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.BlockElement;
@@ -59,6 +62,7 @@ import org.apache.flink.configuration.description.TextElement;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.*;
 
@@ -76,7 +80,7 @@ import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
  * @create: 2021-10-31 20:11
  **/
 @Public
-public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
+public class StarRocksSinkFactory2 extends BasicTISSinkFactory<RowData> {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
     private static final int DEFAULT_PARALLELISM = 1;
@@ -137,9 +141,9 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
     }
 
     @Override
-    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
+        Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
         IDataxProcessor.TableAlias tableName = null;
         // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
         DataXStarRocksWriter dataXWriter = (DataXStarRocksWriter) dataxProcessor.getWriter(null);
@@ -151,7 +155,6 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         List<ISelectedTab> tabs = reader.getSelectedTabs();
 
 
-        //  StarRocksSourceFactory dsFactory =
         StarRocksSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         DBConfig dbConfig = dsFactory.getDbConfig();
 
@@ -169,7 +172,6 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
 
-            AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
             final IDataxProcessor.TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
@@ -187,20 +189,29 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 
-                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab.get(), jdbcUrl, dsFactory, separator));
+                    Pair<List<FlinkCol>, List<String>> colsMeta = getColMeta(dsFactory, selectedTab.get());
+
+                    // sinkFuncRef.set();
+
+                    SinkFunction<RowData> sf = createSinkFunction(dbName, targetTabName, colsMeta, jdbcUrl, dsFactory, separator);
+
+                    RowDataSinkFunc sinkFunc = new RowDataSinkFunc(
+                            tabName, sf, colsMeta.getLeft(), true, DEFAULT_PARALLELISM);
+//            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
+                    sinkFuncs.put(tabName, sinkFunc);
 
                 } catch (Throwable e) {
                     exceptionLoader.set(new Object[]{jdbcUrl, e});
                 }
             });
+
+
             if (exceptionLoader.get() != null) {
                 Object[] error = exceptionLoader.get();
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
-            Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-            DTOSinkFunc sinkFunc = new DTOSinkFunc(tableName, sinkFuncRef.get(), true, DEFAULT_PARALLELISM);
-//            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
-            sinkFuncs.put(tableName, sinkFunc);
+            // Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
+
         }
 
         if (sinkFuncs.size() < 1) {
@@ -209,23 +220,42 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         return sinkFuncs;
     }
 
-    private SinkFunction<DTO> createSinkFunction(
-            String dbName, final String targetTabName, ISelectedTab tab, String jdbcUrl
+    private Pair<List<FlinkCol>, List<String>> getColMeta(
+            DorisSourceFactory dsFactory, ISelectedTab tab) {
+
+        List<String> pks = tab.getCols().stream()
+                .filter((c) -> c.isPk()).map((c) -> c.getName())
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(pks)) {
+            throw new IllegalStateException("pks can not be empty");
+        }
+        List<IColMetaGetter> colsMeta = dsFactory.getTableMetadata(tab.getName())
+                .stream().map((col) -> {
+                    return IColMetaGetter.create(col.getName(), col.getType(), pks.contains(col.getName()));
+                }).collect(Collectors.toList());
+
+        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(colsMeta);
+        return Pair.of(cols, pks);
+    }
+
+    private SinkFunction<RowData> createSinkFunction(
+            String dbName, final String targetTabName, Pair<List<FlinkCol>, List<String>> colsMeta, String jdbcUrl
             , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
 //import org.apache.flink.table.types.DataType;
         TableSchema.Builder schemaBuilder = TableSchema.builder();
-        String[] fieldKeys = new String[tab.getCols().size()];
+        List<String> pks = colsMeta.getRight();
+        List<FlinkCol> cols = (colsMeta.getLeft());
+        String[] fieldKeys = new String[cols.size()];
         if (fieldKeys.length < 1) {
             throw new IllegalArgumentException("fieldKeys.length can not small than 1");
         }
         int index = 0;
-        List<String> pks = Lists.newArrayList();
-        for (ISelectedTab.ColMeta cm : tab.getCols()) {
-            if (cm.isPk()) {
-                pks.add(cm.getName());
-            }
-            schemaBuilder.field(cm.getName(), mapFlinkColType(cm.isPk(), cm.getType()));
-            fieldKeys[index++] = cm.getName();
+        // List<String> pks = Lists.newArrayList();
+        for (FlinkCol cm : cols) {
+            // schemaBuilder.field(cm.getName(), mapFlinkColType(pks.contains(cm.getName()), cm.getType()));
+            schemaBuilder.field(cm.name, cm.type);
+            // schemaBuilder.field(cm.getName(), cm.type);
+            fieldKeys[index++] = cm.name;
         }
         if (!pks.isEmpty()) {
             schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
@@ -238,31 +268,14 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                 // the sink options
                 createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory, separator)
                 // set the slots with streamRowData
-                , (slots, streamRowData) -> {
-                    for (int i = 0; i < fieldKeys.length; i++) {
-                        slots[i] = (DTO.EventType.DELETE == streamRowData.getEventType())
-                                ? streamRowData.getBefore().get(fieldKeys[i])
-                                : streamRowData.getAfter().get(fieldKeys[i]);
-                    }
-                    StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
-                    slots[fieldKeys.length] = sinkOp.ordinal();
-                }
+                , new TISStarRocksSinkRowBuilder(cols)
         );
     }
 
-    private static StarRocksSinkOP getSinkOP(DTO.EventType evt) {
-        switch (evt) {
-            case DELETE:
-                return StarRocksSinkOP.DELETE;
-            case UPDATE_AFTER:
-            default:
-                return StarRocksSinkOP.UPSERT;
-        }
-    }
 
     private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl
             , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
-        StarRocksSinkOptions.Builder builder = StarRocksSinkOptions.builder()
+        Builder builder = StarRocksSinkOptions.builder()
                 .withProperty(JDBC_URL.key(), jdbcUrl)
                 .withProperty(LOAD_URL.key(), dsFactory.getLoadUrls().stream().collect(Collectors.joining(";")))
                 .withProperty(TABLE_NAME.key(), targetTabName)
@@ -298,12 +311,12 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         return sinkOptions;
     }
 
-    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, com.qlangtech.tis.plugin.ds.DataType type) {
+    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, DataType type) {
         if (type == null) {
             throw new IllegalArgumentException("param type can not be null");
         }
         final boolean isNullable = !pk;
-        return type.accept(new com.qlangtech.tis.plugin.ds.DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
+        return type.accept(new DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
             @Override
             public org.apache.flink.table.types.DataType intType(DataType type) {
                 //          return DataTypes.INT();

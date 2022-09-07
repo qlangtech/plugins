@@ -64,7 +64,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
         if (flinkCol == null) {
             throw new IllegalStateException("table:" + tableName + ",colName:" + colName + " relevant flinkCol can not be null");
         }
-        return flinkCol.process.deApply(val);
+        return flinkCol.rowDataProcess.deApply(val);
     }
 //    @Override
 //    protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {

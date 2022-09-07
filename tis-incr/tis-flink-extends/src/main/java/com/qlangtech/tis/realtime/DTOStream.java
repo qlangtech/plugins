@@ -32,12 +32,6 @@ public abstract class DTOStream<T> {
 
     protected transient DataStream<T> stream;
     public transient final Class<T> clazz;
-    //  public transient List<FlinkCol> cols;
-
-//    private DTOStream(//List<FlinkCol> cols
-//    ) {
-//        // this.cols = cols;
-//    }
 
     private DTOStream(Class<T> clazz) {
         this.clazz = clazz;

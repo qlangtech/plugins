@@ -41,7 +41,6 @@ import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -67,9 +66,33 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CenterResource.setNotFetchFromCenterRepository();
     }
 
+//    ImmutableMap.Builder<String, CDCTestSuitParams> builder = ImmutableMap.builder();
+//        builder.put(tabStu, suitParamBuilder(tabStu) //.setIncrColumn("id")
+//                .setTabName(tabStu).build());
+//
+//        builder.put(tabBase, suitParamBuilder(tabStu)
+//    //.setIncrColumn("update_time")
+//                .setTabName(tabBase) //
+//                .build());
+//
+//        builder.put(tabInstanceDetail, suitParamBuilder(tabStu)
+//    //.setIncrColumn("modify_time")
+//                .setTabName(tabInstanceDetail).build());
+
+    static Map<String, String> tab2IncrCol = Maps.newHashMap();
+
+    static {
+        tab2IncrCol.put(tabStu, "id");
+        tab2IncrCol.put(tabBase, "update_time");
+        tab2IncrCol.put(tabInstanceDetail, "modify_time");
+    }
+
+
     @Override
-    protected final CDCTestSuitParams.Builder suitParamBuilder() {
-        return CDCTestSuitParams.chunjunBuilder();//.Builder.ChunjunSuitParamsBuilder();
+    protected final CDCTestSuitParams.Builder suitParamBuilder(String tabName) {
+        CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder builder = CDCTestSuitParams.chunjunBuilder();//.Builder.ChunjunSuitParamsBuilder();
+        builder.setIncrColumn(tab2IncrCol.get(tabName));
+        return builder;
     }
 
 //    protected abstract TestRow.ValProcessor rewriteExpectValProcessor(TestRow.ValProcessor valProcess);
@@ -77,7 +100,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //    protected abstract TestRow.ValProcessor rewriteActualValProcessor(String tabName, TestRow.ValProcessor valProcess);
 
 
-    @Test
+    // @Test
     public void testStuBinlogConsume() throws Exception {
 
 
@@ -149,7 +172,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 for (AssertRow rr : rows) {
                     pkVal = rr.getObj("id");
                     System.out.println("------------" + pkVal);
-                    assertTestRow(tabName, RowKind.INSERT, consumerHandle, stuRow, rr);
+                    // assertTestRow(tabName, RowKind.INSERT, consumerHandle, stuRow, rr);
+                    assertInsertRow(stuRow, rr);
                 }
                 Assert.assertEquals(String.valueOf(new Long(1100001)), pkVal);
             }
@@ -172,32 +196,18 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
     protected abstract MQListenerFactory createMySQLCDCFactory();
 
 
-    @Test
+    // @Test
     public void testBinlogConsume() throws Exception {
-//        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
-//        mysqlCDCFactory.startupOptions = "latest";
-
 
         MQListenerFactory mysqlCDCFactory = createMySQLCDCFactory();
-        // mysqlCDCFactory.startupOptions = "latest";
-        // final String tabName = "base";
-        CDCTestSuitParams params = tabParamMap.get(tabBase); // new CDCTestSuitParams("base");
+
+        CDCTestSuitParams params = tabParamMap.get(tabBase);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
-//            @Override
-//            protected TestRow.ValProcessor getExpectValProcessor() {
-//                return super.getExpectValProcessor();
-//            }
 
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
-
-//            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
-//                SelectedTab tab = super.createSelectedTab(tabName, dataSourceFactory);
-//                overwriteSelectedTab(this, tabName, dataSourceFactory, tab);
-//                return tab;
-//            }
 
             @Override
             protected String getColEscape() {
@@ -465,7 +475,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                         List<AssertRow> rows = fetchRows(snapshot, 1, t, false);
                         for (AssertRow rr : rows) {
                             System.out.println("------------" + rr.getObj("instance_id"));
-                            assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                           // assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                            assertInsertRow(t, rr);
                         }
 
                     }

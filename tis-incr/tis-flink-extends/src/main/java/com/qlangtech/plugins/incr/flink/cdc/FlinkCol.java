@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.types.Row;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -39,7 +40,14 @@ public class FlinkCol implements Serializable {
 
     private boolean pk;
 
-    public BiFunction process;
+    /**
+     * @see RowData (处理从DTO中取数据组装RowData中的列内容处理器)
+     */
+    public BiFunction rowDataProcess;
+    /**
+     * @see Row (处理从DTO中取数据组装Row中的列内容处理器)
+     */
+    public BiFunction rowProcess;
 
     public FlinkCol(String name, DataType type, IRowDataValGetter rowDataValGetter) {
         this(name, type, new NoOpProcess(), rowDataValGetter);
@@ -49,13 +57,18 @@ public class FlinkCol implements Serializable {
         return rowDataValGetter.getVal(row);
     }
 
-    public FlinkCol(String name, DataType type, BiFunction process, IRowDataValGetter rowDataValGetter) {
+    public FlinkCol(String name, DataType type, BiFunction rowDataProcess, IRowDataValGetter rowDataValGetter) {
+        this(name, type, rowDataProcess, rowDataProcess, rowDataValGetter);
+    }
+
+    public FlinkCol(String name, DataType type, BiFunction rowDataProcess, BiFunction rowProcess, IRowDataValGetter rowDataValGetter) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("param name can not be null");
         }
         this.name = name;
         this.type = type;
-        this.process = process;
+        this.rowDataProcess = rowDataProcess;
+        this.rowProcess = rowProcess;
         this.rowDataValGetter = rowDataValGetter;
     }
 
@@ -69,7 +82,7 @@ public class FlinkCol implements Serializable {
     }
 
     public Object processVal(Object val) {
-        return this.process.apply(val);
+        return this.rowDataProcess.apply(val);
     }
 
     public static BiFunction ByteBuffer() {
@@ -84,8 +97,8 @@ public class FlinkCol implements Serializable {
         return new DateTimeProcess();
     }
 
-    public static BiFunction Date() {
-        return new DateProcess();
+    public static BiFunction LocalDate() {
+        return new LocalDateProcess();
     }
 
     public static BiFunction NoOp() {
@@ -121,7 +134,7 @@ public class FlinkCol implements Serializable {
     }
 
 
-    public static class DateProcess extends BiFunction {
+    public static class LocalDateProcess extends BiFunction {
         private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");
 
         @Override

@@ -16,22 +16,15 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.cdc;
-
-import org.junit.Assert;
-import org.junit.Test;
+import com.ververica.cdc.connectors.mysql.testutils.TestMySqlContainer;
+import org.junit.runner.RunWith;
+import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-05 14:33
+ * @create: 2022-09-06 15:42
  **/
-public class TestFlinkCol {
-
-    @Test
-    public void testDate() {
-        FlinkCol.LocalDateProcess process = new FlinkCol.LocalDateProcess();
-        Assert.assertNotNull(process.apply("2021-12-09"));
-        Assert.assertNotNull(process.apply("2021-12-9"));
-        Assert.assertNotNull(process.apply("2021-2-9"));
-    }
+@RunWith(Suite.class)
+@Suite.SuiteClasses({TestMySqlContainer.class})
+public class TestAll {
 }

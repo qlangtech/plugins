@@ -20,7 +20,13 @@ package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
 import com.qlangtech.plugins.incr.flink.cdc.mysql.BasicMySQLCDCTest;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import org.apache.commons.compress.utils.Lists;
 import org.junit.Test;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,7 +43,21 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
     @Test
     @Override
     public void testStuBinlogConsume() throws Exception {
-        super.testStuBinlogConsume();
+
+        System.out.println(this.getClass().getResource("/org/testcontainers/containers/JdbcDatabaseContainer.class"));
+
+        BasicDataSourceFactory dataSourceFactory = createDataSource(new TargetResName("x"));
+
+
+        dataSourceFactory.visitFirstConnection((conn) -> {
+            List<String> tabs = Lists.newArrayList();
+            dataSourceFactory.refectTableInDB(tabs, conn);
+
+            System.out.println("refectTableInDB:" + tabs.stream().collect(Collectors.joining(",")));
+
+        });
+
+        // super.testStuBinlogConsume();
     }
 
     @Test

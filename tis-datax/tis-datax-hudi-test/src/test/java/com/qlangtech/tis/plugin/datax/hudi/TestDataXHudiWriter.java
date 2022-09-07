@@ -97,15 +97,17 @@ public class TestDataXHudiWriter {
 
 
     //protected static final int DEFAULT_PARALLELISM = 4;
-    protected static final MySqlContainer MYSQL_CONTAINER =
-            (MySqlContainer)
-                    new MySqlContainer()
-                            .withConfigurationOverride("docker/server-gtids/my.cnf")
-                            .withSetupSQL("docker/column_type_test.sql")
-                            .withDatabaseName("flink-test")
-                            .withUsername("flinkuser")
-                            .withPassword("flinkpw")
-                            .withLogConsumer(new TISLoggerConsumer(logger));
+    protected static final MySqlContainer MYSQL_CONTAINER
+            = MySqlContainer.createMysqlContainer("docker/server-gtids/my.cnf"
+            ,"docker/column_type_test.sql");
+//            (MySqlContainer)
+//                    new MySqlContainer()
+//                            .withConfigurationOverride("docker/server-gtids/my.cnf")
+//                            .withSetupSQL("docker/column_type_test.sql")
+//                            .withDatabaseName("flink-test")
+//                            .withUsername("flinkuser")
+//                            .withPassword("flinkpw")
+//                            .withLogConsumer(new TISLoggerConsumer(logger));
 
     @BeforeClass
     public static void start() throws Exception {

@@ -19,7 +19,6 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import org.apache.flink.types.RowKind;
-import org.junit.Test;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -75,43 +74,40 @@ public class TestRow extends BasicRow {
         return vals.getInputStream(key);
     }
 
-//    public List<String> getValsList(List<ColMeta> keys) throws Exception {
-//        return getValsList(keys, (rowVals, key, val) -> val);
-//    }
 
-//    @Override
-//    public Object getObj(String key) {
-//        return null;
-//    }
-
-
-    @Test
+    //@Test
     protected Object getUpdateVal(ColMeta key) {
         Object val = null;
-        RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());
-        if (uptColVal != null) {
-            val = uptColVal.updatedVal;
+//        RowValsUpdate.UpdatedColVal uptColVal = (RowValsUpdate.UpdatedColVal) updateVals.getObj(key.getName());
+//        if (uptColVal != null) {
+//            val = uptColVal.updatedVal;
+//        }
+
+        RowValsUpdate.UpdatedColVal updateVal = updateVals.getV(key.getName());
+        if (updateVal == null) {
+            return getSerializeVal(key.getName());
+        } else {
+            return updateVal.updatedVal.getExpect();
         }
-        return val;
+
+//        val =
+//        //val = updateVals.getObj(key.getName());
+////        if (val != null) {
+////            val = uptColVal.updatedVal;
+////        }
+//        return val;
     }
 
     @Override
     public Object getObj(String key) {
         return vals.getObj(key);
     }
-//    public Object getObj(String key) {
-//        return vals.getObj(key);
-//    }
 
     @Override
     public Object getSerializeVal(String key) {
         return vals.getV(key).getExpect();
     }
 
-    //    @FunctionalInterface
-//    public interface ValProcessor {
-//        Object process(RowVals rowVals, String key, Object val) throws Exception;
-//    }
 
     @Override
     public String toString() {
@@ -124,9 +120,7 @@ public class TestRow extends BasicRow {
     public Object getIdVal() {
         return this.idVal;
     }
-//        public Integer getInt(String key) {
-//            return (Integer) vals.get(key);
-//        }
+
 
     @FunctionalInterface
     public interface ColValSetter {
@@ -137,6 +131,6 @@ public class TestRow extends BasicRow {
          * @return newVal
          * @throws Exception
          */
-        public Object setPrepColVal(PreparedStatement statement, int parameterIndex, RowValsExample ovals) throws Exception;
+        public RowValsExample.RowVal setPrepColVal(PreparedStatement statement, int parameterIndex, RowValsExample ovals) throws Exception;
     }
 }

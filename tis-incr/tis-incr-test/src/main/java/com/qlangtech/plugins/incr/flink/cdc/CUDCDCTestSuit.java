@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -52,6 +53,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -67,9 +69,16 @@ public abstract class CUDCDCTestSuit {
     protected final CDCTestSuitParams suitParam;
     private final String tabName;
 
+    final Date now = new Date();
+    private final Calendar calendar;
+    private final AtomicInteger timeGetterCount = new AtomicInteger();
+
+
     public CUDCDCTestSuit(CDCTestSuitParams suitParam) {
         this.suitParam = suitParam;
         this.tabName = suitParam.tabName;
+        calendar = Calendar.getInstance();
+        calendar.setTime(now);
     }
 
     protected final TargetResName dataxName = new TargetResName("x");
@@ -196,13 +205,14 @@ public abstract class CUDCDCTestSuit {
                             List<AssertRow> rows = fetchRows(snapshot, 1, r, false);
                             for (AssertRow rr : rows) {
                                 System.out.println("------------" + rr.getObj(this.getPrimaryKeyName(tab)));
-                                assertTestRow(tabName, RowKind.INSERT, consumerHandle, r, rr);
+                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), consumerHandle, r, rr);
                             }
                             // System.out.println("########################");
 
                         }
                         System.out.println("start to test update");
 
+                        Optional<AssertRow> find = null;
                         // 执行更新
                         for (TestRow exceptRow : exampleRows) {
                             if (!exceptRow.execUpdate()) {
@@ -226,13 +236,28 @@ public abstract class CUDCDCTestSuit {
                             sleepForAWhile();
 
                             waitForSnapshotStarted(snapshot);
-                            List<AssertRow> rows = fetchRows(snapshot, 1, exceptRow, false);
-                            for (AssertRow rr : rows) {
-                                //System.out.println("------------" + rr.getInt(keyBaseId));
-                                assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
+                            int fetchRowSize = this.suitParam.updateRowKind.size();
 
+                            List<AssertRow> rows = fetchRows(snapshot, fetchRowSize, exceptRow, false);
+                            Assert.assertEquals("rowSize must be", fetchRowSize, rows.size());
+                            for (RowKind eventKind : this.suitParam.updateRowKind) {
+                                find = rows.stream().filter((r) -> r.kind == eventKind).findFirst();
+                                Assert.assertTrue("eventKind:" + eventKind + " must be find ", find.isPresent());
+
+                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(eventKind, true))
+                                        , consumerHandle, exceptRow, find.get());
                             }
+
+//                            for (AssertRow rr : rows) {
+//                                //System.out.println("------------" + rr.getInt(keyBaseId));
+//                                // RowKind.UPDATE_AFTER
+//                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(this.suitParam.updateRowKind, true))
+//                                        , consumerHandle, exceptRow, rr);
+//
+//                            }
                         }
+
+
                         System.out.println("start to test delete");
                         // 执行删除
                         for (TestRow r : exampleRows) {
@@ -248,11 +273,12 @@ public abstract class CUDCDCTestSuit {
                                 List<AssertRow> rows = fetchRows(snapshot, 1, r, true);
                                 for (AssertRow rr : rows) {
                                     //System.out.println("------------" + rr.getInt(keyBaseId));
-                                    assertTestRow(tabName, RowKind.DELETE, consumerHandle, r, rr);
+                                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.DELETE, true)), consumerHandle, r, rr);
 
                                 }
                             }
                         }
+
 
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -265,16 +291,15 @@ public abstract class CUDCDCTestSuit {
 
         final String insertBase = createInsertScript(tabName);
 
-        PreparedStatement statement;
-        statement = conn.prepareStatement(insertBase);
+        try (PreparedStatement statement = conn.prepareStatement(insertBase)) {
 
-        for (ColMeta col : this.cols) {
-            col.setTestVal(statement, r);
+            for (ColMeta col : this.cols) {
+                col.setTestVal(statement, r);
+            }
+            Assert.assertEquals(1, executePreparedStatement(conn, statement));
+            System.out.println("insert:" + r.getValsList(Optional.empty(), cols).stream().collect(Collectors.joining(",")));
+
         }
-
-        Assert.assertEquals(1, executePreparedStatement(conn, statement));
-
-        statement.close();
     }
 
     @NotNull
@@ -287,15 +312,22 @@ public abstract class CUDCDCTestSuit {
 
     protected List<TestRow> createExampleTestRows() throws Exception {
         List<TestRow> exampleRows = Lists.newArrayList();
-        Date now = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(now);
-        calendar.add(Calendar.MINUTE, 1);
-        final Date updateDate = calendar.getTime();
+        Date now = null;
         TestRow row = null;
         Map<String, RowValsExample.RowVal> vals = null;
+
+        if (!MySqlSourceTestBase.tabBase.equals(this.tabName)) {
+            throw new IllegalStateException(
+                    "tab:" + this.tabName + " must be " + MySqlSourceTestBase.tabBase);
+        }
+
+
         int insertCount = 5;
+
         for (int i = 1; i <= insertCount; i++) {
+            //  if (i > 1) {
+            now = this.getTime();
+            // }
             vals = Maps.newHashMap();
             vals.put(keyBaseId, RowValsExample.RowVal.$(i));
             vals.put(keyStart_time, parseTimestamp(timeFormat.get().format(now)));
@@ -315,17 +347,19 @@ public abstract class CUDCDCTestSuit {
         row.updateVals.put(keyCol_text, (statement, index, ovals) -> {
             String newVal = "update#" + ovals.getString(keyCol_text);
             statement.setString(index, newVal);
-            return newVal;
+            return RowValsExample.RowVal.$(newVal);
         });
         row.updateVals.put(keyStart_time, (statement, index, ovals) -> {
             String v = "2012-11-13 11:11:35";
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            RowValsExample.RowVal val = parseTimestamp(v);
+            statement.setTimestamp(index, val.getVal());
+            return val;
         });
         row.updateVals.put(key_update_time, (statement, index, ovals) -> {
-            String v = timeFormat.get().format(updateDate);
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            String v = timeFormat.get().format(this.getTime());
+            RowValsExample.RowVal val = parseTimestamp(v);
+            statement.setTimestamp(index, val.getVal());
+            return val;
         });
 
 
@@ -333,43 +367,54 @@ public abstract class CUDCDCTestSuit {
         row.updateVals.put(keyCol_text, (statement, index, ovals) -> {
             String v = "update#" + ovals.getString(keyCol_text);
             statement.setString(index, v);
-            return v;
+            return RowValsExample.RowVal.$(v);
         });
         row.updateVals.put(keyStart_time, (statement, index, ovals) -> {
             String v = "2012-11-13 11:11:35";
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            RowValsExample.RowVal rowVal = parseTimestamp(v);
+            statement.setTimestamp(index, rowVal.getVal());
+            return rowVal;
         });
         row.updateVals.put(key_update_time, (statement, index, ovals) -> {
-            String v = timeFormat.get().format(updateDate);
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            String v = timeFormat.get().format(this.getTime());
+            RowValsExample.RowVal rowVal = parseTimestamp(v);
+            statement.setTimestamp(index, rowVal.getVal());
+            return rowVal;
         });
 
         row = exampleRows.get(0);
         row.updateVals.put(keyCol_text, (statement, index, ovals) -> {
             String v = "update#" + ovals.getString(keyCol_text);
             statement.setString(index, v);
-            return v;
+            return RowValsExample.RowVal.$(v);
         });
         row.updateVals.put(keyStart_time, (statement, index, ovals) -> {
             String v = "2012-11-12 11:11:35";
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            RowValsExample.RowVal rowVal = parseTimestamp(v);
+            statement.setTimestamp(index, rowVal.getVal());
+            return rowVal;//RowValsExample.RowVal.$(v);
         });
         row.updateVals.put(key_update_time, (statement, index, ovals) -> {
-            String v = timeFormat.get().format(updateDate);
-            statement.setTimestamp(index, parseTimestamp(v).getVal());
-            return v;
+            String v = timeFormat.get().format(this.getTime());
+            RowValsExample.RowVal rowVal = parseTimestamp(v);
+            statement.setTimestamp(index, rowVal.getVal());
+            return rowVal;
         });
 
-        // 执行两条删除
-        row = exampleRows.get(1);
-        row.willbeDelete = true;
+        if (this.suitParam.shallTestDeleteProcess) {
+            // 执行两条删除
+            row = exampleRows.get(1);
+            row.willbeDelete = true;
 
-        row = exampleRows.get(3);
-        row.willbeDelete = true;
+            row = exampleRows.get(3);
+            row.willbeDelete = true;
+        }
         return exampleRows;
+    }
+
+    private Date getTime() {
+        this.calendar.add(Calendar.SECOND, timeGetterCount.getAndIncrement());
+        return this.calendar.getTime();
     }
 
     protected String createTableName(String tabName) {
@@ -394,15 +439,6 @@ public abstract class CUDCDCTestSuit {
 
     protected IResultRows getTestBasicFlinkSourceHandle(String tabName) {
         IResultRows consumerHandle = createConsumerHandle(tabName);
-
-        // PrintSinkFunction printSinkFunction = new PrintSinkFunction();
-//        TISSinkFactory sinkFuncFactory = new TISSinkFactory() {
-//            @Override
-//            public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-//                return Collections.emptyMap();
-//            }
-//        };
-        //  consumerHandle.setSinkFuncFactory(sinkFuncFactory);
         return consumerHandle;
     }
 
@@ -490,65 +526,25 @@ public abstract class CUDCDCTestSuit {
             }
         };
         baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
-
-
         if (suitParam.overwriteSelectedTab != null) {
             suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, baseTab);
         }
-        //  overwriteSelectedTab(this, tabName, dataSourceFactory, tab);
         return baseTab;
     }
 
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
 
-//    protected final TestRow.ValProcessor getExpectValProcessor() {
-//        TestRow.ValProcessor valProcess = (rowVals, key, val) -> {
-//            if (keyColBlob.equals(key)) {
-//                ByteArrayInputStream inputStream
-//                        = (ByteArrayInputStream) rowVals.getInputStream(keyColBlob);
-//                inputStream.reset();
-//                return IOUtils.toString(inputStream, TisUTF8.get());
-//            } else {
-//                return val;
-//            }
-//        };
-//
-//        if (suitParam.getRewriteExpectValProcessor() != null) {
-//            return suitParam.getRewriteExpectValProcessor();
-//        } else {
-//            return valProcess;
-//        }
-//        // return rewriteExpectValProcessor(valProcess);
-//
-//    }
 
-//    protected final TestRow.ValProcessor getActualValProcessor(String tabName, IResultRows consumerHandle) {
-//        TestRow.ValProcessor valProcess = (rowVals, key, val) -> {
-//            try {
-//                if (keyColBlob.equals(key)) {
-//                    byte[] buffer = (byte[]) val;
-//                    // buffer.reset();
-//                    return new String(buffer);
-//                } else {
-//                    return consumerHandle.deColFormat(tabName, key, val);
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException("colKey:" + key + ",val:" + val, e);
-//            }
-//        };
-//
-////        if (suitParam.getRewriteActualValProcessor() != null) {
-////            return suitParam.getRewriteActualValProcessor();
-////        } else {
-//            return valProcess;
-////        }
-//    }
+    protected void assertInsertRow(
+            TestRow expect, AssertRow actual) {
+        assertTestRow(null, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), null, expect, actual);
+    }
 
-
-    protected void assertTestRow(String tabName, RowKind updateVal, IResultRows consumerHandle, TestRow expect, AssertRow actual) {
+    protected void assertTestRow(String tabName, Optional<ExpectRowGetter> expectKind
+            , IResultRows consumerHandle, TestRow expect, AssertRow actual) {
         try {
             assertEqualsInOrder(
-                    expect.getValsList(Optional.of(updateVal), cols) //
+                    expect.getValsList(expectKind, cols) //
                     , actual.getValsList(cols));
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -16,26 +16,24 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.junit;
+package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.qlangtech.plugins.incr.flink.TISFlinkClassLoaderFactory;
-import com.qlangtech.tis.manage.common.Config;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
+import org.apache.flink.types.RowKind;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-01-19 18:04
+ * @create: 2022-09-07 12:00
  **/
-public class TISApplySkipFlinkClassloaderFactoryCreation implements TestRule {
+public class ExpectRowGetter {
+    final RowKind expectKind;
+    final boolean getUpdateVal;
 
-    //    @ClassRule(order = 100)
-//    public static TestRule name = new TestRule() {
-    @Override
-    public org.junit.runners.model.Statement apply(org.junit.runners.model.Statement base, Description description) {
-        System.setProperty(TISFlinkClassLoaderFactory.SKIP_CLASSLOADER_FACTORY_CREATION, "true");
-        System.setProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY, "logback-test.xml");
-        return base;
+    public ExpectRowGetter() {
+        this(RowKind.UPDATE_AFTER, true);
     }
-//    };
+
+    public ExpectRowGetter(RowKind expectKind, boolean getUpdateVal) {
+        this.expectKind = expectKind;
+        this.getUpdateVal = getUpdateVal;
+    }
 }

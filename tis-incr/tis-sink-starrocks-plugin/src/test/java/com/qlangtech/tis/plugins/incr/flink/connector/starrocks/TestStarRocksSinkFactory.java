@@ -205,7 +205,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
             public StarRocksSourceFactory getDataSourceFactory() {
                 return sourceFactory;
             }
-        }; //mock("dataXWriter", DataXDorisWriter.class);
+        };
 
         dataXWriter.dataXName = dataXName;
         dataXWriter.autoCreateTable = true;

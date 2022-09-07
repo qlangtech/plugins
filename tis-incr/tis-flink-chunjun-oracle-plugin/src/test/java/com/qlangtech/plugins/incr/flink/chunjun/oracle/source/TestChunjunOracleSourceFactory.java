@@ -145,6 +145,7 @@ public class TestChunjunOracleSourceFactory {
 
         CDCTestSuitParams params //
                 = CDCTestSuitParams.chunjunBuilder()
+
                 .setIncrColumn(key_timestamp6_c)
                 .setTabName(tabNameFull_types)
                 .build();

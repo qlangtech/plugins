@@ -47,7 +47,7 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
         for (FlinkCol col : cols) {
             val = vals.get(col.name);
             //col.type
-            row.setField(index++, (val == null) ? null : col.processVal(val));
+            row.setField(index++, (val == null) ? null : col.rowProcess.apply(val));
         }
         return row;
     }

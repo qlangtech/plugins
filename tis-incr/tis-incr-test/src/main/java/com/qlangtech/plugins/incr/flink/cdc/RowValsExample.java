@@ -59,7 +59,6 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
             final Time t = Time.valueOf(s);
 
             // 为什么要如此处理时间 请查阅： https://github.com/qlangtech/plugins/issues/22
-            //Locale locale = ;
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             return new RowVal(t) {
                 @Override
@@ -197,13 +196,4 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
         return date;
     }
 
-//    private static Date localTimeToDate(final java.time.LocalTime val) {
-//        if (null == val) {
-//            return null;
-//        }
-//
-//        // final ZonedDateTime zdt = val..atZone(timestampZoneId);
-//        final Date date = Date.from(val..toInstant());
-//        return date;
-//    }
 }

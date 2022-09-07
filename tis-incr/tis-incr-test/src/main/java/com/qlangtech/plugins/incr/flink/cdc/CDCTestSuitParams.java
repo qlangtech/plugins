@@ -18,10 +18,15 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.chunjun.poll.RunInterval;
 import com.qlangtech.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.flink.types.RowKind;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -29,6 +34,12 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
  **/
 public class CDCTestSuitParams {
     final String tabName;
+    final boolean shallTestDeleteProcess;
+    //
+    /**
+     * 一条更新基于Binlog则会生成两条一条（U-）一条（U+），如果是 基于chunjun的则只会生成一条（I+）
+     */
+    final List<RowKind> updateRowKind;//UPDATE_AFTER
     public OverwriteSelectedTab overwriteSelectedTab;
 
 //    private TestRow.ValProcessor rewriteExpectValProcessor;
@@ -47,16 +58,34 @@ public class CDCTestSuitParams {
     }
 
     public static Builder.ChunjunSuitParamsBuilder chunjunBuilder() {
-        return new Builder.ChunjunSuitParamsBuilder();
+        Builder.ChunjunSuitParamsBuilder builder = new Builder.ChunjunSuitParamsBuilder();
+        builder.notTestDeleteProcess();
+        builder.setUpdateRowKind(RowKind.INSERT);
+        return builder;
     }
 
     public static class Builder {
         protected String tabName;
+        protected boolean shallTestDeleteProcess = true;
+        /**
+         * 更新流程下RowKind 类型，Chunjun使用polling查询情况下，更新的rowkind 为insert（I+）类型
+         */
+        protected List<RowKind> updateRowKind = Lists.newArrayList(RowKind.UPDATE_BEFORE, RowKind.UPDATE_AFTER);
 //        private TestRow.ValProcessor rewriteExpectValProcessor;
 //        private TestRow.ValProcessor rewriteActualValProcessor;
 
+        public Builder setUpdateRowKind(RowKind... updateRowKind) {
+            this.updateRowKind = Lists.newArrayList(updateRowKind);
+            return this;
+        }
+
         public Builder setTabName(String tabName) {
             this.tabName = tabName;
+            return this;
+        }
+
+        public Builder notTestDeleteProcess() {
+            this.shallTestDeleteProcess = false;
             return this;
         }
 
@@ -78,13 +107,16 @@ public class CDCTestSuitParams {
         }
 
         protected CDCTestSuitParams createParams() {
-            return new CDCTestSuitParams(this.tabName);
+            return new CDCTestSuitParams(this.tabName, this.shallTestDeleteProcess, this.updateRowKind);
         }
 
         public static class ChunjunSuitParamsBuilder extends Builder {
             private String incrColumn = CUDCDCTestSuit.key_update_time;
 
             public ChunjunSuitParamsBuilder setIncrColumn(String incrColumn) {
+                if (StringUtils.isEmpty(incrColumn)) {
+                    throw new IllegalArgumentException("param incrColumn can not be empty");
+                }
                 this.incrColumn = incrColumn;
                 return this;
             }
@@ -110,8 +142,10 @@ public class CDCTestSuitParams {
         }
     }
 
-    protected CDCTestSuitParams(String tabName) {
+    protected CDCTestSuitParams(String tabName, boolean shallTestDeleteProcess, List<RowKind> updateRowKind) {
         this.tabName = tabName;
+        this.shallTestDeleteProcess = shallTestDeleteProcess;
+        this.updateRowKind = updateRowKind;
     }
 
     public String getTabName() {

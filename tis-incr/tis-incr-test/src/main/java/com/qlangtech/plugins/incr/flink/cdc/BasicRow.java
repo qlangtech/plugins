@@ -35,16 +35,17 @@ public abstract class BasicRow {
         this.kind = kind;
     }
 
-    public List<String> getValsList(List<ColMeta> keys) throws Exception {
+    public List<String> getValsList(List<ColMeta> keys) {
         return getValsList(Optional.empty(), keys);
     }
 
-    public List<String> getValsList(Optional<RowKind> updateVal, List<ColMeta> keys) throws Exception {
-        RowKind rowKind = updateVal.isPresent() ? updateVal.get() : this.kind;
+    public List<String> getValsList(Optional<ExpectRowGetter> updateVal, List<ColMeta> keys) {
+        // boolean updateRowGetterPresent = ;
+        RowKind rowKind = updateVal.isPresent() ? updateVal.get().expectKind : this.kind;
         List<String> valsEnum = Lists.newArrayList(rowKind.shortString());
         for (ColMeta key : keys) {
             Object val = null;
-            if (rowKind != RowKind.INSERT) {
+            if (updateVal.isPresent() && updateVal.get().getUpdateVal) {
                 val = getUpdateVal(key);
             }
             if (val == null) {

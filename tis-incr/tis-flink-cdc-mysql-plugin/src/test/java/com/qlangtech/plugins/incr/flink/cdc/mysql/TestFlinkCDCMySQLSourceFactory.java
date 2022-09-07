@@ -64,64 +64,67 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     }
 
     @Override
-    protected CDCTestSuitParams.Builder suitParamBuilder() {
-        return new CDCTestSuitParams.Builder();
+    protected CDCTestSuitParams.Builder suitParamBuilder(String tabName) {
+        //return new CDCTestSuitParams.Builder();
+        return CDCTestSuitParams.createBuilder();
+        // return CDCTestSuitParams.chunjunBuilder();
     }
 
-    @Test
-    public void testStuBinlogConsume() throws Exception {
+//    @Test
+//    public void testStuBinlogConsume() throws Exception {
+//
+//        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+//        mysqlCDCFactory.startupOptions = "latest";
+//        // final String tabName = "stu";
+//        CDCTestSuitParams suitParams = tabParamMap.get(tabStu); //new CDCTestSuitParams(tabName);
+//        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
+//            @Override
+//            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+//                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+//            }
+//
+//            @Override
+//            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+//                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
+//               // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+//                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
+//                Thread.sleep(1000);
+//
+//
+//                BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
+//                Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
+//                dataSourceFactory.visitFirstConnection((conn) -> {
+//
+//                    Statement statement = conn.createStatement();
+//                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
+//                            "VALUES (1100001,'doTun','beida','jasper',81,26,45.54,14597415152,'xxx@hotmail.com','192.192.192.192','极乐世界f座 630103');");
+//                    statement.close();
+//                });
+//
+//                sleepForAWhile();
+//                CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
+//                waitForSnapshotStarted(snapshot);
+//                List<AssertRow> rows = fetchRows(snapshot, 1, null, false);
+//                for (AssertRow rr : rows) {
+//                    System.out.println("------------" + rr.getObj("id"));
+//                    // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
+//
+//                }
+//            }
+//
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
+//        };
+//
+//        cdcTestSuit.startTest(mysqlCDCFactory);
+//
+//    }
 
-        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
-        mysqlCDCFactory.startupOptions = "latest";
-        // final String tabName = "stu";
-        CDCTestSuitParams suitParams = tabParamMap.get(tabStu); //new CDCTestSuitParams(tabName);
-        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
-            @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
-            }
 
-            @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
-                super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
-                Thread.sleep(1000);
-
-
-                BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
-                Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
-                dataSourceFactory.visitFirstConnection((conn) -> {
-
-                    Statement statement = conn.createStatement();
-                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
-                            "VALUES (1100001,'doTun','beida','jasper',81,26,45.54,14597415152,'xxx@hotmail.com','192.192.192.192','极乐世界f座 630103');");
-                    statement.close();
-                });
-
-                sleepForAWhile();
-                CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
-                waitForSnapshotStarted(snapshot);
-                List<AssertRow> rows = fetchRows(snapshot, 1, null, false);
-                for (AssertRow rr : rows) {
-                    System.out.println("------------" + rr.getObj("id"));
-                    // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
-
-                }
-            }
-
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
-        };
-
-        cdcTestSuit.startTest(mysqlCDCFactory);
-
-    }
-
-
-    @Test
+   // @Test(timeout = 20000)
+    @Test()
     public void testBinlogConsume() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = "latest";
@@ -132,7 +135,12 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
-
+            @Override
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
+            }
             @Override
             protected String getColEscape() {
                 return "`";
@@ -197,7 +205,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName,TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;
@@ -385,7 +393,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                         List<AssertRow> rows = fetchRows(snapshot, 1, t, false);
                         for (AssertRow rr : rows) {
                             System.out.println("------------" + rr.getObj("instance_id"));
-                            assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                          //  assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                            assertInsertRow(t, rr);
                         }
 
                     }

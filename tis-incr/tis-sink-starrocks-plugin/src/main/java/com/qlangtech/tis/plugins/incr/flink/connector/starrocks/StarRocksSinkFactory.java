@@ -353,28 +353,28 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         });
     }
 
-    @TISExtension
-    public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {
-        @Override
-        public String getDisplayName() {
-            return DISPLAY_NAME_FLINK_CDC_SINK;
-        }
-
-        public boolean validateColumnSeparator(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return validateRowDelimiter(msgHandler, context, fieldName, value);
-        }
-
-        public boolean validateRowDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            if (StringUtils.length(StringEscapeUtils.unescapeJava(value)) != 1) {
-//                msgHandler.addFieldError(context, fieldName, "分隔符长度必须为1");
-//                return false;
-//            }
-            return true;
-        }
-
-        @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.StarRocks;
-        }
-    }
+//    @TISExtension
+//    public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {
+//        @Override
+//        public String getDisplayName() {
+//            return DISPLAY_NAME_FLINK_CDC_SINK;
+//        }
+//
+//        public boolean validateColumnSeparator(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            return validateRowDelimiter(msgHandler, context, fieldName, value);
+//        }
+//
+//        public boolean validateRowDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+////            if (StringUtils.length(StringEscapeUtils.unescapeJava(value)) != 1) {
+////                msgHandler.addFieldError(context, fieldName, "分隔符长度必须为1");
+////                return false;
+////            }
+//            return true;
+//        }
+//
+//        @Override
+//        protected IDataXPluginMeta.EndType getTargetType() {
+//            return IDataXPluginMeta.EndType.StarRocks;
+//        }
+//    }
 }

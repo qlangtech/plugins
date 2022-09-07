@@ -132,7 +132,7 @@ public class TISDorisColumnConverter
 
     @Override
     protected ISerializationConverter<List<String>> createExternalConverter(final BasicDorisStarRocksWriter.DorisType type) {
-       final  BiFunction dateProcess = FlinkCol.Date();
+       final  BiFunction dateProcess = FlinkCol.LocalDate();
         return (rowData, index, joiner) -> {
 
             Object val = (rowData.isNullAt(index)) ? null : type.type.accept(new DataType.TypeVisitor<Object>() {

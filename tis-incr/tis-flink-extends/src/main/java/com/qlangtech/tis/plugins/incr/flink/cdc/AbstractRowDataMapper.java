@@ -105,7 +105,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return new FlinkCol(meta.getName(),
                         new AtomicDataType(new SmallIntType(nullable))
                         //DataTypes.SMALLINT()
-                        , new ShortConvert(), (rowData) -> rowData.getShort(colIndex));
+                        , new ShortConvert()
+                        , FlinkCol.NoOp()
+                        , (rowData) -> rowData.getShort(colIndex));
             }
 
             @Override
@@ -113,7 +115,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return new FlinkCol(meta.getName(),
                         new AtomicDataType(new TinyIntType(nullable))
                         //         , DataTypes.TINYINT()
-                        , new ShortConvert(), (rowData) -> rowData.getShort(colIndex));
+                        , new ShortConvert()
+                        , new TinyIntConvertByte()
+                        , (rowData) -> rowData.getShort(colIndex));
             }
 
             @Override
@@ -147,6 +151,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
                     return new FlinkCol(meta.getName(), DataTypes.DECIMAL(precision, scale)
                             , new DecimalConvert(precision, scale)
+                            , FlinkCol.NoOp()
                             , (rowData) -> rowData.getDecimal(colIndex, -1, -1));
                 } catch (Exception e) {
                     throw new RuntimeException("colName:" + meta.getName() + ",type:" + type.toString() + ",precision:" + precision + ",scale:" + scale, e);
@@ -162,7 +167,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
             @Override
             public FlinkCol dateType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.DATE(), new DateConvert()
+                return new FlinkCol(meta.getName(), DataTypes.DATE()
+                        , new DateConvert()
+                        , FlinkCol.LocalDate()
                         , (rowData) -> Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(colIndex))));
             }
 
@@ -170,6 +177,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             public FlinkCol timestampType(DataType type) {
                 return new FlinkCol(meta.getName(), DataTypes.TIMESTAMP(3)
                         , new TimestampDataConvert()
+                        , new FlinkCol.DateTimeProcess()
                         , (rowData) -> rowData.getTimestamp(colIndex, -1).toTimestamp());
             }
 
@@ -199,6 +207,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                         , new AtomicDataType(new VarCharType(nullable, type.columnSize))
                         //, DataTypes.VARCHAR(type.columnSize)
                         , new StringConvert()
+                        , FlinkCol.NoOp()
                         , (rowData) -> String.valueOf(rowData.getString(colIndex)));
             }
         });
@@ -244,6 +253,15 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
+    static class TinyIntConvertByte extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            Short s = (Short) o;
+            return new java.lang.Byte(s.byteValue());
+            // return s.intValue();
+        }
+    }
+
     static class IntegerConvert extends BiFunction {
         @Override
         public Object apply(Object o) {
@@ -254,7 +272,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
-    static class DateConvert extends FlinkCol.DateProcess {
+    static class DateConvert extends FlinkCol.LocalDateProcess {
         @Override
         public Object apply(Object o) {
             LocalDate localDate = (LocalDate) super.apply(o);

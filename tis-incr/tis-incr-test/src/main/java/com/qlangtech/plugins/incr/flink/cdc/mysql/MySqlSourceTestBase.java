@@ -21,7 +21,6 @@ package com.qlangtech.plugins.incr.flink.cdc.mysql;
 import com.google.common.collect.ImmutableMap;
 import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
-import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
@@ -35,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.lifecycle.Startables;
 
-import java.text.NumberFormat;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -51,22 +49,23 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
 
     //protected static final int DEFAULT_PARALLELISM = 4;
     protected static final MySqlContainer MYSQL_CONTAINER =
-            (MySqlContainer)
-                    new MySqlContainer()
-                            .withConfigurationOverride("docker/server-gtids/my.cnf")
-                            .withSetupSQL("docker/setup.sql")
-                            .withDatabaseName("flink-test")
-                            .withUsername("flinkuser")
-                            .withPassword("flinkpw")
-                            .withLogConsumer(new TISLoggerConsumer(LOG));
+            MySqlContainer.createMysqlContainer("/docker/server-gtids/my.cnf", "/docker/setup.sql");
+//            (MySqlContainer)
+//                    new MySqlContainer()
+//                            .withConfigurationOverride("docker/server-gtids/my.cnf")
+//                            .withSetupSQL("docker/setup.sql")
+//                            .withDatabaseName("flink-test")
+//                            .withUsername("flinkuser")
+//                            .withPassword("flinkpw")
+//                            .withLogConsumer(new TISLoggerConsumer(LOG));
 
     public static BasicDataSourceFactory createDataSource(TargetResName dataxName) {
         return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
     }
 
-    static String tabStu = "stu";
-    static String tabBase = "base";
-    static final String tabInstanceDetail = "instancedetail";
+    public static String tabStu = "stu";
+    public static String tabBase = "base";
+    public static final String tabInstanceDetail = "instancedetail";
 
     public Map<String, CDCTestSuitParams> tabParamMap;
 
@@ -74,22 +73,27 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
     public void initializeTabParamMap() {
 
         ImmutableMap.Builder<String, CDCTestSuitParams> builder = ImmutableMap.builder();
-        builder.put(tabStu, suitParamBuilder().setTabName(tabStu).build());
+        builder.put(tabStu, suitParamBuilder(tabStu) //.setIncrColumn("id")
+                .setTabName(tabStu).build());
 
-        builder.put(tabBase, suitParamBuilder().setTabName(tabBase) //
+        builder.put(tabBase, suitParamBuilder(tabBase)
+                //.setIncrColumn("update_time")
+                .setTabName(tabBase) //
                 .build());
 
-        builder.put(tabInstanceDetail, suitParamBuilder().setTabName(tabInstanceDetail).build());
+        builder.put(tabInstanceDetail, suitParamBuilder(tabInstanceDetail)
+                //.setIncrColumn("modify_time")
+                .setTabName(tabInstanceDetail).build());
 
         tabParamMap = builder.build();
 
     }
 
-    protected abstract CDCTestSuitParams.Builder suitParamBuilder();
+    protected abstract CDCTestSuitParams.Builder //CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder
+    suitParamBuilder(String tableName);
 
     @BeforeClass
     public static void startContainers() {
-
         LOG.info("Starting containers...");
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         LOG.info("Containers are started.");

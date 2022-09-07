@@ -311,60 +311,60 @@ public class StarRocksSinkFactory2 extends BasicTISSinkFactory<RowData> {
         return sinkOptions;
     }
 
-    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, DataType type) {
-        if (type == null) {
-            throw new IllegalArgumentException("param type can not be null");
-        }
-        final boolean isNullable = !pk;
-        return type.accept(new DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
-            @Override
-            public org.apache.flink.table.types.DataType intType(DataType type) {
-                //          return DataTypes.INT();
-                return new AtomicDataType(new IntType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType bigInt(DataType type) {
-                //return DataTypes.BIGINT();
-                return new AtomicDataType(new BigIntType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType doubleType(DataType type) {
-                // return DataTypes.DOUBLE();
-                return new AtomicDataType(new DoubleType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType dateType(DataType type) {
-                // return DataTypes.DATE();
-                return new AtomicDataType(new DateType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType timestampType(DataType type) {
-                //return DataTypes.TIMESTAMP();
-                return new AtomicDataType(new TimestampType(isNullable, 6));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType bitType(DataType type) {
-                return DataTypes.BOOLEAN();
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType blobType(DataType type) {
-                // return DataTypes.VARBINARY(type.columnSize);
-                return varcharType(type);
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType varcharType(DataType type) {
-                //return DataTypes.VARCHAR(type.columnSize);
-                return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
-            }
-        });
-    }
+//    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, DataType type) {
+//        if (type == null) {
+//            throw new IllegalArgumentException("param type can not be null");
+//        }
+//        final boolean isNullable = !pk;
+//        return type.accept(new DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
+//            @Override
+//            public org.apache.flink.table.types.DataType intType(DataType type) {
+//                //          return DataTypes.INT();
+//                return new AtomicDataType(new IntType(isNullable));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType bigInt(DataType type) {
+//                //return DataTypes.BIGINT();
+//                return new AtomicDataType(new BigIntType(isNullable));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType doubleType(DataType type) {
+//                // return DataTypes.DOUBLE();
+//                return new AtomicDataType(new DoubleType(isNullable));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType dateType(DataType type) {
+//                // return DataTypes.DATE();
+//                return new AtomicDataType(new DateType(isNullable));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType timestampType(DataType type) {
+//                //return DataTypes.TIMESTAMP();
+//                return new AtomicDataType(new TimestampType(isNullable, 6));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType bitType(DataType type) {
+//                return DataTypes.BOOLEAN();
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType blobType(DataType type) {
+//                // return DataTypes.VARBINARY(type.columnSize);
+//                return varcharType(type);
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType varcharType(DataType type) {
+//                //return DataTypes.VARCHAR(type.columnSize);
+//                return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
+//            }
+//        });
+//    }
 
     @TISExtension
     public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {

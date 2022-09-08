@@ -80,8 +80,13 @@ public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
         }
 
         @Override
-        public Optional<IDataXPluginMeta.EndType> getTargetType() {
-            return Optional.of(IDataXPluginMeta.EndType.Postgres);
+        public IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.Postgres;
         }
+
+//        @Override
+//        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+//            return Optional.of(IDataXPluginMeta.EndType.Postgres);
+//        }
     }
 }

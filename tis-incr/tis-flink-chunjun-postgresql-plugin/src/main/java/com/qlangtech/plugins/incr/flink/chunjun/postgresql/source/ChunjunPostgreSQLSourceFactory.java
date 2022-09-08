@@ -37,8 +37,13 @@ public class ChunjunPostgreSQLSourceFactory extends ChunjunSourceFactory {
     @TISExtension()
     public static class DefaultDescriptor extends BaseChunjunDescriptor {
         @Override
-        protected IDataXPluginMeta.EndType getSourceType() {
+        public IDataXPluginMeta.EndType getEndType() {
             return IDataXPluginMeta.EndType.Postgres;
         }
+
+//        @Override
+//        protected IDataXPluginMeta.EndType getSourceType() {
+//            return IDataXPluginMeta.EndType.Postgres;
+//        }
     }
 }

@@ -72,15 +72,15 @@ public abstract class ChunjunSourceFactory extends MQListenerFactory {
             extends BaseDescriptor implements IIncrSelectedTabExtendFactory {
         @Override
         public String getDisplayName() {
-            return DESC_NAME + getSourceType().name();
+            return DESC_NAME + getEndType().name();
         }
 
-        @Override
-        public final Optional<IDataXPluginMeta.EndType> getTargetType() {
-            return Optional.of(getSourceType());
-        }
+//        @Override
+//        public final Optional<IDataXPluginMeta.EndType> getTargetType() {
+//            return Optional.of(getEndType());
+//        }
 
-        protected abstract IDataXPluginMeta.EndType getSourceType();
+//        protected abstract IDataXPluginMeta.EndType getSourceType();
         @Override
         public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(SelectedTabPropsExtends.class);

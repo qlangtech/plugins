@@ -78,6 +78,11 @@ public class TiKVKafkaMQListenerFactory extends MQListenerFactory {
         public String getDisplayName() {
             return "TiCDC-Kafka";
         }
+
+        @Override
+        public IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.Kafka;
+        }
         @Override
         public Optional<IDataXPluginMeta.EndType> getTargetType() {
             return Optional.empty();

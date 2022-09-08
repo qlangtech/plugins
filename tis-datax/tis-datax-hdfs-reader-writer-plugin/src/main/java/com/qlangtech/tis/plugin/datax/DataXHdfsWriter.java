@@ -94,6 +94,16 @@ public class DataXHdfsWriter extends BasicFSWriter {
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.HDFS;
+        }
+
+        @Override
         public boolean isRdbms() {
             return false;
         }

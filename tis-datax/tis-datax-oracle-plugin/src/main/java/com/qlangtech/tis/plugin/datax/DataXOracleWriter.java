@@ -84,7 +84,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                 }
                 script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
                         .append(pks.stream().map((pk) -> wrapWithEscape(pk.getName()))
-                        .collect(Collectors.joining(","))).append(")").append("\n");
+                                .collect(Collectors.joining(","))).append(")").append("\n");
             }
 
             @Override
@@ -167,7 +167,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                         return "DATE";
                     case Types.TIME:
                         return "TIMESTAMP(0)";
-                        // return "TIME";
+                    // return "TIME";
                     case Types.TIMESTAMP:
                         return "TIMESTAMP";
                     case Types.BLOB:
@@ -200,6 +200,16 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         @Override
         public String getDisplayName() {
             return OracleDataSourceFactory.ORACLE;
+        }
+
+        @Override
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Oracle;
         }
 
         public boolean validateSession(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

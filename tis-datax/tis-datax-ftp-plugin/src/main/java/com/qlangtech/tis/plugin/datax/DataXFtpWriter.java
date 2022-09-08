@@ -99,6 +99,16 @@ public class DataXFtpWriter extends DataxWriter {
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.FTP;
+        }
+
+        @Override
         public boolean isRdbms() {
             return false;
         }

@@ -150,6 +150,11 @@ public class RocketMQListenerFactory extends MQListenerFactory {
         }
 
         @Override
+        public IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.RocketMQ;
+        }
+
+        @Override
         public Optional<IDataXPluginMeta.EndType> getTargetType() {
             return Optional.empty();
         }

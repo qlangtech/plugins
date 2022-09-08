@@ -420,7 +420,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         }
 
         @Override
-        protected EndType getEndType() {
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
+        public EndType getEndType() {
             return EndType.ElasticSearch;
         }
 

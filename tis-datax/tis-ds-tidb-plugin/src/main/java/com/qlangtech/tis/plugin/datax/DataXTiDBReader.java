@@ -49,8 +49,18 @@ public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor //implements FormFieldType.IMultiSelectValidator
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor
     {
+        @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.TiDB;
+        }
+
         @Override
         public String getDisplayName() {
             return DATAX_NAME;

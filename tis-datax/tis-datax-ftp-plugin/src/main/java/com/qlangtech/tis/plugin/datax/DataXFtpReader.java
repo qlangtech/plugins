@@ -119,6 +119,16 @@ public class DataXFtpReader extends DataxReader {
             super();
         }
 
+        @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.FTP;
+        }
+
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
         }

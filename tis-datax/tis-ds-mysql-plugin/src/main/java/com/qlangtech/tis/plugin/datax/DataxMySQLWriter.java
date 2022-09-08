@@ -311,11 +311,17 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
         public boolean isSupportTabCreate() {
             return true;
         }
 
-        protected IDataXPluginMeta.EndType getEndType() {
+        @Override
+        public IDataXPluginMeta.EndType getEndType() {
             return EndType.MySQL;
         }
 

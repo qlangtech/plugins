@@ -80,7 +80,7 @@ public class DataXOssWriter extends DataxWriter {
     @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {})
     public Integer maxFileSize;
 
-    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {
@@ -116,6 +116,16 @@ public class DataXOssWriter extends DataxWriter {
         @Override
         public boolean isRdbms() {
             return false;
+        }
+
+        @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.AliyunOSS;
         }
 
         public boolean validateObject(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

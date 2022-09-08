@@ -36,8 +36,18 @@ public class MySQLSourceFactory extends ChunjunSourceFactory {
     @TISExtension
     public static class DefaultDesc extends BaseChunjunDescriptor {
         @Override
-        protected IDataXPluginMeta.EndType getSourceType() {
+        public IDataXPluginMeta.EndType getEndType() {
             return IDataXPluginMeta.EndType.MySQL;
         }
+
+//        @Override
+//        protected IDataXPluginMeta.EndType getSourceType() {
+//            return null;
+//        }
+
+//        @Override
+//        protected IDataXPluginMeta.EndType getSourceType() {
+//            return IDataXPluginMeta.EndType.MySQL;
+//        }
     }
 }

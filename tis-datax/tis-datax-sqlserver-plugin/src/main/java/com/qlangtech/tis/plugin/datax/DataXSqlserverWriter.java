@@ -142,7 +142,14 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         public DefaultDescriptor() {
             super();
         }
-
+        @Override
+        protected boolean isSupportIncr() {
+            return true;
+        }
+        @Override
+        public EndType getEndType() {
+            return EndType.SqlServer;
+        }
         @Override
         public boolean isSupportTabCreate() {
             return true;

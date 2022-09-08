@@ -221,6 +221,16 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Postgres;
+        }
+
+        @Override
         public boolean isSupportTabCreate() {
             return true;
         }

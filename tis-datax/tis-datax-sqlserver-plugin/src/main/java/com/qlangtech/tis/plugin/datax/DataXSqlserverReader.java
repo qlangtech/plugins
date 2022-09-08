@@ -62,6 +62,16 @@ public class DataXSqlserverReader extends BasicDataXRdbmsReader<SqlServerDatasou
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.SqlServer;
+        }
+
+        @Override
         public String getDisplayName() {
             return DATAX_NAME;
         }

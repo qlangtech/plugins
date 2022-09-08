@@ -80,8 +80,13 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
         }
 
         @Override
-        public Optional<IDataXPluginMeta.EndType> getTargetType() {
-            return Optional.of(IDataXPluginMeta.EndType.MySQL);
+        public IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.MySQL;
         }
+
+//        @Override
+//        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+//            return Optional.of(IDataXPluginMeta.EndType.MySQL);
+//        }
     }
 }

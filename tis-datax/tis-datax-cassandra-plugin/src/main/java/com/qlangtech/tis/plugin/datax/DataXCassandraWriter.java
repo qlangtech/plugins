@@ -110,6 +110,16 @@ public class DataXCassandraWriter extends DataxWriter {
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Cassandra;
+        }
+
+        @Override
         public String getDisplayName() {
             return DataXCassandraReader.DATAX_NAME;
         }

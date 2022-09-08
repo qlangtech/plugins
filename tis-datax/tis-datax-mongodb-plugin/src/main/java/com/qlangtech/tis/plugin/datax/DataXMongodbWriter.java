@@ -225,6 +225,16 @@ public class DataXMongodbWriter extends DataxWriter
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.MongoDB;
+        }
+
+        @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return verify(msgHandler, context, postFormVals);
         }

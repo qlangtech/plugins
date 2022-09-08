@@ -50,7 +50,7 @@ public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSou
         }
 
         @Override
-        protected EndType getEndType() {
+        public EndType getEndType() {
             return EndType.StarRocks;
         }
     }

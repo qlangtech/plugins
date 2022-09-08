@@ -185,7 +185,7 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
         }
 
         @Override
-        protected EndType getEndType() {
+        public  EndType getEndType() {
             return EndType.Doris;
         }
     }

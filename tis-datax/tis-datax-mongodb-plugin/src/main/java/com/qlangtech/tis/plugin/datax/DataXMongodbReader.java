@@ -73,7 +73,7 @@ public class DataXMongodbReader extends DataxReader {
     @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
     public String query;
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     /**
@@ -187,7 +187,12 @@ public class DataXMongodbReader extends DataxReader {
         }
 
         @Override
-        protected EndType getEndType() {
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
+        public EndType getEndType() {
             return EndType.MongoDB;
         }
 

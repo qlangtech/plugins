@@ -288,7 +288,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         @Override
-        protected IDataXPluginMeta.EndType getEndType() {
+        public IDataXPluginMeta.EndType getEndType() {
             return IDataXPluginMeta.EndType.Hudi;
         }
 

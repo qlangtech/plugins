@@ -275,6 +275,11 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         }
 
         @Override
+        protected boolean isSupportIncr() {
+            return true;
+        }
+
+        @Override
         protected int getMaxBatchSize() {
             return Integer.MAX_VALUE;
         }
@@ -304,8 +309,8 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
             }
         }
 
-        @Override
-        protected abstract EndType getEndType();
+//        @Override
+//        public  abstract EndType getEndType();
 //        {
 //            return EndType.StarRocks;
 //        }

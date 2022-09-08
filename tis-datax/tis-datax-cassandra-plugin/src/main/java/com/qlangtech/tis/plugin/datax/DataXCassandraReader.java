@@ -67,6 +67,14 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasou
     @TISExtension()
     public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor {
         @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+        @Override
+        public EndType getEndType() {
+            return EndType.Cassandra;
+        }
+        @Override
         public String getDisplayName() {
             return DATAX_NAME;
         }

@@ -26,7 +26,6 @@ import com.aliyun.oss.model.Bucket;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
-import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
@@ -47,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,7 +88,7 @@ public class DataXOssReader extends DataxReader {
     @FormField(ordinal = 11, type = FormFieldType.TEXTAREA, validate = {})
     public String csvReaderConfig;
 
-    @FormField(ordinal = 12, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public static String getDftTemplate() {
@@ -140,6 +138,16 @@ public class DataXOssReader extends DataxReader {
         public DefaultDescriptor() {
             super();
             registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IHttpToken.KEY_DISPLAY_NAME));
+        }
+
+        @Override
+        protected boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.AliyunOSS;
         }
 
         @Override

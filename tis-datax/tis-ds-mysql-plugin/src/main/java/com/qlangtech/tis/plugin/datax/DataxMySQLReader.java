@@ -67,12 +67,17 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
         }
 
         @Override
+        public boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
         public String getDisplayName() {
             return DATAX_NAME;
         }
 
         @Override
-        protected EndType getEndType() {
+        public EndType getEndType() {
             return EndType.MySQL;
         }
     }

@@ -94,8 +94,8 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
         }
 
         @Override
-        public Optional<IDataXPluginMeta.EndType> getTargetType() {
-            return Optional.of(IDataXPluginMeta.EndType.MongoDB);
+        public IDataXPluginMeta.EndType getEndType() {
+            return IDataXPluginMeta.EndType.MongoDB;
         }
     }
 }

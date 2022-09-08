@@ -33,10 +33,16 @@ public class ChunjunOracleSourceFactory extends ChunjunSourceFactory {
     }
 
     public static class DftDesc extends BaseChunjunDescriptor {
+
         @Override
-        protected IDataXPluginMeta.EndType getSourceType() {
+        public IDataXPluginMeta.EndType getEndType() {
             return IDataXPluginMeta.EndType.Oracle;
         }
+
+//        @Override
+//        protected IDataXPluginMeta.EndType getSourceType() {
+//            return IDataXPluginMeta.EndType.Oracle;
+//        }
     }
 
 }

@@ -28,6 +28,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -214,8 +215,12 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         }
 
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.ElasticSearch;
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
+        @Override
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.ElasticSearch;
         }
     }
 }

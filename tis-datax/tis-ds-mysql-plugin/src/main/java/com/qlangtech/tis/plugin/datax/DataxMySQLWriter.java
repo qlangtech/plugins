@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -310,6 +311,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             super();
         }
 
+
+
         @Override
         protected boolean isSupportIncr() {
             return true;
@@ -321,7 +324,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         }
 
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
+        public IEndTypeGetter.EndType getEndType() {
             return EndType.MySQL;
         }
 

@@ -24,6 +24,7 @@ import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -94,8 +95,12 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
         }
 
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.MongoDB;
+        public PluginVender getVender() {
+            return PluginVender.FLINK_CDC;
+        }
+        @Override
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.MongoDB;
         }
     }
 }

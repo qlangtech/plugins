@@ -156,8 +156,8 @@ public class ChunjunGreenplumSinkFactory extends ChunjunSinkFactory {
 //    @TISExtension
 //    public static class DftDesc extends BasicChunjunSinkDescriptor{
 //        @Override
-//        protected IDataXPluginMeta.EndType getTargetType() {
-//            return IDataXPluginMeta.EndType.Greenplum;
+//        protected IEndTypeGetter.EndType getTargetType() {
+//            return IEndTypeGetter.EndType.Greenplum;
 //        }
 //    }
 }

@@ -29,6 +29,7 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -165,8 +166,8 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
         }
 
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.MySQL;
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.MySQL;
         }
     }
 }

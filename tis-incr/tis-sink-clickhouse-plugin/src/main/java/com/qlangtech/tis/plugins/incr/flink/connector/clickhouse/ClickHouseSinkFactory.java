@@ -202,8 +202,8 @@
 //        }
 //
 //        @Override
-//        protected IDataXPluginMeta.EndType getTargetType() {
-//            return IDataXPluginMeta.EndType.Clickhouse;
+//        protected IEndTypeGetter.EndType getTargetType() {
+//            return IEndTypeGetter.EndType.Clickhouse;
 //        }
 //    }
 //}

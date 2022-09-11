@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -262,10 +263,13 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
             }
             return super.validateAll(msgHandler, context, postFormVals);
         }
-
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.Hudi;
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
+        @Override
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.Hudi;
         }
     }
 }

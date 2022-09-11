@@ -430,6 +430,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
             return super.validateAll(msgHandler, context, postFormVals);
         }
 
+        @Override
+        public final PluginVender getVender() {
+            return PluginVender.CHUNJUN;
+        }
+
         public boolean validateFlushIntervalMills(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             // return validateFileDelimiter(msgHandler, context, fieldName, value);
             int interval = Integer.parseInt(value);

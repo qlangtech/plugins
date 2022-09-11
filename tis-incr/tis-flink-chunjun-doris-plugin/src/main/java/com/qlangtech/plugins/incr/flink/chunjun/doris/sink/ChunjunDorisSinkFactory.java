@@ -41,6 +41,7 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
@@ -236,8 +237,8 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     @TISExtension
     public static final class DftDesc extends BasicChunjunSinkDescriptor {
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.Doris;
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.Doris;
         }
     }
 }

@@ -27,7 +27,6 @@ import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -41,6 +40,7 @@ import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -190,6 +190,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
+        @Override
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
 
         public boolean validateFsName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             if (!HUDI_FILESYSTEM_NAME.equals(value)) {
@@ -288,8 +292,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         }
 
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.Hudi;
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.Hudi;
         }
 
         @Override

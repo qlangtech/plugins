@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -35,13 +36,13 @@ public class ChunjunOracleSourceFactory extends ChunjunSourceFactory {
     public static class DftDesc extends BaseChunjunDescriptor {
 
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.Oracle;
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.Oracle;
         }
 
 //        @Override
-//        protected IDataXPluginMeta.EndType getSourceType() {
-//            return IDataXPluginMeta.EndType.Oracle;
+//        protected IEndTypeGetter.EndType getSourceType() {
+//            return IEndTypeGetter.EndType.Oracle;
 //        }
     }
 

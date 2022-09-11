@@ -31,6 +31,7 @@ import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -377,6 +378,11 @@ public class StarRocksSinkFactory2 extends BasicTISSinkFactory<RowData> {
             return validateRowDelimiter(msgHandler, context, fieldName, value);
         }
 
+        @Override
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
+
         public boolean validateRowDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 //            if (StringUtils.length(StringEscapeUtils.unescapeJava(value)) != 1) {
 //                msgHandler.addFieldError(context, fieldName, "分隔符长度必须为1");
@@ -386,8 +392,8 @@ public class StarRocksSinkFactory2 extends BasicTISSinkFactory<RowData> {
         }
 
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.StarRocks;
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.StarRocks;
         }
     }
 }

@@ -373,8 +373,8 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
 //        }
 //
 //        @Override
-//        protected IDataXPluginMeta.EndType getTargetType() {
-//            return IDataXPluginMeta.EndType.StarRocks;
+//        protected IEndTypeGetter.EndType getTargetType() {
+//            return IEndTypeGetter.EndType.StarRocks;
 //        }
 //    }
 }

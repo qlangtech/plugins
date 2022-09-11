@@ -38,8 +38,8 @@ public class ChunjunGreenplumSourceFactory extends ChunjunSourceFactory {
 //    @TISExtension()
 //    public static class DefaultDescriptor extends BaseChunjunDescriptor {
 //        @Override
-//        protected IDataXPluginMeta.EndType getSourceType() {
-//            return IDataXPluginMeta.EndType.Greenplum;
+//        protected IEndTypeGetter.EndType getSourceType() {
+//            return IEndTypeGetter.EndType.Greenplum;
 //        }
 //    }
 }

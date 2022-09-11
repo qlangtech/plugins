@@ -27,6 +27,7 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -142,8 +143,8 @@ public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
     @TISExtension
     public static class DftDesc extends BasicChunjunSinkDescriptor {
         @Override
-        protected IDataXPluginMeta.EndType getTargetType() {
-            return IDataXPluginMeta.EndType.Clickhouse;
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.Clickhouse;
         }
     }
 }

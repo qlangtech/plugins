@@ -25,6 +25,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import org.apache.commons.lang.StringUtils;
@@ -148,14 +149,17 @@ public class RocketMQListenerFactory extends MQListenerFactory {
         public String getDisplayName() {
             return "RocketMq";
         }
-
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.RocketMQ;
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
+        @Override
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.RocketMQ;
         }
 
         @Override
-        public Optional<IDataXPluginMeta.EndType> getTargetType() {
+        public Optional<IEndTypeGetter.EndType> getTargetType() {
             return Optional.empty();
         }
 

@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,13 +38,13 @@ public class ChunjunPostgreSQLSourceFactory extends ChunjunSourceFactory {
     @TISExtension()
     public static class DefaultDescriptor extends BaseChunjunDescriptor {
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.Postgres;
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.Postgres;
         }
 
 //        @Override
-//        protected IDataXPluginMeta.EndType getSourceType() {
-//            return IDataXPluginMeta.EndType.Postgres;
+//        protected IEndTypeGetter.EndType getSourceType() {
+//            return IEndTypeGetter.EndType.Postgres;
 //        }
     }
 }

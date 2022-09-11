@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -36,18 +37,18 @@ public class MySQLSourceFactory extends ChunjunSourceFactory {
     @TISExtension
     public static class DefaultDesc extends BaseChunjunDescriptor {
         @Override
-        public IDataXPluginMeta.EndType getEndType() {
-            return IDataXPluginMeta.EndType.MySQL;
+        public IEndTypeGetter.EndType getEndType() {
+            return IEndTypeGetter.EndType.MySQL;
         }
 
 //        @Override
-//        protected IDataXPluginMeta.EndType getSourceType() {
+//        protected IEndTypeGetter.EndType getSourceType() {
 //            return null;
 //        }
 
 //        @Override
-//        protected IDataXPluginMeta.EndType getSourceType() {
-//            return IDataXPluginMeta.EndType.MySQL;
+//        protected IEndTypeGetter.EndType getSourceType() {
+//            return IEndTypeGetter.EndType.MySQL;
 //        }
     }
 }

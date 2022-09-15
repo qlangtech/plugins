@@ -275,7 +275,7 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return true;
         }
 

@@ -67,7 +67,7 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasou
     @TISExtension()
     public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor {
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
         @Override

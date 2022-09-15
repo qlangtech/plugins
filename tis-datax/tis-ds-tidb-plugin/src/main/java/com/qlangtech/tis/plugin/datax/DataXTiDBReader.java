@@ -52,7 +52,7 @@ public class DataXTiDBReader extends BasicDataXRdbmsReader<TiKVDataSourceFactory
     public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor
     {
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

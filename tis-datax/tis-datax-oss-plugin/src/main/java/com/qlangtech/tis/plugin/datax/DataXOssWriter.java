@@ -119,7 +119,7 @@ public class DataXOssWriter extends DataxWriter {
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

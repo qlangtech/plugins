@@ -141,7 +141,7 @@ public class DataXOssReader extends DataxReader {
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

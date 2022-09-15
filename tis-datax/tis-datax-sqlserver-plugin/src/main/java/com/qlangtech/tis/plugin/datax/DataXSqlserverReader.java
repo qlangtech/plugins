@@ -62,7 +62,7 @@ public class DataXSqlserverReader extends BasicDataXRdbmsReader<SqlServerDatasou
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

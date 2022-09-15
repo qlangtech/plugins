@@ -420,7 +420,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return true;
         }
 

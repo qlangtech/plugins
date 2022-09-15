@@ -175,7 +175,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

@@ -314,7 +314,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return true;
         }
 

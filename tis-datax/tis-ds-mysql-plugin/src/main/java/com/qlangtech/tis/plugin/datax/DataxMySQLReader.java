@@ -68,7 +68,7 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
 
         @Override
         public boolean isSupportIncr() {
-            return false;
+            return true;
         }
 
         @Override

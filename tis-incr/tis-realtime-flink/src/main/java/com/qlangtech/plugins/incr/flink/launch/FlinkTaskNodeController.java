@@ -322,6 +322,27 @@ public class FlinkTaskNodeController implements IRCController {
 //        }
 //    }
 
+    @Override
+    public SupportTriggerSavePointResult supportTriggerSavePoint(TargetResName collection) {
+        SupportTriggerSavePointResult result = new SupportTriggerSavePointResult(false);
+        ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection) {
+            @Override
+            protected void processCollectionNotSupportSavePoint(StateBackendFactory stateBackend) {
+                //super.processCollectionNotSupportSavePoint(stateBackend);
+                result.setUnSupportReason("当前实例不支持Flink SavePoint，请修改stateBackend配置以支持持久化StateBackend");
+            }
+
+            @Override
+            protected void processJobNotRunning() {
+                result.setUnSupportReason("当前实例状态不在运行中，不能执行该操作");
+                //return super.processJobNotRunning();
+            }
+        };
+
+        return validateFlinkJob.valiate().validateSucess
+                ? new SupportTriggerSavePointResult(true) : result;
+    }
+
     /**
      * 创建一个Savepoint
      *
@@ -358,24 +379,9 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
     private void processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
-        FlinkIncrJobStatus status = getIncrJobStatus(collection);
-        // IncrJobStatus launchJobID = getIncrJobRecordFile(collection);  // getLaunchJobID(collection);
-        if (status.getState() != IFlinkIncrJobStatus.State.RUNNING) {
-            throw new IllegalStateException("collection:" + collection.getName()
-                    + " intend to stop incr processing,state must be running ,but now is " + status.getState());
-        }
-        if (status.getLaunchJobID() == null) {
-            throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
-        }
-
-        StateBackendFactory stateBackend = factory.stateBackend;
-        StateBackendFactory.ISavePointSupport savePoint = null;
-
-        if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
-                || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
-            throw new TisException("app:" + collection.getName()
-                    + " is not support savePoint,stateFactoryClass:" + stateBackend.getClass().getName());
-        }
+        ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection).valiate();
+        FlinkIncrJobStatus status = validateFlinkJob.getStatus();
+        StateBackendFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
 
         try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
             CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
@@ -453,4 +459,60 @@ public class FlinkTaskNodeController implements IRCController {
         return null;
     }
 
+    private class ValidateFlinkJob {
+        protected TargetResName collection;
+        private final FlinkIncrJobStatus status;
+        private StateBackendFactory.ISavePointSupport savePoint;
+        private boolean validateSucess = true;
+
+        public ValidateFlinkJob fail() {
+            this.validateSucess = false;
+            return this;
+        }
+
+        public ValidateFlinkJob(TargetResName collection) {
+            this.collection = collection;
+            status = getIncrJobStatus(collection);
+        }
+
+        public FlinkIncrJobStatus getStatus() {
+            return status;
+        }
+
+        public StateBackendFactory.ISavePointSupport getSavePoint() {
+            return savePoint;
+        }
+
+        public ValidateFlinkJob valiate() {
+
+            // IncrJobStatus launchJobID = getIncrJobRecordFile(collection);  // getLaunchJobID(collection);
+            if (status.getState() != IFlinkIncrJobStatus.State.RUNNING) {
+                processJobNotRunning();
+                return fail();
+            }
+            if (status.getLaunchJobID() == null) {
+                throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
+            }
+
+            StateBackendFactory stateBackend = factory.stateBackend;
+            savePoint = null;
+
+            if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
+                    || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
+                processCollectionNotSupportSavePoint(stateBackend);
+                return fail();
+            }
+            return this;
+        }
+
+        protected void processCollectionNotSupportSavePoint(StateBackendFactory stateBackend) {
+            throw new TisException("app:" + collection.getName()
+                    + " is not support savePoint,stateFactoryClass:" + stateBackend.getClass().getName());
+        }
+
+        protected void processJobNotRunning() {
+            throw new IllegalStateException("collection:" + collection.getName()
+                    + " intend to stop incr processing,state must be running ,but now is " + status.getState());
+        }
+    }
 }

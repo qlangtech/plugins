@@ -94,7 +94,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

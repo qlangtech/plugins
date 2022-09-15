@@ -83,7 +83,7 @@ public class DataXPostgresqlReader extends BasicDataXRdbmsReader<PGDataSourceFac
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return true;
         }
     }

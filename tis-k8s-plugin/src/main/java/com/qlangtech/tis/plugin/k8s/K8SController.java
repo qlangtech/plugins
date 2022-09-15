@@ -149,8 +149,14 @@ public class K8SController implements IRCController {
         throw new UnsupportedOperationException();
     }
 
+
     @Override
     public void discardSavepoint(TargetResName resName, String savepointPath) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SupportTriggerSavePointResult supportTriggerSavePoint(TargetResName collection) {
         throw new UnsupportedOperationException();
     }
 
@@ -158,12 +164,6 @@ public class K8SController implements IRCController {
     public void triggerSavePoint(TargetResName collection) {
         throw new UnsupportedOperationException();
     }
-    //    public void deploy(String indexName, ReplicasSpec incrSpec, List<V1EnvVar> envs) throws Exception {
-//        if (timestamp < 1) {
-//            throw new IllegalArgumentException("argument timestamp can not small than 1");
-//        }
-//        createReplicationController(this.config, api, indexName, incrSpec, this.addEnvVars(indexName, timestamp));
-//    }
 
     public static final String REPLICATION_CONTROLLER_VERSION = "v1";
 

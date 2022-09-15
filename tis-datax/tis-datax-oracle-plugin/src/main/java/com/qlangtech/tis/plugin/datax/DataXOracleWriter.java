@@ -203,7 +203,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return true;
         }
 

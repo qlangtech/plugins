@@ -110,7 +110,7 @@ public class DataXCassandraWriter extends DataxWriter {
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

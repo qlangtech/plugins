@@ -120,7 +120,7 @@ public class DataXFtpReader extends DataxReader {
         }
 
         @Override
-        protected boolean isSupportIncr() {
+        public boolean isSupportIncr() {
             return false;
         }
 

@@ -24,15 +24,18 @@ import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
+import com.dtstack.chunjun.connector.jdbc.dialect.SupportUpdateMode;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.dtstack.chunjun.sink.SinkFactory;
+import com.dtstack.chunjun.sink.WriteMode;
 import com.dtstack.chunjun.util.TableUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -61,6 +64,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.RowType;
 
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -357,8 +361,40 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         return createResult;
     }
 
+    /**
+     * 找到chunjun Sink 支持的write方式
+     *
+     * @return
+     */
+    public final Set<WriteMode> supportSinkWriteMode() {
+        Class<? extends JdbcDialect> dialectClass = this.getJdbcDialectClass();
+        SupportUpdateMode supportMode = dialectClass.getAnnotation(SupportUpdateMode.class);
+        Objects.requireNonNull(supportMode, "dialectClass:" + dialectClass.getClass().getName()
+                + " can not find annotation " + SupportUpdateMode.class);
+        Set<WriteMode> result = Sets.newHashSet(supportMode.modes());
+        result.add(WriteMode.INSERT);
+        return result;
+    }
 
-    protected abstract JdbcDialect createJdbcDialect(SyncConf syncConf);
+    protected abstract Class<? extends JdbcDialect> getJdbcDialectClass();
+
+    protected final JdbcDialect createJdbcDialect(SyncConf syncConf) {
+        try {
+
+            Class<? extends JdbcDialect> clazz = getJdbcDialectClass();
+            Constructor<?>[] constructors = clazz.getConstructors();
+            for (Constructor<?> c : constructors) {
+
+                if (c.getParameterCount() == 1 && c.getParameterTypes()[0] == SyncConf.class) {
+                    return (JdbcDialect) c.newInstance(syncConf);
+                }
+            }
+
+            return clazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     protected abstract JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory);

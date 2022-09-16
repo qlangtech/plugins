@@ -47,9 +47,14 @@ public class ChunjunGreenplumSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new GreenplumDialect();
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        return GreenplumDialect.class;
     }
+
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        return new GreenplumDialect();
+//    }
 
     @Override
     protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {

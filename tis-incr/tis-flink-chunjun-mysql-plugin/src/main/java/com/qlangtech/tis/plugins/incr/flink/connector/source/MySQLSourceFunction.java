@@ -74,9 +74,4 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
             return new JdbcInputFormatBuilder(new TISMysqlInputFormat(dataSourceFactory));
         }
     }
-
-//    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
-//        return cm.getType().getS();
-//    }
 }

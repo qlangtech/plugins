@@ -68,8 +68,14 @@ import java.util.stream.Collectors;
  * @create: 2022-08-15 14:32
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        throw new UnsupportedOperationException();
+//    }
+
     @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        //return null;
         throw new UnsupportedOperationException();
     }
 

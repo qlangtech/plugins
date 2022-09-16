@@ -77,7 +77,8 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
         private final DataSourceFactory dataSourceFactory;
 
         public ExtendOracleSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory) {
-            super(syncConf, null, new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
+           // super(syncConf, null, new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
+            super(syncConf, null, new TISOracleDialect(syncConf));
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
         }

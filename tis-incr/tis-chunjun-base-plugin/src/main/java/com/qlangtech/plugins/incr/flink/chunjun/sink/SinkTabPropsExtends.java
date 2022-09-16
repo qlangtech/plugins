@@ -18,14 +18,23 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.sink;
 
+import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
+import com.dtstack.chunjun.connector.jdbc.dialect.SupportUpdateMode;
+import com.dtstack.chunjun.sink.WriteMode;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -41,6 +50,24 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
 
     public UpdateMode getIncrMode() {
         return Objects.requireNonNull(incrMode, "incrMode can not be null");
+    }
+
+    /**
+     * 由于每种 JdbcDialect 支持的写入类型是不同的所以需要在在运行时 更新下拉列表需要进行过滤
+     *
+     * @param descs
+     * @return
+     * @see JdbcDialect
+     * @see SupportUpdateMode
+     */
+    public static List<UpdateMode.BasicDescriptor> filter(List<UpdateMode.BasicDescriptor> descs) {
+
+        SuFormProperties.SuFormGetterContext context = SuFormProperties.subFormGetterProcessThreadLocal.get();
+        Objects.requireNonNull(context, "context can not be null");
+        //String dataXName = context.param.getDataXName();
+        ChunjunSinkFactory sinkFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(context.param.getPluginContext());
+        Set<WriteMode> writeModes = sinkFactory.supportSinkWriteMode();
+        return descs.stream().filter((d) -> writeModes.contains(d.writeMode)).collect(Collectors.toList());
     }
 
     @Override

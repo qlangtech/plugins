@@ -19,7 +19,9 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect;
 
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
+import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
+import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.dialect.PostgresqlDialect;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
@@ -43,8 +45,8 @@ public class TISPostgresqlDialect extends PostgresqlDialect {
 
     private final JdbcConf jdbcConf;
 
-    public TISPostgresqlDialect(JdbcConf jdbcConf) {
-        this.jdbcConf = jdbcConf;
+    public TISPostgresqlDialect(SyncConf syncConf) {
+        this.jdbcConf = JdbcSinkFactory.getJdbcConf(syncConf);
     }
 
     @Override

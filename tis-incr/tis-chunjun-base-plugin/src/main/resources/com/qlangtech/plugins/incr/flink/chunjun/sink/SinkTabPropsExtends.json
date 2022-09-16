@@ -1,5 +1,6 @@
 {
   "incrMode": {
-    "dftVal": "Replace"
+    "dftVal": "Replace",
+    "subDescEnumFilter": "return com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends.filter(desc);"
   }
 }

@@ -29,6 +29,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tis-flink-chunjun-clickhouse-plugin</artifactId>
+    <packaging>tpi</packaging>
 
     <dependencies>
         <dependency>

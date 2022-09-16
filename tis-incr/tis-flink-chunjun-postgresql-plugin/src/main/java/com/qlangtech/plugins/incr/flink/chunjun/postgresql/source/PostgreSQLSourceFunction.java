@@ -71,7 +71,7 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
         private final DataSourceFactory dataSourceFactory;
 
         public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env, DataSourceFactory dataSourceFactory) {
-            super(syncConf, env, new TISPostgresqlDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
+            super(syncConf, env, new TISPostgresqlDialect(syncConf));
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
         }

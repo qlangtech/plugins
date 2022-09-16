@@ -46,9 +46,14 @@ import java.util.Map;
  * @see com.dtstack.chunjun.connector.oracle.sink.OracleSinkFactory
  **/
 public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        return new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf));
+//    }
+
     @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf));
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        return TISOracleDialect.class;
     }
 
     @Override

@@ -23,23 +23,13 @@ import com.qlangtech.tis.extension.TISExtension;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-07-18 10:09
+ * @create: 2022-09-16 11:58
  **/
-public class ReplaceType extends BasicUpdate {
-
-//    @Override
-//    protected String getMode() {
-//        return WriteMode.REPLACE.getMode();
-//    }
-
+public class UpsertType extends BasicUpdate {
     @TISExtension
     public static final class DftDescriptor extends BasicDescriptor {
         public DftDescriptor() {
-            super(WriteMode.REPLACE);
+            super(WriteMode.UPSERT);
         }
-
-//        public String getDisplayName() {
-//            return StringUtils.capitalize(WriteMode.REPLACE.getMode());
-//        }
     }
 }

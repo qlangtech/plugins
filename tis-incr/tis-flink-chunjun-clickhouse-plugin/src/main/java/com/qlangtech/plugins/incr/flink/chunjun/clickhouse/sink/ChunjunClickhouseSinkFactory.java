@@ -40,9 +40,14 @@ import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
  * @create: 2022-08-14 22:29
  **/
 public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        return new TISClickhouseDialect();
+//    }
+
     @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new TISClickhouseDialect();
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        return TISClickhouseDialect.class;
     }
 
     @Override

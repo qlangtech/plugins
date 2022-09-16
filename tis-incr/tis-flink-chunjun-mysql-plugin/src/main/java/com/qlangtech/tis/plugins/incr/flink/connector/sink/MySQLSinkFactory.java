@@ -54,9 +54,14 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-        return new MysqlDialect();
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        return MysqlDialect.class;
     }
+
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        return new MysqlDialect();
+//    }
     /**
      * ==========================================================
      * End impl: IStreamTableCreator

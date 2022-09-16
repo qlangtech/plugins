@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.sink;
 
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
@@ -26,7 +25,6 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 

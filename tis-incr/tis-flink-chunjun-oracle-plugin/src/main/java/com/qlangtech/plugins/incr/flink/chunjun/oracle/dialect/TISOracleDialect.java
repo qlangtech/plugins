@@ -18,7 +18,9 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect;
 
+import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
+import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.connector.oracle.dialect.OracleDialect;
 import com.dtstack.chunjun.converter.RawTypeConverter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
@@ -48,8 +50,9 @@ public class TISOracleDialect extends OracleDialect {
 
     private final JdbcConf jdbcConf;
 
-    public TISOracleDialect(JdbcConf jdbcConf) {
-        this.jdbcConf = jdbcConf;
+    public TISOracleDialect(SyncConf syncConf) {
+
+        this.jdbcConf = JdbcSinkFactory.getJdbcConf(syncConf);
     }
 
     @Override

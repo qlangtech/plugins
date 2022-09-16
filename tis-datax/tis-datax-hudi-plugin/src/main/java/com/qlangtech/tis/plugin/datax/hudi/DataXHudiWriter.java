@@ -189,7 +189,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
-
+        @Override
+        public boolean isSupportIncr() {
+            return true;
+        }
         @Override
         public PluginVender getVender() {
             return PluginVender.TIS;

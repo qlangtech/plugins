@@ -29,17 +29,14 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class InsertType extends UpdateMode {
 
-    private static final WriteMode INSERT = WriteMode.INSERT;
-
-    @Override
-    protected String getMode() {
-        return INSERT.getMode();
-    }
+   // private static final WriteMode INSERT = WriteMode.INSERT;
 
     @TISExtension
     public static final class DftDescriptor extends BasicUpdate.BasicDescriptor {
-        public String getDisplayName() {
-            return StringUtils.capitalize(INSERT.getMode());
+        public DftDescriptor() {
+            super(WriteMode.INSERT);
         }
+
+
     }
 }

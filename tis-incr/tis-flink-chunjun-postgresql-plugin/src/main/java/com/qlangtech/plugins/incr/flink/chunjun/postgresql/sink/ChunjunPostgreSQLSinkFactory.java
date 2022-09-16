@@ -18,17 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 
-import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
-import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.source.PostgreSQLSourceFunction;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -44,11 +41,14 @@ import java.util.Map;
  **/
 public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
 
-    @Override
-    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//    @Override
+//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
+//        return new TISPostgresqlDialect(syncConf);
+//    }
 
-        JdbcConf jdbcConf = JdbcSinkFactory.getJdbcConf(syncConf);
-        return new TISPostgresqlDialect(jdbcConf);
+    @Override
+    protected Class<? extends JdbcDialect> getJdbcDialectClass() {
+        return TISPostgresqlDialect.class;
     }
 
     @Override

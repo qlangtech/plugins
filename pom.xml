@@ -89,7 +89,7 @@
         <hive.version>2.3.1</hive.version>
 
         <maven-tpi-plugin.classpathDependentExcludes>
-            org.apache.commons:commons-lang3,commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:*,org.apache.logging.log4j:*
+            com.alibaba:fastjson,org.apache.commons:commons-lang3,commons-logging:commons-logging,commons-lang:commons-lang,com.google.guava:guava,log4j:log4j,org.slf4j:*,ch.qos.logback:*,org.apache.logging.log4j:*
         </maven-tpi-plugin.classpathDependentExcludes>
         <maven-tpi-plugin.version>${project.version}</maven-tpi-plugin.version>
         <tis.version>${project.version}</tis.version>

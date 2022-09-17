@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.sink;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.dialect.SupportUpdateMode;
 import com.dtstack.chunjun.sink.WriteMode;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -41,9 +43,6 @@ import java.util.stream.Collectors;
  * @create: 2022-07-18 11:51
  **/
 public class SinkTabPropsExtends extends IncrSelectedTabExtend {
-
-//    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public UpdateMode batchMode;
 
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public UpdateMode incrMode;
@@ -60,14 +59,22 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
      * @see JdbcDialect
      * @see SupportUpdateMode
      */
-    public static List<UpdateMode.BasicDescriptor> filter(List<UpdateMode.BasicDescriptor> descs) {
-
+    public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
+        if (CollectionUtils.isEmpty(descs)) {
+            throw new IllegalArgumentException("param descs can not be null");
+        }
         SuFormProperties.SuFormGetterContext context = SuFormProperties.subFormGetterProcessThreadLocal.get();
         Objects.requireNonNull(context, "context can not be null");
+        if (context.param == null) {
+            return descs;
+        }
+        //Objects.requireNonNull(context.param, "'context.param' can not be null");
         //String dataXName = context.param.getDataXName();
-        ChunjunSinkFactory sinkFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(context.param.getPluginContext());
+        ChunjunSinkFactory sinkFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(context.param.getDataXName());
         Set<WriteMode> writeModes = sinkFactory.supportSinkWriteMode();
-        return descs.stream().filter((d) -> writeModes.contains(d.writeMode)).collect(Collectors.toList());
+        return descs.stream().filter((d) -> {
+            return writeModes.contains(((UpdateMode.BasicDescriptor) d).writeMode);
+        }).collect(Collectors.toList());
     }
 
     @Override

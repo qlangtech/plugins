@@ -65,10 +65,10 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
     public String dataXName;
 
-    @Override
-    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, (BasicDataXRdbmsWriter) this, targetTabName, jdbcUrls);
-    }
+//    @Override
+//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, (BasicDataXRdbmsWriter) this, targetTabName, jdbcUrls);
+//    }
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {

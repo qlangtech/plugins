@@ -213,7 +213,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         params.put("username", dsFactory.getUserName());
         params.put("password", dsFactory.getPassword());
 
-        ((SinkTabPropsExtends) tab.getIncrSinkProps()).getIncrMode().set(params);
+        IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
+        if (desc.getSelectedTableExtendDescriptor() != null) {
+            // 有扩展才进行设置，不然会空指针
+            ((SinkTabPropsExtends) tab.getIncrSinkProps()).getIncrMode().set(params);
+        }
 
         List<Map<String, Object>> cols = Lists.newArrayList();
         Map<String, Object> col = null;
@@ -368,6 +372,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      */
     public final Set<WriteMode> supportSinkWriteMode() {
         Class<? extends JdbcDialect> dialectClass = this.getJdbcDialectClass();
+        if (dialectClass == null) {
+            return Sets.newHashSet();
+        }
         SupportUpdateMode supportMode = dialectClass.getAnnotation(SupportUpdateMode.class);
         Objects.requireNonNull(supportMode, "dialectClass:" + dialectClass.getClass().getName()
                 + " can not find annotation " + SupportUpdateMode.class);

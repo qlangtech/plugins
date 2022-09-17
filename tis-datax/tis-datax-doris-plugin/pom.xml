@@ -42,14 +42,15 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-classic</artifactId>-->
-<!--        </dependency>-->
         <!--        <dependency>-->
-        <!--            <groupId>com.alibaba.datax</groupId>-->
-        <!--            <artifactId>plugin-rdbms-util</artifactId>-->
+        <!--            <groupId>ch.qos.logback</groupId>-->
+        <!--            <artifactId>logback-classic</artifactId>-->
         <!--        </dependency>-->
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>doriswriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
@@ -78,7 +79,6 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.75</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
@@ -88,11 +88,11 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>plugin-rdbms-util</artifactId>-->
-<!--            <version>${alibaba.datax.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>plugin-rdbms-util</artifactId>-->
+        <!--            <version>${alibaba.datax.version}</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-test-common</artifactId>

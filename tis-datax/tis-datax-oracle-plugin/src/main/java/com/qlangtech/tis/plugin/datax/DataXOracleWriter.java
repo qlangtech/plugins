@@ -58,10 +58,10 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         return writerContext;
     }
 
-    @Override
-    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-    }
+//    @Override
+//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+//    }
 
     /**
      * https://docs.oracle.com/cd/B28359_01/server.111/b28318/sqlplsql.htm#CNCPT1732

@@ -11,7 +11,7 @@
       "last_ver"
     ],
     "jdbcUrl": "jdbc:mysql://192.168.28.201:9030/tis",
-    "loadUrl": [
+    "feLoadUrl": [
       "192.168.28.201:8030"
     ],
     "table": "customer_order_relation",

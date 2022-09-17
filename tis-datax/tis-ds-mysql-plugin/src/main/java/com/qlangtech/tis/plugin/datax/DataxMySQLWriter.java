@@ -63,10 +63,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
     }
 
-    @Override
-    public void initWriterTable(String targetTabName, List jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, this, targetTabName, jdbcUrls);
-    }
+//    @Override
+//    public void initWriterTable(String targetTabName, List jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, this, targetTabName, jdbcUrls);
+//    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {

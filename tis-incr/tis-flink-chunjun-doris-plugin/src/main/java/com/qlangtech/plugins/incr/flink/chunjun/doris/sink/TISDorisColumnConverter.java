@@ -50,7 +50,6 @@ public class TISDorisColumnConverter
     private static final String NULL_VALUE = "\\N";
 
     private final Map<String, Integer> col2ordMap;
-    // private final Map<String, ISerializationConverter> col2ExternalConverterMap;
 
     public TISDorisColumnConverter(DorisConf options) {
         super(options.getColumn().size());
@@ -59,7 +58,6 @@ public class TISDorisColumnConverter
         BasicDorisStarRocksWriter.DorisType dorisType = null;
 
         this.col2ordMap = Maps.newHashMap();
-        //  this.col2ExternalConverterMap = Maps.newHashMap();
         ISerializationConverter extrnalColConerter = null;
         for (int i = 0; i < options.getColumn().size(); i++) {
             col = options.getColumn().get(i);
@@ -67,7 +65,6 @@ public class TISDorisColumnConverter
             this.col2ordMap.put(col.getName(), i);
             extrnalColConerter = wrapIntoNullableExternalConverter(createExternalConverter(dorisType), dorisType);
             toExternalConverters.add(extrnalColConerter);
-            //  this.col2ExternalConverterMap.put(col.getName(), extrnalColConerter);
         }
     }
 
@@ -203,8 +200,6 @@ public class TISDorisColumnConverter
                     return rowData.getShort(index);
                 }
             });
-
-            // AbstractBaseColumn value = ((ColumnRowData) rowData).getField(index);
             joiner.add(
                     val == null ? NULL_VALUE : String.valueOf(val));
         };

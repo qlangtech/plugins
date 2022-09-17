@@ -1,6 +1,6 @@
 {
   "name": {
-    "helpUrl": "http://doris.apache.org/master/zh-CN/extending-doris/datax.html#%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C"
+    "helpUrl": "https://doris.apache.org/docs/ecosystem/datax?_highlight=datax"
   },
   "dbName": {
     "help": "Doris表的数据库名称"

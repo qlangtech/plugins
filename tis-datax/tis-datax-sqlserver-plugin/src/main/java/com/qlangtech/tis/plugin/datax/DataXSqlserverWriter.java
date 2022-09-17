@@ -46,10 +46,10 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         return IOUtils.loadResourceFromClasspath(DataXSqlserverWriter.class, "DataXSqlserverWriter-tpl.json");
     }
 
-    @Override
-    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-    }
+//    @Override
+//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+//    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {

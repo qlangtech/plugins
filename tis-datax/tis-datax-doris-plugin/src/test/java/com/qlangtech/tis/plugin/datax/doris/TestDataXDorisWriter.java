@@ -64,7 +64,7 @@ public class TestDataXDorisWriter extends TestCase {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
-    private static final String DataXName = "test1dataXname";
+    private static final String DataXName = "mysql_doris";
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXDorisWriter.getDftTemplate();
@@ -233,7 +233,7 @@ public class TestDataXDorisWriter extends TestCase {
 
             EasyMock.verify(dataXProcessor);
         } finally {
-            FileUtils.forceDelete(createDDLFile);
+            FileUtils.deleteQuietly(createDDLFile);
         }
     }
 

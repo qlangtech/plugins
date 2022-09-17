@@ -36,13 +36,17 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
+import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.*;
@@ -68,14 +72,9 @@ import java.util.stream.Collectors;
  * @create: 2022-08-15 14:32
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
-//    @Override
-//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-//        throw new UnsupportedOperationException();
-//    }
-
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
-        //return null;
+       // return null;
         throw new UnsupportedOperationException();
     }
 
@@ -86,7 +85,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected boolean supportUpsetDML() {
-        return false;
+        return true;
     }
 
     private transient List<IColMetaGetter> colsMeta;
@@ -120,12 +119,6 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         }
         return colsMeta;
     }
-
-
-//    @Override
-//    protected List<IColMetaGetter> getColsMeta(Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat> sinkFunc) {
-//        return sinkFunc.getRight().colsMeta.stream().collect(Collectors.toList());
-//    }
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
@@ -196,17 +189,10 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
             @Override
             protected DataStreamSink<RowData> createOutput(DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
-                // JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
-                //Preconditions.checkNotNull(dataSet);
                 Preconditions.checkNotNull(outputFormat);
-
                 SinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
-
                 createSinkResult.setSinkFunction(sinkFunction);
-//                ref.set(Triple.of(sinkFunction, null, null));
-
-
                 return null;
             }
         });
@@ -246,5 +232,11 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         protected IEndTypeGetter.EndType getTargetType() {
             return IEndTypeGetter.EndType.Doris;
         }
+
+        @Override
+        public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
+            return null;
+        }
+
     }
 }

@@ -1,35 +1,47 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,6 +49,7 @@ import java.util.List;
  **/
 public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
+    private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsWriter.class);
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
@@ -57,7 +70,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     // 目标源中是否自动创建表，这样会方便不少
     public boolean autoCreateTable;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public String dataXName;
@@ -96,7 +109,67 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return RdbmsWriterDescriptor.class;
     }
 
-    public abstract void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception ;
+    public final void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);
+    }
+
+
+    /**
+     * 初始化表RDBMS的表，如果表不存在就创建表
+     *
+     * @param
+     * @throws Exception
+     */
+    private static void process(String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
+            , String tableName, List<String> jdbcUrls) throws Exception {
+        if (StringUtils.isEmpty(dataXName)) {
+            throw new IllegalArgumentException("param dataXName can not be null");
+        }
+        Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
+        boolean autoCreateTable = dataXWriter.autoCreateTable;
+        if (autoCreateTable) {
+            DataxProcessor processor = DataxProcessor.load(null, dataXName);
+
+            File createDDL = new File(processor.getDataxCreateDDLDir(null)
+                    , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            if (!createDDL.exists()) {
+                throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
+            }
+
+            BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
+            String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
+            for (String jdbcUrl : jdbcUrls) {
+                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
+                    List<String> tabs = Lists.newArrayList();
+                    dsFactory.refectTableInDB(tabs, conn);
+                    if (!tabs.contains(tableName)) {
+                        // 表不存在
+                        boolean success = false;
+                        try {
+                            try (Statement statement = conn.createStatement()) {
+                                logger.info("create table:{}\n   script:{}", tableName, createScript);
+                                success = statement.execute(createScript);
+                            }
+                        } catch (SQLException e) {
+                            throw new RuntimeException(createScript, e);
+                        }
+//                        if (!success) {
+//                            throw new IllegalStateException("table:" + tableName + " have not been create successful");
+//                        }
+                    } else {
+                        logger.info("table:{} already exist ,skip the create table step", tableName);
+                    }
+//                    tabs = Lists.newArrayList();
+//                    dsFactory.refectTableInDB(tabs, conn);
+//                    tabs.stream().filter((t) -> t.indexOf(tableName) > -1).forEach((tab) -> {
+//                        System.out.println(tab);
+//                    });
+
+                }
+            }
+        }
+
+    }
 
     protected static abstract class RdbmsWriterDescriptor extends BaseDataxWriterDescriptor {
         @Override

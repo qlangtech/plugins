@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 09:39
  * @see com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter
+ * @see com.alibaba.datax.plugin.writer.doriswriter.DorisWriter
  **/
 @Public
 public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFactory> {

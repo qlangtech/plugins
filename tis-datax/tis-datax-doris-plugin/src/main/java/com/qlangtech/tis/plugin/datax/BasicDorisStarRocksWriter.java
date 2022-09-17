@@ -105,12 +105,13 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
     }
 
 
-    /**
-     * 需要先初始化表starrocks目标库中的表
-     */
-    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-    }
+//    /**
+//     * 需要先初始化表starrocks目标库中的表
+//     */
+//    @Override
+//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+//    }
 
     @Override
     public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {

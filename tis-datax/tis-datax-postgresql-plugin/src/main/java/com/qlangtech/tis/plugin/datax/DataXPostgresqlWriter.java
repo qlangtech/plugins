@@ -63,10 +63,10 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 //    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String template;
 
-    @Override
-    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-    }
+//    @Override
+//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
+//    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");

@@ -69,6 +69,7 @@
         <module>tis-datax-hudi-common</module>
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-hudi-common-shade</module>
+        <module>tis-datax-starrocks-plugin</module>
     </modules>
 
     <dependencyManagement>

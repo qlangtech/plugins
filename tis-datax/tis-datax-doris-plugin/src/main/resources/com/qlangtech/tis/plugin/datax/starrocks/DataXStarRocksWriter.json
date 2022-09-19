@@ -8,5 +8,8 @@
         }
       ]
     }
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter.getDftTemplate()"
   }
 }

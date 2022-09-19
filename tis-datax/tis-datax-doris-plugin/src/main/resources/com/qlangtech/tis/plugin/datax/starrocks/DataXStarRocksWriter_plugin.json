@@ -1,6 +1,6 @@
 {
   "name": "dorisWriter",
-  "class": "com.dorisdb.connector.datax.plugin.writer.doriswriter.DorisWriter",
+  "class": "com.alibaba.datax.plugin.writer.starrockswriter.TISStarRocksWriter",
   "description": "",
   "developer": "doris"
 }

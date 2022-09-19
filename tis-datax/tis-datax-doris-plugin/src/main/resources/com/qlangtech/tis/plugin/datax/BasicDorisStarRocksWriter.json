@@ -14,9 +14,6 @@
     "label": "maxBatchSize",
     "dftVal": 104857600
   },
-  "template": {
-    "dftVal": "com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter.getDftTemplate()"
-  },
   "autoCreateTable": {
     "disable": false
   }

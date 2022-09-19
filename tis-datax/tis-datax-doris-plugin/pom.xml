@@ -52,6 +52,11 @@
             <version>${alibaba.datax.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>starrockswriter</artifactId>
+            <version>${alibaba.datax.version}</version>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.9</version>

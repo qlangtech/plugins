@@ -91,7 +91,6 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         } catch (SQLException e) {
             throw new TisException(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }
-        // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
     }
 
     @Override

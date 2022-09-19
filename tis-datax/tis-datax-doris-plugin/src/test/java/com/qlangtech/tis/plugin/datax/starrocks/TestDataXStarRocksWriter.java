@@ -28,7 +28,6 @@ import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
-import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -45,15 +44,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 12:04
  **/
 public class TestDataXStarRocksWriter extends TestCase {
-//    public void testGenDesc() {
-//        ContextDesc.descBuild(DataXDorisWriter.class, false);
-//    }
-
 
     @Override
     public void setUp() throws Exception {
@@ -61,7 +57,7 @@ public class TestDataXStarRocksWriter extends TestCase {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
-    private static final String DataXName = "test1dataXname";
+    private static final String DataXName = "mysql_doris";
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXStarRocksWriter.getDftTemplate();
@@ -82,14 +78,14 @@ public class TestDataXStarRocksWriter extends TestCase {
     public void testDescriptorsJSONGenerate() {
         DataxReader dataxReader = EasyMock.createMock("dataxReader", DataxReader.class);
 
-        List<ISelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1).stream().map((t) -> t).collect(Collectors.toList());
+        List<ISelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1)
+                .stream().map((t) -> t).collect(Collectors.toList());
 
         for (ISelectedTab tab : selectedTabs) {
             for (ISelectedTab.ColMeta cm : tab.getCols()) {
                 cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
-        //  EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
         DataxReader.dataxReaderThreadLocal.set(dataxReader);
         EasyMock.replay(dataxReader);
         DataXStarRocksWriter writer = new DataXStarRocksWriter();
@@ -110,12 +106,9 @@ public class TestDataXStarRocksWriter extends TestCase {
     public void testTemplateGenerate() throws Exception {
 
 
-        CreateDorisWriter createDorisWriter = new CreateDorisWriter().invoke();
+        CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
         DorisSourceFactory dsFactory = createDorisWriter.getDsFactory();
         DataXStarRocksWriter writer = createDorisWriter.getWriter();
-
-        // IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-
 
         List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
         ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
@@ -155,9 +148,10 @@ public class TestDataXStarRocksWriter extends TestCase {
         String targetTableName = "customer_order_relation";
         String testDataXName = "mysql_doris";
 
-        CreateDorisWriter createDorisWriter = new CreateDorisWriter().invoke();
+        CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
         createDorisWriter.dsFactory.password = "";
-        createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
+       // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
+        createDorisWriter.dsFactory.nodeDesc = "localhost";
 
         createDorisWriter.writer.autoCreateTable = true;
 
@@ -167,7 +161,8 @@ public class TestDataXStarRocksWriter extends TestCase {
         try {
             createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile
-                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
+                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(
+                            DataXStarRocksWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
             EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
@@ -178,34 +173,30 @@ public class TestDataXStarRocksWriter extends TestCase {
                 return dataXProcessor;
             };
             EasyMock.replay(dataXProcessor);
-            //DataXDorisWriter writer = new DataXDorisWriter();
+
             WriterTemplate.realExecuteDump("starrocks_writer_real_dump.json", createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {
-            FileUtils.forceDelete(createDDLFile);
+            FileUtils.deleteQuietly(createDDLFile);
         }
     }
 
     public static StarRocksSourceFactory geSourceFactory() {
         StarRocksSourceFactory dataSourceFactory = new StarRocksSourceFactory() {
-//            @Override
-//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-//                throw new UnsupportedOperationException();
-//            }
         };
 
         dataSourceFactory.dbName = "employees";
         dataSourceFactory.password = "123456";
         dataSourceFactory.userName = "root";
-        dataSourceFactory.nodeDesc = "192.168.28.202";
+        dataSourceFactory.nodeDesc = "localhost";
         dataSourceFactory.port = 9030;
         dataSourceFactory.encode = "utf8";
-        dataSourceFactory.loadUrl = "[\"172.28.17.100:8030\", \"172.28.17.100:8030\"]";
+        dataSourceFactory.loadUrl = "[\"localhost:8040\", \"localhost:8040\"]";
         return dataSourceFactory;
     }
 
-    private class CreateDorisWriter {
+    private class CreateStarRocksWriter {
         private StarRocksSourceFactory dsFactory;
         private DataXStarRocksWriter writer;
 
@@ -217,7 +208,7 @@ public class TestDataXStarRocksWriter extends TestCase {
             return writer;
         }
 
-        public CreateDorisWriter invoke() {
+        public CreateStarRocksWriter invoke() {
             dsFactory = geSourceFactory();
             writer = new DataXStarRocksWriter() {
                 @Override
@@ -227,13 +218,13 @@ public class TestDataXStarRocksWriter extends TestCase {
 
                 @Override
                 public Class<?> getOwnerClass() {
-                    return DataXDorisWriter.class;
+                    return DataXStarRocksWriter.class;
                 }
             };
             writer.dataXName = DataXName;// .collectionName = "employee";
 
             //writer..column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
-            writer.template = DataXDorisWriter.getDftTemplate();
+            writer.template = DataXStarRocksWriter.getDftTemplate();
             writer.dbName = "order1";
             writer.preSql = "drop table @table";
             writer.postSql = "drop table @table";

@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.starrocks;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 
@@ -40,6 +41,10 @@ public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSou
                 return "PRIMARY KEY";
             }
         };
+    }
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataXStarRocksWriter.class, "writer-tpl.json");
     }
 
     @TISExtension()

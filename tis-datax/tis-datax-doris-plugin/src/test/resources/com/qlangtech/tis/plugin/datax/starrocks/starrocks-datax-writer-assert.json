@@ -6,15 +6,15 @@
       "user_name"
     ],
     "database":"employees",
-    "dataxName":"test1dataXname",
-    "jdbcUrl":"jdbc:mysql://192.168.28.202:9030/employees",
+    "dataxName":"mysql_doris",
+    "jdbcUrl":"jdbc:mysql://127.0.0.1:9030/employees",
     "loadProps":{
       "column_separator":"\\x01",
       "row_delimiter":"\\x02"
     },
     "loadUrl":[
-      "172.28.17.100:8030",
-      "172.28.17.100:8030"
+      "localhost:8040",
+      "localhost:8040"
     ],
     "maxBatchRows":999,
     "maxBatchSize":1001,

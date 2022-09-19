@@ -61,9 +61,7 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         return new DorisWriterContext(this, tableMap.get());
     }
 
-    public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(BasicDorisStarRocksWriter.class, "BasicDorisStarRocksWriter-tpl.json");
-    }
+
 
     public static String getDftLoadProps() {
         return "{\n" +

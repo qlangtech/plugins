@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.doris;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 
@@ -44,6 +45,11 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
                 return "UNIQUE KEY";
             }
         };
+    }
+
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "writer-tpl.json");
     }
 
 

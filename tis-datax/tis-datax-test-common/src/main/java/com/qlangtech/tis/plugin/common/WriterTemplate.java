@@ -155,7 +155,7 @@ public class WriterTemplate {
                         "                \"type\": \"string\"\n" +
                         "              },\n" +
                         "              {\n" +
-                        "                \"random\": \"0,0\",\n" +
+                        "                \"random\": \"10,10\",\n" +
                         "                \"type\": \"string\"\n" +
                         "              },\n" +
                         "              {\n" +

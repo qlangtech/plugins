@@ -47,6 +47,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>1.7.32</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
       <version>3.6.0</version>

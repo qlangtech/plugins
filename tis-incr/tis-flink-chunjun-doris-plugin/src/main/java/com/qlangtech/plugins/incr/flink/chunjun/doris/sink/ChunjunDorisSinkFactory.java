@@ -27,7 +27,6 @@ import com.dtstack.chunjun.connector.doris.options.DorisKeys;
 import com.dtstack.chunjun.connector.doris.options.LoadConf;
 import com.dtstack.chunjun.connector.doris.sink.DorisHttpOutputFormatBuilder;
 import com.dtstack.chunjun.connector.doris.sink.DorisSinkFactory;
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
@@ -36,11 +35,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -74,7 +70,7 @@ import java.util.stream.Collectors;
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
-       // return null;
+        // return null;
         throw new UnsupportedOperationException();
     }
 
@@ -177,7 +173,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
                 DorisHttpOutputFormatBuilder builder = super.createDorisHttpOutputFormatBuilder();
                 List<String> cols = options.getColumn().stream().map((field) -> field.getName()).collect(Collectors.toList());
                 builder.setColumns(cols);
-                TISDorisColumnConverter columnConverter = new TISDorisColumnConverter(options);
+                TISDorisColumnConverter columnConverter = TISDorisColumnConverter.create(options);
                 columnConverter.setColumnNames(cols);
                 if (CollectionUtils.isEmpty(options.getFullColumn())) {
                     throw new IllegalStateException("options.getFullColumn() can not be empty");
@@ -200,16 +196,16 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
 
-    /**
-     * @param cm
-     * @return
-     * @see BasicDorisStarRocksWriter.DorisType
-     */
-    @Override
-    protected Object parseType(ISelectedTab.ColMeta cm) {
-        // DorisType
-        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
-    }
+//    /**
+//     * @param cm
+//     * @return
+//     * @see BasicDorisStarRocksWriter.DorisType
+//     */
+//    @Override
+//    protected Object parseType(ISelectedTab.ColMeta cm) {
+//        // DorisType
+//        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
+//    }
 
     @Override
     protected void initChunjunJdbcConf(JdbcConf jdbcConf) {

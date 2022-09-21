@@ -19,13 +19,21 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import org.apache.flink.table.data.RowData;
+
 import java.io.Serializable;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-09-05 15:10
  **/
-@FunctionalInterface
-public interface IRowDataValGetter extends Serializable {
+
+public interface IRowDataValGetter extends Serializable, Function<RowData, Object> {
+
+    @Override
+    default Object apply(RowData rowData) {
+        return this.getVal(rowData);
+    }
+
     public Object getVal(RowData rowData);//, int colIndex
 }

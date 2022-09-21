@@ -47,8 +47,8 @@ public class TestFlinkTaskNodeController {
         TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory("mysql_mysql");
 
         Assert.assertNotNull(incrSinkFactory);
-        Set<PluginMeta> pluginMetas = RobustReflectionConverter.usedPluginInfo.get();
-        Assert.assertTrue(pluginMetas.size() > 0);
+       RobustReflectionConverter.PluginMetas pluginMetas = RobustReflectionConverter.usedPluginInfo.get();
+        Assert.assertTrue(pluginMetas.getMetas().size() > 0);
     }
 
 

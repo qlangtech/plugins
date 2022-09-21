@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.RobustReflectionConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -47,7 +48,8 @@ import java.util.Objects;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-23 12:07
  **/
-public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter
+        implements IDataSourceFactoryGetter, IInitWriterTableExecutor, KeyedPluginStore.IPluginKeyAware {
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsWriter.class);
 
@@ -73,7 +75,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
-    public String dataXName;
+    public transient String dataXName;
 
     @Override
     public Integer getRowFetchSize() {
@@ -81,7 +83,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     }
 
     @Override
-    public void setKey(KeyedPluginStore.Key key) {
+    public final void setKey(KeyedPluginStore.Key key) {
         this.dataXName = key.keyVal.getVal();
     }
 
@@ -109,7 +111,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return RdbmsWriterDescriptor.class;
     }
 
+    @Override
     public final void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
+        if (RobustReflectionConverter.usedPluginInfo.get().isDryRun()) {
+            return;
+        }
         process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);
     }
 

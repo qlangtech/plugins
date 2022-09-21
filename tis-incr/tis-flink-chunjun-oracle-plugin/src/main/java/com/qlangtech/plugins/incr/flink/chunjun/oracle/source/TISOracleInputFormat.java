@@ -19,9 +19,10 @@
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
-import com.dtstack.chunjun.connector.jdbc.util.JdbcUtil;
+import com.dtstack.chunjun.connector.oracle.converter.OracleColumnConverter;
 import com.dtstack.chunjun.connector.oracle.source.OracleInputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
@@ -46,7 +47,11 @@ public class TISOracleInputFormat extends OracleInputFormat {
     }
 
 
-
+    @Override
+    protected final void initializeRowConverter() {
+        this.setRowConverter(DialectUtils.createColumnConverter(
+                jdbcDialect, jdbcConf, this.colsMeta, OracleColumnConverter::createInternalConverter));
+    }
 
 
     /**

@@ -76,10 +76,10 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
 
     }
 
-    @Override
-    protected String parseType(ISelectedTab.ColMeta cm) {
-        return typeMap(cm);
-    }
+//    @Override
+//    protected String parseType(ISelectedTab.ColMeta cm) {
+//        return typeMap(cm);
+//    }
 
     public static String typeMap(ISelectedTab.ColMeta cm) {
         return cm.getType().getS();

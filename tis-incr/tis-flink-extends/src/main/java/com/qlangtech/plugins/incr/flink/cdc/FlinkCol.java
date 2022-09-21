@@ -72,6 +72,10 @@ public class FlinkCol implements Serializable {
         this.rowDataValGetter = rowDataValGetter;
     }
 
+    public IRowDataValGetter getRowDataValGetter() {
+        return rowDataValGetter;
+    }
+
     public boolean isPk() {
         return pk;
     }

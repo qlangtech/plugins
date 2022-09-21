@@ -19,8 +19,10 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlInputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
@@ -45,6 +47,18 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
                 .getConnection(jdbcConf.getJdbcUrl());
+    }
+
+    @Override
+    protected void initializeRowConverter() {
+        //  super.initializeRowConverter();
+//        setRowConverter(
+//                rowConverter == null
+//                        ? jdbcDialect.getColumnConverter(rowType, jdbcConf)
+//                        : rowConverter);
+
+        this.setRowConverter(DialectUtils.createColumnConverter(
+                jdbcDialect, jdbcConf, this.colsMeta, PostgresqlColumnConverter::createInternalConverter));
     }
 
     @Override

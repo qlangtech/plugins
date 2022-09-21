@@ -32,10 +32,10 @@ import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.dtstack.chunjun.sink.SinkFactory;
 import com.dtstack.chunjun.sink.WriteMode;
-import com.dtstack.chunjun.util.TableUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -62,7 +62,6 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.logical.RowType;
 
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
@@ -345,11 +344,18 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 } catch (SQLException e) {
                     throw new RuntimeException("jdbcUrl:" + jdbcUrl, e);
                 }
+                //  AbstractRowDataMapper.getAllTabColsMeta(routputFormat.colsMeta.stream().collect(Collectors.toList()));
                 TableCols tableCols = new TableCols(routputFormat.colsMeta);
-                RowType rowType =
-                        TableUtil.createRowType(
-                                tableCols.filterBy(jdbcConf.getColumn()), jdbcDialect.getRawTypeConverter());
-                JdbcColumnConverter rowConverter = (JdbcColumnConverter) jdbcDialect.getColumnConverter(rowType, jdbcConf);
+//                RowType rowType =
+//                        TableUtil.createRowType(
+//                                tableCols.filterBy(jdbcConf.getColumn()), jdbcDialect.getRawTypeConverter());
+
+                //jdbcDialect.getColumnConverter();
+
+                JdbcColumnConverter rowConverter = (JdbcColumnConverter)
+                        DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, tableCols.filterBy(jdbcConf.getColumn()));
+
+                //  JdbcColumnConverter rowConverter = (JdbcColumnConverter) jdbcDialect.getColumnConverter(rowType, jdbcConf);
                 DtOutputFormatSinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
 
@@ -453,7 +459,9 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-    protected abstract Object parseType(ISelectedTab.ColMeta cm);
+    protected final Object parseType(ISelectedTab.ColMeta cm) {
+       return cm.getType().getS();
+    }
 
 
     protected final <TT extends BaseSinkFunctionDescriptor> Class<TT> getExpectDescClass() {

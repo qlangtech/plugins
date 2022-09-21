@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
@@ -47,6 +48,19 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     @Override
     protected Map<String, ColMeta> getTableMetaData() {
         return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
+    }
+
+
+    @Override
+    protected void initializeRowConverter() {
+      //  super.initializeRowConverter();
+//        setRowConverter(
+//                rowConverter == null
+//                        ? jdbcDialect.getColumnConverter(rowType, jdbcConf)
+//                        : rowConverter);
+
+        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
+
     }
 
     @Override

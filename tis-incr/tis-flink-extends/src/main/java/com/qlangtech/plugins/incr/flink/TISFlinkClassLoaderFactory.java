@@ -207,7 +207,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 //                    }
                     final Set<String> relativePluginNames = cfgSnapshot.getPluginNames();
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
-                    return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames), libraryURLs, this.getParentClassLoader()
+                    return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)
+                            , libraryURLs, this.getParentClassLoader()
                             , this.alwaysParentFirstPatterns, this.classLoadingExceptionHandler);
                 } catch (Throwable e) {
                     throw new RuntimeException(e);

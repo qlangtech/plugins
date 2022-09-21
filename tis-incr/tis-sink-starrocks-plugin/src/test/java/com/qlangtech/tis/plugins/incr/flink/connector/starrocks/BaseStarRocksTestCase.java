@@ -53,7 +53,8 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
     private static int addBeNode() throws Exception {
         //  String command = "docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + containerId;
 
-        String command = "mysql -h127.0.0.1 -P" + starRocksContainer.getFePort() + " -uroot -e\"ALTER SYSTEM ADD BACKEND '" + StringUtils.substring(starRocksContainer.getContainerId(), 0, 12) + ":9050'\" ";
+        String command = "mysql -h127.0.0.1 -P" + starRocksContainer.getFePort()
+                + " -uroot -e\"ALTER SYSTEM ADD BACKEND '" + StringUtils.substring(starRocksContainer.getContainerId(), 0, 12) + ":9050'\" ";
 
         Process exec = null;
         String containerIp;

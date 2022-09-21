@@ -61,86 +61,86 @@ public class ChunjunGreenplumSinkFactory extends ChunjunSinkFactory {
         return new GreenplumOutputFormat(dsFactory);
     }
 
-    @Override
-    protected String parseType(ISelectedTab.ColMeta cm) {
-        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-            @Override
-            public String bigInt(DataType type) {
-                return "BIGINT";
-            }
-
-            @Override
-            public String doubleType(DataType type) {
-                return "DOUBLE";
-            }
-
-            @Override
-            public String dateType(DataType type) {
-                return "DATE";
-            }
-
-            @Override
-            public String timestampType(DataType type) {
-                return "TIMESTAMP";
-            }
-
-            @Override
-            public String bitType(DataType type) {
-                return "BIT";
-            }
-
-            @Override
-            public String blobType(DataType type) {
-                // TINYBLOB、BLOB、MEDIUMBLOB、LONGBLOB
-                switch (type.type) {
-                    case Types.BLOB:
-                        return "BLOB";
-                    case Types.BINARY:
-                    case Types.LONGVARBINARY:
-                        return "BINARY";
-                    case Types.VARBINARY:
-                        return "VARBINARY";
-                    default:
-                        throw new IllegalStateException("illegal type:" + type.type);
-                }
-            }
-
-            @Override
-            public String varcharType(DataType type) {
-                return "VARCHAR";
-            }
-
-            @Override
-            public String intType(DataType type) {
-                return "INT";
-            }
-
-            @Override
-            public String floatType(DataType type) {
-                return "FLOAT";
-            }
-
-            @Override
-            public String decimalType(DataType type) {
-                return "DECIMAL";
-            }
-
-            @Override
-            public String timeType(DataType type) {
-                return "TIME";
-            }
-
-            @Override
-            public String tinyIntType(DataType dataType) {
-                return "TINYINT";
-            }
-
-            @Override
-            public String smallIntType(DataType dataType) {
-                return "SMALLINT";
-            }
-        });
-    }
+//    @Override
+//    protected String parseType(ISelectedTab.ColMeta cm) {
+//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
+//            @Override
+//            public String bigInt(DataType type) {
+//                return "BIGINT";
+//            }
+//
+//            @Override
+//            public String doubleType(DataType type) {
+//                return "DOUBLE";
+//            }
+//
+//            @Override
+//            public String dateType(DataType type) {
+//                return "DATE";
+//            }
+//
+//            @Override
+//            public String timestampType(DataType type) {
+//                return "TIMESTAMP";
+//            }
+//
+//            @Override
+//            public String bitType(DataType type) {
+//                return "BIT";
+//            }
+//
+//            @Override
+//            public String blobType(DataType type) {
+//                // TINYBLOB、BLOB、MEDIUMBLOB、LONGBLOB
+//                switch (type.type) {
+//                    case Types.BLOB:
+//                        return "BLOB";
+//                    case Types.BINARY:
+//                    case Types.LONGVARBINARY:
+//                        return "BINARY";
+//                    case Types.VARBINARY:
+//                        return "VARBINARY";
+//                    default:
+//                        throw new IllegalStateException("illegal type:" + type.type);
+//                }
+//            }
+//
+//            @Override
+//            public String varcharType(DataType type) {
+//                return "VARCHAR";
+//            }
+//
+//            @Override
+//            public String intType(DataType type) {
+//                return "INT";
+//            }
+//
+//            @Override
+//            public String floatType(DataType type) {
+//                return "FLOAT";
+//            }
+//
+//            @Override
+//            public String decimalType(DataType type) {
+//                return "DECIMAL";
+//            }
+//
+//            @Override
+//            public String timeType(DataType type) {
+//                return "TIME";
+//            }
+//
+//            @Override
+//            public String tinyIntType(DataType dataType) {
+//                return "TINYINT";
+//            }
+//
+//            @Override
+//            public String smallIntType(DataType dataType) {
+//                return "SMALLINT";
+//            }
+//        });
+//    }
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {

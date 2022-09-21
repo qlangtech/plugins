@@ -71,16 +71,16 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
         super.setSchema(conn, schemaSupported.getDBSchema(), dsFactory);
     }
 
-    /**
-     * https://dtstack.github.io/chunjun/documents/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@postgresql@postgres-sink
-     *
-     * @param cm
-     * @return
-     */
-    @Override
-    protected String parseType(ISelectedTab.ColMeta cm) {
-        return PostgreSQLSourceFunction.typeMapper(cm);
-    }
+//    /**
+//     * https://dtstack.github.io/chunjun/documents/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@postgresql@postgres-sink
+//     *
+//     * @param cm
+//     * @return
+//     */
+//    @Override
+//    protected String parseType(ISelectedTab.ColMeta cm) {
+//        return PostgreSQLSourceFunction.typeMapper(cm);
+//    }
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {

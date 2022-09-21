@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>, Serializable {
     protected final List<FlinkCol> cols;
 
+
     public AbstractRowDataMapper(List<FlinkCol> cols) {
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalArgumentException("param cols can not be empty");
@@ -138,7 +139,13 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return new FlinkCol(meta.getName()
                         , new AtomicDataType(new BigIntType(nullable))
                         // , DataTypes.BIGINT()
-                        , new LongConvert(), (rowData) -> rowData.getLong(colIndex));
+                        , new LongConvert(), (rowData) -> {
+                    //try {
+                        return rowData.getLong(colIndex);
+//                    } catch (Exception e) {
+//                        throw new RuntimeException("col:" + meta.getName() + " type:" + type.toString(), e);
+//                    }
+                });
             }
 
             public FlinkCol decimalType(DataType type) {
@@ -217,13 +224,14 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     @Override
     public RowData map(DTO dto) throws Exception {
         RowData row = createRowData(dto);
-        int index = 0;
+
         Map<String, Object> vals
                 = (dto.getEventType() == DTO.EventType.DELETE || dto.getEventType() == DTO.EventType.UPDATE_BEFORE)
                 ? dto.getBefore() : dto.getAfter();
         if (vals == null) {
             throw new IllegalStateException("incr data of " + dto.getTableName() + " can not be null");
         }
+        int index = 0;
         Object val = null;
         for (FlinkCol col : cols) {
             val = vals.get(col.name);

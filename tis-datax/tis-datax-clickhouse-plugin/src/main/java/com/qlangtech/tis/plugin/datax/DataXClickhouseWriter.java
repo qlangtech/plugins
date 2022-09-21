@@ -28,7 +28,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
@@ -63,7 +62,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String template;
 
-    public String dataXName;
+   // public String dataXName;
 
 //    @Override
 //    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
@@ -179,10 +178,10 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     }
 
 
-    @Override
-    public void setKey(KeyedPluginStore.Key key) {
-        this.dataXName = key.keyVal.getVal();
-    }
+//    @Override
+//    public void setKey(KeyedPluginStore.Key key) {
+//        this.dataXName = key.keyVal.getVal();
+//    }
 
     @Override
     public ClickHouseDataSourceFactory getDataSourceFactory() {

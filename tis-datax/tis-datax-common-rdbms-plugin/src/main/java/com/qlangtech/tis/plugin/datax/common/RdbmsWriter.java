@@ -23,6 +23,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class RdbmsWriter {
         }
 
         try {
-            InitWriterTable.process(dataXName, tableName, jdbcUrls);
+            DataxWriter.process(dataXName, tableName, jdbcUrls);
         } catch (Exception e) {
             throw DataXException.asDataXException(RdbmsWriterErrorCode.INITIALIZE_TABLE_ERROR, tableName, e);
         }

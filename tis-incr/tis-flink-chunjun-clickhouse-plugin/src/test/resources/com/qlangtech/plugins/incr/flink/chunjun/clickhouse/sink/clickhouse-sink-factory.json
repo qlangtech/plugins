@@ -64,7 +64,8 @@
     "displayName":"Chunjun-Sink-Clickhouse",
     "extendPoint":"com.qlangtech.tis.plugin.incr.TISSinkFactory",
     "extractProps":{
-      "targetType":"clickhouse"
+      "targetType":"clickhouse",
+      "extendSelectedTabProp":true
     },
     "impl":"com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink.ChunjunClickhouseSinkFactory",
     "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#chunjunclickhousesinkfactory",

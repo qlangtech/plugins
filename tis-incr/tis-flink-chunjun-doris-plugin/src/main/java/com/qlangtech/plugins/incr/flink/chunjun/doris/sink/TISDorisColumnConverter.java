@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 import com.dtstack.chunjun.conf.FieldConf;
 import com.dtstack.chunjun.connector.doris.options.DorisConf;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
+import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
@@ -29,6 +30,7 @@ import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.table.data.RowData;
 
 import java.time.LocalDate;
@@ -51,22 +53,39 @@ public class TISDorisColumnConverter
 
     private final Map<String, Integer> col2ordMap;
 
-    public TISDorisColumnConverter(DorisConf options) {
-        super(options.getColumn().size());
+    private TISDorisColumnConverter(DorisConf options, Map<String, Integer> col2ordMap, int fieldCount, List<IDeserializationConverter> toInternalConverters
+            , List<Pair<ISerializationConverter<List<String>>, BasicDorisStarRocksWriter.DorisType>> toExternalConverters) {
+        super(fieldCount, toInternalConverters, toExternalConverters);
         this.options = options;
+        this.col2ordMap = col2ordMap;
+    }
+
+
+    public static TISDorisColumnConverter create(DorisConf options) {
         FieldConf col = null;
         BasicDorisStarRocksWriter.DorisType dorisType = null;
+        Map<String, Integer> col2ordMap = Maps.newHashMap();
 
-        this.col2ordMap = Maps.newHashMap();
+        List<Pair<ISerializationConverter<List<String>>, BasicDorisStarRocksWriter.DorisType>>
+                toExternalConverters = Lists.newArrayList();
+        List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
         ISerializationConverter extrnalColConerter = null;
+        int fieldCount = options.getColumn().size();
         for (int i = 0; i < options.getColumn().size(); i++) {
             col = options.getColumn().get(i);
             dorisType = col.getType();
-            this.col2ordMap.put(col.getName(), i);
-            extrnalColConerter = wrapIntoNullableExternalConverter(createExternalConverter(dorisType), dorisType);
-            toExternalConverters.add(extrnalColConerter);
+            col2ordMap.put(col.getName(), i);
+            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dorisType));
+            toExternalConverters.add(Pair.of(extrnalColConerter, dorisType));
         }
+        return new TISDorisColumnConverter(options, col2ordMap, fieldCount, toInternalConverters, toExternalConverters);
     }
+
+//    public TISDorisColumnConverter(DorisConf options) {
+//        super(options.getColumn().size());
+//        this.options = options;
+//
+//    }
 
 
     @Override
@@ -118,6 +137,11 @@ public class TISDorisColumnConverter
     @Override
     protected ISerializationConverter<List<String>> wrapIntoNullableExternalConverter(
             ISerializationConverter<List<String>> serializeConverter, BasicDorisStarRocksWriter.DorisType type) {
+        return wrapNullableExternalConverter(serializeConverter);
+    }
+
+    private static ISerializationConverter<List<String>>
+    wrapNullableExternalConverter(ISerializationConverter<List<String>> serializeConverter) {
         return ((rowData, index, joiner) -> {
             if (rowData == null || rowData.isNullAt(index)) {
                 joiner.add(NULL_VALUE);
@@ -127,9 +151,13 @@ public class TISDorisColumnConverter
         });
     }
 
-    @Override
-    protected ISerializationConverter<List<String>> createExternalConverter(final BasicDorisStarRocksWriter.DorisType type) {
-       final  BiFunction dateProcess = FlinkCol.LocalDate();
+//    @Override
+//    protected ISerializationConverter<List<String>> createExternalConverter(final BasicDorisStarRocksWriter.DorisType type) {
+//        return getSerializationConverter(type);
+//    }
+
+    private static ISerializationConverter<List<String>> getSerializationConverter(BasicDorisStarRocksWriter.DorisType type) {
+        final BiFunction dateProcess = FlinkCol.LocalDate();
         return (rowData, index, joiner) -> {
 
             Object val = (rowData.isNullAt(index)) ? null : type.type.accept(new DataType.TypeVisitor<Object>() {
@@ -145,7 +173,7 @@ public class TISDorisColumnConverter
 
                 @Override
                 public Object dateType(DataType type) {
-                   // dateProcess.deApply()
+                    // dateProcess.deApply()
                     LocalDate localDate = LocalDate.ofEpochDay(rowData.getInt(index));
                     return dateProcess.deApply(localDate);
                 }

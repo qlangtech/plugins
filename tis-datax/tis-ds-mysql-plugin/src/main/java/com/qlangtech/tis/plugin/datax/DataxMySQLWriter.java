@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -30,7 +29,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.datax.common.InitWriterTable;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
@@ -310,7 +308,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         public DefaultDescriptor() {
             super();
         }
-
 
 
         @Override

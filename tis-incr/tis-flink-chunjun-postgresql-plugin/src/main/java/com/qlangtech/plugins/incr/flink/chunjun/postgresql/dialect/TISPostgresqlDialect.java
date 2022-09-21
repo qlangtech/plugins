@@ -25,13 +25,15 @@ import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.dialect.PostgresqlDialect;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
+import com.dtstack.chunjun.converter.IDeserializationConverter;
+import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.dtstack.chunjun.converter.RawTypeConverter;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.converter.TISPostgresqlColumnConverter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import io.vertx.core.json.JsonArray;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.RowType;
 
 import java.sql.ResultSet;
 import java.util.List;
@@ -49,11 +51,28 @@ public class TISPostgresqlDialect extends PostgresqlDialect {
         this.jdbcConf = JdbcSinkFactory.getJdbcConf(syncConf);
     }
 
+//    @Override
+//    public AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
+//    getColumnConverter(RowType rowType, ChunJunCommonConf commonConf) {
+//        return new TISPostgresqlColumnConverter(rowType, commonConf);
+//    }
+
     @Override
     public AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
-    getColumnConverter(RowType rowType, ChunJunCommonConf commonConf) {
-        return new TISPostgresqlColumnConverter(rowType, commonConf);
+    getColumnConverter(
+            ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters
+            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters) {
+        return new TISPostgresqlColumnConverter(commonConf, fieldCount, toInternalConverters, toExternalConverters);
     }
+
+
+//    @Override
+//    public AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
+//    getRowConverter(
+//            int fieldCount, List<IDeserializationConverter> toInternalConverters
+//            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters) {
+//        return new TISPostgresqlColumnConverter(fieldCount, toInternalConverters, toExternalConverters);
+//    }
 
     @Override
     public RawTypeConverter getRawTypeConverter() {

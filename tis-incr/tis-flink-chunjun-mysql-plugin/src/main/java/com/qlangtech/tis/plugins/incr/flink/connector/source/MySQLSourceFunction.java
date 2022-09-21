@@ -45,6 +45,7 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
         super(sourceFactory);
     }
 
+    @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
             SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc) {
         return new ExtendMySQLSourceFactory(conf, sourceFactory) {

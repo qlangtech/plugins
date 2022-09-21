@@ -20,9 +20,12 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.util.TableUtil;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import org.apache.flink.table.types.logical.RowType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -43,6 +46,13 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
             throw new IllegalArgumentException("param dsFactory can not be null");
         }
         this.dsFactory = dsFactory;
+    }
+
+    @Override
+    protected void initializeRowConverter() {
+
+        setRowConverter(
+                DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
     }
 
     @Override

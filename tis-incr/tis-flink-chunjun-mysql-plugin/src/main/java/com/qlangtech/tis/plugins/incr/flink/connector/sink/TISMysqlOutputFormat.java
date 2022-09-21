@@ -18,15 +18,14 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.mysql.sink.MysqlOutputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,6 +48,20 @@ public final class TISMysqlOutputFormat extends MysqlOutputFormat {
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
         return dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+    }
+
+    @Override
+    protected void initializeRowConverter() {
+        //super.initializeRowConverter();
+//
+//        RowType rowType =
+//                TableUtil.createRowTypeByColsMeta(
+//                        this.colsMeta, jdbcDialect.getRawTypeConverter());
+
+        ;
+
+        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
+
     }
 
     @Override

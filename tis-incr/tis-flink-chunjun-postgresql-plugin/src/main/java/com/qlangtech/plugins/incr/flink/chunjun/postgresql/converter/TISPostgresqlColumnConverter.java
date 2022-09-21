@@ -21,22 +21,33 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.converter;
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
 import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
+import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.RowType;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-23 10:46
  **/
 public class TISPostgresqlColumnConverter extends PostgresqlColumnConverter {
-    public TISPostgresqlColumnConverter(RowType rowType, ChunJunCommonConf commonConf) {
-        super(rowType, commonConf);
+
+    public TISPostgresqlColumnConverter(ChunJunCommonConf commonConf, int fieldCount
+            , List<IDeserializationConverter> toInternalConverters
+            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>
+            , LogicalType>> toExternalConverters) {
+        super(commonConf, fieldCount, toInternalConverters, toExternalConverters);
     }
 
-    @Override
-    protected ISerializationConverter<FieldNamedPreparedStatement> createExternalConverter(LogicalType type) {
-        return super.createExternalConverter(type);
+//    public TISPostgresqlColumnConverter(RowType rowType, ChunJunCommonConf commonConf) {
+//        super(rowType, commonConf);
+//    }
+
+//    @Override
+//    protected ISerializationConverter<FieldNamedPreparedStatement> createExternalConverter(LogicalType type) {
+//        return super.createExternalConverter(type);
 //        switch (type.getTypeRoot()) {
 //            case BOOLEAN:
 //                return (val, index, statement) -> {
@@ -95,5 +106,5 @@ public class TISPostgresqlColumnConverter extends PostgresqlColumnConverter {
 //        }
 
 
-    }
+   // }
 }

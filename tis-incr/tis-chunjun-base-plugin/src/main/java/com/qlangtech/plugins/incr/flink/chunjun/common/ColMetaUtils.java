@@ -45,6 +45,14 @@ public class ColMetaUtils {
         return new ColMeta(col.getName(), col.getType(), col.isPk());
     }
 
+    /**
+     * 取得目标库的字段类型
+     *
+     * @param dsFactory
+     * @param conn
+     * @param conf
+     * @return
+     */
     public static Map<String, ColMeta> getColMetasMap(
             DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());

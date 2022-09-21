@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.sink;
 
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 
@@ -47,6 +48,11 @@ public class TISJdbcOutputFormat extends JdbcOutputFormat {
     @Override
     protected Map<String, ColMeta> getTableMetaData() {
         return ColMetaUtils.getColMetasMap(this.dsFactory, dbConn, jdbcConf);
+    }
+
+    @Override
+    protected final void initializeRowConverter() {
+        this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
     }
 
     @Override

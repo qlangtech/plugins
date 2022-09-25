@@ -43,6 +43,7 @@ import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -107,7 +108,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                         new AtomicDataType(new SmallIntType(nullable))
                         //DataTypes.SMALLINT()
                         , new ShortConvert()
-                        , FlinkCol.NoOp()
+                        , new RowShortConvert()
                         , (rowData) -> rowData.getShort(colIndex));
             }
 
@@ -116,21 +117,25 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return new FlinkCol(meta.getName(),
                         new AtomicDataType(new TinyIntType(nullable))
                         //         , DataTypes.TINYINT()
-                        , new ShortConvert()
                         , new TinyIntConvertByte()
-                        , (rowData) -> rowData.getShort(colIndex));
+                        , new TinyIntConvertByte()
+                        , (rowData) -> rowData.getByte(colIndex));
             }
 
             @Override
             public FlinkCol floatType(DataType type) {
                 return new FlinkCol(meta.getName()
                         , DataTypes.FLOAT()
+                        , new FloatDataConvert()
+                        , new FloatDataConvert()
                         , (rowData) -> rowData.getFloat(colIndex));
             }
 
             @Override
             public FlinkCol timeType(DataType type) {
-                return new FlinkCol(meta.getName(), DataTypes.TIME(3)
+                return new FlinkCol(meta.getName() //
+                        , DataTypes.TIME(3) //
+                        , new LocalTimeConvert()
                         , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L)));
             }
 
@@ -139,12 +144,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return new FlinkCol(meta.getName()
                         , new AtomicDataType(new BigIntType(nullable))
                         // , DataTypes.BIGINT()
-                        , new LongConvert(), (rowData) -> {
-                    //try {
-                        return rowData.getLong(colIndex);
-//                    } catch (Exception e) {
-//                        throw new RuntimeException("col:" + meta.getName() + " type:" + type.toString(), e);
-//                    }
+                        , new LongConvert()
+                        , (rowData) -> {
+                    return rowData.getLong(colIndex);
                 });
             }
 
@@ -198,6 +200,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             @Override
             public FlinkCol boolType(DataType dataType) {
                 return new FlinkCol(meta.getName(), DataTypes.BOOLEAN()
+                        , new FlinkCol.BoolProcess()
                         , (rowData) -> rowData.getBoolean(colIndex));
             }
 
@@ -261,6 +264,17 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
+    static class RowShortConvert extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof Integer) {
+                return ((Integer) o).shortValue();
+            }
+            Short s = (Short) o;
+            return s;
+        }
+    }
+
     static class TinyIntConvertByte extends BiFunction {
         @Override
         public Object apply(Object o) {
@@ -295,6 +309,20 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         public Object apply(Object o) {
             LocalDateTime v = (LocalDateTime) super.apply(o);
             return TimestampData.fromLocalDateTime(v);
+//            ZoneOffset zoneOffset = sysDefaultZone.getRules().getOffset(v);
+//            return v.toInstant(zoneOffset).toEpochMilli();
+        }
+    }
+
+    static class FloatDataConvert extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof Number) {
+                return ((Number) o).floatValue();
+            }
+            return o;
+//            LocalDateTime v = (LocalDateTime) super.apply(o);
+//            return TimestampData.fromLocalDateTime(v);
 //            ZoneOffset zoneOffset = sysDefaultZone.getRules().getOffset(v);
 //            return v.toInstant(zoneOffset).toEpochMilli();
         }
@@ -347,6 +375,18 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
+    public static class LocalTimeConvert extends BiFunction {
+        public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof String) {
+                return LocalTime.parse((String) o, TIME_FORMATTER);
+            }
+            return (LocalTime) o;
+        }
+    }
+
     static class LongConvert extends BiFunction {
         @Override
         public Object deApply(Object o) {
@@ -355,12 +395,12 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public Object apply(Object o) {
-            if (o instanceof Long) {
-                return o;
+            if (o instanceof Number) {
+                return ((Number) o).longValue();
             }
-            if (o instanceof Integer) {
-                return ((Integer) o).longValue();
-            }
+//            if (o instanceof Integer) {
+//                return ((Integer) o).longValue();
+//            }
             return Long.parseLong(String.valueOf(o));
         }
     }

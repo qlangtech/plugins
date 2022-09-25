@@ -249,13 +249,11 @@ public class FlinkTaskNodeController implements IRCController {
             try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
                 JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
-//                if (status == JobStatus.CANCELED || status == JobStatus.FINISHED) {
-//                    return null;
-//                }
-                if (status == null) {
+                if (status == null || status.isTerminalState()) {
                     incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
                     return noneStateDetail;
                 }
+
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
                 JobDetailsInfo jobDetailsInfo = jobDetails.get(5, TimeUnit.SECONDS);
                 rcDeployment = new ExtendFlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus, jobDetailsInfo);

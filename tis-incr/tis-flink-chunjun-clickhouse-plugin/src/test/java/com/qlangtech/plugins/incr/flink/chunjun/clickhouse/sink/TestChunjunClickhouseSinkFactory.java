@@ -239,7 +239,7 @@ public class TestChunjunClickhouseSinkFactory
             String colIdVal = "334556";
             d.setField(2, StringData.fromString(colIdVal));
             d.setField(0, StringData.fromString("123dsf124325253dsf123"));
-            d.setField(1, StringData.fromString("5"));
+            d.setField(1, 5);
             d.setField(3, 20211113115959l);
             //after.put(colNum, );
             // after.put(colId, "123dsf124325253dsf123");

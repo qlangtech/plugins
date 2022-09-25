@@ -45,8 +45,20 @@ import java.util.stream.Collectors;
  * @create: 2022-09-21 10:37
  **/
 public class DialectUtils {
+
+    /**
+     * @param jdbcDialect
+     * @param jdbcConf
+     * @param colsMeta
+     * @param internalConverterCreator
+     * @param externalConverterCreator
+     * @return
+     */
     public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
-    createColumnConverter(JdbcDialect jdbcDialect, JdbcConf jdbcConf, List<ColMeta> colsMeta
+    createColumnConverter( //
+                           JdbcDialect jdbcDialect //
+            , JdbcConf jdbcConf //
+            , List<ColMeta> colsMeta //
             , Function<LogicalType, IDeserializationConverter> internalConverterCreator
             , Function<FlinkCol, ISerializationConverter<FieldNamedPreparedStatement>> externalConverterCreator) {
         Objects.requireNonNull(jdbcDialect, "jdbcDialect can not be null");

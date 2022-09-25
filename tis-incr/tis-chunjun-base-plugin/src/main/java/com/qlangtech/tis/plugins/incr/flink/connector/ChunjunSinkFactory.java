@@ -459,8 +459,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-    protected final Object parseType(ISelectedTab.ColMeta cm) {
-       return cm.getType().getS();
+    protected Object parseType(ISelectedTab.ColMeta cm) {
+        return cm.getType().getS();
     }
 
 

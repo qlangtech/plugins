@@ -105,7 +105,11 @@ public class TestRow extends BasicRow {
 
     @Override
     public Object getSerializeVal(String key) {
-        return vals.getV(key).getExpect();
+        try {
+            return vals.getV(key).getExpect();
+        } catch (Exception e) {
+            throw new RuntimeException("key:" + key, e);
+        }
     }
 
 

@@ -147,6 +147,18 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         super.setParameter(dsFactory, dataXWriter, writer, params, targetTabName);
     }
 
+
+    /**
+     * @param cm
+     * @return
+     * @see BasicDorisStarRocksWriter.DorisType
+     */
+    @Override
+    protected Object parseType(ISelectedTab.ColMeta cm) {
+        // DorisType
+        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
+    }
+
     @Override
     protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {

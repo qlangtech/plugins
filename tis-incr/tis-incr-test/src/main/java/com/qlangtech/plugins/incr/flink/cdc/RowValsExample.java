@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 
@@ -29,10 +30,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,6 +47,12 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
 
     public static class RowVal implements Callable<Object> {
         final Object val;
+        public Supplier<String> sqlParamDecorator;
+
+        public RowVal setSqlParamDecorator(Supplier<String> sqlParamDecorator) {
+            this.sqlParamDecorator = sqlParamDecorator;
+            return this;
+        }
 
         public static RowVal $(Object val) {
             return new RowVal(val) {
@@ -56,20 +64,30 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
         }
 
         public static RowVal time(String s) {
+            return time(s, false);
+        }
+
+        public static RowVal time(String s, boolean unixTimeToLocalTime) {
             final Time t = Time.valueOf(s);
 
             // 为什么要如此处理时间 请查阅： https://github.com/qlangtech/plugins/issues/22
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+            // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             return new RowVal(t) {
                 @Override
                 public String getExpect() {
-                    return (formatter.format(SqlDateTimeUtils.unixTimeToLocalTime((int) t.getTime())));
+                    if (unixTimeToLocalTime) {
+                        return (AbstractRowDataMapper.LocalTimeConvert.TIME_FORMATTER
+                                .format(SqlDateTimeUtils.unixTimeToLocalTime((int) t.getTime())));
+                    }
+
+                    return s;
                 }
 
                 @Override
                 public String getAssertActual(Object val) {
                     LocalTime v = (LocalTime) val;
-                    return formatter.format(v);
+                    return AbstractRowDataMapper.LocalTimeConvert.TIME_FORMATTER.format(v);
+                    //  return formatter.format(v);
                     //  return String.valueOf(((Time) val).getTime());
                 }
             };
@@ -120,6 +138,10 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
         }
 
         public static RowVal stream(String text) {
+            return stream(text, (raw) -> new String(raw));
+        }
+
+        public static RowVal stream(String text, Function<byte[], String> assertRawValConvert) {
             return new RowVal(new ByteArrayInputStream(text.getBytes(TisUTF8.get()))) {
                 @Override
                 public String getExpect() {
@@ -129,7 +151,8 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
 
                 @Override
                 public String getAssertActual(Object val) {
-                    return new String((byte[]) val);
+                    // return new String((byte[]) val);
+                    return assertRawValConvert.apply((byte[]) val);
                 }
             };
 

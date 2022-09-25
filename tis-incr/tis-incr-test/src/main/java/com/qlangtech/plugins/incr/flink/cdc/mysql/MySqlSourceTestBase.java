@@ -65,6 +65,7 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
 
     public static String tabStu = "stu";
     public static String tabBase = "base";
+    public static String fullTypes = "full_types";
     public static final String tabInstanceDetail = "instancedetail";
 
     public Map<String, CDCTestSuitParams> tabParamMap;
@@ -84,13 +85,15 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
         builder.put(tabInstanceDetail, suitParamBuilder(tabInstanceDetail)
                 //.setIncrColumn("modify_time")
                 .setTabName(tabInstanceDetail).build());
+        builder.put(fullTypes
+                , suitParamBuilder(fullTypes)
+                        .setTabName(fullTypes).build());
 
         tabParamMap = builder.build();
 
     }
 
-    protected abstract CDCTestSuitParams.Builder //CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder
-    suitParamBuilder(String tableName);
+    protected abstract CDCTestSuitParams.Builder suitParamBuilder(String tableName);
 
     @BeforeClass
     public static void startContainers() {

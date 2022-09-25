@@ -137,6 +137,16 @@ public class FlinkCol implements Serializable {
         }
     }
 
+    public static class BoolProcess extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+            if (o instanceof java.lang.Number) {
+                return ((java.lang.Number) o).byteValue() > 0;
+            }
+            return (Boolean) o;
+        }
+    }
+
 
     public static class LocalDateProcess extends BiFunction {
         private final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-M-d");

@@ -126,7 +126,8 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
 
 
     public Collection<WrapperJobVertexDetailsInfo> getSources() {
-        return jobDetailsInfo.getJobVertexInfos().stream().map((i) -> new WrapperJobVertexDetailsInfo(i)).collect(Collectors.toList());
+        return jobDetailsInfo.getJobVertexInfos().stream()
+                .map((i) -> new WrapperJobVertexDetailsInfo(i)).collect(Collectors.toList());
     }
 
 

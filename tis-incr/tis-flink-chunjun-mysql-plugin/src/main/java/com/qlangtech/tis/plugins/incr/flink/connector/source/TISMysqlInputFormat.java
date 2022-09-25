@@ -19,31 +19,16 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
-import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
-import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
-import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
-import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.mysql.source.MysqlInputFormat;
-import com.dtstack.chunjun.converter.AbstractRowConverter;
-import com.dtstack.chunjun.converter.IDeserializationConverter;
-import com.dtstack.chunjun.converter.ISerializationConverter;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import io.vertx.core.json.JsonArray;
-import org.apache.commons.compress.utils.Lists;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.data.RowData;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -67,11 +52,13 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
 
         //ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters
         //            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters
-
+        if (rowConverter != null) {
+            throw new IllegalStateException("rowConverter shall be null");
+        }
         this.setRowConverter(
-                rowConverter == null
-                        ? DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta) // jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters)
-                        : rowConverter);
+                // rowConverter == null
+                DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta) // jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters)
+        );
     }
 
 //    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>

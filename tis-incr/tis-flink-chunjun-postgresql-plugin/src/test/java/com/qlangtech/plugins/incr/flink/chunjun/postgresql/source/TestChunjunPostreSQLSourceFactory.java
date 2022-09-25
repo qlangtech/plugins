@@ -206,7 +206,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
                     vals.put("timestamp3_c", parseTimestamp("2022-07-29 18:00:22"));
                     vals.put(key_timestamp6_c, parseTimestamp("2020-07-17 18:00:22"));
                     vals.put("date_c", parseDate("2020-07-17"));
-                    vals.put("time_c", RowValsExample.RowVal.time(("9:00:22")));
+                    vals.put("time_c", RowValsExample.RowVal.time(("9:00:22"), true));
                     vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0) // BigDecimal.valueOf(500).setScale(BIG_DECIMAL_SCALA)
                     );
 

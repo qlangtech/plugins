@@ -181,7 +181,7 @@ public abstract class CUDCDCTestSuit {
 
         imqListener.start(dataxName, dataxReader, tabs, null);
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
 
 
         CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
@@ -289,7 +289,7 @@ public abstract class CUDCDCTestSuit {
 
     protected void insertTestRow(Connection conn, TestRow r) throws SQLException {
 
-        final String insertBase = createInsertScript(tabName);
+        final String insertBase = createInsertScript(tabName, r);
 
         try (PreparedStatement statement = conn.prepareStatement(insertBase)) {
 
@@ -303,11 +303,18 @@ public abstract class CUDCDCTestSuit {
     }
 
     @NotNull
-    private String createInsertScript(String tabName) {
+    private String createInsertScript(String tabName, TestRow r) {
+
         return "insert into " + getColEscape() + createTableName(tabName) + getColEscape() + "("
                 + cols.stream().map((col) -> getColEscape() + col.getName() + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
                 "values(" +
-                cols.stream().map((col) -> "?").collect(Collectors.joining(" , ")) + ")";
+                cols.stream().map((col) -> {
+                    RowValsExample.RowVal v = r.vals.getV(col.getName());
+                    if (v.sqlParamDecorator != null) {
+                        return v.sqlParamDecorator.get();
+                    }
+                    return "?";
+                }).collect(Collectors.joining(" , ")) + ")";
     }
 
     protected List<TestRow> createExampleTestRows() throws Exception {
@@ -579,7 +586,7 @@ public abstract class CUDCDCTestSuit {
 
     protected void sleepForAWhile() {
         try {
-            Thread.sleep(50);
+            Thread.sleep(500);
         } catch (Exception e) {
         }
     }
@@ -587,6 +594,7 @@ public abstract class CUDCDCTestSuit {
 
     protected static void waitForSnapshotStarted(CloseableIterator<Row> iterator) {
         try {
+            System.out.println("star wait ---");
             while (!iterator.hasNext()) {
                 System.out.println("waitForSnapshotStarted");
                 Thread.sleep(100);

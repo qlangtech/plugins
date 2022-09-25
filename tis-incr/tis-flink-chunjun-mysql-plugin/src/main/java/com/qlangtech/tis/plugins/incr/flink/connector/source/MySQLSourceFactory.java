@@ -40,15 +40,5 @@ public class MySQLSourceFactory extends ChunjunSourceFactory {
         public IEndTypeGetter.EndType getEndType() {
             return IEndTypeGetter.EndType.MySQL;
         }
-
-//        @Override
-//        protected IEndTypeGetter.EndType getSourceType() {
-//            return null;
-//        }
-
-//        @Override
-//        protected IEndTypeGetter.EndType getSourceType() {
-//            return IEndTypeGetter.EndType.MySQL;
-//        }
     }
 }

@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.*;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -32,7 +33,9 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
+import com.qlangtech.tis.utils.IntegerUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -46,9 +49,9 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -70,60 +73,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         // return CDCTestSuitParams.chunjunBuilder();
     }
 
-//    @Test
-//    public void testStuBinlogConsume() throws Exception {
-//
-//        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
-//        mysqlCDCFactory.startupOptions = "latest";
-//        // final String tabName = "stu";
-//        CDCTestSuitParams suitParams = tabParamMap.get(tabStu); //new CDCTestSuitParams(tabName);
-//        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
-//            @Override
-//            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-//                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
-//            }
-//
-//            @Override
-//            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
-//                    , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
-//               // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
-//                imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
-//                Thread.sleep(1000);
-//
-//
-//                BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
-//                Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
-//                dataSourceFactory.visitFirstConnection((conn) -> {
-//
-//                    Statement statement = conn.createStatement();
-//                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
-//                            "VALUES (1100001,'doTun','beida','jasper',81,26,45.54,14597415152,'xxx@hotmail.com','192.192.192.192','极乐世界f座 630103');");
-//                    statement.close();
-//                });
-//
-//                sleepForAWhile();
-//                CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
-//                waitForSnapshotStarted(snapshot);
-//                List<AssertRow> rows = fetchRows(snapshot, 1, null, false);
-//                for (AssertRow rr : rows) {
-//                    System.out.println("------------" + rr.getObj("id"));
-//                    // assertTestRow(tabName, RowKind.UPDATE_AFTER, consumerHandle, exceptRow, rr);
-//
-//                }
-//            }
-//
-//            @Override
-//            protected String getColEscape() {
-//                return "`";
-//            }
-//        };
-//
-//        cdcTestSuit.startTest(mysqlCDCFactory);
-//
-//    }
-
-
-   // @Test(timeout = 20000)
+    // @Test(timeout = 20000)
     @Test()
     public void testBinlogConsume() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
@@ -135,12 +85,14 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
+
             @Override
             protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;
             }
+
             @Override
             protected String getColEscape() {
                 return "`";
@@ -150,6 +102,115 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         cdcTestSuit.startTest(mysqlCDCFactory);
 
     }
+
+
+    @Test()
+    public void testFullTypesConsume() throws Exception {
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        mysqlCDCFactory.startupOptions = "latest";
+        // final String tabName = "base";
+        CDCTestSuitParams suitParams = tabParamMap.get(fullTypes);
+        Assert.assertNotNull(suitParams);
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
+            @Override
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+            }
+
+            @Override
+            protected List<TestRow> createExampleTestRows() {
+//super.createExampleTestRows();
+                Map<String, RowValsExample.RowVal> vals = Maps.newHashMap();
+
+//                vals.put(keyBaseId, RowValsExample.RowVal.$(i));
+//                vals.put(keyStart_time, parseTimestamp(timeFormat.get().format(now)));
+//                vals.put("update_date", parseDate(dateFormat.get().format(now)));
+//                vals.put(key_update_time, parseTimestamp(timeFormat.get().format(now)));
+//                vals.put("price", RowValsExample.RowVal.decimal(199, 2));
+//                vals.put("json_content", RowValsExample.RowVal.json("{\"name\":\"baisui#" + i + "\"}"));
+//                vals.put("col_blob", RowValsExample.RowVal.stream("Hello world"));
+//                vals.put(keyCol_text, RowValsExample.RowVal.$("我爱北京天安门" + i));
+
+
+                vals.put("id", RowValsExample.RowVal.$(2));
+                vals.put("tiny_c", RowValsExample.RowVal.$((byte) 255));
+                vals.put("tiny_un_c", RowValsExample.RowVal.$((byte) 127));
+                vals.put("small_c", RowValsExample.RowVal.$((short) 32767));
+                vals.put("small_un_c", RowValsExample.RowVal.$((short) 5534));
+                vals.put("medium_c", RowValsExample.RowVal.$(8388607));
+                vals.put("medium_un_c", RowValsExample.RowVal.$(16777215l));// MEDIUMINT UNSIGNED,
+                vals.put("int_c", RowValsExample.RowVal.$(2147483647));
+                vals.put("int_un_c", RowValsExample.RowVal.$(4294967295l)); //INTEGER UNSIGNED,
+                vals.put("int11_c", RowValsExample.RowVal.$(2147483647));
+                vals.put("big_c", RowValsExample.RowVal.$(9223372036854775807l));
+                vals.put("big_un_c", RowValsExample.RowVal.$(9223372036854775807l));
+                vals.put("varchar_c", RowValsExample.RowVal.$("Hello World"));
+                vals.put("char_c", RowValsExample.RowVal.$("abc"));
+                vals.put("real_c", RowValsExample.RowVal.$(123.102d));
+                vals.put("float_c", RowValsExample.RowVal.$(123.102f));
+                vals.put("double_c", RowValsExample.RowVal.$(404.4443d));
+                vals.put("decimal_c", RowValsExample.RowVal.decimal(1234567l, 4));
+                vals.put("numeric_c", RowValsExample.RowVal.decimal(3456, 0));
+                vals.put("big_decimal_c", RowValsExample.RowVal.decimal(345678921, 1));
+                vals.put("bit1_c", RowValsExample.RowVal.$(true));
+                vals.put("tiny1_c", RowValsExample.RowVal.$(true));
+                vals.put("boolean_c", RowValsExample.RowVal.$(true));
+
+                vals.put("date_c", parseDate("2020-07-17"));
+
+                vals.put("time_c", RowValsExample.RowVal.time("18:00:22"));
+                vals.put("datetime3_c", parseTimestamp("2020-07-17 18:00:22"));
+                vals.put("datetime6_c", parseTimestamp("2020-07-17 18:00:22"));
+                vals.put("timestamp_c", parseTimestamp("2020-07-17 18:00:22"));
+                vals.put("file_uuid", RowValsExample.RowVal.stream(StringUtils.lowerCase("FA34E10293CB42848573A4E39937F479")
+                        , (raw) -> {
+                            StringBuffer result = new StringBuffer();
+                            int val;
+                            for (int offset = 0; offset < 4; offset++) {
+                                result.append(Integer.toHexString(IntegerUtils.intFromByteArray(raw, offset * 4)));
+                            }
+                            return result.toString();
+                        }).setSqlParamDecorator(() -> "UNHEX(?)"));
+                //  vals.put("bit_c", RowValsExample.RowVal.$(new byte[]{124, 124})); //b'0000010000000100000001000000010000000100000001000000010000000100'
+                vals.put("text_c", RowValsExample.RowVal.$("text"));
+                vals.put("tiny_blob_c", RowValsExample.RowVal.stream("blob_c"));
+                vals.put("blob_c", RowValsExample.RowVal.stream("blob_c"));
+                vals.put("medium_blob_c", RowValsExample.RowVal.stream("medium_blob_c"));
+                vals.put("long_blob_c", RowValsExample.RowVal.stream("long_blob_c_long_blob_c"));
+                vals.put("year_c", RowValsExample.RowVal.$(2021));
+                vals.put("enum_c", RowValsExample.RowVal.$("white"));//  default 'd',
+                vals.put("set_c", RowValsExample.RowVal.$("a,b"));
+                vals.put("json_c", RowValsExample.RowVal.$("{\"key1\":\"value1\"}"));
+//                vals.put("point_c", RowValsExample.RowVal.$("ST_GeomFromText('POINT(1 1)')"));
+//                vals.put("geometry_c", RowValsExample.RowVal.stream("ST_GeomFromText('POLYGON((1 1, 2 1, 2 2,  1 2, 1 1))')"));
+//                vals.put("linestring_c", RowValsExample.RowVal.$("ST_GeomFromText('LINESTRING(3 0, 3 3, 3 5)')"));
+//                vals.put("polygon_c", RowValsExample.RowVal.$("ST_GeomFromText('POLYGON((1 1, 2 1, 2 2,  1 2, 1 1))')"));
+//                vals.put("multipoint_c", RowValsExample.RowVal.$("ST_GeomFromText('MULTIPOINT((1 1),(2 2))')"));
+//                vals.put("multiline_c", RowValsExample.RowVal.$("ST_GeomFromText('MultiLineString((1 1,2 2,3 3),(4 4,5 5))')"));
+//                vals.put("multipolygon_c", RowValsExample.RowVal.$("ST_GeomFromText('MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)), ((5 5, 7 5, 7 7, 5 7, 5 5)))')"));
+//                vals.put("geometrycollection_c", RowValsExample.RowVal.$("ST_GeomFromText('GEOMETRYCOLLECTION(POINT(10 10), POINT(30 30), LINESTRING(15 15, 20 20))')"));
+                TestRow fullTypeRow = new TestRow(RowKind.INSERT, new RowValsExample(vals));
+                return Lists.newArrayList(fullTypeRow);
+            }
+
+
+            @Override
+            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                return sourceHandle;
+            }
+
+            @Override
+            protected String getColEscape() {
+                return "`";
+            }
+        };
+
+        cdcTestSuit.startTest(mysqlCDCFactory);
+
+    }
+
 
     @Test
     public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
@@ -393,7 +454,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                         List<AssertRow> rows = fetchRows(snapshot, 1, t, false);
                         for (AssertRow rr : rows) {
                             System.out.println("------------" + rr.getObj("instance_id"));
-                          //  assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                            //  assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
                             assertInsertRow(t, rr);
                         }
 

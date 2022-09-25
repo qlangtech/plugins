@@ -26,6 +26,8 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,7 @@ import java.util.Map;
  * @create: 2022-05-13 23:01
  **/
 public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
+    private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
     public abstract Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor);
@@ -89,13 +92,11 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {
             if (sourceStream.clazz == DTO.class) {
-                return sourceStream.stream.map(new DTO2RowDataMapper(
-                        this.colsMeta
-                        //   DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)
-                ))
+                return sourceStream.stream.map(new DTO2RowDataMapper(this.colsMeta))
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
+                logger.info("create stream directly, source type is RowData");
                 return sourceStream.stream;
             }
             throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);

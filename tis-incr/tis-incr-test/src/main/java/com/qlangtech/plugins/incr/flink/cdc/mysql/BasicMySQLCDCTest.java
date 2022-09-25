@@ -50,6 +50,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -85,13 +86,15 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         tab2IncrCol.put(tabStu, "id");
         tab2IncrCol.put(tabBase, "update_time");
         tab2IncrCol.put(tabInstanceDetail, "modify_time");
+        tab2IncrCol.put(fullTypes, "timestamp_c");
     }
 
 
     @Override
     protected final CDCTestSuitParams.Builder suitParamBuilder(String tabName) {
         CDCTestSuitParams.Builder.ChunjunSuitParamsBuilder builder = CDCTestSuitParams.chunjunBuilder();//.Builder.ChunjunSuitParamsBuilder();
-        builder.setIncrColumn(tab2IncrCol.get(tabName));
+        builder.setIncrColumn(
+                Objects.requireNonNull(tab2IncrCol.get(tabName), "tab:" + tabName + " relevant incr cols can not be null"));
         return builder;
     }
 
@@ -475,7 +478,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                         List<AssertRow> rows = fetchRows(snapshot, 1, t, false);
                         for (AssertRow rr : rows) {
                             System.out.println("------------" + rr.getObj("instance_id"));
-                           // assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
+                            // assertTestRow(tabName, RowKind.INSERT, consumerHandle, t, rr);
                             assertInsertRow(t, rr);
                         }
 

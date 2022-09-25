@@ -28,7 +28,6 @@ import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.sql.*;
@@ -91,6 +90,16 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             }
 
             @Override
+            public DataType tinyIntType(DataType dataType) {
+                return null;
+            }
+
+            @Override
+            public DataType smallIntType(DataType dataType) {
+                return null;
+            }
+
+            @Override
             public DataType intType(DataType type) {
                 if (type.isUnsigned()) {
                     return new DataType(Types.BIGINT, type.typeName, type.columnSize);
@@ -105,6 +114,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
             @Override
             public DataType dateType(DataType type) {
+                if ("year".equalsIgnoreCase(type.typeName)) {
+                    return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                }
                 return null;
             }
 
@@ -115,6 +127,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
             @Override
             public DataType bitType(DataType type) {
+                if (type.columnSize > 1) {
+                    return new DataType(Types.BINARY, type.typeName, type.columnSize);
+                }
                 return null;
             }
 
@@ -390,8 +405,6 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         }
         return (filtered.toString());
     }
-
-
 
 
     private void closeResultSet(Connection rs) {

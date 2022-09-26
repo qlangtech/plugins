@@ -41,6 +41,11 @@ public class FlinkCol implements Serializable {
     private boolean pk;
 
     /**
+     * CDC Source组装数据时对从debezium中取得到的值进行处理
+     */
+    private BiFunction sourceDTOColValProcess;
+
+    /**
      * @see RowData (处理从DTO中取数据组装RowData中的列内容处理器)
      */
     public BiFunction rowDataProcess;
@@ -70,6 +75,24 @@ public class FlinkCol implements Serializable {
         this.rowDataProcess = rowDataProcess;
         this.rowProcess = rowProcess;
         this.rowDataValGetter = rowDataValGetter;
+    }
+
+    /**
+     * CDC Source组装数据时对从debezium中取得到的值进行处理
+     *
+     * @param sourceDTOColValProcess
+     * @return
+     */
+    public FlinkCol setSourceDTOColValProcess(BiFunction sourceDTOColValProcess) {
+        this.sourceDTOColValProcess = sourceDTOColValProcess;
+        return this;
+    }
+
+    public BiFunction getSourceDTOColValProcess() {
+        if (this.sourceDTOColValProcess == null) {
+            this.sourceDTOColValProcess = NoOp();
+        }
+        return this.sourceDTOColValProcess;
     }
 
     public IRowDataValGetter getRowDataValGetter() {

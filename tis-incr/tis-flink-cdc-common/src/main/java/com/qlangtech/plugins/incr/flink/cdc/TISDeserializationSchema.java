@@ -27,6 +27,8 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +45,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     private static final Pattern PATTERN_TOPIC = Pattern.compile(".+\\.(.+)\\.(.+)");
     private static final long serialVersionUID = 1L;
     //private static final JsonConverter CONVERTER = new JsonConverter();
+    private static final Logger logger = LoggerFactory.getLogger(TISDeserializationSchema.class);
 
     private final ISourceValConvert rawValConvert;
 

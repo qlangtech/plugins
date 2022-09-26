@@ -181,7 +181,7 @@ public abstract class CUDCDCTestSuit {
 
         imqListener.start(dataxName, dataxReader, tabs, null);
 
-        Thread.sleep(2000);
+        Thread.sleep(4000);
 
 
         CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
@@ -222,7 +222,8 @@ public abstract class CUDCDCTestSuit {
                             List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
 
                             String updateSql = String.format("UPDATE " + createTableName(tabName) + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
-                                    , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(",")), exceptRow.getIdVal());
+                                    , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(","))
+                                    , Objects.requireNonNull(exceptRow.getIdVal(), "idVal can not be null"));
 
                             try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
                                 int colIndex = 1;

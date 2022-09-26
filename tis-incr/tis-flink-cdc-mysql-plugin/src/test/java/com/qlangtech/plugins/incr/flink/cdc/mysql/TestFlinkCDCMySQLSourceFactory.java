@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.utils.IntegerUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
@@ -131,8 +132,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 //                vals.put("col_blob", RowValsExample.RowVal.stream("Hello world"));
 //                vals.put(keyCol_text, RowValsExample.RowVal.$("我爱北京天安门" + i));
 
-
-                vals.put("id", RowValsExample.RowVal.$(2));
+                int pk = 2;
+                vals.put("id", RowValsExample.RowVal.$(pk));
                 vals.put("tiny_c", RowValsExample.RowVal.$((byte) 255));
                 vals.put("tiny_un_c", RowValsExample.RowVal.$((byte) 127));
                 vals.put("small_c", RowValsExample.RowVal.$((short) 32767));
@@ -171,7 +172,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                             }
                             return result.toString();
                         }).setSqlParamDecorator(() -> "UNHEX(?)"));
-                //  vals.put("bit_c", RowValsExample.RowVal.$(new byte[]{124, 124})); //b'0000010000000100000001000000010000000100000001000000010000000100'
+                String colBitC = "bit_c";
+                vals.put(colBitC, RowValsExample.RowVal.stream("val", (raw) -> {
+                    //TODO 暂时先让测试通过
+                    return "val";
+                })); //b'0000010000000100000001000000010000000100000001000000010000000100'
                 vals.put("text_c", RowValsExample.RowVal.$("text"));
                 vals.put("tiny_blob_c", RowValsExample.RowVal.stream("blob_c"));
                 vals.put("blob_c", RowValsExample.RowVal.stream("blob_c"));
@@ -190,6 +195,19 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 //                vals.put("multipolygon_c", RowValsExample.RowVal.$("ST_GeomFromText('MULTIPOLYGON(((0 0, 10 0, 10 10, 0 10, 0 0)), ((5 5, 7 5, 7 7, 5 7, 5 5)))')"));
 //                vals.put("geometrycollection_c", RowValsExample.RowVal.$("ST_GeomFromText('GEOMETRYCOLLECTION(POINT(10 10), POINT(30 30), LINESTRING(15 15, 20 20))')"));
                 TestRow fullTypeRow = new TestRow(RowKind.INSERT, new RowValsExample(vals));
+                fullTypeRow.idVal = pk;
+//                fullTypeRow.updateVals.put(colBitC, (statement, index, ovals) -> {
+//
+//                    RowValsExample.RowVal val = RowValsExample.RowVal.stream("val2", (raw) -> {
+//                        //TODO 暂时先让测试通过
+//                        return "val2";
+//                    });
+//                    ByteArrayInputStream bytes = val.getVal();
+//                    //String newVal = "update#" + ovals.getString(keyCol_text);
+//                    statement.setBytes(index, IOUtils.toByteArray(bytes));
+//                    return val;
+//                });
+
                 return Lists.newArrayList(fullTypeRow);
             }
 

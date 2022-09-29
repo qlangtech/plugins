@@ -20,7 +20,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
-import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;

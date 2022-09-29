@@ -35,7 +35,6 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.utils.IntegerUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
@@ -153,9 +152,9 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 vals.put("decimal_c", RowValsExample.RowVal.decimal(1234567l, 4));
                 vals.put("numeric_c", RowValsExample.RowVal.decimal(3456, 0));
                 vals.put("big_decimal_c", RowValsExample.RowVal.decimal(345678921, 1));
-                vals.put("bit1_c", RowValsExample.RowVal.$(true));
-                vals.put("tiny1_c", RowValsExample.RowVal.$(true));
-                vals.put("boolean_c", RowValsExample.RowVal.$(true));
+                vals.put("bit1_c", RowValsExample.RowVal.bit(true));
+                vals.put("tiny1_c", RowValsExample.RowVal.bit(true));
+                vals.put("boolean_c", RowValsExample.RowVal.bit(true));
 
                 vals.put("date_c", parseDate("2020-07-17"));
 

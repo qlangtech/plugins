@@ -18,11 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.google.common.collect.Sets;
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +42,11 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
 
     @Override
     public Row map(DTO dto) throws Exception {
+
+//        File file = new File("full_types_dto.xml");
+//        XmlFile tabStore = new XmlFile(file.getAbsoluteFile(), "test");
+//        tabStore.write(dto, Sets.newHashSet());
+
         Row row = new Row(getKind(dto), cols.size());
         int index = 0;
         Map<String, Object> vals

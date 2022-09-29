@@ -47,15 +47,12 @@ public class TaskExec {
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
             , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, final List<String> dependencyTasks) {
-        // final JarLoader uberClassLoader = new TISJarLoader(pluginManager);
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteTaskTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
-            // final ExecutorService dataXExecutor = jobContext.getContextInstance();
-
             @Override
             public List<String> getTaskDependencies() {
                 return dependencyTasks;
@@ -63,8 +60,6 @@ public class TaskExec {
 
             @Override
             public void run() {
-                //   Objects.requireNonNull(dataXExecutor, "dataXExecutor can not be null");
-                // dataXExecutor.submit(() -> {
                 try {
                     MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
                     MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
@@ -88,7 +83,6 @@ public class TaskExec {
                         @Override
                         protected String[] getExtraJavaSystemPrams() {
                             return new String[]{
-                                    // "-D" + SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + SYSTEM_KEY_LOGBACK_PATH_VALUE
                                     "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
                         }
 
@@ -111,10 +105,6 @@ public class TaskExec {
 
                     CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
 
-//                        new CuratorDataXTaskMessage();
-//                        dataXJob.setJobId(taskContext.getTaskId());
-//                        dataXJob.setJobName(dataXfileName);
-//                        dataXJob.setDataXName(taskContext.getIndexName());
                     jobConsumer.consumeMessage(dataXJob);
                     success.set(true);
                 } catch (Throwable e) {
@@ -130,18 +120,8 @@ public class TaskExec {
                     }
                 } finally {
                     complete.set(true);
-                    // shutdownExecutor();
                 }
-                //});
             }
-
-//            private void shutdownExecutor() {
-//                try {
-//                    dataXExecutor.shutdownNow();
-//                } catch (Throwable e) {
-//                    logger.error(e.getMessage(), e);
-//                }
-//            }
 
             @Override
             public String getTaskName() {
@@ -157,14 +137,8 @@ public class TaskExec {
                     watchdog.destroyProcess();
                     logger.info("taskId:{} relevant task has been canceled", taskId);
                 });
-                // shutdownExecutor();
                 this.hasCanceled = true;
             }
-
-//            @Override
-//            public RunningStatus getRunningStatus() {
-//                return new RunningStatus(0, complete.get(), success.get());
-//            }
         };
     }
 }

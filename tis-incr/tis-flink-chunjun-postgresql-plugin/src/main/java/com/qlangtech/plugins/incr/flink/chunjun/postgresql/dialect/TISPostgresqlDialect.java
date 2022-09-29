@@ -22,7 +22,7 @@ import com.dtstack.chunjun.conf.ChunJunCommonConf;
 import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
-import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
+import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.dialect.PostgresqlDialect;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;

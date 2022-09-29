@@ -19,8 +19,8 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.plugins.incr.flink.chunjun.poll.RunInterval;
-import com.qlangtech.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.poll.RunInterval;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;

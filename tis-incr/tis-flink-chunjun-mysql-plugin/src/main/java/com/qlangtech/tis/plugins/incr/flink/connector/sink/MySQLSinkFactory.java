@@ -24,18 +24,13 @@ import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.util.JdbcUtil;
 import com.dtstack.chunjun.connector.mysql.dialect.MysqlDialect;
 import com.google.common.collect.Sets;
-import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-
-import java.sql.Types;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

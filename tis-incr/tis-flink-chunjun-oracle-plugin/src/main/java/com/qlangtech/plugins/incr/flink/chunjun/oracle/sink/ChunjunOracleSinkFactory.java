@@ -18,17 +18,14 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.sink;
 
-import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
-import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
-import com.qlangtech.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;

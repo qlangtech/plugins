@@ -33,6 +33,8 @@ import com.ververica.cdc.connectors.postgres.PostgresTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-22 20:35
@@ -44,26 +46,6 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     public static void initialize() throws Exception {
         PostgresTestBase.startContainers();
         pgDSFactory = PostgresTestBase.createPgSourceFactory(new TargetResName(dataXName));
-
-
-//        pgDSFactory.visitFirstConnection((conn) -> {
-//            try (Statement stat = conn.createStatement()) {
-//                stat.execute("CREATE TABLE public.\"tis_user\" ( entity_id   VARCHAR(6))");
-//            }
-//
-//            ResultSet tableRs = conn.getMetaData().getTables(null, "default", "tis_user", null);
-//            // cataLog和schema需要为空，不然pg不能反射到表的存在
-//            // ResultSet tableRs = dbConn.getMetaData().getTables(null, null, tableName, null);
-//            String colName = null;
-//            if (tableRs.next()) {
-//                ResultSetMetaData metaData = tableRs.getMetaData();
-//
-//                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-//                    colName = metaData.getColumnName(i);
-//                    System.out.println(colName + ":" + tableRs.getString(colName));
-//                }
-//            }
-//        });
     }
 
     @Override
@@ -81,8 +63,13 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     @Override
     protected UpdateMode createIncrMode() {
         UpdateType updateMode = new UpdateType();
-        updateMode.updateKey = Lists.newArrayList(colId);
+        //  updateMode.updateKey = Lists.newArrayList(colId);
         return updateMode;
+    }
+
+    @Override
+    protected ArrayList<String> getUniqueKey() {
+        return Lists.newArrayList(colId);
     }
 
     @Override

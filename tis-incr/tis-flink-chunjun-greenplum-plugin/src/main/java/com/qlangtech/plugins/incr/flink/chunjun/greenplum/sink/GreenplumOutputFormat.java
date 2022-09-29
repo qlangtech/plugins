@@ -18,9 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.greenplum.sink;
 
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
-import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 

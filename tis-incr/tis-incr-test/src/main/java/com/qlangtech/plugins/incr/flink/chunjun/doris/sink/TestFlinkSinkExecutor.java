@@ -22,7 +22,6 @@ package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
-import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -38,6 +37,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.ReplaceType;
@@ -58,11 +58,11 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
-import java.sql.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -127,6 +127,23 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     }
 
+    private int updateNumVal = 999;
+
+    protected DTO[] createTestDTO() {
+
+        DTO add = createDTO(DTO.EventType.ADD);
+        final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
+            after.put(colNum, updateNumVal);
+            after.put(updateTime, "2021-12-17 09:21:22");
+        });
+        final DTO updateAfter = updateBefore.colone();
+        updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
+
+        final DTO delete = updateBefore.colone();
+        delete.setEventType(DTO.EventType.DELETE);
+        return new DTO[]{add, updateAfter, delete};
+    }
+
     // @Test
     protected void testSinkSync() throws Exception {
 
@@ -153,8 +170,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         try {
 
-            String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
-
+            //   String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
+            SelectedTab totalpayInfo = createSelectedTab();
+            tableName = totalpayInfo.getName();
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
 
             File ddlDir = folder.newFolder("ddl");
@@ -170,7 +188,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
 
 
-            SelectedTab totalpayInfo = createSelectedTab();
+
 
 
 //            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
@@ -218,18 +236,18 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             this.replay();
             Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
-            int updateNumVal = 999;
+            //int updateNumVal = 999;
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-            DTO add = createDTO(DTO.EventType.ADD);
-            final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
-                after.put(colNum, updateNumVal);
-                after.put(updateTime, "2021-12-17 09:21:22");
-            });
-            final DTO updateAfter = updateBefore.colone();
-            updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
-
-            final DTO delete = updateBefore.colone();
-            delete.setEventType(DTO.EventType.DELETE);
+//            DTO add = createDTO(DTO.EventType.ADD);
+//            final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
+//                after.put(colNum, updateNumVal);
+//                after.put(updateTime, "2021-12-17 09:21:22");
+//            });
+//            final DTO updateAfter = updateBefore.colone();
+//            updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
+//
+//            final DTO delete = updateBefore.colone();
+//            delete.setEventType(DTO.EventType.DELETE);
 //            d.setEventType(DTO.EventType.ADD);
 //            d.setTableName(tableName);
 //            Map<String, Object> after = Maps.newHashMap();
@@ -249,7 +267,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                 DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 
                 ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-                        , env.fromElements(new DTO[]{add, updateBefore, updateAfter}).setParallelism(1));
+                        , env.fromElements(this.createTestDTO()).setParallelism(1));
 
                 readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
 
@@ -279,7 +297,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                     try (ResultSet resultSet = statement.executeQuery(createDDL.getSelectAllScript())) {
                         if (resultSet.next()) {
                             IResultRows.printRow(resultSet);
-                            Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
+                            assertResultSetFromStore(resultSet);
                         } else {
                             Assert.fail("have not find row with id=" + pk);
                         }
@@ -310,6 +328,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         }
     }
 
+    protected void assertResultSetFromStore(ResultSet resultSet) throws SQLException {
+        Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
+    }
+
     protected DataxReader createDataxReader() {
         return mock("dataxReader", DataxReader.class);
     }
@@ -326,6 +348,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         UpdateMode updateMode = createIncrMode();
         // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
         sinkExt.incrMode = updateMode;
+        sinkExt.uniqueKey = getUniqueKey();
         List<ISelectedTab.ColMeta> metaCols = Lists.newArrayList();
         ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
         cm.setName(colEntityId);
@@ -372,6 +395,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         return totalpayInfo;
     }
 
+    protected ArrayList<String> getUniqueKey() {
+        return Lists.newArrayList(colId, updateTime);
+    }
+
     protected ISelectedTab.ColMeta createUpdateTime() {
         ISelectedTab.ColMeta cm;
         cm = new ISelectedTab.ColMeta();
@@ -384,7 +411,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     @NotNull
     protected UpdateMode createIncrMode() {
         ReplaceType updateMode = new ReplaceType();
-        updateMode.updateKey = Lists.newArrayList(colId, updateTime);
+        //  updateMode.updateKey = Lists.newArrayList(colId, updateTime);
         return updateMode;
     }
 
@@ -392,7 +419,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected abstract BasicDataXRdbmsWriter createDataXWriter();
 
-    protected DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
+    private DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
         DTO d = new DTO();
         d.setEventType(eventType);
         d.setTableName(tableName);

@@ -20,13 +20,11 @@ package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.mysql.source.MysqlInputFormat;
-import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import org.apache.flink.table.data.RowData;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 

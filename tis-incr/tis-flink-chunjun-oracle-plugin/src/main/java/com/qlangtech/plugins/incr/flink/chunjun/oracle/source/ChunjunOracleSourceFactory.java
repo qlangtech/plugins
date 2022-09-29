@@ -18,9 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
-import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 
 /**

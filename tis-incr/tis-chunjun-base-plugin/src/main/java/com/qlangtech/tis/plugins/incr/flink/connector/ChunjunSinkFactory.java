@@ -35,8 +35,8 @@ import com.dtstack.chunjun.sink.WriteMode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -215,7 +215,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
         if (desc.getSelectedTableExtendDescriptor() != null) {
             // 有扩展才进行设置，不然会空指针
-            ((SinkTabPropsExtends) tab.getIncrSinkProps()).getIncrMode().set(params);
+            ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
         }
 
         List<Map<String, Object>> cols = Lists.newArrayList();
@@ -403,7 +403,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 }
             }
 
-            return clazz.newInstance();
+            return new WriteModeFilterJdbcDialect(clazz.newInstance(), supportSinkWriteMode());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

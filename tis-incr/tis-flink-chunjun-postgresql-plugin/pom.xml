@@ -41,10 +41,10 @@
                     <groupId>com.alibaba</groupId>
                     <artifactId>druid</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>org.postgresql</groupId>-->
+<!--                    <artifactId>postgresql</artifactId>-->
+<!--                </exclusion>-->
                 <exclusion>
                     <groupId>mysql</groupId>
                     <artifactId>mysql-connector-java</artifactId>
@@ -88,12 +88,12 @@
         </dependency>
 
 
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.19</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.postgresql</groupId>-->
+<!--            <artifactId>postgresql</artifactId>-->
+<!--            <version>42.2.19</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-postgresql-plugin</artifactId>

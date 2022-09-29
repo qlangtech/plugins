@@ -34,6 +34,7 @@ import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.*;
 
@@ -117,14 +118,14 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol intType(DataType type) {
-            return new FlinkCol(meta.getName()
+            return new FlinkCol(meta.getName(), type
                     , new AtomicDataType(new IntType(nullable)), new IntegerConvert()
                     , (rowData) -> rowData.getInt(colIndex));
         }
 
         @Override
         public FlinkCol smallIntType(DataType dataType) {
-            return new FlinkCol(meta.getName(),
+            return new FlinkCol(meta.getName(), dataType,
                     new AtomicDataType(new SmallIntType(nullable))
                     //DataTypes.SMALLINT()
                     , new ShortConvert()
@@ -134,7 +135,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol tinyIntType(DataType dataType) {
-            return new FlinkCol(meta.getName(),
+            return new FlinkCol(meta.getName(), dataType,
                     new AtomicDataType(new TinyIntType(nullable))
                     //         , DataTypes.TINYINT()
                     , new TinyIntConvertByte()
@@ -144,7 +145,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol floatType(DataType type) {
-            return new FlinkCol(meta.getName()
+            return new FlinkCol(meta.getName(), type
                     , DataTypes.FLOAT()
                     , new FloatDataConvert()
                     , new FloatDataConvert()
@@ -154,14 +155,19 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         @Override
         public FlinkCol timeType(DataType type) {
             return new FlinkCol(meta.getName() //
+                    , type
                     , DataTypes.TIME(3) //
+                    , new DTOLocalTimeConvert()
                     , new LocalTimeConvert()
-                    , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L)));
+                    // , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L))
+                    , (rowData) -> Time.valueOf(SqlDateTimeUtils.unixTimeToLocalTime((rowData.getInt(colIndex)))
+            ));
         }
 
         @Override
         public FlinkCol bigInt(DataType type) {
             return new FlinkCol(meta.getName()
+                    , type
                     , new AtomicDataType(new BigIntType(nullable))
                     // , DataTypes.BIGINT()
                     , new LongConvert()
@@ -178,7 +184,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
             }
             try {
 
-                return new FlinkCol(meta.getName(), DataTypes.DECIMAL(precision, scale)
+                return new FlinkCol(meta.getName(), type, DataTypes.DECIMAL(precision, scale)
                         , new DecimalConvert(precision, scale)
                         , FlinkCol.NoOp()
                         , (rowData) -> rowData.getDecimal(colIndex, -1, -1));
@@ -189,14 +195,14 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol doubleType(DataType type) {
-            return new FlinkCol(meta.getName()
+            return new FlinkCol(meta.getName(), type
                     , DataTypes.DOUBLE()
                     , (rowData) -> rowData.getDouble(colIndex));
         }
 
         @Override
         public FlinkCol dateType(DataType type) {
-            return new FlinkCol(meta.getName(), DataTypes.DATE()
+            return new FlinkCol(meta.getName(), type, DataTypes.DATE()
                     , new DateConvert()
                     , FlinkCol.LocalDate()
                     , (rowData) -> Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(colIndex))));
@@ -204,7 +210,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol timestampType(DataType type) {
-            return new FlinkCol(meta.getName(), DataTypes.TIMESTAMP(3)
+            return new FlinkCol(meta.getName(), type, DataTypes.TIMESTAMP(3)
                     , new TimestampDataConvert()
                     , new FlinkCol.DateTimeProcess()
                     , (rowData) -> rowData.getTimestamp(colIndex, -1).toTimestamp());
@@ -212,21 +218,33 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol bitType(DataType type) {
-            return new FlinkCol(meta.getName(), DataTypes.BINARY(1)
+//            return new FlinkCol(meta.getName(), DataTypes.BINARY(1)
+//                    , FlinkCol.Byte()
+//                    , (rowData) -> rowData.getByte(colIndex));
+            return new FlinkCol(meta.getName(), type, DataTypes.TINYINT()
                     , FlinkCol.Byte()
                     , (rowData) -> rowData.getByte(colIndex));
         }
 
         @Override
         public FlinkCol boolType(DataType dataType) {
-            return new FlinkCol(meta.getName(), DataTypes.BOOLEAN()
+            FlinkCol fcol = new FlinkCol(meta.getName(), dataType, DataTypes.BOOLEAN()
                     , new FlinkCol.BoolProcess()
                     , (rowData) -> rowData.getBoolean(colIndex));
+            return fcol.setSourceDTOColValProcess(new BiFunction() {
+                @Override
+                public Object apply(Object o) {
+                    if (o instanceof Number) {
+                        return ((Number) o).shortValue() > 0;
+                    }
+                    return (Boolean) o;
+                }
+            });
         }
 
         @Override
         public FlinkCol blobType(DataType type) {
-            FlinkCol col = new FlinkCol(meta.getName(), DataTypes.BYTES()
+            FlinkCol col = new FlinkCol(meta.getName(), type, DataTypes.BYTES()
                     , new BinaryRawValueDataConvert()
                     , (rowData) -> rowData.getBinary(colIndex));
             return col.setSourceDTOColValProcess(new BinaryRawValueDTOConvert());
@@ -234,7 +252,8 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol varcharType(DataType type) {
-            return new FlinkCol(meta.getName()
+            return new FlinkCol(meta.getName() //
+                    , type
                     , new AtomicDataType(new VarCharType(nullable, type.columnSize))
                     //, DataTypes.VARCHAR(type.columnSize)
                     , new StringConvert()
@@ -265,10 +284,12 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         int index = 0;
         Object val = null;
         for (FlinkCol col : cols) {
-            val = vals.get(col.name);
-            //col.type
-            // row.setField(index++, (val == null) ? null : col.processVal(val));
-            setRowDataVal(index++, row, (val == null) ? null : col.processVal(val));
+            try {
+                val = vals.get(col.name);
+                setRowDataVal(index++, row, (val == null) ? null : col.processVal(val));
+            } catch (Exception e) {
+                throw new IllegalStateException("colName:" + col.name + ",index:" + index, e);
+            }
         }
         return row;
     }
@@ -287,19 +308,22 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     static class ShortConvert extends BiFunction {
         @Override
         public Object apply(Object o) {
-            Short s = (Short) o;
-            return s.intValue();
+            if (o instanceof Number) {
+                return ((Number) o).shortValue();
+            }
+            throw new IllegalStateException("val:" + o + ",type:" + o.getClass().getName());
         }
     }
 
     static class RowShortConvert extends BiFunction {
         @Override
         public Object apply(Object o) {
-            if (o instanceof Integer) {
-                return ((Integer) o).shortValue();
+            if (o instanceof Number) {
+                return ((Number) o).shortValue();
             }
-            Short s = (Short) o;
-            return s;
+            return Short.parseShort(String.valueOf(o));
+//            Short s = (Short) o;
+//            return s;
         }
     }
 
@@ -424,6 +448,14 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 return LocalTime.parse((String) o, TIME_FORMATTER);
             }
             return (LocalTime) o;
+        }
+    }
+
+    static class DTOLocalTimeConvert extends LocalTimeConvert {
+        @Override
+        public Object apply(Object o) {
+            LocalTime time = (LocalTime) super.apply(o);
+            return SqlDateTimeUtils.localTimeToUnixDate(time);
         }
     }
 

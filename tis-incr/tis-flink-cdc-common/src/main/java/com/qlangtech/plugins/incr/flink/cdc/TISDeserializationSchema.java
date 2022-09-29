@@ -81,13 +81,22 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
             if (op == Envelope.Operation.DELETE) {
                 this.extractBeforeRow(dto, value, valueSchema);
                 dto.setEventType(DTO.EventType.DELETE);
-                // this.validator.validate(delete, RowKind.DELETE);
                 out.collect(dto);
             } else {
                 this.extractBeforeRow(dto, value, valueSchema);
-                // dto.setEventType(RowKind.UPDATE_BEFORE);
-                //out.collect(dto);
                 this.extractAfterRow(dto, value, valueSchema);
+
+//                StringBuffer log = new StringBuffer();
+//                Object v = null;
+//                for (Map.Entry<String, Object> e : dto.getAfter().entrySet()) {
+//                    v = e.getValue();
+//                    if (v == null) {
+//                        continue;
+//                    }
+//                    log.append(e.getKey()).append(":").append(v.getClass().getName()).append("||");
+//                }
+//                logger.info(log.toString());
+                //  }
                 // TODO: 需要判断这条记录是否要处理
                 dto.setEventType(DTO.EventType.UPDATE_BEFORE);
                 out.collect(dto);

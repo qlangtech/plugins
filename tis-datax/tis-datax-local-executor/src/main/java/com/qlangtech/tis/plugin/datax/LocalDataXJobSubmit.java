@@ -84,14 +84,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public DataXJobSubmit.IDataXJobContext createJobContext(final IJoinTaskContext parentContext) {
-
-
         return new DataXJobSubmit.IDataXJobContext() {
-//            @Override
-//            public ExecutorService getContextInstance() {
-//                return executorService;
-//            }
-
             @Override
             public IJoinTaskContext getTaskContext() {
                 return parentContext;
@@ -99,7 +92,6 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
             @Override
             public void destroy() {
-                // executorService.shutdownNow();
             }
         };
     }

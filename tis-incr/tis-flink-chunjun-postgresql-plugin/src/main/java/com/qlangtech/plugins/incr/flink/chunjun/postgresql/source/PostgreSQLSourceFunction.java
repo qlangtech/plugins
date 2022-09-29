@@ -19,13 +19,12 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.source;
 
 import com.dtstack.chunjun.conf.SyncConf;
-import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
 import com.dtstack.chunjun.connector.jdbc.source.JdbcInputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
-import com.qlangtech.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -86,73 +85,73 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
 //        return typeMapper(cm);
 //    }
 
-    public static String typeMapper(ISelectedTab.ColMeta cm) {
-        // https://dtstack.github.io/chunjun/documents/7d23239f-9f24-5889-af9c-fc412d788060
-        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-            @Override
-            public String bigInt(DataType type) {
-                return "BIGINT";
-            }
-
-            @Override
-            public String doubleType(DataType type) {
-                return "DOUBLE PRECISION";
-            }
-
-            @Override
-            public String dateType(DataType type) {
-                return "DATE";
-            }
-
-            @Override
-            public String timestampType(DataType type) {
-                return "TIMESTAMP";
-            }
-
-            @Override
-            public String bitType(DataType type) {
-                return "BOOL";
-            }
-
-            @Override
-            public String blobType(DataType type) {
-                return "BYTEA";
-            }
-
-            @Override
-            public String varcharType(DataType type) {
-                return "VARCHAR";
-            }
-
-            @Override
-            public String intType(DataType type) {
-                return "INT";
-            }
-
-            @Override
-            public String floatType(DataType type) {
-                return "FLOAT";
-            }
-
-            @Override
-            public String decimalType(DataType type) {
-                return "DECIMAL";
-            }
-
-            @Override
-            public String timeType(DataType type) {
-                return "TIME";
-            }
-
-            @Override
-            public String tinyIntType(DataType dataType) {
-                return smallIntType(null);
-            }
-
-            @Override
-            public String smallIntType(DataType dataType) {
-                return "SMALLINT";
-            }
-        });
-    }
+//    public static String typeMapper(ISelectedTab.ColMeta cm) {
+//        // https://dtstack.github.io/chunjun/documents/7d23239f-9f24-5889-af9c-fc412d788060
+//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
+//            @Override
+//            public String bigInt(DataType type) {
+//                return "BIGINT";
+//            }
+//
+//            @Override
+//            public String doubleType(DataType type) {
+//                return "DOUBLE PRECISION";
+//            }
+//
+//            @Override
+//            public String dateType(DataType type) {
+//                return "DATE";
+//            }
+//
+//            @Override
+//            public String timestampType(DataType type) {
+//                return "TIMESTAMP";
+//            }
+//
+//            @Override
+//            public String bitType(DataType type) {
+//                return "BOOL";
+//            }
+//
+//            @Override
+//            public String blobType(DataType type) {
+//                return "BYTEA";
+//            }
+//
+//            @Override
+//            public String varcharType(DataType type) {
+//                return "VARCHAR";
+//            }
+//
+//            @Override
+//            public String intType(DataType type) {
+//                return "INT";
+//            }
+//
+//            @Override
+//            public String floatType(DataType type) {
+//                return "FLOAT";
+//            }
+//
+//            @Override
+//            public String decimalType(DataType type) {
+//                return "DECIMAL";
+//            }
+//
+//            @Override
+//            public String timeType(DataType type) {
+//                return "TIME";
+//            }
+//
+//            @Override
+//            public String tinyIntType(DataType dataType) {
+//                return smallIntType(null);
+//            }
+//
+//            @Override
+//            public String smallIntType(DataType dataType) {
+//                return "SMALLINT";
+//            }
+//        });
+//    }
 }

@@ -36,7 +36,9 @@ public class FlinkCol implements Serializable {
     public final String name;
     public final DataType type;
 
-    private final IRowDataValGetter rowDataValGetter;
+    public final com.qlangtech.tis.plugin.ds.DataType colType;
+
+    private final RowData.FieldGetter rowDataValGetter;
 
     private boolean pk;
 
@@ -54,24 +56,26 @@ public class FlinkCol implements Serializable {
      */
     public BiFunction rowProcess;
 
-    public FlinkCol(String name, DataType type, IRowDataValGetter rowDataValGetter) {
-        this(name, type, new NoOpProcess(), rowDataValGetter);
+    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, RowData.FieldGetter rowDataValGetter) {
+        this(name, colType, type, new NoOpProcess(), rowDataValGetter);
     }
 
     public Object getRowDataVal(RowData row) {
-        return rowDataValGetter.getVal(row);
+        return rowDataValGetter.getFieldOrNull(row);
     }
 
-    public FlinkCol(String name, DataType type, BiFunction rowDataProcess, IRowDataValGetter rowDataValGetter) {
-        this(name, type, rowDataProcess, rowDataProcess, rowDataValGetter);
+    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
+        this(name, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
     }
 
-    public FlinkCol(String name, DataType type, BiFunction rowDataProcess, BiFunction rowProcess, IRowDataValGetter rowDataValGetter) {
+    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess
+            , BiFunction rowProcess, RowData.FieldGetter rowDataValGetter) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("param name can not be null");
         }
         this.name = name;
         this.type = type;
+        this.colType = colType;
         this.rowDataProcess = rowDataProcess;
         this.rowProcess = rowProcess;
         this.rowDataValGetter = rowDataValGetter;
@@ -95,7 +99,7 @@ public class FlinkCol implements Serializable {
         return this.sourceDTOColValProcess;
     }
 
-    public IRowDataValGetter getRowDataValGetter() {
+    public RowData.FieldGetter getRowDataValGetter() {
         return rowDataValGetter;
     }
 
@@ -151,6 +155,10 @@ public class FlinkCol implements Serializable {
             if (o instanceof java.lang.Short) {
                 return new Byte(((java.lang.Short) o).byteValue());
             }
+            if (o instanceof java.lang.Boolean) {
+                return (byte) (((Boolean) o) ? 1 : 0);
+            }
+            //  Boolean b = (Boolean) o;
             return (Byte) o;
         }
 

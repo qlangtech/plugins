@@ -63,6 +63,20 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
             };
         }
 
+        public static RowVal bit(boolean v) {
+            return new RowVal(v) {
+                @Override
+                public String getExpect() {
+                    return v ? "1" : "0"; //super.getExpect();
+                }
+
+                @Override
+                public String getAssertActual(Object val) {
+                    return String.valueOf(val);
+                }
+            };
+        }
+
         public static RowVal time(String s) {
             return time(s, false);
         }

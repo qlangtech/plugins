@@ -19,7 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.converter;
 
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
-import com.dtstack.chunjun.connector.jdbc.statement.FieldNamedPreparedStatement;
+import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;

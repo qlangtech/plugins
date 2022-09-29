@@ -32,10 +32,10 @@
 
     <dependencies>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-dag</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-           <scope>compile</scope>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -60,7 +60,6 @@
             <artifactId>tis-testcontainer-mysql</artifactId>
             <version>${project.version}</version>
         </dependency>
-
 
 
         <!-- test dependencies on Flink -->
@@ -154,5 +153,19 @@
 
     </dependencies>
 
+
+    <build>
+
+        <plugins>
+
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes combine.self="override"></excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
 
 </project>

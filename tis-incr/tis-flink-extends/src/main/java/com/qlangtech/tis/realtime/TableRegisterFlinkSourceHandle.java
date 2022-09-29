@@ -109,16 +109,10 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
         DataStream<Row> rowStream = null;
         if (sourceStream.clazz == DTO.class) {
-            // return sourceStream.stream;
-//            return sourceStream.stream.map(new DTO2RowDataMapper(
-//                    DTO2RowDataMapper.getAllTabColsMeta(this.colsMeta)))
-//                    .name(tab.getFrom() + "_dto2Rowdata")
-//                    .setParallelism(this.sinkTaskParallelism);
             rowStream = sourceStream.getStream()
                     .map(new DTO2RowMapper(cols), outputType)
                     .name(tabName).uid("uid_" + tabName);
         } else if (sourceStream.clazz == RowData.class) {
-            //return sourceStream.stream;
             rowStream = sourceStream.getStream()
                     .map(new RowData2RowMapper(cols), outputType)
                     .name(tabName).uid("uid_" + tabName);
@@ -136,74 +130,5 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         // return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 
-//    private static FlinkCol mapFlinkCol(HdfsColMeta meta) {
-//        return meta.type.accept(new DataType.TypeVisitor<FlinkCol>() {
-//
-//            @Override
-//            public FlinkCol intType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.INT());
-//            }
-//
-//            @Override
-//            public FlinkCol smallIntType(DataType dataType) {
-//                return new FlinkCol(meta.colName, DataTypes.SMALLINT());
-//            }
-//
-//            @Override
-//            public FlinkCol tinyIntType(DataType dataType) {
-//                return new FlinkCol(meta.colName, DataTypes.TINYINT(), FlinkCol.Byte());
-//            }
-//
-//            @Override
-//            public FlinkCol floatType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.FLOAT());
-//            }
-//
-//            @Override
-//            public FlinkCol timeType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.TIME(3));
-//            }
-//
-//            @Override
-//            public FlinkCol bigInt(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.BIGINT());
-//            }
-//
-//            public FlinkCol decimalType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.DECIMAL(type.columnSize, type.getDecimalDigits()));
-//            }
-//
-//            @Override
-//            public FlinkCol doubleType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.DOUBLE());
-//            }
-//
-//            @Override
-//            public FlinkCol dateType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.DATE(), FlinkCol.Date());
-//            }
-//
-//            @Override
-//            public FlinkCol timestampType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.TIMESTAMP(3), FlinkCol.DateTime());
-//            }
-//
-//            @Override
-//            public FlinkCol bitType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.BINARY(type.columnSize), FlinkCol.Byte());
-//            }
-//
-//            @Override
-//            public FlinkCol blobType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.BYTES(), FlinkCol.ByteBuffer());
-//            }
-//
-//            @Override
-//            public FlinkCol varcharType(DataType type) {
-//                return new FlinkCol(meta.colName, DataTypes.VARCHAR(type.columnSize));
-//            }
-//        });
-//
-//    }
 
 }

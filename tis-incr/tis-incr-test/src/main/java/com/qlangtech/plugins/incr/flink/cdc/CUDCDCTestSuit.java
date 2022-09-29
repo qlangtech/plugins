@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -29,6 +30,7 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -48,6 +50,7 @@ import org.apache.flink.util.CloseableIterator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
+import java.io.File;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -175,6 +178,10 @@ public abstract class CUDCDCTestSuit {
     protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
             , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
             throws Exception {
+//        File file = new File("full_types.xml");
+//        XmlFile tabStore = new XmlFile(file.getAbsoluteFile(), "test");
+//        tabStore.write(tab, Sets.newHashSet());
+
         List<ISelectedTab> tabs = Collections.singletonList(tab);
 
         List<TestRow> exampleRows = createExampleTestRows();
@@ -527,12 +534,7 @@ public abstract class CUDCDCTestSuit {
             c.setComment(col.getComment());
             return c;
         }).collect(Collectors.toList());
-        SelectedTab baseTab = new SelectedTab(tabName) {
-            @Override
-            public List<ColMeta> getCols() {
-                return colsMeta;
-            }
-        };
+        SelectedTab baseTab = new TestSelectedTab(tabName, colsMeta);
         baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
         if (suitParam.overwriteSelectedTab != null) {
             suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, baseTab);

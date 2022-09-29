@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.plugins.incr.flink.cdc.IRowDataValGetter;
 import com.starrocks.connector.flink.row.sink.StarRocksSinkOP;
 import com.starrocks.connector.flink.row.sink.StarRocksSinkRowBuilder;
 import org.apache.flink.table.data.RowData;

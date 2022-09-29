@@ -19,11 +19,16 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlInputFormat;
-import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
+import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
+import org.apache.flink.table.data.RowData;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -51,15 +56,14 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
 
     @Override
     protected void initializeRowConverter() {
-        //  super.initializeRowConverter();
-//        setRowConverter(
-//                rowConverter == null
-//                        ? jdbcDialect.getColumnConverter(rowType, jdbcConf)
-//                        : rowConverter);
-
         this.setRowConverter(DialectUtils.createColumnConverter(
-                jdbcDialect, jdbcConf, this.colsMeta, PostgresqlColumnConverter::createInternalConverter));
+                jdbcDialect, jdbcConf, this.colsMeta, PostgresqlColumnConverter::createInternalConverter
+                ));
     }
+
+
+
+
 
     @Override
     protected TableCols getTableMetaData() {

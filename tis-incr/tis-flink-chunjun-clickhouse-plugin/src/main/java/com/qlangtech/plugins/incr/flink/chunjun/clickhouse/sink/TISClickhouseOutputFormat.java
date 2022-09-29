@@ -19,17 +19,13 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
-import com.dtstack.chunjun.connector.jdbc.TableCols;
-import com.dtstack.chunjun.util.TableUtil;
-import com.qlangtech.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import org.apache.flink.table.types.logical.RowType;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 

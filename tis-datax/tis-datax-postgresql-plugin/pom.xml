@@ -32,7 +32,6 @@
     <packaging>tpi</packaging>
 
 
-
     <dependencies>
 
         <dependency>
@@ -84,7 +83,7 @@
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -96,5 +95,10 @@
         </dependency>
 
     </dependencies>
+
+
+    <build>
+
+    </build>
 
 </project>

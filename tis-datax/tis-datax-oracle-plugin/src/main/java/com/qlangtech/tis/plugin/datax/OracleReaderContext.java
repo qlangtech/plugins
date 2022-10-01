@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -30,6 +30,11 @@ import org.apache.commons.lang.StringUtils;
 public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, OracleDataSourceFactory> {
     public OracleReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXOracleReader reader) {
         super(jobName, sourceTableName, dumper, reader);
+        //reader.dataXName;
+    }
+
+    public String getDataXName() {
+        return this.plugin.dataXName;
     }
 
     public String getUserName() {
@@ -43,6 +48,12 @@ public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, O
     public String getPassword() {
         return this.dsFactory.getPassword();
     }
+
+    @Override
+    public String getSourceEntityName() {
+        return this.escapeEntity( this.sourceTableName);
+    }
+
 
 //    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
 //    public Boolean splitPk;
@@ -79,6 +90,6 @@ public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, O
 
     @Override
     protected String colEscapeChar() {
-        return StringUtils.EMPTY;
+        return "\\\"";
     }
 }

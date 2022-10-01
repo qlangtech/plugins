@@ -100,25 +100,6 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                 };
             }
 
-            //            @Override
-//            protected String convertType(ISelectedTab.ColMeta col) {
-//                switch (col.getType()) {
-//                    case Long:
-//                        return "bigint(20)";
-//                    case INT:
-//                        return "int(11)";
-//                    case Double:
-//                        return "decimal(18,2)";
-//                    case Date:
-//                        return "date";
-//                    case STRING:
-//                    case Boolean:
-//                    case Bytes:
-//                    default:
-//                        return "varchar(50)";
-//                }
-//            }
-
             /**
              * https://docs.oracle.com/database/121/SQLRF/sql_elements001.htm#SQLRF30020
              * https://docs.oracle.com/cd/B28359_01/server.111/b28318/datatype.htm
@@ -157,7 +138,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                     case Types.DECIMAL:
                     case Types.NUMERIC: {
                         if (type.columnSize > 0) {
-                            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                            return "DECIMAL(" + Math.min(type.columnSize, 38) + "," + type.getDecimalDigits() + ")";
                         } else {
                             return "DECIMAL";
                         }
@@ -181,7 +162,8 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                         return "VARCHAR2(" + type.columnSize + " CHAR)";
                     }
                     default:
-                        return "TINYTEXT";
+                        // return "TINYTEXT";
+                        return "CLOB";
                 }
             }
 
@@ -202,7 +184,18 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         }
 
         @Override
+        public boolean isSupportTabCreate() {
+            return true;
+        }
+
+        @Override
         public boolean isSupportIncr() {
+//            try {
+//                Method gDDL = this.clazz.getMethod("generateCreateDDL", IDataxProcessor.TableMap.class);
+//                return gDDL.getDeclaringClass() != IDataxWriter.class;
+//            } catch (NoSuchMethodException e) {
+//                throw new RuntimeException(e);
+//            }
             return true;
         }
 

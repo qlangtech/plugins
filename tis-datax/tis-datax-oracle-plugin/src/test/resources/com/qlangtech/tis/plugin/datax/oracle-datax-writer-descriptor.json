@@ -5,7 +5,14 @@
         "describable":false,
         "eprops":{
           "creator":{
-            "label":"数据源管理",
+            "label":"配置",
+            "plugin":[
+              {
+                "descName":"Oracle",
+                "extraParam":"type_detailed,update_false,disableBizStore_true",
+                "hetero":"datasource"
+              }
+            ],
             "routerLink":"/offline/ds"
           },
           "enum":[
@@ -25,7 +32,7 @@
       {
         "describable":false,
         "eprops":{
-          "help":"描述：写入数据到目的表前，会先执行这里的标准语句。如果 Sql 中有你需要操作到的表名称，请使用 @table 表示，这样在实际执行 Sql 语句时，会对变量按照实际表名称进行替换。比如你的任务是要写入到目的端的100个同构分表(表名称为:datax_00,datax01, ... datax_98,datax_99)，并且你希望导入数据前，先对表中数据进行删除操作，那么你可以这样配置：\"preSql\":[\"delete from @table\"]，效果是：在执行到每个表写入数据前，会先执行对应的 delete from 对应表名称",
+          "asyncHelp":true,
           "placeholder":"delete from @table"
         },
         "key":"preSql",
@@ -37,7 +44,7 @@
       {
         "describable":false,
         "eprops":{
-          "help":"描述：写入数据到目的表后，会执行这里的标准语句。（原理同 preSql ）"
+          "asyncHelp":true
         },
         "key":"postSql",
         "ord":6,
@@ -48,7 +55,7 @@
       {
         "describable":false,
         "eprops":{
-          "help":"设置连接时的session信息，格式示例如下：\"session\":[\n            \"alter session set nls_date_format = 'dd.mm.yyyy hh24:mi:ss';\"\n            \"alter session set NLS_LANG = 'AMERICAN';\"\n]",
+          "asyncHelp":true,
           "placeholder":"set session sql_mode='ANSI'"
         },
         "key":"session",
@@ -60,6 +67,31 @@
       {
         "describable":false,
         "eprops":{
+          "dftVal":true,
+          "disable":false,
+          "enum":[
+            {
+              "label":"是",
+              "val":true
+            },
+            {
+              "label":"否",
+              "val":false
+            }
+          ],
+          "help":"解析Reader的元数据，自动生成Writer create table DDL语句",
+          "label":"自动建表"
+        },
+        "key":"autoCreateTable",
+        "ord":10,
+        "pk":false,
+        "required":true,
+        "type":5
+      },
+      {
+        "describable":false,
+        "eprops":{
+          "asyncHelp":true,
           "dftVal":1000,
           "help":"一次性批量提交的记录数大小，该值可以极大减少DataX与Oracle的网络交互次数，并提升整体吞吐量。但是该值设置过大可能会造成DataX运行进程OOM情况。"
         },
@@ -72,10 +104,12 @@
       {
         "describable":false,
         "eprops":{
-          "dftVal":"{\n    \"name\": \"oraclewriter\",\n    \"parameter\": {\n        \"username\": \"${writer.userName}\",\n        \"password\": \"${writer.password}\",\n        \"column\": [${writer.colsQuotes}],\n#if($writer.containSession)\n        \"session\": $writer.session,\n#end\n#if($writer.containBatchSize)\n        \"batchSize\": $writer.batchSize,\n#end\n        #if($writer.containPreSql)\n        \"preSql\": [\"$writer.preSql\"],\n        #end\n        #if($writer.containPostSql)\n        \"postSql\": [\"$writer.postSql\"],\n        #end\n        \"connection\": [\n            {\n                \"jdbcUrl\": \"$writer.jdbcUrl\",\n                \"table\": [\"$writer.tableName\"]\n            }\n        ]\n    }\n}",
+          "dftVal":"{\n    \"name\": \"oraclewriter\",\n    \"parameter\": {\n        \"username\": \"${writer.userName}\",\n        \"password\": \"${writer.password}\",\n        \"escapeChar\": \"\\\"\",\n        \"column\": [${writer.colsQuotes}],\n#if($writer.containSession)\n        \"session\": $writer.session,\n#end\n#if($writer.containBatchSize)\n        \"batchSize\": $writer.batchSize,\n#end\n        #if($writer.containPreSql)\n        \"preSql\": [\"$writer.preSql\"],\n        #end\n        #if($writer.containPostSql)\n        \"postSql\": [\"$writer.postSql\"],\n        #end\n        \"connection\": [\n            {\n                \"jdbcUrl\": \"$writer.jdbcUrl\",\n                \"table\": [\"$writer.tableName\"]\n            }\n        ]\n    }\n}\n",
           "help":"无特殊情况请不要修改模版内容，避免不必要的错误",
           "label":"配置模版",
-          "rows":18
+          "mode":"text/velocity",
+          "rows":12,
+          "style":"codemirror"
         },
         "key":"template",
         "ord":15,
@@ -84,13 +118,18 @@
         "type":2
       }
     ],
+    "containAdvance":false,
     "displayName":"Oracle",
     "extendPoint":"com.qlangtech.tis.datax.impl.DataxWriter",
     "extractProps":{
+      "createDDL":true,
+      "endType":"oracle",
       "rdbms":true,
+      "supportIncr":true,
       "supportMultiTable":true
     },
     "impl":"com.qlangtech.tis.plugin.datax.DataXOracleWriter",
+    "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#dataxoraclewriter",
     "veriflable":false
   }
 }

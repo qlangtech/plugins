@@ -37,8 +37,8 @@ import org.easymock.EasyMock;
 import org.junit.Assert;
 
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -91,6 +91,7 @@ public class ReaderTemplate {
             public String getTemplate() {
                 return null;
             }
+
             @Override
             public DataxWriter.BaseDataxWriterDescriptor getWriterDescriptor() {
                 return null;
@@ -129,28 +130,13 @@ public class ReaderTemplate {
 //        realExecute(readerJson, dataxReader);
 //    }
 
-    /**
-     * dataXWriter执行
-     *
-     * @param readerJson
-     * @param dataxReader
-     * @throws IllegalAccessException
-     */
-    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
-//        DataxExecutor.initializeClassLoader(
-//                Sets.newHashSet("plugin.reader.streamreader", "plugin.writer." + dataxReader.getDataxMeta().getName()), uberClassLoader);
 
+    public static void realExecute(final Configuration readerCfg, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+        Objects.requireNonNull(readerCfg);
+        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
         DataxExecutor.initializeClassLoader(
                 Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
-
-//        Map<String, JarLoader> jarLoaderCenter = (Map<String, JarLoader>) jarLoaderCenterField.get(null);
-//        jarLoaderCenter.clear();
-//
-//
-//        jarLoaderCenter.put("plugin.reader.streamreader", uberClassLoader);
-//        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
 
         Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
                 , "container.json", true, (input) -> {
@@ -163,19 +149,13 @@ public class ReaderTemplate {
                     cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class"
                             , dataxReader.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].reader" //
-                            , IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
-                                return Configuration.from(writerJsonInput);
-                            }));
+                            , readerCfg);
                     cfg.set("job.content[0].writer", Configuration.from("{\n" +
                             "    \"name\": \"streamwriter\",\n" +
                             "    \"parameter\": {\n" +
                             "        \"print\": true\n" +
                             "    }\n" +
                             "}"));
-                  //  if (contentWriter != null) {
-//                        cfg.set("job.content[0].writer.parameter."
-//                                + com.alibaba.datax.plugin.writer.streamwriter.Key.CONTENT_WRITER, contentWriter);
-                   // }
                     return cfg;
                 });
 
@@ -187,6 +167,56 @@ public class ReaderTemplate {
         JobContainer container = new JobContainer(allConf);
 
         container.start();
+    }
+
+    /**
+     * dataXWriter执行
+     *
+     * @param readerJson
+     * @param dataxReader
+     * @throws IllegalAccessException
+     */
+    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+       // Configuration writeCfg = ;
+        realExecute((Configuration) IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
+            return Configuration.from(writerJsonInput);
+        }), dataxReader);
+//        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+//
+//        DataxExecutor.initializeClassLoader(
+//                Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
+//
+//        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
+//                , "container.json", true, (input) -> {
+//                    Configuration cfg = Configuration.from(input);
+//
+//
+//                    cfg.set("plugin.writer.streamwriter.class"
+//                            , "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
+//
+//                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class"
+//                            , dataxReader.getDataxMeta().getImplClass());
+//                    cfg.set("job.content[0].reader" //
+//                            , IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
+//                                return Configuration.from(writerJsonInput);
+//                            }));
+//                    cfg.set("job.content[0].writer", Configuration.from("{\n" +
+//                            "    \"name\": \"streamwriter\",\n" +
+//                            "    \"parameter\": {\n" +
+//                            "        \"print\": true\n" +
+//                            "    }\n" +
+//                            "}"));
+//                    return cfg;
+//                });
+//
+//
+//        // 绑定column转换信息
+//        ColumnCast.bind(allConf);
+//        LoadUtil.bind(allConf);
+//
+//        JobContainer container = new JobContainer(allConf);
+//
+//        container.start();
     }
 
 }

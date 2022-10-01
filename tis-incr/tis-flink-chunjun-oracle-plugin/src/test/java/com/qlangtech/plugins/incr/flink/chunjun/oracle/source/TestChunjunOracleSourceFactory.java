@@ -21,16 +21,13 @@ package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.*;
-import com.qlangtech.plugins.incr.flink.chunjun.oracle.sink.TestChunjunOracleSinkFactory;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
-import org.apache.commons.io.IOUtils;
+import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.RowKind;
@@ -40,22 +37,14 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.sql.Statement;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-24 15:33
  **/
 public class TestChunjunOracleSourceFactory {
-    static OracleDataSourceFactory oracleDS;
+    static BasicDataSourceFactory oracleDS;
     private static final String tabNameFull_types = "full_types";
     private static final String tabNameFull_types_pk = "id";
     private static final String key_timestamp6_c = "timestamp6_c";
@@ -63,13 +52,14 @@ public class TestChunjunOracleSourceFactory {
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
     private static final int BIG_DECIMAL_SCALA = 5;
-    private static final Pattern COMMENT_PATTERN = Pattern.compile("^(.*)--.*$");
+
 
     @BeforeClass
     public static void initialize() throws Exception {
-        TestChunjunOracleSinkFactory.initialize();
-        oracleDS = Objects.requireNonNull(TestChunjunOracleSinkFactory.oracleDS, "oracleDS can not be null");
-        initializeOracleTable("column_type_test");
+        //TestChunjunOracleSinkFactory.initialize();
+        OracleDSFactoryContainer.initialize();
+        oracleDS = Objects.requireNonNull(OracleDSFactoryContainer.oracleDS, "oracleDS can not be null");
+        OracleDSFactoryContainer.initializeOracleTable("column_type_test");
         List<String> tables = oracleDS.getTablesInDB();
         String full_types = "full_types";
         Optional<String> find = tables.stream().filter((tab) -> {
@@ -78,66 +68,43 @@ public class TestChunjunOracleSourceFactory {
         Assert.assertTrue("table must present:" + full_types, find.isPresent());
     }
 
-    /**
-     * Executes a JDBC statement using the default jdbc config without autocommitting the
-     * connection.
-     */
-    protected static void initializeOracleTable(String sqlFile) {
-        final String ddlFile = String.format("ddl/%s.sql", sqlFile);
-        final URL ddlTestFile = TestChunjunOracleSourceFactory.class.getClassLoader().getResource(ddlFile);
-        assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
-
-        oracleDS.visitAllConnection((connection) -> {
-            try (InputStream reader = ddlTestFile.openStream()) {
-
-                try (Statement statement = connection.createStatement()) {
-
-                    final List<String> statements
-                            = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
-                            .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                            .map(
-                                    x -> {
-                                        final Matcher m =
-                                                COMMENT_PATTERN.matcher(x);
-                                        return m.matches() ? m.group(1) : x;
-                                    })
-                            .collect(Collectors.joining("\n"))
-                            .split(";"))
-                            .collect(Collectors.toList());
-                    for (String stmt : statements) {
-                        statement.execute(stmt);
-                    }
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-
-        });
-//        try (Connection connection = getJdbcConnection();
-//             Statement statement = connection.createStatement()) {
+//    /**
+//     * Executes a JDBC statement using the default jdbc config without autocommitting the
+//     * connection.
+//     */
+//    protected static void initializeOracleTable(String sqlFile) {
+//        final String ddlFile = String.format("ddl/%s.sql", sqlFile);
+//        final URL ddlTestFile = TestChunjunOracleSourceFactory.class.getClassLoader().getResource(ddlFile);
+//        assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
 //
+//        oracleDS.visitAllConnection((connection) -> {
+//            try (InputStream reader = ddlTestFile.openStream()) {
 //
-////            final List<String> statements =
-////                    Arrays.stream(
-////                            Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
-////                                    .map(String::trim)
-////                                    .filter(x -> !x.startsWith("--") && !x.isEmpty())
-////                                    .map(
-////                                            x -> {
-////                                                final Matcher m =
-////                                                        COMMENT_PATTERN.matcher(x);
-////                                                return m.matches() ? m.group(1) : x;
-////                                            })
-////                                    .collect(Collectors.joining("\n"))
-////                                    .split(";"))
-////                            .collect(Collectors.toList());
-////            for (String stmt : statements) {
-////                statement.execute(stmt);
-////            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-    }
+//                try (Statement statement = connection.createStatement()) {
+//
+//                    final List<String> statements
+//                            = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
+//                            .filter(x -> !x.startsWith("--") && !x.isEmpty())
+//                            .map(
+//                                    x -> {
+//                                        final Matcher m =
+//                                                COMMENT_PATTERN.matcher(x);
+//                                        return m.matches() ? m.group(1) : x;
+//                                    })
+//                            .collect(Collectors.joining("\n"))
+//                            .split(";"))
+//                            .collect(Collectors.toList());
+//                    for (String stmt : statements) {
+//                        statement.execute(stmt);
+//                    }
+//                }
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+//
+//        });
+//
+//    }
 
     @Test
     public void testRecordPull() throws Exception {

@@ -1,6 +1,7 @@
 {
     "name": "oraclereader",
     "parameter": {
+        "dataxName": "${reader.dataXName}",
         #if($reader.containPassword)
         "password": "${reader.password}",
         #end

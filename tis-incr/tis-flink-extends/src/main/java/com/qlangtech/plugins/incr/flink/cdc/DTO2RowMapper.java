@@ -18,14 +18,11 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.google.common.collect.Sets;
-import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 

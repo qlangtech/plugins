@@ -105,14 +105,15 @@ public class PluginItems {
 
         for (String sourceType : extendClass) {
             if ("Oracle".equals(sourceType)) {
-                return Collections.singletonList(new Option(DB_SQL_DORIS, DB_SQL_DORIS));
+                return Collections.singletonList(new Option(DB_SQL_ORACLE, DB_SQL_ORACLE));
+
                 //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
             }
         }
 
         for (String sourceType : extendClass) {
             if ("Doris".equals(sourceType)) {
-                return Collections.singletonList(new Option(DB_SQL_ORACLE, DB_SQL_ORACLE));
+                return Collections.singletonList(new Option(DB_SQL_DORIS, DB_SQL_DORIS));
                 //  Assert.fail("param:" + sourceType + " must contain in:" + extendClazzs.stream().collect(Collectors.joining(",")));
             }
         }

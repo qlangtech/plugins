@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -32,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.RobustReflectionConverter;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -71,6 +71,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     // 目标源中是否自动创建表，这样会方便不少
     public boolean autoCreateTable;
+
+    @Override
+    public boolean isGenerateCreateDDLSwitchOff() {
+        return !autoCreateTable;
+    }
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
@@ -146,9 +151,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
             for (String jdbcUrl : jdbcUrls) {
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                    List<String> tabs = Lists.newArrayList();
-                    dsFactory.refectTableInDB(tabs, conn);
-                    if (!tabs.contains(tableName)) {
+                    //List<String> tabs = Lists.newArrayList();
+                    //dsFactory.refectTableInDB(tabs, conn);
+                    List<ColumnMetaData> tabCols = dsFactory.getTableMetadata(conn, tableName);
+                    // if (!tabs.contains(tableName)) {
+                    if (CollectionUtils.isEmpty(tabCols)) {
                         // 表不存在
                         boolean success = false;
                         try {

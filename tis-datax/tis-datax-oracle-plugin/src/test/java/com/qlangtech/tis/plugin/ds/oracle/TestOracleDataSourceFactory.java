@@ -25,8 +25,9 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
-import junit.framework.TestCase;
 import org.apache.commons.lang.StringUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -37,17 +38,21 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-24 14:11
  **/
-public class TestOracleDataSourceFactory extends TestCase {
+public class TestOracleDataSourceFactory {
+
+    @Test
     public void testDescGenerate() {
         PluginDesc.testDescGenerate(OracleDataSourceFactory.class, "oracle-datax-ds-factory-descriptor.json");
     }
 
+    @Test
     public void testDSDescPresent() {
         ExtensionList<Descriptor<DataSourceFactory>> descriptorList = TIS.get().getDescriptorList(DataSourceFactory.class);
         Optional<Descriptor<DataSourceFactory>> match = descriptorList.stream().filter((desc) -> OracleDataSourceFactory.ORACLE.equals(desc.getDisplayName())).findFirst();
-        assertTrue(OracleDataSourceFactory.ORACLE + " desc must present", match.isPresent());
+        Assert.assertTrue(OracleDataSourceFactory.ORACLE + " desc must present", match.isPresent());
     }
 
+    @Test
     public void testShowTableInDB() {
 
         // System.out.println("SELECT NULL AS table_cat,\n       c.owner AS table_schem,\n       c.table_name,\n       c.column_name,\n       c.position AS key_seq,\n       c.constraint_name AS pk_name\nFROM all_cons_columns c, all_constraints k\nWHERE k.constraint_type = 'P'\n  AND k.table_name = :1\n  AND k.owner like :2 escape '/'\n  AND k.constraint_name = c.constraint_name \n  AND k.table_name = c.table_name \n  AND k.owner = c.owner \nORDER BY column_name\n");
@@ -58,17 +63,18 @@ public class TestOracleDataSourceFactory extends TestCase {
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
-        assertTrue(tablesInDB.size() > 1);
+        Assert.assertTrue(tablesInDB.size() > 1);
         // tablesInDB.forEach((tab) -> System.out.println(tab));
         List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("BM"));
 
-        assertTrue(cols.size() > 0);
+        Assert.assertTrue(cols.size() > 0);
 
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.isPk() + " " + col.getType());
         }
     }
 
+    @Test
     public void testSqlTime() {
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
         dsFactory.visitAllConnection((conn) -> {
@@ -90,7 +96,7 @@ public class TestOracleDataSourceFactory extends TestCase {
     public static OracleDataSourceFactory createOracleDataSourceFactory() {
         OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
         dsFactory.name = "xe";
-       // dsFactory.dbName = "xe";
+        // dsFactory.dbName = "xe";
         dsFactory.userName = "system";
         dsFactory.password = "oracle";
         dsFactory.nodeDesc = "192.168.28.201";

@@ -3,6 +3,7 @@
     "parameter": {
         "username": "${writer.userName}",
         "password": "${writer.password}",
+        "escapeChar": "\"",
         "column": [${writer.colsQuotes}],
 #if($writer.containSession)
         "session": $writer.session,

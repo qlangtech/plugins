@@ -65,6 +65,7 @@ public class DataXOracleReader extends BasicDataXRdbmsReader<OracleDataSourceFac
     protected RdbmsReaderContext createDataXReaderContext(
             String jobName, SelectedTab tab, IDataSourceDumper dumper) {
         OracleReaderContext context = new OracleReaderContext(jobName, tab.getName(), dumper, this);
+//        context.setCols(tab.cols);
         return context;
     }
 

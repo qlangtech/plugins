@@ -96,25 +96,25 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
         @Override
         public ISerializationConverter<FieldNamedPreparedStatement> bitType(DataType type) {
 
-            try {
-                final org.postgresql.util.PGobject bit1 = new org.postgresql.util.PGobject();
-                bit1.setType("bit");
-                bit1.setValue("1");
-                final org.postgresql.util.PGobject bit0 = new org.postgresql.util.PGobject();
-                bit0.setType("bit");
-                bit0.setValue("0");
+          //  try {
+//                final org.postgresql.util.PGobject bit1 = new org.postgresql.util.PGobject();
+//                bit1.setType("bit");
+//                bit1.setValue("1");
+//                final org.postgresql.util.PGobject bit0 = new org.postgresql.util.PGobject();
+//                bit0.setType("bit");
+//                bit0.setValue("0");
 
 
                 return new ISerializationConverter<FieldNamedPreparedStatement>() {
                     @Override
                     public void serialize(RowData rowData, int pos, FieldNamedPreparedStatement output) throws Exception {
                         byte v = (byte) fieldGetter.getFieldOrNull(rowData);
-                        output.setObject(pos, v > 0 ? bit1 : bit0);
+                        output.setString(pos, v > 0 ? "1" : "0");
                     }
                 };
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+//            } catch (SQLException e) {
+//                throw new RuntimeException(e);
+//            }
         }
 
         @Override

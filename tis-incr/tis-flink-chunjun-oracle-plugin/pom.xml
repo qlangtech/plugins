@@ -81,12 +81,18 @@
         </dependency>
 
 
+        <!--        <dependency>-->
+        <!--            <groupId>org.testcontainers</groupId>-->
+        <!--            <artifactId>oracle-xe</artifactId>-->
+        <!--            <version>${testcontainers.version}</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
+
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>oracle-xe</artifactId>
-            <version>${testcontainers.version}</version>
-            <scope>test</scope>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-testcontainer-oracle</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-oracle-plugin</artifactId>

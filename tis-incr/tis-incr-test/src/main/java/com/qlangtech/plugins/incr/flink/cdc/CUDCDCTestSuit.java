@@ -21,7 +21,6 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -30,7 +29,6 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
-import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -50,7 +48,6 @@ import org.apache.flink.util.CloseableIterator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
-import java.io.File;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -521,26 +518,13 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected final SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
-        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
-        if (CollectionUtils.isEmpty(tableMetadata)) {
-            throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
-        }
-        List<ISelectedTab.ColMeta> colsMeta = tableMetadata.stream().map((col) -> {
-            ISelectedTab.ColMeta c = new ISelectedTab.ColMeta();
-            c.setPk(col.isPk());
-            c.setName(col.getName());
-            c.setNullable(col.isNullable());
-            c.setType(col.getType());
-            c.setComment(col.getComment());
-            return c;
-        }).collect(Collectors.toList());
-        SelectedTab baseTab = new TestSelectedTab(tabName, colsMeta);
-        baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
-        if (suitParam.overwriteSelectedTab != null) {
-            suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, baseTab);
-        }
-        return baseTab;
+        return TestSelectedTab.createSelectedTab(tabName, dataSourceFactory, (tab) -> {
+            if (suitParam.overwriteSelectedTab != null) {
+                suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);
+            }
+        });
     }
+
 
     protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
 

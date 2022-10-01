@@ -100,6 +100,10 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-testcontainer-oracle</artifactId>
+        </dependency>
 
     </dependencies>
 

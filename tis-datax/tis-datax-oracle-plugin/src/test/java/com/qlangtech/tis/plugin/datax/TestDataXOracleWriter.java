@@ -18,51 +18,55 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
-import junit.framework.TestCase;
+import org.apache.commons.io.FileUtils;
+import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
+import java.io.File;
+import java.sql.Types;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXOracleWriter extends TestCase {
+public class TestDataXOracleWriter {
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXOracleWriter.getDftTemplate();
-        assertNotNull("dftTemplate can not be null", dftTemplate);
+        Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXOracleWriter.class);
-        assertTrue(extraProps.isPresent());
+        Assert.assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescGenerate() throws Exception {
 
         PluginDesc.testDescGenerate(DataXOracleWriter.class, "oracle-datax-writer-descriptor.json");
     }
 
+    @Test
     public void testTemplateGenerate() throws Exception {
-        OracleDataSourceFactory dsFactory = TestOracleDataSourceFactory.createOracleDataSourceFactory();
-
-        DataXOracleWriter writer = new DataXOracleWriter() {
-            @Override
-            public OracleDataSourceFactory getDataSourceFactory() {
-                return dsFactory;
-            }
-
-            @Override
-            public Class<?> getOwnerClass() {
-                return DataXOracleWriter.class;
-            }
-        };
+        DataXOracleWriter writer = getOracleWriter();
         writer.template = DataXOracleWriter.getDftTemplate();
         writer.batchSize = 1235;
         writer.postSql = "drop table @table";
@@ -85,4 +89,96 @@ public class TestDataXOracleWriter extends TestCase {
 
         WriterTemplate.valiateCfgGenerate("oracle-datax-writer-assert-without-option.json", writer, tableMap.get());
     }
+
+    private DataXOracleWriter getOracleWriter() {
+        OracleDataSourceFactory dsFactory = TestOracleDataSourceFactory.createOracleDataSourceFactory();
+
+        DataXOracleWriter writer = new DataXOracleWriter() {
+            @Override
+            public OracleDataSourceFactory getDataSourceFactory() {
+                return dsFactory;
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXOracleWriter.class;
+            }
+        };
+        writer.autoCreateTable = true;
+        return writer;
+    }
+
+    @Test
+    public void testRealDump() throws Exception {
+
+        final String targetTableName = "customer_order_relation";
+        String testDataXName = "mysql_oracle";
+
+        final DataXOracleWriter writer = getOracleWriter();
+        writer.dataXName = testDataXName;
+        List<HdfsColMeta> colMetas = Lists.newArrayList();
+
+//                "customerregister_id",
+//                "waitingorder_id",
+//                "kind",
+//                "create_time",
+//                "last_ver"
+        // DataType
+        HdfsColMeta cmeta = null;
+        // String colName, Boolean nullable, Boolean pk, DataType dataType
+        cmeta = new HdfsColMeta("customerregister_id", false
+                , true, new DataType(Types.VARCHAR, "VARCHAR", 150));
+        colMetas.add(cmeta);
+
+        cmeta = new HdfsColMeta("waitingorder_id", false, true
+                , new DataType(Types.VARCHAR, "VARCHAR", 150));
+        colMetas.add(cmeta);
+
+        cmeta = new HdfsColMeta("kind"
+                , true, false, new DataType(Types.BIGINT));
+        colMetas.add(cmeta);
+
+        cmeta = new HdfsColMeta("create_time"
+                , true, false, new DataType(Types.BIGINT));
+        colMetas.add(cmeta);
+
+        cmeta = new HdfsColMeta("last_ver"
+                , true, false, new DataType(Types.BIGINT));
+        colMetas.add(cmeta);
+
+        IDataxProcessor.TableMap tabMap = IDataxProcessor.TableMap.create(targetTableName, colMetas);
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap);
+
+//        CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
+//        createDorisWriter.dsFactory.password = "";
+//        // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
+//        createDorisWriter.dsFactory.nodeDesc = "localhost";
+//
+//        createDorisWriter.writer.autoCreateTable = true;
+
+        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
+        File createDDLDir = new File(".");
+        File createDDLFile = null;
+        try {
+            createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            FileUtils.write(createDDLFile, ddl.getDDLScript(), TisUTF8.get());
+
+            EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
+            DataxWriter.dataxWriterGetter = (dataXName) -> {
+                return writer;
+            };
+            DataxProcessor.processorGetter = (dataXName) -> {
+                Assert.assertEquals(testDataXName, dataXName);
+                return dataXProcessor;
+            };
+            EasyMock.replay(dataXProcessor);
+
+            WriterTemplate.realExecuteDump("oracle_writer_real_dump.json", writer);
+
+            EasyMock.verify(dataXProcessor);
+        } finally {
+            FileUtils.deleteQuietly(createDDLFile);
+        }
+    }
+
 }

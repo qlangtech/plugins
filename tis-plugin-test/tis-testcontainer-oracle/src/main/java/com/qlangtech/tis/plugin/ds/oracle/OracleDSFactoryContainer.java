@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -171,61 +172,42 @@ public class OracleDSFactoryContainer {
      * Executes a JDBC statement using the default jdbc config without autocommitting the
      * connection.
      */
-    public static void initializeOracleTable(String sqlFile) {
-        final String ddlFile = String.format("ddl/%s.sql", sqlFile);
-        final URL ddlTestFile = OracleDSFactoryContainer.class.getClassLoader().getResource(ddlFile);
-        assertNotNull("Cannot locate " + ddlFile, ddlTestFile);
+    public static void initializeOracleTable(String... sqlFile) {
+        final List<URL> ddlTestFile = Lists.newArrayList();
+        for (String f : sqlFile) {
+            final String ddlFile = String.format("ddl/%s.sql", f);
+            final URL ddFile = OracleDSFactoryContainer.class.getClassLoader().getResource(ddlFile);
+            assertNotNull("Cannot locate " + ddlFile, ddFile);
+            ddlTestFile.add(ddFile);
+        }
 
         oracleDS.visitAllConnection((connection) -> {
-            try (InputStream reader = ddlTestFile.openStream()) {
+            for (URL ddl : ddlTestFile) {
+                try (InputStream reader = ddl.openStream()) {
 
-                try (Statement statement = connection.createStatement()) {
+                    try (Statement statement = connection.createStatement()) {
 
-                    final List<String> statements
-                            = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
-                            .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                            .map(
-                                    x -> {
-                                        final Matcher m =
-                                                COMMENT_PATTERN.matcher(x);
-                                        return m.matches() ? m.group(1) : x;
-                                    })
-                            .collect(Collectors.joining("\n"))
-                            .split(";"))
-                            .collect(Collectors.toList());
-                    for (String stmt : statements) {
-                        statement.execute(stmt);
+                        final List<String> statements
+                                = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
+                                .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                .map(
+                                        x -> {
+                                            final Matcher m =
+                                                    COMMENT_PATTERN.matcher(x);
+                                            return m.matches() ? m.group(1) : x;
+                                        })
+                                .collect(Collectors.joining("\n"))
+                                .split(";"))
+                                .collect(Collectors.toList());
+                        for (String stmt : statements) {
+                            statement.execute(stmt);
+                        }
                     }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
             }
-
         });
-//        try (Connection connection = getJdbcConnection();
-//             Statement statement = connection.createStatement()) {
-//
-//
-////            final List<String> statements =
-////                    Arrays.stream(
-////                            Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
-////                                    .map(String::trim)
-////                                    .filter(x -> !x.startsWith("--") && !x.isEmpty())
-////                                    .map(
-////                                            x -> {
-////                                                final Matcher m =
-////                                                        COMMENT_PATTERN.matcher(x);
-////                                                return m.matches() ? m.group(1) : x;
-////                                            })
-////                                    .collect(Collectors.joining("\n"))
-////                                    .split(";"))
-////                            .collect(Collectors.toList());
-////            for (String stmt : statements) {
-////                statement.execute(stmt);
-////            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
 }

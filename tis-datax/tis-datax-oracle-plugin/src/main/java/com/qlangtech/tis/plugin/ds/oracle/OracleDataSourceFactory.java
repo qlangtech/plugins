@@ -31,7 +31,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
-import java.util.concurrent.Callable;
+import java.util.Optional;
 import java.util.function.Function;
 
 import static oracle.jdbc.OracleTypes.*;
@@ -100,12 +100,10 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     protected ResultSet getColumnsMeta(String table, DatabaseMetaData metaData1) throws SQLException {
         return getColRelevantMeta(table, (tab) -> {
             try {
-                return metaData1.getColumns(null, tab.owner, tab.tabName, null);
+                return metaData1.getColumns(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }, () -> {
-            return super.getColumnsMeta(table, metaData1);
         });
     }
 
@@ -115,36 +113,46 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         return getColRelevantMeta(table, (tab) -> {
             try {
 
-                return metaData1.getPrimaryKeys(null, tab.owner, tab.tabName);
+                return metaData1.getPrimaryKeys(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }, () -> {
-            return super.getPrimaryKeys(table, metaData1);
         });
     }
 
     private ResultSet getColRelevantMeta(String table
-            , Function<OracleTab, ResultSet> containSchema, Callable<ResultSet> notContainSchema) throws SQLException {
+            , Function<OracleTab, ResultSet> containSchema) throws SQLException {
         try {
+            OracleTab otab = null;
             if (StringUtils.indexOf(table, ".") > -1) {
                 String[] tab = StringUtils.split(table, ".");
-                return containSchema.apply(new OracleTab(tab[0], tab[1]));
+                otab = new OracleTab(tab[0], tab[1]);
             } else {
-                return notContainSchema.call();
+                otab = new OracleTab(Optional.empty(), table);
             }
+
+            return containSchema.apply(otab);
         } catch (Exception e) {
             throw new SQLException(e);
         }
     }
 
     private static class OracleTab {
-        private final String owner;
+        private final Optional<String> owner;
         private final String tabName;
 
         public OracleTab(String owner, String tabName) {
-            this.owner = StringUtils.upperCase(owner);
-            this.tabName = tabName;
+//            this.owner = Optional.of(StringUtils.upperCase(owner));
+//            this.tabName = StringUtils.remove(tabName, "\"");
+            this(Optional.of(StringUtils.upperCase(owner)), tabName);
+        }
+
+        public OracleTab(Optional<String> owner, String tabName) {
+            if (StringUtils.isEmpty(tabName)) {
+                throw new IllegalArgumentException("tabName:" + tabName + " can not be null");
+            }
+            this.owner = owner;
+            this.tabName = StringUtils.remove(tabName, "\"");
         }
     }
 
@@ -172,8 +180,10 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
             case FLOAT: // = 6;
                 return Types.FLOAT;
             case REAL: // = 7;
+            case BINARY_FLOAT:
                 return Types.REAL;
             case DOUBLE: // = 8;
+            case BINARY_DOUBLE:
                 return Types.DOUBLE;
             case NUMERIC: // = 2;
             case DECIMAL: // = 3;

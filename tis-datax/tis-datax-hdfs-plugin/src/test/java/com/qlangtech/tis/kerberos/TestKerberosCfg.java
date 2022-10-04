@@ -82,10 +82,11 @@ public class TestKerberosCfg {
 
 
         EasyMock.replay(fieldErrorHandler, context);
-        AttrValMap attrValMap = AttrValMap.parseDescribableMap(fieldErrorHandler, Optional.empty(), jsonObject);
+        AttrValMap attrValMap = AttrValMap.parseDescribableMap( //fieldErrorHandler,
+                Optional.empty(), jsonObject);
         Assert.assertNotNull(attrValMap);
 
-        Descriptor.PluginValidateResult validate = attrValMap.validate(context, false);
+        Descriptor.PluginValidateResult validate = attrValMap.validate(fieldErrorHandler, context, false);
         Assert.assertNotNull(validate);
 
         Assert.assertTrue(validate.isValid());
@@ -97,7 +98,7 @@ public class TestKerberosCfg {
         validateKerberosProps(kerberosCfg);
 
         IPluginStore<ParamsConfig> pluginStore
-                = ParamsConfig.getTargetPluginStore(pmeta.getTargetPluginDesc());
+                = ParamsConfig.getTargetPluginStore(pmeta.getTargetDesc().matchTargetPluginDescName);
         FileUtils.deleteQuietly(pluginStore.getTargetFile().getFile());
 
 
@@ -121,17 +122,17 @@ public class TestKerberosCfg {
                 , "kerberos_form_update.json", true, (input) -> {
                     return JSON.parseObject(org.apache.commons.io.IOUtils.toString(input, TisUTF8.get()));
                 });
-        attrValMap = AttrValMap.parseDescribableMap(fieldErrorHandler, Optional.empty(), updateJson);
+        attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), updateJson);
         Assert.assertNotNull(attrValMap);
 
-        validate = attrValMap.validate(context, false);
+        validate = attrValMap.validate(fieldErrorHandler, context, false);
         Assert.assertNotNull(validate);
 
         Assert.assertTrue(validate.isValid());
         validate.setDescriptor(attrValMap.descriptor);
         kerberosCfg = validate.newInstance(fieldErrorHandler);
 
-       // validateKerberosProps(kerberosCfg);
+        // validateKerberosProps(kerberosCfg);
 
         saveResult = pluginStore.setPlugins(fieldErrorHandler, Optional.of(context)
                 , Collections.singletonList(new Descriptor.ParseDescribable<>(kerberosCfg)));
@@ -140,7 +141,7 @@ public class TestKerberosCfg {
         Assert.assertFalse(saveResult.cfgChanged);
         Assert.assertTrue(saveResult.success);
 
-       // pluginStore.cleanPlugins();
+        // pluginStore.cleanPlugins();
         kerberosCfg = (KerberosCfg) pluginStore.getPlugin();
         validateKerberosProps(kerberosCfg);
 
@@ -155,7 +156,7 @@ public class TestKerberosCfg {
     protected void validateKerberosProps(KerberosCfg kerberosCfg) throws Exception {
         Assert.assertNotNull(kerberosCfg);
 
-        Assert.assertEquals("principal", kerberosCfg.principal);
+        Assert.assertEquals("principal@taobao", kerberosCfg.principal);
         Assert.assertEquals("xxxx.cfg", kerberosCfg.keytabPath);
         Assert.assertEquals("kerberos_name", kerberosCfg.name);
 

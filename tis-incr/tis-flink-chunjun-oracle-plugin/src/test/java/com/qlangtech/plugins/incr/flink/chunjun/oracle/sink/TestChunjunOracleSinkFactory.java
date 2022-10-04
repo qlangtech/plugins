@@ -28,7 +28,7 @@ import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TISOracleContainer;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
-import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpdateType;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -117,9 +117,10 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
 
     @Override
     protected UpdateMode createIncrMode() {
-        UpdateType updateMode = new UpdateType();
+        InsertType insertType = new InsertType();
+        // UpdateType updateMode = new UpdateType();
         //  updateMode.updateKey = Lists.newArrayList(colId, updateTime);
-        return updateMode;
+        return insertType;
     }
 
     @Override

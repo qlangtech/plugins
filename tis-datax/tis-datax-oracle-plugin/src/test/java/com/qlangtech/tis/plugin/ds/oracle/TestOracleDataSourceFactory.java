@@ -94,17 +94,20 @@ public class TestOracleDataSourceFactory {
     }
 
     public static OracleDataSourceFactory createOracleDataSourceFactory() {
-        OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
-        dsFactory.name = "xe";
-        // dsFactory.dbName = "xe";
-        dsFactory.userName = "system";
-        dsFactory.password = "oracle";
-        dsFactory.nodeDesc = "192.168.28.201";
-        dsFactory.port = 1521;
 
-        SIDConnEntity connEntity = new SIDConnEntity();
-        connEntity.sid = "xe";
-        dsFactory.connEntity = connEntity;
-        return dsFactory;
+        return (OracleDataSourceFactory) OracleDSFactoryContainer.initialize();
+
+//        OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
+//        dsFactory.name = "xe";
+//        // dsFactory.dbName = "xe";
+//        dsFactory.userName = "system";
+//        dsFactory.password = "oracle";
+//        dsFactory.nodeDesc = "192.168.28.201";
+//        dsFactory.port = 1521;
+//
+//        SIDConnEntity connEntity = new SIDConnEntity();
+//        connEntity.sid = "xe";
+//        dsFactory.connEntity = connEntity;
+//        return dsFactory;
     }
 }

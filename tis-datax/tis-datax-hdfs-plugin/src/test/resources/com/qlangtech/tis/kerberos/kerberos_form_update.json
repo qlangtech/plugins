@@ -57,7 +57,7 @@
     },
     "principal": {
       "updateModel": false,
-      "_primaryVal": "principal",
+      "_primaryVal": "principal@taobao",
       "has_set_primaryVal": false,
       "disabled": false,
       "key": "principal",

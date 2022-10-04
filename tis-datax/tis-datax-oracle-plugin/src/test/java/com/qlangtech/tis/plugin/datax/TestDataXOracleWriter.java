@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
 import org.apache.commons.io.FileUtils;
@@ -172,8 +173,14 @@ public class TestDataXOracleWriter {
                 return dataXProcessor;
             };
             EasyMock.replay(dataXProcessor);
-
-            WriterTemplate.realExecuteDump("oracle_writer_real_dump.json", writer);
+            String[] jdbcUrl = new String[1];
+            OracleDSFactoryContainer.oracleDS.getDbConfig().vistDbURL(false, (a, b, url) -> {
+                jdbcUrl[0] = url;
+            });
+            WriterTemplate.realExecuteDump("oracle_writer_real_dump.json", writer, (cfg) -> {
+                cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
+                return cfg;
+            });
 
             EasyMock.verify(dataXProcessor);
         } finally {

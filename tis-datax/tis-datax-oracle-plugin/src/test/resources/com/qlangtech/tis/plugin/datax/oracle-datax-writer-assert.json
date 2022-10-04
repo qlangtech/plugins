@@ -15,6 +15,7 @@
         ]
       }
     ],
+    "escapeChar":"\"",
     "password":"oracle",
     "postSql":[
       "drop table @table"

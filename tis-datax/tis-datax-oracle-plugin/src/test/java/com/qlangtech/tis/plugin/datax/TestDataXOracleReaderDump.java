@@ -22,20 +22,24 @@ import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
+import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.util.Collections;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -43,11 +47,14 @@ import java.util.Optional;
  **/
 public class TestDataXOracleReaderDump {
     private static BasicDataSourceFactory dsFactory;
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     @BeforeClass
     public static void initialize() {
         dsFactory = OracleDSFactoryContainer.initialize();
-        OracleDSFactoryContainer.initializeOracleTable(OracleDSFactoryContainer.sqlfile_column_type_test);
+        OracleDSFactoryContainer.initializeOracleTable(
+                OracleDSFactoryContainer.sqlfile_column_type_test, "insert_full_types");
 
     }
 
@@ -61,11 +68,11 @@ public class TestDataXOracleReaderDump {
         String dataXName = OracleDSFactoryContainer.dataName.getName();
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxWriter dataxWriter = EasyMock.mock("dataXWriter", IDataxWriter.class);
-       // IDataxReaderContext dataXContext = EasyMock.mock("dataxContext", IDataxReaderContext.class);
+        // IDataxReaderContext dataXContext = EasyMock.mock("dataxContext", IDataxReaderContext.class);
 
         SelectedTab stab = TestSelectedTab.createSelectedTab(OracleDSFactoryContainer.tab_full_types, dsFactory);
-        IDataxProcessor.TableMap tab = new IDataxProcessor.TableMap(stab);
-       // EasyMock.expect(dataxWriter.getSubTask(Optional.of(tab))).andReturn(dataXContext);
+        //IDataxProcessor.TableMap tab = new IDataxProcessor.TableMap(stab);
+        // EasyMock.expect(dataxWriter.getSubTask(Optional.of(tab))).andReturn(dataXContext);
 
         IDataxGlobalCfg globalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
 
@@ -105,9 +112,16 @@ public class TestDataXOracleReaderDump {
             return dataxReader;
         };
 
+        File readContent = folder.newFile("readContent.txt");
+        ReaderTemplate.realExecute(Configuration.from(cfgResult), readContent, dataxReader);
+        String content = FileUtils.readFileToString(readContent, TisUTF8.get());
 
-        ReaderTemplate.realExecute(Configuration.from(cfgResult), dataxReader);
+        Assert.assertNotNull(content);
+        System.out.println(content);
 
+        Assert.assertEquals(IOUtils.loadResourceFromClasspath(
+                TestDataXOracleReaderDump.class, "oracle_full_types_read_expect.txt")
+                , content);
 
         EasyMock.verify(processor, dataxWriter, globalCfg);
     }

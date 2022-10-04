@@ -23,6 +23,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
 import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
+import com.alibaba.datax.plugin.writer.streamwriter.Key;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
@@ -36,6 +37,7 @@ import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
@@ -131,7 +133,7 @@ public class ReaderTemplate {
 //    }
 
 
-    public static void realExecute(final Configuration readerCfg, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+    public static void realExecute(final Configuration readerCfg, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
         Objects.requireNonNull(readerCfg);
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
@@ -153,7 +155,9 @@ public class ReaderTemplate {
                     cfg.set("job.content[0].writer", Configuration.from("{\n" +
                             "    \"name\": \"streamwriter\",\n" +
                             "    \"parameter\": {\n" +
-                            "        \"print\": true\n" +
+                            //"        \"print\": true\n" +
+                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" +
+                            "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" +
                             "    }\n" +
                             "}"));
                     return cfg;
@@ -176,11 +180,11 @@ public class ReaderTemplate {
      * @param dataxReader
      * @throws IllegalAccessException
      */
-    public static void realExecute(final String readerJson, IDataXPluginMeta dataxReader) throws IllegalAccessException {
-       // Configuration writeCfg = ;
+    public static void realExecute(final String readerJson, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+        // Configuration writeCfg = ;
         realExecute((Configuration) IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
             return Configuration.from(writerJsonInput);
-        }), dataxReader);
+        }), writeFile, dataxReader);
 //        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 //
 //        DataxExecutor.initializeClassLoader(

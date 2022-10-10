@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.oracle.OracleTab;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -30,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, OracleDataSourceFactory> {
     public OracleReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, DataXOracleReader reader) {
         super(jobName, sourceTableName, dumper, reader);
-        //reader.dataXName;
     }
 
     public String getDataXName() {
@@ -51,18 +51,14 @@ public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, O
 
     @Override
     public String getSourceEntityName() {
-        return this.escapeEntity( this.sourceTableName);
+
+        OracleTab tab = OracleTab.create(this.sourceTableName);
+        StringBuffer val = new StringBuffer();
+        if (tab.owner.isPresent()) {
+            val.append(this.escapeEntity(tab.owner.get())).append(".");
+        }
+        return val.append(this.escapeEntity(tab.tabName)).toString();
     }
-
-
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-//    public Boolean splitPk;
-//
-//    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {})
-//    public Integer fetchSize;
-//
-//    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
-//    public String session;
 
     public boolean isContainSplitPk() {
         return this.plugin.splitPk != null;

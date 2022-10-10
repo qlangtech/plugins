@@ -11,7 +11,7 @@
         ]
       }
     ],
-    "dataxName": "mysql_startrock2",
+    "dataxName": "dataXName",
     "username": "root"
   },
   "name": "mysqlreader"

@@ -35,6 +35,7 @@ import com.dtstack.chunjun.sink.WriteMode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.TIS;
@@ -69,8 +70,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-//import com.qlangtech.tis.plugin.datax.DataxMySQLWriter;
 
 /**
  * WRITER extends BasicDataXRdbmsWriter, DS extends BasicDataSourceFactory
@@ -107,11 +106,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
 
     @Override
-    public Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
-        IDataxProcessor.TableAlias tableName = null;
+    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
+        Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
+        TableAlias tableName = null;
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) dataxProcessor.getWriter(null);
-        Map<String, IDataxProcessor.TableAlias> selectedTabs = dataxProcessor.getTabAlias();
+        Map<String, TableAlias> selectedTabs = dataxProcessor.getTabAlias();
         if (MapUtils.isEmpty(selectedTabs)) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }
@@ -120,7 +119,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
         // 清空一下tabs的缓存以免有脏数据
         this.selTabs = null;
-        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
+        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
             tableName = tabAliasEntry.getValue();
 
             Objects.requireNonNull(tableName, "tableName can not be null");
@@ -130,7 +129,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
             AtomicReference<CreateChunjunSinkFunctionResult> sinkFuncRef = new AtomicReference<>();
             CreateChunjunSinkFunctionResult sinkFunc = null;
-            final IDataxProcessor.TableAlias tabName = tableName;
+            final TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) dataXWriter.getDataSourceFactory();
@@ -182,7 +181,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         return sinkFuncs;
     }
 
-    protected List<IColMetaGetter> getColsMeta(IDataxProcessor.TableAlias tableName, BasicDataSourceFactory dsFactory
+    protected List<IColMetaGetter> getColsMeta(TableAlias tableName, BasicDataSourceFactory dsFactory
             , CreateChunjunSinkFunctionResult sinkFunc) {
         return sinkFunc.getOutputFormat().colsMeta.stream().collect(Collectors.toList());
     }

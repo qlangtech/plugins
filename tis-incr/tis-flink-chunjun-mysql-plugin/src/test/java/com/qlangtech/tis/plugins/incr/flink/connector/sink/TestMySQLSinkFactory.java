@@ -40,31 +40,12 @@ import org.junit.Test;
  * @see MySqlSourceTestBase
  **/
 public class TestMySQLSinkFactory extends TestFlinkSinkExecutor
-        //        implements TISEasyMock
 {
 
     @Test
     public void testMySQLWrite() throws Exception {
         super.testSinkSync();
     }
-
-    // String dataXName = "testDataX";
-
-//    String tableName = "totalpayinfo";
-//
-//    String colEntityId = "entity_id";
-//    String colNum = "num";
-//    String colId = "id";
-//    String colCreateTime = "create_time";
-//    String updateTime = "update_time";
-//    String updateDate = "update_date";
-//    String starTime = "start_time";
-//
-//    String pk = "88888888887";
-
-//    @Rule
-//    public TemporaryFolder folder = new TemporaryFolder();
-
 
     static BasicDataSourceFactory mysqlDSFactory;
 
@@ -237,13 +218,13 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor
 //            sinkFactory.semantic = "at-least-once";
 //
 //
-//            Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
-//            IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
+//            Map<String, TableAlias> aliasMap = new HashMap<>();
+//            TableAlias tab = new TableAlias(tableName);
 //            aliasMap.put(tableName, tab);
 //            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 //
 //            this.replay();
-//            Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+//            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
 //
 //            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 //            DTO d = createDTO(DTO.EventType.ADD);
@@ -264,7 +245,7 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor
 ////            after.put(updateDate, "2021-12-09");
 ////            d.setAfter(after);
 //            Assert.assertEquals(1, sinkFunction.size());
-//            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+//            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 //
 //                DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 //                sourceStream.addStream(env.fromElements(new DTO[]{d, update}));

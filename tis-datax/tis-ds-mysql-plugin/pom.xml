@@ -112,6 +112,12 @@
             <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-testcontainer-mysql</artifactId>
+            <version>3.6.0</version>
+            <scope>test</scope>
+        </dependency>
 
 
     </dependencies>

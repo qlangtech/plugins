@@ -18,10 +18,9 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.streaming.api.datastream.DataStream;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,18 +34,18 @@ import java.util.stream.Collectors;
  **/
 public final class SinkFuncs<TRANSFER_OBJ> {
 
-    private transient final Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction;
-    // public transient final StreamExecutionEnvironment env;
+    private transient final Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction;
 
-    public SinkFuncs(Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction) {
+    public SinkFuncs(Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction) {
         this.sinkFunction = sinkFunction;
     }
 
-
     public void add2Sink(String originTableName, DTOStream sourceStream) {
-
+        if (sourceStream == null) {
+            throw new IllegalArgumentException("param sourceStream can not be null");
+        }
         if (sinkFunction.size() < 2) {
-            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 entry.getValue().add2Sink(sourceStream);
                 return;
             }
@@ -55,7 +54,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
                 throw new IllegalArgumentException("param originTableName can not be null");
             }
             boolean hasMatch = false;
-            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
                 if (originTableName.equals(entry.getKey().getFrom())) {
                     entry.getValue().add2Sink(sourceStream);
                     // streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());

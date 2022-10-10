@@ -72,7 +72,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
         this.consumerHandle = consumerHandle;
     }
 
-    @TISExtension()
+   // @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {

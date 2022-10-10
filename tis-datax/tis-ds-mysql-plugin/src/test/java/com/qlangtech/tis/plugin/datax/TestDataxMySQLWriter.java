@@ -38,6 +38,8 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -57,16 +59,17 @@ public class TestDataxMySQLWriter extends BasicTest {
 
     public static String dataXName = "testDataXName";
 
+    @Test
     public void testFieldCount() throws Exception {
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
         Descriptor<DataxWriter> descriptor = mySQLWriter.getDescriptor();
         PluginFormProperties pluginFormPropertyTypes = descriptor.getPluginFormPropertyTypes();
 
-        assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
-        assertEquals(8, pluginFormPropertyTypes.getKVTuples().size());
+       Assert. assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
+        Assert.assertEquals(8, pluginFormPropertyTypes.getKVTuples().size());
 
     }
-
+    @Test
     public void testGenerateCreateDDL() {
         DataxMySQLWriter writer = new DataxMySQLWriter();
         writer.autoCreateTable = true;
@@ -112,10 +115,10 @@ public class TestDataxMySQLWriter extends BasicTest {
             cols.add(col);
         }));
 
-        assertNotNull(ddl);
+        Assert.assertNotNull(ddl);
         // System.out.println(ddl);
 
-        assertEquals(
+        Assert.assertEquals(
                 StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataxMySQLWriter.class, "create-application-ddl.sql"))
                 ,StringUtils.trimToEmpty( ddl.getDDLScript().toString()));
     }
@@ -145,10 +148,10 @@ public class TestDataxMySQLWriter extends BasicTest {
         return tableMap;
     }
 
-
+    @Test
     public void testTempateGenerate() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
-        assertTrue("DataxMySQLWriter extraProps shall exist", extraProps.isPresent());
+        Assert.assertTrue("DataxMySQLWriter extraProps shall exist", extraProps.isPresent());
         IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
@@ -171,7 +174,8 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbWriterName));
 
-        assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
+        Assert.assertTrue("save mysql db Config faild"
+                , dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
 
         DataxMySQLWriter mySQLWriter = new DataxMySQLWriter();
@@ -213,14 +217,14 @@ public class TestDataxMySQLWriter extends BasicTest {
 //        }).collect(Collectors.toList()));
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
         IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
-        assertNotNull(subTaskCtx);
+        Assert.assertNotNull(subTaskCtx);
 
         RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;
-        assertEquals("\"`col1`\",\"`col2`\",\"`col3`\"", mySQLDataxContext.getColsQuotes());
-        assertEquals(mysqlJdbcUrl, mySQLDataxContext.getJdbcUrl());
-        assertEquals("123456", mySQLDataxContext.getPassword());
-        assertEquals("orderinfo_new", mySQLDataxContext.tabName);
-        assertEquals("root", mySQLDataxContext.getUsername());
+        Assert.assertEquals("\"`col1`\",\"`col2`\",\"`col3`\"", mySQLDataxContext.getColsQuotes());
+        Assert.assertEquals(mysqlJdbcUrl, mySQLDataxContext.getJdbcUrl());
+        Assert.assertEquals("123456", mySQLDataxContext.getPassword());
+        Assert.assertEquals("orderinfo_new", mySQLDataxContext.tabName);
+        Assert.assertEquals("root", mySQLDataxContext.getUsername());
 
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
@@ -243,20 +247,20 @@ public class TestDataxMySQLWriter extends BasicTest {
         String cfgResult = dataProcessor.generateDataxConfig(null, mySQLWriter, dataxReader, tableMap);
 
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
-            assertEquals(m, e, a);
+            Assert.assertEquals(m, e, a);
         });
         EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
     }
 
-
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataxMySQLWriter.getDftTemplate();
-        assertNotNull("dftTemplate can not be null", dftTemplate);
+        Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
-
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);
-        assertTrue(extraProps.isPresent());
+        Assert.assertTrue(extraProps.isPresent());
     }
 
 //    public void testCreateDDLParser() {

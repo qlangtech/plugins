@@ -120,4 +120,9 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
     public String getSourceEntityName() {
         return null;
     }
+
+    @Override
+    public String getSourceTableName() {
+        return null;
+    }
 }

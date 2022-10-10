@@ -185,10 +185,10 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
                 .andReturn(StreamExecutionEnvironment.getExecutionEnvironment());
 
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncts = Collections.singletonMap(new IDataxProcessor.TableAlias(table1), null);
+        Map<TableAlias, TabSinkFunc<DTO>> sinkFuncts = Collections.singletonMap(new TableAlias(table1), null);
         HudiSinkFactory sinkFactory = new HudiSinkFactory() {
             @Override
-            public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+            public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
                 //  return super.createSinkFunction(dataxProcessor);
                 return sinkFuncts;
             }

@@ -20,12 +20,15 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.compress.utils.Lists;
 
 import java.io.IOException;
@@ -41,10 +44,10 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     private final List<ReaderSource> sourceFunction;
     private Set<String> focusTabs = null;// = Sets.newHashSet();
-    private Map<String, DTOStream> tab2OutputTag = null;
+    private Tab2OutputTag<DTOStream> tab2OutputTag = null;
 
     @Override
-    public Map<String, DTOStream> getTab2OutputTag(
+    public Tab2OutputTag<DTOStream> getTab2OutputTag(
             //        Function<String, List<com.qlangtech.plugins.incr.flink.cdc.FlinkCol>> colsCreator
     ) {
         return Objects.requireNonNull(tab2OutputTag);
@@ -86,12 +89,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             });
 
             for (Map.Entry<String /**ip*/, List<String>/**dbs*/> entry : ip2dbs.entrySet()) {
-//                Set<String> tbs = entry.getValue().stream().flatMap(
-//                        (dbName) -> db2tabs.get(dbName).stream().map((tab) -> dbName + "." + tab.getName())).collect(Collectors.toSet());
 
                 Set<String> tbs = entry.getValue().stream().flatMap(
                         (dbName) -> db2tabs.get(dbName).stream().map((tab) -> {
-                            //  return (dsSchemaSupport ? ((BasicDataSourceFactory.ISchemaSupported) dsFactory).getDBSchema() : dbName) + "." + tab.getName();
                             return tabnameCreator.apply(new DBTable(dbName, tab));
                         })).collect(Collectors.toSet());
 
@@ -144,17 +144,20 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
         return this.focusTabs;
     }
 
-    public void setFocusTabs(List<ISelectedTab> tabs, Function<String, DTOStream> dtoStreamCreator) {
-
+    public void setFocusTabs(List<ISelectedTab> tabs, Map<String, TableAlias> tabAliasMapper, Function<String, DTOStream> dtoStreamCreator) {
         if (CollectionUtils.isEmpty(tabs)) {
             throw new IllegalArgumentException("param tabs can not be null");
         }
+        if (MapUtils.isEmpty(tabAliasMapper)) {
+            throw new IllegalArgumentException("param tabAliasMapper can not be null");
+        }
         this.focusTabs = tabs.stream().map((t) -> t.getName()).collect(Collectors.toSet());
         this.tab2OutputTag
-                = tabs.stream().collect(
+                = new Tab2OutputTag<DTOStream>(tabs.stream().collect(
                 Collectors.toMap(
-                        (tab) -> tab.getName()
-                        , (tab) -> dtoStreamCreator.apply(tab.getName())));
+                        (tab) -> Objects.requireNonNull(tabAliasMapper.get(tab.getName())
+                                , "table:" + tab.getName() + " relevant tabAlias can not be null")
+                        , (t) -> dtoStreamCreator.apply(t.getName()))));
     }
 
 

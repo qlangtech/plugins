@@ -16,27 +16,27 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax;
+package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
-import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.dtstack.chunjun.element.column.TimestampColumn;
+
+import java.sql.Timestamp;
 
 /**
+ * Oracle的date类型在jdbc返回的是Timestamp 类型，在flink中传输使用int序列化的
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-14 13:42
+ * @create: 2022-10-09 18:54
  **/
-public class MockDataxReaderContext implements IDataxReaderContext {
-    @Override
-    public String getTaskName() {
-        return null;
+public class OracleDateColumn extends TimestampColumn {
+    public OracleDateColumn(Timestamp data) {
+        super(data, 0);
     }
 
     @Override
-    public String getSourceTableName() {
-        return null;
-    }
-
-    @Override
-    public String getSourceEntityName() {
-        return null;
+    public Integer asInt() {
+        Timestamp date = (Timestamp) data;
+        return (int) date.toLocalDateTime().toLocalDate().toEpochDay();
+        //   return (int) LocalDate.of(date.getYear(), date.getMonth(), date.getDate()).toEpochDay();// date.toLocalDateTime().toLocalDate().toEpochDay();
     }
 }

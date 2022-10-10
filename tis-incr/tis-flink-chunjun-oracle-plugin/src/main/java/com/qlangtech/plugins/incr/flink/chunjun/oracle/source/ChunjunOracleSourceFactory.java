@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -32,17 +33,11 @@ public class ChunjunOracleSourceFactory extends ChunjunSourceFactory {
         return new OracleSourceFunction(this);
     }
 
+    @TISExtension
     public static class DftDesc extends BaseChunjunDescriptor {
-
         @Override
         public IEndTypeGetter.EndType getEndType() {
             return IEndTypeGetter.EndType.Oracle;
         }
-
-//        @Override
-//        protected IEndTypeGetter.EndType getSourceType() {
-//            return IEndTypeGetter.EndType.Oracle;
-//        }
     }
-
 }

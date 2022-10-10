@@ -21,8 +21,10 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -57,7 +59,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     @Override
     protected void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
+            , Tab2OutputTag<DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
 
         StreamTableEnvironment tabEnv = StreamTableEnvironment.create(
                 env, EnvironmentSettings.newInstance()
@@ -65,9 +67,8 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
                         .inStreamingMode()
                         .build());
 
-
-        for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
-            this.registerTable(tabEnv, entry.getKey(), entry.getValue());
+        for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
+            this.registerTable(tabEnv, entry.getKey().getTo(), entry.getValue());
         }
 
         this.executeSql(tabEnv);

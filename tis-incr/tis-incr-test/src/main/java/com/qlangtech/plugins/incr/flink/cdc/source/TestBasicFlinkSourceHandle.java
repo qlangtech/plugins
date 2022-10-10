@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc.source;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.realtime.DTOStream;
@@ -72,11 +73,12 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
     }
 
     @Override
-    protected void processTableStream(StreamExecutionEnvironment env, Map<String, DTOStream> streamMap, SinkFuncs<DTO> sinkFunction) {
+    protected void processTableStream(StreamExecutionEnvironment env
+            , Tab2OutputTag<DTOStream> streamMap, SinkFuncs<DTO> sinkFunction) {
 
 //    @Override
 //    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {
-        sinkFunction.add2Sink(tabName, streamMap.get(tabName));
+        sinkFunction.add2Sink(tabName, streamMap.getSourceMapper().get(tabName));
         if (tabEnv == null) {
 
             tabEnv = StreamTableEnvironment.create(
@@ -93,9 +95,9 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
         getSourceTableQueryResult().put(tabName, tabEnv.executeSql("SELECT * FROM " + tabName));
     }
 
-    protected void createTemporaryView(Map<String, DTOStream> streamMap) {
+    protected void createTemporaryView(Tab2OutputTag<DTOStream> streamMap) {
         tabEnv.createTemporaryView(tabName
-                , Objects.requireNonNull(streamMap.get(tabName).getStream()
+                , Objects.requireNonNull(streamMap.getSourceMapper().get(tabName).getStream()
                         , "tabName:" + tabName + " relevant 'DataStream' can not be null"));
     }
 

@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
@@ -50,12 +52,12 @@ public abstract class ReaderSource<T> {
         this.rowType = rowType;
     }
 
-    protected SingleOutputStreamOperator<T> afterSourceStreamGetter(Map<String, DTOStream> tab2OutputStream, SingleOutputStreamOperator<T> operator) {
+    protected SingleOutputStreamOperator<T> afterSourceStreamGetter(Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<T> operator) {
         return operator;
     }
 
     public SingleOutputStreamOperator<T> getSourceStream(
-            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputStream) {
+            StreamExecutionEnvironment env, Tab2OutputTag<DTOStream> tab2OutputStream) {
 
         SingleOutputStreamOperator<T> operator = addAsSource(env)
                 .name(this.tokenName)
@@ -111,20 +113,15 @@ public abstract class ReaderSource<T> {
 
         @Override
         protected final SingleOutputStreamOperator<DTO> afterSourceStreamGetter(
-                Map<String, DTOStream> tab2OutputStream, SingleOutputStreamOperator<DTO> operator) {
+                Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<DTO> operator) {
             SingleOutputStreamOperator<DTO> mainStream
                     = operator.process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-                    .collect(Collectors.toMap((e) -> e.getKey(), (e) -> ((DTOStream.DispatchedDTOStream) e.getValue()).outputTag))));
-            for (Map.Entry<String, DTOStream> e : tab2OutputStream.entrySet()) {
+                    .collect(Collectors.toMap((e) -> e.getKey().getFrom(), (e) -> ((DTOStream.DispatchedDTOStream) e.getValue()).outputTag))));
+            for (Map.Entry<TableAlias, DTOStream> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }
             return mainStream;
         }
-
-//        @Override
-//        protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
-//            return env.addSource(sourceFunc);
-//        }
     }
 
 
@@ -156,8 +153,8 @@ public abstract class ReaderSource<T> {
 
         @Override
         protected final SingleOutputStreamOperator<RowData> afterSourceStreamGetter(
-                Map<String, DTOStream> tab2OutputStream, SingleOutputStreamOperator<RowData> operator) {
-            DTOStream dtoStream = tab2OutputStream.get(tab.getName());
+                Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<RowData> operator) {
+            DTOStream dtoStream = tab2OutputStream.get(tab);
             dtoStream.addStream(operator);
             return operator;
         }

@@ -27,13 +27,20 @@ import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
@@ -183,7 +190,9 @@ public abstract class CUDCDCTestSuit {
 
         List<TestRow> exampleRows = createExampleTestRows();
 
-        imqListener.start(dataxName, dataxReader, tabs, null);
+        DataxProcessor process = createProcess();
+
+        imqListener.start(dataxName, dataxReader, tabs, process);
 
         Thread.sleep(4000);
 
@@ -290,6 +299,28 @@ public abstract class CUDCDCTestSuit {
                     }
                 }
         );
+    }
+
+    @NotNull
+    private DataxProcessor createProcess() {
+        DataxProcessor processor = new DataxProcessor() {
+            @Override
+            public Application buildApp() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public IDataxGlobalCfg getDataXGlobalCfg() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String identityValue() {
+                throw new UnsupportedOperationException();
+            }
+        };
+        processor.setTableMaps(Lists.newArrayList(new TableAlias(this.tabName)));
+        return processor;
     }
 
     protected void insertTestRow(Connection conn, TestRow r) throws SQLException {
@@ -484,7 +515,7 @@ public abstract class CUDCDCTestSuit {
         }
 
         @Override
-        public Map<IDataxProcessor.TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+        public Map<TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
             return Collections.emptyMap();
         }
     }

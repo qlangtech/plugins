@@ -325,8 +325,8 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //            sinkFactory.parallelism = 1;
 //
 //
-//            Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
-//            IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
+//            Map<String, TableAlias> aliasMap = new HashMap<>();
+//            TableAlias tab = new TableAlias(tableName);
 //            aliasMap.put(tableName, tab);
 //            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 //            AtomicInteger httpPutCount = new AtomicInteger();
@@ -335,7 +335,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //                httpPutCount.incrementAndGet();
 //            };
 //            this.replay();
-//            Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+//            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
 //            int updateNumVal = 999;
 //            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 //            DTO add = createDTO(DTO.EventType.ADD);
@@ -362,7 +362,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 ////            after.put(updateDate, "2021-12-09");
 ////            d.setAfter(after);
 //            Assert.assertEquals(1, sinkFunction.size());
-//            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+//            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 //
 //                DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 //

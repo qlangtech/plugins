@@ -31,7 +31,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
-import java.util.Optional;
 import java.util.function.Function;
 
 import static oracle.jdbc.OracleTypes.*;
@@ -72,11 +71,12 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         return this.connEntity.buidJdbcUrl(ip, this.port);
     }
 
+    @Override
     protected String getRefectTablesSql() {
         if (allAuthorized != null && allAuthorized) {
-            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE instr(table_name,'.') < 1";
+            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
         } else {
-            return "SELECT '" + StringUtils.upperCase(this.userName) + "' ||'.'||  (TABLE_NAME) FROM user_tables WHERE instr(TABLE_NAME,'.') < 1";
+            return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
         }
     }
 
@@ -100,7 +100,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     protected ResultSet getColumnsMeta(String table, DatabaseMetaData metaData1) throws SQLException {
         return getColRelevantMeta(table, (tab) -> {
             try {
-                return metaData1.getColumns(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
+                return metaData1.getColumns(null
+                        , tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -113,7 +114,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         return getColRelevantMeta(table, (tab) -> {
             try {
 
-                return metaData1.getPrimaryKeys(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName);
+                return metaData1.getPrimaryKeys(null
+                        , tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -123,36 +125,17 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     private ResultSet getColRelevantMeta(String table
             , Function<OracleTab, ResultSet> containSchema) throws SQLException {
         try {
-            OracleTab otab = null;
-            if (StringUtils.indexOf(table, ".") > -1) {
-                String[] tab = StringUtils.split(table, ".");
-                otab = new OracleTab(tab[0], tab[1]);
-            } else {
-                otab = new OracleTab(Optional.empty(), table);
-            }
+//            OracleTab otab = null;
+//            if (StringUtils.indexOf(table, ".") > -1) {
+//                String[] tab = StringUtils.split(table, ".");
+//                otab = new OracleTab(tab[0], tab[1]);
+//            } else {
+//                otab = new OracleTab(Optional.empty(), table);
+//            }
 
-            return containSchema.apply(otab);
+            return containSchema.apply(OracleTab.create(table));
         } catch (Exception e) {
             throw new SQLException(e);
-        }
-    }
-
-    private static class OracleTab {
-        private final Optional<String> owner;
-        private final String tabName;
-
-        public OracleTab(String owner, String tabName) {
-//            this.owner = Optional.of(StringUtils.upperCase(owner));
-//            this.tabName = StringUtils.remove(tabName, "\"");
-            this(Optional.of(StringUtils.upperCase(owner)), tabName);
-        }
-
-        public OracleTab(Optional<String> owner, String tabName) {
-            if (StringUtils.isEmpty(tabName)) {
-                throw new IllegalArgumentException("tabName:" + tabName + " can not be null");
-            }
-            this.owner = owner;
-            this.tabName = StringUtils.remove(tabName, "\"");
         }
     }
 

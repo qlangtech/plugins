@@ -23,9 +23,9 @@ import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -79,15 +79,15 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
 
 
     @Override
-    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
         IHttpToken token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
-        for (Map.Entry<String, IDataxProcessor.TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
-            IDataxProcessor.TableAlias value = e.getValue();
+        for (Map.Entry<String, TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
+            TableAlias value = e.getValue();
             if (!(value instanceof ESTableAlias)) {
                 throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
             }
@@ -139,7 +139,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         }
 
 
-        IDataxProcessor.TableAlias tableMapper = new IDataxProcessor.TableAlias();
+        TableAlias tableMapper = new TableAlias();
         tableMapper.setTo(dataXWriter.getIndexName());
         IDataxReader reader = dataxProcessor.getReader(null);
         for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
@@ -218,6 +218,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         public PluginVender getVender() {
             return PluginVender.TIS;
         }
+
         @Override
         protected IEndTypeGetter.EndType getTargetType() {
             return IEndTypeGetter.EndType.ElasticSearch;

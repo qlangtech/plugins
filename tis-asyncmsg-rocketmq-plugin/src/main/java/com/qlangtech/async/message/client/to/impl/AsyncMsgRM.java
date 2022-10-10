@@ -71,10 +71,10 @@ public class AsyncMsgRM implements AsyncMsg {
         return messageExt;
     }
 
-    @Override
-    public Map getTab2OutputTag() {
-        throw new UnsupportedOperationException();
-    }
+//    @Override
+//    public Map getTab2OutputTag() {
+//        throw new UnsupportedOperationException();
+//    }
 
     @Override
     public Set<String> getFocusTabs() {

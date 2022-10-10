@@ -71,17 +71,10 @@ public abstract class ChunjunSourceFactory extends MQListenerFactory {
         public String getDisplayName() {
             return DESC_NAME + getEndType().name();
         }
-
         @Override
         public final PluginVender getVender() {
             return PluginVender.CHUNJUN;
         }
-//        @Override
-//        public final Optional<IEndTypeGetter.EndType> getTargetType() {
-//            return Optional.of(getEndType());
-//        }
-
-        //        protected abstract IEndTypeGetter.EndType getSourceType();
         @Override
         public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(SelectedTabPropsExtends.class);

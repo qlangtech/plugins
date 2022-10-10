@@ -20,6 +20,7 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -40,7 +41,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
-    public abstract Map<IDataxProcessor.TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor);
+    public abstract Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor);
 
     /**
      * (RowData,DTO) -> DTO
@@ -52,7 +53,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
          * @param sinkFunction
          * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
          */
-        public DTOSinkFunc(IDataxProcessor.TableAlias tab, SinkFunction<DTO> sinkFunction
+        public DTOSinkFunc(TableAlias tab, SinkFunction<DTO> sinkFunction
                 , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);
             if (supportUpset) {
@@ -78,7 +79,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
         final List<FlinkCol> colsMeta;
 
-        public RowDataSinkFunc(IDataxProcessor.TableAlias tab
+        public RowDataSinkFunc(TableAlias tab
                 , SinkFunction<RowData> sinkFunction, List<FlinkCol> colsMeta
                 , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, sinkFunction, sinkTaskParallelism);

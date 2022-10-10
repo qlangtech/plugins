@@ -83,6 +83,11 @@ public class OSSWriterContext implements IDataxReaderContext {
     }
 
     @Override
+    public String getSourceTableName() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String getSourceEntityName() {
         throw new UnsupportedOperationException();
     }

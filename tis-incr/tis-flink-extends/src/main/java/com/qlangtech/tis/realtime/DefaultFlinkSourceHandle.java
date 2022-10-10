@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -36,9 +37,9 @@ public abstract class DefaultFlinkSourceHandle extends BasicFlinkSourceHandle<DT
      */
     @Override
     protected final void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
+            , Tab2OutputTag<DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
         // Map<String, DataStream<DTO>> streamMap = convert(tab2OutputTag);
-        this.processTableStream(tab2OutputTag, sinkFunction);
+        this.processTableStream(tab2OutputTag.getSinkMapper(), sinkFunction);
     }
 
 //    static Map<String, DataStream<DTO>> convert(Map<String, DTOStream> tab2OutputTag) {

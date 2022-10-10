@@ -131,9 +131,9 @@
 //    }
 //
 //    @Override
-//    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-//        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
-//        IDataxProcessor.TableAlias tableName = null;
+//    public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+//        Map<TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
+//        TableAlias tableName = null;
 //        DataXClickhouseWriter dataXWriter = (DataXClickhouseWriter) dataxProcessor.getWriter(null);
 //        Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
 //        IDataxReader reader = dataxProcessor.getReader(null);
@@ -142,7 +142,7 @@
 //        ClickHouseDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
 //        DBConfig dbConfig = dsFactory.getDbConfig();
 //
-//        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : dataxProcessor.getTabAlias().entrySet()) {
+//        for (Map.Entry<String, TableAlias> tabAliasEntry : dataxProcessor.getTabAlias().entrySet()) {
 //            tableName = tabAliasEntry.getValue();
 //
 //            Objects.requireNonNull(tableName, "tableName can not be null");
@@ -151,7 +151,7 @@
 //            }
 //
 //            AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
-//            final IDataxProcessor.TableAlias tabName = tableName;
+//            final TableAlias tabName = tableName;
 //            AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
 //            final String targetTabName = tableName.getTo();
 //            dbConfig.vistDbURL(false, (dbName, jdbcUrl) -> {

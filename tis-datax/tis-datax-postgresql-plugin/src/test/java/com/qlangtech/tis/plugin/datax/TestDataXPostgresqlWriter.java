@@ -40,16 +40,19 @@ import java.util.Optional;
 public class TestDataXPostgresqlWriter  //extends TestCase
 {
 
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataXPostgresqlWriter.getDftTemplate();
         Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXPostgresqlWriter.class);
         Assert.assertTrue(extraProps.isPresent());
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataXPostgresqlWriter esWriter = new DataXPostgresqlWriter();
         DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());

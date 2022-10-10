@@ -23,8 +23,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -113,7 +115,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 //
         ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d, update}));
 //
-        readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
+        readerSource.getSourceStream(env
+                , new Tab2OutputTag<DTOStream>(Collections.singletonMap(new TableAlias(tableName), sourceStream)));
 //
 //
         //  dtoStream.addSink(new PrintSinkFunction<>());
@@ -188,9 +191,6 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
 
 
-
-
-
 //            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
             selectedTabs.add(totalpayInfo);
             EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
@@ -229,13 +229,13 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             sinkFactory.parallelism = 1;
 
 
-            Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
-            IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
+            Map<String, TableAlias> aliasMap = new HashMap<>();
+            TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
             EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
             this.replay();
-            Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
             //int updateNumVal = 999;
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 //            DTO add = createDTO(DTO.EventType.ADD);
@@ -262,14 +262,15 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 //            after.put(updateDate, "2021-12-09");
 //            d.setAfter(after);
             Assert.assertEquals(1, sinkFunction.size());
-            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
                 DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 
                 ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
                         , env.fromElements(this.createTestDTO()).setParallelism(1));
 
-                readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
+                readerSource.getSourceStream(env
+                        , new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), sourceStream)));
 
                 entry.getValue().add2Sink(sourceStream);
 

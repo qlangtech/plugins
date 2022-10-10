@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -108,6 +109,11 @@ public class TestDataXOracleWriter {
         writer.autoCreateTable = true;
         return writer;
     }
+//    @Test
+//    public void test() {
+//        String sql = "INSERT INTO \"full_types\" (\"id\",\"tiny_c\",\"tiny_un_c\",\"small_c\",\"small_un_c\",\"medium_c\",\"medium_un_c\",\"int_c\",\"int_un_c\",\"int11_c\",\"big_c\",\"big_un_c\",\"varchar_c\",\"char_c\",\"real_c\",\"float_c\",\"double_c\",\"decimal_c\",\"numeric_c\",\"big_decimal_c\",\"bit1_c\",\"tiny1_c\",\"boolean_c\",\"date_c\",\"time_c\",\"datetime3_c\",\"datetime6_c\",\"timestamp_c\",\"file_uuid\",\"bit_c\",\"text_c\",\"tiny_blob_c\",\"blob_c\",\"medium_blob_c\",\"long_blob_c\",\"year_c\",\"enum_c\",\"set_c\",\"json_c\") VALUES(:1 ,:2 ,:3 ,:4 ,:5 ,:6 ,:7 ,:8 ,:9 ,:10 ,:11 ,:12 ,:13 ,:14 ,:15 ,:16 ,:17 ,:18 ,:19 ,:20 ,:21 ,:22 ,:23 ,:24 ,:25 ,:26 ,:27 ,:28 ,:29 ,:30 ,:31 ,:32 ,:33 ,:34 ,:35 ,:36 ,:37 ,:38 ,:39 ), OriginalSql = INSERT INTO \"full_types\" (\"id\",\"tiny_c\",\"tiny_un_c\",\"small_c\",\"small_un_c\",\"medium_c\",\"medium_un_c\",\"int_c\",\"int_un_c\",\"int11_c\",\"big_c\",\"big_un_c\",\"varchar_c\",\"char_c\",\"real_c\",\"float_c\",\"double_c\",\"decimal_c\",\"numeric_c\",\"big_decimal_c\",\"bit1_c\",\"tiny1_c\",\"boolean_c\",\"date_c\",\"time_c\",\"datetime3_c\",\"datetime6_c\",\"timestamp_c\",\"file_uuid\",\"bit_c\",\"text_c\",\"tiny_blob_c\",\"blob_c\",\"medium_blob_c\",\"long_blob_c\",\"year_c\",\"enum_c\",\"set_c\",\"json_c\") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?), \n";
+//        System.out.println(StringUtils.substring(sql, 547));
+//    }
 
     @Test
     public void testRealDump() throws Exception {

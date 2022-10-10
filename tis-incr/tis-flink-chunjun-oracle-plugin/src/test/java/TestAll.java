@@ -27,9 +27,6 @@ import org.junit.runners.Suite;
  **/
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestChunjunOracleSinkFactory.class
-                , TestChunjunOracleSourceFactory.class
-        })
+@Suite.SuiteClasses({TestChunjunOracleSinkFactory.class, TestChunjunOracleSourceFactory.class})
 public class TestAll {
 }

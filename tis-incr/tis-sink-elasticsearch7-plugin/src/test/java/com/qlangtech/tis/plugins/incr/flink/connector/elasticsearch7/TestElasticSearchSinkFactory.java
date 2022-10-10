@@ -120,15 +120,15 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
 
-        Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
-        IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
+        Map<String, TableAlias> aliasMap = new HashMap<>();
+        TableAlias tab = new TableAlias(tableName);
         aliasMap.put(tableName, tab);
         EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
         this.replay();
 
         ElasticSearchSinkFactory clickHouseSinkFactory = new ElasticSearchSinkFactory();
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>>
+        Map<TableAlias, TabSinkFunc<DTO>>
                 sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
@@ -146,7 +146,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         d.setAfter(after);
         Assert.assertEquals(1, sinkFuncs.size());
 
-        for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> entry : sinkFuncs.entrySet()) {
+        for (Map.Entry<TableAlias, TabSinkFunc<DTO>> entry : sinkFuncs.entrySet()) {
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             runElasticSearchSinkTest(
                     "elasticsearch-sink-test-json-index", entry.getValue());

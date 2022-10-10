@@ -21,15 +21,18 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -37,21 +40,23 @@ import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.TisMetaProps;
 import com.starrocks.connector.flink.StarRocksSink;
-import com.starrocks.connector.flink.row.sink.StarRocksSinkOP;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.BlockElement;
@@ -59,6 +64,7 @@ import org.apache.flink.configuration.description.TextElement;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.*;
 
@@ -76,7 +82,7 @@ import static com.starrocks.connector.flink.table.sink.StarRocksSinkOptions.*;
  * @create: 2021-10-31 20:11
  **/
 @Public
-public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
+public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-StarRocks-Sink";
     private static final int DEFAULT_PARALLELISM = 1;
@@ -137,11 +143,11 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
     }
 
     @Override
-    public Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<DTO>> sinkFuncs = Maps.newHashMap();
-        IDataxProcessor.TableAlias tableName = null;
-        // Map<String, IDataxProcessor.TableAlias> tabAlias = dataxProcessor.getTabAlias();
+        Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
+        TableAlias tableName = null;
+        // Map<String, TableAlias> tabAlias = dataxProcessor.getTabAlias();
         DataXStarRocksWriter dataXWriter = (DataXStarRocksWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
 
@@ -151,17 +157,16 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         List<ISelectedTab> tabs = reader.getSelectedTabs();
 
 
-        //  StarRocksSourceFactory dsFactory =
         StarRocksSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         DBConfig dbConfig = dsFactory.getDbConfig();
 
 
-        Map<String, IDataxProcessor.TableAlias> selectedTabs = dataxProcessor.getTabAlias();
+        Map<String, TableAlias> selectedTabs = dataxProcessor.getTabAlias();
         if (MapUtils.isEmpty(selectedTabs)) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }
 
-        for (Map.Entry<String, IDataxProcessor.TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
+        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
             tableName = tabAliasEntry.getValue();
 
             Objects.requireNonNull(tableName, "tableName can not be null");
@@ -169,8 +174,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
 
-            AtomicReference<SinkFunction<DTO>> sinkFuncRef = new AtomicReference<>();
-            final IDataxProcessor.TableAlias tabName = tableName;
+            final TableAlias tabName = tableName;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
             final String targetTabName = tableName.getTo();
             dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
@@ -187,20 +191,29 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                      */
                     dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
 
-                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab.get(), jdbcUrl, dsFactory, separator));
+                    Pair<List<FlinkCol>, List<String>> colsMeta = getColMeta(dsFactory, selectedTab.get());
+
+                    // sinkFuncRef.set();
+
+                    SinkFunction<RowData> sf = createSinkFunction(dbName, targetTabName, colsMeta, jdbcUrl, dsFactory, separator);
+
+                    RowDataSinkFunc sinkFunc = new RowDataSinkFunc(
+                            tabName, sf, colsMeta.getLeft(), true, DEFAULT_PARALLELISM);
+//            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
+                    sinkFuncs.put(tabName, sinkFunc);
 
                 } catch (Throwable e) {
                     exceptionLoader.set(new Object[]{jdbcUrl, e});
                 }
             });
+
+
             if (exceptionLoader.get() != null) {
                 Object[] error = exceptionLoader.get();
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
-            Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-            DTOSinkFunc sinkFunc = new DTOSinkFunc(tableName, sinkFuncRef.get(), true, DEFAULT_PARALLELISM);
-//            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
-            sinkFuncs.put(tableName, sinkFunc);
+            // Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
+
         }
 
         if (sinkFuncs.size() < 1) {
@@ -209,23 +222,42 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         return sinkFuncs;
     }
 
-    private SinkFunction<DTO> createSinkFunction(
-            String dbName, final String targetTabName, ISelectedTab tab, String jdbcUrl
+    private Pair<List<FlinkCol>, List<String>> getColMeta(
+            DorisSourceFactory dsFactory, ISelectedTab tab) {
+
+        List<String> pks = tab.getCols().stream()
+                .filter((c) -> c.isPk()).map((c) -> c.getName())
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(pks)) {
+            throw new IllegalStateException("pks can not be empty");
+        }
+        List<IColMetaGetter> colsMeta = dsFactory.getTableMetadata(tab.getName())
+                .stream().map((col) -> {
+                    return IColMetaGetter.create(col.getName(), col.getType(), pks.contains(col.getName()));
+                }).collect(Collectors.toList());
+
+        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(colsMeta);
+        return Pair.of(cols, pks);
+    }
+
+    private SinkFunction<RowData> createSinkFunction(
+            String dbName, final String targetTabName, Pair<List<FlinkCol>, List<String>> colsMeta, String jdbcUrl
             , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
 //import org.apache.flink.table.types.DataType;
         TableSchema.Builder schemaBuilder = TableSchema.builder();
-        String[] fieldKeys = new String[tab.getCols().size()];
+        List<String> pks = colsMeta.getRight();
+        List<FlinkCol> cols = (colsMeta.getLeft());
+        String[] fieldKeys = new String[cols.size()];
         if (fieldKeys.length < 1) {
             throw new IllegalArgumentException("fieldKeys.length can not small than 1");
         }
         int index = 0;
-        List<String> pks = Lists.newArrayList();
-        for (ISelectedTab.ColMeta cm : tab.getCols()) {
-            if (cm.isPk()) {
-                pks.add(cm.getName());
-            }
-            schemaBuilder.field(cm.getName(), mapFlinkColType(cm.isPk(), cm.getType()));
-            fieldKeys[index++] = cm.getName();
+        // List<String> pks = Lists.newArrayList();
+        for (FlinkCol cm : cols) {
+            // schemaBuilder.field(cm.getName(), mapFlinkColType(pks.contains(cm.getName()), cm.getType()));
+            schemaBuilder.field(cm.name, cm.type);
+            // schemaBuilder.field(cm.getName(), cm.type);
+            fieldKeys[index++] = cm.name;
         }
         if (!pks.isEmpty()) {
             schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
@@ -238,31 +270,14 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
                 // the sink options
                 createRocksSinkOptions(dbName, targetTabName, jdbcUrl, dsFactory, separator)
                 // set the slots with streamRowData
-                , (slots, streamRowData) -> {
-                    for (int i = 0; i < fieldKeys.length; i++) {
-                        slots[i] = (DTO.EventType.DELETE == streamRowData.getEventType())
-                                ? streamRowData.getBefore().get(fieldKeys[i])
-                                : streamRowData.getAfter().get(fieldKeys[i]);
-                    }
-                    StarRocksSinkOP sinkOp = getSinkOP(streamRowData.getEventType());
-                    slots[fieldKeys.length] = sinkOp.ordinal();
-                }
+                , new TISStarRocksSinkRowBuilder(cols)
         );
     }
 
-    private static StarRocksSinkOP getSinkOP(DTO.EventType evt) {
-        switch (evt) {
-            case DELETE:
-                return StarRocksSinkOP.DELETE;
-            case UPDATE_AFTER:
-            default:
-                return StarRocksSinkOP.UPSERT;
-        }
-    }
 
     private StarRocksSinkOptions createRocksSinkOptions(String dbName, String targetTabName, String jdbcUrl
             , DorisSourceFactory dsFactory, BasicDorisStarRocksWriter.Separator separator) {
-        StarRocksSinkOptions.Builder builder = StarRocksSinkOptions.builder()
+        Builder builder = StarRocksSinkOptions.builder()
                 .withProperty(JDBC_URL.key(), jdbcUrl)
                 .withProperty(LOAD_URL.key(), dsFactory.getLoadUrls().stream().collect(Collectors.joining(";")))
                 .withProperty(TABLE_NAME.key(), targetTabName)
@@ -298,83 +313,88 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<DTO> {
         return sinkOptions;
     }
 
-    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, com.qlangtech.tis.plugin.ds.DataType type) {
-        if (type == null) {
-            throw new IllegalArgumentException("param type can not be null");
-        }
-        final boolean isNullable = !pk;
-        return type.accept(new com.qlangtech.tis.plugin.ds.DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
-            @Override
-            public org.apache.flink.table.types.DataType intType(DataType type) {
-                //          return DataTypes.INT();
-                return new AtomicDataType(new IntType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType bigInt(DataType type) {
-                //return DataTypes.BIGINT();
-                return new AtomicDataType(new BigIntType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType doubleType(DataType type) {
-                // return DataTypes.DOUBLE();
-                return new AtomicDataType(new DoubleType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType dateType(DataType type) {
-                // return DataTypes.DATE();
-                return new AtomicDataType(new DateType(isNullable));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType timestampType(DataType type) {
-                //return DataTypes.TIMESTAMP();
-                return new AtomicDataType(new TimestampType(isNullable, 6));
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType bitType(DataType type) {
-                return DataTypes.BOOLEAN();
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType blobType(DataType type) {
-                // return DataTypes.VARBINARY(type.columnSize);
-                return varcharType(type);
-            }
-
-            @Override
-            public org.apache.flink.table.types.DataType varcharType(DataType type) {
-                //return DataTypes.VARCHAR(type.columnSize);
-                return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
-            }
-        });
-    }
-
-//    @TISExtension
-//    public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {
-//        @Override
-//        public String getDisplayName() {
-//            return DISPLAY_NAME_FLINK_CDC_SINK;
+//    private static org.apache.flink.table.types.DataType mapFlinkColType(boolean pk, DataType type) {
+//        if (type == null) {
+//            throw new IllegalArgumentException("param type can not be null");
 //        }
+//        final boolean isNullable = !pk;
+//        return type.accept(new DataType.TypeVisitor<org.apache.flink.table.types.DataType>() {
+//            @Override
+//            public org.apache.flink.table.types.DataType intType(DataType type) {
+//                //          return DataTypes.INT();
+//                return new AtomicDataType(new IntType(isNullable));
+//            }
 //
-//        public boolean validateColumnSeparator(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//            return validateRowDelimiter(msgHandler, context, fieldName, value);
-//        }
+//            @Override
+//            public org.apache.flink.table.types.DataType bigInt(DataType type) {
+//                //return DataTypes.BIGINT();
+//                return new AtomicDataType(new BigIntType(isNullable));
+//            }
 //
-//        public boolean validateRowDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-////            if (StringUtils.length(StringEscapeUtils.unescapeJava(value)) != 1) {
-////                msgHandler.addFieldError(context, fieldName, "分隔符长度必须为1");
-////                return false;
-////            }
-//            return true;
-//        }
+//            @Override
+//            public org.apache.flink.table.types.DataType doubleType(DataType type) {
+//                // return DataTypes.DOUBLE();
+//                return new AtomicDataType(new DoubleType(isNullable));
+//            }
 //
-//        @Override
-//        protected IEndTypeGetter.EndType getTargetType() {
-//            return IEndTypeGetter.EndType.StarRocks;
-//        }
+//            @Override
+//            public org.apache.flink.table.types.DataType dateType(DataType type) {
+//                // return DataTypes.DATE();
+//                return new AtomicDataType(new DateType(isNullable));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType timestampType(DataType type) {
+//                //return DataTypes.TIMESTAMP();
+//                return new AtomicDataType(new TimestampType(isNullable, 6));
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType bitType(DataType type) {
+//                return DataTypes.BOOLEAN();
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType blobType(DataType type) {
+//                // return DataTypes.VARBINARY(type.columnSize);
+//                return varcharType(type);
+//            }
+//
+//            @Override
+//            public org.apache.flink.table.types.DataType varcharType(DataType type) {
+//                //return DataTypes.VARCHAR(type.columnSize);
+//                return new AtomicDataType(new VarCharType(isNullable, type.columnSize));
+//            }
+//        });
 //    }
+
+    @TISExtension
+    public static class DefaultSinkFunctionDescriptor extends BaseSinkFunctionDescriptor {
+        @Override
+        public String getDisplayName() {
+            return DISPLAY_NAME_FLINK_CDC_SINK;
+        }
+
+        public boolean validateColumnSeparator(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return validateRowDelimiter(msgHandler, context, fieldName, value);
+        }
+
+        @Override
+        public PluginVender getVender() {
+            return PluginVender.TIS;
+        }
+
+        public boolean validateRowDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+//            if (StringUtils.length(StringEscapeUtils.unescapeJava(value)) != 1) {
+//                msgHandler.addFieldError(context, fieldName, "分隔符长度必须为1");
+//                return false;
+//            }
+            return true;
+        }
+
+        @Override
+        protected IEndTypeGetter.EndType getTargetType() {
+            return IEndTypeGetter.EndType.StarRocks;
+        }
+    }
 }

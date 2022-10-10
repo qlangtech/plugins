@@ -21,12 +21,16 @@ package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.oracle.converter.OracleColumnConverter;
 import com.dtstack.chunjun.connector.oracle.source.OracleInputFormat;
+import com.dtstack.chunjun.converter.IDeserializationConverter;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 /**
@@ -50,7 +54,14 @@ public class TISOracleInputFormat extends OracleInputFormat {
     @Override
     protected final void initializeRowConverter() {
         this.setRowConverter(DialectUtils.createColumnConverter(
-                jdbcDialect, jdbcConf, this.colsMeta, OracleColumnConverter::createInternalConverter));
+                jdbcDialect, jdbcConf, this.colsMeta, TISOracleInputFormat::createInternalConverter));
+    }
+
+    public static IDeserializationConverter createInternalConverter(LogicalType type) {
+        if (type.getTypeRoot() == LogicalTypeRoot.DATE) {
+            return val -> new OracleDateColumn((Timestamp) val);
+        }
+        return OracleColumnConverter.createInternalConverter(type);
     }
 
 

@@ -214,8 +214,8 @@ public class TestChunjunClickhouseSinkFactory
                 return dataxProcessor;
             };
 
-            Map<String, IDataxProcessor.TableAlias> aliasMap = new HashMap<>();
-            IDataxProcessor.TableAlias tab = new IDataxProcessor.TableAlias(tableName);
+            Map<String, TableAlias> aliasMap = new HashMap<>();
+            TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
             EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
 
@@ -226,7 +226,7 @@ public class TestChunjunClickhouseSinkFactory
             clickHouseSinkFactory.parallelism = 1;
             clickHouseSinkFactory.semantic = "at-least-once";
 
-            Map<IDataxProcessor.TableAlias, TabSinkFunc<RowData>>
+            Map<TableAlias, TabSinkFunc<RowData>>
                     sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
             Assert.assertTrue(sinkFuncs.size() > 0);
 
@@ -249,7 +249,7 @@ public class TestChunjunClickhouseSinkFactory
             Assert.assertEquals(1, sinkFuncs.size());
             DTOStream rowStream = DTOStream.createRowData(tableName);
             // rowStream.addStream(env.fromElements(new RowData[]{d}));
-            for (Map.Entry<IDataxProcessor.TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
+            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
 
                 ReaderSource<RowData> readerSource = ReaderSource.createRowDataSource("testStreamSource", totalpayinfo
                         , env.fromElements(new RowData[]{d}));

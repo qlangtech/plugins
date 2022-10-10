@@ -113,7 +113,7 @@ public class OracleDSFactoryContainer {
         return parseDescribable.getInstance();
     }
 
-    @BeforeClass
+    //@BeforeClass
     public static BasicDataSourceFactory initialize() {
         oracleContainer = new TISOracleContainer();
         oracleContainer.usingSid();

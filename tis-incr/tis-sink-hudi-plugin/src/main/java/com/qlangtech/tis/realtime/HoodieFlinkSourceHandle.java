@@ -19,7 +19,9 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
@@ -60,7 +62,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
 
     @Override
     protected final void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
+            , Tab2OutputTag<DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
         FlinkStreamerConfig flinkCfg = null;
         Map<String, FlinkStreamerConfig> tabStreamerCfg = createTabStreamerCfg();
         if (MapUtils.isEmpty(tabStreamerCfg)) {
@@ -71,7 +73,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
 
         ITISFileSystem fs = dataXHudiWriter.getFileSystem();
         try {
-            for (Map.Entry<String, DTOStream> entry : tab2OutputTag.entrySet()) {
+            for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
                 flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
                         , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null,exist keys:"
                                 + tabStreamerCfg.keySet().stream().collect(Collectors.joining(",")));
@@ -95,15 +97,15 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
      * @param sinkFunc
      * @param fs
      */
-    private void createSchema(String tableName, FlinkStreamerConfig flinkCfg, HudiSinkFactory sinkFunc, ITISFileSystem fs) {
+    private void createSchema(TableAlias tableName, FlinkStreamerConfig flinkCfg, HudiSinkFactory sinkFunc, ITISFileSystem fs) {
         IPath schemaSourcePath = fs.getPath(flinkCfg.sourceAvroSchemaPath);
         if (fs.exists(schemaSourcePath)) {
             logger.info("schemaSourcePath has been create,shall not be create again,path:{}", schemaSourcePath);
             return;
         }
         HudiTableMeta.createSourceSchema(
-                fs, tableName
-                , schemaSourcePath, sinkFunc.getTableMeta(tableName).getLeft());
+                fs, tableName.getTo()
+                , schemaSourcePath, sinkFunc.getTableMeta(tableName.getTo()).getLeft());
     }
 
 
@@ -128,7 +130,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
     protected abstract Map<String, org.apache.hudi.streamer.FlinkStreamerConfig> createTabStreamerCfg();
 
     private void registerTable(StreamExecutionEnvironment env, org.apache.hudi.streamer.FlinkStreamerConfig tabStreamerCfg
-            , String tabName, DTOStream dtoDataStream) throws Exception {
+            , TableAlias tabName, DTOStream dtoDataStream) throws Exception {
         int parallelism = env.getParallelism();
 
         final org.apache.hudi.streamer.FlinkStreamerConfig cfg = tabStreamerCfg;
@@ -137,11 +139,11 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
                 (RowType) AvroSchemaConverter.convertToDataType(StreamerUtil.getSourceSchema(cfg))
                         .getLogicalType();
         DTO2RowDataMapper toRowMapper
-                = new DTO2RowDataMapper(this.getTabColMetas(new TargetResName(this.getDataXName()), tabName));
+                = new DTO2RowDataMapper(this.getTabColMetas(new TargetResName(this.getDataXName()), tabName.getTo()));
 
         DataStream<RowData> dataStream = Objects.requireNonNull(dtoDataStream.getStream(), "source stream can not be null")
                 .map(toRowMapper, InternalTypeInfo.of(rowType))
-                .name(tabName).uid("uid_" + tabName);
+                .name(tabName.getTo()).uid("uid_" + tabName.getTo());
 
 
         if (cfg.transformerClassNames != null && !cfg.transformerClassNames.isEmpty()) {

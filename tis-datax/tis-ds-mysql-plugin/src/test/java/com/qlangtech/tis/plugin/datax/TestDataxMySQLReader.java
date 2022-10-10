@@ -43,12 +43,16 @@ import com.qlangtech.tis.util.UploadPluginMeta;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 /**
  * @author: baisui 百岁
@@ -59,11 +63,11 @@ public class TestDataxMySQLReader extends BasicTest {
     public static String dbName = "baisuitestdb";
     String userName = "root";
     String password = "123456";
-    final String dataXName = "dataXName";
+    public static final String dataXName = "dataXName";
 
-    @Override
+
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
         TIS.dataXReaderPluginStore.clear();
     }
 
@@ -72,6 +76,7 @@ public class TestDataxMySQLReader extends BasicTest {
      *
      * @throws Exception
      */
+    @Test
     public void testUpdateDataxReader() throws Exception {
         KeyedPluginStore<DataxReader> readerStore = DataxReader.getPluginStore(null, dataXName);
         final SuFormProperties props = EasyMock.createMock("subformProp", SuFormProperties.class);
@@ -171,6 +176,7 @@ public class TestDataxMySQLReader extends BasicTest {
         EasyMock.verify(props);
     }
 
+    @Test
     public void testDescriptorsJSONGenerate() {
         DataxMySQLReader esWriter = new DataxMySQLReader();
         DescriptorsJSON descJson = new DescriptorsJSON(esWriter.getDescriptor());
@@ -193,6 +199,7 @@ public class TestDataxMySQLReader extends BasicTest {
                 });
     }
 
+    @Test
     public void testGetPluginFormPropertyTypes() {
         DataxMySQLReader mySQLReader = new DataxMySQLReader();
         Descriptor<DataxReader> descriptor = mySQLReader.getDescriptor();
@@ -202,6 +209,7 @@ public class TestDataxMySQLReader extends BasicTest {
         assertEquals(4, propertyTypes.getKVTuples().size());
     }
 
+    @Test
     public void testGetSubTasks() {
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
 //            @Override
@@ -293,6 +301,7 @@ public class TestDataxMySQLReader extends BasicTest {
         EasyMock.verify(pluginContext, context);
     }
 
+    @Test
     public void testTempateGenerate() throws Exception {
 
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
@@ -387,7 +396,7 @@ public class TestDataxMySQLReader extends BasicTest {
         EasyMock.verify(mysqlDataSource, dataDumper);
     }
 
-//    private void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxMySQLReader mySQLReader) throws IOException {
+    //    private void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxMySQLReader mySQLReader) throws IOException {
 ////        List<SelectedTab> selectedTabs = Lists.newArrayList();
 ////
 ////        selectedTabs.add(selectedTab);
@@ -415,41 +424,17 @@ public class TestDataxMySQLReader extends BasicTest {
 //        System.out.println(readerCfg);
 //        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
 //    }
-
+    @Test
     public void testGetDftTemplate() {
         String dftTemplate = DataxMySQLReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
 
+    @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue(extraProps.isPresent());
     }
 
-    public void testRealDump() throws Exception {
-
-        DataxMySQLReader dataxReader = createHdfsReader(dataXName);
-        DataxReader.dataxReaderGetter = (name) -> {
-            assertEquals(dataXName, name);
-            return dataxReader;
-        };
-
-        ReaderTemplate.realExecute("mysql-datax-reader-test-cfg.json", dataxReader);
-    }
-
-    protected DataxMySQLReader createHdfsReader(String dataXName) {
-
-        DataxMySQLReader dataxReader = new DataxMySQLReader() {
-            @Override
-            public Class<?> getOwnerClass() {
-                return DataxMySQLReader.class;
-            }
-        };
-        dataxReader.fetchSize = 2000;
-        dataxReader.dataXName = dataXName;
-        dataxReader.template = DataxMySQLReader.getDftTemplate();
-
-        return dataxReader;
-    }
 
 }

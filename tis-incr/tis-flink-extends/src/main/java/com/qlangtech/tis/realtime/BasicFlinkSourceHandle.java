@@ -22,9 +22,11 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -88,10 +90,11 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
             throw new IllegalArgumentException("focusTabs can not be empty");
         }
+        //dataXProcessor.getTabAlias()
         //Key
-        Map<String, DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
+        Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
 
-        Map<IDataxProcessor.TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
+        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
@@ -111,36 +114,16 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
      * @param
      */
     protected abstract void processTableStream(StreamExecutionEnvironment env
-            , Map<String, DTOStream> tab2OutputTag, SinkFuncs<SINK_TRANSFER_OBJ> sinkFunction);
+            , Tab2OutputTag<DTOStream> tab2OutputTag, SinkFuncs<SINK_TRANSFER_OBJ> sinkFunction);
 
 
-    private Map<String, DTOStream> createTab2OutputTag(
+    private Tab2OutputTag<DTOStream> createTab2OutputTag(
             AsyncMsg<List<ReaderSource>> asyncMsg, StreamExecutionEnvironment env, TargetResName dataxName) throws java.io.IOException {
-//        Map<String, DTOStream> tab2OutputTag
-//                = asyncMsg.getFocusTabs().stream().collect(
-//                Collectors.toMap(
-//                        (tab) -> tab
-//                        , (tab) -> new DTOStream(new OutputTag<DTO>(tab) {
-//                        }, getTabColMetas(dataxName, tab))));
-
-
-        Map<String, DTOStream> tab2OutputTag = asyncMsg.getTab2OutputTag();
-
-        // List<SingleOutputStreamOperator> mainDataStream = Lists.newArrayList();
+        Tab2OutputTag<DTOStream> tab2OutputTag = asyncMsg.getTab2OutputTag();
         for (ReaderSource sourceFunc : asyncMsg.getSource()) {
 
-            //sourceFunc.rowType
-            // mainDataStream.add();
-
             sourceFunc.getSourceStream(env, tab2OutputTag);
-            // mainDataStream.add(getSourceStream(env, tab2OutputTag, sourceFunc));
         }
-
-//        for (SingleOutputStreamOperator<DTO> mainStream : mainDataStream) {
-//            for (Map.Entry<String, DTOStream> e : tab2OutputTag.entrySet()) {
-//                e.getValue().addStream(mainStream);
-//            }
-//        }
         return tab2OutputTag;
     }
 

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.source;
@@ -81,25 +81,10 @@ public abstract class ChunjunSourceFunction
             SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc);
 
 
-//    protected JdbcSourceFactory createChunjunSourceFactory(
-//            SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc) {
-//        return new ExtendPostgresqlSourceFactory(conf, null, sourceFactory) {
-//            protected DataStream<RowData> createInput(
-//                    InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
-//                Preconditions.checkNotNull(sourceName);
-//                Preconditions.checkNotNull(inputFormat);
-//                DtInputFormatSourceFunction<RowData> function =
-//                        new DtInputFormatSourceFunction<>(inputFormat, getTypeInformation());
-//                sourceFunc.set(function);
-//                return null;
-//            }
-//        };
-//    }
-
     @Override
     public JobExecutionResult start(TargetResName name, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
-
+        Objects.requireNonNull(dataXProcessor, "dataXProcessor can not be null");
         BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
         final BasicDataSourceFactory sourceFactory = (BasicDataSourceFactory) reader.getDataSourceFactory();
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
@@ -114,28 +99,12 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
-            sourceChannel.setFocusTabs(tabs, DTOStream::createRowData);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createRowData);
             return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
     }
-
-//    private static class ExtendPostgresqlSourceFactory extends PostgresqlSourceFactory {
-//        private final DataSourceFactory dataSourceFactory;
-//
-//        public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env, DataSourceFactory dataSourceFactory) {
-//            super(syncConf, env);
-//            this.fieldList = syncConf.getReader().getFieldList();
-//            this.dataSourceFactory = dataSourceFactory;
-//        }
-//
-//        @Override
-//        protected JdbcInputFormatBuilder getBuilder() {
-//            return new JdbcInputFormatBuilder(new TISPostgresqlInputFormat(dataSourceFactory));
-//        }
-//
-//    }
 
     private SyncConf createSyncConf(BasicDataSourceFactory sourceFactory, String jdbcUrl, String dbName, SelectedTab tab) {
         SyncConf syncConf = new SyncConf();
@@ -178,7 +147,7 @@ public abstract class ChunjunSourceFunction
 
         SelectedTabPropsExtends tabExtend = tab.getIncrSourceProps();
         if (tabExtend == null) {
-            throw new IllegalStateException("tabExtend can not be null");
+            throw new IllegalStateException("tab:" + tab.getName() + " relevant tabExtend can not be null");
         }
         // tabExtend.polling.setParams(params);
         tabExtend.setParams(params);

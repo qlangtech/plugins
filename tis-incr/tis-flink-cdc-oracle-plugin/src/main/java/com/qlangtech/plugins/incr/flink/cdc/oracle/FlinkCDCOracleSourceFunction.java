@@ -80,12 +80,12 @@ public class FlinkCDCOracleSourceFunction implements IMQListener<JobExecutionRes
                                             .password(f.getPassword())
                                             .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
                                             .build();
-                                    return  ReaderSource.createDTOSource(dbHost + ":" + f.port + "_" + databaseName, sourceFunction);
+                                    return ReaderSource.createDTOSource(dbHost + ":" + f.port + "_" + databaseName, sourceFunction);
                                 }).collect(Collectors.toList());
 
                             }));
-           // for (ISelectedTab tab : tabs) {
-                sourceChannel.setFocusTabs(tabs, DTOStream::createDispatched);
+            // for (ISelectedTab tab : tabs) {
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createDispatched);
             //}
             return (JobExecutionResult) getConsumerHandle().consume(channalName, sourceChannel, dataXProcessor);
         } catch (Exception e) {

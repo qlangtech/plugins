@@ -39,12 +39,21 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     public RdbmsReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, READER reader) {
         super(reader, (reader != null) ? (DS) reader.getDataSourceFactory() : null);
         this.name = jobName;
+        if (StringUtils.isEmpty(sourceTableName)) {
+            throw new IllegalArgumentException("param sourceTableName can not be null");
+        }
         this.sourceTableName = sourceTableName;
-//        this.reader = reader;
-//        this.dsFactory = ;
         this.dumper = dumper;
     }
 
+    @Override
+    public String getSourceTableName() {
+        return this.sourceTableName;
+    }
+    @Override
+    public String getSourceEntityName() {
+        return this.sourceTableName;
+    }
     public String getJdbcUrl() {
         return this.dumper.getDbHost();
     }
@@ -67,10 +76,7 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
         return this.name;
     }
 
-    @Override
-    public String getSourceEntityName() {
-        return this.sourceTableName;
-    }
+
 
 
 }

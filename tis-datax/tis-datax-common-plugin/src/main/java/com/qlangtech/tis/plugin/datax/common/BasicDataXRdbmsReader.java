@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
-
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;

@@ -82,7 +82,8 @@ public class MySqlContainer extends JdbcDatabaseContainer {
                                 , "/docker-entrypoint-initdb.d/setup.sql");
     }
 
-    public static BasicDataSourceFactory createMySqlDataSourceFactory(TargetResName dataxName, MySqlContainer mySqlContainer) {
+    public static BasicDataSourceFactory createMySqlDataSourceFactory(
+            TargetResName dataxName, MySqlContainer mySqlContainer) {
         Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
         Assert.assertNotNull(mySqlV5DataSourceFactory);
 

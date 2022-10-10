@@ -43,6 +43,11 @@ public class OSSReaderContext implements IDataxReaderContext {
         return "oss";
     }
 
+    @Override
+    public String getSourceTableName() {
+        return this.getSourceEntityName();
+    }
+
     public OSSReaderContext(DataXOssReader reader) {
         this.reader = reader;
     }

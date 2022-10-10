@@ -39,7 +39,7 @@ public class SourceProcessFunction extends ProcessFunction<DTO, DTO> {
     @Override
     public void processElement(DTO in, Context ctx, Collector<DTO> out) throws Exception {
         //side_output: https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/side_output.html
-        final String tabName = in.getTableName();// String.valueOf(in.getAfter().get(DTOTypeInfo.KEY_FIELD_TABLE_NAME));
+        final String tabName = in.getTableName();
         OutputTag<DTO> outputTag = tab2OutputTag.get(tabName);
         if (outputTag == null) {
             throw new IllegalStateException("target table:" + tabName + " can not find relevant in tab2OutputTag");

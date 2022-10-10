@@ -19,8 +19,8 @@ CREATE TABLE "full_types" (
     "character_varying_c" CHARACTER VARYING(20),
     "timestamp3_c" TIMESTAMP(3),
     "timestamp6_c" TIMESTAMP(6),
-    "date_c" TIMESTAMP(0),
-    "time_c" TIMESTAMP,
+    "date_c" DATE ,
+    "time_c" TIMESTAMP(0),
     "default_numeric_c" NUMERIC(10, 5),
     CONSTRAINT full_types_pk PRIMARY KEY ("id")
 );

@@ -1,6 +1,7 @@
 {
     "name": "postgresqlwriter",
     "parameter": {
+        "escapeChar": "\"",
         "username": "${writer.userName}",
         "password": "${writer.password}",
         "column": [${writer.colsQuotes}],

@@ -105,7 +105,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 //        super.getSinkFuncFactory();
 //        return new TISSinkFactory() {
 //            @Override
-//            public <SinkFunc> Map<IDataxProcessor.TableAlias, SinkFunc> createSinkFunction(IDataxProcessor dataxProcessor) {
+//            public <SinkFunc> Map<TableAlias, SinkFunc> createSinkFunction(IDataxProcessor dataxProcessor) {
 //                return Collections.emptyMap();
 //            }
 //

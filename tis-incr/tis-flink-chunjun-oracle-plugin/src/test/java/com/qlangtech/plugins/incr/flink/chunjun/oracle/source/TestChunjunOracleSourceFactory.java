@@ -247,7 +247,7 @@ public class TestChunjunOracleSourceFactory {
                     vals.put("character_varying_c", RowValsExample.RowVal.$("abcd..xyzkkkkk"));
                     vals.put("timestamp3_c", parseTimestamp("2022-07-29 18:00:22"));
                     vals.put(key_timestamp6_c, parseTimestamp("2020-07-17 18:00:22"));
-                    vals.put("date_c", (parseTimestamp("2020-07-17 00:00:00")));
+                    vals.put("date_c", (parseDate("2020-07-17")));
                     vals.put("time_c", parseTimestamp("1970-01-01 18:00:22"));
                     vals.put("default_numeric_c", RowValsExample.RowVal.decimal(500, 0));
 

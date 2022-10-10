@@ -50,6 +50,11 @@ public class HdfsReaderContext implements IDataxReaderContext {
         return reader.dataXName;
     }
 
+    @Override
+    public String getSourceTableName() {
+        return this.getSourceEntityName();
+    }
+
     public String getDefaultFS() {
         return this.fileSystemFactory.getFSAddress();
     }

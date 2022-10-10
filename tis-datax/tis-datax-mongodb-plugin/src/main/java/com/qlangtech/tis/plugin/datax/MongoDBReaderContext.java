@@ -58,6 +58,11 @@ public class MongoDBReaderContext extends BasicMongoDBContext implements IDataxR
     }
 
     @Override
+    public String getSourceTableName() {
+        return DataXMongodbReader.DATAX_NAME;
+    }
+
+    @Override
     public String getSourceEntityName() {
         return DataXMongodbReader.DATAX_NAME;
     }

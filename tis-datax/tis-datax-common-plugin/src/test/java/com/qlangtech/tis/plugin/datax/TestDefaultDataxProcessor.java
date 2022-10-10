@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
@@ -49,10 +50,10 @@ public class TestDefaultDataxProcessor extends BasicTest {
 
         try {
             DefaultDataxProcessor dataxProcessor = new DefaultDataxProcessor();
-            IDataxProcessor.TableAlias tabAlias = new IDataxProcessor.TableAlias();
+            TableAlias tabAlias = new TableAlias();
             tabAlias.setFrom("customer_order_relation");
             tabAlias.setTo("customer_order_relation1");
-            List<IDataxProcessor.TableAlias> tableMaps = Lists.newArrayList(tabAlias);
+            List<TableAlias> tableMaps = Lists.newArrayList(tabAlias);
             dataxProcessor.setTableMaps(tableMaps);
 
             dataxProcessor.globalCfg = "datax-global-config";
@@ -67,9 +68,9 @@ public class TestDefaultDataxProcessor extends BasicTest {
             assertEquals(dataxProcessor.dptId, loadDataxProcessor.dptId);
             assertEquals(dataxProcessor.recept, loadDataxProcessor.recept);
 
-            Map<String, IDataxProcessor.TableAlias> tabAlias1 = loadDataxProcessor.getTabAlias();
+            Map<String, TableAlias> tabAlias1 = loadDataxProcessor.getTabAlias();
             assertEquals(1, tabAlias1.size());
-            for (Map.Entry<String, IDataxProcessor.TableAlias> entry : tabAlias1.entrySet()) {
+            for (Map.Entry<String, TableAlias> entry : tabAlias1.entrySet()) {
                 assertEquals(tabAlias.getFrom(), entry.getKey());
 
                 assertEquals(tabAlias.getFrom(), entry.getValue().getFrom());

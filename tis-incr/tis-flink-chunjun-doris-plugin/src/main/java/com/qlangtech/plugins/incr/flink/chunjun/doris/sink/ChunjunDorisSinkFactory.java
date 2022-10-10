@@ -34,6 +34,7 @@ import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
@@ -87,7 +88,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     private transient List<IColMetaGetter> colsMeta;
 
     @Override
-    protected List<IColMetaGetter> getColsMeta(IDataxProcessor.TableAlias tableName
+    protected List<IColMetaGetter> getColsMeta(TableAlias tableName
             , BasicDataSourceFactory dsFactory, CreateChunjunSinkFunctionResult sinkFunc) {
         //return super.getColsMeta(tableName, dsFactory, sinkFunc);
 

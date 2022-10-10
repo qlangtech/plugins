@@ -97,7 +97,7 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-oracle-plugin</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
+<!--            <scope>test</scope>-->
         </dependency>
 
     </dependencies>

@@ -33,6 +33,7 @@ import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
@@ -181,14 +182,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             try {
                 esClient.closeJestClient();
             } catch (Throwable e) {
-
             }
         }
     }
 
-
     @Override
-    public ISchema projectionFromExpertModel(IDataxProcessor.TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
+    public ISchema projectionFromExpertModel(TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
         ESTableAlias esTable = (ESTableAlias) tableAlias;
         schemaContentConsumer.accept(esTable.getSchemaByteContent());
         JSONObject body = new JSONObject();

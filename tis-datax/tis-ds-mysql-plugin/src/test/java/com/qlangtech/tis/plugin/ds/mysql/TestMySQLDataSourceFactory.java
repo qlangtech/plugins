@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import org.junit.Test;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -52,6 +53,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
 
     private static final String empNo = "emp_no";
 
+    @Test
     public void testGetPlugin() throws Exception {
 
         DataSourceFactoryPluginStore dbPluginStore = TIS.getDataBasePluginStore(new PostedDSProp(DB_ORDER));
@@ -86,7 +88,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
     }
 
 
-
+    @Test
     public void testDataDumpers() throws Exception {
         MySQLDataSourceFactory dataSourceFactory = new MySQLDataSourceFactory() {
 //            @Override

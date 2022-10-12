@@ -24,10 +24,10 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.extension.PluginWrapper;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
@@ -39,7 +39,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -54,7 +53,6 @@ import com.starrocks.connector.flink.StarRocksSink;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkSemantic;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
@@ -62,11 +60,8 @@ import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.description.BlockElement;
 import org.apache.flink.configuration.description.TextElement;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.AtomicDataType;
-import org.apache.flink.table.types.logical.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -146,7 +141,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
     public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
         Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
-        TableAlias tableName = null;
+        // TableAlias tableName = null;
         // Map<String, TableAlias> tabAlias = dataxProcessor.getTabAlias();
         DataXStarRocksWriter dataXWriter = (DataXStarRocksWriter) dataxProcessor.getWriter(null);
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
@@ -161,13 +156,12 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
         DBConfig dbConfig = dsFactory.getDbConfig();
 
 
-        Map<String, TableAlias> selectedTabs = dataxProcessor.getTabAlias();
-        if (MapUtils.isEmpty(selectedTabs)) {
+        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias();
+        if (selectedTabs.isNull()) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }
-
-        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
-            tableName = tabAliasEntry.getValue();
+        selectedTabs.forEach((key, val) -> {
+            TableAlias tableName = val;
 
             Objects.requireNonNull(tableName, "tableName can not be null");
             if (StringUtils.isEmpty(tableName.getFrom())) {
@@ -213,8 +207,11 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
                 throw new RuntimeException((String) error[0], (Throwable) error[1]);
             }
             // Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-
-        }
+        });
+//        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
+//
+//
+//        }
 
         if (sinkFuncs.size() < 1) {
             throw new IllegalStateException("size of sinkFuncs can not be small than 1");

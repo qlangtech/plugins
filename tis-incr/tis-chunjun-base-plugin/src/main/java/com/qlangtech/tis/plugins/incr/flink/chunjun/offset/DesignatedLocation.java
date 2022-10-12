@@ -16,39 +16,38 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ds.starrocks;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.offset;
 
-import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-29 10:01
+ * @create: 2022-10-10 18:04
  **/
-@Public
-public class StarRocksSourceFactory extends DorisSourceFactory {
-
-    public static final String DISPLAY_NAME = "StarRocks";
-
-    @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
-        return super.getConnection(jdbcUrl);
-    }
+public class DesignatedLocation extends StartLocation {
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String startLocation;
 
     @Override
-    public String getEscapeChar() {
-        return "`";
+    public void setParams(Map<String, Object> params) {
+        if (StringUtils.isEmpty(this.startLocation)) {
+            throw new IllegalStateException("prop startLocation can not be empty");
+        }
+        this.setStartLocation(params, this.startLocation);
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends DorisSourceFactory.DefaultDescriptor {
+    public static class DefaultDescriptor extends Descriptor<StartLocation> {
         @Override
-        protected String getDataSourceName() {
-            return DISPLAY_NAME;
+        public String getDisplayName() {
+            return "Designated";
         }
     }
 }

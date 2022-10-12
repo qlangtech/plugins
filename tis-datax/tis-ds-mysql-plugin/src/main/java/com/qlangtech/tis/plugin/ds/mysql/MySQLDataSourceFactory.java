@@ -256,21 +256,26 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         public int getRowSize() {
             int[] count = new int[1];
 
-            validateConnection(jdbcUrl, (conn) -> {
-                Statement statement = null;
-                ResultSet result = null;
-                try {
-                    StringBuffer refactSql = parseRowCountSql();
-                    statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                    result = statement.executeQuery(refactSql.toString());
-                    result.last();
-                    final int rowSize = result.getRow();
-                    count[0] = rowSize;
-                } finally {
-                    closeResultSet(result);
-                    closeResultSet(statement);
-                }
-            });
+            try {
+                validateConnection(jdbcUrl, (conn) -> {
+                    Statement statement = null;
+                    ResultSet result = null;
+                    try {
+                        StringBuffer refactSql = parseRowCountSql();
+                        statement = connection.createStatement(
+                                ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                        result = statement.executeQuery(refactSql.toString());
+                        result.last();
+                        final int rowSize = result.getRow();
+                        count[0] = rowSize;
+                    } finally {
+                        closeResultSet(result);
+                        closeResultSet(statement);
+                    }
+                });
+            } catch (TableNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             return count[0];
         }
 

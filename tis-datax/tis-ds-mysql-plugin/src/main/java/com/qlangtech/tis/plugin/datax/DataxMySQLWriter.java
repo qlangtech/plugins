@@ -111,7 +111,9 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-        if (threadBingDataXReader instanceof DataxMySQLReader) {
+        if (threadBingDataXReader instanceof DataxMySQLReader
+                // 没有使用别名
+                && tableMapper.hasNotUseAlias()) {
             DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
             MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
             dsFactory.visitFirstConnection((conn) -> {
@@ -135,7 +137,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
         final AtomicInteger timestampCount = new AtomicInteger();
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
                 if (!pks.isEmpty()) {

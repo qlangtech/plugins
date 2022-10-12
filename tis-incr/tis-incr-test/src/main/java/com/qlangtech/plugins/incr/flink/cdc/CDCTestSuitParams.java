@@ -19,10 +19,12 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.poll.RunInterval;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.LatestLocation;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.offset.StartLocation;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.poll.RunInterval;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.SelectedTabPropsExtends;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.types.RowKind;
 
@@ -113,11 +115,18 @@ public class CDCTestSuitParams {
         public static class ChunjunSuitParamsBuilder extends Builder {
             private String incrColumn = CUDCDCTestSuit.key_update_time;
 
+            private StartLocation startLocation = new LatestLocation();
+
             public ChunjunSuitParamsBuilder setIncrColumn(String incrColumn) {
                 if (StringUtils.isEmpty(incrColumn)) {
                     throw new IllegalArgumentException("param incrColumn can not be empty");
                 }
                 this.incrColumn = incrColumn;
+                return this;
+            }
+
+            public ChunjunSuitParamsBuilder setStartLocation(StartLocation startLocation) {
+                this.startLocation = startLocation;
                 return this;
             }
 
@@ -134,6 +143,7 @@ public class CDCTestSuitParams {
                     polling.useMaxFunc = true;
                     polling.incrColumn = this.incrColumn;//CUDCDCTestSuit.key_update_time; //cdcTestSuit.getPrimaryKeyName(tab);
                     polling.pollingInterval = 4999;
+                    polling.startLocation = this.startLocation;
                     incrTabExtend.polling = polling;
                     tab.setIncrSourceProps(incrTabExtend);
                 };

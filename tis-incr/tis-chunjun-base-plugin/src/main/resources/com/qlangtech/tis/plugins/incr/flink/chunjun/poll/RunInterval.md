@@ -9,3 +9,11 @@ useMaxFunc的使用场景
 
 某一次增量启动时上次作业的endLocation为10，id最大值为100，那么将会拼接SQL语句 SELECT id,name,age FROM table WHERE id >= 10 AND id < 100
 下一次增量作业启动时id的最大值为200，那么将会拼接SQL语句 SELECT id,name,age FROM table WHERE id >=100 AND id < 200
+
+## startLocation
+
+Chunjun 增量消费启动起始位点支持三种模式：
+
+* `Latest`:
+* `Initial`:
+* `Designated`:

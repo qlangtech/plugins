@@ -21,9 +21,11 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -234,7 +236,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
         Map<String, TableAlias> aliasMap = new HashMap<>();
         TableAlias tab = new TableAlias(tableName);
         aliasMap.put(tableName, tab);
-        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
+        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
 
         this.replay();
 
@@ -263,7 +265,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
             DTOStream sourceStream = DTOStream.createDispatched(tableName);
             ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d}));
 
-            readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
+            readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), sourceStream)));
 
             entry.getValue().add2Sink(sourceStream);
 

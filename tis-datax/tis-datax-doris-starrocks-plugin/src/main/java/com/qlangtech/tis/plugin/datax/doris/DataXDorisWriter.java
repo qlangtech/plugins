@@ -39,7 +39,7 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
 
     @Override
     protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper) {
+        return new BasicCreateTableSqlBuilder(tableMapper,this.getDataSourceFactory()) {
             @Override
             protected String getUniqueKeyToken() {
                 return "UNIQUE KEY";

@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -58,7 +59,6 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         }
         return new DorisWriterContext(this, tableMap.get());
     }
-
 
 
     public static String getDftLoadProps() {
@@ -125,8 +125,8 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
-        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper) {
-            super(tableMapper);
+        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta) {
+            super(tableMapper, dsMeta);
         }
 
         @Override
@@ -154,13 +154,13 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
             script.append(" ENGINE=olap").append("\n");
             if (pks.size() > 0) {
                 script.append(getUniqueKeyToken() + "(").append(pks.stream()
-                        .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
+                        .map((pk) -> wrapWithEscape(pk.getName()))
                         .collect(Collectors.joining(","))).append(")\n");
             }
             script.append("DISTRIBUTED BY HASH(");
             if (pks.size() > 0) {
                 script.append(pks.stream()
-                        .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
+                        .map((pk) -> wrapWithEscape(pk.getName()))
                         .collect(Collectors.joining(",")));
             } else {
                 List<ISelectedTab.ColMeta> cols = this.getCols();

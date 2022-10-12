@@ -16,39 +16,28 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ds.starrocks;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.offset;
 
-import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-29 10:01
+ * @create: 2022-10-10 18:01
  **/
-@Public
-public class StarRocksSourceFactory extends DorisSourceFactory {
-
-    public static final String DISPLAY_NAME = "StarRocks";
-
+public class LatestLocation extends StartLocation {
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
-        return super.getConnection(jdbcUrl);
-    }
-
-    @Override
-    public String getEscapeChar() {
-        return "`";
+    public void setParams(Map<String, Object> params) {
+        setStartLocation(params, "latest");
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends DorisSourceFactory.DefaultDescriptor {
+    public static class DefaultDescriptor extends Descriptor<StartLocation> {
         @Override
-        protected String getDataSourceName() {
-            return DISPLAY_NAME;
+        public String getDisplayName() {
+            return "Latest";
         }
     }
 }

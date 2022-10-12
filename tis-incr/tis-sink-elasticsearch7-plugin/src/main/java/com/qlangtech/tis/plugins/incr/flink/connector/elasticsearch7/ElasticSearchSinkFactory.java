@@ -86,14 +86,22 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         IHttpToken token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
-        for (Map.Entry<String, TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
-            TableAlias value = e.getValue();
+        Optional<TableAlias> first = dataxProcessor.getTabAlias().findFirst();
+        if(first.isPresent()){
+            TableAlias value = first.get();
             if (!(value instanceof ESTableAlias)) {
                 throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
             }
             esSchema = (ESTableAlias) value;
-            break;
         }
+//        for (Map.Entry<String, TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
+//            TableAlias value = e.getValue();
+//            if (!(value instanceof ESTableAlias)) {
+//                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
+//            }
+//            esSchema = (ESTableAlias) value;
+//            break;
+//        }
         Objects.requireNonNull(esSchema, "esSchema can not be null");
         List<ISelectedTab.ColMeta> cols = esSchema.getSourceCols();
         if (CollectionUtils.isEmpty(cols)) {

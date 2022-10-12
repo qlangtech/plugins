@@ -169,7 +169,7 @@ public abstract class CUDCDCTestSuit {
 
         for (ISelectedTab.ColMeta col : tab.getCols()) {
             if (col.isPk()) {
-                return col.getName();
+                return getColEscape() + col.getName() + getColEscape();
             }
         }
 
@@ -234,8 +234,8 @@ public abstract class CUDCDCTestSuit {
 
                             List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
 
-                            String updateSql = String.format("UPDATE " + createTableName(tabName) + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
-                                    , cols.stream().map((e) -> e.getKey() + " = ?").collect(Collectors.joining(","))
+                            String updateSql = String.format("UPDATE " + getColEscape() + createTableName(tabName) + getColEscape() + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
+                                    , cols.stream().map((e) -> getColEscape() + e.getKey() + getColEscape() + " = ?").collect(Collectors.joining(","))
                                     , Objects.requireNonNull(exceptRow.getIdVal(), "idVal can not be null"));
 
                             try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
@@ -279,7 +279,7 @@ public abstract class CUDCDCTestSuit {
                                 continue;
                             }
 
-                            String deleteSql = String.format("DELETE FROM " + createTableName(tabName) + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
+                            String deleteSql = String.format("DELETE FROM " + getColEscape() + createTableName(tabName) + getColEscape() + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
                             try (Statement statement1 = conn.createStatement()) {
                                 Assert.assertTrue(deleteSql, executeStatement(conn, statement1, (deleteSql)) > 0);
                                 sleepForAWhile();
@@ -302,7 +302,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     @NotNull
-    private DataxProcessor createProcess() {
+    protected DataxProcessor createProcess() {
         DataxProcessor processor = new DataxProcessor() {
             @Override
             public Application buildApp() {

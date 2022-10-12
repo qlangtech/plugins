@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
@@ -29,7 +28,6 @@ import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -67,7 +65,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     @FormField(ordinal = 98, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer fetchSize;
 
-    @FormField(ordinal = 99, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     @SubForm(desClazz = SelectedTab.class
@@ -241,12 +239,16 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 DataSourceFactory datasource = getDataSourceFactory();
                 Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
 
-                return datasource.getTableMetadata(tab)
-                        .stream().collect(
-                                Collectors.toMap(
-                                        (m) -> m.getKey()
-                                        , (m) -> m
-                                        , (c1, c2) -> c1));
+                try {
+                    return datasource.getTableMetadata(tab)
+                            .stream().collect(
+                                    Collectors.toMap(
+                                            (m) -> m.getKey()
+                                            , (m) -> m
+                                            , (c1, c2) -> c1));
+                } catch (TableNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
     }
@@ -274,7 +276,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     @Override
-    public final List<ColumnMetaData> getTableMetadata(String table) {
+    public final List<ColumnMetaData> getTableMetadata(String table) throws TableNotFoundException {
         //Map<String, List<ColumnMetaData>> tabMeta = DataSourceMeta.tableMetadataLocal.get();
         //List<ColumnMetaData> cols = null;
         //if ((cols = tabMeta.get(table)) == null) {

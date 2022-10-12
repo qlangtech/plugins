@@ -35,13 +35,8 @@ import com.dtstack.chunjun.sink.WriteMode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -52,11 +47,12 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -108,10 +104,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
     @Override
     public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
         Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
-        TableAlias tableName = null;
+        // TableAlias tableName = null;
         BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) dataxProcessor.getWriter(null);
-        Map<String, TableAlias> selectedTabs = dataxProcessor.getTabAlias();
-        if (MapUtils.isEmpty(selectedTabs)) {
+        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias();
+        if (selectedTabs.isNull()) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }
         IDataxReader reader = dataxProcessor.getReader(null);
@@ -119,19 +115,20 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
 
         // 清空一下tabs的缓存以免有脏数据
         this.selTabs = null;
-        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
-            tableName = tabAliasEntry.getValue();
 
-            Objects.requireNonNull(tableName, "tableName can not be null");
-            if (StringUtils.isEmpty(tableName.getFrom())) {
+        selectedTabs.forEach((key, val) -> {
+            // tableName = tabAliasEntry.getValue();
+
+            Objects.requireNonNull(val, "tableName can not be null");
+            if (StringUtils.isEmpty(val.getFrom())) {
                 throw new IllegalStateException("tableName.getFrom() can not be empty");
             }
 
             AtomicReference<CreateChunjunSinkFunctionResult> sinkFuncRef = new AtomicReference<>();
             CreateChunjunSinkFunctionResult sinkFunc = null;
-            final TableAlias tabName = tableName;
+            final TableAlias tabName = val;
             AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
-            final String targetTabName = tableName.getTo();
+            final String targetTabName = val.getTo();
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) dataXWriter.getDataSourceFactory();
             if (dsFactory == null) {
                 throw new IllegalStateException("dsFactory can not be null");
@@ -168,12 +165,16 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
                 throw new IllegalStateException("param parallelism can not be null");
             }
 
-            sinkFuncs.put(tableName, new RowDataSinkFunc(tableName
+            sinkFuncs.put(val, new RowDataSinkFunc(val
                     , sinkFunc.getSinkFunction()
-                    , AbstractRowDataMapper.getAllTabColsMeta(this.getColsMeta(tableName, dsFactory, sinkFunc))
+                    , AbstractRowDataMapper.getAllTabColsMeta(this.getColsMeta(val, dsFactory, sinkFunc))
                     , supportUpsetDML()
                     , this.parallelism));
-        }
+        });
+
+//        for (Map.Entry<String, TableAlias> tabAliasEntry : selectedTabs.entrySet()) {
+//
+//        }
 
         if (sinkFuncs.size() < 1) {
             throw new IllegalStateException("size of sinkFuncs can not be small than 1");

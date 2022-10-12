@@ -20,10 +20,11 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.Config;
@@ -34,6 +35,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -217,7 +219,7 @@ public class TestChunjunClickhouseSinkFactory
             Map<String, TableAlias> aliasMap = new HashMap<>();
             TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
+            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
 
             this.replay();
 
@@ -254,7 +256,7 @@ public class TestChunjunClickhouseSinkFactory
                 ReaderSource<RowData> readerSource = ReaderSource.createRowDataSource("testStreamSource", totalpayinfo
                         , env.fromElements(new RowData[]{d}));
 
-                readerSource.getSourceStream(env, Collections.singletonMap(tableName, rowStream));
+                readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), rowStream)));
 
                 // .addSink(entry.getValue().).name("clickhouse");
                 entry.getValue().add2Sink(rowStream);
@@ -277,7 +279,7 @@ public class TestChunjunClickhouseSinkFactory
                 try (Connection conn = sourceFactory.getConnection(jdbcUrls[0])) {
                     Statement statement = conn.createStatement();
                     //+ " where id='" + colIdVal + "'"
-                    ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName );
+                    ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName);
                     if (resultSet.next()) {
                         IResultRows.printRow(resultSet);
 //                        StringBuffer rowDesc = new StringBuffer();

@@ -57,7 +57,7 @@ public class TISOracleInputFormat extends OracleInputFormat {
                 jdbcDialect, jdbcConf, this.colsMeta, TISOracleInputFormat::createInternalConverter));
     }
 
-    public static IDeserializationConverter createInternalConverter(LogicalType type) {
+    private static IDeserializationConverter createInternalConverter(LogicalType type) {
         if (type.getTypeRoot() == LogicalTypeRoot.DATE) {
             return val -> new OracleDateColumn((Timestamp) val);
         }

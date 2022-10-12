@@ -55,6 +55,11 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
+    public String getEscapeChar() {
+        return "`";
+    }
+
+    @Override
     public String identityValue() {
         return this.name;
     }

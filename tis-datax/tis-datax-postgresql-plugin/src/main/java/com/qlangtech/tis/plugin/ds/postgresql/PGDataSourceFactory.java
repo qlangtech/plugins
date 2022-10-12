@@ -65,6 +65,11 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 //    }
 
     @Override
+    public String getEscapeChar() {
+        return "\"";
+    }
+
+    @Override
     public String getDBSchema() {
         return this.tabSchema;
     }

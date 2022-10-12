@@ -62,7 +62,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //    @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, validate = {Validator.require})
 //    public String template;
 
-   // public String dataXName;
+    // public String dataXName;
 
 //    @Override
 //    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
@@ -74,7 +74,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         if (!this.autoCreateTable) {
             return null;
         }
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
                 script.append("   ,`__cc_ck_sign` Int8 DEFAULT 1").append("\n");

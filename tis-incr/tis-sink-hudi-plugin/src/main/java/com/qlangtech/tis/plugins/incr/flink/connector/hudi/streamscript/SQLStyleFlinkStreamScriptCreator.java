@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.HudiWriteTabType;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
@@ -85,8 +86,14 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
              * https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/sql/create/#create-table
              * @return
              */
+            DataSourceMeta sourceMeta = new DataSourceMeta() {
+                @Override
+                public String getEscapeChar() {
+                    return "`";
+                }
+            };
             CreateTableSqlBuilder flinkTableDdlBuilder
-                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas)) {
+                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta) {
                 @Override
                 protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
                     return new ColWrapper(c) {

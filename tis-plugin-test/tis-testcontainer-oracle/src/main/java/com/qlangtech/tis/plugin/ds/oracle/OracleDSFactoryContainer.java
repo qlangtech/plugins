@@ -50,7 +50,7 @@ import static org.junit.Assert.assertNotNull;
  * @create: 2022-10-01 09:36
  **/
 public class OracleDSFactoryContainer {
-
+    public static final String drop_column_type_test = "drop_column_types";
     public static final String sqlfile_column_type_test = "column_type_test";
 
     public static final String tab_full_types = "full_types";

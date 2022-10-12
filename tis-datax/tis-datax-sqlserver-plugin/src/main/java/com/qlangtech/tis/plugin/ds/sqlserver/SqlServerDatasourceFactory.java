@@ -52,7 +52,11 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     @Override
     protected String getRefectTablesSql() {
         return "select name from sys.tables where is_ms_shipped = 0";
-        // return "select count(1) from instancedetail";
+    }
+
+    @Override
+    public String getEscapeChar() {
+        return "\"";
     }
 
     @Override

@@ -75,7 +75,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
         }
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
                 if (pks.isEmpty()) {
@@ -121,7 +121,13 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                         return "NUMBER(1,0)";
                     case Types.REAL: {
                         if (type.columnSize > 0 && type.getDecimalDigits() > 0) {
-                            return "NUMBER(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                            // 在PG->Oracle情况下，PG中是Real类型 通过jdbc反射得到columnSize和getDecimalDigits()都为8，这样number(8,8)就没有小数位了，出问题了
+                            // 在此进行除2处理
+                            int scale = type.getDecimalDigits();
+                            if (scale >= type.columnSize) {
+                                scale = scale / 2;
+                            }
+                            return "NUMBER(" + type.columnSize + "," + scale + ")";
                         }
                         return "BINARY_FLOAT";
                     }
@@ -167,10 +173,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                 }
             }
 
-            @Override
-            protected char colEscapeChar() {
-                return '"';
-            }
+
         };
         createDDL = createTableSqlBuilder.build();
         return createDDL;

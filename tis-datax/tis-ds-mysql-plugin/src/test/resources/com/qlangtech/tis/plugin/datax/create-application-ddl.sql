@@ -1,4 +1,4 @@
-CREATE TABLE `application`
+CREATE TABLE `application_alias`
 (
     `user_id`     BIGINT(20),
     `user_name`   VARCHAR(256),

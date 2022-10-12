@@ -9,7 +9,8 @@
     "dftVal": 5000
   },
   "startLocation": {
-    "help": "增量查询起始位置"
+    "label": "起始位点",
+    "dftVal": "Latest"
   },
   "useMaxFunc": {
     "dftVal": true,

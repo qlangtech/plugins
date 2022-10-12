@@ -2,6 +2,7 @@
 -- DATABASE:  column_type_test
 -- ----------------------------------------------------------------------------------------------------------------
 -- https://docs.oracle.com/database/121/SQLRF/sql_elements001.htm#SQLRF30020
+
 CREATE TABLE "full_types" (
     "id" INTEGER NOT NULL,
     "bytea_c" BLOB,

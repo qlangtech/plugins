@@ -35,7 +35,7 @@ public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSou
 
     @Override
     protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper) {
+        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected String getUniqueKeyToken() {
                 return "PRIMARY KEY";

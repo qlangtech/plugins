@@ -65,15 +65,16 @@ public class TestDataxMySQLWriter extends BasicTest {
         Descriptor<DataxWriter> descriptor = mySQLWriter.getDescriptor();
         PluginFormProperties pluginFormPropertyTypes = descriptor.getPluginFormPropertyTypes();
 
-       Assert. assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
+        Assert.assertTrue(pluginFormPropertyTypes instanceof RootFormProperties);
         Assert.assertEquals(8, pluginFormPropertyTypes.getKVTuples().size());
 
     }
+
     @Test
     public void testGenerateCreateDDL() {
         DataxMySQLWriter writer = new DataxMySQLWriter();
         writer.autoCreateTable = true;
-        DataxReader.dataxReaderThreadLocal.set(new DataxReader(){
+        DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
             @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 return null;
@@ -120,7 +121,7 @@ public class TestDataxMySQLWriter extends BasicTest {
 
         Assert.assertEquals(
                 StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataxMySQLWriter.class, "create-application-ddl.sql"))
-                ,StringUtils.trimToEmpty( ddl.getDDLScript().toString()));
+                , StringUtils.trimToEmpty(ddl.getDDLScript().toString()));
     }
 
     private IDataxProcessor.TableMap getTabApplication(
@@ -143,7 +144,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         }
         IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
         tableMap.setFrom("application");
-        tableMap.setTo("application");
+        tableMap.setTo("application_alias");
         //tableMap.setSourceCols(sourceCols);
         return tableMap;
     }
@@ -257,6 +258,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         String dftTemplate = DataxMySQLWriter.getDftTemplate();
         Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
+
     @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLWriter.class);

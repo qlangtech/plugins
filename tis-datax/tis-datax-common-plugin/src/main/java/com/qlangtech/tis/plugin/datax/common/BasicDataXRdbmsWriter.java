@@ -31,7 +31,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.util.RobustReflectionConverter;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -151,11 +150,15 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
             for (String jdbcUrl : jdbcUrls) {
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                    //List<String> tabs = Lists.newArrayList();
-                    //dsFactory.refectTableInDB(tabs, conn);
-                    List<ColumnMetaData> tabCols = dsFactory.getTableMetadata(conn, tableName);
+                    boolean tableExist = false;
+                    try {
+                        dsFactory.getTableMetadata(conn, tableName);
+                        tableExist = true;
+                    } catch (TableNotFoundException e) {
+                        logger.warn(e.toString());
+                    }
                     // if (!tabs.contains(tableName)) {
-                    if (CollectionUtils.isEmpty(tabCols)) {
+                    if (!tableExist) {
                         // 表不存在
                         boolean success = false;
                         try {

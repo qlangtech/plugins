@@ -1,6 +1,0 @@
-{
-  "incrMode": {
-    "label": "增量更新模式",
-    "dftVal": "Replace"
-  }
-}

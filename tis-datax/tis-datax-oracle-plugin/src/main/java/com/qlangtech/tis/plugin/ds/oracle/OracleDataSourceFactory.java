@@ -60,6 +60,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
+    public String getEscapeChar() {
+        return "\"";
+    }
+
+    @Override
     public String getDbName() {
         return "default";
     }

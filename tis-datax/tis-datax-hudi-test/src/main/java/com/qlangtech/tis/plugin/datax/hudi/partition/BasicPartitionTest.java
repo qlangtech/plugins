@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.junit.Assert;
 
@@ -39,8 +40,9 @@ public class BasicPartitionTest {
 
     public void verifySQLDDLOfPartition(HudiTablePartition partition) {
         Assert.assertTrue(partition.isSupportPartition());
-
-        CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList())) {
+        DataSourceMeta sourceMeta = new DataSourceMeta() {
+        };
+        CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList()), sourceMeta) {
             @Override
             protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
                 return null;

@@ -65,7 +65,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             return null;
         }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
 
             private String convertType(ISelectedTab.ColMeta col) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html
@@ -116,10 +116,6 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                 }
             }
 
-            @Override
-            protected char colEscapeChar() {
-                return '\"';
-            }
 
             @Override
             protected void appendExtraColDef(List<ColWrapper> pk) {
@@ -140,14 +136,17 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         public DefaultDescriptor() {
             super();
         }
+
         @Override
         public boolean isSupportIncr() {
             return false;
         }
+
         @Override
         public EndType getEndType() {
             return EndType.SqlServer;
         }
+
         @Override
         public boolean isSupportTabCreate() {
             return true;

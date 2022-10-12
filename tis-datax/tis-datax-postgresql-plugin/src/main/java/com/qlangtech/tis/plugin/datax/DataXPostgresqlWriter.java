@@ -85,7 +85,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
         // 多个主键
         boolean multiPk = tableMapper.getSourceCols().stream().filter((col) -> col.isPk()).count() > 1;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, ds) {
             @Override
             protected CreateTableName getCreateTableName() {
                 return new CreateTableName(ds.tabSchema, tableMapper.getTo(), this);
@@ -104,10 +104,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
                 }
             }
 
-            @Override
-            protected char colEscapeChar() {
-                return '\"';
-            }
+
 
             @Override
             protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {

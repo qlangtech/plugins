@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
@@ -68,14 +69,19 @@ public class TestDefaultDataxProcessor extends BasicTest {
             assertEquals(dataxProcessor.dptId, loadDataxProcessor.dptId);
             assertEquals(dataxProcessor.recept, loadDataxProcessor.recept);
 
-            Map<String, TableAlias> tabAlias1 = loadDataxProcessor.getTabAlias();
+            TableAliasMapper tabAlias1 = loadDataxProcessor.getTabAlias();
             assertEquals(1, tabAlias1.size());
-            for (Map.Entry<String, TableAlias> entry : tabAlias1.entrySet()) {
-                assertEquals(tabAlias.getFrom(), entry.getKey());
 
-                assertEquals(tabAlias.getFrom(), entry.getValue().getFrom());
-                assertEquals(tabAlias.getTo(), entry.getValue().getTo());
-            }
+            tabAlias1.forEach((key,val)->{
+                assertEquals(tabAlias.getFrom(), key);
+
+                assertEquals(tabAlias.getFrom(), val.getFrom());
+                assertEquals(tabAlias.getTo(), val.getTo());
+            });
+
+//            for (Map.Entry<String, TableAlias> entry : tabAlias1.entrySet()) {
+//
+//            }
         } finally {
             try {
                 KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, false, appName, IAppSource.class);

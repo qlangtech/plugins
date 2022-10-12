@@ -55,7 +55,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
             }
             boolean hasMatch = false;
             for (Map.Entry<TableAlias, TabSinkFunc<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
-                if (originTableName.equals(entry.getKey().getFrom())) {
+                if (originTableName.equals(entry.getKey().getTo())) {
                     entry.getValue().add2Sink(sourceStream);
                     // streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
                     hasMatch = true;
@@ -65,7 +65,7 @@ public final class SinkFuncs<TRANSFER_OBJ> {
             if (!hasMatch) {
                 throw new IllegalStateException("tabName:" + originTableName + " can not find SINK in :"
                         + sinkFunction.keySet().stream()
-                        .map((t) -> "(" + t.getFrom() + "," + t.getTo() + ")").collect(Collectors.joining(" ")));
+                        .map((t) -> t.toString()).collect(Collectors.joining(" ")));
             }
         }
     }

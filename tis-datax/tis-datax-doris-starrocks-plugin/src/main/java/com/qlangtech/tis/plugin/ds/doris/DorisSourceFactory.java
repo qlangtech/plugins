@@ -66,6 +66,10 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         return DorisSourceFactory.getLoadUrls(this.loadUrl);
     }
 
+    @Override
+    public String getEscapeChar() {
+        return "`";
+    }
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
@@ -83,7 +87,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     public Connection getConnection(String jdbcUrl) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToEmpty(this.userName));
-        if(StringUtils.isNotEmpty(this.password)){
+        if (StringUtils.isNotEmpty(this.password)) {
             props.put("password", StringUtils.trimToEmpty(this.password));
         }
         try {

@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
@@ -123,7 +125,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         Map<String, TableAlias> aliasMap = new HashMap<>();
         TableAlias tab = new TableAlias(tableName);
         aliasMap.put(tableName, tab);
-        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
+        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn( new TableAliasMapper(aliasMap));
 
         this.replay();
 

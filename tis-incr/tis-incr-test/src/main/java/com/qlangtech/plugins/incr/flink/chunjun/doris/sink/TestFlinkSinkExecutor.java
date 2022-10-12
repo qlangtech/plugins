@@ -27,6 +27,7 @@ import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -116,7 +117,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d, update}));
 //
         readerSource.getSourceStream(env
-                , new Tab2OutputTag<DTOStream>(Collections.singletonMap(new TableAlias(tableName), sourceStream)));
+                , new Tab2OutputTag<>(Collections.singletonMap(new TableAlias(tableName), sourceStream)));
 //
 //
         //  dtoStream.addSink(new PrintSinkFunction<>());
@@ -232,7 +233,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             Map<String, TableAlias> aliasMap = new HashMap<>();
             TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
+            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
 
             this.replay();
             Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);

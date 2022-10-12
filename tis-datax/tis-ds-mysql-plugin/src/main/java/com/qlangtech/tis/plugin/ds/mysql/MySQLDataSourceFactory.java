@@ -52,7 +52,10 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
 
-
+    @Override
+    public final String getEscapeChar() {
+        return "`";
+    }
 //    // 数据库名称
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public String dbName;

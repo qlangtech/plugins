@@ -200,10 +200,12 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                         return "BOOLEAN";
                     case Types.REAL:
                         return "REAL";
-                    case Types.TINYINT:
-                        return "TINYINT";
-                    case Types.SMALLINT:
-                        return "SMALLINT";
+                    case Types.TINYINT: {
+                        return "TINYINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                    }
+                    case Types.SMALLINT: {
+                        return "SMALLINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                    }
                     case Types.INTEGER:
                         return "int(11)";
                     case Types.BIGINT:

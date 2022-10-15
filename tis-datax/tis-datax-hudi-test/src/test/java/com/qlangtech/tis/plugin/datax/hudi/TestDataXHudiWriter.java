@@ -23,7 +23,6 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hudi.HudiWriter;
 import com.google.common.collect.Lists;
-import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataXPluginMeta;
@@ -46,16 +45,14 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
-import com.qlangtech.tis.plugin.common.IReaderPluginMeta;
-import com.qlangtech.tis.plugin.common.IWriterPluginMeta;
-import com.qlangtech.tis.plugin.common.ReaderTemplate;
-import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.common.*;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.NonePartitionKeyGenerator;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.collections.CollectionUtils;
@@ -99,7 +96,7 @@ public class TestDataXHudiWriter {
     //protected static final int DEFAULT_PARALLELISM = 4;
     protected static final MySqlContainer MYSQL_CONTAINER
             = MySqlContainer.createMysqlContainer("docker/server-gtids/my.cnf"
-            ,"docker/column_type_test.sql");
+            , "docker/column_type_test.sql");
 //            (MySqlContainer)
 //                    new MySqlContainer()
 //                            .withConfigurationOverride("docker/server-gtids/my.cnf")
@@ -129,7 +126,7 @@ public class TestDataXHudiWriter {
     public void testRealDumpFullTypesTable() throws Exception {
         // System.setProperty(DataxUtils.EXEC_TIMESTAMP)
         System.out.println(Config.getAssembleHost());
-       // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
+        // System.setProperty(IRemoteTaskTrigger.KEY_DELTA_STREM_DEBUG, "true");
         String tableFullTypes = "full_types";
         TargetResName dbName = new TargetResName("hudi-data-test-mysql-ds");
 
@@ -155,7 +152,7 @@ public class TestDataXHudiWriter {
         dataxReader.template = IOUtils.loadResourceFromClasspath(dataxReader.getClass(), "mysql-reader-tpl.json");
         dataxReader.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
         Assert.assertNotNull("dataxReader can not be null", dataxReader);
-        List<ColumnMetaData> tabMeta = dataxReader.getTableMetadata(tableFullTypes);
+        List<ColumnMetaData> tabMeta = dataxReader.getTableMetadata(EntityName.parse(tableFullTypes));
         Assert.assertTrue(CollectionUtils.isNotEmpty(tabMeta));
 
         List<String> fullTypesCols = tabMeta.stream().map((col) -> col.getName())
@@ -331,10 +328,13 @@ public class TestDataXHudiWriter {
             Assert.assertNotNull("postTask can not be null", preExecuteTask);
             preExecuteTask.run();
 
-            WriterTemplate.realExecuteDump(HudiTest.hudi_datax_writer_assert_without_optional, houseTest.writer, (cfg) -> {
-                //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
-                return cfg;
-            });
+            WriterTemplate.realExecuteDump(
+                    WriterJson.path(HudiTest.hudi_datax_writer_assert_without_optional)
+                            .addCfgSetter((cfg) -> {
+                                //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
+                                return cfg;
+                            })
+                    , houseTest.writer);
 
 
             // DataXHudiWriter hudiWriter = new DataXHudiWriter();

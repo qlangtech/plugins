@@ -22,7 +22,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.util.JdbcUtil;
-import com.dtstack.chunjun.connector.mysql.dialect.MysqlDialect;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
@@ -30,6 +29,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.dialect.TISMysqlDialect;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 /**
@@ -49,7 +49,7 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
-        return MysqlDialect.class;
+        return TISMysqlDialect.class;
     }
 
 //    @Override

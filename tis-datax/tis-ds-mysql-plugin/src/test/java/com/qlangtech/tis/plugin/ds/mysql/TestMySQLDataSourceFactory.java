@@ -25,6 +25,7 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -62,7 +63,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
 
         assertNotNull(dataSourceFactory);
 
-        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata("totalpayinfo");
+        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(EntityName.parse("totalpayinfo"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }
@@ -71,7 +72,7 @@ public class TestMySQLDataSourceFactory extends TestCase {
         assertNotNull(datasource);
 
 
-        cols = dataSourceFactory.getTableMetadata("base");
+        cols = dataSourceFactory.getTableMetadata(EntityName.parse("base"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }

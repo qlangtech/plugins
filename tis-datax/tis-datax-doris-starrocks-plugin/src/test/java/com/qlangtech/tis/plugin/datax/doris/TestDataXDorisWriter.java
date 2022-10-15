@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
@@ -229,7 +230,7 @@ public class TestDataXDorisWriter extends TestCase {
             };
             EasyMock.replay(dataXProcessor);
             //DataXDorisWriter writer = new DataXDorisWriter();
-            WriterTemplate.realExecuteDump("doris_writer_real_dump.json", createDorisWriter.writer);
+            WriterTemplate.realExecuteDump(WriterJson.path("doris_writer_real_dump.json"), createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

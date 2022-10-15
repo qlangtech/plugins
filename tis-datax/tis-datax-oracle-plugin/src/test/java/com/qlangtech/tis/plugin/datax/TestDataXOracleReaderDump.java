@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -70,7 +71,7 @@ public class TestDataXOracleReaderDump {
         IDataxWriter dataxWriter = EasyMock.mock("dataXWriter", IDataxWriter.class);
         // IDataxReaderContext dataXContext = EasyMock.mock("dataxContext", IDataxReaderContext.class);
 
-        SelectedTab stab = TestSelectedTab.createSelectedTab(OracleDSFactoryContainer.tab_full_types, dsFactory);
+        SelectedTab stab = TestSelectedTab.createSelectedTab(EntityName.parse(OracleDSFactoryContainer.tab_full_types), dsFactory);
         //IDataxProcessor.TableMap tab = new IDataxProcessor.TableMap(stab);
         // EasyMock.expect(dataxWriter.getSubTask(Optional.of(tab))).andReturn(dataXContext);
 

@@ -90,9 +90,9 @@ public class TestHudiSelectedTab {
         Assert.assertTrue(subFormFilter.isPresent());
 
         EasyMock.replay(fieldErrorHandler, pluginContext, context);
-        AttrValMap attrValMap = AttrValMap.parseDescribableMap(fieldErrorHandler, subFormFilter, jsonObject);
+        AttrValMap attrValMap = AttrValMap.parseDescribableMap(subFormFilter, jsonObject);
 
-        Descriptor.PluginValidateResult validate = attrValMap.validate(context, false);
+        Descriptor.PluginValidateResult validate = attrValMap.validate(fieldErrorHandler, context, false);
 
         Assert.assertFalse("must contain error in form ", validate.isValid());
 

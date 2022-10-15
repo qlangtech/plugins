@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import junit.framework.TestCase;
 
@@ -41,7 +42,7 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
         dataSourceFactory.nodeDesc = "192.168.28.200";
 
 
-        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata("base");
+        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata( EntityName.parse( "base"));
         assertEquals(8, baseColsMeta.size());
 
 

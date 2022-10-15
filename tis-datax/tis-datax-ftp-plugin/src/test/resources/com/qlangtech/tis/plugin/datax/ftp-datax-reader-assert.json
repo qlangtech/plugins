@@ -19,7 +19,6 @@
       "useTextQualifier":false
     },
     "encoding":"utf-8",
-    "fieldDelimiter":",",
     "host":"192.168.28.201",
     "maxTraversalLevel":"99",
     "nullFormat":"\\N",
@@ -28,7 +27,7 @@
     "port":21,
     "protocol":"ftp",
     "skipHeader":true,
-    "timeout":59999,
+    "timeout":33333,
     "username":"test"
   }
 }

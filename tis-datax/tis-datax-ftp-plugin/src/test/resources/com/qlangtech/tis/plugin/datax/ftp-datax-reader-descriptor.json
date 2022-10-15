@@ -2,33 +2,127 @@
   "com.qlangtech.tis.plugin.datax.DataXFtpReader":{
     "attrs":[
       {
-        "describable":false,
-        "eprops":{
-          "enum":[
-            {
-              "label":"FTP",
-              "val":"ftp"
-            },
-            {
-              "label":"SFTP",
-              "val":"sftp"
-            }
-          ],
-          "help":"描述：ftp服务器协议，目前支持传输协议有ftp和sftp。 "
+        "describable":true,
+        "descriptors":{
+          "com.qlangtech.tis.plugin.datax.server.FTPServer":{
+            "attrs":[
+              {
+                "describable":false,
+                "eprops":{
+                  "asyncHelp":true,
+                  "dftVal":"ftp",
+                  "enum":[
+                    {
+                      "label":"FTP",
+                      "val":"ftp"
+                    },
+                    {
+                      "label":"SFTP",
+                      "val":"sftp"
+                    }
+                  ]
+                },
+                "key":"protocol",
+                "ord":0,
+                "pk":false,
+                "required":true,
+                "type":5
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "help":"描述：ftp服务器地址。 ",
+                  "placeholder":"127.0.0.1"
+                },
+                "key":"host",
+                "ord":1,
+                "pk":false,
+                "required":true,
+                "type":1
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "help":"描述：ftp服务器端口。 ",
+                  "placeholder":"22"
+                },
+                "key":"port",
+                "ord":2,
+                "pk":false,
+                "required":false,
+                "type":4
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "dftVal":60000,
+                  "help":"描述：连接ftp服务器连接超时时间，单位毫秒。默认值：60000（1分钟）"
+                },
+                "key":"timeout",
+                "ord":3,
+                "pk":false,
+                "required":false,
+                "type":4
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "asyncHelp":true,
+                  "dftVal":"PASV",
+                  "enum":[
+                    {
+                      "label":"主动",
+                      "val":"PORT"
+                    },
+                    {
+                      "label":"被动",
+                      "val":"PASV"
+                    }
+                  ],
+                  "label":"连接模式"
+                },
+                "key":"connectPattern",
+                "ord":4,
+                "pk":false,
+                "required":false,
+                "type":5
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "help":"描述：ftp服务器访问用户名。 "
+                },
+                "key":"username",
+                "ord":5,
+                "pk":false,
+                "required":true,
+                "type":1
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "help":"描述：ftp服务器访问密码。 "
+                },
+                "key":"password",
+                "ord":6,
+                "pk":false,
+                "required":true,
+                "type":7
+              }
+            ],
+            "containAdvance":false,
+            "displayName":"Server",
+            "extendPoint":"com.qlangtech.tis.plugin.datax.server.FTPServer",
+            "impl":"com.qlangtech.tis.plugin.datax.server.FTPServer",
+            "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#ftpserver",
+            "veriflable":true
+          }
         },
-        "key":"protocol",
-        "ord":0,
-        "pk":false,
-        "required":true,
-        "type":5
-      },
-      {
-        "describable":false,
         "eprops":{
-          "help":"描述：ftp服务器地址。 ",
-          "placeholder":"127.0.0.1"
+          "dftVal":"Server",
+          "label":"远端连接"
         },
-        "key":"host",
+        "key":"linker",
         "ord":1,
         "pk":false,
         "required":true,
@@ -37,76 +131,8 @@
       {
         "describable":false,
         "eprops":{
-          "help":"描述：ftp服务器端口。 ",
-          "placeholder":"22"
-        },
-        "key":"port",
-        "ord":2,
-        "pk":false,
-        "required":false,
-        "type":4
-      },
-      {
-        "describable":false,
-        "eprops":{
-          "dftVal":60000,
-          "help":"描述：连接ftp服务器连接超时时间，单位毫秒。默认值：60000（1分钟）"
-        },
-        "key":"timeout",
-        "ord":3,
-        "pk":false,
-        "required":false,
-        "type":4
-      },
-      {
-        "describable":false,
-        "eprops":{
           "asyncHelp":true,
-          "dftVal":"PASV",
-          "enum":[
-            {
-              "label":"主动",
-              "val":"PORT"
-            },
-            {
-              "label":"被动",
-              "val":"PASV"
-            }
-          ],
-          "label":"连接模式"
-        },
-        "key":"connectPattern",
-        "ord":4,
-        "pk":false,
-        "required":false,
-        "type":5
-      },
-      {
-        "describable":false,
-        "eprops":{
-          "help":"描述：ftp服务器访问用户名。 "
-        },
-        "key":"username",
-        "ord":5,
-        "pk":false,
-        "required":true,
-        "type":1
-      },
-      {
-        "describable":false,
-        "eprops":{
-          "help":"描述：ftp服务器访问密码。 "
-        },
-        "key":"password",
-        "ord":6,
-        "pk":false,
-        "required":true,
-        "type":7
-      },
-      {
-        "describable":false,
-        "eprops":{
-          "asyncHelp":true
+          "placeholder":"/admin/instancedetail"
         },
         "key":"path",
         "ord":7,
@@ -125,18 +151,6 @@
         "pk":false,
         "required":true,
         "type":2
-      },
-      {
-        "describable":false,
-        "eprops":{
-          "dftVal":",",
-          "help":"描述：读取的字段分隔符，可以用'\\t','\\001'等字符 "
-        },
-        "key":"fieldDelimiter",
-        "ord":9,
-        "pk":false,
-        "required":true,
-        "type":1
       },
       {
         "describable":false,
@@ -276,27 +290,6 @@
       {
         "describable":false,
         "eprops":{
-          "enum":[
-            {
-              "label":"是",
-              "val":true
-            },
-            {
-              "label":"否",
-              "val":false
-            }
-          ],
-          "help":"描述：类CSV格式文件可能存在表头为标题情况，需要跳过。默认不跳过。"
-        },
-        "key":"skipHeader",
-        "ord":12,
-        "pk":false,
-        "required":false,
-        "type":5
-      },
-      {
-        "describable":false,
-        "eprops":{
           "asyncHelp":true
         },
         "key":"nullFormat",
@@ -317,15 +310,97 @@
         "type":4
       },
       {
-        "describable":false,
-        "eprops":{
-          "asyncHelp":true
+        "describable":true,
+        "descriptors":{
+          "com.qlangtech.tis.plugin.datax.format.CSVFormat":{
+            "attrs":[
+              {
+                "describable":false,
+                "eprops":{
+                  "asyncHelp":true
+                },
+                "key":"csvReaderConfig",
+                "ord":15,
+                "pk":false,
+                "required":false,
+                "type":2
+              }
+            ],
+            "containAdvance":false,
+            "displayName":"CSV",
+            "extendPoint":"com.qlangtech.tis.plugin.datax.format.FileFormat",
+            "impl":"com.qlangtech.tis.plugin.datax.format.CSVFormat",
+            "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#csvformat",
+            "veriflable":false
+          },
+          "com.qlangtech.tis.plugin.datax.format.TextFormat":{
+            "attrs":[
+              {
+                "describable":false,
+                "eprops":{
+                  "dftVal":"comma",
+                  "enum":[
+                    {
+                      "label":"Comma",
+                      "val":"comma"
+                    },
+                    {
+                      "label":"Tab",
+                      "val":"tab"
+                    },
+                    {
+                      "label":"Char001",
+                      "val":"char001"
+                    },
+                    {
+                      "label":"Char005",
+                      "val":"char005"
+                    }
+                  ],
+                  "help":"描述：读取的字段分隔符，可以用'\\t','\\001'等字符 "
+                },
+                "key":"fieldDelimiter",
+                "ord":9,
+                "pk":false,
+                "required":true,
+                "type":5
+              },
+              {
+                "describable":false,
+                "eprops":{
+                  "dftVal":true,
+                  "enum":[
+                    {
+                      "label":"是",
+                      "val":true
+                    },
+                    {
+                      "label":"否",
+                      "val":false
+                    }
+                  ],
+                  "help":"描述：txt写出时的表头，是否在文件头将key写入"
+                },
+                "key":"header",
+                "ord":16,
+                "pk":false,
+                "required":false,
+                "type":5
+              }
+            ],
+            "containAdvance":false,
+            "displayName":"TEXT",
+            "extendPoint":"com.qlangtech.tis.plugin.datax.format.FileFormat",
+            "impl":"com.qlangtech.tis.plugin.datax.format.TextFormat",
+            "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#textformat",
+            "veriflable":false
+          }
         },
-        "key":"csvReaderConfig",
-        "ord":15,
+        "key":"fileFormat",
+        "ord":14,
         "pk":false,
-        "required":false,
-        "type":2
+        "required":true,
+        "type":1
       },
       {
         "describable":false,
@@ -344,12 +419,16 @@
         "type":2
       }
     ],
+    "containAdvance":false,
     "displayName":"FTP",
     "extendPoint":"com.qlangtech.tis.datax.impl.DataxReader",
     "extractProps":{
-      "rdbms":false
+      "endType":"ftp",
+      "rdbms":false,
+      "supportIncr":false
     },
     "impl":"com.qlangtech.tis.plugin.datax.DataXFtpReader",
+    "implUrl":"http://tis.pub/docs/guide/plugin/plugins/#dataxftpreader",
     "veriflable":false
   }
 }

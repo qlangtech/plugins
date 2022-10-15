@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
@@ -102,7 +103,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected ResultSet getColumnsMeta(String table, DatabaseMetaData metaData1) throws SQLException {
+    protected ResultSet getColumnsMeta(EntityName table, DatabaseMetaData metaData1) throws SQLException {
         return getColRelevantMeta(table, (tab) -> {
             try {
                 return metaData1.getColumns(null
@@ -114,7 +115,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected ResultSet getPrimaryKeys(String table, DatabaseMetaData metaData1) throws SQLException {
+    protected ResultSet getPrimaryKeys(EntityName table, DatabaseMetaData metaData1) throws SQLException {
 
         return getColRelevantMeta(table, (tab) -> {
             try {
@@ -127,7 +128,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         });
     }
 
-    private ResultSet getColRelevantMeta(String table
+    private ResultSet getColRelevantMeta(EntityName table
             , Function<OracleTab, ResultSet> containSchema) throws SQLException {
         try {
 //            OracleTab otab = null;
@@ -138,7 +139,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 //                otab = new OracleTab(Optional.empty(), table);
 //            }
 
-            return containSchema.apply(OracleTab.create(table));
+            return containSchema.apply(OracleTab.create(table.getFullName()));
         } catch (Exception e) {
             throw new SQLException(e);
         }

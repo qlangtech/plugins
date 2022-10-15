@@ -48,6 +48,7 @@ import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.utils.TisMetaProps;
 import com.starrocks.connector.flink.StarRocksSink;
 import com.starrocks.connector.flink.table.sink.StarRocksSinkOptions;
@@ -228,7 +229,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
         if (CollectionUtils.isEmpty(pks)) {
             throw new IllegalStateException("pks can not be empty");
         }
-        List<IColMetaGetter> colsMeta = dsFactory.getTableMetadata(tab.getName())
+        List<IColMetaGetter> colsMeta = dsFactory.getTableMetadata(EntityName.parse(tab.getName()))
                 .stream().map((col) -> {
                     return IColMetaGetter.create(col.getName(), col.getType(), pks.contains(col.getName()));
                 }).collect(Collectors.toList());

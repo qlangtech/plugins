@@ -16,7 +16,7 @@
     "path": "/tmp/data/",
     "port": 21,
     "protocol": "ftp",
-    "suffix": "xxxx",
+    "suffix": ".text",
     "timeout": 33333,
     "username": "test",
     "writeMode": "truncate"

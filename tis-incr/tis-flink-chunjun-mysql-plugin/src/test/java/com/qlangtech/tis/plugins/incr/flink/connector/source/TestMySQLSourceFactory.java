@@ -60,6 +60,11 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
         // super.testStuBinlogConsume();
     }
 
+//    @Test
+//    public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
+//        super.testBinlogConsumeWithDataStreamRegisterInstaneDetailTable();
+//    }
+
     @Test
     @Override
     public void testBinlogConsume() throws Exception {

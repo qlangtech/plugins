@@ -23,9 +23,10 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcInputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.mysql.source.MysqlSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
+import com.qlangtech.tis.plugins.incr.flink.connector.dialect.TISMysqlDialect;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -64,7 +65,7 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
         private final DataSourceFactory dataSourceFactory;
 
         public ExtendMySQLSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory) {
-            super(syncConf, null);
+            super(syncConf, null, new TISMysqlDialect());
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
         }

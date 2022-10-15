@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -174,7 +175,7 @@ public class TestDataXStarRocksWriter extends TestCase {
             };
             EasyMock.replay(dataXProcessor);
 
-            WriterTemplate.realExecuteDump("starrocks_writer_real_dump.json", createDorisWriter.writer);
+            WriterTemplate.realExecuteDump( WriterJson.path("starrocks_writer_real_dump.json"), createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

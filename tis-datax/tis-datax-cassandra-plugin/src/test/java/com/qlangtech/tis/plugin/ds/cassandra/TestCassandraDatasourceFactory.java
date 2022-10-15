@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.cassandra;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -52,7 +53,7 @@ public class TestCassandraDatasourceFactory extends TestCase {
     public void testGetTableMetadata() {
         Set<String> keys = Sets.newHashSet("city", "user_id", "user_name");
         CassandraDatasourceFactory ds = getDS();
-        List<ColumnMetaData> colsMeta = ds.getTableMetadata("user_dtl");
+        List<ColumnMetaData> colsMeta = ds.getTableMetadata(EntityName.parse("user_dtl"));
         assertEquals(3, colsMeta.size());
         for (ColumnMetaData col : colsMeta) {
             assertTrue(keys.contains(col.getKey()));

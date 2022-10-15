@@ -1,12 +1,14 @@
 {
-  "name": "ftpwriter",
-  "parameter": {
+  "name":"ftpwriter",
+  "parameter":{
+    "fileFormat":"csv",
     "fileName":"orderinfo_new",
-    "host": "192.168.28.201",
-    "password": "test",
-    "path": "/tmp/data/",
-    "protocol": "ftp",
-    "username": "test",
-    "writeMode": "truncate"
+    "host":"192.168.28.201",
+    "password":"test",
+    "path":"/tmp/data/",
+    "protocol":"ftp",
+    "suffix":".csv",
+    "username":"test",
+    "writeMode":"truncate"
   }
 }

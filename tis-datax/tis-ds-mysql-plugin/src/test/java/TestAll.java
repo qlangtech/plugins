@@ -17,6 +17,7 @@
  */
 
 import com.qlangtech.tis.plugin.datax.TestDataxMySQLReader;
+import com.qlangtech.tis.plugin.datax.TestDataxMySQLReaderDump;
 import com.qlangtech.tis.plugin.datax.TestDataxMySQLWriter;
 import com.qlangtech.tis.plugin.ds.mysql.TestMySQLDataSourceFactory;
 import org.junit.runner.RunWith;
@@ -27,7 +28,11 @@ import org.junit.runners.Suite;
  * @create: 2021-01-07 18:52
  **/
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestMySQLDataSourceFactory.class, TestDataxMySQLReader.class, TestDataxMySQLWriter.class})
+@Suite.SuiteClasses({
+        TestMySQLDataSourceFactory.class //
+        , TestDataxMySQLReader.class //
+        , TestDataxMySQLWriter.class //
+        , TestDataxMySQLReaderDump.class})
 public class TestAll  //extends TestCase
 {
 

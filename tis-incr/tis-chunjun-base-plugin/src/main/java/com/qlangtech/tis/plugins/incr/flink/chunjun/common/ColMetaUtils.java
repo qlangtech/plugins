@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.sql.Connection;
 import java.util.List;
@@ -37,7 +38,7 @@ public class ColMetaUtils {
     public static List<ColMeta> getColMetas(
             DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         try {
-            List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
+            List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, EntityName.parse(conf.getTable()));
             return meta.stream().map((col) -> {
                 return createColMeta(col);
             }).collect(Collectors.toList());
@@ -61,7 +62,7 @@ public class ColMetaUtils {
     public static Map<String, ColMeta> getColMetasMap(
             DataSourceFactory dsFactory, Connection conn, JdbcConf conf) {
         try {
-            List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, conf.getTable());
+            List<ColumnMetaData> meta = dsFactory.getTableMetadata(conn, EntityName.parse(conf.getTable()));
             return meta.stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> createColMeta(c)));
         } catch (TableNotFoundException e) {
             throw new RuntimeException(e);

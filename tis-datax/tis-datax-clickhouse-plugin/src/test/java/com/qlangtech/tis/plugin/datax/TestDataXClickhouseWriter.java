@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -252,7 +253,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
             };
             EasyMock.replay(dataXProcessor);
             DataXClickhouseWriter writer = new DataXClickhouseWriter();
-            WriterTemplate.realExecuteDump(clickhouse_datax_writer_assert_without_optional, writer);
+            WriterTemplate.realExecuteDump( WriterJson.path( clickhouse_datax_writer_assert_without_optional), writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

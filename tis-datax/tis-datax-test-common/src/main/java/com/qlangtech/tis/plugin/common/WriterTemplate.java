@@ -68,7 +68,7 @@ public class WriterTemplate {
 //        }
 //    }
 
-    public static void valiateCfgGenerate(String assertFileName, DataxWriter dataXWriter, IDataxProcessor.TableMap tableMap) throws Exception {
+    public static String cfgGenerate(DataxWriter dataXWriter, IDataxProcessor.TableMap tableMap) throws Exception {
 
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
 
@@ -86,14 +86,34 @@ public class WriterTemplate {
         String writerCfg = generateWriterCfg(dataXWriter, tableMap, processor, dataXReader);
         Assert.assertNotNull(writerCfg);
         System.out.println(writerCfg);
+        EasyMock.verify(processor, dataxGlobalCfg, dataXReader);
+        return writerCfg;
+    }
+
+    public static void valiateCfgGenerate(String assertFileName, DataxWriter dataXWriter, IDataxProcessor.TableMap tableMap) throws Exception {
+
+//        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
+//
+//        IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+//        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
+//        //EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
+//
+//        IDataxReader dataXReader = EasyMock.createMock("dataXReader", IDataxReader.class);
+//
+//        //EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
+//
+//
+//        EasyMock.replay(processor, dataxGlobalCfg, dataXReader);
+
+        String writerCfg = cfgGenerate(dataXWriter, tableMap);// generateWriterCfg(dataXWriter, tableMap, processor, dataXReader);
+        Assert.assertNotNull(writerCfg);
+        System.out.println(writerCfg);
         JsonUtil.assertJSONEqual(dataXWriter.getClass(), assertFileName, writerCfg, (message, expected, actual) -> {
             Assert.assertEquals(message, expected, actual);
         });
         JSONObject writer = JSON.parseObject(writerCfg);
 
         Assert.assertEquals(dataXWriter.getDataxMeta().getName(), writer.getString("name"));
-
-        EasyMock.verify(processor, dataxGlobalCfg, dataXReader);
     }
 
     public static String generateWriterCfg(DataxWriter dataXWriter
@@ -133,8 +153,7 @@ public class WriterTemplate {
         return dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));
     }
 
-    public static void realExecuteDump(final String writerJson, IDataXPluginMeta dataxWriter
-            , Function<Configuration, Configuration>... cfgSetter) throws IllegalAccessException {
+    public static void realExecuteDump(final WriterJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
             @Override
             public DataXMeta getDataxMeta() {
@@ -190,13 +209,21 @@ public class WriterTemplate {
 
             @Override
             public Configuration getWriterJsonCfg() {
-                return IOUtils.loadResourceFromClasspath(dataxWriter.getClass(), writerJson, true, (writerJsonInput) -> {
-                    Configuration c = Configuration.from(writerJsonInput);
-                    for (Function<Configuration, Configuration> setter : cfgSetter) {
-                        c = setter.apply(c);
-                    }
-                    return c;
-                });
+                Configuration cfg = null;
+                if (writerJson.isPath()) {
+                    cfg = IOUtils.loadResourceFromClasspath(
+                            dataxWriter.getClass(), writerJson.getVal(), true
+                            , (writerJsonInput) -> {
+                                Configuration c = Configuration.from(writerJsonInput);
+                                return c;
+                            });
+                } else {
+                    cfg = Configuration.from(writerJson.getVal());
+                }
+                for (Function<Configuration, Configuration> setter : writerJson.cfgSetters) {
+                    cfg = setter.apply(cfg);
+                }
+                return cfg;
             }
         };
 
@@ -212,7 +239,7 @@ public class WriterTemplate {
      */
     public static void realExecuteDump(IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
     ) throws IllegalAccessException {
-       // final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+        // final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
         final JarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());
         IDataXPluginMeta.DataXMeta readerMeta = readerPluginMeta.getDataxMeta();
         DataxExecutor.initializeClassLoader(

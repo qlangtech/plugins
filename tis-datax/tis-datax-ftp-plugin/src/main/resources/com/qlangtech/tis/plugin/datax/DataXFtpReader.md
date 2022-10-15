@@ -45,41 +45,33 @@
   ]
   ```
 
-## connectPattern
-
- 连接模式（主动模式或者被动模式）。该参数只在传输协议是标准ftp协议时使用，值只能为：**PORT (主动)**，**PASV（被动）**。两种模式主要的不同是数据连接建立的不同。
-
- 1. 对于Port模式，是客户端在本地打开一个端口等服务器去连接建立数据连接，
-
- 2. 而Pasv模式就是服务器打开一个端口等待客户端去建立一个数据连接。
-    
-## csvReaderConfig
-
- 描述：读取CSV类型文件参数配置，Map类型。读取CSV类型文件使用的CsvReader进行读取，会有很多配置，不配置则使用默认值。
- 
- ```json
-{ "safetySwitch": false,  
-  "skipEmptyRecords": false,       
-  "useTextQualifier": false} 
- ```
- 所有配置项及默认值,配置时 csvReaderConfig 的map中请严格按照以下字段名字进行配置：
- ```java
- boolean caseSensitive = true;
- char textQualifier = 34;
- boolean trimWhitespace = true;
- boolean useTextQualifier = true;//是否使用csv转义字符
- char delimiter = 44;//分隔符
- char recordDelimiter = 0;
- char comment = 35;
- boolean useComments = false;
- int escapeMode = 1;
- boolean safetySwitch = true;//单列长度是否限制100000字符
- boolean skipEmptyRecords = true;//是否跳过空行
- boolean captureRawRecord = true;
- ```
 
 ## nullFormat
 
  描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。
  例如如果用户配置: nullFormat:"\N"，那么如果源头数据是"\N"，DataX视作null字段。默认值：\N
+ 
+## protocol
+
+SFTP 和 FTP 非常相似，都支持批量传输（一次传输多个文件），文件夹 / 目录导航，文件移动，文件夹 / 目录创建，文件删除等。但还是存在着差异，SFTP 和 FTP 之间的区别：
+
+* 链接方式不同
+
+    FTP 使用 TCP 端口 21 上的控制连接建立连接。而 SFTP 是在客户端和服务器之间通过 SSH 协议 (TCP 端口 22) 建立的安全连接来传输文件。
+
+* 安全性不同
+
+    SFTP 使用加密传输认证信息和传输的数据，所以使用 SFTP 相对于 FTP 是非常安全。
+
+* 效率不同
+
+    SFTP 这种传输方式使用了加密解密技术，所以传输效率比普通的 FTP 要低得多。
+
+* 使用的协议不同
+
+    FTP 使用 TCP / IP 协议。而，SFTP 是 SSH 协议的一部分，它是一种远程登录信息。
+
+* 安全通道
+
+    FTP 不提供任何安全通道来在主机之间传输文件；而 SFTP 协议提供了一个安全通道，用于在网络上的主机之间传输文件。
   

@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.net.Inet4Address;
@@ -92,14 +93,14 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(String table) {
+    public List<ColumnMetaData> getTableMetadata(EntityName table) {
         List<ColumnMetaData> colsMeta = Lists.newArrayList();
         AtomicInteger index = new AtomicInteger();
         processSession((session) -> {
             ColumnMetaData cmeta = null;
             ResultSet resultSet = session.execute(
                     "SELECT column_name,type FROM system_schema.columns WHERE keyspace_name = '"
-                            + this.dbName + "' AND table_name = '" + table + "'");
+                            + this.dbName + "' AND table_name = '" + table.getTabName() + "'");
             Iterator<Row> rows = resultSet.iterator();
             Row row = null;
             while (rows.hasNext()) {

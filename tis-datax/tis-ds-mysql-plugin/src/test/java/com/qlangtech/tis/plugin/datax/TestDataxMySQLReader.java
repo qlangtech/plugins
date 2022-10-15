@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import com.qlangtech.tis.util.IPluginContext;
@@ -218,8 +219,8 @@ public class TestDataxMySQLReader extends BasicTest {
 //            }
 
             @Override
-            public List<ColumnMetaData> getTableMetadata(String table) {
-                switch (table) {
+            public List<ColumnMetaData> getTableMetadata(EntityName table) {
+                switch (table.getTabName()) {
                     case TestSelectedTabs.tabNameOrderDetail:
                         return TestSelectedTabs.tabColsMetaOrderDetail;
                     case TestSelectedTabs.tabNameTotalpayinfo:
@@ -339,7 +340,7 @@ public class TestDataxMySQLReader extends BasicTest {
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getTableMetadata(TestSelectedTabs.tabNameOrderDetail))
+        EasyMock.expect(mysqlDataSource.getTableMetadata(EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
                 .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
 

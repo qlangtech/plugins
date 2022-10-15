@@ -89,16 +89,31 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
             @Override
             public DataType bigInt(DataType type) {
+                if (type.isUnsigned()) {
+                    DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
+                    t.setDecimalDigits(0);
+                    return t;
+                }
                 return null;
             }
 
             @Override
             public DataType tinyIntType(DataType dataType) {
+                if (dataType.isUnsigned()) {
+                    // 如果为unsigned则会按照一个byte来进行处理，需要将其变成small int
+                    return new DataType(Types.SMALLINT, type.typeName, type.columnSize);
+                }
                 return null;
             }
 
             @Override
             public DataType smallIntType(DataType dataType) {
+
+                if (dataType.isUnsigned()) {
+                    // 如果为unsigned则会按照一个short来进行处理，需要将其变成small int
+                    return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                }
+
                 return null;
             }
 

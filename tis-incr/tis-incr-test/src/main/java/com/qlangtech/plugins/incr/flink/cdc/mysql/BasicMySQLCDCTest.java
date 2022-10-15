@@ -305,10 +305,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 List<ISelectedTab> tabs = Collections.singletonList(tab);
 
                 List<TestRow> exampleRows = Lists.newArrayList();
-                exampleRows.add(this.parseTestRow(RowKind.INSERT, BasicMySQLCDCTest.this.getClass(), tabName + "/insert1.txt"));
+                exampleRows.add(this.parseTestRow(RowKind.INSERT, BasicMySQLCDCTest.class, tabName + "/insert1.txt"));
 
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(dataxName, dataxReader, tabs, null);
+                imqListener.start(dataxName, dataxReader, tabs, createProcess());
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);

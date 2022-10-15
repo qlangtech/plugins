@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Memoizer;
 import com.qlangtech.tis.util.impl.AttrVals;
@@ -240,7 +241,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
 
                 try {
-                    return datasource.getTableMetadata(tab)
+                    return datasource.getTableMetadata(EntityName.parse(tab))
                             .stream().collect(
                                     Collectors.toMap(
                                             (m) -> m.getKey()
@@ -276,15 +277,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     @Override
-    public final List<ColumnMetaData> getTableMetadata(String table) throws TableNotFoundException {
-        //Map<String, List<ColumnMetaData>> tabMeta = DataSourceMeta.tableMetadataLocal.get();
-        //List<ColumnMetaData> cols = null;
-        //if ((cols = tabMeta.get(table)) == null) {
+    public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTableMetadata(table);
-        //  tabMeta.put(table, cols);
-//        }
-//        return cols;
     }
 
 //    /**

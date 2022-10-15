@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -153,10 +154,8 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     }
 
     public void testRealDump() throws Exception {
-
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
-
-        WriterTemplate.realExecuteDump("es-datax-writer-real-dump.json", dataXWriter);
+        WriterTemplate.realExecuteDump(WriterJson.path("es-datax-writer-real-dump.json"), dataXWriter);
     }
 
     public void testMergeFromStupidModel() {

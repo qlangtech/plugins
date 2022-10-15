@@ -370,7 +370,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         cm = new ISelectedTab.ColMeta();
         cm.setName(colCreateTime);
-        cm.setType(new DataType(Types.BIGINT));
+        cm.setType(new DataType(Types.BIGINT, "bigint", 8));
         metaCols.add(cm);
 
         cm = createUpdateTime();

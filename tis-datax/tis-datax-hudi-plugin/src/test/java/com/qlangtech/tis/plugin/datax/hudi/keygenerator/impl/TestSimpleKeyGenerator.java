@@ -25,6 +25,8 @@ import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import org.easymock.EasyMock;
@@ -54,7 +56,11 @@ public class TestSimpleKeyGenerator implements TISEasyMock {
         // (int index, String key, DataType type, boolean pk)
         cols.add(new ColumnMetaData(0, "user_id", new com.qlangtech.tis.plugin.ds.DataType(Types.BIGINT), true));
         cols.add(new ColumnMetaData(1, "user_name", new com.qlangtech.tis.plugin.ds.DataType(Types.VARBINARY), false));
-        EasyMock.expect(metaPlugin.getTableMetadata(id1)).andReturn(cols);
+        try {
+            EasyMock.expect(metaPlugin.getTableMetadata(EntityName.parse(id1))).andReturn(cols);
+        } catch (TableNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         context.plugin = metaPlugin;
         context.param = param;
 

@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -33,7 +34,6 @@ import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -183,10 +183,12 @@ public class TestDataXOracleWriter {
             OracleDSFactoryContainer.oracleDS.getDbConfig().vistDbURL(false, (a, b, url) -> {
                 jdbcUrl[0] = url;
             });
-            WriterTemplate.realExecuteDump("oracle_writer_real_dump.json", writer, (cfg) -> {
+            WriterJson wjson = WriterJson.path("oracle_writer_real_dump.json");
+            wjson.addCfgSetter((cfg) -> {
                 cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
                 return cfg;
             });
+            WriterTemplate.realExecuteDump(wjson, writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

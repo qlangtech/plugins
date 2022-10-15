@@ -208,8 +208,12 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     }
                     case Types.INTEGER:
                         return "int(11)";
-                    case Types.BIGINT:
-                        return "BIGINT(20)";
+                    case Types.BIGINT: {
+                        if (type.columnSize < 1) {
+                            throw new IllegalStateException("col:" + col.getName() + type + " colsize can not small than 1");
+                        }
+                        return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                    }
                     case Types.FLOAT:
                         return "FLOAT";
                     case Types.DOUBLE:

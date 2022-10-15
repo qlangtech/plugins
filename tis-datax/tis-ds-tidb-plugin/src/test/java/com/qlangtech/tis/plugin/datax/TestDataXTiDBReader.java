@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.tidb.TestTiKVDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 import com.qlangtech.tis.plugin.test.BasicTest;
 
+import java.io.File;
 import java.util.Optional;
 
 /**
@@ -74,11 +75,13 @@ public class TestDataXTiDBReader extends BasicTest {
 
     public void testRealDumpEmployees() throws Exception {
         DataXTiDBReader dataxReader = new DataXTiDBReader();
-        ReaderTemplate.realExecute("tidb-datax-reader-template-assert.json", dataxReader);
+        File cf = new File("tidb-datax-reader-content.txt");
+        ReaderTemplate.realExecute("tidb-datax-reader-template-assert.json", cf, dataxReader);
     }
 
     public void testRealDumpTable1() throws Exception {
         DataXTiDBReader dataxReader = new DataXTiDBReader();
-        ReaderTemplate.realExecute("tidb-datax-reader-cfg-tab1.json", dataxReader);
+        File cf = new File("tidb-datax-reader-content.txt");
+        ReaderTemplate.realExecute("tidb-datax-reader-cfg-tab1.json", cf, dataxReader);
     }
 }

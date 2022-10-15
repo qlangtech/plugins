@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.RobustReflectionConverter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -152,7 +153,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
                     boolean tableExist = false;
                     try {
-                        dsFactory.getTableMetadata(conn, tableName);
+                        dsFactory.getTableMetadata(conn, EntityName.parse(tableName));
                         tableExist = true;
                     } catch (TableNotFoundException e) {
                         logger.warn(e.toString());

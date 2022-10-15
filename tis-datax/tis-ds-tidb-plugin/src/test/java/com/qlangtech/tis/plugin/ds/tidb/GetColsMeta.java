@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.tidb;
 
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class GetColsMeta {
     }
 
     public List<ColumnMetaData> getColsMeta(String tabName) {
-        return dataSourceFactory.getTableMetadata(tabName);
+        return dataSourceFactory.getTableMetadata( EntityName.parse(tabName));
     }
 
     public GetColsMeta invoke(boolean datetimeFormat) {

@@ -24,10 +24,10 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.InputStream;
@@ -159,7 +159,7 @@ public class OracleDSFactoryContainer {
                 throw new RuntimeException(String.format("table %s not found.", testTabName));
             }
             // conn.getMetaData().getTables()
-            List<ColumnMetaData> cols = oracleDS.getTableMetadata(conn, testTabName);
+            List<ColumnMetaData> cols = oracleDS.getTableMetadata(conn, EntityName.parse(testTabName));
             for (ColumnMetaData col : cols) {
                 System.out.println("key:" + col.getName() + ",type:" + col.getType());
             }

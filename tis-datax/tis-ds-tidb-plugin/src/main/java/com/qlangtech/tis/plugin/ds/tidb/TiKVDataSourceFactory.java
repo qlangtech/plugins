@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,9 +219,9 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(String table) {
+    public List<ColumnMetaData> getTableMetadata(EntityName table) {
         return this.openTiDB((session, c, db) -> {
-            TiTableInfo table1 = c.getTable(db, table);
+            TiTableInfo table1 = c.getTable(db, table.getTableName());
             int[] index = new int[1];
             if (table1 == null) {
                 throw new IllegalStateException("table:" + table + " can not find relevant table in db:" + db.getName());

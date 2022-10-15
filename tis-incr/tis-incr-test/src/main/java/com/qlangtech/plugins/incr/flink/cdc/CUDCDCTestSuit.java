@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -549,7 +550,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected final SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
-        return TestSelectedTab.createSelectedTab(tabName, dataSourceFactory, (tab) -> {
+        return TestSelectedTab.createSelectedTab(EntityName.parse(tabName), dataSourceFactory, (tab) -> {
             if (suitParam.overwriteSelectedTab != null) {
                 suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);
             }

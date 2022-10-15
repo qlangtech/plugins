@@ -19,14 +19,21 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
+import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.mysql.source.MysqlInputFormat;
+import com.dtstack.chunjun.converter.IDeserializationConverter;
+import com.dtstack.chunjun.element.column.BigDecimalColumn;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.LogicalTypeRoot;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -47,16 +54,30 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
 
     @Override
     protected void initializeRowConverter() {
-
-        //ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters
-        //            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters
         if (rowConverter != null) {
             throw new IllegalStateException("rowConverter shall be null");
         }
         this.setRowConverter(
-                // rowConverter == null
-                DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta) // jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters)
+                DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta, getRowDataValConverter())
         );
+    }
+
+    private static Function<LogicalType, IDeserializationConverter> getRowDataValConverter() {
+        return (type) -> {
+
+            if (type.getTypeRoot() == LogicalTypeRoot.INTEGER) {
+                return (val) -> {
+                    // 当数据库中定义的是year类型
+                    if (val instanceof Date) {
+                        return new BigDecimalColumn(((Date) val).getYear());
+                    } else {
+                        return new BigDecimalColumn((Integer) val);
+                    }
+                };
+            }
+
+            return JdbcColumnConverter.getRowDataValConverter(type);
+        };
     }
 
 //    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>

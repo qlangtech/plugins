@@ -24,7 +24,7 @@ import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class TestOracleDataSourceFactory {
         List<String> tablesInDB = dsFactory.getTablesInDB();
         Assert.assertTrue(tablesInDB.size() > 1);
         // tablesInDB.forEach((tab) -> System.out.println(tab));
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(StringUtils.upperCase("BM"));
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(EntityName.parse(StringUtils.upperCase("BM")));
 
         Assert.assertTrue(cols.size() > 0);
 

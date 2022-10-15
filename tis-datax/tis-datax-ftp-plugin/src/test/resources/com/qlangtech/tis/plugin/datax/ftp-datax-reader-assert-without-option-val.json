@@ -16,6 +16,7 @@
     "password":"test",
     "path":"/home/hanfa.shf/ftpReaderTest/data",
     "protocol":"ftp",
+    "skipHeader":false,
     "username":"test"
   }
 }

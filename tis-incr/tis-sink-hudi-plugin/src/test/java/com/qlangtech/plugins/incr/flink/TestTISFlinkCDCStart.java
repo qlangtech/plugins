@@ -30,6 +30,7 @@ import com.qlangtech.tis.compiler.java.FileObjectsContext;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.RestartRequiredException;
 import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;

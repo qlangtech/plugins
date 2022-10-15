@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.tidb.DateUtils;
 import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Types;
@@ -50,7 +51,7 @@ public class TisDataXTiDBReader extends Reader {
 
     private static final List<IDataSourceDumper> getTiKVDataSource(Configuration config, Optional<Long> regionId) {
         List<String> cols = config.getList("column", String.class);
-        String tableName = config.getString("table");
+        EntityName tableName = EntityName.parse(config.getString("table"));
         Configuration connection = config.getConfiguration("connection");
 
 
@@ -65,7 +66,7 @@ public class TisDataXTiDBReader extends Reader {
         List<ColumnMetaData> tableMetadata = sourceFactory.getTableMetadata(tableName);
 
         TISTable table = new TISTable();
-        table.setTableName(tableName);
+        table.setTableName(tableName.getTableName());
         table.setReflectCols(tableMetadata.stream()
                 .filter((cmeta) -> cols.contains(cmeta.getKey())).collect(Collectors.toList()));
         DataDumpers dataDumpers = sourceFactory.getDataDumpers(table, regionId);

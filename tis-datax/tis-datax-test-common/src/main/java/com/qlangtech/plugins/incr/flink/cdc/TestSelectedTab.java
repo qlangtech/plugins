@@ -22,6 +22,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
@@ -35,12 +36,12 @@ import java.util.stream.Collectors;
 public class TestSelectedTab extends SelectedTab {
     final List<ISelectedTab.ColMeta> colsMeta;
 
-    public static SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
+    public static SelectedTab createSelectedTab(EntityName tabName, BasicDataSourceFactory dataSourceFactory) {
         return createSelectedTab(tabName, dataSourceFactory, (t) -> {
         });
     }
 
-    public static SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory, Consumer<SelectedTab> baseTabSetter) {
+    public static SelectedTab createSelectedTab(EntityName tabName, BasicDataSourceFactory dataSourceFactory, Consumer<SelectedTab> baseTabSetter) {
         List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
@@ -54,7 +55,7 @@ public class TestSelectedTab extends SelectedTab {
             c.setComment(col.getComment());
             return c;
         }).collect(Collectors.toList());
-        SelectedTab baseTab = new TestSelectedTab(tabName, colsMeta);
+        SelectedTab baseTab = new TestSelectedTab(tabName.getTableName(), colsMeta);
         baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
         baseTabSetter.accept(baseTab);
 

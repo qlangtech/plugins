@@ -31,8 +31,9 @@
     "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符 默认值：,"
   },
   "compress": {
-    "help": "描述：文本压缩类型，暂时不支持。 ",
-    "disable": true
+    "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。 ",
+    "enum": "com.qlangtech.tis.plugin.datax.DataXFtpWriter.supportCompress()",
+    "dftVal": "none"
   },
   "encoding": {
     "help": "描述：读取文件的编码配置。",

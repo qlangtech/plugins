@@ -75,6 +75,9 @@ public class DataXFtpWriterContext implements IDataxContext {
     }
 
     public String getPath() {
+        if (StringUtils.isEmpty(this.writer.path)) {
+            throw new IllegalStateException("writer path can not be null");
+        }
         return this.writer.path;
     }
 
@@ -121,6 +124,17 @@ public class DataXFtpWriterContext implements IDataxContext {
     public boolean isContainFileFormat() {
         // return StringUtils.isNotBlank(this.writer.fileFormat);
         return true;
+    }
+
+//    public boolean isContainCompress() {
+//        return StringUtils.isNotBlank(this.writer.compress);
+//    }
+
+    public String getCompress() {
+        if (StringUtils.isEmpty(this.writer.compress)) {
+            throw new IllegalStateException("param compress can not be empty");
+        }
+        return this.writer.compress;
     }
 
     public String getFileFormat() {

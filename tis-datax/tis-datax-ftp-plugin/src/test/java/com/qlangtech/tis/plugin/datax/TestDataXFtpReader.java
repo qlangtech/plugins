@@ -58,7 +58,7 @@ public class TestDataXFtpReader {
         DataXFtpReader reader = new DataXFtpReader();
 
         reader.template = DataXFtpReader.getDftTemplate();
-        reader.linker = TestDataXFtpWriter.createFtpServer();
+        reader.linker = FtpWriterUtils.createFtpServer();
 //        reader.protocol = "ftp";
 //        reader.host = "192.168.28.201";
 //        reader.port = 21;
@@ -76,7 +76,7 @@ public class TestDataXFtpReader {
                 "    \"value\": \"alibaba\"  \n" +
                 " }";
 
-        reader.fileFormat = TestDataXFtpWriter.createCsvFormat();
+        reader.fileFormat = FtpWriterUtils.createCsvFormat();
 
         // reader.fieldDelimiter = ",";
         reader.compress = "bzip2";
@@ -93,12 +93,12 @@ public class TestDataXFtpReader {
         ReaderTemplate.validateDataXReader("ftp-datax-reader-assert.json", dataXName, reader);
 
 
-        FTPServer ftpServer = TestDataXFtpWriter.createFtpServer();
+        FTPServer ftpServer = FtpWriterUtils.createFtpServer();
         ftpServer.port = null;
         ftpServer.timeout = null;
         ftpServer.connectPattern = null;
         reader.linker = ftpServer;
-        reader.fileFormat = TestDataXFtpWriter.createTextFormat();
+        reader.fileFormat = FtpWriterUtils.createTextFormat();
 //        reader.port = null;
 //        reader.timeout = null;
 //        reader.connectPattern = null;

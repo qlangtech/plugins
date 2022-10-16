@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.format;
 
+import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -38,7 +39,7 @@ public class TextFormat extends FileFormat {
 
     @Override
     public String getFieldDelimiter() {
-        return this.fieldDelimiter;
+        return String.valueOf(Delimiter.parse(this.fieldDelimiter).val);
     }
 
     @Override

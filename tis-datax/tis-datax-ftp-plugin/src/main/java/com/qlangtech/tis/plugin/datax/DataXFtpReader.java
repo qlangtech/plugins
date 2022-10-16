@@ -20,12 +20,14 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -36,8 +38,10 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -55,16 +59,20 @@ public class DataXFtpReader extends DataxReader {
     @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String column;
 
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
     public String compress;
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
     public String encoding;
-//    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {})
+    //    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {})
 //    public Boolean skipHeader;
     @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
     public String nullFormat;
     @FormField(ordinal = 14, type = FormFieldType.INT_NUMBER, validate = {})
     public String maxTraversalLevel;
+
+    public static List<Option> supportCompress() {
+        return Arrays.stream(Compress.values()).map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
+    }
 
 
     @FormField(ordinal = 14, validate = {Validator.require})

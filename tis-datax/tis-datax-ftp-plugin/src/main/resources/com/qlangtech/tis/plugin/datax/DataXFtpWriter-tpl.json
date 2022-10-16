@@ -16,6 +16,7 @@
 #if($writer.containFieldDelimiter)
 ,"fieldDelimiter": "${writer.fieldDelimiter}"
 #end
+,"compress": "${writer.compress}"
 #if($writer.containEncoding)
 ,"encoding": "${writer.encoding}"
 #end

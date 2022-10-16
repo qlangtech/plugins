@@ -61,7 +61,7 @@ public class TestDataXFtpWriter {
         DataXFtpWriter dataXWriter = new DataXFtpWriter();
         dataXWriter.template = DataXFtpWriter.getDftTemplate();
 
-        FTPServer ftpServer = createFtpServer();
+        FTPServer ftpServer = FtpWriterUtils.createFtpServer();
         // dataXWriter.protocol = "ftp";
         /// dataXWriter.host = "192.168.28.201";
         //dataXWriter.port = 21;
@@ -79,7 +79,7 @@ public class TestDataXFtpWriter {
         // dataXWriter.suffix = "xxxx";
         // dataXWriter.header = true;
 
-        TextFormat tformat = createTextFormat();
+        TextFormat tformat = FtpWriterUtils.createTextFormat();
         dataXWriter.fileFormat = tformat;
 
         IDataxProcessor.TableMap tableMap = TestSelectedTabs.createTableMapper().get();
@@ -90,7 +90,7 @@ public class TestDataXFtpWriter {
         ftpServer.timeout = null;
         // dataXWriter.port = null;
         // dataXWriter.timeout = null;
-        CSVFormat csvFormat = createCsvFormat();
+        CSVFormat csvFormat = FtpWriterUtils.createCsvFormat();
         // dataXWriter.fieldDelimiter = null;
         dataXWriter.fileFormat = csvFormat;
         dataXWriter.encoding = null;
@@ -101,35 +101,6 @@ public class TestDataXFtpWriter {
         //dataXWriter.header = false;
 
         WriterTemplate.valiateCfgGenerate("ftp-datax-writer-assert-without-option-val.json", dataXWriter, tableMap);
-    }
-
-    public static TextFormat createTextFormat() {
-        TextFormat tformat = new TextFormat();
-        tformat.header = true;
-        tformat.fieldDelimiter = ",";
-        return tformat;
-    }
-
-    public static CSVFormat createCsvFormat() {
-        CSVFormat format = new CSVFormat();
-        format.csvReaderConfig = "{\n" +
-                "        \"safetySwitch\": false,\n" +
-                "        \"skipEmptyRecords\": false,\n" +
-                "        \"useTextQualifier\": false\n" +
-                "}";
-        return format;
-    }
-
-    public static FTPServer createFtpServer() {
-        FTPServer ftpServer = new FTPServer();
-        ftpServer.protocol = "ftp";
-        ftpServer.host = "192.168.28.201";
-        ftpServer.port = 21;
-        ftpServer.timeout = 33333;
-        ftpServer.username = "test";
-        ftpServer.password = "test";
-        ftpServer.connectPattern = "PASV";
-        return ftpServer;
     }
 
 

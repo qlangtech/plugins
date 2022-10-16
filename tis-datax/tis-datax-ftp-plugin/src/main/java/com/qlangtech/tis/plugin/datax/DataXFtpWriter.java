@@ -18,19 +18,24 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
@@ -55,16 +60,17 @@ public class DataXFtpWriter extends DataxWriter {
 //    public String username;
 //    @FormField(ordinal = 5, type = FormFieldType.PASSWORD, validate = {Validator.require})
 //    public String password;
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
+    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;
     //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
 //    public String fileName;
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
-//    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
+    //    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
 //    public String fieldDelimiter;
-    //    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String compress;
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String compress;
+
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
     public String encoding;
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
@@ -75,6 +81,12 @@ public class DataXFtpWriter extends DataxWriter {
     public FileFormat fileFormat;
 //    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
 //    public String suffix;
+
+
+    public static List<Option> supportCompress() {
+        return Arrays.stream(Compress.values()).filter((c) -> c.supportWriter())
+                .map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
+    }
 
 
     @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})

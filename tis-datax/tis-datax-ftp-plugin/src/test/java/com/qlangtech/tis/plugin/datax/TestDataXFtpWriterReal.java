@@ -18,21 +18,19 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.reader.ftpreader.FtpHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.DataType;
-import org.apache.commons.io.FileUtils;
-import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.sql.Types;
 import java.util.List;
 
@@ -43,16 +41,13 @@ import java.util.List;
 public class TestDataXFtpWriterReal {
     static FTPContainer ftpContainer;
 
+    static final String FTP_PATH = "/path1";
+
+    @BeforeClass
     public static void initialize() {
         ftpContainer = new FTPContainer();
         ftpContainer.start();
     }
-
-    @Test
-    public void testStubWrite() {
-
-    }
-
 
     @Test
     public void testRealDump() throws Exception {
@@ -61,6 +56,14 @@ public class TestDataXFtpWriterReal {
         String testDataXName = "mysql_ftp";
 
         final DataXFtpWriter writer = getFTPWriter();
+        FTPServer ftpServer = writer.linker;
+        ftpServer.host = "127.0.0.1";
+        ftpServer.port = ftpContainer.getPort21();
+        ftpServer.connectPattern = "PORT";
+        ftpServer.username = FTPContainer.USER_NAME;
+        ftpServer.password = FTPContainer.PASSWORD;
+        ftpServer.protocol = "ftp";
+        ftpServer.timeout = 1000;
         // writer.dataXName = testDataXName;
         List<HdfsColMeta> colMetas = Lists.newArrayList();
 
@@ -98,44 +101,28 @@ public class TestDataXFtpWriterReal {
         WriterJson wjson = WriterJson.content(WriterTemplate.cfgGenerate(writer, tabMap));
 
         WriterTemplate.realExecuteDump(wjson, writer);
+        try (final FtpHelper ftpHelper = FtpHelper.createFtpClient(ftpServer.protocol, ftpServer.host, ftpServer.username
+                , ftpServer.password, ftpServer.port, ftpServer.timeout, ftpServer.connectPattern)) {
 
-//        CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
-//        createDorisWriter.dsFactory.password = "";
-//        // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
-//        createDorisWriter.dsFactory.nodeDesc = "localhost";
-//
-//        createDorisWriter.writer.autoCreateTable = true;
+            Assert.assertTrue(FTP_PATH + " must be exist", ftpHelper.isDirExist(FTP_PATH));
 
-//        DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
-//        File createDDLDir = new File(".");
-//        File createDDLFile = null;
-//        try {
-//            createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
-//            FileUtils.write(createDDLFile, ddl.getDDLScript(), TisUTF8.get());
-//
-//            EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
-//            DataxWriter.dataxWriterGetter = (dataXName) -> {
-//                return writer;
-//            };
-//            DataxProcessor.processorGetter = (dataXName) -> {
-//                Assert.assertEquals(testDataXName, dataXName);
-//                return dataXProcessor;
-//            };
-//            EasyMock.replay(dataXProcessor);
-//            String[] jdbcUrl = new String[1];
-//
-//            WriterTemplate.realExecuteDump("oracle_writer_real_dump.json", writer, (cfg) -> {
-//                cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
-//                return cfg;
-//            });
-//
-//            EasyMock.verify(dataXProcessor);
-//        } finally {
-//            FileUtils.deleteQuietly(createDDLFile);
-//        }
+            // HashSet<String> importFiles = ftpHelper.getListFiles(FTP_PATH + "/", 0, 1);
+            // HashSet<String>  importFiles = ftpHelper.getListFiles("path1/path2/*", 0, 1);
+            // Assert.assertEquals("importFiles size ", 1, importFiles.size());
+        }
+
+
     }
 
     private DataXFtpWriter getFTPWriter() {
-        return new DataXFtpWriter();
+        DataXFtpWriter writer = new DataXFtpWriter();
+        writer.path = FTP_PATH;
+        writer.writeMode = "truncate";
+        writer.template = DataXFtpWriter.getDftTemplate();
+        FileFormat txtFormat = FtpWriterUtils.createTextFormat();
+        writer.fileFormat = txtFormat;
+        FTPServer ftpServer = FtpWriterUtils.createFtpServer();
+        writer.linker = ftpServer;
+        return writer;
     }
 }

@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
  **/
 public class CSVFormat extends FileFormat {
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {}, advance = true)
     public String csvReaderConfig;
 
     @Override

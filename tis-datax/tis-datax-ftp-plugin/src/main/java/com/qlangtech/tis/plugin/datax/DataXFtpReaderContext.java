@@ -30,7 +30,9 @@ import java.util.Objects;
  **/
 public class DataXFtpReaderContext implements IDataxReaderContext {
 
+    public static final String FTP_TASK = "ftp_datax";
     private final DataXFtpReader reader;
+
 
     public DataXFtpReaderContext(DataXFtpReader reader) {
         this.reader = reader;
@@ -144,10 +146,9 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
         return ((CSVFormat) this.reader.fileFormat).csvReaderConfig;
     }
 
-
     @Override
     public String getTaskName() {
-        return null;
+        return FTP_TASK;
     }
 
     @Override

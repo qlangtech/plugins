@@ -21,10 +21,7 @@ package com.qlangtech.tis.plugin.datax.test;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.DataXReaderColType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 
 import java.sql.Types;
 import java.util.List;
@@ -80,7 +77,7 @@ public class TestSelectedTabs {
         IDataxProcessor.TableMap tm
                 = new IDataxProcessor.TableMap(
                 Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-                    ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
+                    CMeta meta = new CMeta();
                     meta.setName(c);
                     meta.setType(DataXReaderColType.STRING.dataType);
                     return meta;

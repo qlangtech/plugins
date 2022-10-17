@@ -93,7 +93,8 @@ public class DataXFtpReader extends DataxReader {
     @Override
     public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
-        ParseColsResult parseColsResult = ParseColsResult.parseColsCfg(new DefaultFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
+        ParseColsResult parseColsResult = ParseColsResult.parseColsCfg(
+                new DefaultFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
         if (!parseColsResult.success) {
             throw new IllegalStateException("parseColsResult must be success");
         }

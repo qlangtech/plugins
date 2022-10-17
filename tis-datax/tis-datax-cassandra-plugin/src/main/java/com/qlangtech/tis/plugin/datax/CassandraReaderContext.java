@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
@@ -69,7 +70,7 @@ public class CassandraReaderContext extends RdbmsReaderContext<DataXCassandraRea
         return this.tab.where;
     }
 
-    public List<ISelectedTab.ColMeta> getColumn() {
+    public List<CMeta> getColumn() {
         return this.tab.getCols();
     }
 

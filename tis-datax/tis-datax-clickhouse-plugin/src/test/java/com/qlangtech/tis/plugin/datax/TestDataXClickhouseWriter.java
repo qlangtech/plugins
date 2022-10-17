@@ -26,6 +26,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
@@ -83,29 +84,29 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 //        tableMap.setFrom("application");
 //        tableMap.setTo("customer_order_relation");
 //
-//        ISelectedTab.ColMeta cm = null;
-//        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
-//        cm = new ISelectedTab.ColMeta();
+//        CMeta cm = null;
+//        List<CMeta> cmetas = Lists.newArrayList();
+//        cm = new CMeta();
 //        cm.setName("customerregister_id");
 //        cm.setType(DataXReaderColType.STRING);
 //        cmetas.add(cm);
 //
-//        cm = new ISelectedTab.ColMeta();
+//        cm = new CMeta();
 //        cm.setName("waitingorder_id");
 //        cm.setType(DataXReaderColType.STRING);
 //        cmetas.add(cm);
 //
-//        cm = new ISelectedTab.ColMeta();
+//        cm = new CMeta();
 //        cm.setName("kind");
 //        cm.setType(DataXReaderColType.INT);
 //        cmetas.add(cm);
 //
-//        cm = new ISelectedTab.ColMeta();
+//        cm = new CMeta();
 //        cm.setName("create_time");
 //        cm.setType(DataXReaderColType.Long);
 //        cmetas.add(cm);
 //
-//        cm = new ISelectedTab.ColMeta();
+//        cm = new CMeta();
 //        cm.setName("last_ver");
 //        cm.setType(DataXReaderColType.INT);
 //        cmetas.add(cm);
@@ -167,35 +168,35 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
         dsFactory.dbName = dbName;
         dsFactory.port = 8123;
         dsFactory.name = dbName;
-        List<ISelectedTab.ColMeta> cmetas = Lists.newArrayList();
+        List<CMeta> cmetas = Lists.newArrayList();
         IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(cmetas);
         tableMap.setFrom("application");
         tableMap.setTo(targetTableName);
 
-        ISelectedTab.ColMeta cm = null;
+        CMeta cm = null;
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setPk(true);
         cm.setName("customerregister_id");
         cm.setType(DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName("waitingorder_id");
         cm.setType(DataXReaderColType.STRING.dataType);
         cmetas.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName("kind");
         cm.setType(DataXReaderColType.INT.dataType);
         cmetas.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName("create_time");
         cm.setType(DataXReaderColType.Long.dataType);
         cmetas.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName("last_ver");
         cm.setType(DataXReaderColType.INT.dataType);
         cmetas.add(cm);

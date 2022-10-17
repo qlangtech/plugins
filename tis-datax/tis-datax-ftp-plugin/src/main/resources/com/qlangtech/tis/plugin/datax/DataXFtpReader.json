@@ -8,7 +8,9 @@
     "placeholder": "/admin/instancedetail"
   },
   "column": {
-    "rows": 10
+    "rows": 10,
+    "mode":"application/ld+json",
+    "style":"codemirror"
   },
   "compress": {
     "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。 ",

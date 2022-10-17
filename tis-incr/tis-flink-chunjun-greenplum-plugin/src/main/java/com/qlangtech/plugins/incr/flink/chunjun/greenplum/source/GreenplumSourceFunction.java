@@ -61,7 +61,7 @@ public class GreenplumSourceFunction extends ChunjunSourceFunction {
     }
 
 //    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return null;
 //    }
 }

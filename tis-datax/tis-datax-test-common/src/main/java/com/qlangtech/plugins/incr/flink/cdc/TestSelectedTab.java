@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
  * @create: 2022-09-28 16:23
  **/
 public class TestSelectedTab extends SelectedTab {
-    final List<ISelectedTab.ColMeta> colsMeta;
+    final List<CMeta> colsMeta;
 
     public static SelectedTab createSelectedTab(EntityName tabName, BasicDataSourceFactory dataSourceFactory) {
         return createSelectedTab(tabName, dataSourceFactory, (t) -> {
@@ -46,8 +47,8 @@ public class TestSelectedTab extends SelectedTab {
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
         }
-        List<ColMeta> colsMeta = tableMetadata.stream().map((col) -> {
-            ColMeta c = new ColMeta();
+        List<CMeta> colsMeta = tableMetadata.stream().map((col) -> {
+            CMeta c = new CMeta();
             c.setPk(col.isPk());
             c.setName(col.getName());
             c.setNullable(col.isNullable());
@@ -62,13 +63,13 @@ public class TestSelectedTab extends SelectedTab {
         return baseTab;
     }
 
-    public TestSelectedTab(String name, List<ColMeta> colsMeta) {
+    public TestSelectedTab(String name, List<CMeta> colsMeta) {
         super(name);
         this.colsMeta = colsMeta;
     }
 
     @Override
-    public List<ISelectedTab.ColMeta> getCols() {
+    public List<CMeta> getCols() {
         return colsMeta;
     }
 }

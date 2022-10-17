@@ -155,7 +155,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
      * @see BasicDorisStarRocksWriter.DorisType
      */
     @Override
-    protected Object parseType(ISelectedTab.ColMeta cm) {
+    protected Object parseType(CMeta cm) {
         // DorisType
         return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
     }
@@ -215,7 +215,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 //     * @see BasicDorisStarRocksWriter.DorisType
 //     */
 //    @Override
-//    protected Object parseType(ISelectedTab.ColMeta cm) {
+//    protected Object parseType(CMeta cm) {
 //        // DorisType
 //        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
 //    }

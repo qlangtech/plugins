@@ -19,7 +19,7 @@
   },
   "port": {
     "help": "描述：ftp服务器端口。 ",
-    "placeholder": "22"
+    "dftVal": 21
   },
   "timeout": {
     "dftVal": 60000,

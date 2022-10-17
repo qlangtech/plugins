@@ -246,40 +246,40 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //            updateMode.updateKey = Lists.newArrayList(colId, updateTime);
 //            // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
 //            sinkExt.incrMode = updateMode;
-//            List<ISelectedTab.ColMeta> metaCols = Lists.newArrayList();
-//            ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
+//            List<CMeta> metaCols = Lists.newArrayList();
+//            CMeta cm = new CMeta();
 //            cm.setName(colEntityId);
 //            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(colNum);
 //            cm.setType(new DataType(Types.INTEGER));
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(colId);
 //            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
 //            cm.setPk(true);
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(colCreateTime);
 //            cm.setType(new DataType(Types.BIGINT));
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(updateTime);
 //            cm.setPk(true);
 //            cm.setType(new DataType(Types.TIMESTAMP));
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(updateDate);
 //            cm.setType(new DataType(Types.DATE));
 //            metaCols.add(cm);
 //
-//            cm = new ISelectedTab.ColMeta();
+//            cm = new CMeta();
 //            cm.setName(starTime);
 //            cm.setType(new DataType(Types.TIMESTAMP));
 //            metaCols.add(cm);

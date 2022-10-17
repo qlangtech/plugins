@@ -92,24 +92,24 @@ public class TestDataxMySQLWriter extends BasicTest {
         });
 
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
-            ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+            CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");
             col.setType(DataXReaderColType.Long.dataType);
             cols.add(col);
 
-            col = new ISelectedTab.ColMeta();
+            col = new CMeta();
             col.setName("col4");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
 
-            col = new ISelectedTab.ColMeta();
+            col = new CMeta();
             col.setName("col5");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
 
 
-            col = new ISelectedTab.ColMeta();
+            col = new CMeta();
             col.setPk(true);
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
@@ -125,21 +125,21 @@ public class TestDataxMySQLWriter extends BasicTest {
     }
 
     private IDataxProcessor.TableMap getTabApplication(
-            Consumer<List<ISelectedTab.ColMeta>>... colsProcess) {
+            Consumer<List<CMeta>>... colsProcess) {
 
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-        ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+        List<CMeta> sourceCols = Lists.newArrayList();
+        CMeta col = new CMeta();
         col.setPk(true);
         col.setName("user_id");
         col.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(col);
 
-        col = new ISelectedTab.ColMeta();
+        col = new CMeta();
         col.setName("user_name");
         col.setType(DataXReaderColType.STRING.dataType);
         sourceCols.add(col);
 
-        for (Consumer<List<ISelectedTab.ColMeta>> p : colsProcess) {
+        for (Consumer<List<CMeta>> p : colsProcess) {
             p.accept(sourceCols);
         }
         IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
@@ -212,7 +212,7 @@ public class TestDataxMySQLWriter extends BasicTest {
 //        tm.setFrom("orderinfo");
 //        tm.setTo("orderinfo_new");
 //        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-//            ISelectedTab.ColMeta meta = new ISelectedTab.ColMeta();
+//            CMeta meta = new CMeta();
 //            meta.setName(c);
 //            return meta;
 //        }).collect(Collectors.toList()));

@@ -41,6 +41,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -133,7 +134,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         ESSchema schema = new ESSchema();
         metaContent.parseResult = schema;
         ESField field = null;
-        for (ISelectedTab.ColMeta m : tab.getCols()) {
+        for (CMeta m : tab.getCols()) {
             field = new ESField();
             field.setName(m.getName());
             field.setStored(true);
@@ -378,7 +379,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 //                throw new IllegalStateException("can not find any selectedTabs");
 //            }
 //
-//            for (ISelectedTab.ColMeta colMeta : first.get().getCols()) {
+//            for (CMeta colMeta : first.get().getCols()) {
 //                col = new JSONObject();
 //                col.put("name", colMeta.getName());
 //                col.put("type", colMeta.getType().getLiteria());

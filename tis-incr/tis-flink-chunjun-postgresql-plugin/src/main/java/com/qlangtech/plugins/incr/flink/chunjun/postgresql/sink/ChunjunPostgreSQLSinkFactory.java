@@ -78,7 +78,7 @@ public class ChunjunPostgreSQLSinkFactory extends ChunjunSinkFactory {
 //     * @return
 //     */
 //    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return PostgreSQLSourceFunction.typeMapper(cm);
 //    }
 

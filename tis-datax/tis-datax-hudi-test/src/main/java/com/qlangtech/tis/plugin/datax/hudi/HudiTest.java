@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
+import com.qlangtech.tis.plugin.ds.CMeta;
 
 import java.io.File;
 import java.util.List;
@@ -75,9 +76,9 @@ public class HudiTest {
                 , hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
         HudiSelectedTab tab = new HudiSelectedTab() {
             @Override
-            public List<ColMeta> getCols() {
+            public List<CMeta> getCols() {
                 return colsMeta.stream().map((c) -> {
-                    ColMeta col = new ColMeta();
+                    CMeta col = new CMeta();
                     col.setName(c.getName());
                     col.setPk(c.pk);
                     col.setType(c.type);

@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
@@ -67,7 +68,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
 
-            private String convertType(ISelectedTab.ColMeta col) {
+            private String convertType(CMeta col) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html
                 StringBuffer createSql = new StringBuffer(getSqlServerType(col));
                 if (col.isPk()) {
@@ -77,7 +78,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -86,7 +87,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                 };
             }
 
-            private String getSqlServerType(ISelectedTab.ColMeta col) {
+            private String getSqlServerType(CMeta col) {
                 DataType type = col.getType();
                 switch (type.type) {
                     case Types.INTEGER:

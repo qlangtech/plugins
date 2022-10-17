@@ -57,7 +57,7 @@ public class TestDataXMongodbWriter extends TestCase {
         List<ISelectedTab> selectedTabs = TestSelectedTabs.createSelectedTabs(1).stream().map((t) -> t).collect(Collectors.toList());
 
         for (ISelectedTab tab : selectedTabs) {
-            for (ISelectedTab.ColMeta cm : tab.getCols()) {
+            for (CMeta cm : tab.getCols()) {
                 cm.setType(DataXReaderColType.STRING.dataType);
             }
         }

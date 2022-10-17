@@ -222,7 +222,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
         Map<String, Object> col = null;
         // com.dtstack.chunjun.conf.FieldConf.getField(List)
 
-        for (ISelectedTab.ColMeta cm : tab.getCols()) {
+        for (CMeta cm : tab.getCols()) {
             col = Maps.newHashMap();
             col.put("name", cm.getName());
             col.put("type", parseType(cm));
@@ -459,7 +459,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData> im
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-    protected Object parseType(ISelectedTab.ColMeta cm) {
+    protected Object parseType(CMeta cm) {
         return cm.getType().getS();
     }
 

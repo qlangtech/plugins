@@ -31,6 +31,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.DataXClickhouseWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -164,24 +165,24 @@ public class TestChunjunClickhouseSinkFactory
             sinkExt.incrMode = insertType;
             EasyMock.expect(totalpayinfo.getIncrSinkProps()).andReturn(sinkExt);
             EasyMock.expect(totalpayinfo.getName()).andReturn(tableName).anyTimes();
-            List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
-            ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
+            List<CMeta> cols = Lists.newArrayList();
+            CMeta cm = new CMeta();
             cm.setName(colEntityId);
             cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
             cols.add(cm);
 
-            cm = new ISelectedTab.ColMeta();
+            cm = new CMeta();
             cm.setName(colNum);
             cm.setType(new DataType(Types.INTEGER));
             cols.add(cm);
 
-            cm = new ISelectedTab.ColMeta();
+            cm = new CMeta();
             cm.setName(colId);
             cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
             cm.setPk(true);
             cols.add(cm);
 
-            cm = new ISelectedTab.ColMeta();
+            cm = new CMeta();
             cm.setName(colCreateTime);
             cm.setType(new DataType(Types.BIGINT));
             cols.add(cm);

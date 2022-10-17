@@ -27,6 +27,7 @@ import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.avro.LogicalTypes;
@@ -62,7 +63,7 @@ public class HudiTableMeta {
 
     public static IPath createSourceSchema(ITISFileSystem fs
             , String tabName, IPath fsSourceSchemaPath, HudiSelectedTab hudiTabMeta) {
-        List<ISelectedTab.ColMeta> colsMetas = hudiTabMeta.getCols();
+        List<CMeta> colsMetas = hudiTabMeta.getCols();
         if (CollectionUtils.isEmpty(colsMetas)) {
             throw new IllegalStateException("colsMetas of hudiTabMeta can not be empty");
         }
@@ -73,7 +74,7 @@ public class HudiTableMeta {
 //            builder.prop("testFiled", LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT)));
             SchemaBuilder.FieldAssembler<Schema> fields = builder.fields();
 
-            for (ISelectedTab.ColMeta meta : colsMetas) {
+            for (CMeta meta : colsMetas) {
                 meta.getType().accept(new DataType.TypeVisitor<Void>() {
 
                     @Override
@@ -310,7 +311,7 @@ public class HudiTableMeta {
     }
 
 
-    protected static void addNullableSchema(SchemaBuilder.FieldAssembler<Schema> fields, Schema schema, ISelectedTab.ColMeta meta) {
+    protected static void addNullableSchema(SchemaBuilder.FieldAssembler<Schema> fields, Schema schema, CMeta meta) {
         if (meta.isNullable()) {
             schema = Schema.createUnion(Schema.create(Schema.Type.NULL), schema);
         }

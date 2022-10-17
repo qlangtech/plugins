@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.google.common.collect.ImmutableMap;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.io.Serializable;
@@ -31,10 +32,10 @@ import java.util.stream.Collectors;
  * @create: 2021-12-18 22:03
  **/
 public class TabColIndexer implements Serializable {
-    final Map<String, Map<String, ISelectedTab.ColMeta>> tabColsMapper;
+    final Map<String, Map<String, CMeta>> tabColsMapper;
 
     public TabColIndexer(List<ISelectedTab> tabs) {
-        ImmutableMap.Builder<String, Map<String, ISelectedTab.ColMeta>> tabColsMapperBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Map<String, CMeta>> tabColsMapperBuilder = ImmutableMap.builder();
         for (ISelectedTab tab : tabs) {
             tabColsMapperBuilder.put(tab.getName()
                     , tab.getCols().stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> c)));
@@ -42,8 +43,8 @@ public class TabColIndexer implements Serializable {
         this.tabColsMapper = tabColsMapperBuilder.build();
     }
 
-    public ISelectedTab.ColMeta getColMeta(String tableName, String colName) {
-        Map<String, ISelectedTab.ColMeta> tabCols = tabColsMapper.get(tableName);
+    public CMeta getColMeta(String tableName, String colName) {
+        Map<String, CMeta> tabCols = tabColsMapper.get(tableName);
         if (tabCols == null) {
             throw new IllegalStateException("table:" + tableName + " relevant tabCols can not be null");
         }

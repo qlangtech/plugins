@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
@@ -76,23 +77,23 @@ public class TestDataXCassandraWriter extends TestCase {
         writer.consistancyLevel = "ALL";
         writer.connectionsPerHost = 99;
         writer.maxPendingPerConnection = 33;
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
+        List<CMeta> sourceCols = Lists.newArrayList();
         IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
         tableMap.setFrom("application");
         tableMap.setTo("application");
 
-        ISelectedTab.ColMeta colMeta = null;
-        colMeta = new ISelectedTab.ColMeta();
+        CMeta colMeta = null;
+        colMeta = new CMeta();
         colMeta.setName("user_id");
         colMeta.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName("user_name");
         colMeta.setType(DataXReaderColType.STRING.dataType);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName("bron_date");
         colMeta.setType(DataXReaderColType.Date.dataType);
         sourceCols.add(colMeta);

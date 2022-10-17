@@ -65,7 +65,7 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
 
 //    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return ChunjunOracleSinkFactory.typeMap(cm);
 //
 //    }

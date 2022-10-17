@@ -152,7 +152,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             }
 
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -162,7 +162,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             }
 
             //            @Override
-//            protected String convertType(ISelectedTab.ColMeta col) {
+//            protected String convertType(CMeta col) {
 //                switch (col.getType()) {
 //                    case Long:
 //                        return "bigint(20)";
@@ -185,7 +185,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
              * @param col
              * @return
              */
-            private String convertType(ISelectedTab.ColMeta col) {
+            private String convertType(CMeta col) {
                 DataType type = col.getType();
                 switch (type.type) {
                     case Types.CHAR: {

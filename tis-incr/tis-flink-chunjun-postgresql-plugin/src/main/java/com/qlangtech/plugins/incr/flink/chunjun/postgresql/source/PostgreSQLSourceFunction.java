@@ -81,11 +81,11 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
         }
     }
 
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return typeMapper(cm);
 //    }
 
-//    public static String typeMapper(ISelectedTab.ColMeta cm) {
+//    public static String typeMapper(CMeta cm) {
 //        // https://dtstack.github.io/chunjun/documents/7d23239f-9f24-5889-af9c-fc412d788060
 //        return cm.getType().accept(new DataType.TypeVisitor<String>() {
 //            @Override

@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
@@ -91,7 +92,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
             }
 
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -106,7 +107,7 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
              * @param col
              * @return
              */
-            private String convertType(ISelectedTab.ColMeta col) {
+            private String convertType(CMeta col) {
                 DataType type = col.getType();
                 switch (type.type) {
                     case Types.CHAR: {

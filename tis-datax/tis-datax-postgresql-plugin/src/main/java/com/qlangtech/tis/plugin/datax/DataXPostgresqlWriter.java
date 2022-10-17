@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
@@ -107,7 +108,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
 
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -126,7 +127,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
              * @param col
              * @return
              */
-            private String convertType(ISelectedTab.ColMeta col) {
+            private String convertType(CMeta col) {
                 DataType type = col.getType();
                 String colType = type.accept(new DataType.TypeVisitor<String>() {
                     @Override

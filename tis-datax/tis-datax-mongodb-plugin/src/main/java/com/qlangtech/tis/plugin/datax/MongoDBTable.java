@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.List;
  * @create: 2021-06-19 14:48
  **/
 public class MongoDBTable implements ISelectedTab {
-    public List<ColMeta> cols;
+    public List<CMeta> cols;
     private final String collectionName;
 
     public MongoDBTable(String collectionName) {
@@ -35,7 +36,7 @@ public class MongoDBTable implements ISelectedTab {
     }
 
     @Override
-    public List<ColMeta> getCols() {
+    public List<CMeta> getCols() {
         return this.cols;
     }
 

@@ -87,14 +87,14 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
 //
 //        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
 //            @Override
-//            protected void appendExtraColDef(List<ISelectedTab.ColMeta> pks) {
+//            protected void appendExtraColDef(List<CMeta> pks) {
 ////                if (pk != null) {
 ////                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 ////                }
 //            }
 //
 //            @Override
-//            protected void appendTabMeta(List<ISelectedTab.ColMeta> pks) {
+//            protected void appendTabMeta(List<CMeta> pks) {
 //                script.append(" ENGINE=olap").append("\n");
 //                if (pks.size() > 0) {
 //                    script.append("UNIQUE KEY(").append(pks.stream()
@@ -107,8 +107,8 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
 //                            .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
 //                            .collect(Collectors.joining(",")));
 //                } else {
-//                    List<ISelectedTab.ColMeta> cols = this.getCols();
-//                    Optional<ISelectedTab.ColMeta> firstCol = cols.stream().findFirst();
+//                    List<CMeta> cols = this.getCols();
+//                    Optional<CMeta> firstCol = cols.stream().findFirst();
 //                    if (firstCol.isPresent()) {
 //                        script.append(firstCol.get().getName());
 //                    } else {
@@ -122,7 +122,7 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
 //            }
 //
 //            @Override
-//            protected String convertType(ISelectedTab.ColMeta col) {
+//            protected String convertType(CMeta col) {
 //                DataType type = col.getType();
 //                return type.accept(new ColumnMetaData.TypeVisitor<String>() {
 //                    @Override

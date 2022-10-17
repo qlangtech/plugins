@@ -33,6 +33,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.test.BasicTest;
@@ -295,7 +296,7 @@ public class WriterTemplate {
             }
 
             @Override
-            public List<ColMeta> getCols() {
+            public List<CMeta> getCols() {
                 return createColMetas();
             }
         });
@@ -304,32 +305,32 @@ public class WriterTemplate {
         return tableMap;
     }
 
-    public static List<ISelectedTab.ColMeta> createColMetas() {
-        ISelectedTab.ColMeta colMeta = null;
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-        colMeta = new ISelectedTab.ColMeta();
+    public static List<CMeta> createColMetas() {
+        CMeta colMeta = null;
+        List<CMeta> sourceCols = Lists.newArrayList();
+        colMeta = new CMeta();
         colMeta.setName(customerregisterId);
         colMeta.setType(DataXReaderColType.STRING.dataType);
         colMeta.setPk(true);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName("waitingorder_id");
         colMeta.setType(DataXReaderColType.STRING.dataType);
         colMeta.setPk(true);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName(kind);
         colMeta.setType(DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName("create_time");
         colMeta.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(colMeta);
 
-        colMeta = new ISelectedTab.ColMeta();
+        colMeta = new CMeta();
         colMeta.setName(lastVer);
         colMeta.setType(DataXReaderColType.INT.dataType);
         sourceCols.add(colMeta);

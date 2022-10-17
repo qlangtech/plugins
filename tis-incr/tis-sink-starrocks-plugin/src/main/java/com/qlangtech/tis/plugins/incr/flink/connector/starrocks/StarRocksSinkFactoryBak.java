@@ -220,7 +220,7 @@
 //        }
 //        int index = 0;
 //        List<String> pks = Lists.newArrayList();
-//        for (ISelectedTab.ColMeta cm : tab.getCols()) {
+//        for (CMeta cm : tab.getCols()) {
 //            if (cm.isPk()) {
 //                pks.add(cm.getName());
 //            }

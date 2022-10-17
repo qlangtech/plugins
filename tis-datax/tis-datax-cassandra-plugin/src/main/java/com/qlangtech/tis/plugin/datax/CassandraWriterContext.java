@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
@@ -60,7 +61,7 @@ public class CassandraWriterContext implements IDataxContext {
         return this.tabMapper.getTo();
     }
 
-    public List<ISelectedTab.ColMeta> getColumn() {
+    public List<CMeta> getColumn() {
         return this.tabMapper.getSourceCols();
     }
 

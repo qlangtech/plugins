@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -140,7 +141,7 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<ISelectedTab.ColMeta> cols) {
+        protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<CMeta> cols) {
             // 将主键排在最前面
             List<ColWrapper> result = Lists.newArrayList(pks);
             cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
@@ -163,8 +164,8 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
                         .map((pk) -> wrapWithEscape(pk.getName()))
                         .collect(Collectors.joining(",")));
             } else {
-                List<ISelectedTab.ColMeta> cols = this.getCols();
-                Optional<ISelectedTab.ColMeta> firstCol = cols.stream().findFirst();
+                List<CMeta> cols = this.getCols();
+                Optional<CMeta> firstCol = cols.stream().findFirst();
                 if (firstCol.isPresent()) {
                     script.append(firstCol.get().getName());
                 } else {
@@ -177,7 +178,7 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         }
 
         @Override
-        protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+        protected ColWrapper createColWrapper(CMeta c) {
             return new ColWrapper(c) {
                 @Override
                 public String getMapperType() {
@@ -193,7 +194,7 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
             };
         }
 
-        protected DorisType convertType(ISelectedTab.ColMeta col) {
+        protected DorisType convertType(CMeta col) {
             DataType type = col.getType();
             return type.accept(columnTokenRecognise);
         }

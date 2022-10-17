@@ -84,24 +84,24 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         List<ISelectedTab> selectedTabs = Lists.newArrayList();
         SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
         EasyMock.expect(totalpayinfo.getName()).andReturn(tableName);
-        List<ISelectedTab.ColMeta> cols = Lists.newArrayList();
-        ISelectedTab.ColMeta cm = new ISelectedTab.ColMeta();
+        List<CMeta> cols = Lists.newArrayList();
+        CMeta cm = new CMeta();
         cm.setName(colEntityId);
         cm.setType(new DataType(Types.VARCHAR, "varchar" ,6));
         cols.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName(colNum);
         cm.setType(new DataType(Types.INTEGER));
         cols.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName(colId);
         cm.setType(new DataType(Types.VARCHAR,"varchar" ,32));
         cm.setPk(true);
         cols.add(cm);
 
-        cm = new ISelectedTab.ColMeta();
+        cm = new CMeta();
         cm.setName(colCreateTime);
         cm.setType(new DataType(Types.BIGINT));
         cols.add(cm);

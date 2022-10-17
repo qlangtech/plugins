@@ -69,8 +69,8 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor {
     }
 
     @Override
-    protected ISelectedTab.ColMeta createUpdateTime() {
-        ISelectedTab.ColMeta updateTime = super.createUpdateTime();
+    protected CMeta createUpdateTime() {
+        CMeta updateTime = super.createUpdateTime();
         updateTime.setPk(false);
         return updateTime;
     }

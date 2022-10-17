@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
@@ -142,7 +143,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
             return tabName;
         }
 
-        public List<ISelectedTab.ColMeta> getCols() {
+        public List<CMeta> getCols() {
 
             return this.tabMap.getSourceCols();
 

@@ -37,10 +37,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -147,7 +144,7 @@ public abstract class CUDCDCTestSuit {
         this.cols = Lists.newArrayList();
         HdfsColMeta cMeta = null;
         int colIndex = 1;
-        for (ISelectedTab.ColMeta c : tab.getCols()) {
+        for (CMeta c : tab.getCols()) {
             cMeta = new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType());
             cols.add(new ColMeta(colIndex++, cMeta));
         }
@@ -168,7 +165,7 @@ public abstract class CUDCDCTestSuit {
 
     public final String getPrimaryKeyName(ISelectedTab tab) {
 
-        for (ISelectedTab.ColMeta col : tab.getCols()) {
+        for (CMeta col : tab.getCols()) {
             if (col.isPk()) {
                 return getColEscape() + col.getName() + getColEscape();
             }

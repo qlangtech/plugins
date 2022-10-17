@@ -100,7 +100,7 @@ public class DataXMongodbReader extends DataxReader {
 
         List<ColCfg> cols = JSON.parseArray(this.column, ColCfg.class);
         tab.cols = cols.stream().map((c) -> {
-            ISelectedTab.ColMeta colMeta = new ISelectedTab.ColMeta();
+            CMeta colMeta = new CMeta();
             colMeta.setName(c.getName());
             colMeta.setType(convertType(c.getType()));
             return colMeta;

@@ -100,7 +100,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             if (colsMeta.size() < 1) {
                 throw new IllegalStateException("table:" + tab.getName() + " relevant cols meta can not be null");
             }
-            for (ISelectedTab.ColMeta col : tab.getCols()) {
+            for (CMeta col : tab.getCols()) {
                 colMeta = colsMeta.get(col.getName());
                 if (colMeta == null) {
                     throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'col' on " + tab.getName() + ",exist Keys:["

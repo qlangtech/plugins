@@ -54,8 +54,8 @@ public class TestChunjunPostgreSQLSinkFactoryByFullTypes extends TestFlinkSinkEx
     }
 
     @Override
-    protected ISelectedTab.ColMeta createUpdateTime() {
-        ISelectedTab.ColMeta cm = super.createUpdateTime();
+    protected CMeta createUpdateTime() {
+        CMeta cm = super.createUpdateTime();
         cm.setPk(false);
         return cm;
     }

@@ -61,7 +61,7 @@ public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
     }
 
 //    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return cm.getType().accept(new DataType.TypeVisitor<String>() {
 //            @Override
 //            public String bigInt(DataType type) {

@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -103,11 +104,11 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
 //            break;
 //        }
         Objects.requireNonNull(esSchema, "esSchema can not be null");
-        List<ISelectedTab.ColMeta> cols = esSchema.getSourceCols();
+        List<CMeta> cols = esSchema.getSourceCols();
         if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalStateException("cols can not be null");
         }
-        Optional<ISelectedTab.ColMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
+        Optional<CMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
         if (!firstPK.isPresent()) {
             throw new IllegalStateException("has not set PK col");
         }

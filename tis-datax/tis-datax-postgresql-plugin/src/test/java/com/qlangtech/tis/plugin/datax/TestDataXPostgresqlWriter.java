@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -120,7 +121,7 @@ public class TestDataXPostgresqlWriter  //extends TestCase
         // 多主键
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(TestDataXPostgresqlWriter.class, "multi-pks-create-ddl.txt"), createDDL.toString());
 
-        Optional<ISelectedTab.ColMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> WriterTemplate.customerregisterId.equals(col.getName())).findFirst();
+        Optional<CMeta> firstCustomerregisterId = tableMapper.getSourceCols().stream().filter((col) -> WriterTemplate.customerregisterId.equals(col.getName())).findFirst();
         Assert.assertTrue(firstCustomerregisterId.isPresent());
         firstCustomerregisterId.get().setPk(false);
 

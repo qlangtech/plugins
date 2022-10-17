@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.junit.Assert;
@@ -44,7 +45,7 @@ public class BasicPartitionTest {
         };
         CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList()), sourceMeta) {
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return null;
             }
         };

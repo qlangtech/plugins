@@ -23,6 +23,7 @@ import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
@@ -74,11 +75,11 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
     }
 
 //    @Override
-//    protected String parseType(ISelectedTab.ColMeta cm) {
+//    protected String parseType(CMeta cm) {
 //        return typeMap(cm);
 //    }
 
-    public static String typeMap(ISelectedTab.ColMeta cm) {
+    public static String typeMap(CMeta cm) {
         return cm.getType().getS();
 //        return cm.getType().accept(new DataType.TypeVisitor<String>() {
 //            @Override

@@ -37,6 +37,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -130,7 +131,7 @@ public abstract class ChunjunSourceFunction
         Map<String, String> col = null;
         // com.dtstack.chunjun.conf.FieldConf.getField(List)
 
-        for (ISelectedTab.ColMeta cm : tab.getCols()) {
+        for (CMeta cm : tab.getCols()) {
             col = Maps.newHashMap();
             col.put("name", cm.getName());
             col.put("type", parseType(cm));
@@ -166,7 +167,7 @@ public abstract class ChunjunSourceFunction
         return syncConf;
     }
 
-    protected final String parseType(ISelectedTab.ColMeta cm) {
+    protected final String parseType(CMeta cm) {
         return cm.getType().getS();
     }
 

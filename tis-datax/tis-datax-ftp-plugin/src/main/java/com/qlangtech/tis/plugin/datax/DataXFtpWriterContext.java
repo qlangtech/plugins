@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
@@ -150,7 +151,7 @@ public class DataXFtpWriterContext implements IDataxContext {
     }
 
     public boolean isContainHeader() {
-        List<ISelectedTab.ColMeta> cols = tableMapper.getSourceCols();
+        List<CMeta> cols = tableMapper.getSourceCols();
         return (this.writer.fileFormat.containHeader() && cols.size() > 0);
     }
 

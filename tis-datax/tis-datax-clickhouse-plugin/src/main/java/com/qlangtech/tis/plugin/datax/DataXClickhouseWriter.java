@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
@@ -81,7 +82,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             }
 
             @Override
-            protected ColWrapper createColWrapper(ISelectedTab.ColMeta c) {
+            protected ColWrapper createColWrapper(CMeta c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -99,7 +100,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
                 script.append(" SETTINGS index_granularity = 8192");
             }
 
-            private String convertType(ISelectedTab.ColMeta col) {
+            private String convertType(CMeta col) {
                 DataType type = col.getType();
                 switch (type.type) {
                     case Types.INTEGER:
@@ -137,16 +138,16 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 //        StringBuffer script = new StringBuffer();
 //        script.append("CREATE TABLE ").append(tableMapper.getTo()).append("\n");
 //        script.append("(\n");
-//        ISelectedTab.ColMeta pk = null;
+//        CMeta pk = null;
 //        int maxColNameLength = 0;
-//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//        for (CMeta col : tableMapper.getSourceCols()) {
 //            int m = StringUtils.length(col.getName());
 //            if (m > maxColNameLength) {
 //                maxColNameLength = m;
 //            }
 //        }
 //        maxColNameLength += 4;
-//        for (ISelectedTab.ColMeta col : tableMapper.getSourceCols()) {
+//        for (CMeta col : tableMapper.getSourceCols()) {
 //            if (pk == null && col.isPk()) {
 //                pk = col;
 //            }

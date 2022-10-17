@@ -30,6 +30,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
@@ -83,7 +84,7 @@ public class TestDataXStarRocksWriter extends TestCase {
                 .stream().map((t) -> t).collect(Collectors.toList());
 
         for (ISelectedTab tab : selectedTabs) {
-            for (ISelectedTab.ColMeta cm : tab.getCols()) {
+            for (CMeta cm : tab.getCols()) {
                 cm.setType(DataXReaderColType.STRING.dataType);
             }
         }
@@ -111,14 +112,14 @@ public class TestDataXStarRocksWriter extends TestCase {
         DorisSourceFactory dsFactory = createDorisWriter.getDsFactory();
         DataXStarRocksWriter writer = createDorisWriter.getWriter();
 
-        List<ISelectedTab.ColMeta> sourceCols = Lists.newArrayList();
-        ISelectedTab.ColMeta col = new ISelectedTab.ColMeta();
+        List<CMeta> sourceCols = Lists.newArrayList();
+        CMeta col = new CMeta();
         col.setPk(true);
         col.setName("user_id");
         col.setType(DataXReaderColType.Long.dataType);
         sourceCols.add(col);
 
-        col = new ISelectedTab.ColMeta();
+        col = new CMeta();
         col.setName("user_name");
         col.setType(DataXReaderColType.STRING.dataType);
         sourceCols.add(col);

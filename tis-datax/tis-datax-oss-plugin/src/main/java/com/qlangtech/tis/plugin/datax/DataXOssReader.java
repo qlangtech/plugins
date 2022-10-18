@@ -91,6 +91,10 @@ public class DataXOssReader extends DataxReader {
     @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
+    public String getTaskName() {
+        return StringUtils.replace(StringUtils.remove(this.object, "*"), "/", "-");
+    }
+
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXOssReader.class, "DataXOssReader-tpl.json");
     }
@@ -114,7 +118,7 @@ public class DataXOssReader extends DataxReader {
     @Override
     public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
-        ParseColsResult parseOSSColsResult = ParseColsResult.parseColsCfg(new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
+        ParseColsResult parseOSSColsResult = ParseColsResult.parseColsCfg(this.getTaskName(), new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
         if (!parseOSSColsResult.success) {
             throw new IllegalStateException("parseOSSColsResult must be success");
         }
@@ -165,7 +169,7 @@ public class DataXOssReader extends DataxReader {
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
-            return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
+            return ParseColsResult.parseColsCfg(StringUtils.EMPTY, msgHandler, context, fieldName, value).success;
         }
 
         public boolean validateBucket(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

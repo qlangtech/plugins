@@ -31,7 +31,7 @@ public class FtpWriterUtils {
     public static TextFormat createTextFormat() {
         TextFormat tformat = new TextFormat();
         tformat.header = true;
-        tformat.fieldDelimiter = ",";
+        tformat.fieldDelimiter = "comma";
         return tformat;
     }
 

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
@@ -37,11 +38,13 @@ public class TestDataXFtpReader {
         String dftTemplate = DataXFtpReader.getDftTemplate();
         Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
+
     @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXFtpReader.class);
         Assert.assertTrue(extraProps.isPresent());
     }
+
     @Test
     public void testDescGenerate() throws Exception {
 
@@ -50,13 +53,14 @@ public class TestDataXFtpReader {
         PluginDesc.testDescGenerate(DataXFtpReader.class, "ftp-datax-reader-descriptor.json");
 
     }
+
     @Test
     public void testTemplateGenerate() throws Exception {
 
         String dataXName = "test";
 
         DataXFtpReader reader = new DataXFtpReader();
-
+        reader.compress = Compress.noCompress.token;
         reader.template = DataXFtpReader.getDftTemplate();
         reader.linker = FtpWriterUtils.createFtpServer();
 //        reader.protocol = "ftp";
@@ -67,14 +71,14 @@ public class TestDataXFtpReader {
 //        reader.username = "test";
 //        reader.password = "test";
         reader.path = "/home/hanfa.shf/ftpReaderTest/data";
-        reader.column = " {\n" +
+        reader.column = " [{\n" +
                 "    \"type\": \"long\",\n" +
                 "    \"index\": 0    \n" +
                 " },\n" +
                 " {\n" +
                 "    \"type\": \"string\",\n" +
                 "    \"value\": \"alibaba\"  \n" +
-                " }";
+                " }]";
 
         reader.fileFormat = FtpWriterUtils.createCsvFormat();
 

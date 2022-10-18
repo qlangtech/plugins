@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.reader.ftpreader.FtpReader
  **/
 @Public
 public class DataXFtpReader extends DataxReader {
@@ -93,7 +95,7 @@ public class DataXFtpReader extends DataxReader {
     @Override
     public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
-        ParseColsResult parseColsResult = ParseColsResult.parseColsCfg(
+        ParseColsResult parseColsResult = ParseColsResult.parseColsCfg(DataXFtpReaderContext.FTP_TASK,
                 new DefaultFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
         if (!parseColsResult.success) {
             throw new IllegalStateException("parseColsResult must be success");
@@ -131,7 +133,20 @@ public class DataXFtpReader extends DataxReader {
         }
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
+            return ParseColsResult.parseColsCfg(DataXFtpReaderContext.FTP_TASK, msgHandler, context, fieldName, value,
+                    (colIndex, col) -> {
+                        String colType = ParseColsResult.getColType(col);
+                        for (UnstructuredStorageReaderUtil.Type t : UnstructuredStorageReaderUtil.Type.values()) {
+                            if (t.name().equalsIgnoreCase(colType)) {
+                                return true;
+                            }
+                        }
+                        msgHandler.addFieldError(context, fieldName
+                                , "index为" + colIndex + "的字段列中，属性type必须为:"
+                                        + Arrays.stream(UnstructuredStorageReaderUtil.Type.values()).map((t) -> String.valueOf(t)).collect(Collectors.joining(",")) + "中之一");
+                        return false;
+                    }
+            ).success;
         }
 
         public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

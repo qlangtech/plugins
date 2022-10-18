@@ -93,7 +93,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     @FormField(ordinal = 12, type = FormFieldType.TEXTAREA, validate = {})
     public String csvReaderConfig;
 
-    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 13, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public String dataXName;
@@ -118,7 +118,8 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     @Override
     public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
-        ParseColsResult parseOSSColsResult = ParseColsResult.parseColsCfg(new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
+        ParseColsResult parseOSSColsResult
+                = ParseColsResult.parseColsCfg(this.dataXName, new MockFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
         if (!parseOSSColsResult.success) {
             throw new IllegalStateException("parseOSSColsResult must be success");
         }
@@ -190,7 +191,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
         }
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return ParseColsResult.parseColsCfg(msgHandler, context, fieldName, value).success;
+            return ParseColsResult.parseColsCfg(StringUtils.EMPTY, msgHandler, context, fieldName, value).success;
         }
 
         public boolean validatePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

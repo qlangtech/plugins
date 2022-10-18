@@ -18,7 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.plugin.reader.ftpreader.FtpHelper;
+import com.alibaba.datax.plugin.ftp.common.FtpHelper;
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -32,6 +33,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.sql.Types;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -59,7 +61,7 @@ public class TestDataXFtpWriterReal {
         FTPServer ftpServer = writer.linker;
         ftpServer.host = "127.0.0.1";
         ftpServer.port = ftpContainer.getPort21();
-        ftpServer.connectPattern = "PORT";
+        ftpServer.connectPattern = "PASV"; // PORT
         ftpServer.username = FTPContainer.USER_NAME;
         ftpServer.password = FTPContainer.PASSWORD;
         ftpServer.protocol = "ftp";
@@ -106,9 +108,9 @@ public class TestDataXFtpWriterReal {
 
             Assert.assertTrue(FTP_PATH + " must be exist", ftpHelper.isDirExist(FTP_PATH));
 
-            // HashSet<String> importFiles = ftpHelper.getListFiles(FTP_PATH + "/", 0, 1);
-            // HashSet<String>  importFiles = ftpHelper.getListFiles("path1/path2/*", 0, 1);
-            // Assert.assertEquals("importFiles size ", 1, importFiles.size());
+            HashSet<String> importFiles = ftpHelper.getListFiles(FTP_PATH + "/*", 0, 100);
+            // HashSet<String> importFiles = ftpHelper.getListFiles("path1/path2/*", 0, 1);
+            Assert.assertEquals("importFiles size ", 1, importFiles.size());
         }
 
 
@@ -118,6 +120,7 @@ public class TestDataXFtpWriterReal {
         DataXFtpWriter writer = new DataXFtpWriter();
         writer.path = FTP_PATH;
         writer.writeMode = "truncate";
+        writer.compress = Compress.noCompress.token;
         writer.template = DataXFtpWriter.getDftTemplate();
         FileFormat txtFormat = FtpWriterUtils.createTextFormat();
         writer.fileFormat = txtFormat;

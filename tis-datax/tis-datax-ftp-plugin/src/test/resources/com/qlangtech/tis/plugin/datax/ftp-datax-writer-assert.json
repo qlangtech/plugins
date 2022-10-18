@@ -1,6 +1,7 @@
 {
   "name": "ftpwriter",
   "parameter": {
+    "compress":"none",
     "encoding": "utf-8",
     "fieldDelimiter": ",",
     "fileFormat": "text",

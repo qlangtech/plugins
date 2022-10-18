@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
@@ -60,7 +61,7 @@ public class TestDataXFtpWriter {
 
         DataXFtpWriter dataXWriter = new DataXFtpWriter();
         dataXWriter.template = DataXFtpWriter.getDftTemplate();
-
+        dataXWriter.compress = Compress.noCompress.token;
         FTPServer ftpServer = FtpWriterUtils.createFtpServer();
         // dataXWriter.protocol = "ftp";
         /// dataXWriter.host = "192.168.28.201";

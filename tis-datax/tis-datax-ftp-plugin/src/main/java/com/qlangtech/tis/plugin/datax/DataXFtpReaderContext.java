@@ -71,6 +71,10 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
         return this.reader.linker.connectPattern;
     }
 
+    public String getFormat() {
+        return this.reader.fileFormat.getFormat();
+    }
+
     public String getUsername() {
         return this.reader.linker.username;
     }
@@ -91,8 +95,8 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
         return this.reader.fileFormat.getFieldDelimiter();
     }
 
-    public boolean isContainFieldDelimiter(){
-       return StringUtils.isNotBlank(this.reader.fileFormat.getFieldDelimiter());
+    public boolean isContainFieldDelimiter() {
+        return StringUtils.isNotBlank(this.reader.fileFormat.getFieldDelimiter());
     }
 
     public boolean isContainCompress() {

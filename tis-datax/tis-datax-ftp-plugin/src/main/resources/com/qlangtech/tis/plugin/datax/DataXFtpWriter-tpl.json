@@ -8,6 +8,9 @@
 #if($writer.containTimeout)
 ,"timeout": ${writer.timeout}
 #end
+#if($writer.containConnectPattern)
+,"connectPattern": "${writer.connectPattern}"
+#end
 ,"username": "${writer.username}"
 ,"password": "${writer.password}"
 ,"path": "${writer.path}"

@@ -75,6 +75,14 @@ public class DataXFtpWriterContext implements IDataxContext {
         return this.writer.linker.password;
     }
 
+    public boolean isContainConnectPattern() {
+        return StringUtils.isNotBlank(this.writer.linker.connectPattern);
+    }
+
+    public String getConnectPattern() {
+        return this.writer.linker.connectPattern;
+    }
+
     public String getPath() {
         if (StringUtils.isEmpty(this.writer.path)) {
             throw new IllegalStateException("writer path can not be null");

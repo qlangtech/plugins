@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -23,7 +23,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -44,10 +47,20 @@ public class ParseColsResult {
     public DataXReaderTabMeta tabMeta;
     public boolean success;
 
-    public static ParseColsResult parseColsCfg(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+    public interface IColProcessor {
+        public boolean process(int colIndex, JSONObject col);
+    }
+
+    public static ParseColsResult parseColsCfg(String tabName, IFieldErrorHandler msgHandler
+            , Context context, String fieldName, String value) {
+        return parseColsCfg(tabName, msgHandler, context, fieldName, value, (index, col) -> true);
+    }
+
+    public static ParseColsResult parseColsCfg(String tabName, IFieldErrorHandler msgHandler
+            , Context context, String fieldName, String value, IColProcessor colProcessor) {
         ParseColsResult parseOSSColsResult = new ParseColsResult();
 
-        DataXReaderTabMeta tabMeta = new DataXReaderTabMeta();
+        DataXReaderTabMeta tabMeta = new DataXReaderTabMeta(tabName);
         parseOSSColsResult.tabMeta = tabMeta;
         DataXColMeta colMeta = null;
         try {
@@ -68,7 +81,7 @@ public class ParseColsResult {
             String appValue = null;
             for (int i = 0; i < cols.size(); i++) {
                 col = cols.getJSONObject(i);
-                type = col.getString("type");
+                type = getColType(col);
                 if (StringUtils.isEmpty(type)) {
                     msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，属性type不能为空");
                     return parseOSSColsResult.faild();
@@ -89,6 +102,11 @@ public class ParseColsResult {
                     msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，index/value必须选择其一");
                     return parseOSSColsResult.faild();
                 }
+
+                if (!colProcessor.process(i, col)) {
+                    return parseOSSColsResult.faild();
+                }
+
                 if (index != null) {
                     colMeta.index = index;
                 }
@@ -103,6 +121,10 @@ public class ParseColsResult {
         }
 
         return parseOSSColsResult.ok();
+    }
+
+    public static String getColType(JSONObject col) {
+        return col.getString("type");
     }
 
     public ParseColsResult ok() {
@@ -130,11 +152,16 @@ public class ParseColsResult {
     public static class DataXReaderTabMeta implements ISelectedTab {
         public boolean allCols = false;
         public final List<DataXColMeta> cols = Lists.newArrayList();
+        private final String name;
+
+        public DataXReaderTabMeta(String name) {
+            this.name = name;
+        }
 
         @Override
         @JSONField(serialize = false)
         public String getName() {
-            return "oss"; // throw new UnsupportedOperationException();
+            return this.name;
         }
 
         @Override

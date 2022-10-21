@@ -291,7 +291,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.alibaba.datax</groupId>
+                <groupId>com.qlagntech.tis</groupId>
                 <artifactId>datax-config</artifactId>
                 <version>${project.version}</version>
                 <scope>provided</scope>

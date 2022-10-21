@@ -155,7 +155,7 @@
 
         <dependency>
             <artifactId>datax-config</artifactId>
-            <groupId>com.alibaba.datax</groupId>
+            <groupId>com.qlagntech.tis</groupId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

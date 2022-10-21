@@ -59,7 +59,7 @@
                     <artifactId>druid</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
+                    <groupId>com.qlagntech.tis</groupId>
                     <artifactId>datax-config</artifactId>
                 </exclusion>
             </exclusions>
@@ -71,7 +71,7 @@
             <version>${chunjun.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
+                    <groupId>com.qlagntech.tis</groupId>
                     <artifactId>datax-config</artifactId>
                 </exclusion>
                 <exclusion>

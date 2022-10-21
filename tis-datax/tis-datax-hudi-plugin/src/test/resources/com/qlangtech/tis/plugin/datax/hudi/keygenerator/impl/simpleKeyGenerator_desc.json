@@ -42,6 +42,7 @@
         "descriptors":{
           "com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition":{
             "attrs":[],
+            "containAdvance":false,
             "displayName":"fieldValBased",
             "extendPoint":"com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition",
             "impl":"com.qlangtech.tis.plugin.datax.hudi.partition.FieldValBasedPartition",
@@ -50,6 +51,7 @@
           },
           "com.qlangtech.tis.plugin.datax.hudi.partition.SlashEncodedDayPartition":{
             "attrs":[],
+            "containAdvance":false,
             "displayName":"slashEncodedDay",
             "extendPoint":"com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition",
             "impl":"com.qlangtech.tis.plugin.datax.hudi.partition.SlashEncodedDayPartition",
@@ -58,6 +60,7 @@
           },
           "com.qlangtech.tis.plugin.datax.hudi.partition.SlashEncodedHourPartition":{
             "attrs":[],
+            "containAdvance":false,
             "displayName":"slashEncodedHour",
             "extendPoint":"com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition",
             "impl":"com.qlangtech.tis.plugin.datax.hudi.partition.SlashEncodedHourPartition",
@@ -76,6 +79,7 @@
         "type":1
       },
       {
+        "advance":true,
         "describable":false,
         "eprops":{
           "asyncHelp":true,
@@ -98,6 +102,7 @@
         "type":5
       },
       {
+        "advance":true,
         "describable":false,
         "eprops":{
           "asyncHelp":true,
@@ -120,6 +125,7 @@
         "type":5
       },
       {
+        "advance":true,
         "describable":false,
         "eprops":{
           "asyncHelp":true,
@@ -143,6 +149,7 @@
         "type":5
       }
     ],
+    "containAdvance":true,
     "displayName":"SIMPLE",
     "extendPoint":"com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator",
     "impl":"com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl.SimpleKeyGenerator",

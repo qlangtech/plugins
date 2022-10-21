@@ -2,6 +2,7 @@
   "name":"ftpwriter",
   "parameter":{
     "compress":"none",
+    "connectPattern":"PASV",
     "fileFormat":"csv",
     "fileName":"orderinfo_new",
     "host":"192.168.28.201",

@@ -34,12 +34,10 @@ import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -49,6 +47,9 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.io.OutputFormat;
@@ -244,7 +245,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
         @Override
         public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return null;
+            return TIS.get().getDescriptor(UniqueKeySetter.class);
         }
 
     }

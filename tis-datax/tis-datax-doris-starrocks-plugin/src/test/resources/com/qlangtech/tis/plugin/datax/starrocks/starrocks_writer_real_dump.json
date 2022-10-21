@@ -18,5 +18,5 @@
     "dataxName": "mysql_doris",
     "username": "root"
   },
-  "name": "dorisWriter"
+  "name": "starrocksWriter"
 }

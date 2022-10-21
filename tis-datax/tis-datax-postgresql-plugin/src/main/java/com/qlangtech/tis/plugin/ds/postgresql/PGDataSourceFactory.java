@@ -26,7 +26,9 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.ds.DataType;
+import org.apache.commons.lang3.StringUtils;
+
 
 import java.sql.*;
 import java.util.Collections;
@@ -126,6 +128,23 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             throw new RuntimeException(e);
         }
         return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+    }
+
+
+    @Override
+    protected DataType createColDataType(String colName
+            , String typeName, int dbColType, int colSize) throws SQLException {
+        DataType type = super.createColDataType(colName, typeName, dbColType, colSize);
+        DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
+            @Override
+            public DataType bitType(DataType type) {
+                if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
+                    return new DataType(Types.BOOLEAN, type.typeName, type.columnSize);
+                }
+                return null;
+            }
+        });
+        return fix != null ? fix : type;
     }
 
 //    @Override

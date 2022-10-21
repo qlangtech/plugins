@@ -26,11 +26,11 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -84,7 +84,8 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
         PGDataSourceFactory ds = this.getDataSourceFactory();
         // 多个主键
-        boolean multiPk = tableMapper.getSourceCols().stream().filter((col) -> col.isPk()).count() > 1;
+        boolean multiPk = Objects.requireNonNull(tableMapper.getSourceCols(),"sourceCols can not be null")
+                .stream().filter((col) -> col.isPk()).count() > 1;
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, ds) {
             @Override
@@ -104,7 +105,6 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
                             .append(pks.stream().map((c) -> c.getName()).collect(Collectors.joining(","))).append(")");
                 }
             }
-
 
 
             @Override

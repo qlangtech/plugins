@@ -26,10 +26,11 @@ import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -43,7 +44,8 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2020-11-24 17:42
  **/
-public class TestMySQLDataSourceFactory extends TestCase {
+public class TestMySQLDataSourceFactory  //extends TestCase
+{
 
     private static final String DB_ORDER = "order1";
 
@@ -60,7 +62,6 @@ public class TestMySQLDataSourceFactory extends TestCase {
         DataSourceFactoryPluginStore dbPluginStore = TIS.getDataBasePluginStore(new PostedDSProp(DB_ORDER));
 
         DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
-
         assertNotNull(dataSourceFactory);
 
         List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(EntityName.parse("totalpayinfo"));

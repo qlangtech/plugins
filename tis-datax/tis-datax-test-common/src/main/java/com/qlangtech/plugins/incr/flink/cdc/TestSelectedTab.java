@@ -42,7 +42,9 @@ public class TestSelectedTab extends SelectedTab {
         });
     }
 
-    public static SelectedTab createSelectedTab(EntityName tabName, BasicDataSourceFactory dataSourceFactory, Consumer<SelectedTab> baseTabSetter) {
+    public static SelectedTab createSelectedTab(EntityName tabName //
+            , BasicDataSourceFactory dataSourceFactory //
+            , Consumer<SelectedTab> baseTabSetter) {
         List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");

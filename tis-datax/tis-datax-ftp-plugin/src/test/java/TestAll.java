@@ -18,6 +18,7 @@
 
 import com.qlangtech.tis.plugin.datax.TestDataXFtpReader;
 import com.qlangtech.tis.plugin.datax.TestDataXFtpWriter;
+import com.qlangtech.tis.plugin.datax.TestDataXFtpWriterReal;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -27,7 +28,7 @@ import org.junit.runners.Suite;
  **/
 @RunWith(Suite.class)
 @Suite.SuiteClasses(
-        {TestDataXFtpReader.class, TestDataXFtpWriter.class})
+        {TestDataXFtpReader.class, TestDataXFtpWriter.class, TestDataXFtpWriterReal.class})
 public class TestAll {
 //    public static Test suite() {
 //        TestSuite suite = new TestSuite();

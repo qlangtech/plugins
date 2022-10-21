@@ -18,22 +18,10 @@
 
 package com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl;
 
-import com.google.common.collect.Lists;
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.extension.impl.SuFormProperties;
+import com.qlangtech.tis.extension.impl.StubSuFormGetterContext;
 import com.qlangtech.tis.plugin.common.PluginDesc;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.test.TISEasyMock;
-import com.qlangtech.tis.util.UploadPluginMeta;
-import org.easymock.EasyMock;
 import org.junit.Test;
-
-import java.sql.Types;
-import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,35 +32,37 @@ public class TestSimpleKeyGenerator implements TISEasyMock {
     @Test
     public void testDescJsonGen() {
 
-        SuFormProperties.SuFormGetterContext context = new SuFormProperties.SuFormGetterContext();
+        //   SuFormProperties.SuFormGetterContext context = new SuFormProperties.SuFormGetterContext();
 
-        MockPlugin metaPlugin = this.mock("metaPlugin", MockPlugin.class);
-        UploadPluginMeta param = this.mock("param", UploadPluginMeta.class);
-        String id1 = "id1";
-        EasyMock.expect(param.getExtraParam(
-                IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE)).andReturn(id1);
+        StubSuFormGetterContext suFormGetterContext = new StubSuFormGetterContext(this);
 
-        List<ColumnMetaData> cols = Lists.newArrayList();
-        // (int index, String key, DataType type, boolean pk)
-        cols.add(new ColumnMetaData(0, "user_id", new com.qlangtech.tis.plugin.ds.DataType(Types.BIGINT), true));
-        cols.add(new ColumnMetaData(1, "user_name", new com.qlangtech.tis.plugin.ds.DataType(Types.VARBINARY), false));
-        try {
-            EasyMock.expect(metaPlugin.getTableMetadata(EntityName.parse(id1))).andReturn(cols);
-        } catch (TableNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        context.plugin = metaPlugin;
-        context.param = param;
+//        MockPlugin metaPlugin = this.mock("metaPlugin", MockPlugin.class);
+//        UploadPluginMeta param = this.mock("param", UploadPluginMeta.class);
+//        String id1 = "id1";
+//        param.putExtraParams(IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE, id1);
+//        EasyMock.expectLastCall().times(1);
+//        EasyMock.expect(param.getExtraParam(
+//                IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE)).andReturn(id1);
+//
+//        List<ColumnMetaData> cols = Lists.newArrayList();
+//        // (int index, String key, DataType type, boolean pk)
+//        cols.add(new ColumnMetaData(0, "user_id", new com.qlangtech.tis.plugin.ds.DataType(Types.BIGINT), true));
+//        cols.add(new ColumnMetaData(1, "user_name", new com.qlangtech.tis.plugin.ds.DataType(Types.VARBINARY), false));
+//        try {
+//            EasyMock.expect(metaPlugin.getTableMetadata(EntityName.parse(id1))).andReturn(cols);
+//        } catch (TableNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//        context.plugin = metaPlugin;
+//        context.param = param;
 
-        SuFormProperties.subFormGetterProcessThreadLocal.set(context);
-
+        // SuFormProperties.subFormGetterProcessThreadLocal.set(context);
         this.replay();
+        suFormGetterContext.setSuFormGetterContext();
         PluginDesc.testDescGenerate(SimpleKeyGenerator.class, "simpleKeyGenerator_desc.json");
 
         this.verifyAll();
     }
 
-    private interface MockPlugin extends Describable, DataSourceMeta {
 
-    }
 }

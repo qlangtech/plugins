@@ -159,6 +159,7 @@ public class TestChunjunClickhouseSinkFactory
             SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
             SinkTabPropsExtends sinkExt = new SinkTabPropsExtends();
             sinkExt.tabName = tableName;
+            sinkExt.uniqueKey = Collections.singletonList(colId);
             // ReplaceType replaceMode = new ReplaceType();
             // replaceMode.updateKey = Collections.singletonList(colId);
             InsertType insertType = new InsertType();

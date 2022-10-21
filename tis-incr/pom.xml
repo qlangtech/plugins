@@ -47,7 +47,7 @@
         <module>tis-scala-compiler</module>
         <module>tis-realtime-flink</module>
         <module>tis-incr-test</module>
-        <module>tis-sink-elasticsearch7</module>
+
         <module>tis-sink-elasticsearch7-plugin</module>
 
         <module>tis-sink-starrocks-plugin</module>
@@ -107,6 +107,19 @@
         </plugins>
 
     </build>
-
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>appname</name>
+                    <value>all</value>
+                </property>
+            </activation>
+            <modules>
+                <module>tis-sink-elasticsearch7</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>

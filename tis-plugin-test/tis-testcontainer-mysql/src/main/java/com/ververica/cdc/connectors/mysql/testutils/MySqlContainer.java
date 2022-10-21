@@ -85,7 +85,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     public static BasicDataSourceFactory createMySqlDataSourceFactory(
             TargetResName dataxName, MySqlContainer mySqlContainer) {
         Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
-        Assert.assertNotNull(mySqlV5DataSourceFactory);
+        Assert.assertNotNull("desc of mySqlV5DataSourceFactory can not be null", mySqlV5DataSourceFactory);
 
         Descriptor.FormData formData = new Descriptor.FormData();
         formData.addProp("name", "mysql");

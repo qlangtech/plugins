@@ -177,6 +177,15 @@ public abstract class CUDCDCTestSuit {
         // return "base_id";
     }
 
+    private BasicDataSourceFactory dataSourceFactory;
+
+    public final void visitConn(final BasicDataSourceFactory.IConnProcessor conn) {
+        Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null").visitFirstConnection((c) -> {
+            startProcessConn(c);
+            conn.vist(c);
+        });
+    }
+
     protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
             , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
             throws Exception {
@@ -197,68 +206,75 @@ public abstract class CUDCDCTestSuit {
 
         CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
         //insertCount
-        BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
+        this.dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
         Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
-        dataSourceFactory.visitFirstConnection((conn) -> {
-                    startProcessConn(conn);
-                    PreparedStatement statement = null;
+//        dataSourceFactory.visitFirstConnection((conn) -> {
+//                    startProcessConn(conn);
+        // PreparedStatement statement = null;
+        try {
+            // 执行添加
+            System.out.println("start to insert");
+            for (TestRow r : exampleRows) {
+                visitConn((conn) -> {
+                    insertTestRow(conn, r);
+                });
+                sleepForAWhile();
+
+                System.out.println("wait to show insert rows");
+                waitForSnapshotStarted(snapshot);
+
+                List<AssertRow> rows = fetchRows(snapshot, 1, r, false);
+                for (AssertRow rr : rows) {
+                    System.out.println("------------" + rr.getObj(this.getPrimaryKeyName(tab)));
+                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), consumerHandle, r, rr);
+                }
+                // System.out.println("########################");
+
+            }
+            System.out.println("start to test update");
+
+            Optional<AssertRow> find = null;
+            // 执行更新
+            for (TestRow exceptRow : exampleRows) {
+                if (!exceptRow.execUpdate()) {
+                    continue;
+                }
+
+                List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
+
+
+                visitConn((conn) -> {
                     try {
-                        // 执行添加
-                        System.out.println("start to insert");
-                        for (TestRow r : exampleRows) {
-
-                            insertTestRow(conn, r);
-                            sleepForAWhile();
-
-                            System.out.println("wait to show insert rows");
-                            waitForSnapshotStarted(snapshot);
-
-                            List<AssertRow> rows = fetchRows(snapshot, 1, r, false);
-                            for (AssertRow rr : rows) {
-                                System.out.println("------------" + rr.getObj(this.getPrimaryKeyName(tab)));
-                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), consumerHandle, r, rr);
+                        String updateSql = String.format("UPDATE " + getColEscape() + createTableName(tabName) + getColEscape() + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
+                                , cols.stream().map((e) -> getColEscape() + e.getKey() + getColEscape() + " = ?").collect(Collectors.joining(","))
+                                , Objects.requireNonNull(exceptRow.getIdVal(), "idVal can not be null"));
+                        try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
+                            int colIndex = 1;
+                            for (Map.Entry<String, RowValsUpdate.UpdatedColVal> col : cols) {
+                                col.getValue().setPrepColVal(updateStatement, colIndex++, exceptRow.vals);
                             }
-                            // System.out.println("########################");
-
+                            Assert.assertTrue(updateSql, executePreparedStatement(conn, updateStatement) > 0);
                         }
-                        System.out.println("start to test update");
+                        conn.commit();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                //  statement.close();
+                sleepForAWhile();
 
-                        Optional<AssertRow> find = null;
-                        // 执行更新
-                        for (TestRow exceptRow : exampleRows) {
-                            if (!exceptRow.execUpdate()) {
-                                continue;
-                            }
+                waitForSnapshotStarted(snapshot);
+                int fetchRowSize = this.suitParam.updateRowKind.size();
 
-                            List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
+                List<AssertRow> rows = fetchRows(snapshot, fetchRowSize, exceptRow, false);
+                Assert.assertEquals("rowSize must be", fetchRowSize, rows.size());
+                for (RowKind eventKind : this.suitParam.updateRowKind) {
+                    find = rows.stream().filter((r) -> r.kind == eventKind).findFirst();
+                    Assert.assertTrue("eventKind:" + eventKind + " must be find ", find.isPresent());
 
-                            String updateSql = String.format("UPDATE " + getColEscape() + createTableName(tabName) + getColEscape() + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
-                                    , cols.stream().map((e) -> getColEscape() + e.getKey() + getColEscape() + " = ?").collect(Collectors.joining(","))
-                                    , Objects.requireNonNull(exceptRow.getIdVal(), "idVal can not be null"));
-
-                            try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
-                                int colIndex = 1;
-                                for (Map.Entry<String, RowValsUpdate.UpdatedColVal> col : cols) {
-                                    col.getValue().setPrepColVal(updateStatement, colIndex++, exceptRow.vals);
-                                }
-                                Assert.assertTrue(updateSql, executePreparedStatement(conn, updateStatement) > 0);
-                            }
-
-                            //  statement.close();
-                            sleepForAWhile();
-
-                            waitForSnapshotStarted(snapshot);
-                            int fetchRowSize = this.suitParam.updateRowKind.size();
-
-                            List<AssertRow> rows = fetchRows(snapshot, fetchRowSize, exceptRow, false);
-                            Assert.assertEquals("rowSize must be", fetchRowSize, rows.size());
-                            for (RowKind eventKind : this.suitParam.updateRowKind) {
-                                find = rows.stream().filter((r) -> r.kind == eventKind).findFirst();
-                                Assert.assertTrue("eventKind:" + eventKind + " must be find ", find.isPresent());
-
-                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(eventKind, true))
-                                        , consumerHandle, exceptRow, find.get());
-                            }
+                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(eventKind, true))
+                            , consumerHandle, exceptRow, find.get());
+                }
 
 //                            for (AssertRow rr : rows) {
 //                                //System.out.println("------------" + rr.getInt(keyBaseId));
@@ -267,36 +283,41 @@ public abstract class CUDCDCTestSuit {
 //                                        , consumerHandle, exceptRow, rr);
 //
 //                            }
-                        }
+            }
 
 
-                        System.out.println("start to test delete");
-                        // 执行删除
-                        for (TestRow r : exampleRows) {
-                            if (!r.execDelete()) {
-                                continue;
-                            }
+            System.out.println("start to test delete");
+            // 执行删除
+            this.visitConn((conn) -> {
+                for (TestRow r : exampleRows) {
+                    if (!r.execDelete()) {
+                        continue;
+                    }
 
-                            String deleteSql = String.format("DELETE FROM " + getColEscape() + createTableName(tabName) + getColEscape() + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
-                            try (Statement statement1 = conn.createStatement()) {
-                                Assert.assertTrue(deleteSql, executeStatement(conn, statement1, (deleteSql)) > 0);
-                                sleepForAWhile();
-                                waitForSnapshotStarted(snapshot);
-                                List<AssertRow> rows = fetchRows(snapshot, 1, r, true);
-                                for (AssertRow rr : rows) {
-                                    //System.out.println("------------" + rr.getInt(keyBaseId));
-                                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.DELETE, true)), consumerHandle, r, rr);
+                    String deleteSql = String.format("DELETE FROM " + getColEscape() + createTableName(tabName) + getColEscape() + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
 
-                                }
-                            }
-                        }
+                    try (Statement statement1 = conn.createStatement()) {
+                        Assert.assertTrue(deleteSql, executeStatement(conn, statement1, (deleteSql)) > 0);
+                        conn.commit();
+                    }
 
+                    sleepForAWhile();
+                    waitForSnapshotStarted(snapshot);
+                    List<AssertRow> rows = fetchRows(snapshot, 1, r, true);
+                    for (AssertRow rr : rows) {
+                        //System.out.println("------------" + rr.getInt(keyBaseId));
+                        assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.DELETE, true)), consumerHandle, r, rr);
 
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
                     }
                 }
-        );
+            });
+
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        // }
+
     }
 
     @NotNull
@@ -332,8 +353,8 @@ public abstract class CUDCDCTestSuit {
             }
             Assert.assertEquals(1, executePreparedStatement(conn, statement));
             System.out.println("insert:" + r.getValsList(Optional.empty(), cols).stream().collect(Collectors.joining(",")));
-
         }
+        conn.commit();
     }
 
     @NotNull
@@ -475,7 +496,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected void startProcessConn(Connection conn) throws SQLException {
-        // conn.setAutoCommit(false);
+        conn.setAutoCommit(false);
     }
 
     protected IResultRows getTestBasicFlinkSourceHandle(String tabName) {
@@ -501,8 +522,6 @@ public abstract class CUDCDCTestSuit {
                         throw new IllegalStateException("cols can not be null");
                     }
                     return cols.stream().map(c -> c.meta).collect(Collectors.toList());
-
-                    // throw new UnsupportedOperationException();
                 }
             };
         }

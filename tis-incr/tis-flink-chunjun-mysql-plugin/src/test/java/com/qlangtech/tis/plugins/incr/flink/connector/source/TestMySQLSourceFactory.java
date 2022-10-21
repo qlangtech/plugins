@@ -54,37 +54,12 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
             dataSourceFactory.refectTableInDB(tabs, conn);
 
             System.out.println("refectTableInDB:" + tabs.stream().collect(Collectors.joining(",")));
-
         });
-
-        // super.testStuBinlogConsume();
     }
-
-//    @Test
-//    public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
-//        super.testBinlogConsumeWithDataStreamRegisterInstaneDetailTable();
-//    }
 
     @Test
     @Override
     public void testBinlogConsume() throws Exception {
         super.testBinlogConsume();
     }
-
-//    @Test
-//    @Override
-//    public void testBinlogConsumeWithDataStreamRegisterTable() throws Exception {
-//        super.testBinlogConsumeWithDataStreamRegisterTable();
-//    }
-//
-//    @Test
-//    @Override
-//    public void testBinlogConsumeWithDataStreamRegisterInstaneDetailTable() throws Exception {
-//        super.testBinlogConsumeWithDataStreamRegisterInstaneDetailTable();
-//    }
-
-    //    @Test
-//    public void testSourceRead() {
-//
-//    }
 }

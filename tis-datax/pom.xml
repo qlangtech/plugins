@@ -61,7 +61,7 @@
         <module>tis-ds-mysql-v5-plugin</module>
         <module>tis-ds-mysql-v8-plugin</module>
         <module>tis-datax-local-executor</module>
-        <module>tis-datax-hudi-common-shade</module>
+        <!--        -->
         <module>tis-datax-hudi-dependency</module>
         <module>tis-datax-hudi-test</module>
         <module>tis-datax-hudi-plugin</module>
@@ -99,8 +99,6 @@
                 </exclusions>
             </dependency>
 
-
-
             <dependency>
                 <groupId>com.alibaba.datax</groupId>
                 <artifactId>datax-common</artifactId>
@@ -123,5 +121,20 @@
 
     </dependencyManagement>
 
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>appname</name>
+                    <value>all</value>
+                </property>
+            </activation>
+            <modules>
+                <module>tis-datax-hudi-common-shade</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>

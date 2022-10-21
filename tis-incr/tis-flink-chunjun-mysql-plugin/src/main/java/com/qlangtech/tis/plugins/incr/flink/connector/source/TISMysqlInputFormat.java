@@ -80,29 +80,12 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
         };
     }
 
-//    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
-//    createColumnConverter(JdbcDialect jdbcDialect, JdbcConf jdbcConf, List<ColMeta> colsMeta) {
-//        List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(colsMeta.stream().collect(Collectors.toList()));
-//        List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
-//        List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters = Lists.newArrayList();
-//        LogicalType type = null;
-//        for (FlinkCol col : flinkCols) {
-//            type = col.type.getLogicalType();
-//            toInternalConverters.add(JdbcColumnConverter.getRowDataValConverter(type));
-//            toExternalConverters.add(Pair.of(JdbcColumnConverter.createJdbcStatementValConverter(type, col.rowDataValGetter), type));
-//        }
-//
-//        return jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters)
-//    }
-
-
     @Override
     protected TableCols getTableMetaData() {
         return new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
     }
-
     @Override
     protected boolean useCustomReporter() {
-        return false;//jdbcConf.isIncrement() && jdbcConf.getInitReporter();
+        return false;
     }
 }

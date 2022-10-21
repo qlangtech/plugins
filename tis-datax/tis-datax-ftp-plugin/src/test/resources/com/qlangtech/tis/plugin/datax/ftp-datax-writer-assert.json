@@ -1,25 +1,26 @@
 {
-  "name": "ftpwriter",
-  "parameter": {
+  "name":"ftpwriter",
+  "parameter":{
     "compress":"none",
-    "encoding": "utf-8",
-    "fieldDelimiter": ",",
-    "fileFormat": "text",
+    "connectPattern":"PASV",
+    "encoding":"utf-8",
+    "fieldDelimiter":",",
+    "fileFormat":"text",
     "fileName":"orderinfo_new",
-    "header": [
+    "header":[
       "col1",
       "col2",
       "col3"
     ],
-    "host": "192.168.28.201",
-    "nullFormat": "\\N",
-    "password": "test",
-    "path": "/tmp/data/",
-    "port": 21,
-    "protocol": "ftp",
-    "suffix": ".text",
-    "timeout": 33333,
-    "username": "test",
-    "writeMode": "truncate"
+    "host":"192.168.28.201",
+    "nullFormat":"\\N",
+    "password":"test",
+    "path":"/tmp/data/",
+    "port":21,
+    "protocol":"ftp",
+    "suffix":".text",
+    "timeout":33333,
+    "username":"test",
+    "writeMode":"truncate"
   }
 }

@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import com.qlangtech.tis.plugins.incr.flink.connector.dialect.TISMysqlDialect;
+import com.qlangtech.tis.web.start.TisAppLaunch;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -68,6 +69,20 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
             super(syncConf, null, new TISMysqlDialect());
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
+        }
+
+
+        /**
+         * @see com.mysql.jdbc.StatementImpl createStreamingResultSet
+         * @see com.dtstack.chunjun.connector.jdbc.source.JdbcInputFormat nextRecordInternal
+         */
+        @Override
+        protected int getDefaultFetchSize() {
+            // 测试中发现 使用 Integer.MIN_VALUE 会创建一个基于streaming的Resource会导致 JdbcInputFormat.nextRecordInternal 方法中 在finally 中执行result.next blocked
+            if (TisAppLaunch.isTestMock()) {
+                return 0;
+            }
+            return super.getDefaultFetchSize();
         }
 
         @Override

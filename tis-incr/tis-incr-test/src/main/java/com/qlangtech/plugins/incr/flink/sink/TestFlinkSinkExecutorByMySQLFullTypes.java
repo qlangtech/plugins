@@ -24,15 +24,19 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpsertType;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -65,6 +69,8 @@ public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSin
         sinkExt.uniqueKey = getUniqueKey();
         this.tabFullType.setIncrSinkProps(sinkExt);
 
+        List<CMeta> cols = this.tabFullType.getCols();
+        Assert.assertTrue(CollectionUtils.isNotEmpty(cols));
         return this.tabFullType;
     }
 

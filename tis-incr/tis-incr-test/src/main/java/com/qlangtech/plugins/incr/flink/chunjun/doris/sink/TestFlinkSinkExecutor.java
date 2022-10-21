@@ -49,6 +49,7 @@ import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.test.EasyMockUtil;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.io.FileUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -101,6 +102,11 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    @Before
+    public void startClearMocks() {
+        this.clearMocks();
+    }
 
     @Ignore
     @Test

@@ -43,7 +43,7 @@
     <string>json_c</string>
   </cols>
   <colsMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>id</name>
       <type>
         <type>4</type>
@@ -52,8 +52,8 @@
       </type>
       <pk>true</pk>
       <nullable>false</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>tiny_c</name>
       <type>
         <type>-6</type>
@@ -62,8 +62,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>tiny_un_c</name>
       <type>
         <type>-6</type>
@@ -72,8 +72,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>small_c</name>
       <type>
         <type>5</type>
@@ -82,8 +82,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>small_un_c</name>
       <type>
         <type>5</type>
@@ -92,8 +92,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>medium_c</name>
       <type>
         <type>4</type>
@@ -102,8 +102,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>medium_un_c</name>
       <type>
         <type>-5</type>
@@ -112,8 +112,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>int_c</name>
       <type>
         <type>4</type>
@@ -122,8 +122,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>int_un_c</name>
       <type>
         <type>-5</type>
@@ -132,8 +132,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>int11_c</name>
       <type>
         <type>4</type>
@@ -142,8 +142,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>big_c</name>
       <type>
         <type>-5</type>
@@ -152,8 +152,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>big_un_c</name>
       <type>
         <type>-5</type>
@@ -162,8 +162,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>varchar_c</name>
       <type>
         <type>12</type>
@@ -172,8 +172,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>char_c</name>
       <type>
         <type>1</type>
@@ -182,8 +182,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>real_c</name>
       <type>
         <type>8</type>
@@ -192,8 +192,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>float_c</name>
       <type>
         <type>7</type>
@@ -202,8 +202,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>double_c</name>
       <type>
         <type>8</type>
@@ -212,8 +212,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>decimal_c</name>
       <type>
         <type>3</type>
@@ -223,8 +223,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>numeric_c</name>
       <type>
         <type>3</type>
@@ -233,8 +233,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>big_decimal_c</name>
       <type>
         <type>3</type>
@@ -244,8 +244,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>bit1_c</name>
       <type>
         <type>-7</type>
@@ -254,8 +254,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>tiny1_c</name>
       <type>
         <type>-7</type>
@@ -264,8 +264,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>boolean_c</name>
       <type>
         <type>-7</type>
@@ -274,8 +274,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>date_c</name>
       <type>
         <type>91</type>
@@ -284,8 +284,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>time_c</name>
       <type>
         <type>92</type>
@@ -294,8 +294,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>datetime3_c</name>
       <type>
         <type>93</type>
@@ -304,8 +304,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>datetime6_c</name>
       <type>
         <type>93</type>
@@ -314,8 +314,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>timestamp_c</name>
       <type>
         <type>93</type>
@@ -324,8 +324,8 @@
       </type>
       <pk>false</pk>
       <nullable>false</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>file_uuid</name>
       <type>
         <type>-2</type>
@@ -334,8 +334,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>bit_c</name>
       <type>
         <type>-2</type>
@@ -344,8 +344,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>text_c</name>
       <type>
         <type>-1</type>
@@ -354,8 +354,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>tiny_blob_c</name>
       <type>
         <type>-2</type>
@@ -364,8 +364,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>blob_c</name>
       <type>
         <type>-4</type>
@@ -374,8 +374,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>medium_blob_c</name>
       <type>
         <type>-4</type>
@@ -384,8 +384,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>long_blob_c</name>
       <type>
         <type>-4</type>
@@ -394,8 +394,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>year_c</name>
       <type>
         <type>4</type>
@@ -404,8 +404,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>enum_c</name>
       <type>
         <type>1</type>
@@ -414,8 +414,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>set_c</name>
       <type>
         <type>1</type>
@@ -424,8 +424,8 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
-    <com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
+    <com.qlangtech.tis.plugin.ds.CMeta>
       <name>json_c</name>
       <type>
         <type>12</type>
@@ -435,6 +435,6 @@
       </type>
       <pk>false</pk>
       <nullable>true</nullable>
-    </com.qlangtech.tis.plugin.ds.ISelectedTab_-ColMeta>
+    </com.qlangtech.tis.plugin.ds.CMeta>
   </colsMeta>
 </com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab>

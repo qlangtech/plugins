@@ -24,11 +24,11 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlWriter;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
-import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpdateType;
+import com.qlangtech.tis.plugins.incr.flink.connector.impl.UpsertType;
 import com.ververica.cdc.connectors.postgres.PostgresTestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,9 +62,12 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
 
     @Override
     protected UpdateMode createIncrMode() {
-        UpdateType updateMode = new UpdateType();
+        // UpdateType updateMode = new UpdateType();
+
+        UpsertType upsert = new UpsertType();
+        return upsert;
         //  updateMode.updateKey = Lists.newArrayList(colId);
-        return updateMode;
+        // return updateMode;
     }
 
     @Override

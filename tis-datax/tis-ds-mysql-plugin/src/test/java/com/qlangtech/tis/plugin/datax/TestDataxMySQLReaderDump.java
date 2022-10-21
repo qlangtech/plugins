@@ -21,10 +21,10 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.BasicTest;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.plugin.test.BasicTest;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
@@ -35,8 +35,6 @@ import org.testcontainers.lifecycle.Startables;
 
 import java.io.File;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）

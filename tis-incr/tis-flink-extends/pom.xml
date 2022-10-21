@@ -56,7 +56,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.qlagntech.tis</groupId>
+            <groupId>com.qlangtech.tis</groupId>
             <artifactId>datax-config</artifactId>
             <scope>compile</scope>
         </dependency>

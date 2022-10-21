@@ -155,7 +155,7 @@
 
         <dependency>
             <artifactId>datax-config</artifactId>
-            <groupId>com.qlagntech.tis</groupId>
+            <groupId>com.qlangtech.tis</groupId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

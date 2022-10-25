@@ -46,7 +46,6 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.Attributes;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
@@ -170,7 +169,7 @@ CompileAndPackage implements ICompileAndPackage {
         //====================================================================
         TargetResName collection = new TargetResName(appName);
         // 插件元数据
-        createPluginMetaInfo(webInf, collection);
+        Manifest tpiMeta = createPluginMetaInfo(collection);
         //====================================================================
 
         FileObjectsContext tisExtension = new FileObjectsContext();
@@ -200,7 +199,7 @@ CompileAndPackage implements ICompileAndPackage {
         File f = null;
         Path pluginRootPath = pluginDir.toPath();
         try (JarOutputStream jaroutput = new JarOutputStream(
-                FileUtils.openOutputStream(tpi, false))) {
+                FileUtils.openOutputStream(tpi, false), tpiMeta)) {
             Iterator<File> fit = FileUtils.iterateFiles(pluginDir, null, true);
             while (fit.hasNext()) {
                 f = fit.next();
@@ -228,7 +227,7 @@ CompileAndPackage implements ICompileAndPackage {
     }
 
 
-    private void createPluginMetaInfo(File webInf, TargetResName collection) {
+    private Manifest createPluginMetaInfo(TargetResName collection) {
         Manifest man = new Manifest();
         Attributes mattrs = man.getMainAttributes();
 
@@ -254,13 +253,13 @@ CompileAndPackage implements ICompileAndPackage {
             mattrs.put(new Attributes.Name(PluginStrategy.KEY_MANIFEST_DEPENDENCIES)
                     , dpts.stream().collect(Collectors.joining(",")));
         }
-
-        try (OutputStream output = FileUtils.openOutputStream(
-                new File(webInf.getParentFile(), JarFile.MANIFEST_NAME), false)) {
-            man.write(output);
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+        return man;
+//        try (OutputStream output = FileUtils.openOutputStream(
+//                new File(webInf.getParentFile(), JarFile.MANIFEST_NAME), false)) {
+//            man.write(output);
+//        } catch (Exception e) {
+//            throw new IllegalStateException(e);
+//        }
 
     }
 

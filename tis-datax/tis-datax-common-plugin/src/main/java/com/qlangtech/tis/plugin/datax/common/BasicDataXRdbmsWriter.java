@@ -150,10 +150,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
             BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
             String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
             for (String jdbcUrl : jdbcUrls) {
+                final EntityName tab = EntityName.parse(tableName);
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
                     boolean tableExist = false;
                     try {
-                        dsFactory.getTableMetadata(conn, EntityName.parse(tableName));
+                        dsFactory.getTableMetadata(conn, tab);
                         tableExist = true;
                     } catch (TableNotFoundException e) {
                         logger.warn(e.toString());
@@ -164,7 +165,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                         boolean success = false;
                         try {
                             try (Statement statement = conn.createStatement()) {
-                                logger.info("create table:{}\n   script:{}", tableName, createScript);
+                                logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
                                 success = statement.execute(createScript);
                             }
                         } catch (SQLException e) {
@@ -174,7 +175,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 //                            throw new IllegalStateException("table:" + tableName + " have not been create successful");
 //                        }
                     } else {
-                        logger.info("table:{} already exist ,skip the create table step", tableName);
+                        logger.info("table:{} already exist ,skip the create table step", tab.getFullName());
                     }
 //                    tabs = Lists.newArrayList();
 //                    dsFactory.refectTableInDB(tabs, conn);

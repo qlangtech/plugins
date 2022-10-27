@@ -16,8 +16,8 @@
     {
         "jdbcUrl": [
         "${reader.jdbcUrl}"
-    ],
-    "querySql": [
+    ]
+    ,"querySql": [
         "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
     ]
    }

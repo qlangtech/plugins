@@ -134,14 +134,6 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     private ResultSet getColRelevantMeta(EntityName table
             , Function<OracleTab, ResultSet> containSchema) throws SQLException {
         try {
-//            OracleTab otab = null;
-//            if (StringUtils.indexOf(table, ".") > -1) {
-//                String[] tab = StringUtils.split(table, ".");
-//                otab = new OracleTab(tab[0], tab[1]);
-//            } else {
-//                otab = new OracleTab(Optional.empty(), table);
-//            }
-
             return containSchema.apply(OracleTab.create(table.getFullName()));
         } catch (Exception e) {
             throw new SQLException(e);

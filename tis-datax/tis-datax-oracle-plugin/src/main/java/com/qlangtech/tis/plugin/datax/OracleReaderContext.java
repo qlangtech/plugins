@@ -51,13 +51,20 @@ public class OracleReaderContext extends RdbmsReaderContext<DataXOracleReader, O
 
     @Override
     public String getSourceEntityName() {
+        return getTableName(true);
+    }
 
+    private String getTableName(boolean escapeEntity) {
         OracleTab tab = OracleTab.create(this.sourceTableName);
         StringBuffer val = new StringBuffer();
         if (tab.owner.isPresent()) {
-            val.append(this.escapeEntity(tab.owner.get())).append(".");
+            val.append(escapeEntity ? this.escapeEntity(tab.owner.get()) : tab.owner.get()).append(".");
         }
-        return val.append(this.escapeEntity(tab.tabName)).toString();
+        return val.append(escapeEntity ? this.escapeEntity(tab.tabName) : tab.tabName).toString();
+    }
+
+    public String getTableName() {
+        return getTableName(false);
     }
 
     public boolean isContainSplitPk() {

@@ -18,17 +18,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
-import org.easymock.EasyMock;
+import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,20 +41,39 @@ public class TestDataXOracleReader {
         String dftTemplate = DataXOracleReader.getDftTemplate();
         Assert.assertNotNull("dftTemplate can not be null", dftTemplate);
     }
+
     @Test
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXOracleReader.class);
         Assert.assertTrue(extraProps.isPresent());
     }
+
     @Test
     public void testDescGenerate() throws Exception {
 
         PluginDesc.testDescGenerate(DataXOracleReader.class, "oracle-datax-reader-descriptor.json");
     }
+
+    private static OracleDataSourceFactory createOracleDataSourceFactory() {
+
+        OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
+        dsFactory.name = "xe";
+        // dsFactory.dbName = "xe";
+        dsFactory.userName = "system";
+        dsFactory.password = "oracle";
+        dsFactory.nodeDesc = "192.168.28.201";
+        dsFactory.port = 1521;
+
+        SIDConnEntity connEntity = new SIDConnEntity();
+        connEntity.sid = "xe";
+        dsFactory.connEntity = connEntity;
+        return dsFactory;
+    }
+
     @Test
     public void testTemplateGenerate() throws Exception {
 
-        final OracleDataSourceFactory dsFactory = TestOracleDataSourceFactory.createOracleDataSourceFactory();
+        final OracleDataSourceFactory dsFactory = createOracleDataSourceFactory(); // TestOracleDataSourceFactory.createOracleDataSourceFactory();
 
         DataXOracleReader reader = new DataXOracleReader() {
             @Override
@@ -88,8 +102,6 @@ public class TestDataXOracleReader {
 
         ReaderTemplate.validateDataXReader("oracle-datax-reader-template-assert.json", dataXName, reader);
     }
-
-
 
 
 }

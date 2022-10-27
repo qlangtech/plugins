@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.ds.oracle;
 
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Optional;

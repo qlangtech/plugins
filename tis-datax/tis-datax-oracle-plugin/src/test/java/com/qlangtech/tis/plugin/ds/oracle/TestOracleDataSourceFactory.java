@@ -25,7 +25,6 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -61,17 +60,26 @@ public class TestOracleDataSourceFactory {
 //        System.out.println(createDDL);
 
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
+        Assert.assertTrue("allAuthorized must be true", dsFactory.allAuthorized);
 
         List<String> tablesInDB = dsFactory.getTablesInDB();
         Assert.assertTrue(tablesInDB.size() > 1);
+        EntityName tab = EntityName.parse("SYSTEM." + OracleDSFactoryContainer.testTabName);
+        Assert.assertTrue(tablesInDB.contains(tab.getFullName()));
         // tablesInDB.forEach((tab) -> System.out.println(tab));
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(EntityName.parse(StringUtils.upperCase("BM")));
-
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(tab);
         Assert.assertTrue(cols.size() > 0);
-
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.isPk() + " " + col.getType());
         }
+
+        // 出来的表名应该是没有前缀的
+        EntityName tabNonePrefix = EntityName.parse(OracleDSFactoryContainer.testTabName);
+        dsFactory.allAuthorized = false;
+        tablesInDB = dsFactory.getTablesInDB();
+        Assert.assertTrue(tablesInDB.contains(tabNonePrefix.getFullName()));
+        cols = dsFactory.getTableMetadata(tabNonePrefix);
+        Assert.assertTrue(cols.size() > 0);
     }
 
     @Test

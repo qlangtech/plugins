@@ -131,7 +131,7 @@ public class TestDataXHudiWriter {
         TargetResName dbName = new TargetResName("hudi-data-test-mysql-ds");
 
         Optional<Context> context = Optional.of(new DefaultContext());
-        BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(dbName, MYSQL_CONTAINER);
+        BasicDataSourceFactory dsFactory = MYSQL_CONTAINER.createMySqlDataSourceFactory(dbName);// MySqlContainer.createMySqlDataSourceFactory(dbName, MYSQL_CONTAINER);
         TIS.getDataBasePluginStore(new PostedDSProp(dbName.getName()))
                 .setPlugins(IPluginContext.namedContext(dbName.getName()), context
                         , Collections.singletonList(new Descriptor.ParseDescribable(dsFactory)));

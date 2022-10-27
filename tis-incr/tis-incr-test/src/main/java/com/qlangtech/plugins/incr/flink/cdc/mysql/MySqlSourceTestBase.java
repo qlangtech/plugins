@@ -47,20 +47,10 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
 
-    //protected static final int DEFAULT_PARALLELISM = 4;
-    protected static final MySqlContainer MYSQL_CONTAINER =
-            MySqlContainer.createMysqlContainer("/docker/server-gtids/my.cnf", "/docker/setup.sql");
-//            (MySqlContainer)
-//                    new MySqlContainer()
-//                            .withConfigurationOverride("docker/server-gtids/my.cnf")
-//                            .withSetupSQL("docker/setup.sql")
-//                            .withDatabaseName("flink-test")
-//                            .withUsername("flinkuser")
-//                            .withPassword("flinkpw")
-//                            .withLogConsumer(new TISLoggerConsumer(LOG));
+    protected abstract MySqlContainer getMysqlContainer();
 
-    public static BasicDataSourceFactory createDataSource(TargetResName dataxName) {
-        return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+    public BasicDataSourceFactory createDataSource(TargetResName dataxName) {
+        return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
     }
 
     public static String tabStu = "stu";
@@ -97,9 +87,7 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
 
     @BeforeClass
     public static void startContainers() {
-        LOG.info("Starting containers...");
-        Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
-        LOG.info("Containers are started.");
+
     }
 
 

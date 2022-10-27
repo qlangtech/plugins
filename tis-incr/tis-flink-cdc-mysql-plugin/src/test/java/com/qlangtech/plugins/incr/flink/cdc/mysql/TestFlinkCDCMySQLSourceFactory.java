@@ -73,6 +73,11 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         // return CDCTestSuitParams.chunjunBuilder();
     }
 
+    @Override
+    protected MySqlContainer getMysqlContainer() {
+        return MySqlContainer.MYSQL5_CONTAINER;
+    }
+
     // @Test(timeout = 20000)
     @Test()
     public void testBinlogConsume() throws Exception {
@@ -83,7 +88,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -114,7 +120,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -238,7 +245,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
 
             @Override
@@ -273,7 +281,8 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
 
             @Override

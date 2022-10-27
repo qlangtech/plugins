@@ -113,36 +113,17 @@ public class OracleDSFactoryContainer {
         return parseDescribable.getInstance();
     }
 
+    public static final String testTabName = "testTab";
+
     //@BeforeClass
     public static BasicDataSourceFactory initialize() {
         oracleContainer = new TISOracleContainer();
         oracleContainer.usingSid();
         oracleContainer.start();
         oracleDS = createOracleDataSourceFactory(dataName);
-//        new OracleDataSourceFactory();
-//        oracleDS.userName = oracleContainer.getUsername();
-//        oracleDS.password = oracleContainer.getPassword();
-//        oracleDS.port = oracleContainer.getOraclePort();
-//
-//        //oracleDS.asServiceName = !oracleContainer.isUsingSid();
-//
-//        if (oracleContainer.isUsingSid()) {
-//            SIDConnEntity sidConn = new SIDConnEntity();
-//            sidConn.sid = oracleContainer.getSid();
-//            oracleDS.connEntity = sidConn;
-//        } else {
-//            ServiceNameConnEntity serviceConn = new ServiceNameConnEntity();
-//            serviceConn.serviceName = oracleContainer.getDatabaseName();
-//            oracleDS.connEntity = serviceConn;
-//        }
-//
-//        // oracleDS.dbName = oracleDS.asServiceName ? oracleContainer.getDatabaseName() : oracleContainer.getSid();
-//        oracleDS.nodeDesc = oracleContainer.getHost();//.getJdbcUrl()
-//
-//        oracleDS.allAuthorized = true;
         System.out.println(oracleContainer.getJdbcUrl());
         System.out.println(oracleDS.toString());
-        final String testTabName = "testTab";
+
         oracleDS.visitAllConnection((conn) -> {
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery("select 1,sysdate from dual")) {
@@ -163,6 +144,15 @@ public class OracleDSFactoryContainer {
             for (ColumnMetaData col : cols) {
                 System.out.println("key:" + col.getName() + ",type:" + col.getType());
             }
+
+            // 创建新用户
+            //try (Statement statement = conn.createStatement()) {
+            //  statement.execute("CREATE TABLESPACE tbs_perm_01   DATAFILE 'tbs_perm_01.dat' SIZE 20M  ONLINE;");
+            // statement.execute("create user \"baisui\" identified by 123456");
+            // statement.execute(" grant connect,resource,dba to \"baisui\"");
+            //  statement.execute("create table \"baisui\".\"" + testTabName + "\"( U_ID integer ,birthday DATE ,update_time TIMESTAMP ,U_NAME varchar(20),CONSTRAINT testTab_pk PRIMARY KEY (U_ID))");
+            // }
+
         });
         return oracleDS;
     }

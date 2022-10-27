@@ -29,8 +29,8 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -59,7 +59,8 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor {
     @BeforeClass
     public static void initialize() throws Exception {
         MySqlSourceTestBase.startContainers();
-        mysqlDSFactory = MySqlSourceTestBase.createDataSource(new TargetResName(dataXName));
+        mysqlDSFactory = MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(new TargetResName(dataXName));
+        //    mysqlDSFactory = MySqlSourceTestBase.createDataSource(new TargetResName(dataXName));
     }
 
 

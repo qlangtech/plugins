@@ -115,7 +115,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                //return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -209,7 +210,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -233,7 +235,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);// MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
 //            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
@@ -274,7 +276,8 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
 //            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {

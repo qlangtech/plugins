@@ -22,8 +22,12 @@ import com.qlangtech.plugins.incr.flink.cdc.mysql.BasicMySQLCDCTest;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.compress.utils.Lists;
+import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,11 +36,31 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-28 14:21
  **/
+@RunWith(Parameterized.class)
 public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
+
+    private final MySqlContainer mySqlContainer;
 
     @Override
     protected MQListenerFactory createMySQLCDCFactory() {
         return new MySQLSourceFactory();
+    }
+
+    public TestMySQLSourceFactory(MySqlContainer mySqlContainer) {
+        this.mySqlContainer = mySqlContainer;
+    }
+
+    @Override
+    protected MySqlContainer getMysqlContainer() {
+        return this.mySqlContainer;
+    }
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Object[][] data() {
+        return new Object[][]{ //
+             //   {MySqlContainer.MYSQL5_CONTAINER},
+                {MySqlContainer.MYSQL8_CONTAINER},
+        };
     }
 
 
@@ -48,6 +72,7 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
 
         BasicDataSourceFactory dataSourceFactory = createDataSource(new TargetResName("x"));
 
+        Assert.assertNotNull(dataSourceFactory);
 
         dataSourceFactory.visitFirstConnection((conn) -> {
             List<String> tabs = Lists.newArrayList();

@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.images.builder.Transferable;
+import org.testcontainers.lifecycle.Startables;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Docker container for MySQL. The difference between this class and {@link
@@ -43,11 +45,21 @@ import java.util.Set;
 @SuppressWarnings("rawtypes")
 public class MySqlContainer extends JdbcDatabaseContainer {
 
+    //protected static final int DEFAULT_PARALLELISM = 4;
+
+
     private static Logger LOG = LoggerFactory.getLogger(MySqlContainer.class);
+
 
     public static final String IMAGE = "mysql";
     public static final String DEFAULT_TAG = "5.7";
+    public static final String VERSION_8 = "8.0.11";
     public static final Integer MYSQL_PORT = 3306;
+
+    public static final MySqlContainer MYSQL5_CONTAINER =
+            createMysqlContainer(DEFAULT_TAG, "/docker/server-gtids/my.cnf", "/docker/setup.sql");
+    public static final MySqlContainer MYSQL8_CONTAINER =
+            createMysqlContainer(VERSION_8, "/docker/server-gtids/my.cnf", "/docker/setup.sql");
 
     private static final String MY_CNF_CONFIG_OVERRIDE_PARAM_NAME = "MY_CNF";
     private static final String SETUP_SQL_PARAM_NAME = "SETUP_SQL";
@@ -56,6 +68,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     private String databaseName = "test";
     private String username = "test";
     private String password = "test";
+    private final String imageTag;
 
     private MySqlContainer() {
         this(DEFAULT_TAG);
@@ -64,11 +77,16 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     private MySqlContainer(String tag) {
         super(IMAGE + ":" + tag);
         addExposedPort(MYSQL_PORT);
+        this.imageTag = tag;
     }
 
     public static final MySqlContainer createMysqlContainer(String myConf, String sqlClasspath) {
+        return createMysqlContainer(DEFAULT_TAG, myConf, sqlClasspath);
+    }
+
+    public static final MySqlContainer createMysqlContainer(String tag, String myConf, String sqlClasspath) {
         return (MySqlContainer)
-                new MySqlContainer()
+                new MySqlContainer(tag)
                         //.withConfigurationOverride("docker/server-gtids/my.cnf")
                         // .withSetupSQL("docker/setup.sql")
                         .withDatabaseName("flink-test")
@@ -82,21 +100,30 @@ public class MySqlContainer extends JdbcDatabaseContainer {
                                 , "/docker-entrypoint-initdb.d/setup.sql");
     }
 
-    public static BasicDataSourceFactory createMySqlDataSourceFactory(
-            TargetResName dataxName, MySqlContainer mySqlContainer) {
-        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor("MySQLV5DataSourceFactory");
+    BasicDataSourceFactory ds;
+
+    public BasicDataSourceFactory createMySqlDataSourceFactory(
+            TargetResName dataxName) {
+        if (this.ds != null) {
+            return this.ds;
+        }
+        LOG.info("Starting containers...");
+        Startables.deepStart(Stream.of(this)).join();
+        LOG.info("Containers are started.");
+
+        Descriptor mySqlV5DataSourceFactory = TIS.get().getDescriptor(imageTag.equals(DEFAULT_TAG) ? "MySQLV5DataSourceFactory" : "MySQLV8DataSourceFactory");
         Assert.assertNotNull("desc of mySqlV5DataSourceFactory can not be null", mySqlV5DataSourceFactory);
 
         Descriptor.FormData formData = new Descriptor.FormData();
         formData.addProp("name", "mysql");
-        formData.addProp("dbName", mySqlContainer.getDatabaseName());
+        formData.addProp("dbName", this.getDatabaseName());
         // formData.addProp("nodeDesc", mySqlContainer.getHost());
 
         formData.addProp("nodeDesc", NetUtils.getHost());
 
-        formData.addProp("password", mySqlContainer.getPassword());
-        formData.addProp("userName", mySqlContainer.getUsername());
-        formData.addProp("port", String.valueOf(mySqlContainer.getDatabasePort()));
+        formData.addProp("password", this.getPassword());
+        formData.addProp("userName", this.getUsername());
+        formData.addProp("port", String.valueOf(this.getDatabasePort()));
         formData.addProp("encode", "utf8");
         formData.addProp("useCompression", "true");
 
@@ -104,7 +131,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
                 = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.getInstance());
 
-        return parseDescribable.getInstance();
+        return this.ds = parseDescribable.getInstance();
     }
 
     @Override

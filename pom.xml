@@ -58,6 +58,10 @@
 
         <module>tis-kafka-plugin</module>
 
+        <module>tis-plugin-test/tis-testcontainer-mysql</module>
+        <module>tis-plugin-test/tis-testcontainer-postgresql</module>
+        <module>tis-plugin-test/tis-testcontainer-oracle</module>
+
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
     </modules>
@@ -75,9 +79,7 @@
                 <appname>all</appname>
             </properties>
             <modules>
-                <module>tis-plugin-test/tis-testcontainer-mysql</module>
-                <module>tis-plugin-test/tis-testcontainer-postgresql</module>
-                <module>tis-plugin-test/tis-testcontainer-oracle</module>
+
             </modules>
         </profile>
     </profiles>

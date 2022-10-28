@@ -24,7 +24,9 @@ import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactor
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
+import com.ververica.cdc.connectors.mysql.testutils.MySQL8;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,10 +34,9 @@ import org.junit.ClassRule;
 import org.junit.rules.TestRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.lifecycle.Startables;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Basic class for testing {@link MySqlSource}.
@@ -47,10 +48,22 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
     @ClassRule(order = 100)
     public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
 
-    protected abstract MySqlContainer getMysqlContainer();
+    protected abstract JdbcDatabaseContainer getMysqlContainer();
+
+    private BasicDataSourceFactory dsFactory;
 
     public BasicDataSourceFactory createDataSource(TargetResName dataxName) {
-        return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+        if (this.dsFactory != null) {
+            return this.dsFactory;
+        }
+        JdbcDatabaseContainer container = this.getMysqlContainer();
+        if (container instanceof MySqlContainer) {
+            return this.dsFactory = ((MySqlContainer) container).createMySqlDataSourceFactory(dataxName);
+        } else {
+            this.dsFactory = MySqlContainer.getBasicDataSourceFactory(dataxName, MySQL8.VERSION_8, container);
+            this.dsFactory.initializeDB(StringUtils.substring(MySqlContainer.INITIAL_DB_SQL, 1));
+            return dsFactory;
+        }
     }
 
     public static String tabStu = "stu";

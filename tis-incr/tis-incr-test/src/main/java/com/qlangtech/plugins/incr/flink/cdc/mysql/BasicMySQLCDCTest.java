@@ -34,7 +34,6 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
-import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
@@ -115,7 +114,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                return createDataSource(dataxName);
                 //return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -210,7 +209,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -235,7 +234,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);// MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+                return createDataSource(dataxName);// MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
 //            protected SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
@@ -276,7 +275,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+                return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 

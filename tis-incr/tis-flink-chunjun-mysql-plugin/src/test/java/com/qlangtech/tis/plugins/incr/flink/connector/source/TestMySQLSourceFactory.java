@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,27 +40,28 @@ import java.util.stream.Collectors;
 @RunWith(Parameterized.class)
 public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
 
-    private final MySqlContainer mySqlContainer;
+    private final JdbcDatabaseContainer mySqlContainer;
 
     @Override
     protected MQListenerFactory createMySQLCDCFactory() {
         return new MySQLSourceFactory();
     }
 
-    public TestMySQLSourceFactory(MySqlContainer mySqlContainer) {
+    public TestMySQLSourceFactory(JdbcDatabaseContainer mySqlContainer) {
         this.mySqlContainer = mySqlContainer;
     }
 
     @Override
-    protected MySqlContainer getMysqlContainer() {
+    protected JdbcDatabaseContainer getMysqlContainer() {
         return this.mySqlContainer;
     }
 
     @Parameterized.Parameters(name = "{0}")
     public static Object[][] data() {
         return new Object[][]{ //
-             //   {MySqlContainer.MYSQL5_CONTAINER},
-                {MySqlContainer.MYSQL8_CONTAINER},
+                {MySqlContainer.MYSQL5_CONTAINER},
+                // {MySQL8.createMySqlContainer()},
+                // {MySqlContainer.MYSQL8_CONTAINER},
         };
     }
 

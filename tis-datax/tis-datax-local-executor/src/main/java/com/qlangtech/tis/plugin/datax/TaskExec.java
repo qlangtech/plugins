@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -49,10 +48,11 @@ public class TaskExec {
             , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
-        AtomicBoolean success = new AtomicBoolean(false);
+        //  AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteTaskTrigger() {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
+
             @Override
             public List<String> getTaskDependencies() {
                 return dependencyTasks;
@@ -106,17 +106,17 @@ public class TaskExec {
                     CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
 
                     jobConsumer.consumeMessage(dataXJob);
-                    success.set(true);
+                    // success.set(true);
                 } catch (Throwable e) {
                     //  e.printStackTrace();
-                    success.set(false);
+                    // success.set(false);
                     if (this.hasCanceled) {
                         logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
                     } else {
                         logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
-                        if (!(e instanceof DataXJobSingleProcessorException)) {
-                            throw new RuntimeException(e);
-                        }
+                        // if (!(e instanceof DataXJobSingleProcessorException)) {
+                        throw new RuntimeException(e);
+                        // }
                     }
                 } finally {
                     complete.set(true);

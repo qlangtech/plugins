@@ -32,168 +32,187 @@ import java.time.LocalDate;
  **/
 public class RowFieldGetterFactory {
 
-    public static RowData.FieldGetter intGetter(int colIndex) {
-        return new IntGetter(colIndex);
+    public static RowData.FieldGetter intGetter(String colName, int colIndex) {
+        return new IntGetter(colName, colIndex);
     }
 
-    public static RowData.FieldGetter smallIntGetter(int colIndex) {
-        return new SmallIntGetter(colIndex);
+    public static RowData.FieldGetter smallIntGetter(String colName, int colIndex) {
+        return new SmallIntGetter(colName, colIndex);
     }
 
     public static class StringGetter extends BasicGetter {
-        public StringGetter(int colIndex) {
-            super(colIndex);
+        public StringGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        protected Object getObject(RowData rowData) {
             return String.valueOf(rowData.getString(colIndex));
         }
     }
 
     public static class BlobGetter extends BasicGetter {
-        public BlobGetter(int colIndex) {
-            super(colIndex);
+        public BlobGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        protected Object getObject(RowData rowData) {
             return rowData.getBinary(colIndex);
         }
     }
 
     public static class BoolGetter extends BasicGetter {
-        public BoolGetter(int colIndex) {
-            super(colIndex);
+        public BoolGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getBoolean(colIndex);
         }
     }
 
     public static class DateGetter extends BasicGetter {
-        public DateGetter(int colIndex) {
-            super(colIndex);
+
+        public DateGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(colIndex)));
         }
     }
 
     public static class TimestampGetter extends BasicGetter {
-        public TimestampGetter(int colIndex) {
-            super(colIndex);
+
+        public TimestampGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getTimestamp(colIndex, -1).toTimestamp();
         }
     }
 
 
     public static class DoubleGetter extends BasicGetter {
-        public DoubleGetter(int colIndex) {
-            super(colIndex);
+        public DoubleGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getDouble(colIndex);
         }
     }
 
     public static class DecimalGetter extends BasicGetter {
-        public DecimalGetter(int colIndex) {
-            super(colIndex);
+        public DecimalGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getDecimal(colIndex, -1, -1);
         }
     }
 
 
     public static class BigIntGetter extends BasicGetter {
-        public BigIntGetter(int colIndex) {
-            super(colIndex);
+        public BigIntGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getLong(colIndex);
         }
     }
 
     public static class TimeGetter extends BasicGetter {
-        public TimeGetter(int colIndex) {
-            super(colIndex);
+        public TimeGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Nullable
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return Time.valueOf(SqlDateTimeUtils.unixTimeToLocalTime((rowData.getInt(colIndex))));
         }
     }
 
 
     public static class FloatGetter extends BasicGetter {
-        public FloatGetter(int colIndex) {
-            super(colIndex);
+        public FloatGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getFloat(colIndex);
         }
     }
 
 
     public static class ByteGetter extends BasicGetter {
-        public ByteGetter(int colIndex) {
-            super(colIndex);
+        public ByteGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getByte(colIndex);
         }
     }
 
     static class SmallIntGetter extends BasicGetter {
-        public SmallIntGetter(int colIndex) {
-            super(colIndex);
+        public SmallIntGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getShort(colIndex);
         }
     }
 
     static class IntGetter extends BasicGetter {
 
-        public IntGetter(int colIndex) {
-            super(colIndex);
+        public IntGetter(String colName, int colIndex) {
+            super(colName, colIndex);
         }
 
         @Override
-        public Object getFieldOrNull(RowData rowData) {
+        public Object getObject(RowData rowData) {
             return rowData.getInt(colIndex);
         }
     }
 
     static abstract class BasicGetter implements RowData.FieldGetter {
         final int colIndex;
+        final String colName;
 
-        public BasicGetter(int colIndex) {
+        public BasicGetter(String colName, int colIndex) {
             this.colIndex = colIndex;
+            this.colName = colName;
         }
+
+        @Override
+        public final Object getFieldOrNull(RowData rowData) {
+            return getVal(rowData);
+        }
+
+        private Object getVal(RowData rowData) {
+            try {
+                return getObject(rowData);
+            } catch (ClassCastException e) {
+                throw new RuntimeException("colIdx:" + this.colIndex + ",colName:" + this.colName, e);
+            }
+        }
+
+        protected abstract Object getObject(RowData rowData);
     }
 }

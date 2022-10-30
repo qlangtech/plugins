@@ -102,21 +102,13 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
     }
 
 
-//    /**
-//     * 需要先初始化表starrocks目标库中的表
-//     */
-//    @Override
-//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-//    }
-
     @Override
     public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
         if (!this.autoCreateTable) {
             return null;
         }
-        // https://doris.apache.org/master/zh-CN/sql-reference/sql-statements/Data%20Definition/CREATE%20TABLE.html#create-table
-
+        // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
+        // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
 
         return createTableSqlBuilder.build();
@@ -212,6 +204,16 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
     public static final DataType.TypeVisitor<DorisType> columnTokenRecognise
             = new DataType.TypeVisitor<DorisType>() {
+        @Override
+        public DorisType tinyIntType(DataType dataType) {
+            return new DorisType(dataType, "TINYINT");
+        }
+
+        @Override
+        public DorisType smallIntType(DataType dataType) {
+            return new DorisType(dataType, "SMALLINT");
+        }
+
         @Override
         public DorisType bigInt(DataType type) {
             return new DorisType(type, "BIGINT");

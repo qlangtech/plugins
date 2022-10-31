@@ -16,6 +16,7 @@
  *   limitations under the License.
  */
 import com.qlangtech.tis.plugin.datax.TestDataXElasticsearchWriter;
+import com.qlangtech.tis.plugin.datax.elastic.TestElasticEndpoint;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.framework.Test;
@@ -27,6 +28,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXElasticsearchWriter.class);
+        suite.addTestSuite(TestElasticEndpoint.class);
         return suite;
     }
 }

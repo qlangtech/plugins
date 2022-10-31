@@ -21,14 +21,15 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -104,7 +105,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter() {
             @Override
-            public IHttpToken getToken() {
+            public ElasticEndpoint getToken() {
                 return token;
             }
 
@@ -145,8 +146,8 @@ public class TestDataXElasticsearchWriter extends BasicTest {
         WriterTemplate.valiateCfgGenerate("es-datax-writer-assert.json", dataXWriter, tableMap);
 
 
-        token.accessKeyId = null;
-        token.sccessKeySecret = null;
+        token.authToken = null;
+        // token.sccessKeySecret = null;
 
         WriterTemplate.valiateCfgGenerate("es-datax-writer-assert-without-option.json", dataXWriter, tableMap);
 
@@ -260,28 +261,21 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     }
 
 
-    private static class TestAliyunToken implements IHttpToken {
-        private String accessKeyId;
-        private String sccessKeySecret;
+    private static class TestAliyunToken extends ElasticEndpoint {
 
-        public TestAliyunToken(String accessKeyId, String sccessKeySecret) {
-            this.accessKeyId = accessKeyId;
-            this.sccessKeySecret = sccessKeySecret;
+
+        public TestAliyunToken(String userName, String password) {
+            UsernamePassword auth = new UsernamePassword();
+            auth.userName = userName;
+            auth.password = password;
+            this.authToken = auth;
         }
+
         @Override
         public String identityValue() {
             return null;
         }
 
-        @Override
-        public String getAccessKeyId() {
-            return accessKeyId;
-        }
-
-        @Override
-        public String getAccessKeySecret() {
-            return sccessKeySecret;
-        }
 
         @Override
         public String getEndpoint() {

@@ -1,31 +1,32 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
+import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
+import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,12 +34,14 @@ import java.util.Objects;
  **/
 public class ESContext implements IDataxContext {
     private final DataXElasticsearchWriter writer;
-    private final IHttpToken token;
+    private final ElasticEndpoint token;
     private final ESTableAlias mapper;
+    private final Optional<UsernamePassword> auth;
 
     public ESContext(DataXElasticsearchWriter writer, ESTableAlias mapper) {
         this.writer = writer;
         this.token = writer.getToken();
+        this.auth = Optional.ofNullable((UsernamePassword) token.authToken);
         Objects.requireNonNull(this.token, "token can not be null");
         this.mapper = mapper;
     }
@@ -56,11 +59,14 @@ public class ESContext implements IDataxContext {
 //    }
     // 当用户没有填写认证信息的时候需要有一个占位符，不然提交请求时会报错
     public String getUserName() {
-        return StringUtils.defaultIfBlank(token.getAccessKeyId(), "default");
+        return auth.isPresent() ? auth.get().userName : "default";
+        // return StringUtils.defaultIfBlank(token.getAccessKeyId(), "default");
     }
 
     public String getPassword() {
-        return StringUtils.defaultIfBlank(token.getAccessKeySecret(), "******");
+        return auth.isPresent() ? auth.get().password : "******";
+
+      //  return StringUtils.defaultIfBlank(token.getAccessKeySecret(), "******");
     }
 
     public String getIndex() {

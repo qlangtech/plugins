@@ -18,67 +18,40 @@
 
 package com.qlangtech.tis.plugin.aliyun;
 
-
-import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
- * @author 百岁（baisui@qlangtech.com）
- * @date 2020/04/13
- */
-@Public
-public class HttpEndpoint extends ParamsConfig implements IHttpToken  {
-
-    @FormField(identity = true, ordinal = 0, validate = {Validator.require, Validator.identity})
-    public String name;
-
-    @FormField(ordinal = 1, validate = {Validator.require, Validator.url})
-    public String endpoint;
-
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2022-10-31 09:52
+ **/
+public class AccessKey extends AuthToken {
     // 可以为空
-    @FormField(ordinal = 2, validate = {})
+    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
     public String accessKeyId;
-
     // 可以为空
-    @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {})
+    @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {Validator.require})
     public String accessKeySecret;
 
-    @Override
-    public IHttpToken createConfigInstance() {
-        return this;
-    }
-
-    @Override
-    public String getEndpoint() {
-        return this.endpoint;
-    }
-
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
-
-    @Override
     public String getAccessKeyId() {
         return this.accessKeyId;
     }
 
-    @Override
     public String getAccessKeySecret() {
         return this.accessKeySecret;
     }
 
+
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends Descriptor<AuthToken> {
         @Override
         public String getDisplayName() {
-            return KEY_DISPLAY_NAME;
+            return "accessKey";
         }
     }
 }

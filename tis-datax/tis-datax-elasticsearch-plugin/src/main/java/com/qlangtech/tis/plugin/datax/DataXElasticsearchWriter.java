@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
-import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESInitialization;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -29,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.ISearchEngineTypeTransfer;
@@ -41,6 +39,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -74,11 +73,6 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String index;
-//    @FormField(ordinal = 16, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
-//    public String type;
-
-//    @FormField(ordinal = 17, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String column;
 
     @FormField(ordinal = 20, type = FormFieldType.ENUM, validate = {})
     public Boolean cleanup;
@@ -119,8 +113,10 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
-    public IHttpToken getToken() {
-        return IHttpToken.getToken(this.endpoint);
+
+    public ElasticEndpoint getToken() {
+        ElasticEndpoint aliyunToken = ParamsConfig.getItem(endpoint, ElasticEndpoint.KEY_DISPLAY_NAME);
+        return aliyunToken;
     }
 
     public String getIndexName() {
@@ -159,18 +155,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         if (esSchema == null) {
             throw new IllegalArgumentException("param esSchema can not be null");
         }
-        IHttpToken token = this.getToken();
+        ElasticEndpoint token = this.getToken();
         /********************************************************
          * 初始化索引Schema
          *******************************************************/
         JSONArray schemaCols = esSchema.getSchemaCols();
-        ESClient esClient = new ESClient(ESInitialization.create(token.getEndpoint(),
-                token.getAccessKeyId(),
-                token.getAccessKeySecret(),
-                false,
-                300000,
-                false,
-                false));
+        ESClient esClient = (token.createESClient());
         String type = null;
         try {
             esClient.createIndex(this.getIndexName()
@@ -363,35 +353,6 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
                 DataXElasticsearchWriter.class, "DataXElasticsearchWriter-tpl.json");
     }
 
-
-    //    public static String getDftColumn() {
-//        JSONArray cols = new JSONArray();
-//        JSONObject col = null;
-//        DataxReader reader = DataxWriter.dataReaderThreadlocal.get();
-//        // Objects.requireNonNull(reader, "reader plugin can not be null");
-//        if (reader == null) {
-//            return "[]";
-//        }
-//        try {
-//            List<ISelectedTab> selectedTabs = reader.getSelectedTabs();
-//            Optional<ISelectedTab> first = selectedTabs.stream().findFirst();
-//            if (!first.isPresent()) {
-//                throw new IllegalStateException("can not find any selectedTabs");
-//            }
-//
-//            for (CMeta colMeta : first.get().getCols()) {
-//                col = new JSONObject();
-//                col.put("name", colMeta.getName());
-//                col.put("type", colMeta.getType().getLiteria());
-//                cols.add(col);
-//            }
-//
-//            return JsonUtil.toString(cols);
-//        } finally {
-//            DataxWriter.dataReaderThreadlocal.remove();
-//        }
-//    }
-
     @Override
     public String getTemplate() {
         return this.template;
@@ -416,7 +377,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IHttpToken.KEY_DISPLAY_NAME));
+            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_DISPLAY_NAME));
         }
 
         @Override

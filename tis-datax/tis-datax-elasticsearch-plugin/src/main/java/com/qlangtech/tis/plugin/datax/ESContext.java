@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
+import com.qlangtech.tis.plugin.AuthToken;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import org.apache.commons.lang.StringUtils;
@@ -41,7 +43,16 @@ public class ESContext implements IDataxContext {
     public ESContext(DataXElasticsearchWriter writer, ESTableAlias mapper) {
         this.writer = writer;
         this.token = writer.getToken();
-        this.auth = Optional.ofNullable((UsernamePassword) token.authToken);
+        this.auth = token.accept(new AuthToken.Visitor<Optional<UsernamePassword>>() {
+            @Override
+            public Optional<UsernamePassword> visit(NoneToken noneToken) {
+                return Optional.empty();
+            }
+            @Override
+            public Optional<UsernamePassword> visit(UsernamePassword accessKey) {
+                return Optional.ofNullable(accessKey);
+            }
+        });// Optional.ofNullable((UsernamePassword) token.authToken);
         Objects.requireNonNull(this.token, "token can not be null");
         this.mapper = mapper;
     }
@@ -66,7 +77,7 @@ public class ESContext implements IDataxContext {
     public String getPassword() {
         return auth.isPresent() ? auth.get().password : "******";
 
-      //  return StringUtils.defaultIfBlank(token.getAccessKeySecret(), "******");
+        //  return StringUtils.defaultIfBlank(token.getAccessKeySecret(), "******");
     }
 
     public String getIndex() {

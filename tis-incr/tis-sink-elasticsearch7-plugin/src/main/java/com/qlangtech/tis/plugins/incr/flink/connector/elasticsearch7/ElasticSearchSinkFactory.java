@@ -19,25 +19,30 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 
+import com.google.common.collect.Sets;
 import com.qlangtech.org.apache.http.HttpHost;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
+import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
+import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.annotation.Public;
@@ -46,6 +51,9 @@ import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureH
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
+import org.apache.flink.table.data.DecimalData;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Requests;
@@ -64,7 +72,7 @@ import java.util.stream.Collectors;
  * @create: 2021-09-28 19:45
  **/
 @Public
-public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
+public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-ElasticSearch-Sink";
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSinkFactory.class);
     private static final int DEFAULT_PARALLELISM = 1;// parallelism
@@ -80,15 +88,17 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
+
+
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null");
-        IHttpToken token = dataXWriter.getToken();
+        ElasticEndpoint token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
         Optional<TableAlias> first = dataxProcessor.getTabAlias().findFirst();
-        if(first.isPresent()){
+        if (first.isPresent()) {
             TableAlias value = first.get();
             if (!(value instanceof ESTableAlias)) {
                 throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
@@ -120,11 +130,20 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         List<HttpHost> transportAddresses = new ArrayList<>();
         transportAddresses.add(HttpHost.create(token.getEndpoint()));
 
+        ISelectedTab tab = null;
+        IDataxReader reader = dataxProcessor.getReader(null);
+        for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
+            tab = selectedTab;
+            break;
+        }
+        Objects.requireNonNull(tab, "tab ca not be null");
 
-        ElasticsearchSink.Builder<DTO> sinkBuilder
+
+        ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
                 cols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
+                , AbstractRowDataMapper.getAllTabColsMeta(tab.getCols())
                 , firstPK.get().getName()
                 , dataXWriter.getIndexName()));
 
@@ -141,21 +160,30 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         }
 
         sinkBuilder.setFailureHandler(new DefaultActionRequestFailureHandler());
-        if (StringUtils.isNotEmpty(token.getAccessKeyId())
-                || StringUtils.isNotEmpty(token.getAccessKeySecret())) {
-            // 如果用户设置了accessKey 或者accessSecret
-            sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(token.getAccessKeyId(), token.getAccessKeySecret()));
-        }
+
+        token.accept(new AuthToken.Visitor<Void>() {
+            @Override
+            public Void visit(NoneToken noneToken) {
+                return null;
+            }
+
+            @Override
+            public Void visit(UsernamePassword accessKey) {
+                sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(accessKey.userName, accessKey.password));
+                return null;
+            }
+        });
+
+//        if (StringUtils.isNotEmpty(token.getAccessKeyId())
+//                || StringUtils.isNotEmpty(token.getAccessKeySecret())) {
+//            // 如果用户设置了accessKey 或者accessSecret
+//            sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(token.getAccessKeyId(), token.getAccessKeySecret()));
+//        }
 
 
-        TableAlias tableMapper = new TableAlias();
-        tableMapper.setTo(dataXWriter.getIndexName());
-        IDataxReader reader = dataxProcessor.getReader(null);
-        for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
-            tableMapper.setFrom(selectedTab.getName());
-        }
-        return Collections.singletonMap(tableMapper
-                , new DTOSinkFunc(tableMapper, sinkBuilder.build(), true, DEFAULT_PARALLELISM));
+        return Collections.singletonMap(esSchema
+                , new RowDataSinkFunc(esSchema, sinkBuilder.build()
+                        , Collections.emptyList(), true, DEFAULT_PARALLELISM));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {
@@ -168,15 +196,18 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
-        return new CompileAndPackage();
+        return new CompileAndPackage(Sets.newHashSet(ElasticSearchSinkFactory.class));
     }
 
-    private static class DefaultElasticsearchSinkFunction implements ElasticsearchSinkFunction<DTO>, Serializable {
+    private static class DefaultElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>, Serializable {
         private final Set<String> cols;
         private final String pkName;
         private final String targetIndexName;
+        private final List<FlinkCol> vgetters;
 
-        public DefaultElasticsearchSinkFunction(Set<String> cols, String pkName, String targetIndexName) {
+        public DefaultElasticsearchSinkFunction(Set<String> cols
+                , List<FlinkCol> vgetters, String pkName, String targetIndexName) {
+            this.vgetters = vgetters;
             this.cols = cols;
             this.pkName = pkName;
             this.targetIndexName = targetIndexName;
@@ -185,20 +216,23 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
             }
         }
 
-        private IndexRequest createIndexRequest(DTO element) {
-            Map<String, Object> after = element.getAfter();
+        private IndexRequest createIndexRequest(RowData element) {
             Map<String, Object> json = new HashMap<>();
+
             Object val = null;
-            for (String col : cols) {
-                val = after.get(col);
-                if (val == null) {
+            for (FlinkCol get : vgetters) {
+                if (!cols.contains(get.name)) {
                     continue;
                 }
-                json.put(col, val);
+                val = get.getRowDataVal(element);
+                if (val instanceof DecimalData) {
+                    val = ((DecimalData) val).toBigDecimal();
+                } else if (val instanceof StringData) {
+                    val = ((StringData) val).toString();
+                }
+                json.put(get.name, val);
             }
-
-            Object pkVal = after.get(pkName);
-
+            Object pkVal = json.get(this.pkName);
             IndexRequest request = Requests.indexRequest()
                     .index(this.targetIndexName)
                     //.type("my-type")
@@ -210,7 +244,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<DTO> {
         }
 
         @Override
-        public void process(DTO element, RuntimeContext ctx, RequestIndexer indexer) {
+        public void process(RowData element, RuntimeContext ctx, RequestIndexer indexer) {
             indexer.add(createIndexRequest(element));
         }
     }

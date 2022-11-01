@@ -19,10 +19,32 @@
 package com.qlangtech.tis.plugin;
 
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.plugin.aliyun.AccessKey;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
+import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-31 09:51
  **/
-public class AuthToken implements Describable<AuthToken> {
+public abstract class AuthToken implements Describable<AuthToken> {
+
+    public abstract <T> T accept(Visitor<T> visitor);
+
+
+    public interface Visitor<T> {
+
+        default public T visit(NoneToken noneToken) {
+            throw new UnsupportedOperationException();
+        }
+
+        default public T visit(AccessKey accessKey) {
+            throw new UnsupportedOperationException();
+        }
+
+        default public T visit(UsernamePassword accessKey) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
 }

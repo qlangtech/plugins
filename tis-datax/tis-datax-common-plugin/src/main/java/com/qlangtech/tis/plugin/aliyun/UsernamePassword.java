@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.aliyun;
 
-import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
@@ -38,11 +37,16 @@ public class UsernamePassword extends AuthToken {
     @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<AuthToken> {
         @Override
         public String getDisplayName() {
-            return "userNamePassword";
+            return "user";
         }
     }
 }

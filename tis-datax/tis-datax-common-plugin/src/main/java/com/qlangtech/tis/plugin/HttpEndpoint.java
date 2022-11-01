@@ -24,6 +24,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
@@ -42,6 +43,13 @@ public class HttpEndpoint extends ParamsConfig implements IHttpToken {
 
     @FormField(ordinal = 2, validate = {})
     public AuthToken authToken;
+
+    public <T> T accept(AuthToken.Visitor<T> visitor) {
+        if (authToken == null) {
+            return visitor.visit(new NoneToken());
+        }
+        return authToken.accept(visitor);
+    }
 
     @Override
     public IHttpToken createConfigInstance() {

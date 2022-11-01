@@ -21,30 +21,12 @@ package com.qlangtech.tis.plugin.aliyun;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-10-31 09:52
+ * @create: 2022-10-31 12:14
  **/
-public class AccessKey extends AuthToken {
-    // 可以为空
-    @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
-    public String accessKeyId;
-    // 可以为空
-    @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {Validator.require})
-    public String accessKeySecret;
-
-    public String getAccessKeyId() {
-        return this.accessKeyId;
-    }
-
-    public String getAccessKeySecret() {
-        return this.accessKeySecret;
-    }
-
+public class NoneToken extends AuthToken {
     @Override
     public <T> T accept(Visitor<T> visitor) {
         return visitor.visit(this);
@@ -54,7 +36,7 @@ public class AccessKey extends AuthToken {
     public static class DefaultDescriptor extends Descriptor<AuthToken> {
         @Override
         public String getDisplayName() {
-            return "accessKey";
+            return "none";
         }
     }
 }

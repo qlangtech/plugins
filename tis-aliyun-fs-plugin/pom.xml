@@ -29,7 +29,7 @@
 
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-aliyun-fs-plugin</artifactId>
-    <packaging>tpi</packaging>
+<!--    <packaging>tpi</packaging>-->
 
 
     <name>tis-aliyun-fs-plugin</name>

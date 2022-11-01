@@ -31,7 +31,11 @@ import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.HttpEndpoint;
+import com.qlangtech.tis.plugin.aliyun.AccessKey;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
+import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -159,6 +163,29 @@ public class DataXOssReader extends DataxReader {
             return false;
         }
 
+
+        public boolean validateEndpoint(IFieldErrorHandler msgHandler, Context context, String fieldName, String endpoint) {
+            HttpEndpoint end = (HttpEndpoint) IHttpToken.getToken(endpoint);
+            return end.accept(new AuthToken.Visitor<Boolean>() {
+                @Override
+                public Boolean visit(NoneToken noneToken) {
+                    Validator.require.validate(msgHandler, context, fieldName, null);
+                    return false;
+                }
+                @Override
+                public Boolean visit(AccessKey accessKey) {
+                    return true;
+                }
+
+                @Override
+                public Boolean visit(UsernamePassword accessKey) {
+                    msgHandler.addFieldError(context, fieldName, "不支持使用用户名/密码认证方式");
+                    return false;
+                }
+            });
+        }
+
+
         public boolean validateFieldDelimiter(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return validateFileDelimiter(msgHandler, context, fieldName, value);
         }
@@ -196,10 +223,15 @@ public class DataXOssReader extends DataxReader {
     public static boolean verifyFormOSSRelative(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
         String endpoint = postFormVals.getField(FIELD_ENDPOINT);
         String bucket = postFormVals.getField(FIELD_BUCKET);
-        HttpEndpoint end = ParamsConfig.getItem(endpoint, HttpEndpoint.KEY_DISPLAY_NAME);
-
+        HttpEndpoint end = (HttpEndpoint) IHttpToken.getToken(endpoint);
         try {
-            OSS ossClient = new OSSClientBuilder().build(end.getEndpoint(), end.getAccessKeyId(), end.getAccessKeySecret());
+            OSS ossClient = end.accept(new AuthToken.Visitor<OSS>() {
+                @Override
+                public OSS visit(AccessKey accessKey) {
+                    return new OSSClientBuilder().build(end.getEndpoint(), accessKey.getAccessKeyId(), accessKey.getAccessKeySecret());
+                }
+            });
+
             List<Bucket> buckets = ossClient.listBuckets();
             if (buckets.size() < 1) {
                 msgHandler.addErrorMessage(context, "buckets不能为空");

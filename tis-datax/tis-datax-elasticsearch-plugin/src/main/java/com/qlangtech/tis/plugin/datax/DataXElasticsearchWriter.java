@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -119,7 +120,11 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         return aliyunToken;
     }
 
+    @Override
     public String getIndexName() {
+        if (StringUtils.isEmpty(this.index)) {
+            throw new IllegalArgumentException("prop index can not be empty");
+        }
         return this.index;
     }
 
@@ -134,16 +139,68 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
             field = new ESField();
             field.setName(m.getName());
             field.setStored(true);
-            field.setIndexed(true);
-            field.setType(this.mapSearchEngineType(m.getType().getCollapse()));
-//            field.setSharedKey();
-//            field.setUniqueKey();
+            if (m.isPk()) {
+                field.setUniqueKey(true);
+            }
+            m.getType().accept(new CMetaTypeVisitor(field));
 
+            field.setType(this.mapSearchEngineType(m.getType().getCollapse()));
             schema.fields.add(field);
         }
         byte[] schemaContent = null;
         metaContent.content = schemaContent;
         return metaContent;
+    }
+
+    private static class CMetaTypeVisitor implements DataType.TypeVisitor {
+        private final ESField field;
+
+        public CMetaTypeVisitor(ESField field) {
+            this.field = field;
+        }
+
+        private Void typeVisit(DataType type) {
+            field.setIndexed(true);
+            return null;
+        }
+
+        @Override
+        public Void bigInt(DataType type) {
+            return typeVisit(type);
+        }
+
+        @Override
+        public Void doubleType(DataType type) {
+            return typeVisit(type);
+        }
+
+        @Override
+        public Void dateType(DataType type) {
+            return typeVisit(type);
+        }
+
+        @Override
+        public Void timestampType(DataType type) {
+            return typeVisit(type);
+        }
+
+        @Override
+        public Void bitType(DataType type) {
+            return typeVisit(type);
+        }
+
+        @Override
+        public Void blobType(DataType type) {
+            // return typeVisit(type);
+            // 字节内容 需要index=false
+            field.setIndexed(false);
+            return null;
+        }
+
+        @Override
+        public Void varcharType(DataType type) {
+            return typeVisit(type);
+        }
     }
 
     /**

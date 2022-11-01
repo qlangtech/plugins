@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -21,11 +21,13 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.fastjson.JSONArray;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.runtime.module.misc.ISearchEngineTokenizerType;
-import com.qlangtech.tis.runtime.module.misc.TokenizerType;
 import com.qlangtech.tis.runtime.module.misc.VisualType;
 import com.qlangtech.tis.solrdao.ISchema;
 import com.qlangtech.tis.solrdao.SolrFieldsParser;
+import org.apache.commons.collections.CollectionUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +36,8 @@ import java.util.Map;
  * @create: 2021-06-11 16:22
  **/
 public class ESSchema implements ISchema {
+
+
     private String uniqueKey;
     private String sharedKey;
     public List<ESField> fields = Lists.newArrayList();
@@ -125,5 +129,27 @@ public class ESSchema implements ISchema {
         return types;
     }
 
+    public List<String> errlist = new ArrayList<String>();
 
+//    public String getErrorSummary() {
+//        StringBuffer summary = new StringBuffer();
+//        for (String err : errlist) {
+//            summary.append(err);
+//            summary.append("\n");
+//        }
+//        return summary.toString();
+//    }
+
+    @Override
+    public boolean isValid() {
+        if (!this.errlist.isEmpty()) {
+            return false;
+        }
+        return CollectionUtils.isEmpty(this.errlist = ISchema.validateSchema(this.fields));
+    }
+
+    @Override
+    public List<String> getErrors() {
+        return Collections.unmodifiableList(this.errlist);
+    }
 }

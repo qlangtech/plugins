@@ -24,7 +24,9 @@ import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESInitialization;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.HttpEndpoint;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.searchbox.client.JestResult;
@@ -43,8 +45,18 @@ public class ElasticEndpoint extends HttpEndpoint {
     public static final String KEY_DISPLAY_NAME = "elasticToken";
 
     public final ESInitialization createESInitialization() {
-        UsernamePassword authToken = (UsernamePassword) this.authToken;
-        return (ESInitialization.create(this.getEndpoint(), authToken.userName, authToken.password,
+        UsernamePassword auth = this.accept(new AuthToken.Visitor<UsernamePassword>() {
+            @Override
+            public UsernamePassword visit(NoneToken noneToken) {
+                return new UsernamePassword();
+            }
+
+            @Override
+            public UsernamePassword visit(UsernamePassword accessKey) {
+                return accessKey;
+            }
+        });
+        return (ESInitialization.create(this.getEndpoint(), auth.userName, auth.password,
                 false,
                 300000,
                 false,
@@ -57,7 +69,7 @@ public class ElasticEndpoint extends HttpEndpoint {
 
     public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
         return descs.stream().filter((desc) -> {
-            return desc instanceof UsernamePassword.DefaultDescriptor;
+            return desc instanceof UsernamePassword.DefaultDescriptor || desc instanceof NoneToken.DefaultDescriptor;
         }).collect(Collectors.toList());
     }
 
@@ -75,6 +87,9 @@ public class ElasticEndpoint extends HttpEndpoint {
                 JestResult result = es.jestClient.execute(hbuild.build());
                 if (!result.isSucceeded()) {
                     msgHandler.addErrorMessage(context, result.getErrorMessage());
+                } else {
+                    msgHandler.addActionMessage(context
+                            , "cluster '" + result.getValue("cluster_name") + "' is working,status:'" + result.getValue("status") + "'");
                 }
                 return result.isSucceeded();
             } catch (IOException e) {

@@ -4,7 +4,8 @@
     "help": "数据源实例名称，请起一个有意义的名称"
   },
   "dbName": {
-    "label": "数据库名,创建JDBC实例时用"
+    "label": "数据库名",
+    "help": "数据库名,创建JDBC实例时用"
   },
   "userName": {
     "label": "用户名",

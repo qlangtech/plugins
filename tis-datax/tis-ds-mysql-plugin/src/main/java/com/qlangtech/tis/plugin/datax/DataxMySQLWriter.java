@@ -117,13 +117,15 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
             MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
             dsFactory.visitFirstConnection((conn) -> {
-                Statement statement = conn.createStatement();
-                ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom());
-                if (!resultSet.next()) {
-                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+                try (Statement statement = conn.createStatement()) {
+                    try (ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom())) {
+                        if (!resultSet.next()) {
+                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+                        }
+                        String ddl = resultSet.getString(2);
+                        script.append(ddl);
+                    }
                 }
-                String ddl = resultSet.getString(2);
-                script.append(ddl);
             });
             return new CreateTableSqlBuilder.CreateDDL(script, null) {
                 @Override

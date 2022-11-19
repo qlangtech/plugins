@@ -24,10 +24,12 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.oracle.source.OracleSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -49,8 +51,8 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
     @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc) {
-        return new ExtendOracleSourceFactory(conf, sourceFactory) {
+            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+        return new ExtendOracleSourceFactory(conf, sourceFactory, reader) {
             protected DataStream<RowData> createInput(
                     InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
                 Preconditions.checkNotNull(sourceName);
@@ -72,17 +74,19 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
     private static class ExtendOracleSourceFactory extends OracleSourceFactory {
         private final DataSourceFactory dataSourceFactory;
+        private final BasicDataXRdbmsReader reader;
 
-        public ExtendOracleSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory) {
-           // super(syncConf, null, new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
+        public ExtendOracleSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory, BasicDataXRdbmsReader reader) {
+            // super(syncConf, null, new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
             super(syncConf, null, new TISOracleDialect(syncConf));
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
+            this.reader = reader;
         }
 
         @Override
         protected JdbcInputFormatBuilder getBuilder() {
-            return new JdbcInputFormatBuilder(new TISOracleInputFormat(dataSourceFactory));
+            return new JdbcInputFormatBuilder(new TISOracleInputFormat(dataSourceFactory, ColMetaUtils.getColMetas(reader, this.jdbcConf)));
         }
     }
 }

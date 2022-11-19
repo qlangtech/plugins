@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
@@ -56,29 +57,30 @@ public class FlinkCol implements Serializable {
      */
     public BiFunction rowProcess;
 
-    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, RowData.FieldGetter rowDataValGetter) {
-        this(name, colType, type, new NoOpProcess(), rowDataValGetter);
+    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, RowData.FieldGetter rowDataValGetter) {
+        this(meta, colType, type, new NoOpProcess(), rowDataValGetter);
     }
 
     public Object getRowDataVal(RowData row) {
         return rowDataValGetter.getFieldOrNull(row);
     }
 
-    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
-        this(name, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
+    public FlinkCol(IColMetaGetter meta , com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
+        this(meta, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
     }
 
-    public FlinkCol(String name, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess
+    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess
             , BiFunction rowProcess, RowData.FieldGetter rowDataValGetter) {
-        if (StringUtils.isEmpty(name)) {
+        if (StringUtils.isEmpty(meta.getName())) {
             throw new IllegalArgumentException("param name can not be null");
         }
-        this.name = name;
+        this.name = meta.getName();
         this.type = type;
         this.colType = colType;
         this.rowDataProcess = rowDataProcess;
         this.rowProcess = rowProcess;
         this.rowDataValGetter = rowDataValGetter;
+        this.setPk(meta.isPk());
     }
 
     /**

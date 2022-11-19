@@ -18,19 +18,16 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
-import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 
 /**
@@ -40,10 +37,7 @@ import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
  * @create: 2022-08-14 22:29
  **/
 public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
-//    @Override
-//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-//        return new TISClickhouseDialect();
-//    }
+
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
@@ -56,79 +50,9 @@ public class ChunjunClickhouseSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        return new TISClickhouseOutputFormat(dsFactory);
+    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+        return new TISClickhouseOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, jdbcConf));
     }
-
-//    @Override
-//    protected String parseType(CMeta cm) {
-//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-//            @Override
-//            public String bigInt(DataType type) {
-//                return "BIGINT";
-//            }
-//
-//            @Override
-//            public String doubleType(DataType type) {
-//                return "DOUBLE";
-//            }
-//
-//            @Override
-//            public String dateType(DataType type) {
-//                return "DATE";
-//            }
-//
-//            @Override
-//            public String timestampType(DataType type) {
-//                return "TIMESTAMP";
-//            }
-//
-//            @Override
-//            public String bitType(DataType type) {
-//                return "SMALLINT";
-//            }
-//
-//            @Override
-//            public String blobType(DataType type) {
-//                return "BINARY";
-//            }
-//
-//            @Override
-//            public String varcharType(DataType type) {
-//                return "VARCHAR";
-//            }
-//
-//            @Override
-//            public String intType(DataType type) {
-//                return "INT";
-//            }
-//
-//            @Override
-//            public String floatType(DataType type) {
-//                return "FLOAT";
-//            }
-//
-//            @Override
-//            public String decimalType(DataType type) {
-//                return "DECIMAL";
-//            }
-//
-//            @Override
-//            public String timeType(DataType type) {
-//                return "TIMESTAMP";
-//            }
-//
-//            @Override
-//            public String tinyIntType(DataType dataType) {
-//                return "TINYINT";
-//            }
-//
-//            @Override
-//            public String smallIntType(DataType dataType) {
-//                return "SMALLINT";
-//            }
-//        });
-//    }
 
     @Override
     protected void initChunjunJdbcConf(JdbcConf jdbcConf) {

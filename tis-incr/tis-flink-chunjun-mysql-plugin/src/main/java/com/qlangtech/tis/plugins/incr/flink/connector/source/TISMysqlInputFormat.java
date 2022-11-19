@@ -24,7 +24,7 @@ import com.dtstack.chunjun.connector.mysql.source.MysqlInputFormat;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.element.column.BigDecimalColumn;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
@@ -32,6 +32,7 @@ import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -41,9 +42,11 @@ import java.util.function.Function;
  **/
 public class TISMysqlInputFormat extends MysqlInputFormat {
     private final DataSourceFactory dataSourceFactory;
+    private final TableCols tabCols;
 
-    public TISMysqlInputFormat(DataSourceFactory dataSourceFactory) {
+    public TISMysqlInputFormat(DataSourceFactory dataSourceFactory, List<IColMetaGetter> colsMeta) {
         this.dataSourceFactory = dataSourceFactory;
+        this.tabCols = new TableCols(colsMeta);
     }
 
     @Override
@@ -82,8 +85,10 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
 
     @Override
     protected TableCols getTableMetaData() {
-        return new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
+        return this.tabCols;
+        //  return new TableCols(ColMetaUtils.getColMetas(this.sinkStreamMetaCreator, this.jdbcConf));
     }
+
     @Override
     protected boolean useCustomReporter() {
         return false;

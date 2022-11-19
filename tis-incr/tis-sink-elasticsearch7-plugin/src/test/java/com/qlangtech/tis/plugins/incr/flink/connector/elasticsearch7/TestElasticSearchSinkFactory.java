@@ -28,7 +28,6 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -38,8 +37,8 @@ import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
 import org.elasticsearch.client.Client;
@@ -88,7 +87,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         List<CMeta> cols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
-        cm.setType(new DataType(Types.VARCHAR, "varchar" ,6));
+        cm.setType(new DataType(Types.VARCHAR, "varchar", 6));
         cols.add(cm);
 
         cm = new CMeta();
@@ -98,7 +97,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         cm = new CMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR,"varchar" ,32));
+        cm.setType(new DataType(Types.VARCHAR, "varchar", 32));
         cm.setPk(true);
         cols.add(cm);
 
@@ -126,12 +125,12 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         Map<String, TableAlias> aliasMap = new HashMap<>();
         TableAlias tab = new TableAlias(tableName);
         aliasMap.put(tableName, tab);
-        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn( new TableAliasMapper(aliasMap));
+        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
 
         this.replay();
 
         ElasticSearchSinkFactory clickHouseSinkFactory = new ElasticSearchSinkFactory();
-        Map<TableAlias, TabSinkFunc<DTO>>
+        Map<TableAlias, TabSinkFunc<RowData>>
                 sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
@@ -149,7 +148,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         d.setAfter(after);
         Assert.assertEquals(1, sinkFuncs.size());
 
-        for (Map.Entry<TableAlias, TabSinkFunc<DTO>> entry : sinkFuncs.entrySet()) {
+        for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
             // env.fromElements(new DTO[]{d}).addSink(entry.getValue()).name("clickhouse");
             runElasticSearchSinkTest(
                     "elasticsearch-sink-test-json-index", entry.getValue());
@@ -174,14 +173,14 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
     private void runElasticSearchSinkTest(
             String index,
-            TabSinkFunc<DTO> sinkFunc)
+            TabSinkFunc<RowData> sinkFunc)
             throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         DataStreamSource<DTO> source =
                 env.addSource(new TestDataSourceFunction());
-       // sinkFunc.add2Sink(source);
-       // source.addSink();
+        // sinkFunc.add2Sink(source);
+        // source.addSink();
 
         env.execute("Elasticsearch Sink Test");
 
@@ -238,22 +237,8 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         }
     }
 
-//    /**
-//     *
-//     */
-//    protected abstract ElasticsearchSinkBase<DTO, C> createElasticsearchSinkForEmbeddedNode(
-//            int bulkFlushMaxActions,
-//            String clusterName,
-//            ElasticsearchSinkFunction<DTO> elasticsearchSinkFunction)
-//            throws Exception;
-
 
     public static void verifyProducedSinkData(Client client, String index) {
-//        for (int i = 0; i < NUM_ELEMENTS; i++) {
-//            GetResponse response =
-//                    client.get(new GetRequest(index, TYPE_NAME, Integer.toString(i))).actionGet();
-//            Assert.assertEquals(DATA_PREFIX + i, response.getSource().get(DATA_FIELD_NAME));
-//        }
     }
 
 }

@@ -23,7 +23,7 @@ import com.dtstack.chunjun.connector.oracle.converter.OracleColumnConverter;
 import com.dtstack.chunjun.connector.oracle.source.OracleInputFormat;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.LogicalTypeRoot;
@@ -31,6 +31,7 @@ import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -39,9 +40,11 @@ import java.util.Objects;
  **/
 public class TISOracleInputFormat extends OracleInputFormat {
     private final DataSourceFactory dataSourceFactory;
+    private final TableCols tableCols;
 
-    public TISOracleInputFormat(DataSourceFactory dataSourceFactory) {
+    public TISOracleInputFormat(DataSourceFactory dataSourceFactory, List<IColMetaGetter> cols) {
         this.dataSourceFactory = dataSourceFactory;
+        this.tableCols = new TableCols(cols);
     }
 
     @Override
@@ -71,7 +74,7 @@ public class TISOracleInputFormat extends OracleInputFormat {
     @Override
     protected TableCols getTableMetaData() {
         // return JdbcUtil.getTableMetaData(null, jdbcConf.getSchema(), jdbcConf.getTable(), dbConn);
-        return new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
+        return this.tableCols; //new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
     }
 
 

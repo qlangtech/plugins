@@ -16,19 +16,32 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype;
+package com.qlangtech.tis.realtime;
 
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IStreamTableCreator;
-import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import org.apache.flink.core.execution.JobClient;
+import org.apache.flink.table.api.TableResult;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-31 11:43
+ * @create: 2022-11-19 16:29
  **/
-@Public
-public abstract class ScriptType implements Describable<ScriptType> {
+public class TISTableEnvironment {
+    private final StreamTableEnvironment tabEnv;
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(TISTableEnvironment.class);
 
-   public abstract IStreamTableCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory);
+    public TISTableEnvironment(StreamTableEnvironment tabEnv) {
+        this.tabEnv = tabEnv;
+    }
+
+    public TableResult executeSql(String sql) {
+        TableResult tabResult = tabEnv.executeSql(sql);
+        Optional<JobClient> jobClient = tabResult.getJobClient();
+        logger.info("submit flink job: {}", jobClient.get().getJobID());
+        return tabResult;
+    }
+
 }

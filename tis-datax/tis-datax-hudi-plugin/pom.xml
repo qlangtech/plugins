@@ -164,7 +164,8 @@
                         <artifactId>maven-antrun-plugin</artifactId>
                         <executions>
                             <execution>
-                                <phase>prepare-package</phase>
+<!--                            先暂时不执行    <phase>prepare-package</phase>-->
+                                <phase>none</phase>
                                 <!--https://ant.apache.org/manual/index.html-->
                                 <configuration>
                                     <target>

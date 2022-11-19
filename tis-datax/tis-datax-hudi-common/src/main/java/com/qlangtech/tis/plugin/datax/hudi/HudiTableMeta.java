@@ -213,78 +213,8 @@ public class HudiTableMeta {
                         return null;
                     }
                 });
-
-
-//                SupportHiveDataType hiveDataType = DataType.convert2HiveType(meta.getType());
-//                switch (hiveDataType) {
-//                    case STRING:
-//                    case DATE:
-//                    case TIMESTAMP:
-//                    case VARCHAR:
-//                    case CHAR:
-//                        // fields.nullableString(meta.colName, StringUtils.EMPTY);
-////                            if (meta.nullable) {
-////                                fields.nullableString(meta.colName, StringUtils.EMPTY);
-////                            } else {
-//                        // fields.requiredString(meta.colName);
-//                        // SchemaBuilder.StringDefault<Schema> strType = fields.name(meta.colName).type().stringType();
-//                        if (meta.isNullable()) {
-//                            // strType.stringDefault(StringUtils.EMPTY);
-//                            fields.optionalString(meta.getName());
-//                        } else {
-//                            //   strType.noDefault();
-//                            fields.requiredString(meta.getName());
-//                        }
-//                        //}
-//                        break;
-//                    case DOUBLE:
-//                        if (meta.isNullable()) {
-//                            fields.optionalDouble(meta.getName());
-//                        } else {
-//                            fields.requiredDouble(meta.getName());
-//                        }
-//                        break;
-//                    case INT:
-//                    case TINYINT:
-//                    case SMALLINT:
-//                        if (meta.isNullable()) {
-//                            fields.optionalInt(meta.getName());
-//                        } else {
-//                            fields.requiredInt(meta.getName());
-//                        }
-//                        break;
-//                    case BOOLEAN:
-//                        if (meta.isNullable()) {
-//                            fields.optionalBoolean(meta.getName());
-//                        } else {
-//                            fields.requiredBoolean(meta.getName());
-//                        }
-//                        break;
-//                    case BIGINT:
-//                        if (meta.isNullable()) {
-//                            fields.optionalLong(meta.getName());
-//                        } else {
-//                            fields.requiredLong(meta.getName());
-//                        }
-//                        break;
-//                    case FLOAT:
-//                        if (meta.isNullable()) {
-//                            fields.optionalFloat(meta.getName());
-//                        } else {
-//                            fields.requiredFloat(meta.getName());
-//                        }
-//                        break;
-//                    default:
-//                        throw new IllegalStateException("illegal type:" + hiveDataType);
-//                }
             }
-
             Schema schema = fields.endRecord();
-
-
-            // LogicalTypes.date().addToSchema(schema.getField("last_ver").schema());
-
-
             if (schema.getFields().size() != colsMetas.size()) {
                 throw new IllegalStateException("schema.getFields():" + schema.getFields().size() + " is not equal to 'colsMeta.size()':" + colsMetas.size());
             }
@@ -390,10 +320,6 @@ public class HudiTableMeta {
     public String getPkName() {
         return pkName;
     }
-
-//    public String getPartitionpathField() {
-//        return partitionpathField;
-//    }
 
     public int getShuffleParallelism() {
         return shuffleParallelism;

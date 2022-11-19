@@ -21,10 +21,9 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
 import com.dtstack.chunjun.converter.ISerializationConverter;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import org.apache.flink.table.data.RowData;
@@ -41,18 +40,18 @@ import java.util.Objects;
 public class TISPostgresOutputFormat extends PostgresOutputFormat {
     private final DataSourceFactory dsFactory;
 
-    public TISPostgresOutputFormat(DataSourceFactory dsFactory) {
-        super();
+    public TISPostgresOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+        super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");
         }
         this.dsFactory = dsFactory;
     }
 
-    @Override
-    protected Map<String, ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
-    }
+//    @Override
+//    protected Map<String, IColMetaGetter> getTableMetaData() {
+//        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
+//    }
 
 
     @Override
@@ -96,7 +95,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
         @Override
         public ISerializationConverter<FieldNamedPreparedStatement> bitType(DataType type) {
 
-          //  try {
+            //  try {
 //                final org.postgresql.util.PGobject bit1 = new org.postgresql.util.PGobject();
 //                bit1.setType("bit");
 //                bit1.setValue("1");
@@ -105,13 +104,13 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
 //                bit0.setValue("0");
 
 
-                return new ISerializationConverter<FieldNamedPreparedStatement>() {
-                    @Override
-                    public void serialize(RowData rowData, int pos, FieldNamedPreparedStatement output) throws Exception {
-                        byte v = (byte) fieldGetter.getFieldOrNull(rowData);
-                        output.setString(pos, v > 0 ? "1" : "0");
-                    }
-                };
+            return new ISerializationConverter<FieldNamedPreparedStatement>() {
+                @Override
+                public void serialize(RowData rowData, int pos, FieldNamedPreparedStatement output) throws Exception {
+                    byte v = (byte) fieldGetter.getFieldOrNull(rowData);
+                    output.setString(pos, v > 0 ? "1" : "0");
+                }
+            };
 //            } catch (SQLException e) {
 //                throw new RuntimeException(e);
 //            }

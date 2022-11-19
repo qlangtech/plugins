@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
@@ -30,8 +31,8 @@ import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,15 +48,17 @@ import java.util.Optional;
  **/
 public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCreator {
 
+    private final HudiSinkFactory hudiSinkFactory;
 
-    public SQLStyleFlinkStreamScriptCreator(HudiSinkFactory hudiSinkFactory) {
-        super(hudiSinkFactory);
+    public SQLStyleFlinkStreamScriptCreator(IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaGetter) {
+        super(sinkStreamMetaGetter);
+        this.hudiSinkFactory = (HudiSinkFactory) sinkStreamMetaGetter;
     }
 
 
     @Override
-    public String getFlinkStreamGenerateTemplateFileName() {
-        return TEMPLATE_FLINK_TABLE_HANDLE_SCALA;
+    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+        return IStreamTemplateResource.createClasspathResource(TEMPLATE_FLINK_TABLE_HANDLE_SCALA, true);
     }
 
     @Override
@@ -69,7 +72,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
         }
 
         public String getSourceTable(String tableName) {
-            return tableName + IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX;
+            return tableName + KEY_STREAM_SOURCE_TABLE_SUFFIX;
         }
 
         public List<HdfsColMeta> getCols(String tableName) {

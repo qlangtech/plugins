@@ -19,10 +19,11 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,8 +37,8 @@ import java.util.Objects;
 public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     private final DataSourceFactory dsFactory;
 
-    public TISClickhouseOutputFormat(DataSourceFactory dsFactory) {
-        super();
+    public TISClickhouseOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+        super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");
         }
@@ -57,8 +58,8 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
         return dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
     }
 
-    @Override
-    protected Map<String, ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
-    }
+//    @Override
+//    protected Map<String, ColMeta> getTableMetaData() {
+//        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
+//    }
 }

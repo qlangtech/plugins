@@ -48,8 +48,12 @@ public abstract class DTOStream<T> {
         });
     }
 
-    public static DTOStream createRowData(String table) {
-        return new RowDataDTOStream(table);
+    public static DTOStream createRowData() {
+        return new RowDataDTOStream();
+    }
+
+    public static DTOStream createRowData(DataStream<RowData> stream) {
+        return new RowDataDTOStream(stream);
     }
 
     /**
@@ -77,11 +81,15 @@ public abstract class DTOStream<T> {
      * 利用pull的方式拉取增量数据，每个流本来就是独立的不需要分流
      */
     private static class RowDataDTOStream extends DTOStream<RowData> {
-        private final String table;
+        // private final String table;
 
-        public RowDataDTOStream(String table) {
+        public RowDataDTOStream() {
             super(RowData.class);
-            this.table = table;
+        }
+
+        public RowDataDTOStream(DataStream<RowData> stream) {
+            super(RowData.class);
+            this.stream = stream;
         }
 
         @Override

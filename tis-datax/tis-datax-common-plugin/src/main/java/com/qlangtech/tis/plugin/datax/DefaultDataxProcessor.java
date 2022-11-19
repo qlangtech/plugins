@@ -81,10 +81,10 @@ public class DefaultDataxProcessor extends DataxProcessor {
     }
 
     @Override
-    public String getFlinkStreamGenerateTemplateFileName() {
+    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
 
-        return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTemplateFileName()
-                , () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTemplateFileName());
+        return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTplResource()
+                , () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTplResource());
 
 //        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
 //        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");

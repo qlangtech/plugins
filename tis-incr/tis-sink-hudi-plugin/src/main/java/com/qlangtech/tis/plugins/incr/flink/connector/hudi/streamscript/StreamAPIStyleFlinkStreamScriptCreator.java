@@ -22,6 +22,7 @@ import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.lang.TisException;
@@ -32,11 +33,10 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
+import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -47,22 +47,24 @@ import java.util.regex.Pattern;
  * @create: 2022-03-24 11:02
  **/
 public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCreator {
-
-    private static final Logger logger = LoggerFactory.getLogger(StreamAPIStyleFlinkStreamScriptCreator.class);
+    String TEMPLATE_FLINK_HUDI_STREAM_STYLE_HANDLE_SCALA = "flink_hudi_stream_style_handle_scala.vm";
+    // private static final Logger logger = LoggerFactory.getLogger(StreamAPIStyleFlinkStreamScriptCreator.class);
 
     /**
      * 需要将路径中的时间戳抽取出来
      * hdfs://namenode/user/admin/default/20220530153950/instancedetail/hudi
      */
     private static final Pattern PATTERN_EXEC_TIMESTAMP = Pattern.compile("/(\\d{14})/");
+    private final HudiSinkFactory hudiSinkFactory;
 
-    public StreamAPIStyleFlinkStreamScriptCreator(HudiSinkFactory hudiSinkFactory) {
-        super(hudiSinkFactory);
+    public StreamAPIStyleFlinkStreamScriptCreator(IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator) {
+        super(sinkStreamMetaCreator);
+        this.hudiSinkFactory = (HudiSinkFactory) sinkStreamMetaCreator;
     }
 
     @Override
-    public String getFlinkStreamGenerateTemplateFileName() {
-        return TEMPLATE_FLINK_HUDI_STREAM_STYLE_HANDLE_SCALA;
+    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+        return IStreamTemplateResource.createClasspathResource(TEMPLATE_FLINK_HUDI_STREAM_STYLE_HANDLE_SCALA, true);
     }
 
     @Override

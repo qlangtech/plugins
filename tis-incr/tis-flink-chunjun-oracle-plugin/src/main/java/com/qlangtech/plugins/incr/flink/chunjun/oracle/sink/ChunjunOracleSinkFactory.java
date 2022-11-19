@@ -23,15 +23,14 @@ import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.TISJdbcOutputFormat;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 
 import java.util.Map;
@@ -44,10 +43,6 @@ import java.util.Map;
  * @see com.dtstack.chunjun.connector.oracle.sink.OracleSinkFactory
  **/
 public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
-//    @Override
-//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-//        return new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf));
-//    }
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
@@ -60,8 +55,9 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        return new TISJdbcOutputFormat(dsFactory);
+    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
+
+        return new TISJdbcOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, conf));
     }
 
     @Override
@@ -79,8 +75,8 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
 //        return typeMap(cm);
 //    }
 
-    public static String typeMap(CMeta cm) {
-        return cm.getType().getS();
+//    public static String typeMap(CMeta cm) {
+//        return cm.getType().getS();
 //        return cm.getType().accept(new DataType.TypeVisitor<String>() {
 //            @Override
 //            public String bigInt(DataType type) {
@@ -147,7 +143,7 @@ public class ChunjunOracleSinkFactory extends ChunjunSinkFactory {
 //                return this.tinyIntType(dataType);
 //            }
 //        });
-    }
+    // }
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {

@@ -18,13 +18,14 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype;
 
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.SQLStyleFlinkStreamScriptCreator;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,8 +39,8 @@ public class SqlType extends ScriptType {
     public String database;
 
     @Override
-    public IStreamTableCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory) {
-        return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
+    public BasicFlinkStreamScriptCreator createStreamTableCreator(IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator) {
+        return new SQLStyleFlinkStreamScriptCreator(sinkStreamMetaCreator);
     }
 
     // 暂时先不用

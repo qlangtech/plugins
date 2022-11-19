@@ -70,16 +70,18 @@ public abstract class ChunjunSourceFunction
         return this.sourceFactory.getConsumerHandle();
     }
 
-    private SourceFunction<RowData> createSourceFunction(SyncConf conf, BasicDataSourceFactory sourceFactory) {
+    private SourceFunction<RowData> createSourceFunction(SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
+
+
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-        JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, sourceFunc);
+        JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, reader, sourceFunc);
         Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();
         return Objects.requireNonNull(sourceFunc.get(), "SourceFunction<RowData> shall present");
     }
 
     protected abstract JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc);
+            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc);
 
 
     @Override
@@ -92,7 +94,7 @@ public abstract class ChunjunSourceFunction
         sourceFactory.getDbConfig().vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             for (ISelectedTab tab : tabs) {
                 SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab);
-                SourceFunction<RowData> sourceFunc = createSourceFunction(conf, sourceFactory);
+                SourceFunction<RowData> sourceFunc = createSourceFunction(conf, sourceFactory, reader);
                 sourceFuncs.add(ReaderSource.createRowDataSource(
                         dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
             }
@@ -100,7 +102,7 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createRowData);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), (tabName) -> DTOStream.createRowData());
             return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

@@ -23,8 +23,11 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcInputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.mysql.source.MysqlSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import com.qlangtech.tis.plugins.incr.flink.connector.dialect.TISMysqlDialect;
 import com.qlangtech.tis.web.start.TisAppLaunch;
@@ -48,8 +51,8 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
 
     @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc) {
-        return new ExtendMySQLSourceFactory(conf, sourceFactory) {
+            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+        return new ExtendMySQLSourceFactory(conf, sourceFactory, reader) {
             protected DataStream<RowData> createInput(
                     InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
                 Preconditions.checkNotNull(sourceName);
@@ -64,11 +67,14 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
 
     private static class ExtendMySQLSourceFactory extends MysqlSourceFactory {
         private final DataSourceFactory dataSourceFactory;
+        private final IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator;
 
-        public ExtendMySQLSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory) {
+        public ExtendMySQLSourceFactory(SyncConf syncConf
+                , DataSourceFactory dataSourceFactory, IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator) {
             super(syncConf, null, new TISMysqlDialect());
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
+            this.sourceStreamMetaCreator = sourceStreamMetaCreator;
         }
 
 
@@ -87,7 +93,8 @@ public class MySQLSourceFunction extends ChunjunSourceFunction {
 
         @Override
         protected JdbcInputFormatBuilder getBuilder() {
-            return new JdbcInputFormatBuilder(new TISMysqlInputFormat(dataSourceFactory));
+            return new JdbcInputFormatBuilder(
+                    new TISMysqlInputFormat(dataSourceFactory, ColMetaUtils.getColMetas(this.sourceStreamMetaCreator, this.jdbcConf)));
         }
     }
 }

@@ -41,6 +41,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
@@ -49,9 +50,9 @@ import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.qlangtech.tis.test.EasyMockUtil;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.table.data.RowData;
@@ -79,16 +80,16 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected static String dataXName = "testDataX";
 
-    String tableName = "totalpayinfo";
+    static final String tableName = "totalpayinfo";
     protected static final String dbName = "tis";
 
     String colEntityId = "entity_id";
     String colNum = "num";
-    protected String colId = "id";
+    static protected String colId = "id";
     String colCreateTime = "create_time";
     protected String updateTime = "update_time";
     String updateDate = "update_date";
-    String starTime = "start_time";
+    static String starTime = "start_time";
 
     String pk = "88888888887";
     @ClassRule(order = 100)
@@ -155,8 +156,37 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         return new DTO[]{add, updateAfter, delete};
     }
 
-    // @Test
+    /**
+     * 尝试使用Stream API流程测试
+     *
+     * @throws Exception
+     */
     protected void testSinkSync() throws Exception {
+        testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
+
+            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+            //int updateNumVal = 999;
+            Assert.assertEquals(1, sinkFunction.size());
+            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
+
+                Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, entry.getKey());
+
+                entry.getValue().add2Sink(sourceStream.getKey());
+
+                //  sourceStream.getStream().addSink();
+
+                // entry.getValue().add2Sink(sourceStream.addStream(env.fromElements(new DTO[]{d, update})));
+                // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
+                break;
+            }
+
+            env.execute("testJob");
+
+        });
+    }
+
+    // @Test
+    protected void testSinkSync(IStreamScriptRun streamScriptRun) throws Exception {
 
 
         //  System.out.println("logger.getClass():" + logger.getClass());
@@ -183,7 +213,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             //   String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
             SelectedTab totalpayInfo = createSelectedTab();
-            tableName = totalpayInfo.getName();
+            // tableName = totalpayInfo.getName();
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
 
             File ddlDir = folder.newFolder("ddl");
@@ -227,7 +257,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
 
-            EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
+            EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter).anyTimes();
 
             ChunjunSinkFactory sinkFactory = getSinkFactory();
             sinkFactory.setKey(new KeyedPluginStore.Key(null, dataXName, null));
@@ -235,61 +265,21 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             sinkFactory.flushIntervalMills = 100000;
             sinkFactory.semantic = "at-least-once";
             sinkFactory.parallelism = 1;
-
+            TISSinkFactory.stubGetter = (pn) -> {
+                return sinkFactory;
+            };
 
             Map<String, TableAlias> aliasMap = new HashMap<>();
             TableAlias tab = new TableAlias(tableName);
             aliasMap.put(tableName, tab);
-            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
+            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap)).anyTimes();
 
             this.replay();
-            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
-            //int updateNumVal = 999;
+
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//            DTO add = createDTO(DTO.EventType.ADD);
-//            final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
-//                after.put(colNum, updateNumVal);
-//                after.put(updateTime, "2021-12-17 09:21:22");
-//            });
-//            final DTO updateAfter = updateBefore.colone();
-//            updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
-//
-//            final DTO delete = updateBefore.colone();
-//            delete.setEventType(DTO.EventType.DELETE);
-//            d.setEventType(DTO.EventType.ADD);
-//            d.setTableName(tableName);
-//            Map<String, Object> after = Maps.newHashMap();
-//            after.put(colEntityId, "334556");
-//            after.put(colNum, 5);
-//            String pk = "88888888887";
-//            after.put(colId, pk);
-//            after.put(colCreateTime, 20211113115959l);
-//            //  after.put(updateTime, "2021-12-17T09:21:20Z");
-//            after.put(updateTime, "2021-12-17 09:21:20");
-//            after.put(starTime, "2021-12-18 09:21:20");
-//            after.put(updateDate, "2021-12-09");
-//            d.setAfter(after);
-            Assert.assertEquals(1, sinkFunction.size());
-            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
 
-                DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
 
-                ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-                        , env.fromElements(this.createTestDTO()).setParallelism(1));
-
-                readerSource.getSourceStream(env
-                        , new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), sourceStream)));
-
-                entry.getValue().add2Sink(sourceStream);
-
-                //  sourceStream.getStream().addSink();
-
-                // entry.getValue().add2Sink(sourceStream.addStream(env.fromElements(new DTO[]{d, update})));
-                // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
-                break;
-            }
-
-            env.execute("testJob");
+            streamScriptRun.runStream(dataxProcessor, sinkFactory, env, totalpayInfo);
             Thread.sleep(9000);
 
 
@@ -335,6 +325,23 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             Thread.sleep(14000);
             throw new RuntimeException(e);
         }
+    }
+
+
+    interface IStreamScriptRun {
+
+        void runStream(DataxProcessor dataxProcessor
+                , ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception;
+    }
+
+
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env, TableAlias tableAlia) {
+        DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
+                , env.fromElements(this.createTestDTO()).setParallelism(1));
+        readerSource.getSourceStream(env
+                , new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
+        return Pair.of(sourceStream, readerSource);
     }
 
     protected void assertResultSetFromStore(ResultSet resultSet) throws SQLException {
@@ -412,7 +419,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         CMeta cm;
         cm = new CMeta();
         cm.setName(updateTime);
-        cm.setPk(true);
+        // cm.setPk(true);
         cm.setType(new DataType(Types.TIMESTAMP));
         return cm;
     }

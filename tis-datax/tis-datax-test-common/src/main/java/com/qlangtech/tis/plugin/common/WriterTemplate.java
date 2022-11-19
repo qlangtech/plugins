@@ -123,6 +123,10 @@ public class WriterTemplate {
 
         IDataxReader dataxReader = new IDataxReader() {
             @Override
+            public IStreamTableMeta getStreamTableMeta(String tableName) {
+               throw new UnsupportedOperationException();
+            }
+            @Override
             public List<ISelectedTab> getSelectedTabs() {
                 return null;
             }

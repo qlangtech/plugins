@@ -18,16 +18,30 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.dtstack.chunjun.connector.doris.rest.DorisStreamLoad;
 import com.dtstack.chunjun.connector.doris.rest.FeRestService;
 import com.dtstack.chunjun.connector.doris.rest.module.BackendRow;
+import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.script.ChunjunSqlType;
+import com.qlangtech.plugins.incr.flink.chunjun.doris.table.TISDorisDynamicTableFactory;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.http.HttpEntity;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -40,9 +54,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 
 /**
@@ -186,257 +203,96 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     @Test
     public void testSinkSync() throws Exception {
 
+        AtomicInteger httpPutCount = getHttpPutCount();
+
+        super.testSinkSync();
+
+        Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
+    }
+
+
+    private AtomicInteger getHttpPutCount() {
         AtomicInteger httpPutCount = new AtomicInteger();
         DorisStreamLoad.httpPutConsumer = (httpPut) -> {
             HttpEntity putEntity = httpPut.getEntity();
             httpPutCount.incrementAndGet();
         };
+        return httpPutCount;
+    }
 
-        super.testSinkSync();
 
+    /**
+     * 使用SQL引擎来执行同步
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testSinkSyncWithSQL() throws Exception {
+
+        AtomicInteger httpPutCount = getHttpPutCount();
+        super.testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
+            /**
+             * ==================================================
+             */
+            TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
+            tableRegisterHandle.setSinkFuncFactory(sinkFactory);
+            tableRegisterHandle.setSourceStreamTableMeta((tab) -> {
+                return () -> {
+                    return selectedTab.getCols().stream()
+                            .map((c) -> new HdfsColMeta(
+                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+                };
+            });
+
+            List<ReaderSource> sourceFuncts = Lists.newArrayList();
+            dataxProcessor.getTabAlias().forEach((key, val) -> {
+                Pair<DTOStream, ReaderSource<DTO>> sourceStream = createReaderSource(env, val);
+                sourceFuncts.add(sourceStream.getRight());
+            });
+
+            SourceChannel sourceChannel = new SourceChannel(sourceFuncts);
+            sourceChannel.setFocusTabs(Collections.singletonList(selectedTab), dataxProcessor.getTabAlias(), DTOStream::createDispatched);
+            tableRegisterHandle.consume(new TargetResName(dataXName), sourceChannel, dataxProcessor);
+            /**
+             * ===========================================
+             */
+        });
         Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
-        //  System.out.println("logger.getClass():" + logger.getClass());
-//
-//        /**
-//         建表需要将update_time作为uniqueKey的一部分，不然更新会有问题
-//         CREATE TABLE `totalpayinfo` (
-//         `id` varchar(32) NULL COMMENT "",
-//         `update_time` DATETIME   NULL,
-//         `entity_id` varchar(10) NULL COMMENT "",
-//         `num` int(11) NULL COMMENT "",
-//         `create_time` bigint(20) NULL COMMENT "",
-//         `update_date` DATE       NULL,
-//         `start_time`  DATETIME   NULL
-//         ) ENGINE=OLAP
-//         UNIQUE KEY(`id`,`update_time`)
-//         DISTRIBUTED BY HASH(`id`) BUCKETS 10
-//         PROPERTIES (
-//         "replication_num" = "1"
-//         );
-//         * */
-//
-//        try {
-//
-//            String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
-//
-//            DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
-//
-//            File ddlDir = folder.newFolder("ddl");
-//            String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
-//            FileUtils.write(new File(ddlDir, tabSql)
-//                    , IOUtils.loadResourceFromClasspath(this.getClass(), tabSql), TisUTF8.get());
-//
-//            EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
-//
-//            DataxProcessor.processorGetter = (name) -> {
-//                return dataxProcessor;
-//            };
-//            IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
-//            List<ISelectedTab> selectedTabs = Lists.newArrayList();
-//
-//
-//            SinkTabPropsExtends sinkExt = new SinkTabPropsExtends();
-//            sinkExt.tabName = tableName;
-//
-//
-//            //  EasyMock.expect(sinkExt.tabName).andReturn(tableName).times(2);
-//            //InsertType updateMode = new InsertType();
-//
-//            ReplaceType updateMode = new ReplaceType();
-//            updateMode.updateKey = Lists.newArrayList(colId, updateTime);
-//            // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
-//            sinkExt.incrMode = updateMode;
-//            List<CMeta> metaCols = Lists.newArrayList();
-//            CMeta cm = new CMeta();
-//            cm.setName(colEntityId);
-//            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(colNum);
-//            cm.setType(new DataType(Types.INTEGER));
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(colId);
-//            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
-//            cm.setPk(true);
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(colCreateTime);
-//            cm.setType(new DataType(Types.BIGINT));
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(updateTime);
-//            cm.setPk(true);
-//            cm.setType(new DataType(Types.TIMESTAMP));
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(updateDate);
-//            cm.setType(new DataType(Types.DATE));
-//            metaCols.add(cm);
-//
-//            cm = new CMeta();
-//            cm.setName(starTime);
-//            cm.setType(new DataType(Types.TIMESTAMP));
-//            metaCols.add(cm);
-//
-//            SelectedTab totalpayInfo = new SelectedTab() {
-//                @Override
-//                public List<ColMeta> getCols() {
-//                    return metaCols;
-//                }
-//            };
-//            totalpayInfo.setIncrSinkProps(sinkExt);
-//            totalpayInfo.name = tableName;
-//
-//
-////            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
-//            selectedTabs.add(totalpayInfo);
-//            EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
-//
-//            EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
-//
-//            // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName(dataXName), MYSQL_CONTAINER);
-//            BasicDataXRdbmsWriter dataXWriter = createDataXWriter();
-//
-//            dataXWriter.autoCreateTable = true;
-//            dataXWriter.dataXName = dataXName;
-//            // dataXWriter.maxBatchRows = 100;
-//            DataxWriter.dataxWriterGetter = (xName) -> {
-//                Assert.assertEquals(dataXName, xName);
-//                return dataXWriter;
-//            };
-//
-//            // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
-//
-//            //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
-//
-//            EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
-//
-//            ChunjunSinkFactory sinkFactory = getSinkFactory();
-//            sinkFactory.setKey(new KeyedPluginStore.Key(null, dataXName, null));
-//            sinkFactory.batchSize = 100;
-//            sinkFactory.flushIntervalMills = 100000;
-//            sinkFactory.semantic = "at-least-once";
-//            sinkFactory.parallelism = 1;
-//
-//
-//            Map<String, TableAlias> aliasMap = new HashMap<>();
-//            TableAlias tab = new TableAlias(tableName);
-//            aliasMap.put(tableName, tab);
-//            EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(aliasMap);
-//            AtomicInteger httpPutCount = new AtomicInteger();
-//            DorisStreamLoad.httpPutConsumer = (httpPut) -> {
-//                HttpEntity putEntity = httpPut.getEntity();
-//                httpPutCount.incrementAndGet();
-//            };
-//            this.replay();
-//            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
-//            int updateNumVal = 999;
-//            StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//            DTO add = createDTO(DTO.EventType.ADD);
-//            final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
-//                after.put(colNum, updateNumVal);
-//                after.put(updateTime, "2021-12-17 09:21:22");
-//            });
-//            final DTO updateAfter = updateBefore.colone();
-//            updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
-//
-//            final DTO delete = updateBefore.colone();
-//            delete.setEventType(DTO.EventType.DELETE);
-////            d.setEventType(DTO.EventType.ADD);
-////            d.setTableName(tableName);
-////            Map<String, Object> after = Maps.newHashMap();
-////            after.put(colEntityId, "334556");
-////            after.put(colNum, 5);
-////            String pk = "88888888887";
-////            after.put(colId, pk);
-////            after.put(colCreateTime, 20211113115959l);
-////            //  after.put(updateTime, "2021-12-17T09:21:20Z");
-////            after.put(updateTime, "2021-12-17 09:21:20");
-////            after.put(starTime, "2021-12-18 09:21:20");
-////            after.put(updateDate, "2021-12-09");
-////            d.setAfter(after);
-//            Assert.assertEquals(1, sinkFunction.size());
-//            for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
-//
-//                DTOStream sourceStream = DTOStream.createDispatched(entry.getKey().getFrom());
-//
-//                ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-//                        , env.fromElements(new DTO[]{add, updateBefore, updateAfter
-//                        }));
-//
-//                readerSource.getSourceStream(env, Collections.singletonMap(tableName, sourceStream));
-//
-//                entry.getValue().add2Sink(sourceStream);
-//
-//                //  sourceStream.getStream().addSink();
-//
-//                // entry.getValue().add2Sink(sourceStream.addStream(env.fromElements(new DTO[]{d, update})));
-//                // env.fromElements(new DTO[]{d}).addSink(entry.getValue());
-//                break;
-//            }
-//
-//            env.execute("testJob");
-//            Thread.sleep(9000);
-//            Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
-//
-//            DBConfig dbConfig = dsFactory.getDbConfig();
-//
-//            String[] jdbcUrls = new String[1];
-//            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-//                jdbcUrls[0] = jdbcUrl;
-//            });
-//
-//            try (Connection conn = dsFactory.getConnection(jdbcUrls[0])) {
-//                Statement statement = conn.createStatement();
-//                ResultSet resultSet = statement.executeQuery("select * from " + tableName + " where id=" + pk);
-//                if (resultSet.next()) {
-//                    StringBuffer rowDesc = new StringBuffer();
-//                    for (String col : colNames) {
-//                        Object obj = resultSet.getObject(col);
-//                        rowDesc.append(col).append("=").append(obj).append("[").append((obj != null) ? obj.getClass().getSimpleName() : "").append("]").append(" , ");
-//                    }
-//                    Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
-//                    System.out.println("test_output==>" + rowDesc.toString());
-//                } else {
-//                    Assert.fail("have not find row with id=" + pk);
-//                }
-//            }
-//
-////            DBConfig dbConfig = dsFactory.getDbConfig();
-////            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-////                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-////
-////
-////
-////                } catch (Exception e) {
-////                    throw new RuntimeException(e);
-////                }
-////            });
-//            this.verifyAll();
-//
-//
-//        } catch (Throwable e) {
-//            Thread.sleep(14000);
-//            throw new RuntimeException(e);
-//        }
+    }
+
+    private static class TotalpayRegisterFlinkSourceHandle extends TestTableRegisterFlinkSourceHandle {
+        private final SelectedTab selectedTab;
+
+        public TotalpayRegisterFlinkSourceHandle(SelectedTab tab) {
+            super(tab.getName(), Collections.emptyList());
+            this.selectedTab = tab;
+        }
+
+        @Override
+        protected void executeSql(StreamTableEnvironment tabEnv) {
+            super.executeSql(tabEnv);
+
+            String cols = selectedTab.getCols().stream().map((c) -> c.getName()).collect(Collectors.joining(","));
+            //  String cols = colId + "," + starTime;
+            // String targetCols = selectedTab.getCols().stream().map((c) -> "cast("+ c.getName()+" AS string)").collect(Collectors.joining(","));
+            tabEnv.executeSql("INSERT INTO " + tableName + "(" + cols + ") SELECT "
+                    + cols + " FROM " + tableName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX);
+        }
+
+        protected final Boolean shallRegisterSinkTable() {
+            return true;
+        }
+
+        @Override
+        protected String getSinkTypeName() {
+            return TISDorisDynamicTableFactory.IDENTIFIER;
+        }
     }
 
     protected BasicDataXRdbmsWriter createDataXWriter() {
         DataXDorisWriter dataXWriter = new DataXDorisWriter() {
-            //                @Override
-            //                public DataSourceFactory getDataSourceFactory() {
-            //                    return dsFactory;
-            //                }
-
             @Override
             public DorisSourceFactory getDataSourceFactory() {
-                //return super.getDataSourceFactory();
                 return Objects.requireNonNull(dsFactory, "dsFactory can not be null");
             }
         };
@@ -446,7 +302,10 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     }
 
     protected ChunjunSinkFactory getSinkFactory() {
-        return new ChunjunDorisSinkFactory();
+        ChunjunDorisSinkFactory dorisSinkFactory = new ChunjunDorisSinkFactory();
+        ChunjunSqlType chunjunSqlType = new ChunjunSqlType();
+        dorisSinkFactory.scriptType = chunjunSqlType;
+        return dorisSinkFactory;
     }
 
 

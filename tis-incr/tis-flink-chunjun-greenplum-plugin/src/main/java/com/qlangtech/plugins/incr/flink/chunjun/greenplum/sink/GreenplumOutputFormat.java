@@ -19,9 +19,8 @@
 package com.qlangtech.plugins.incr.flink.chunjun.greenplum.sink;
 
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,18 +35,18 @@ public class GreenplumOutputFormat extends PostgresOutputFormat {
 
     private final DataSourceFactory dsFactory;
 
-    public GreenplumOutputFormat(DataSourceFactory dsFactory) {
-        super();
+    public GreenplumOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+        super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");
         }
         this.dsFactory = dsFactory;
     }
 
-    @Override
-    protected Map<String, ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
-    }
+//    @Override
+//    protected Map<String, ColMeta> getTableMetaData() {
+//        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
+//    }
 
     @Override
     protected Connection getConnection() throws SQLException {

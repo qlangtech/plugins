@@ -1,19 +1,19 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *   Licensed to the Apache Software Foundation (ASF) under one
+ *   or more contributor license agreements.  See the NOTICE file
+ *   distributed with this work for additional information
+ *   regarding copyright ownership.  The ASF licenses this file
+ *   to you under the Apache License, Version 2.0 (the
+ *   "License"); you may not use this file except in compliance
+ *   with the License.  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi;
@@ -24,7 +24,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -37,12 +40,13 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
-import com.qlangtech.tis.plugins.incr.flink.connector.hudi.scripttype.ScriptType;
-import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.BasicFlinkStreamScriptCreator;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
+import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.annotation.Public;
@@ -61,7 +65,7 @@ import java.util.stream.Collectors;
  * @create: 2022-02-14 14:39
  **/
 @Public
-public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStreamTableCreator {
+public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStreamTableMeataCreator.ISinkStreamMetaCreator, IStreamIncrGenerateStrategy {
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Flink-Hudi-Sink";
     public static final String HIVE_SYNC_MODE = "hms";
 
@@ -86,13 +90,26 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
     @FormField(ordinal = 7, validate = {Validator.require})
     public CompactionConfig compaction;
 
-    private transient IStreamTableCreator streamTableCreator;
+    private transient BasicFlinkStreamScriptCreator streamTableCreator;
 
-    private IStreamTableCreator getStreamTableCreator() {
+    // public static BasicFlinkStreamScriptCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory) {
+//        StreamScriptType scriptType = StreamScriptType.parse();
+//        switch (scriptType) {
+//            case SQL:
+//                return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
+//            case STREAM_API:
+//                return new StreamAPIStyleFlinkStreamScriptCreator(hudiSinkFactory);
+//            default:
+//                throw new IllegalStateException("illegal:" + hudiSinkFactory.scriptType);
+//        }
+//        return hudiSinkFactory.scriptType.createStreamTableCreator(hudiSinkFactory);
+//    }
+
+    private BasicFlinkStreamScriptCreator getStreamTableCreator() {
         if (streamTableCreator != null) {
             return streamTableCreator;
         }
-        return streamTableCreator = BasicFlinkStreamScriptCreator.createStreamTableCreator(this);
+        return streamTableCreator = this.scriptType.createStreamTableCreator(this); //createStreamTableCreator(this);
     }
 
 
@@ -205,12 +222,13 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
      */
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
-        return getStreamTableCreator().getStreamTableMeta(tableName);
+        return () -> getTableMeta(tableName).getRight().colMetas;
+        // return getStreamTableCreator().getStreamTableMeta(tableName);
     }
 
     @Override
-    public String getFlinkStreamGenerateTemplateFileName() {
-        return getStreamTableCreator().getFlinkStreamGenerateTemplateFileName();
+    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+        return getStreamTableCreator().getFlinkStreamGenerateTplResource();
     }
 
     @Override
@@ -260,10 +278,12 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
             }
             return super.validateAll(msgHandler, context, postFormVals);
         }
+
         @Override
         public PluginVender getVender() {
             return PluginVender.TIS;
         }
+
         @Override
         protected IEndTypeGetter.EndType getTargetType() {
             return IEndTypeGetter.EndType.Hudi;

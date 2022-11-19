@@ -25,7 +25,7 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
@@ -47,10 +47,12 @@ import java.util.Objects;
  **/
 @Public
 @TISExtensible
-public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
+public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
+        implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
 
     private transient TISSinkFactory sinkFuncFactory;
     private transient IncrStreamFactory streamFactory;
+    private transient IStreamTableMeataCreator.ISourceStreamMetaCreator metaCreator;
 
     protected String getDataXName() {
         String name = this.sinkFuncFactory.dataXName;
@@ -60,25 +62,23 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
         return name;
     }
 
-    public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
-
-//        if (!(sinKFactory instanceof IStreamTableCreator)) {
-//            throw new IllegalStateException("writer:"
-//                    + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
-//        }
-//        return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
         return getStreamTableMeta(sinKFactory, tabName);
     }
 
-    public static IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
-//        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
-
-        if (!(sinKFactory instanceof IStreamTableCreator)) {
+    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
+        if (!(sinKFactory instanceof IStreamTableMeataCreator.ISinkStreamMetaCreator)) {
             throw new IllegalStateException("writer:"
-                    + sinKFactory.getClass().getName() + " must be type of " + IStreamTableCreator.class.getSimpleName());
+                    + sinKFactory.getClass().getName() + " must be type of "
+                    + IStreamTableMeataCreator.ISinkStreamMetaCreator.class.getSimpleName());
         }
-        return ((IStreamTableCreator) sinKFactory).getStreamTableMeta(tabName);
+        return ((IStreamTableMeataCreator.ISinkStreamMetaCreator) sinKFactory).getStreamTableMeta(tabName);
+    }
+
+    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(
+            IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, String tabName) {
+        return sourceFactory.getStreamTableMeta(tabName);
     }
 
 
@@ -90,10 +90,16 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
             throw new IllegalArgumentException("focusTabs can not be empty");
         }
-        //dataXProcessor.getTabAlias()
-        //Key
-        Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
 
+        Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
+        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
+
+
+        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
+        return executeFlinkJob(dataxName, env);
+    }
+
+    protected Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
         sinks.forEach((tab, func) -> {
@@ -102,11 +108,9 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
                         + this.getSinkFuncFactory().getDescriptor().getDisplayName() + ":" + tab + " is illegal");
             }
         });
-
-
-        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
-        return executeFlinkJob(dataxName, env);
+        return sinks;
     }
+
 
     /**
      * 处理各个表对应的数据流
@@ -118,7 +122,8 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
 
 
     private Tab2OutputTag<DTOStream> createTab2OutputTag(
-            AsyncMsg<List<ReaderSource>> asyncMsg, StreamExecutionEnvironment env, TargetResName dataxName) throws java.io.IOException {
+            AsyncMsg<List<ReaderSource>> asyncMsg
+            , StreamExecutionEnvironment env, TargetResName dataxName) throws java.io.IOException {
         Tab2OutputTag<DTOStream> tab2OutputTag = asyncMsg.getTab2OutputTag();
         for (ReaderSource sourceFunc : asyncMsg.getSource()) {
 
@@ -139,21 +144,6 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
         return env.execute(dataxName.getName());
     }
 
-
-//    private SingleOutputStreamOperator<DTO> getSourceStream(
-//            StreamExecutionEnvironment env, Map<String, DTOStream> tab2OutputStream, ReaderSource sourceFunc) {
-//
-//
-//
-//
-//        return env.addSource(sourceFunc.sourceFunc)
-//                .name(sourceFunc.tokenName)
-//                .setParallelism(1)
-//                .process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
-//                        .collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue().outputTag))));
-//    }
-
-
     public TISSinkFactory getSinkFuncFactory() {
         return this.sinkFuncFactory;
     }
@@ -167,5 +157,19 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ> implements ICons
 
     public void setStreamFactory(IncrStreamFactory streamFactory) {
         this.streamFactory = Objects.requireNonNull(streamFactory, "streamFactory can not be null");
+    }
+
+    /**
+     * 源端Meta信息获取策略
+     *
+     * @param metaCreator
+     */
+    public void setSourceStreamTableMeta(IStreamTableMeataCreator.ISourceStreamMetaCreator metaCreator) {
+        this.metaCreator = metaCreator;
+    }
+
+    public IStreamTableMeataCreator.ISourceStreamMetaCreator getSourceStreamTableMeta() {
+        Objects.requireNonNull(this.metaCreator, "metaCreator can not be null");
+        return metaCreator;
     }
 }

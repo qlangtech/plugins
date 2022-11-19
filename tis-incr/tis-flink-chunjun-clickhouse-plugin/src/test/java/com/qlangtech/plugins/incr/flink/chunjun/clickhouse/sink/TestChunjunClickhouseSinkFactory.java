@@ -251,7 +251,7 @@ public class TestChunjunClickhouseSinkFactory
             // d.setAfter(after);
 
             Assert.assertEquals(1, sinkFuncs.size());
-            DTOStream rowStream = DTOStream.createRowData(tableName);
+            DTOStream rowStream = DTOStream.createRowData();
             // rowStream.addStream(env.fromElements(new RowData[]{d}));
             for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFuncs.entrySet()) {
 

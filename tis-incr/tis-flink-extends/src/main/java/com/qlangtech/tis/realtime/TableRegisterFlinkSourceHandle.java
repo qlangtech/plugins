@@ -18,13 +18,21 @@
 
 package com.qlangtech.tis.realtime;
 
+import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -40,9 +48,11 @@ import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.descriptors.ConnectorDescriptor;
 import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
 import org.apache.flink.types.Row;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,8 +67,13 @@ import java.util.stream.Collectors;
 public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
 
 
+    /**
+     * @param env
+     * @param tab2OutputTag source 部分
+     * @param sinkFunction  sink 部分
+     */
     @Override
-    protected void processTableStream(StreamExecutionEnvironment env
+    protected final void processTableStream(StreamExecutionEnvironment env
             , Tab2OutputTag<DTOStream> tab2OutputTag, SinkFuncs<DTO> sinkFunction) {
 
         StreamTableEnvironment tabEnv = StreamTableEnvironment.create(
@@ -68,14 +83,31 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
                         .build());
 
         for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
-            this.registerTable(tabEnv, entry.getKey().getTo(), entry.getValue());
+            this.registerSourceTable(tabEnv, entry.getKey().getFrom(), entry.getValue());
+            if (shallRegisterSinkTable()) {
+                this.registerSinkTable(tabEnv, entry.getKey());
+            }
         }
 
-        this.executeSql(tabEnv);
+        this.executeSql( new TISTableEnvironment(tabEnv));
     }
 
+    @Override
+    protected Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+        // return super.createTabSinkFunc(dataXProcessor);
+        return Collections.emptyMap();
+    }
 
-    abstract protected void executeSql(StreamTableEnvironment tabEnv);
+    /**
+     * 是否要自动注册Sink表？
+     *
+     * @return
+     */
+    protected Boolean shallRegisterSinkTable() {
+        return true;
+    }
+
+    abstract protected void executeSql(TISTableEnvironment tabEnv);
 
     @Override
     protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {
@@ -83,11 +115,57 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         return getAllTabColsMeta(this.getSinkFuncFactory(), tabName);
     }
 
-    protected void registerTable(StreamTableEnvironment tabEnv
-            , String tabName, DTOStream sourceStream) {
-        Schema.Builder scmBuilder = Schema.newBuilder();
+    private void registerSinkTable(StreamTableEnvironment tabEnv, TableAlias alias) {
+        final Map<String, String> connProps = Maps.newHashMap();
+        connProps.put(DataxUtils.DATAX_NAME, this.getDataXName());
+        //ChunjunSinkFactory.KEY_SOURCE_TABLE_NAME
+        connProps.put(TableAlias.KEY_FROM_TABLE_NAME, alias.getFrom());
+        org.apache.flink.table.descriptors.Schema sinkTabSchema
+                = new org.apache.flink.table.descriptors.Schema();
+        // 其实无作用骗骗校验器的
 
-        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), tabName);
+        DataxWriter dataXWriter = DataxWriter.load(null, this.getDataXName());
+        BasicDataSourceFactory dsFactory
+                = (BasicDataSourceFactory) ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
+        if (dsFactory == null) {
+            throw new IllegalStateException("dsFactory can not be null");
+        }
+        DBConfig dbConfig = dsFactory.getDbConfig();
+        dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
+            try {
+                /**
+                 * 需要先初始化表MySQL目标库中的表
+                 */
+                ((IInitWriterTableExecutor) dataXWriter)
+                        .initWriterTable(alias.getTo(), Collections.singletonList(jdbcUrl));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias.getTo());
+        for (FlinkCol c : cols) {
+            sinkTabSchema.field(c.name, c.type);
+        }
+        tabEnv.connect(new ConnectorDescriptor(this.getSinkTypeName(), 1, false) {
+            @Override
+            protected Map<String, String> toConnectorProperties() {
+                return connProps;
+            }
+        }).withSchema(sinkTabSchema) //
+                .inUpsertMode().createTemporaryTable(alias.getTo());
+    }
+
+    protected abstract String getSinkTypeName();
+
+
+    protected void registerSourceTable(StreamTableEnvironment tabEnv
+            , String tabName, DTOStream sourceStream) {
+
+
+
+        Schema.Builder scmBuilder = Schema.newBuilder();
+        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(
+                this.getSourceStreamTableMeta().getStreamTableMeta(tabName));
         String[] fieldNames = new String[cols.size()];
         TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
         int i = 0;
@@ -125,10 +203,8 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     }
 
     private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, String tabName) {
-        IStreamTableCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
+        IStreamTableMeataCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
         return AbstractRowDataMapper.getAllTabColsMeta(streamTableMeta);
-
-        // return streamTableMeta.getColsMeta().stream().map((c) -> mapFlinkCol(c)).collect(Collectors.toList());
     }
 
 

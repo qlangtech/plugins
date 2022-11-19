@@ -24,11 +24,11 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -50,10 +50,10 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
         super(sourceFactory);
     }
 
-
+    @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, AtomicReference<SourceFunction<RowData>> sourceFunc) {
-        return new ExtendPostgresqlSourceFactory(conf, null, sourceFactory) {
+            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+        return new ExtendPostgresqlSourceFactory(conf, null, reader, sourceFactory) {
             protected DataStream<RowData> createInput(
                     InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
                 Preconditions.checkNotNull(sourceName);
@@ -68,16 +68,18 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
 
     private static class ExtendPostgresqlSourceFactory extends PostgresqlSourceFactory {
         private final DataSourceFactory dataSourceFactory;
+        private final BasicDataXRdbmsReader reader;
 
-        public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env, DataSourceFactory dataSourceFactory) {
+        public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env, BasicDataXRdbmsReader reader, DataSourceFactory dataSourceFactory) {
             super(syncConf, env, new TISPostgresqlDialect(syncConf));
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
+            this.reader = reader;
         }
 
         @Override
         protected JdbcInputFormatBuilder getBuilder() {
-            return new JdbcInputFormatBuilder(new TISPostgresqlInputFormat(dataSourceFactory));
+            return new JdbcInputFormatBuilder(new TISPostgresqlInputFormat(dataSourceFactory, ColMetaUtils.getColMetas(this.reader, this.jdbcConf)));
         }
     }
 

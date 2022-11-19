@@ -19,7 +19,6 @@
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dtstack.chunjun.conf.FieldConf;
 import com.dtstack.chunjun.conf.OperatorConf;
 import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.doris.options.DorisConfBuilder;
@@ -27,30 +26,33 @@ import com.dtstack.chunjun.connector.doris.options.DorisKeys;
 import com.dtstack.chunjun.connector.doris.options.LoadConf;
 import com.dtstack.chunjun.connector.doris.sink.DorisHttpOutputFormatBuilder;
 import com.dtstack.chunjun.connector.doris.sink.DorisSinkFactory;
+import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
+import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -61,15 +63,17 @@ import org.apache.flink.util.Preconditions;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-15 14:32
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
+
+    @FormField(ordinal = 6, validate = {Validator.require})
+    public ScriptType scriptType;
+
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
         // return null;
@@ -77,7 +81,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
+    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
         throw new UnsupportedOperationException();
     }
 
@@ -86,37 +90,37 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         return true;
     }
 
-    private transient List<IColMetaGetter> colsMeta;
+    // private transient List<IColMetaGetter> colsMeta;
 
-    @Override
-    protected List<IColMetaGetter> getColsMeta(TableAlias tableName
-            , BasicDataSourceFactory dsFactory, CreateChunjunSinkFunctionResult sinkFunc) {
-        //return super.getColsMeta(tableName, dsFactory, sinkFunc);
-
-        if (colsMeta == null) {
-
-            Map<String, ColMeta> colsMap = Maps.newHashMap();
-            dsFactory.visitFirstConnection((conn) -> {
-                colsMap.putAll(ColMetaUtils.getColMetasMap(dsFactory, conn, new JdbcConf() {
-                    @Override
-                    public String getTable() {
-                        return tableName.getTo();
-                    }
-                }));
-            });
-            // 为了保证RowData创建的字段顺序( 由FieldConfig顺序决定 )
-            DorisSinkFactory sinkFactory = (DorisSinkFactory) sinkFunc.getSinkFactory();
-            colsMeta = Lists.newArrayList();
-            for (FieldConf field : sinkFactory.options.getColumn()) {
-                colsMeta.add(Objects.requireNonNull(colsMap.get(field.getName())
-                        , "fileName:" + field.getName() + " relevant colMeta can not be null"));
-            }
-            if (CollectionUtils.isEmpty(colsMeta)) {
-                throw new IllegalStateException("colsMeta can not be empty,tableName:" + tableName.toString());
-            }
-        }
-        return colsMeta;
-    }
+//    @Override
+//    protected List<IColMetaGetter> getColsMeta(TableAlias tableName
+//            , BasicDataSourceFactory dsFactory, CreateChunjunSinkFunctionResult sinkFunc) {
+//        //return super.getColsMeta(tableName, dsFactory, sinkFunc);
+//
+//        if (colsMeta == null) {
+//
+//            Map<String, IColMetaGetter> colsMap = Maps.newHashMap();
+//            // dsFactory.visitFirstConnection((conn) -> {
+//            colsMap.putAll(ColMetaUtils.getColMetasMap(ChunjunDorisSinkFactory.this, new JdbcConf() {
+//                @Override
+//                public String getTable() {
+//                    return tableName.getTo();
+//                }
+//            }));
+//            //});
+//            // 为了保证RowData创建的字段顺序( 由FieldConfig顺序决定 )
+//            DorisSinkFactory sinkFactory = (DorisSinkFactory) sinkFunc.getSinkFactory();
+//            colsMeta = Lists.newArrayList();
+//            for (FieldConf field : sinkFactory.options.getColumn()) {
+//                colsMeta.add(Objects.requireNonNull(colsMap.get(field.getName())
+//                        , "fileName:" + field.getName() + " relevant colMeta can not be null"));
+//            }
+//            if (CollectionUtils.isEmpty(colsMeta)) {
+//                throw new IllegalStateException("colsMeta can not be empty,tableName:" + tableName.toString());
+//            }
+//        }
+//        return colsMeta;
+//    }
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
@@ -162,9 +166,28 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
+        IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
+        final CreateChunjunSinkFunctionResult createSinkResult = createDorisSinkFunctionResult(syncConf, tabMeta);
+        return createSinkResult;
+    }
 
+    @Override
+    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+        return scriptType.createStreamTableCreator(this).getFlinkStreamGenerateTplResource();
+    }
+
+    @Override
+    public IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
+        return scriptType.createStreamTableCreator(this).decorateMergeData(mergeData);
+    }
+
+    private static CreateChunjunSinkFunctionResult createDorisSinkFunctionResult(SyncConf syncConf, IStreamTableMeta tabMeta) {
+        if (syncConf == null) {
+            throw new IllegalArgumentException("param syncConf can not be null");
+        }
+        final TableCols sinkTabCols = new TableCols(tabMeta.getColsMeta());
         final CreateChunjunSinkFunctionResult createSinkResult = new CreateChunjunSinkFunctionResult();
 
         createSinkResult.setSinkFactory(new DorisSinkFactory(syncConf) {
@@ -173,7 +196,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
             protected DorisConfBuilder createDorisConfBuilder(OperatorConf parameter, LoadConf loadConf) {
                 DorisConfBuilder builder = super.createDorisConfBuilder(parameter, loadConf);
                 final OperatorConf params = syncConf.getWriter();
-                List<String> fullCols = (List<String>) params.getVal(KEY_FULL_COLS);
+                List<String> fullCols = sinkTabCols.getColKeys();// (List<String>) params.getVal(KEY_FULL_COLS);
                 if (CollectionUtils.isEmpty(fullCols)) {
                     throw new IllegalStateException("fullCols can not be empty");
                 }
@@ -185,9 +208,9 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
             @Override
             protected DorisHttpOutputFormatBuilder createDorisHttpOutputFormatBuilder() {
                 DorisHttpOutputFormatBuilder builder = super.createDorisHttpOutputFormatBuilder();
-                List<String> cols = options.getColumn().stream().map((field) -> field.getName()).collect(Collectors.toList());
+                List<String> cols = sinkTabCols.getColKeys();// options.getColumn().stream().map((field) -> field.getName()).collect(Collectors.toList());
                 builder.setColumns(cols);
-                TISDorisColumnConverter columnConverter = TISDorisColumnConverter.create(options);
+                TISDorisColumnConverter columnConverter = TISDorisColumnConverter.create(sinkTabCols);
                 columnConverter.setColumnNames(cols);
                 if (CollectionUtils.isEmpty(options.getFullColumn())) {
                     throw new IllegalStateException("options.getFullColumn() can not be empty");
@@ -199,9 +222,11 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
             @Override
             protected DataStreamSink<RowData> createOutput(DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
+
                 Preconditions.checkNotNull(outputFormat);
                 SinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);
+                createSinkResult.setSinkCols(sinkTabCols);
                 createSinkResult.setSinkFunction(sinkFunction);
                 return null;
             }
@@ -210,21 +235,11 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
 
-//    /**
-//     * @param cm
-//     * @return
-//     * @see BasicDorisStarRocksWriter.DorisType
-//     */
-//    @Override
-//    protected Object parseType(CMeta cm) {
-//        // DorisType
-//        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
-//    }
-
     @Override
     protected void initChunjunJdbcConf(JdbcConf jdbcConf) {
 
     }
+
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
@@ -235,6 +250,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
                 // , "com.alibaba.datax.plugin.writer.hudi.HudiConfig"
         ));
     }
+
 
     @TISExtension
     public static final class DftDesc extends BasicChunjunSinkDescriptor {

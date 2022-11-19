@@ -18,13 +18,16 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.datax.TableAlias;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+
+import java.util.List;
 
 /**
  * <TRANSFER_OBJ/> 可以是用：
@@ -40,7 +43,11 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final TableAlias tab;
     protected transient final int sinkTaskParallelism;
+    protected final List<FlinkCol> colsMeta;
 
+    public List<FlinkCol> getColsMeta() {
+        return this.colsMeta;
+    }
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
 
@@ -48,13 +55,15 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      * @param tab
      * @param sinkFunction
      */
-    public TabSinkFunc(TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction, int sinkTaskParallelism) {
+    public TabSinkFunc(TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
+            , final List<FlinkCol> colsMeta, int sinkTaskParallelism) {
         this.sinkFunction = sinkFunction;
         this.tab = tab;
         if (sinkTaskParallelism < 1) {
             throw new IllegalArgumentException("param sinkTaskParallelism can not small than 1");
         }
         this.sinkTaskParallelism = sinkTaskParallelism;
+        this.colsMeta = colsMeta;
         //  this.env = env;
     }
 
@@ -76,7 +85,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      */
     protected abstract DataStream<SINK_TRANSFER_OBJ> streamMap(DTOStream sourceStream);
 
-    public void add2Sink(DTOStream sourceStream) {
+    public DataStreamSink<SINK_TRANSFER_OBJ> add2Sink(DTOStream sourceStream) {
 
         DataStream<SINK_TRANSFER_OBJ> source = this.streamMap(sourceStream);
 
@@ -88,32 +97,6 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
         if (this.sinkTaskParallelism < 1) {
             throw new IllegalStateException("sinkTaskParallelism can not small than 1");
         }
-        source.addSink(sinkFunction).name(tab.getTo()).setParallelism(this.sinkTaskParallelism);
-//        .filter((obj) -> {
-//            return true;
-//        })
-
-//        if (sinkFunction.size() < 2) {
-//            for (Map.Entry<TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
-//                streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
-//            }
-//        } else {
-//            if (StringUtils.isEmpty(originTableName)) {
-//                throw new IllegalArgumentException("param originTableName can not be null");
-//            }
-//            boolean hasMatch = false;
-//            for (Map.Entry<TableAlias, SinkFunction<TRANSFER_OBJ>> entry : sinkFunction.entrySet()) {
-//                if (originTableName.equals(entry.getKey().getFrom())) {
-//                    streamMap(sourceStream).addSink(entry.getValue()).name(entry.getKey().getTo());
-//                    hasMatch = true;
-//                    break;
-//                }
-//            }
-//            if (!hasMatch) {
-//                throw new IllegalStateException("tabName:" + originTableName + " can not find SINK in :"
-//                        + sinkFunction.keySet().stream()
-//                        .map((t) -> "(" + t.getFrom() + "," + t.getTo() + ")").collect(Collectors.joining(" ")));
-//            }
-//        }
+        return source.addSink(sinkFunction).name(tab.getTo()).setParallelism(this.sinkTaskParallelism);
     }
 }

@@ -124,9 +124,14 @@ public class TISFlinkCDCStart {
 //            sinkFactory = factory;
 //            break;
 //        }
+
 //        Objects.requireNonNull(sinkFactory, "sinkFactories.size():" + sinkFactories.size());
 
+        IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
+        DataxReader reader = (DataxReader) dataXProcess.getReader(null);
+
         tableStreamHandle.setSinkFuncFactory(TISSinkFactory.getIncrSinKFactory(dataxName.getName()));
+        tableStreamHandle.setSourceStreamTableMeta(reader);
 
         // List<MQListenerFactory> mqFactories = HeteroEnum.MQ.getPlugins(pluginContext, null);
         MQListenerFactory mqFactory = HeteroEnum.getIncrSourceListenerFactory(dataxName.getName());
@@ -139,9 +144,7 @@ public class TISFlinkCDCStart {
 
         IMQListener mq = mqFactory.create();
 
-        IDataxProcessor dataXProcess = DataxProcessor.load(null, dataxName.getName());
 
-        DataxReader reader = (DataxReader) dataXProcess.getReader(null);
         if (reader == null) {
             throw new IllegalStateException("dataXReader is illegal");
         }

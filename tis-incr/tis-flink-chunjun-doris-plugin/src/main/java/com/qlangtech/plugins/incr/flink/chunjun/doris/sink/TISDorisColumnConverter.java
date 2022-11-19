@@ -18,22 +18,20 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
-import com.dtstack.chunjun.conf.FieldConf;
-import com.dtstack.chunjun.connector.doris.options.DorisConf;
+import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.table.data.RowData;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,42 +41,68 @@ import java.util.Map;
  * @create: 2022-08-18 11:03
  **/
 public class TISDorisColumnConverter
-        extends AbstractRowConverter<RowData, RowData, List<String>, BasicDorisStarRocksWriter.DorisType> {
+        extends AbstractRowConverter<RowData, RowData, List<String>, DataType> {
 
     private List<String> fullColumn;
     private List<String> columnNames;
-    private final DorisConf options;
+    // private final DorisConf options;
 
     private static final String NULL_VALUE = "\\N";
 
     private final Map<String, Integer> col2ordMap;
 
-    private TISDorisColumnConverter(DorisConf options, Map<String, Integer> col2ordMap, int fieldCount, List<IDeserializationConverter> toInternalConverters
-            , List<Pair<ISerializationConverter<List<String>>, BasicDorisStarRocksWriter.DorisType>> toExternalConverters) {
+    private TISDorisColumnConverter(//DorisConf options,
+                                    Map<String, Integer> col2ordMap,
+                                    int fieldCount, List<IDeserializationConverter> toInternalConverters
+            , List<Pair<ISerializationConverter<List<String>>, DataType>> toExternalConverters) {
         super(fieldCount, toInternalConverters, toExternalConverters);
-        this.options = options;
+        //   this.options = options;
         this.col2ordMap = col2ordMap;
     }
 
 
-    public static TISDorisColumnConverter create(DorisConf options) {
-        FieldConf col = null;
-        BasicDorisStarRocksWriter.DorisType dorisType = null;
+    public static TISDorisColumnConverter create(TableCols<IColMetaGetter> sinkTabCols  //DorisConf options
+    ) {
+        // FieldConf col = null;
+        //DataType dataType = null;
         Map<String, Integer> col2ordMap = Maps.newHashMap();
 
-        List<Pair<ISerializationConverter<List<String>>, BasicDorisStarRocksWriter.DorisType>>
+        List<Pair<ISerializationConverter<List<String>>, DataType>>
                 toExternalConverters = Lists.newArrayList();
         List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
         ISerializationConverter extrnalColConerter = null;
-        int fieldCount = options.getColumn().size();
-        for (int i = 0; i < options.getColumn().size(); i++) {
-            col = options.getColumn().get(i);
-            dorisType = col.getType();
-            col2ordMap.put(col.getName(), i);
-            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dorisType));
-            toExternalConverters.add(Pair.of(extrnalColConerter, dorisType));
+
+        int fieldCount = 0;
+        List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(sinkTabCols.getCols());
+        for (FlinkCol col : flinkCols) {
+
+            // dataType = cmeta.getType();
+            col2ordMap.put(col.name, fieldCount);
+            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(col));
+            toExternalConverters.add(Pair.of(extrnalColConerter, col.colType));
+            fieldCount++;
+
         }
-        return new TISDorisColumnConverter(options, col2ordMap, fieldCount, toInternalConverters, toExternalConverters);
+
+
+//        for (IColMetaGetter cmeta : sinkTabCols.getCols()) {
+//
+//            dataType = cmeta.getType();
+//            col2ordMap.put(cmeta.getName(), fieldCount);
+//            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dataType));
+//            toExternalConverters.add(Pair.of(extrnalColConerter, dataType));
+//            fieldCount++;
+//        }
+
+//        int fieldCount = options.getColumn().size();
+//        for (int i = 0; i < options.getColumn().size(); i++) {
+//            col = options.getColumn().get(i);
+//            dorisType = col.getType();
+//            col2ordMap.put(col.getName(), i);
+//            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dorisType));
+//            toExternalConverters.add(Pair.of(extrnalColConerter, dorisType));
+//        }
+        return new TISDorisColumnConverter(col2ordMap, fieldCount, toInternalConverters, toExternalConverters);
     }
 
 //    public TISDorisColumnConverter(DorisConf options) {
@@ -117,26 +141,26 @@ public class TISDorisColumnConverter
 
     @Override
     public List<String> toExternal(RowData rowData, List<String> joiner) throws Exception {
-        if (fullColumn.size() == options.getColumn().size()) {
-            for (int index = 0; index < rowData.getArity(); index++) {
-                toExternalConverters.get(index).serialize(rowData, index, joiner);
-            }
-        } else {
-            for (String columnName : fullColumn) {
-                if (columnNames.contains(columnName)) {
-                    int index = columnNames.indexOf(columnName);
-                    toExternalConverters.get(index).serialize(rowData, index, joiner);
-                } else {
-                    joiner.add(NULL_VALUE);
-                }
-            }
+//        if (fullColumn.size() == options.getColumn().size()) {
+        for (int index = 0; index < rowData.getArity(); index++) {
+            toExternalConverters.get(index).serialize(rowData, index, joiner);
         }
+//        } else {
+//        for (String columnName : fullColumn) {
+//            if (columnNames.contains(columnName)) {
+//                int index = columnNames.indexOf(columnName);
+//                toExternalConverters.get(index).serialize(rowData, index, joiner);
+//            } else {
+//                joiner.add(NULL_VALUE);
+//            }
+//        }
+        //}
         return joiner;
     }
 
     @Override
     protected ISerializationConverter<List<String>> wrapIntoNullableExternalConverter(
-            ISerializationConverter<List<String>> serializeConverter, BasicDorisStarRocksWriter.DorisType type) {
+            ISerializationConverter<List<String>> serializeConverter, DataType type) {
         return wrapNullableExternalConverter(serializeConverter);
     }
 
@@ -156,81 +180,28 @@ public class TISDorisColumnConverter
 //        return getSerializationConverter(type);
 //    }
 
-    private static ISerializationConverter<List<String>> getSerializationConverter(BasicDorisStarRocksWriter.DorisType type) {
-        final BiFunction dateProcess = FlinkCol.LocalDate();
-        return (rowData, index, joiner) -> {
+    private static ISerializationConverter<List<String>> getSerializationConverter(FlinkCol col) {
+        return new DorisSerializationConverter(col.getRowDataValGetter());
+//        return (rowData, index, joiner) -> {
+//            Object val = (rowData.isNullAt(index)) ? null : col.getRowDataValGetter().getFieldOrNull(rowData);
+//            joiner.add(
+//                    val == null ? NULL_VALUE : String.valueOf(val));
+//        };
+    }
 
-            Object val = (rowData.isNullAt(index)) ? null : type.type.accept(new DataType.TypeVisitor<Object>() {
-                @Override
-                public Object bigInt(DataType type) {
-                    return (rowData.getLong(index));
-                }
+    public static class DorisSerializationConverter implements ISerializationConverter<List<String>> {
+        private final RowData.FieldGetter valGetter;
 
-                @Override
-                public Object doubleType(DataType type) {
-                    return (rowData.getDouble(index));
-                }
+        public DorisSerializationConverter(RowData.FieldGetter valGetter) {
+            this.valGetter = valGetter;
+        }
 
-                @Override
-                public Object dateType(DataType type) {
-                    // dateProcess.deApply()
-                    LocalDate localDate = LocalDate.ofEpochDay(rowData.getInt(index));
-                    return dateProcess.deApply(localDate);
-                }
-
-                @Override
-                public Object timestampType(DataType type) {
-                    return (rowData.getTimestamp(index, -1));
-                }
-
-                @Override
-                public Object bitType(DataType type) {
-                    return (rowData.getInt(index));
-                }
-
-                @Override
-                public Object blobType(DataType type) {
-                    return new String(rowData.getBinary(index));
-                }
-
-                @Override
-                public Object varcharType(DataType type) {
-                    return rowData.getString(index).toString();
-                }
-
-                @Override
-                public Object intType(DataType type) {
-                    return (rowData.getInt(index));
-                }
-
-                @Override
-                public Object floatType(DataType type) {
-                    return (rowData.getFloat(index));
-                }
-
-                @Override
-                public Object decimalType(DataType type) {
-                    return rowData.getDecimal(index, -1, -1);
-                }
-
-                @Override
-                public Object timeType(DataType type) {
-                    return rowData.getInt(index);
-                }
-
-                @Override
-                public Object tinyIntType(DataType dataType) {
-                    return rowData.getShort(index);
-                }
-
-                @Override
-                public Object smallIntType(DataType dataType) {
-                    return rowData.getShort(index);
-                }
-            });
+        @Override
+        public void serialize(RowData rowData, int index, List<String> joiner) throws Exception {
+            Object val = (rowData.isNullAt(index)) ? null : valGetter.getFieldOrNull(rowData);
             joiner.add(
                     val == null ? NULL_VALUE : String.valueOf(val));
-        };
+        }
     }
 
     public void setFullColumn(List<String> fullColumn) {

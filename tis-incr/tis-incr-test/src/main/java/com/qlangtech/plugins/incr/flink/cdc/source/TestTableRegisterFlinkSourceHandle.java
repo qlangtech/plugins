@@ -25,6 +25,7 @@ import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.TISTableEnvironment;
 import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
@@ -80,10 +81,11 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
         return flinkCols;
     }
 
-//    @Override
-//    protected IStreamTableCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
-//        return () -> cols;
-//    }
+    @Override
+    protected String getSinkTypeName() {
+       throw new UnsupportedOperationException();
+    }
+
 
     @Override
     protected StreamExecutionEnvironment getFlinkExecutionEnvironment() {
@@ -117,8 +119,8 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 //    }
 
     @Override
-    protected void registerTable(StreamTableEnvironment tabEnv, String tabName, DTOStream sourceStream) {
-        super.registerTable(tabEnv, tabName, sourceStream);
+    protected void registerSourceTable(StreamTableEnvironment tabEnv, String tabName, DTOStream sourceStream) {
+        super.registerSourceTable(tabEnv, tabName, sourceStream);
         if (tableCount++ > 1) {
             throw new IllegalStateException("testCase just test 1 table,pre:" + this.tabName + ",new:" + tabName);
         }
@@ -127,7 +129,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
     }
 
     @Override
-    protected void executeSql(StreamTableEnvironment tabEnv) {
+    protected void executeSql(TISTableEnvironment tabEnv) {
         // IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX
         if (StringUtils.isEmpty(this.tabName)) {
             throw new IllegalStateException("prop tabName can not be null");

@@ -60,7 +60,6 @@ public class TestMySQLSinkFactory extends TestFlinkSinkExecutor {
     public static void initialize() throws Exception {
         MySqlSourceTestBase.startContainers();
         mysqlDSFactory = MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(new TargetResName(dataXName));
-        //    mysqlDSFactory = MySqlSourceTestBase.createDataSource(new TargetResName(dataXName));
     }
 
 

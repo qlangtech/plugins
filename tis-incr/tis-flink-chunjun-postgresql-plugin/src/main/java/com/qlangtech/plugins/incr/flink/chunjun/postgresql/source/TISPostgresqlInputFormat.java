@@ -19,19 +19,16 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.source;
 
 import com.dtstack.chunjun.connector.jdbc.TableCols;
-import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlInputFormat;
-import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
-import org.apache.flink.table.data.RowData;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -41,11 +38,14 @@ import java.util.Objects;
 public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     private final DataSourceFactory dataSourceFactory;
 
-    public TISPostgresqlInputFormat(DataSourceFactory dataSourceFactory) {
+    private final TableCols tabCols;
+
+    public TISPostgresqlInputFormat(DataSourceFactory dataSourceFactory, List<IColMetaGetter> colsMeta) {
         if (dataSourceFactory == null) {
             throw new IllegalArgumentException("param dataSourceFactory can not be null");
         }
         this.dataSourceFactory = dataSourceFactory;
+        this.tabCols = new TableCols(colsMeta);
     }
 
     @Override
@@ -58,16 +58,13 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     protected void initializeRowConverter() {
         this.setRowConverter(DialectUtils.createColumnConverter(
                 jdbcDialect, jdbcConf, this.colsMeta, PostgresqlColumnConverter::createInternalConverter
-                ));
+        ));
     }
-
-
-
 
 
     @Override
     protected TableCols getTableMetaData() {
-        return new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
+        return this.tabCols;// new TableCols(ColMetaUtils.getColMetas(this.dataSourceFactory, this.dbConn, this.jdbcConf));
     }
 
     @Override

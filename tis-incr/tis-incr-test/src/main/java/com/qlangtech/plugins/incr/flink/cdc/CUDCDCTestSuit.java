@@ -29,7 +29,7 @@ import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableCreator;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
@@ -512,7 +512,7 @@ public abstract class CUDCDCTestSuit {
         return createConsumerHandle(tabName, sinkFuncFactory);
     }
 
-    private class StubSinkFactory extends TISSinkFactory implements IStreamTableCreator {
+    private class StubSinkFactory extends TISSinkFactory implements IStreamTableMeataCreator {
         @Override
         public IStreamTableMeta getStreamTableMeta(String tableName) {
             return new IStreamTableMeta() {

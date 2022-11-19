@@ -28,6 +28,7 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.dialect.TISMysqlDialect;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -52,95 +53,13 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
         return TISMysqlDialect.class;
     }
 
-//    @Override
-//    protected JdbcDialect createJdbcDialect(SyncConf syncConf) {
-//        return new MysqlDialect();
-//    }
 
     /**
      * ==========================================================
      * End impl: IStreamTableCreator
      * ===========================================================
      */
-//    protected String parseType(CMeta cm) {
-//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-//            @Override
-//            public String bigInt(DataType type) {
-//                return "BIGINT";
-//            }
-//
-//            @Override
-//            public String doubleType(DataType type) {
-//                return "DOUBLE";
-//            }
-//
-//            @Override
-//            public String dateType(DataType type) {
-//                return "DATE";
-//            }
-//
-//            @Override
-//            public String timestampType(DataType type) {
-//                return "TIMESTAMP";
-//            }
-//
-//            @Override
-//            public String bitType(DataType type) {
-//                return "BIT";
-//            }
-//
-//            @Override
-//            public String blobType(DataType type) {
-//                // TINYBLOB、BLOB、MEDIUMBLOB、LONGBLOB
-//                switch (type.type) {
-//                    case Types.BLOB:
-//                        return "BLOB";
-//                    case Types.BINARY:
-//                    case Types.LONGVARBINARY:
-//                        return "BINARY";
-//                    case Types.VARBINARY:
-//                        return "VARBINARY";
-//                    default:
-//                        throw new IllegalStateException("illegal type:" + type.type);
-//                }
-//            }
-//
-//            @Override
-//            public String varcharType(DataType type) {
-//                return "VARCHAR";
-//            }
-//
-//            @Override
-//            public String intType(DataType type) {
-//                return "INT";
-//            }
-//
-//            @Override
-//            public String floatType(DataType type) {
-//                return "FLOAT";
-//            }
-//
-//            @Override
-//            public String decimalType(DataType type) {
-//                return "DECIMAL";
-//            }
-//
-//            @Override
-//            public String timeType(DataType type) {
-//                return "TIME";
-//            }
-//
-//            @Override
-//            public String tinyIntType(DataType dataType) {
-//                return "TINYINT";
-//            }
-//
-//            @Override
-//            public String smallIntType(DataType dataType) {
-//                return "SMALLINT";
-//            }
-//        });
-//    }
+
 
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
@@ -153,8 +72,9 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected TISMysqlOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        TISMysqlOutputFormat outputFormat = new TISMysqlOutputFormat(dsFactory);
+    protected TISMysqlOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf) {
+
+        TISMysqlOutputFormat outputFormat = new TISMysqlOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, jdbcConf));
 
         return outputFormat;
     }

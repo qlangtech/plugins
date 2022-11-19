@@ -19,10 +19,9 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 
 import com.dtstack.chunjun.connector.mysql.sink.MysqlOutputFormat;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,8 +35,9 @@ import java.util.Objects;
 public final class TISMysqlOutputFormat extends MysqlOutputFormat {
     private final DataSourceFactory dsFactory;
 
-    public TISMysqlOutputFormat(DataSourceFactory dsFactory) {
-        super();
+
+    public TISMysqlOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+        super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");
         }
@@ -62,10 +62,5 @@ public final class TISMysqlOutputFormat extends MysqlOutputFormat {
 
         this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
 
-    }
-
-    @Override
-    protected Map<String, ColMeta> getTableMetaData() {
-        return ColMetaUtils.getColMetasMap(this.dsFactory, this.dbConn, this.jdbcConf);
     }
 }

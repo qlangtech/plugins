@@ -18,7 +18,6 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.greenplum.sink;
 
-import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.greenplum.dialect.GreenplumDialect;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
@@ -26,14 +25,9 @@ import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-
-import java.sql.Types;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,8 +51,8 @@ public class ChunjunGreenplumSinkFactory extends ChunjunSinkFactory {
 //    }
 
     @Override
-    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory) {
-        return new GreenplumOutputFormat(dsFactory);
+    protected JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf conf) {
+        return new GreenplumOutputFormat(dsFactory, ColMetaUtils.getColMetasMap(this, conf));
     }
 
 //    @Override

@@ -25,7 +25,7 @@ import com.dtstack.chunjun.connector.doris.rest.module.BackendRow;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.script.ChunjunSqlType;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.table.TISDorisDynamicTableFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
@@ -37,11 +37,11 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.TISTableEnvironment;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.http.HttpEntity;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -269,7 +269,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
         }
 
         @Override
-        protected void executeSql(StreamTableEnvironment tabEnv) {
+        protected void executeSql(TISTableEnvironment tabEnv) {
             super.executeSql(tabEnv);
 
             String cols = selectedTab.getCols().stream().map((c) -> c.getName()).collect(Collectors.joining(","));

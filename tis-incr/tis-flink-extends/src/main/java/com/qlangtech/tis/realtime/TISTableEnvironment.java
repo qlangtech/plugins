@@ -18,30 +18,41 @@
 
 package com.qlangtech.tis.realtime;
 
-import org.apache.flink.core.execution.JobClient;
+import org.apache.flink.table.api.StatementSet;
 import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.slf4j.LoggerFactory;
-
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-11-19 16:29
  **/
 public class TISTableEnvironment {
-    private final StreamTableEnvironment tabEnv;
+    public final StreamTableEnvironment tabEnv;
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(TISTableEnvironment.class);
+    private final StatementSet statementSet;
+    int statmentCount = 0;
 
     public TISTableEnvironment(StreamTableEnvironment tabEnv) {
         this.tabEnv = tabEnv;
+        statementSet = tabEnv.createStatementSet();
     }
 
-    public TableResult executeSql(String sql) {
-        TableResult tabResult = tabEnv.executeSql(sql);
-        Optional<JobClient> jobClient = tabResult.getJobClient();
-        logger.info("submit flink job: {}", jobClient.get().getJobID());
-        return tabResult;
+    public void insert(String sql) {
+
+        statementSet.addInsertSql(sql);
+        this.statmentCount++;
+
+//        Optional<JobClient> jobClient = tabResult.getJobClient();
+//        logger.info("submit flink job: {}", jobClient.get().getJobID());
+//        return tabResult;
+    }
+
+    void executeMultiStatment() {
+        if (this.statmentCount > 0) {
+            TableResult result = statementSet.execute();
+            logger.info("submit flink job: {}", result.getJobClient().get().getJobID());
+        }
     }
 
 }

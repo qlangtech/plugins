@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi;
@@ -40,7 +40,7 @@ import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
-import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.IStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -72,10 +72,7 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
     private static final Logger logger = LoggerFactory.getLogger(HudiSinkFactory.class);
 
     @FormField(ordinal = 3, validate = {Validator.require})
-    public ScriptType scriptType;
-
-    //    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String dumpTimeStamp;
+    public IStreamScriptType scriptType;
 
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean baseOnBach;
@@ -92,55 +89,12 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
 
     private transient BasicFlinkStreamScriptCreator streamTableCreator;
 
-    // public static BasicFlinkStreamScriptCreator createStreamTableCreator(HudiSinkFactory hudiSinkFactory) {
-//        StreamScriptType scriptType = StreamScriptType.parse();
-//        switch (scriptType) {
-//            case SQL:
-//                return new SQLStyleFlinkStreamScriptCreator(hudiSinkFactory);
-//            case STREAM_API:
-//                return new StreamAPIStyleFlinkStreamScriptCreator(hudiSinkFactory);
-//            default:
-//                throw new IllegalStateException("illegal:" + hudiSinkFactory.scriptType);
-//        }
-//        return hudiSinkFactory.scriptType.createStreamTableCreator(hudiSinkFactory);
-//    }
-
     private BasicFlinkStreamScriptCreator getStreamTableCreator() {
         if (streamTableCreator != null) {
             return streamTableCreator;
         }
-        return streamTableCreator = this.scriptType.createStreamTableCreator(this); //createStreamTableCreator(this);
+        return streamTableCreator = this.scriptType.createStreamTableCreator(this);
     }
-
-
-//    public static List<Option> getHistoryBatch() {
-//
-//        Map<Class<? extends Descriptor>, Describable> pluginThreadLocal
-//                = GroovyShellEvaluate.pluginThreadLocal.get();
-//
-//        Describable sink = null;
-//        if ((sink = pluginThreadLocal.get(DefaultSinkFunctionDescriptor.class)) != null
-//                && sink instanceof HudiSinkFactory) {
-//            try {
-//                IDataXHudiWriter dataXWriter = getDataXHudiWriter((HudiSinkFactory) sink);
-//                IHiveConnGetter hiveMeta = dataXWriter.getHiveConnMeta();
-//                try (IHiveMetaStore metaStoreClient = hiveMeta.createMetaStoreClient()) {
-//                    //  metaStoreClient.getTable();
-//                }
-//
-//
-//                List<Option> batchs = HudiTableMeta.getHistoryBatchs(dataXWriter.getFileSystem(), dataXWriter.getHiveConnMeta());
-//                if (!CollectionUtils.isEmpty(batchs)) {
-//                    return batchs;
-//                }
-//            } catch (Exception e) {
-//                logger.warn(e.getMessage(), e);
-//            }
-//        }
-//
-//        return Lists.newArrayList(new Option(IParamContext.getCurrentTimeStamp()));
-//
-//    }
 
     public static IDataXHudiWriter getDataXHudiWriter(HudiSinkFactory sink) {
         return (IDataXHudiWriter) DataxWriter.load(null, sink.dataXName);

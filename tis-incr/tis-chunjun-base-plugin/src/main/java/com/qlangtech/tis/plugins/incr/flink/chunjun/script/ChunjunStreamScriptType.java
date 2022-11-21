@@ -16,20 +16,15 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.connector.scripttype;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.script;
 
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.IStreamScriptType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-31 11:43
+ * @create: 2022-11-21 10:32
  **/
-@Public
-public abstract class ScriptType implements Describable<ScriptType> {
+public abstract class ChunjunStreamScriptType implements Describable<ChunjunStreamScriptType>, IStreamScriptType {
 
-    public abstract BasicFlinkStreamScriptCreator createStreamTableCreator(
-            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator);
 }

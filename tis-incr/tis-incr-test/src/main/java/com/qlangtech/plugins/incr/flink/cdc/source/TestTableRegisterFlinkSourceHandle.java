@@ -134,7 +134,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
         if (StringUtils.isEmpty(this.tabName)) {
             throw new IllegalStateException("prop tabName can not be null");
         }
-        sourceTableQueryResult.put(this.tabName, tabEnv.executeSql("SELECT * FROM "
+        sourceTableQueryResult.put(this.tabName, tabEnv.tabEnv.executeSql("SELECT * FROM "
                 + tabName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX));
     }
 

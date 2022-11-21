@@ -50,6 +50,7 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
@@ -95,6 +96,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //    必选：否
 //    参数类型：int
 //    默认值：1
+
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public ChunjunStreamScriptType scriptType;
+
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public int batchSize;
 
@@ -385,6 +390,16 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         return Objects.requireNonNull(sinkFactory, "create result can not be null");
     }
 
+    @Override
+    public final IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+        return scriptType.createStreamTableCreator(this).getFlinkStreamGenerateTplResource();
+    }
+
+    @Override
+    public final IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
+        return scriptType.createStreamTableCreator(this).decorateMergeData(mergeData);
+    }
+
 
     public static class CreateChunjunSinkFunctionResult {
         SinkFunction<RowData> sinkFunction;
@@ -586,15 +601,15 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         //  throw new UnsupportedOperationException();
     }
 
-    @Override
-    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
-        return IStreamTemplateResource.createClasspathResource("flink_source_handle_rowdata_scala.vm", true);
-    }
+//    @Override
+//    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
+//        return IStreamTemplateResource.createClasspathResource("flink_source_handle_rowdata_scala.vm", true);
+//    }
 
-    @Override
-    public IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
-        return mergeData;
-    }
+//    @Override
+//    public IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
+//        return mergeData;
+//    }
 
     /**
      * ==========================================================

@@ -40,6 +40,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -93,9 +95,12 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
         Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
+        CountDownLatch countDown = new CountDownLatch(1);
+
+        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks, countDown));
 
 
-        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
+        countDown.await(60, TimeUnit.SECONDS);
         return executeFlinkJob(dataxName, env);
     }
 

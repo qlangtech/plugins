@@ -16,17 +16,18 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.chunjun.doris.table;
+package com.qlangtech.tis.plugins.incr.flink.connector.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-11-21 12:39
+ * @create: 2022-11-21 13:07
  **/
-public class DorisTableSinkFactory extends ChunjunTableSinkFactory {
-    public DorisTableSinkFactory() {
-        super(IEndTypeGetter.EndType.Doris);
+
+public class MySQLTableSinkFactory extends ChunjunTableSinkFactory {
+    public MySQLTableSinkFactory() {
+        super(IEndTypeGetter.EndType.MySQL);
     }
 }

@@ -22,5 +22,9 @@
   "parallelism": {
     "dftVal": 1,
     "help": "sink 并行度"
+  },
+  "scriptType": {
+    "label": "脚本类型",
+    "dftVal": "SQL"
   }
 }

@@ -74,7 +74,7 @@ public abstract class HoodieFlinkSourceHandle extends BasicFlinkSourceHandle<DTO
         ITISFileSystem fs = dataXHudiWriter.getFileSystem();
         try {
             for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
-                flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey())
+                flinkCfg = Objects.requireNonNull(tabStreamerCfg.get(entry.getKey().getFrom())
                         , "tab:" + entry.getKey() + " relevant instance of 'FlinkStreamerConfig' can not be null,exist keys:"
                                 + tabStreamerCfg.keySet().stream().collect(Collectors.joining(",")));
                 this.createSchema(entry.getKey(), flinkCfg, sinkFunc, fs);

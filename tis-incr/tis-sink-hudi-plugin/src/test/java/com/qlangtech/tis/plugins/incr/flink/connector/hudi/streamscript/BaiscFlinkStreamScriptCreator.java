@@ -32,7 +32,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTest;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.IStreamScriptType;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -62,7 +62,7 @@ public class BaiscFlinkStreamScriptCreator {
         CenterResource.setNotFetchFromCenterRepository();
     }
 
-    protected void validateGenerateScript(ScriptType scriptType, HudiTablePartition partition, MergeDataProcessor mergeDataProcessor) throws IOException {
+    protected void validateGenerateScript(IStreamScriptType scriptType, HudiTablePartition partition, MergeDataProcessor mergeDataProcessor) throws IOException {
         String child = "default/customer_order_relation";
         String dataDir = "hudi";
         IPath rootPath = new HdfsPath(HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin");

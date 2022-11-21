@@ -18,10 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.doris.table;
 
-import com.qlangtech.plugins.incr.flink.chunjun.doris.script.ChunjunSqlType;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.IEndTypeGetter;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
@@ -36,7 +34,7 @@ import java.util.stream.Stream;
  * @create: 2022-11-13 11:48
  **/
 public class TISDorisDynamicTableFactory implements DynamicTableSinkFactory {
-    public static final String IDENTIFIER = ChunjunSqlType.getTableSinkTypeName(IEndTypeGetter.EndType.Doris); //"tis-doris-x";
+    // public static final String IDENTIFIER = ChunjunSqlType.getTableSinkTypeName(IEndTypeGetter.EndType.Doris); //"tis-doris-x";
 
 
     @Override
@@ -84,7 +82,8 @@ public class TISDorisDynamicTableFactory implements DynamicTableSinkFactory {
 
     @Override
     public String factoryIdentifier() {
-        return IDENTIFIER;
+        //  return IDENTIFIER;
+        return null;
     }
 
     @Override

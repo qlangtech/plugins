@@ -38,8 +38,6 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -51,8 +49,6 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
-import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -71,8 +67,7 @@ import java.util.Properties;
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
-    @FormField(ordinal = 6, validate = {Validator.require})
-    public ScriptType scriptType;
+
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
@@ -173,15 +168,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         return createSinkResult;
     }
 
-    @Override
-    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
-        return scriptType.createStreamTableCreator(this).getFlinkStreamGenerateTplResource();
-    }
 
-    @Override
-    public IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
-        return scriptType.createStreamTableCreator(this).decorateMergeData(mergeData);
-    }
 
     private static CreateChunjunSinkFunctionResult createDorisSinkFunctionResult(SyncConf syncConf, IStreamTableMeta tabMeta) {
         if (syncConf == null) {

@@ -25,13 +25,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript.SQLStyleFlinkStreamScriptCreator;
-import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.ScriptType;
+import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.IStreamScriptType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-31 11:43
  **/
-public class SqlType extends ScriptType {
+public class SqlType extends HudiStreamScriptType {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String catalog;
 
@@ -45,7 +45,7 @@ public class SqlType extends ScriptType {
 
     // 暂时先不用
     // @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ScriptType> {
+    public static class DefaultDescriptor extends Descriptor<HudiStreamScriptType> {
         @Override
         public String getDisplayName() {
             return "SQL";

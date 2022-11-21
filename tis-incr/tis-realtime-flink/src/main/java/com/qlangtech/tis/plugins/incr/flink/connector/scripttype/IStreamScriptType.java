@@ -16,17 +16,19 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.chunjun.doris.table;
+package com.qlangtech.tis.plugins.incr.flink.connector.scripttype;
 
-import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
+import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-11-21 12:39
+ * @create: 2022-03-31 11:43
  **/
-public class DorisTableSinkFactory extends ChunjunTableSinkFactory {
-    public DorisTableSinkFactory() {
-        super(IEndTypeGetter.EndType.Doris);
-    }
+@Public
+public interface IStreamScriptType {
+
+    BasicFlinkStreamScriptCreator createStreamTableCreator(
+            IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator);
 }

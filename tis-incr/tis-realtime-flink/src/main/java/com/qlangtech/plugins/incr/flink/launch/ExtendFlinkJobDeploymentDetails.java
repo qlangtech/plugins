@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.qlangtech.tis.config.flink.IFlinkClusterConfig;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.runtime.execution.ExecutionState;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
@@ -172,6 +173,11 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
 
         @JsonIgnore
         public String getName() {
+            // 避免在页面上显示太长只取60个字符
+            return StringUtils.left(jobVertexDetailsInfo.getName(), 60);
+        }
+
+        public String getFullName(){
             return jobVertexDetailsInfo.getName();
         }
 

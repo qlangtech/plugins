@@ -149,11 +149,31 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
 
 
+        /**
+         * <pre>
+         *
+         * 由于报一下错误，将DataTypes.TIME(3) 改成 DataTypes.TIME()
+         *
+         * Caused by: org.apache.flink.table.api.ValidationException: Type TIME(3) of table field 'time_c' does not match with the physical type TIME(0) of the 'time_c' field of the TableSink consumed type.
+         * at org.apache.flink.table.utils.TypeMappingUtils.lambda$checkPhysicalLogicalTypeCompatible$5(TypeMappingUtils.java:190)
+         * at org.apache.flink.table.utils.TypeMappingUtils$1.defaultMethod(TypeMappingUtils.java:326)
+         * at org.apache.flink.table.utils.TypeMappingUtils$1.defaultMethod(TypeMappingUtils.java:291)
+         * at org.apache.flink.table.types.logical.utils.LogicalTypeDefaultVisitor.visit(LogicalTypeDefaultVisitor.java:127)
+         * at org.apache.flink.table.types.logical.TimeType.accept(TimeType.java:134)
+         * at org.apache.flink.table.utils.TypeMappingUtils.checkIfCompatible(TypeMappingUtils.java:290)
+         * at org.apache.flink.table.utils.TypeMappingUtils.checkPhysicalLogicalTypeCompatible(TypeMappingUtils.
+         *
+         * </pre>
+         *
+         * @param type
+         * @return
+         */
         @Override
         public FlinkCol timeType(DataType type) {
             return new FlinkCol(meta //
                     , type
-                    , DataTypes.TIME(3) //
+                    // , DataTypes.TIME(3) //
+                    , DataTypes.TIME()
                     , new DTOLocalTimeConvert()
                     , new LocalTimeConvert()
                     // , (rowData) -> Time.valueOf(LocalTime.ofNanoOfDay(rowData.getInt(colIndex) * 1_000_000L))

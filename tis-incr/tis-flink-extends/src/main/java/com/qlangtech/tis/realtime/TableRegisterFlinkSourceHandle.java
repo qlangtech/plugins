@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -88,14 +89,23 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
                 this.registerSinkTable(tabEnv, entry.getKey());
             }
         }
-
-        this.executeSql( new TISTableEnvironment(tabEnv));
+        TISTableEnvironment tabEnvironment = new TISTableEnvironment(tabEnv);
+        this.executeSql(tabEnvironment);
+        tabEnvironment.executeMultiStatment();
     }
 
     @Override
     protected Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
+    }
+
+    @Override
+    protected JobExecutionResult executeFlinkJob(TargetResName dataxName, StreamExecutionEnvironment env) throws Exception {
+//        JobExecutionResult execResult = super.executeFlinkJob(dataxName, env);
+//
+//        return execResult;
+        return null;
     }
 
     /**
@@ -160,7 +170,6 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     protected void registerSourceTable(StreamTableEnvironment tabEnv
             , String tabName, DTOStream sourceStream) {
-
 
 
         Schema.Builder scmBuilder = Schema.newBuilder();

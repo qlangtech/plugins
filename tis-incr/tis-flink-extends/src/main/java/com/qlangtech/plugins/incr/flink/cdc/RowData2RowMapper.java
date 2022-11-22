@@ -19,7 +19,9 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.conversion.RowRowConverter;
 import org.apache.flink.types.Row;
 
 import java.util.List;
@@ -29,15 +31,23 @@ import java.util.List;
  * @create: 2022-08-31 13:30
  **/
 public class RowData2RowMapper implements MapFunction<RowData, Row> {
-    private final List<FlinkCol> cols;
+    //  private final List<FlinkCol> cols;
+    private final RowRowConverter rowRowConverter;
 
     public RowData2RowMapper(List<FlinkCol> cols) {
-        this.cols = cols;
+        DataTypes.Field[] fields = new DataTypes.Field[cols.size()];
+        int index = 0;
+        for (FlinkCol cm : cols) {
+            fields[index++] = DataTypes.FIELD(cm.name, cm.type);// new DataTypes.Field(cm.name,cm.type);
+        }
+        this.rowRowConverter = RowRowConverter.create(DataTypes.ROW(fields).notNull());
     }
+
 
     @Override
     public Row map(RowData r) throws Exception {
-        throw new UnsupportedOperationException();
+        return rowRowConverter.toExternal(r);
+        //  throw new UnsupportedOperationException();
 //        GenericRowData rr = (GenericRowData) r;
 //
 //        Row row = new Row(r.getRowKind(), cols.size());

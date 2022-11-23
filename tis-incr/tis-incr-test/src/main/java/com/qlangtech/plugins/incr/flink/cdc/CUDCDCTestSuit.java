@@ -517,7 +517,7 @@ public abstract class CUDCDCTestSuit {
         public IStreamTableMeta getStreamTableMeta(String tableName) {
             return new IStreamTableMeta() {
                 @Override
-                public List<HdfsColMeta> getColsMeta() {
+                public List<IColMetaGetter> getColsMeta() {
                     if (CollectionUtils.isEmpty(cols)) {
                         throw new IllegalStateException("cols can not be null");
                     }

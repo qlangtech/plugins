@@ -567,15 +567,20 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
         BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) dataXProcessor.getWriter(null);
 
-        return () -> {
-            try {
-                return writer.getDataSourceFactory().getTableMetadata(EntityName.parse(tableName))
-                        .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
-                        .collect(Collectors.toList());
-            } catch (TableNotFoundException e) {
-                throw new RuntimeException(e);
+        return new IStreamTableMeta() {
+            @Override
+            public List<IColMetaGetter> getColsMeta() {
+                try {
+                    return writer.getDataSourceFactory().getTableMetadata(EntityName.parse(tableName))
+                            .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
+                            .collect(Collectors.toList());
+                } catch (TableNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
+
+
 //        if (this.selTabs == null) {
 //
 //            this.getColsMeta()

@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.HudiSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
@@ -75,7 +76,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
             return tableName + KEY_STREAM_SOURCE_TABLE_SUFFIX;
         }
 
-        public List<HdfsColMeta> getCols(String tableName) {
+        public List<IColMetaGetter> getCols(String tableName) {
             Pair<HudiSelectedTab, HudiTableMeta> tableMeta = hudiSinkFactory.getTableMeta(tableName);
             return tableMeta.getRight().colMetas;
         }

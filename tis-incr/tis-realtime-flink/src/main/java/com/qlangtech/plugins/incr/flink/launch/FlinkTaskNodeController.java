@@ -393,9 +393,11 @@ public class FlinkTaskNodeController implements IRCController {
         processFlinkJob(collection, (restClient, savePoint, status) -> {
             //job 任务没有终止，立即停止
             String savepointDirectory = savePoint.createSavePointPath();
+            // advanceToEndOfTime - flag indicating if the source should inject a MAX_WATERMARK in the pipeline
             CompletableFuture<String> result
                     = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
-            status.stop(result.get(25, TimeUnit.SECONDS));
+            status.stop(result.get(3, TimeUnit.MINUTES));
+            // status.stop(result.get());
         });
     }
 

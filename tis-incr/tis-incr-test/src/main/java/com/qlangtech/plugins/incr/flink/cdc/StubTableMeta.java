@@ -18,8 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,14 +29,14 @@ import java.util.List;
  * @create: 2022-03-01 09:50
  **/
 public class StubTableMeta implements IStreamTableMeataCreator.IStreamTableMeta, Serializable {
-    final List<HdfsColMeta> cols;
+    final List<IColMetaGetter> cols;
 
-    public StubTableMeta(List<HdfsColMeta> cols) {
+    public StubTableMeta(List<IColMetaGetter> cols) {
         this.cols = cols;
     }
 
     @Override
-    public List<HdfsColMeta> getColsMeta() {
+    public List<IColMetaGetter> getColsMeta() {
         return this.cols;
     }
 }

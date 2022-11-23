@@ -24,10 +24,10 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.connector.oracle.source.OracleSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
-import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFunction;
 import org.apache.flink.api.common.io.InputFormat;
@@ -37,6 +37,7 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.Preconditions;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -51,8 +52,8 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
     @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc) {
-        return new ExtendOracleSourceFactory(conf, sourceFactory, reader) {
+            SyncConf conf, BasicDataSourceFactory sourceFactory, IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+        return new ExtendOracleSourceFactory(conf, sourceFactory, streamTableMeta.getColsMeta()) {
             protected DataStream<RowData> createInput(
                     InputFormat<RowData, InputSplit> inputFormat, String sourceName) {
                 Preconditions.checkNotNull(sourceName);
@@ -74,19 +75,19 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
     private static class ExtendOracleSourceFactory extends OracleSourceFactory {
         private final DataSourceFactory dataSourceFactory;
-        private final BasicDataXRdbmsReader reader;
+        // private final BasicDataXRdbmsReader reader;
 
-        public ExtendOracleSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory, BasicDataXRdbmsReader reader) {
+        public ExtendOracleSourceFactory(SyncConf syncConf, DataSourceFactory dataSourceFactory, List<IColMetaGetter> sourceColsMeta) {
             // super(syncConf, null, new TISOracleDialect(JdbcSinkFactory.getJdbcConf(syncConf)));
-            super(syncConf, null, new TISOracleDialect(syncConf));
+            super(syncConf, null, new TISOracleDialect(syncConf), sourceColsMeta);
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
-            this.reader = reader;
+
         }
 
         @Override
         protected JdbcInputFormatBuilder getBuilder() {
-            return new JdbcInputFormatBuilder(new TISOracleInputFormat(dataSourceFactory, ColMetaUtils.getColMetas(reader, this.jdbcConf)));
+            return new JdbcInputFormatBuilder(new TISOracleInputFormat(dataSourceFactory, this.sourceColsMeta));
         }
     }
 }

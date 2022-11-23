@@ -43,6 +43,7 @@ import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.kafka.connect.data.Field;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 
 import java.io.Serializable;
@@ -96,9 +97,38 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
         }
 
         @Override
+        public FlinkCol varcharType(DataType type) {
+            FlinkCol flinkCol = super.varcharType(type);
+            return flinkCol.setSourceDTOColValProcess(new MySQLStringValueDTOConvert());
+        }
+
+        @Override
         public FlinkCol blobType(DataType type) {
             FlinkCol flinkCol = super.blobType(type);
             return flinkCol.setSourceDTOColValProcess(new MySQLBinaryRawValueDTOConvert());
+        }
+    }
+
+    static class MySQLStringValueDTOConvert extends BiFunction {
+        @Override
+        public Object apply(Object o) {
+//before--->Struct{id=1,tiny_c=124,tiny_un_c=255,small_c=32767,small_un_c=65535,medium_c=8388607,medium_un_c=16777215,int_c=2147483647,int_un_c=4294967295,int11_c=2147483647,big_c=9223372036854775807,big_un_c=18446744073709551615,varchar_c=Hello World,char_c=abc,real_c=123.102,float_c=123.10199737548828,double_c=404.4443,decimal_c=123.4567,numeric_c=346,big_decimal_c=34567892.1,bit1_c=false,tiny1_c=1,boolean_c=1,date_c=2020-07-17,time_c=18:00:22,datetime3_c=2020-07-17 18:00:22,datetime6_c=2020-07-17 18:00:22,timestamp_c=2020-07-17 17:40:22,file_uuid=java.nio.HeapByteBuffer[pos=0 lim=16 cap=16],bit_c=[B@5a62bd7b,text_c=text,tiny_blob_c=java.nio.HeapByteBuffer[pos=0 lim=1 cap=1],blob_c=java.nio.HeapByteBuffer[pos=0 lim=1 cap=1],medium_blob_c=java.nio.HeapByteBuffer[pos=0 lim=1 cap=1],long_blob_c=java.nio.HeapByteBuffer[pos=0 lim=1 cap=1],year_c=2021,enum_c=red,set_c=a,b,json_c={"key1":"value1"},point_c=Struct{x=1.0,y=1.0,wkb=[B@5cd2a615}
+//,geometry_c=Struct{wkb=[B@68768d6f}
+//,linestring_c=Struct{wkb=[B@62a1f465}
+//,polygon_c=Struct{wkb=[B@2de7042f},multipoint_c=Struct{wkb=[B@644ced88},multiline_c=Struct{wkb=[B@380d099b},multipolygon_c=Struct{wkb=[B@55e2d023},geometrycollection_c=Struct{wkb=[B@403170cc}}
+            /**
+             * 测试中发现full_types表中的部分binlog接收到的值是Struct"Struct{wkb=[B@644ced88}" 需要继续拆包才能在下游中使用
+             */
+            if (o instanceof Struct) {
+                Struct val = (Struct) o;
+                Schema schema = val.schema();
+                StringBuffer vals = new StringBuffer();
+                for (Field f : schema.fields()) {
+                    vals.append(f.name()).append(":").append(val.get(f)).append(",");
+                }
+                return vals.toString();
+            }
+            return o;
         }
     }
 

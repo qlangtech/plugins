@@ -452,6 +452,10 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public Object apply(Object o) {
+            if (!(o instanceof BigDecimal)) {
+                Number number = (Number) o;
+                return DecimalData.fromBigDecimal(BigDecimal.valueOf(number.longValue()), precision, scale);
+            }
             return DecimalData.fromBigDecimal((BigDecimal) o, precision, scale);
         }
     }

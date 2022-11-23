@@ -25,15 +25,15 @@ import com.dtstack.chunjun.connector.doris.rest.module.BackendRow;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.table.TISDorisDynamicTableFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.realtime.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
@@ -275,7 +275,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
             String cols = selectedTab.getCols().stream().map((c) -> c.getName()).collect(Collectors.joining(","));
             //  String cols = colId + "," + starTime;
             // String targetCols = selectedTab.getCols().stream().map((c) -> "cast("+ c.getName()+" AS string)").collect(Collectors.joining(","));
-            tabEnv.executeSql("INSERT INTO " + tableName + "(" + cols + ") SELECT "
+            tabEnv.insert("INSERT INTO " + tableName + "(" + cols + ") SELECT "
                     + cols + " FROM " + tableName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX);
         }
 
@@ -285,7 +285,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 
         @Override
         protected String getSinkTypeName() {
-            return TISDorisDynamicTableFactory.IDENTIFIER;
+            return ChunjunSqlType.getTableSinkTypeName(IEndTypeGetter.EndType.Doris);
         }
     }
 

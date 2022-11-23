@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import com.qlangtech.tis.plugin.datax.hudi.partition.OffPartition;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 
 import java.io.File;
 import java.util.List;
@@ -69,15 +70,16 @@ public class HudiTest {
     public static HudiTest createDataXWriter(Optional<FileSystemFactory> fsFactory, HudiTablePartition partition) {
 
         DataXHudiWriter writer = createDataXHudiWriter(fsFactory);
-
-
-        List<HdfsColMeta> colsMeta
+        // HdfsColMeta
+        // IColMetaGetter
+        List<IColMetaGetter> colsMeta
                 = HdfsColMeta.getColsMeta(Configuration.from(IOUtils.loadResourceFromClasspath(writer.getClass()
                 , hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
         HudiSelectedTab tab = new HudiSelectedTab() {
             @Override
             public List<CMeta> getCols() {
-                return colsMeta.stream().map((c) -> {
+                return colsMeta.stream().map((cc) -> {
+                    HdfsColMeta c = (HdfsColMeta) cc;
                     CMeta col = new CMeta();
                     col.setName(c.getName());
                     col.setPk(c.pk);

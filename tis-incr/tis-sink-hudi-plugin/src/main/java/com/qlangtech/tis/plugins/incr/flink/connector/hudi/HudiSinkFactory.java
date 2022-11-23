@@ -39,6 +39,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction.CompactionConfig;
 import com.qlangtech.tis.plugins.incr.flink.connector.scripttype.IStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.connector.streamscript.BasicFlinkStreamScriptCreator;
@@ -56,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -176,7 +178,15 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
      */
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
-        return () -> getTableMeta(tableName).getRight().colMetas;
+
+        return new IStreamTableMeta(){
+            @Override
+            public  List<IColMetaGetter> getColsMeta() {
+                return getTableMeta(tableName).getRight().colMetas;
+            }
+        };
+
+
         // return getStreamTableCreator().getStreamTableMeta(tableName);
     }
 

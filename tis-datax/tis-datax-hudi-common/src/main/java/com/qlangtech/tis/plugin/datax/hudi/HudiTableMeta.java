@@ -29,6 +29,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -51,7 +52,7 @@ public class HudiTableMeta {
     public static final String FILE_NAME = "fileName";
 
     public static final String KEY_SOURCE_ORDERING_FIELD = "hudiSourceOrderingField";
-    public final List<HdfsColMeta> colMetas;
+    public final List<IColMetaGetter> colMetas;
     private final String sourceOrderingField;
     private final String dataXName;
     private final String pkName;

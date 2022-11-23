@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiDumpPostTask;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.avro.Conversions;
 import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions;
@@ -136,7 +137,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
 
     public static class Task extends TisDataXHdfsWriter.Task {
         private Schema avroSchema;
-        private List<HdfsColMeta> colsMeta;
+        private List<IColMetaGetter> colsMeta;
         private HudiTableMeta tabMeta;
 
         private DataFileWriter<GenericRecord> dataFileWriter;
@@ -204,7 +205,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
             GenericRecord r = new GenericData.Record(this.avroSchema);
             int i = 0;
             Column column = null;
-            for (HdfsColMeta meta : colsMeta) {
+            for (IColMetaGetter meta : colsMeta) {
                 column = record.getColumn(i++);
                 if (column.getRawData() == null) {
                     r.put(meta.getName(), null);
@@ -216,8 +217,8 @@ public class TisDataXHudiWriter extends HdfsWriter {
             return r;
         }
 
-        private Object parseAvroVal(HdfsColMeta meta, Column colVal) {
-            switch (meta.type.type) {
+        private Object parseAvroVal(IColMetaGetter meta, Column colVal) {
+            switch (meta.getType().type) {
                 case Types.TINYINT:
                 case Types.INTEGER:
                 case Types.SMALLINT:

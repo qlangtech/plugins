@@ -34,6 +34,7 @@ import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
@@ -70,18 +71,20 @@ public abstract class ChunjunSourceFunction
         return this.sourceFactory.getConsumerHandle();
     }
 
-    private SourceFunction<RowData> createSourceFunction(SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
+    private SourceFunction<RowData> createSourceFunction(String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
 
 
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-        JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, reader, sourceFunc);
+        IStreamTableMeataCreator.IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(sourceTabName);
+        JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, streamTableMeta, sourceFunc);
         Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();
         return Objects.requireNonNull(sourceFunc.get(), "SourceFunction<RowData> shall present");
     }
 
-    protected abstract JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader, AtomicReference<SourceFunction<RowData>> sourceFunc);
+    protected abstract JdbcSourceFactory //
+    createChunjunSourceFactory( //
+                                SyncConf conf, BasicDataSourceFactory sourceFactory, IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc);
 
 
     @Override
@@ -94,7 +97,7 @@ public abstract class ChunjunSourceFunction
         sourceFactory.getDbConfig().vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             for (ISelectedTab tab : tabs) {
                 SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab);
-                SourceFunction<RowData> sourceFunc = createSourceFunction(conf, sourceFactory, reader);
+                SourceFunction<RowData> sourceFunc = createSourceFunction(tab.getName(), conf, sourceFactory, reader);
                 sourceFuncs.add(ReaderSource.createRowDataSource(
                         dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
             }

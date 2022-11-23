@@ -165,7 +165,8 @@
                         <executions>
                             <execution>
 <!--                            先暂时不执行    <phase>prepare-package</phase>-->
-                                <phase>none</phase>
+<!--                                <phase>none</phase>-->
+                                <phase>prepare-package</phase>
                                 <!--https://ant.apache.org/manual/index.html-->
                                 <configuration>
                                     <target>

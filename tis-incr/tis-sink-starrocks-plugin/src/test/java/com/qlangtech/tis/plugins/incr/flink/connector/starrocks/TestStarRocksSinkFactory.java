@@ -37,7 +37,7 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -264,7 +264,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
         Assert.assertEquals(1, sinkFunction.size());
         for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
             DTOStream sourceStream = DTOStream.createDispatched(tableName);
-            ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d}));
+            ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",env.fromElements(new DTO[]{d}));
 
             readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(entry.getKey(), sourceStream)));
 

@@ -35,13 +35,14 @@ import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Schema;
@@ -195,7 +196,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
 
 
-        DataStream<Row> rowStream = null;
+        SingleOutputStreamOperator<Row> rowStream = null;
         if (sourceStream.clazz == DTO.class) {
             rowStream = sourceStream.getStream()
                     .map(new DTO2RowMapper(cols), outputType)

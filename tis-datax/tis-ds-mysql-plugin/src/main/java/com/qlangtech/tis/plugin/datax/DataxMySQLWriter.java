@@ -43,7 +43,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-//import com.qlangtech.tis.plugin.datax.common.MySQLSelectedTab;
 
 /**
  * @author: baisui 百岁
@@ -211,10 +210,12 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.INTEGER:
                         return "int(11)";
                     case Types.BIGINT: {
-                        if (type.columnSize < 1) {
-                            throw new IllegalStateException("col:" + col.getName() + type + " colsize can not small than 1");
-                        }
-                        return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
+//                        if (type.columnSize < 1) {
+//                            throw new IllegalStateException("col:" + col.getName() + type + " colsize can not small than 1");
+//                        }
+                       // return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
+
+                        return "BIGINT " + type.getUnsignedToken();
                     }
                     case Types.FLOAT:
                         return "FLOAT";

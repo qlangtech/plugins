@@ -19,6 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
 

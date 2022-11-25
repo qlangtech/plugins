@@ -42,6 +42,12 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
 
+    /**
+     * binlog监听在独立的slot中执行
+     */
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public boolean independentBinLogMonitor;
+
     StartupOptions getStartupOptions() {
         switch (startupOptions) {
             case "latest":
@@ -77,10 +83,12 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
         public String getDisplayName() {
             return "Flink-CDC-MySQL";
         }
+
         @Override
         public PluginVender getVender() {
             return PluginVender.FLINK_CDC;
         }
+
         @Override
         public IEndTypeGetter.EndType getEndType() {
             return IEndTypeGetter.EndType.MySQL;

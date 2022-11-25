@@ -19,6 +19,7 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.data.RowData;
 

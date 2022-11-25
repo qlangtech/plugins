@@ -40,7 +40,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;

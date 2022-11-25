@@ -35,7 +35,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TISTableEnvironment;
 import com.qlangtech.tis.realtime.transfer.DTO;

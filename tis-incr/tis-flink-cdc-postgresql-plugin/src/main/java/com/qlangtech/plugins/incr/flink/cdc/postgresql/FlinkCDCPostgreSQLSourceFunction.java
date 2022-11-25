@@ -31,7 +31,7 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
@@ -41,10 +41,6 @@ import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-//import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
-//import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
-//import com.ververica.cdc.connectors.mysql.MySqlSource;
 
 /**
  * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html

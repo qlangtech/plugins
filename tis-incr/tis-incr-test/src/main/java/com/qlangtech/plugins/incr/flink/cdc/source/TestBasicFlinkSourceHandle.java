@@ -24,7 +24,7 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.SinkFuncs;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.api.common.JobExecutionResult;

@@ -208,7 +208,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
             int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
             if (decimalDigits < 1) {
-                return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER);
+                return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.columnSize);
             }
         }
 

@@ -1,4 +1,18 @@
 {
+  "independentBinLogMonitor": {
+    "label": "BinLog独立监听",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  },
   "startupOptions": {
     "dftVal": "latest",
     "enum": [

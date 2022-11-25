@@ -218,35 +218,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 = createSinFunctionResult(dataxProcessor
                 , (SelectedTab) selectedTab.get(), tabName.getTo(), shallInitSinkTable);
 
-//            AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
-//            final String targetTabName = val.getTo();
-        //  BasicDataXRdbmsWriter dataXWriter = (BasicDataXRdbmsWriter) dataxProcessor.getWriter(null);
-        // BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) dataXWriter.getDataSourceFactory();
-//        if (dsFactory == null) {
-//            throw new IllegalStateException("dsFactory can not be null");
-//        }
-//            DBConfig dbConfig = dsFactory.getDbConfig();
-//            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-//                try {
-//
-//                    /**
-//                     * 需要先初始化表MySQL目标库中的表
-//                     */
-//                    dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
-//// FIXME 这里不能用 MySQLSelectedTab
-//                    sinkFuncRef.set(createSinkFunction(dbName, targetTabName
-//                            , (SelectedTab) selectedTab.get(), jdbcUrl, dsFactory, dataXWriter));
-//
-//                } catch (Throwable e) {
-//                    exceptionLoader.set(new Object[]{jdbcUrl, e});
-//                }
-//            });
-//            if (exceptionLoader.get() != null) {
-//                Object[] error = exceptionLoader.get();
-//                throw new RuntimeException((String) error[0], (Throwable) error[1]);
-//            }
-//            Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
-//            sinkFunc = sinkFuncRef.get();
         if (this.parallelism == null) {
             throw new IllegalStateException("param parallelism can not be null");
         }
@@ -259,10 +230,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , this.parallelism);
     }
 
-//    private CreateChunjunSinkFunctionResult createSinFunctionResult(
-//            IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName) {
-//        return this.createSinFunctionResult(dataxProcessor, selectedTab, targetTabName, true);
-//    }
+
 
     private CreateChunjunSinkFunctionResult createSinFunctionResult(
             IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName, boolean shallInitSinkTable) {
@@ -277,13 +245,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         DBConfig dbConfig = dsFactory.getDbConfig();
         dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
             try {
-//                Optional<ISelectedTab> selectedTab = tabs.stream()
-//                        .filter((tab) -> StringUtils.equals(tabName.getFrom(), tab.getName())).findFirst();
-//                if (!selectedTab.isPresent()) {
-//                    throw new IllegalStateException("target table:" + tabName.getFrom()
-//                            + " can not find matched table in:["
-//                            + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
-//                }
                 if (shallInitSinkTable) {
                     /**
                      * 需要先初始化表MySQL目标库中的表
@@ -383,8 +344,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     private CreateChunjunSinkFunctionResult createChunjunSinkFunction(
             String jdbcUrl, String targetTabName, BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
-        // AtomicReference<Triple<SinkFunction<RowData>, JdbcColumnConverter, JdbcOutputFormat>> ref = new AtomicReference<>();
-
         CreateChunjunSinkFunctionResult sinkFactory = createSinkFactory(jdbcUrl, targetTabName, dsFactory, dataXWriter, syncConf);
         sinkFactory.initialize();
         return Objects.requireNonNull(sinkFactory, "create result can not be null");

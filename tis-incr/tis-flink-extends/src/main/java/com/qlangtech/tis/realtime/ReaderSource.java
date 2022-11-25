@@ -21,6 +21,7 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -52,18 +53,18 @@ public abstract class ReaderSource<T> {
         this.rowType = rowType;
     }
 
-    protected SingleOutputStreamOperator<T> afterSourceStreamGetter(Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<T> operator) {
-        return operator;
+    protected void afterSourceStreamGetter(Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<T> operator) {
+        //return operator;
     }
 
-    public SingleOutputStreamOperator<T> getSourceStream(
+    public void getSourceStream(
             StreamExecutionEnvironment env, Tab2OutputTag<DTOStream> tab2OutputStream) {
 
         SingleOutputStreamOperator<T> operator = addAsSource(env)
                 .name(this.tokenName)
                 .setParallelism(1);
 
-        return afterSourceStreamGetter(tab2OutputStream, operator);
+        afterSourceStreamGetter(tab2OutputStream, operator);
 
 //        if (rowType == DTO.class) {
 //
@@ -112,7 +113,7 @@ public abstract class ReaderSource<T> {
         }
 
         @Override
-        protected final SingleOutputStreamOperator<DTO> afterSourceStreamGetter(
+        protected final void afterSourceStreamGetter(
                 Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<DTO> operator) {
             SingleOutputStreamOperator<DTO> mainStream
                     = operator.process(new SourceProcessFunction(tab2OutputStream.entrySet().stream()
@@ -120,7 +121,7 @@ public abstract class ReaderSource<T> {
             for (Map.Entry<TableAlias, DTOStream> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }
-            return mainStream;
+           // return mainStream;
         }
     }
 
@@ -152,11 +153,11 @@ public abstract class ReaderSource<T> {
         }
 
         @Override
-        protected final SingleOutputStreamOperator<RowData> afterSourceStreamGetter(
+        protected final void afterSourceStreamGetter(
                 Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<RowData> operator) {
             DTOStream dtoStream = tab2OutputStream.get(tab);
             dtoStream.addStream(operator);
-            return operator;
+           // return operator;
         }
     }
 }

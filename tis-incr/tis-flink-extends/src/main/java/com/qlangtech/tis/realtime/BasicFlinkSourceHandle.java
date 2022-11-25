@@ -30,6 +30,7 @@ import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;

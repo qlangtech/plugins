@@ -35,7 +35,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import com.qlangtech.tis.realtime.DTOStream;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
@@ -51,8 +51,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-//import org.apache.flink.types.Row;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -200,7 +198,8 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                                                 .build())
                                 );
                             }));
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createDispatched);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias()
+                    , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

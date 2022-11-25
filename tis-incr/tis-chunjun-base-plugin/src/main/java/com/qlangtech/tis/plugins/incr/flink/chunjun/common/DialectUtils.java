@@ -25,7 +25,6 @@ import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import io.vertx.core.json.JsonArray;
@@ -90,7 +89,6 @@ public class DialectUtils {
     }
 
     /**
-     *
      * @param jdbcDialect
      * @param jdbcConf
      * @param colsMeta

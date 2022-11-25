@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -64,7 +65,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         @Override
         protected DataStream<DTO> streamMap(DTOStream sourceStream) {
             if (sourceStream.clazz == DTO.class) {
-                return sourceStream.stream;
+                return sourceStream.getStream();
             } else if (sourceStream.clazz == RowData.class) {
                 throw new UnsupportedOperationException("RowData -> DTO is not support");
             }
@@ -92,12 +93,12 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {
             if (sourceStream.clazz == DTO.class) {
-                return sourceStream.stream.map(new DTO2RowDataMapper(this.colsMeta))
+                return sourceStream.getStream().map(new DTO2RowDataMapper(this.colsMeta))
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
                 logger.info("create stream directly, source type is RowData");
-                return sourceStream.stream;
+                return sourceStream.getStream();
             }
             throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
         }

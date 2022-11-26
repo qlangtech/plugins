@@ -18,8 +18,10 @@
 
 package com.qlangtech.tis.plugin.ds.postgresql;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -27,13 +29,16 @@ import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
+import org.postgresql.jdbc.PgConnection;
 
 import java.sql.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * https://jdbc.postgresql.org/download.html <br/>
@@ -46,6 +51,9 @@ import java.util.Properties;
 @Public
 public class PGDataSourceFactory extends BasicDataSourceFactory implements BasicDataSourceFactory.ISchemaSupported {
     // public static final String DS_TYPE_PG = "PG";
+
+    private static final String FIELD_TAB_SCHEMA = "tabSchema";
+
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String tabSchema;
 
@@ -117,6 +125,10 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         props.setProperty(PGProperty.PASSWORD.getName(), this.password);
 
         return DriverManager.getConnection(jdbcUrl, props);
+//        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
+//            throw new TisException("invalid tabSchema:" + this.tabSchema);
+//        }
+        //  return conn;
     }
 
 
@@ -159,21 +171,31 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             return Collections.emptyList();
         }
 
-//        @Override
-//        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-//
-//            ParseDescribable<DataSourceFactory> pgDataSource = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-//
-//            try {
-//                List<String> tables = pgDataSource.instance.getTablesInDB();
-//                msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
-//            } catch (Exception e) {
-//                msgHandler.addErrorMessage(context, e.getMessage());
-//                return false;
-//            }
-//
-//            return true;
-//        }
+        @Override
+        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
+            try {
+                AtomicBoolean valid = new AtomicBoolean(true);
+                PGDataSourceFactory ds = (PGDataSourceFactory) dsFactory;
+                dsFactory.visitFirstConnection((c) -> {
+                    PgConnection conn = (PgConnection) c;
+                    if (!StringUtils.equals(ds.tabSchema, conn.getSchema())) {
+                        msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");
+                        valid.set(false);
+                    }
+                });
+
+                if (!valid.get()) {
+                    return false;
+                }
+                //  List<String> tables = dsFactory.getTablesInDB();
+                // msgHandler.addActionMessage(context, "find " + tables.size() + " table in db");
+            } catch (Exception e) {
+                //logger.warn(e.getMessage(), e);
+                msgHandler.addErrorMessage(context, TisException.getErrMsg(e).getMessage());
+                return false;
+            }
+            return true;
+        }
     }
 
 }

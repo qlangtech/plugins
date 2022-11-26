@@ -51,11 +51,19 @@ public class TestPGDataSourceFactory extends TestCase {
 //        public
 //        information_schema
 
-        dsFactory.tabSchema = "public";
+        dsFactory.tabSchema = "tis";
 
        // System.out.println("tables:" + dsFactory.getTablesInDB().stream().collect(Collectors.joining(" ,")));
 
         dsFactory.visitAllConnection((conn) -> {
+
+
+            try (Statement statement = conn.createStatement()) {
+                statement.execute("    CREATE TABLE public.\"instancedetail\"\n" +
+                        "(\n" +
+                        "    \"instance_id\"            VARCHAR(32) PRIMARY KEY,\n" +
+                        "    \"order_id\"               VARCHAR(32))");
+            }
 //
 //            SELECT schema_name
 //            ;
@@ -78,16 +86,16 @@ public class TestPGDataSourceFactory extends TestCase {
 //                statement.executeUpdate();
 //            }
 
-            try (Statement statement = conn.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery("select id,time_c from time_test")) {
-                    while (resultSet.next()) {
-                        System.out.print(resultSet.getObject(1));
-                        System.out.print("=");
-                        System.out.print(resultSet.getObject(2));
-                        System.out.println();
-                    }
-                }
-            }
+//            try (Statement statement = conn.createStatement()) {
+//                try (ResultSet resultSet = statement.executeQuery("select id,time_c from time_test")) {
+//                    while (resultSet.next()) {
+//                        System.out.print(resultSet.getObject(1));
+//                        System.out.print("=");
+//                        System.out.print(resultSet.getObject(2));
+//                        System.out.println();
+//                    }
+//                }
+//            }
 
         });
 

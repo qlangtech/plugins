@@ -18,12 +18,14 @@
 
 package com.qlangtech.tis.plugin.datax.starrocks;
 
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -32,6 +34,28 @@ import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 @Public
 public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSourceFactory> {
 
+    public static String getDftLoadProps() {
+        return "{\n" +
+                "    \"" + Separator.COL_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
+                "    \"" + Separator.ROW_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
+                "}";
+    }
+
+    @Override
+    public Separator getSeparator() {
+        JSONObject props = getLoadProps();
+        return new Separator() {
+            @Override
+            public String getColumnSeparator() {
+                return StringUtils.defaultIfBlank(props.getString(Separator.COL_SEPARATOR), COL_SEPARATOR_DEFAULT);
+            }
+
+            @Override
+            public String getRowDelimiter() {
+                return StringUtils.defaultIfBlank(props.getString(Separator.ROW_DELIMITER), ROW_DELIMITER_DEFAULT);
+            }
+        };
+    }
 
     @Override
     protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
@@ -52,6 +76,15 @@ public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSou
         @Override
         public String getDisplayName() {
             return StarRocksSourceFactory.DISPLAY_NAME;
+        }
+
+        @Override
+        protected String getRowDelimiterKey() {
+            return Separator.ROW_DELIMITER;
+        }
+        @Override
+        protected String getColSeparatorKey() {
+            return Separator.COL_SEPARATOR;
         }
 
         @Override

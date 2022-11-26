@@ -28,11 +28,12 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import org.apache.commons.lang3.StringUtils;
-
+import org.postgresql.PGProperty;
 
 import java.sql.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * https://jdbc.postgresql.org/download.html <br/>
@@ -47,24 +48,6 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     // public static final String DS_TYPE_PG = "PG";
     @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String tabSchema;
-
-//    // 数据库名称
-//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String name;
-//
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String jdbcURL;
-//
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String userName;
-//
-//    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
-//    public String password;
-
-//    @Override
-//    public DataDumpers getDataDumpers(TISTable table) {
-//        return DataDumpers.create(table);
-//    }
 
     @Override
     public String getEscapeChar() {
@@ -127,7 +110,13 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+        // StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)
+        java.util.Properties props = new Properties();
+        props.setProperty(PGProperty.CURRENT_SCHEMA.getName(), this.tabSchema);
+        props.setProperty(PGProperty.USER.getName(), this.getUserName());
+        props.setProperty(PGProperty.PASSWORD.getName(), this.password);
+
+        return DriverManager.getConnection(jdbcUrl, props);
     }
 
 

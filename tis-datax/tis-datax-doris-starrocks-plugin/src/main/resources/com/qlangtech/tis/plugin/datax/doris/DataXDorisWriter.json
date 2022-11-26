@@ -11,5 +11,8 @@
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter.getDftTemplate()"
+  },
+  "loadProps": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter.getDftLoadProps()"
   }
 }

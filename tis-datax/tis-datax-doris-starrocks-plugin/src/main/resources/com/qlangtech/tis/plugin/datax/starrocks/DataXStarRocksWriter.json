@@ -11,5 +11,8 @@
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter.getDftTemplate()"
+  },
+  "loadProps": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter.getDftLoadProps()"
   }
 }

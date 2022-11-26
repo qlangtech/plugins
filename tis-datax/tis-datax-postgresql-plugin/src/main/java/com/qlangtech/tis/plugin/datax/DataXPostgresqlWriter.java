@@ -42,32 +42,6 @@ import java.util.stream.Collectors;
 @Public
 public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFactory> {
 
-
-//    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String jdbcUrl;
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String username;
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String password;
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String table;
-//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String column;
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String preSql;
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String postSql;
-//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String batchSize;
-//
-//    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String template;
-
-//    @Override
-//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-//    }
-
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXPostgresqlWriter.class, "DataXPostgresqlWriter-tpl.json");
     }

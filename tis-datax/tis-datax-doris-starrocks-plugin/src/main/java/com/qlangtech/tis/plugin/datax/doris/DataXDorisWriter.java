@@ -18,15 +18,18 @@
 
 package com.qlangtech.tis.plugin.datax.doris;
 
+import com.alibaba.datax.plugin.writer.doriswriter.Keys;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
+import org.apache.commons.lang3.StringUtils;
 
 /**
- * reference: https://github.com/DorisDB/DataX/blob/master/doriswriter/doc/doriswriter.md
+ *
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-07 09:39
@@ -37,9 +40,32 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFactory> {
 
 
+    public static String getDftLoadProps() {
+        return "{\n" +
+                "    \"" + Keys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
+                "    \"" + Keys.LOAD_PROPS_LINE_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
+                "}";
+    }
+
+    @Override
+    public Separator getSeparator() {
+        JSONObject props = getLoadProps();
+        return new Separator() {
+            @Override
+            public String getColumnSeparator() {
+                return StringUtils.defaultIfBlank(props.getString(Keys.LOAD_PROPS_COLUMN_SEPARATOR), COL_SEPARATOR_DEFAULT);
+            }
+
+            @Override
+            public String getRowDelimiter() {
+                return StringUtils.defaultIfBlank(props.getString(Keys.LOAD_PROPS_LINE_DELIMITER), ROW_DELIMITER_DEFAULT);
+            }
+        };
+    }
+
     @Override
     protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper,this.getDataSourceFactory()) {
+        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected String getUniqueKeyToken() {
                 return "UNIQUE KEY";
@@ -53,133 +79,6 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
     }
 
 
-//    @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {})
-//    public String loadProps;
-//    @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-//    public Integer maxBatchRows;
-//
-//    @Override
-//    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-//        if (!tableMap.isPresent()) {
-//            throw new IllegalStateException("tableMap must be present");
-//        }
-//        return new DorisWriterContext(this, tableMap.get());
-//    }
-//
-//    public static String getDftTemplate() {
-//        return IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "DataXDorisWriter-tpl.json");
-//    }
-//
-//
-//    /**
-//     * 需要先初始化表starrocks目标库中的表
-//     */
-//    public void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-//        InitWriterTable.process(this.dataXName, targetTabName, jdbcUrls);
-//    }
-//
-//    @Override
-//    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
-//        // https://doris.apache.org/master/zh-CN/sql-reference/sql-statements/Data%20Definition/CREATE%20TABLE.html#create-table
-//
-//        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper) {
-//            @Override
-//            protected void appendExtraColDef(List<CMeta> pks) {
-////                if (pk != null) {
-////                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
-////                }
-//            }
-//
-//            @Override
-//            protected void appendTabMeta(List<CMeta> pks) {
-//                script.append(" ENGINE=olap").append("\n");
-//                if (pks.size() > 0) {
-//                    script.append("UNIQUE KEY(").append(pks.stream()
-//                            .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
-//                            .collect(Collectors.joining(","))).append(")\n");
-//                }
-//                script.append("DISTRIBUTED BY HASH(");
-//                if (pks.size() > 0) {
-//                    script.append(pks.stream()
-//                            .map((pk) -> this.colEscapeChar() + pk.getName() + this.colEscapeChar())
-//                            .collect(Collectors.joining(",")));
-//                } else {
-//                    List<CMeta> cols = this.getCols();
-//                    Optional<CMeta> firstCol = cols.stream().findFirst();
-//                    if (firstCol.isPresent()) {
-//                        script.append(firstCol.get().getName());
-//                    } else {
-//                        throw new IllegalStateException("can not find table:" + getCreateTableName() + " any cols");
-//                    }
-//                }
-//                script.append(")\n");
-//                script.append("BUCKETS 10\n");
-//                script.append("PROPERTIES(\"replication_num\" = \"1\")");
-//                //script.append("DISTRIBUTED BY HASH(customerregister_id)");
-//            }
-//
-//            @Override
-//            protected String convertType(CMeta col) {
-//                DataType type = col.getType();
-//                return type.accept(new ColumnMetaData.TypeVisitor<String>() {
-//                    @Override
-//                    public String longType(DataType type) {
-//                        return "BIGINT";
-//                    }
-//
-//                    @Override
-//                    public String doubleType(DataType type) {
-//                        return "DOUBLE";
-//                    }
-//
-//                    @Override
-//                    public String dateType(DataType type) {
-//                        return "DATE";
-//                    }
-//
-//                    @Override
-//                    public String timestampType(DataType type) {
-//                        return "DATETIME";
-//                    }
-//
-//                    @Override
-//                    public String bitType(DataType type) {
-//                        return "TINYINT";
-//                    }
-//
-//                    @Override
-//                    public String blobType(DataType type) {
-//                        return "BITMAP";
-//                    }
-//
-//                    @Override
-//                    public String varcharType(DataType type) {
-//                        return "VARCHAR(" + Math.min(type.columnSize, 65500) + ")";
-//                    }
-//
-//                    @Override
-//                    public String intType(DataType type) {
-//                        return "INT";
-//                    }
-//
-//                    @Override
-//                    public String floatType(DataType type) {
-//                        return "FLOAT";
-//                    }
-//
-//                    @Override
-//                    public String decimalType(DataType type) {
-//                        return "DECIMAL";
-//                    }
-//                });
-//            }
-//        };
-//        return createTableSqlBuilder.build();
-//    }
-
     @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         public DefaultDescriptor() {
@@ -192,7 +91,17 @@ public class DataXDorisWriter extends BasicDorisStarRocksWriter<DorisSourceFacto
         }
 
         @Override
-        public  EndType getEndType() {
+        protected String getRowDelimiterKey() {
+            return Keys.LOAD_PROPS_LINE_DELIMITER;
+        }
+
+        @Override
+        protected String getColSeparatorKey() {
+            return Keys.LOAD_PROPS_COLUMN_SEPARATOR;
+        }
+
+        @Override
+        public EndType getEndType() {
             return EndType.Doris;
         }
     }

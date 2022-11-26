@@ -31,7 +31,6 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
@@ -61,28 +60,13 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         return new DorisWriterContext(this, tableMap.get());
     }
 
+    /**
+     * 提增量处理模块使用
+     *
+     * @return
+     */
+    public abstract Separator getSeparator();
 
-    public static String getDftLoadProps() {
-        return "{\n" +
-                "    \"" + Separator.COL_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
-                "    \"" + Separator.ROW_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
-                "}";
-    }
-
-    public Separator getSeparator() {
-        JSONObject props = getLoadProps();
-        return new Separator() {
-            @Override
-            public String getColumnSeparator() {
-                return StringUtils.defaultIfBlank(props.getString(Separator.COL_SEPARATOR), COL_SEPARATOR_DEFAULT);
-            }
-
-            @Override
-            public String getRowDelimiter() {
-                return StringUtils.defaultIfBlank(props.getString(Separator.ROW_DELIMITER), ROW_DELIMITER_DEFAULT);
-            }
-        };
-    }
 
     public JSONObject getLoadProps() {
         return JSON.parseObject(loadProps);
@@ -293,12 +277,12 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
             try {
                 JSONObject props = JSON.parseObject(value);
                 boolean valid = true;
-                if (StringUtils.isEmpty(props.getString(Separator.COL_SEPARATOR))) {
-                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + Separator.COL_SEPARATOR + "'");
+                if (StringUtils.isEmpty(props.getString(getColSeparatorKey()))) {
+                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + getColSeparatorKey() + "'");
                     valid = false;
                 }
-                if (StringUtils.isEmpty(props.getString(Separator.ROW_DELIMITER))) {
-                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + Separator.ROW_DELIMITER + "'");
+                if (StringUtils.isEmpty(props.getString(getRowDelimiterKey()))) {
+                    msgHandler.addFieldError(context, fieldName, "必须包含key:'" + getRowDelimiterKey() + "'");
                     valid = false;
                 }
 
@@ -308,6 +292,13 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
                 return false;
             }
         }
+
+
+        protected abstract String getRowDelimiterKey() ;
+
+        protected abstract String getColSeparatorKey() ;
+
+
 
 //        @Override
 //        public  abstract EndType getEndType();

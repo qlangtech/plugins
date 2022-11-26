@@ -71,91 +71,15 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
 
     private static class ExtendPostgresqlSourceFactory extends PostgresqlSourceFactory {
         private final DataSourceFactory dataSourceFactory;
-
-
-        public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env, List<IColMetaGetter> colsMeta, DataSourceFactory dataSourceFactory) {
+        public ExtendPostgresqlSourceFactory(SyncConf syncConf, StreamExecutionEnvironment env
+                , List<IColMetaGetter> colsMeta, DataSourceFactory dataSourceFactory) {
             super(syncConf, env, new TISPostgresqlDialect(syncConf), colsMeta);
             this.fieldList = syncConf.getReader().getFieldList();
             this.dataSourceFactory = dataSourceFactory;
         }
-
         @Override
         protected JdbcInputFormatBuilder getBuilder() {
             return new JdbcInputFormatBuilder(new TISPostgresqlInputFormat(dataSourceFactory, sourceColsMeta));
         }
     }
-
-//    protected String parseType(CMeta cm) {
-//        return typeMapper(cm);
-//    }
-
-//    public static String typeMapper(CMeta cm) {
-//        // https://dtstack.github.io/chunjun/documents/7d23239f-9f24-5889-af9c-fc412d788060
-//        return cm.getType().accept(new DataType.TypeVisitor<String>() {
-//            @Override
-//            public String bigInt(DataType type) {
-//                return "BIGINT";
-//            }
-//
-//            @Override
-//            public String doubleType(DataType type) {
-//                return "DOUBLE PRECISION";
-//            }
-//
-//            @Override
-//            public String dateType(DataType type) {
-//                return "DATE";
-//            }
-//
-//            @Override
-//            public String timestampType(DataType type) {
-//                return "TIMESTAMP";
-//            }
-//
-//            @Override
-//            public String bitType(DataType type) {
-//                return "BOOL";
-//            }
-//
-//            @Override
-//            public String blobType(DataType type) {
-//                return "BYTEA";
-//            }
-//
-//            @Override
-//            public String varcharType(DataType type) {
-//                return "VARCHAR";
-//            }
-//
-//            @Override
-//            public String intType(DataType type) {
-//                return "INT";
-//            }
-//
-//            @Override
-//            public String floatType(DataType type) {
-//                return "FLOAT";
-//            }
-//
-//            @Override
-//            public String decimalType(DataType type) {
-//                return "DECIMAL";
-//            }
-//
-//            @Override
-//            public String timeType(DataType type) {
-//                return "TIME";
-//            }
-//
-//            @Override
-//            public String tinyIntType(DataType dataType) {
-//                return smallIntType(null);
-//            }
-//
-//            @Override
-//            public String smallIntType(DataType dataType) {
-//                return "SMALLINT";
-//            }
-//        });
-//    }
 }

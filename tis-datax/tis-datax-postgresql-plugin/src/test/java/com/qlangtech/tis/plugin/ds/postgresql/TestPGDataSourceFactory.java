@@ -18,13 +18,12 @@
 
 package com.qlangtech.tis.plugin.ds.postgresql;
 
-import com.qlangtech.tis.extension.impl.IOUtils;
 import junit.framework.TestCase;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Time;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,10 +32,10 @@ import java.sql.Time;
 public class TestPGDataSourceFactory extends TestCase {
     public void testShowTables() {
 
-        String createSQL = IOUtils.loadResourceFromClasspath(TestPGDataSourceFactory.class, "create-sql-instancedetail.sql");
+        // String createSQL = IOUtils.loadResourceFromClasspath(TestPGDataSourceFactory.class, "create-sql-instancedetail.sql");
 
         // 之后数据库如果没有了可以用下面的这个SQL 再把数据库给跑起来的
-        System.out.println(createSQL);
+        // System.out.println(createSQL);
 
         PGDataSourceFactory dsFactory = new PGDataSourceFactory();
         dsFactory.userName = "postgres";
@@ -44,9 +43,31 @@ public class TestPGDataSourceFactory extends TestCase {
         dsFactory.dbName = "tis";
         dsFactory.port = 5432;
         dsFactory.nodeDesc = "192.168.28.201";
+
+//        pg_toast
+//        pg_temp_1
+//        pg_toast_temp_1
+//        pg_catalog
+//        public
+//        information_schema
+
         dsFactory.tabSchema = "public";
 
+       // System.out.println("tables:" + dsFactory.getTablesInDB().stream().collect(Collectors.joining(" ,")));
+
         dsFactory.visitAllConnection((conn) -> {
+//
+//            SELECT schema_name
+//            ;
+
+//            try (Statement statement = conn.createStatement()) {
+//                try (ResultSet resultSet = statement.executeQuery("SELECT schema_name FROM information_schema.schemata")) {
+//                  while(resultSet.next()){
+//                      System.out.println(resultSet.getString(1));
+//                  }
+//
+//                }
+//            }
 
             Time t = Time.valueOf("18:22:00");
 //            try (PreparedStatement statement = conn.prepareStatement("insert into time_test(id,time_c) values(?,?)")) {

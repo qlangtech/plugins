@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.starrocks.connector.datax.plugin.writer.starrockswriter.row.StarRocksDelimiterParser;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
@@ -65,6 +66,10 @@ public class TestDataXStarRocksWriter extends TestCase {
         String dftTemplate = DataXStarRocksWriter.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }
+
+//    public void test() {
+//        System.out.println("xxx:"+StarRocksDelimiterParser.parse("\\x01", null).length());
+//    }
 
     public void testPluginExtraPropsLoad() throws Exception {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXStarRocksWriter.class);
@@ -152,7 +157,7 @@ public class TestDataXStarRocksWriter extends TestCase {
 
         CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
         createDorisWriter.dsFactory.password = "";
-       // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
+        // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
         createDorisWriter.dsFactory.nodeDesc = "localhost";
 
         createDorisWriter.writer.autoCreateTable = true;
@@ -176,7 +181,7 @@ public class TestDataXStarRocksWriter extends TestCase {
             };
             EasyMock.replay(dataXProcessor);
 
-            WriterTemplate.realExecuteDump( WriterJson.path("starrocks_writer_real_dump.json"), createDorisWriter.writer);
+            WriterTemplate.realExecuteDump(WriterJson.path("starrocks_writer_real_dump.json"), createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class TestDataXFtpWriterReal {
         ftpServer.protocol = "ftp";
         ftpServer.timeout = 1000;
         // writer.dataXName = testDataXName;
-        List<HdfsColMeta> colMetas = Lists.newArrayList();
+        List<IColMetaGetter> colMetas = Lists.newArrayList();
 
 //                "customerregister_id",
 //                "waitingorder_id",

@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.6.0-alpha</version>
+        <version>3.6.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

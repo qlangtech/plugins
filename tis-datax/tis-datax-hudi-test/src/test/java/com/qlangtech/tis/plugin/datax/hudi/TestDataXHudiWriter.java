@@ -38,6 +38,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -269,7 +270,7 @@ public class TestDataXHudiWriter {
 
         WriterTemplate.realExecuteDump(readerPluginMeta, writerMeta);
 
-        MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(123));
+        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
         HudiDumpPostTask postTask = (HudiDumpPostTask) dataxWriter.createPostTask(execContext, hudiTab, genCfgs);
         Assert.assertNotNull("postTask can not be null", postTask);
         postTask.run();
@@ -282,9 +283,9 @@ public class TestDataXHudiWriter {
     @Test
     public void testRealDump() throws Exception {
 
-        MDC.put(TISCollectionUtils.KEY_COLLECTION
+        MDC.put(JobCommon.KEY_COLLECTION
                 , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
-        MDC.put(IParamContext.KEY_TASK_ID, "123");
+        MDC.put(JobCommon.KEY_TASK_ID, "123");
         HudiTest houseTest = HudiTest.createDataXWriter();
 
 
@@ -340,7 +341,7 @@ public class TestDataXHudiWriter {
             // DataXHudiWriter hudiWriter = new DataXHudiWriter();
 //            hudiWriter.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
 //            hudiWriter.createPostTask(execContext, tab);
-            MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(123));
+            MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
             HudiDumpPostTask postTask = (HudiDumpPostTask) houseTest.writer.createPostTask(execContext, houseTest.tab, genCfg);
             Assert.assertNotNull("postTask can not be null", postTask);
 

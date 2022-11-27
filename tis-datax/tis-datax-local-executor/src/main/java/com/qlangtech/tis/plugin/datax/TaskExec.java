@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
@@ -61,8 +62,8 @@ public class TaskExec {
             @Override
             public void run() {
                 try {
-                    MDC.put(IParamContext.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
-                    MDC.put(TISCollectionUtils.KEY_COLLECTION, taskContext.getIndexName());
+                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
+                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
 
                     jobConsumer = new DataXJobSingleProcessorExecutor() {
                         @Override

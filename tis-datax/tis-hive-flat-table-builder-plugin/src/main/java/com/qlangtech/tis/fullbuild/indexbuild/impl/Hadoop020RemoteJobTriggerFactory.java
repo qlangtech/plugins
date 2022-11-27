@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.*;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.ConfigFileReader;
 import com.qlangtech.tis.manage.common.IndexBuildParam;
@@ -247,7 +248,7 @@ public class Hadoop020RemoteJobTriggerFactory implements IRemoteJobTriggerFactor
         final String coreName = state.getIndexName() + '-' + groupNum;
         // TSearcherConfigFetcher config = TSearcherConfigFetcher.get();
         JobConfParams jobConf = new JobConfParams();
-        jobConf.set(IParamContext.KEY_TASK_ID, String.valueOf(state.getTaskId()));
+        jobConf.set(JobCommon.KEY_TASK_ID, String.valueOf(state.getTaskId()));
         // 设置记录条数
 //        if (state.getDumpCount() != null) {
 //            jobConf.set(IndexBuildParam.INDEXING_ROW_COUNT, String.valueOf(state.getDumpCount()));

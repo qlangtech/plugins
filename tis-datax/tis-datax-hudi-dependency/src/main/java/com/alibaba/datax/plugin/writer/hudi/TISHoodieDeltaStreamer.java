@@ -28,6 +28,7 @@ import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -187,8 +188,8 @@ public class TISHoodieDeltaStreamer implements Serializable {
         public HudiLoggerAppender() {
             super();
             this.loggerFactory = LogbackBinder.getSingleton().getLoggerFactory();
-            this.mdcCollection = System.getProperty(TISCollectionUtils.KEY_COLLECTION);
-            this.taskId = System.getProperty(IParamContext.KEY_TASK_ID);
+            this.mdcCollection = System.getProperty(JobCommon.KEY_COLLECTION);
+            this.taskId = System.getProperty(JobCommon.KEY_TASK_ID);
             if (StringUtils.isEmpty(taskId)) {
                 throw new IllegalArgumentException("taskId can not be empty");
             }
@@ -197,9 +198,9 @@ public class TISHoodieDeltaStreamer implements Serializable {
         @Override
         protected void append(LoggingEvent event) {
 
-            MDC.put(IParamContext.KEY_TASK_ID, taskId);
+            MDC.put(JobCommon.KEY_TASK_ID, taskId);
             if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
-                MDC.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
+                MDC.put(JobCommon.KEY_COLLECTION, mdcCollection);
             }
             Level level = event.getLevel();
             if (level.isGreaterOrEqual(Level.INFO)) {

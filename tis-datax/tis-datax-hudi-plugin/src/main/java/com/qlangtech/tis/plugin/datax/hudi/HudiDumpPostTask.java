@@ -35,6 +35,7 @@ import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TISCollectionUtils;
@@ -151,14 +152,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         File sparkHome = HudiConfig.getSparkHome();
         File sparkCfgDir = new File(sparkHome, "conf");
         this.hudiWriter.getFs().setConfigFile(sparkCfgDir);
-        String mdcCollection = MDC.get(TISCollectionUtils.KEY_COLLECTION);
-        final String taskId = MDC.get(IParamContext.KEY_TASK_ID);
+        String mdcCollection = MDC.get(JobCommon.KEY_COLLECTION);
+        final String taskId = MDC.get(JobCommon.KEY_TASK_ID);
         if (StringUtils.isEmpty(taskId)) {
             throw new IllegalStateException("mdc param taskId can not be null");
         }
-        env.put(IParamContext.KEY_TASK_ID, taskId);
+        env.put(JobCommon.KEY_TASK_ID, taskId);
         if (StringUtils.isNotEmpty(mdcCollection)) {
-            env.put(TISCollectionUtils.KEY_COLLECTION, mdcCollection);
+            env.put(JobCommon.KEY_COLLECTION, mdcCollection);
         }
         env.put(IYarnConfig.ENV_YARN_CONF_DIR, String.valueOf(sparkCfgDir.toPath().normalize()));
 
@@ -293,8 +294,8 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         if (!manifestJar.exists()) {
             Map<String, String> extraEnvProps = Maps.newHashMap();
-            extraEnvProps.put(IParamContext.KEY_TASK_ID, String.valueOf(execContext.getTaskId()));
-            extraEnvProps.put(TISCollectionUtils.KEY_COLLECTION, execContext.getIndexName());
+            extraEnvProps.put(JobCommon.KEY_TASK_ID, String.valueOf(execContext.getTaskId()));
+            extraEnvProps.put(JobCommon.KEY_COLLECTION, execContext.getIndexName());
             Pair<PluginAndCfgsSnapshot, Manifest> manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
                     , new TargetResName(execContext.getIndexName()), -1, Optional.of((meta) -> {
                         // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了

@@ -135,6 +135,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
         }
     }
 
+    // 本地缓存
+    private PluginAndCfgsSnapshot localCache = null;
 
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildServerLoaderFactory(
@@ -183,7 +185,10 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                                     , Config.getMetaProps().getVersion(), Optional.empty());
                             // 服务端不需要配置文件，只需要能够加载到类就行了
                             PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
-                            cfgSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                            cfgSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(localCache));
+
+
+                            localCache = cfgSnapshot;
 
                         }
                     }

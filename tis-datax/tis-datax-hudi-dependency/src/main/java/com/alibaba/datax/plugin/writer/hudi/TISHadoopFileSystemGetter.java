@@ -38,6 +38,7 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -47,6 +48,7 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
     private Configuration configuration;
     private static final Logger LOG = LoggerFactory.getLogger(TISHadoopFileSystemGetter.class);
     static boolean initializeDir = false;
+    private PluginAndCfgsSnapshot cacheSnapshot;
 
     @Override
     public FileSystem getHadoopFileSystem(String path) {
@@ -79,7 +81,8 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                                             = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
                                     PluginAndCfgsSnapshot localSnaphsot
                                             = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Collections.emptySet());
-                                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot);
+                                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(this.cacheSnapshot));
+                                    this.cacheSnapshot = remoteSnapshot;
                                 }
                             }
                         }

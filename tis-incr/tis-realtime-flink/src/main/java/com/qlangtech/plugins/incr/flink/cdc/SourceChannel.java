@@ -22,11 +22,11 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.TableAliasMapper;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 
@@ -60,13 +60,13 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public static List<ReaderSource> getSourceFunction(
-            BasicDataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+            DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
         return getSourceFunction(dsFactory, (tab) -> tab.dbNanme + "." + tab.tab.getName(), tabs, sourceFunctionCreator);
     }
 
     //https://ververica.github.io/flink-cdc-connectors/master/
     public static List<ReaderSource> getSourceFunction(
-            BasicDataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator
+            DataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator
             , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {

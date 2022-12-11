@@ -129,7 +129,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
 
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return TestChunjunPostreSQLSourceFactory.this.createPgSourceFactory(dataxName);
+                return (BasicDataSourceFactory) TestChunjunPostreSQLSourceFactory.this.createPgSourceFactory(dataxName);
             }
 
 //            @Override

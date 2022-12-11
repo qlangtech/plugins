@@ -85,6 +85,9 @@
     </profiles>
 
     <properties>
+        <zeppelin.version>0.10.2-SNAPSHOT</zeppelin.version>
+
+
         <scala.version>2.11.12</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <spark2.version>2.4.4</spark2.version>

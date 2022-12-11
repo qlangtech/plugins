@@ -144,6 +144,11 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
+    public DBConfig getDbConfig() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public DataDumpers getDataDumpers(TISTable table) {
         return getDataDumpers(table, Optional.empty());
     }

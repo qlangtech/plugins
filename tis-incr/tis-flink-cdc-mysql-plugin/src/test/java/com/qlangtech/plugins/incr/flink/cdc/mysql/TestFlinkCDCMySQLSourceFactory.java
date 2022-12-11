@@ -88,7 +88,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
                 //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -120,7 +120,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -246,7 +246,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
-                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
 
             @Override
@@ -282,7 +282,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
                 //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
-                return MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
 
             @Override

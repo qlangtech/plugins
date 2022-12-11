@@ -34,17 +34,23 @@
 
     <dependencies>
 
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>datax-core</artifactId>-->
-<!--            <version>${alibaba.datax.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.zeppelin</groupId>
+            <artifactId>zeppelin-client</artifactId>
+            <version>${zeppelin.version}</version>
+        </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>datax-common</artifactId>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>datax-core</artifactId>-->
+        <!--            <version>${alibaba.datax.version}</version>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.datax</groupId>-->
+        <!--            <artifactId>datax-common</artifactId>-->
+        <!--            <scope>compile</scope>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -60,11 +66,11 @@
             <artifactId>tis-plugin</artifactId>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-solrj-client</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-solrj-client</artifactId>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-hadoop-rpc</artifactId>

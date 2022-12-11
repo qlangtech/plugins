@@ -29,8 +29,8 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -136,8 +136,8 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         // 其实无作用骗骗校验器的
 
         DataxWriter dataXWriter = DataxWriter.load(null, this.getDataXName());
-        BasicDataSourceFactory dsFactory
-                = (BasicDataSourceFactory) ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
+        DataSourceFactory dsFactory
+                = ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
         if (dsFactory == null) {
             throw new IllegalStateException("dsFactory can not be null");
         }

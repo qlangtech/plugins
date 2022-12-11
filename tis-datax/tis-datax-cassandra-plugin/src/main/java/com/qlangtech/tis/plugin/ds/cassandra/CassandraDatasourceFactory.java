@@ -84,6 +84,11 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     }
 
     @Override
+    public DBConfig getDbConfig() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public DataDumpers getDataDumpers(TISTable table) {
         List<String> jdbcUrls = Lists.newArrayList();
         for (String host : this.getHosts()) {

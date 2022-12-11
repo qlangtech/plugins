@@ -20,7 +20,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.flink.test.util.AbstractTestBase;
@@ -80,7 +80,7 @@ public abstract class PostgresTestBase extends AbstractTestBase {
                 POSTGERS_CONTAINER.getPassword());
     }
 
-    public static BasicDataSourceFactory createPgSourceFactory(TargetResName dataxName) {
+    public static DataSourceFactory createPgSourceFactory(TargetResName dataxName) {
         PostgreSQLContainer<?> postgersContainer = POSTGERS_CONTAINER;
         Descriptor pgDataSourceFactory = TIS.get().getDescriptor("PGDataSourceFactory");
         Assert.assertNotNull(pgDataSourceFactory);
@@ -98,7 +98,7 @@ public abstract class PostgresTestBase extends AbstractTestBase {
         formData.addProp("encode", "utf8");
         formData.addProp("useCompression", "true");
 
-        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
+        Descriptor.ParseDescribable<DataSourceFactory> parseDescribable
                 = pgDataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.getInstance());
         return parseDescribable.getInstance();

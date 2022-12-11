@@ -115,14 +115,14 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     @Override
     public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
         Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
-        // TableAlias tableName = null;
+
 
         TableAliasMapper selectedTabs = dataxProcessor.getTabAlias();
         if (selectedTabs.isNull()) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }
         IDataxReader reader = dataxProcessor.getReader(null);
-        List<ISelectedTab> tabs = reader.getSelectedTabs();
+       // List<ISelectedTab> tabs = reader.getSelectedTabs();
 
         // 清空一下tabs的缓存以免有脏数据
         this.selTabs = null;
@@ -200,9 +200,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     public RowDataSinkFunc createRowDataSinkFunc(IDataxProcessor dataxProcessor
             , final TableAlias tabName, boolean shallInitSinkTable) {
-        //  AtomicReference<CreateChunjunSinkFunctionResult> sinkFuncRef = new AtomicReference<>();
-        //  sinkFunc = null;
-        // final TableAlias tabName = val;
+
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();
 
@@ -224,7 +222,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
         return new RowDataSinkFunc(tabName
                 , sinkFunc.getSinkFunction()
-                // , AbstractRowDataMapper.getAllTabColsMeta(this.getColsMeta(val, dsFactory, sinkFunc))
                 , AbstractRowDataMapper.getAllTabColsMeta(sinkFunc.tableCols.getCols())
                 , supportUpsetDML()
                 , this.parallelism);
@@ -384,11 +381,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             this.sinkFunction = sinkFunction;
         }
 
-//        public CreateChunjunSinkFunctionResult(SinkFactory sinkFactory, SinkFunction<RowData> sinkFunction) {
-//            this.sinkFunction = sinkFunction;
-//            this.sinkFactory = sinkFactory;
-//        }
-
         public JdbcColumnConverter getColumnConverter() {
             return columnConverter;
         }
@@ -516,10 +508,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * impl: IStreamTableCreator
      * ===========================================================
      */
-//    protected List<IColMetaGetter> getColsMeta(TableAlias tableName, BasicDataSourceFactory dsFactory
-//            , CreateChunjunSinkFunctionResult sinkFunc) {
-//        return sinkFunc.getOutputFormat().colsMeta.stream().collect(Collectors.toList());
-//    }
     @Override
     public final IStreamTableMeta getStreamTableMeta(String tableName) {
 
@@ -538,42 +526,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 }
             }
         };
-
-
-//        if (this.selTabs == null) {
-//
-//            this.getColsMeta()
-//            DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
-//            IDataxReader reader = dataXProcessor.getReader(null);
-//
-//            List<SelectedTab> tabs = reader.getSelectedTabs();
-//            this.selTabs
-//                    = tabs.stream()
-//                    .collect(Collectors.toMap((t) -> tableName, (t) -> t));
-//        }
-//
-//        return new IStreamTableMeta() {
-//            @Override
-//            public List<HdfsColMeta> getColsMeta() {
-//                SelectedTab tab = Objects.requireNonNull(selTabs.get(tableName), "tableName:" + tableName + " relevant tab can not be null");
-//                return tab.getCols().stream().map((c) -> {
-//                    return new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType());
-//                }).collect(Collectors.toList());
-//                // return tabMeta.getRight().colMetas;
-//            }
-//        };
-        //  throw new UnsupportedOperationException();
     }
-
-//    @Override
-//    public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
-//        return IStreamTemplateResource.createClasspathResource("flink_source_handle_rowdata_scala.vm", true);
-//    }
-
-//    @Override
-//    public IStreamIncrGenerateStrategy.IStreamTemplateData decorateMergeData(IStreamTemplateData mergeData) {
-//        return mergeData;
-//    }
 
     /**
      * ==========================================================
@@ -608,7 +561,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
         public boolean validateFlushIntervalMills(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            // return validateFileDelimiter(msgHandler, context, fieldName, value);
             int interval = Integer.parseInt(value);
             if (interval < 1000) {
                 msgHandler.addFieldError(context, fieldName, "不能小于1秒");

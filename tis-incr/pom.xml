@@ -72,6 +72,7 @@
         <module>tis-flink-chunjun-greenplum-plugin</module>
 
         <module>tis-flink-chunjun-clickhouse-plugin</module>
+        <module>tis-flink-chunjun-starrocks-plugin</module>
 
 
     </modules>

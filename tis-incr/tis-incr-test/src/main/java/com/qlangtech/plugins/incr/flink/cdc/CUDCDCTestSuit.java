@@ -566,11 +566,15 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected final SelectedTab createSelectedTab(String tabName, BasicDataSourceFactory dataSourceFactory) {
-        return TestSelectedTab.createSelectedTab(EntityName.parse(tabName), dataSourceFactory, (tab) -> {
-            if (suitParam.overwriteSelectedTab != null) {
-                suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);
-            }
-        });
+        try {
+            return TestSelectedTab.createSelectedTab(EntityName.parse(tabName), dataSourceFactory, (tab) -> {
+                if (suitParam.overwriteSelectedTab != null) {
+                    suitParam.overwriteSelectedTab.apply(this, tabName, dataSourceFactory, tab);
+                }
+            });
+        } catch (TableNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

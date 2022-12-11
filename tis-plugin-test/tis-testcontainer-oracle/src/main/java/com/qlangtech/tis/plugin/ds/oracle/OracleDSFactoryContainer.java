@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.io.IOUtils;
@@ -106,7 +107,7 @@ public class OracleDSFactoryContainer {
 //        formData.addProp("encode", "utf8");
 //        formData.addProp("useCompression", "true");
 
-        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
+        Descriptor.ParseDescribable<DataSourceFactory> parseDescribable
                 = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.getInstance());
 
@@ -116,7 +117,7 @@ public class OracleDSFactoryContainer {
     public static final String testTabName = "testTab";
 
     //@BeforeClass
-    public static BasicDataSourceFactory initialize() {
+    public static DataSourceFactory initialize() {
         oracleContainer = new TISOracleContainer();
         oracleContainer.usingSid();
         oracleContainer.start();

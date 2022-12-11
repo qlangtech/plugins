@@ -23,7 +23,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -102,9 +102,9 @@ public class MySqlContainer extends JdbcDatabaseContainer {
                                 , "/docker-entrypoint-initdb.d/setup.sql");
     }
 
-    BasicDataSourceFactory ds;
+    DataSourceFactory ds;
 
-    public BasicDataSourceFactory createMySqlDataSourceFactory(
+    public DataSourceFactory createMySqlDataSourceFactory(
             TargetResName dataxName) {
         if (this.ds != null) {
             return this.ds;
@@ -112,7 +112,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
         return this.ds = getBasicDataSourceFactory(dataxName, this.imageTag, this);
     }
 
-    public static BasicDataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, String imageTag, JdbcDatabaseContainer container) {
+    public static DataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, String imageTag, JdbcDatabaseContainer container) {
         LOG.info("Starting containers...");
         Startables.deepStart(Stream.of(container)).join();
         LOG.info("Containers are started.");
@@ -133,7 +133,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
         formData.addProp("encode", "utf8");
         formData.addProp("useCompression", "true");
 
-        Descriptor.ParseDescribable<BasicDataSourceFactory> parseDescribable
+        Descriptor.ParseDescribable<DataSourceFactory> parseDescribable
                 = mySqlV5DataSourceFactory.newInstance(dataxName.getName(), formData);
         Assert.assertNotNull(parseDescribable.getInstance());
 

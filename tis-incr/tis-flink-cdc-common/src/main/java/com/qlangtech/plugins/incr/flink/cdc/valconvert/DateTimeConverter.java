@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.valconvert;
 
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -26,11 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.DateTimeException;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -66,7 +63,6 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
     protected static ZoneId timestampZoneId = ZoneId.systemDefault();
 
 
-
     public static void setDatetimeConverters(String convertType, Properties debeziumProperties) {
         debeziumProperties.put("converters", "datetime");
         debeziumProperties.put("datetime.type", convertType);
@@ -75,7 +71,7 @@ public abstract class DateTimeConverter implements CustomConverter<SchemaBuilder
         debeziumProperties.put("datetime.format.datetime", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put("datetime.format.timestamp", "yyyy-MM-dd HH:mm:ss");
         debeziumProperties.put("datetime.format.timestamp.zone"
-                , BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
+                , DataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId());
     }
 
 

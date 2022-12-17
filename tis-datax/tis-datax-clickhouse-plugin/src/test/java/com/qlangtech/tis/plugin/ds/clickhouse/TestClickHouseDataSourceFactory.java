@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.ds.clickhouse;
 
 import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -43,8 +44,8 @@ public class TestClickHouseDataSourceFactory extends TestCase {
         dsFactory.userName = "default";
         dsFactory.password = "123456";
 
-        List<String> tablesInDB = dsFactory.getTablesInDB();
-        assertTrue(tablesInDB.size() > 0);
+        TableInDB tablesInDB = dsFactory.getTablesInDB();
+        assertFalse(tablesInDB.isEmpty());
     }
 
 }

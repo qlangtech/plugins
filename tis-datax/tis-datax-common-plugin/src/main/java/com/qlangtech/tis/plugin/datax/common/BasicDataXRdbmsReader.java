@@ -265,7 +265,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     @Override
-    public final List<String> getTablesInDB() {
+    public final TableInDB getTablesInDB() {
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTablesInDB();
     }

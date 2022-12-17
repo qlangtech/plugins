@@ -159,8 +159,8 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<String> getTablesInDB() {
-        List<String> tables = Lists.newArrayList();
+    public TableInDB getTablesInDB() {
+        TableInDB tables = new TableInDB();
         processSession((session) -> {
             ResultSet resultSet = session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = '" + this.dbName + "' ");
             Iterator<Row> rows = resultSet.iterator();
@@ -202,7 +202,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

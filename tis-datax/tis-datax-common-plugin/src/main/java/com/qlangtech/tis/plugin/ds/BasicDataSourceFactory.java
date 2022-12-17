@@ -157,7 +157,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
      *
      * @param connProcessor
      */
-    public final void visitFirstConnection(final IConnProcessor connProcessor) {
+    public void visitFirstConnection(final IConnProcessor connProcessor) {
         this.visitConnection(connProcessor, false);
     }
 
@@ -183,7 +183,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
@@ -204,9 +204,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<String> getTablesInDB() {
+    public TableInDB getTablesInDB() {
         try {
-            final List<String> tabs = new ArrayList<>();
+            final TableInDB tabs = new TableInDB();
 
             this.visitFirstConnection((conn) -> {
                 refectTableInDB(tabs, conn);
@@ -227,7 +227,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         return "show tables";
     }
 
-    public final DBConfig getDbConfig() {
+    public DBConfig getDbConfig() {
         final DBConfig dbConfig = new DBConfig(this);
         dbConfig.setName(this.getDbName());
         dbConfig.setDbEnum(DBConfigParser.parseDBEnum(getDbName(), getNodeDesc()));

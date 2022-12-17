@@ -100,10 +100,10 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         String zkSubPath = "nodes0000000020";
         EasyMock.expect(zkClient.getChildren(
-                ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, null, true))
+                ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, true))
                 .andReturn(Collections.singletonList(zkSubPath)).times(3);
         EasyMock.expect(zkClient.getData(EasyMock.eq(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath)
-                , EasyMock.isNull(), EasyMock.anyObject(Stat.class), EasyMock.eq(true)))
+                , EasyMock.eq(true)))
                 .andReturn(statusCollectorHost.getBytes(TisUTF8.get())).times(3);
 
         EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();

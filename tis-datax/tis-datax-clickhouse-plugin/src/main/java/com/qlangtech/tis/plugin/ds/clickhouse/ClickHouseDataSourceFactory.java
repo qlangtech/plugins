@@ -23,6 +23,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
         return this.name;
     }
 
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         DatabaseMetaData metaData = conn.getMetaData();
 
         ResultSet tablesResult = metaData.getTables(null, this.dbName, null, new String[]{"TABLE"});

@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -132,7 +133,7 @@ public class DataXOssReader extends DataxReader {
 
 
     @Override
-    public List<String> getTablesInDB() {
+    public TableInDB getTablesInDB() {
         throw new UnsupportedOperationException();
     }
 

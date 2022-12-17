@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
@@ -123,7 +124,7 @@ public class TestDataXOracleWriter {
 
         final DataXOracleWriter writer = getOracleWriter();
         writer.dataXName = testDataXName;
-        List<HdfsColMeta> colMetas = Lists.newArrayList();
+        List<IColMetaGetter> colMetas = Lists.newArrayList();
 
 //                "customerregister_id",
 //                "waitingorder_id",

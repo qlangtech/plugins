@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.mysql.BasicMySQLCDCTest;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
@@ -77,10 +78,10 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
         Assert.assertNotNull(dataSourceFactory);
 
         dataSourceFactory.visitFirstConnection((conn) -> {
-            List<String> tabs = Lists.newArrayList();
+            TableInDB tabs = new TableInDB();
             dataSourceFactory.refectTableInDB(tabs, conn);
 
-            System.out.println("refectTableInDB:" + tabs.stream().collect(Collectors.joining(",")));
+            System.out.println("refectTableInDB:" + tabs.getTabs().stream().collect(Collectors.joining(",")));
         });
     }
 

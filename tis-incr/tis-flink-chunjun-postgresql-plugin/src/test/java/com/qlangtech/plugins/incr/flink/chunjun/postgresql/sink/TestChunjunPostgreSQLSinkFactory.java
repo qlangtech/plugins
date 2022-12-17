@@ -45,7 +45,7 @@ public class TestChunjunPostgreSQLSinkFactory extends TestFlinkSinkExecutor {
     @BeforeClass
     public static void initialize() throws Exception {
         PostgresTestBase.startContainers();
-        pgDSFactory = PostgresTestBase.createPgSourceFactory(new TargetResName(dataXName));
+        pgDSFactory = (BasicDataSourceFactory) PostgresTestBase.createPgSourceFactory(new TargetResName(dataXName));
     }
 
     @Override

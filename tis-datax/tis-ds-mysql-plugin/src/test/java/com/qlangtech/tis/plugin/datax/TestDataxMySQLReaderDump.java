@@ -49,7 +49,7 @@ public class TestDataxMySQLReaderDump extends BasicTest {
     static BasicDataSourceFactory dsFactory;
 
     private static BasicDataSourceFactory createDataSource(TargetResName dataxName) {
-        return MYSQL_CONTAINER.createMySqlDataSourceFactory(dataxName);
+        return (BasicDataSourceFactory)MYSQL_CONTAINER.createMySqlDataSourceFactory(dataxName);
         //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
     }
 

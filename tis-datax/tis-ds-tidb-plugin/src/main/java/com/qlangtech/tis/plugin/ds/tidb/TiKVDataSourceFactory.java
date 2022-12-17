@@ -112,7 +112,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
 
@@ -205,12 +205,16 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<String> getTablesInDB() {
+    public TableInDB getTablesInDB() {
         return this.openTiDB((s, c, d) -> {
+            TableInDB tables = new TableInDB();
             List<TiTableInfo> tabs = c.listTables(d);
             // either view or sequence shall be filter
-            return tabs.stream().filter((tbl) -> (tbl != null && !(tbl.isView() || tbl.isSequence())))
-                    .map((tt) -> tt.getName()).collect(Collectors.toList());
+            tabs.stream().filter((tbl) -> (tbl != null && !(tbl.isView() || tbl.isSequence())))
+                    .map((tt) -> tt.getName()).forEach((tab) -> {
+                tables.add(tab);
+            });
+            return tables;
         });
     }
 
@@ -393,8 +397,8 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             try {
 //                ParseDescribable<DataSourceFactory> tikv = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
 //                DataSourceFactory sourceFactory = tikv.instance;
-                List<String> tables = sourceFactory.getTablesInDB();
-                if (tables.size() < 1) {
+                TableInDB tables = sourceFactory.getTablesInDB();
+                if (tables.isEmpty()) {
                     msgHandler.addErrorMessage(context, "TiKV库'" + sourceFactory.dbName + "'中的没有数据表");
                     return false;
                 }

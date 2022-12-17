@@ -113,12 +113,17 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<String> getTablesInDB() {
+    public TableInDB getTablesInDB() {
         MongoClient mongoClient = null;
+        TableInDB tabs = new TableInDB();
         try {
             mongoClient = createMongoClient();
             MongoDatabase database = mongoClient.getDatabase(this.dbName);
-            return Lists.newArrayList(database.listCollectionNames());
+            for (String tab : database.listCollectionNames()) {
+                tabs.add(tab);
+            }
+            //  Lists.newArrayList(database.listCollectionNames());
+            return tabs;
         } finally {
             try {
                 mongoClient.close();
@@ -156,7 +161,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

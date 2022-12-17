@@ -199,7 +199,8 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
                 precision = 38;
             }
             try {
-                return new FlinkCol(meta, type, DataTypes.DECIMAL(precision, scale)
+                return new FlinkCol(meta, type, //DataTypes.DECIMAL(precision, scale)
+                        new AtomicDataType(new DecimalType(nullable, precision, scale))
                         , new DecimalConvert(precision, scale)
                         , FlinkCol.NoOp()
                         , new RowFieldGetterFactory.DecimalGetter(meta.getName(), colIndex));

@@ -21,6 +21,7 @@ package com.ververica.cdc.connectors.mysql.testutils;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import org.junit.Assert;
 import org.junit.Test;
 import org.testcontainers.lifecycle.Startables;
@@ -51,14 +52,14 @@ public class TestMySqlContainer {
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         DataSourceFactory dsFactory = MYSQL_CONTAINER.createMySqlDataSourceFactory(new TargetResName("x"));// MySqlContainer.createMySqlDataSourceFactory(new TargetResName("x"), MYSQL_CONTAINER);
         dsFactory.visitFirstConnection((conn) -> {
-            List<String> tabs = Lists.newArrayList();
+            TableInDB tabs = new TableInDB();
             dsFactory.refectTableInDB(tabs, conn);
             List<String> examples = Lists.newArrayList("base", "instancedetail", "stu");
             for (String tab : examples) {
                 Assert.assertTrue("tab:" + tab, tabs.contains(tab));
             }
 
-            System.out.println(tabs.stream().collect(Collectors.joining(",")));
+            System.out.println(tabs.getTabs().stream().collect(Collectors.joining(",")));
         });
     }
 }

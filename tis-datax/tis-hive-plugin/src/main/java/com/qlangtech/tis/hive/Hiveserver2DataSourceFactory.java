@@ -35,8 +35,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.jdbc.HiveDriver;
@@ -49,13 +49,12 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-14 09:33
  **/
-public class Hiveserver2DataSourceFactory extends DataSourceFactory implements JdbcUrlBuilder {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder {
     private static final String NAME_HIVESERVER2 = "Hiveserver2";
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -141,16 +140,18 @@ public class Hiveserver2DataSourceFactory extends DataSourceFactory implements J
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public final List<String> getTablesInDB() {
+    public final TableInDB getTablesInDB() {
 
         try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
+            TableInDB tabs = new TableInDB();
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
-            return tables.stream().map((t) -> t.getTableName()).collect(Collectors.toList());
+            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(tab));
+            return tabs;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

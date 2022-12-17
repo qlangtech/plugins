@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.cassandra;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 
@@ -36,7 +37,7 @@ public class TestCassandraDatasourceFactory extends TestCase {
         CassandraDatasourceFactory dsFactory = getDS();
         // dsFactory.useSSL = true;
 
-        List<String> tablesInDB = dsFactory.getTablesInDB();
+        TableInDB tablesInDB = dsFactory.getTablesInDB();
         assertTrue(tablesInDB.contains("user_dtl"));
     }
 

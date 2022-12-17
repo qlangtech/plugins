@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
@@ -83,7 +84,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet result = null;
         try {

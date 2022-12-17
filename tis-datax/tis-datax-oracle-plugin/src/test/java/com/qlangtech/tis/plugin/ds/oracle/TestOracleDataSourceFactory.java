@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,8 +63,8 @@ public class TestOracleDataSourceFactory {
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
         Assert.assertTrue("allAuthorized must be true", dsFactory.allAuthorized);
 
-        List<String> tablesInDB = dsFactory.getTablesInDB();
-        Assert.assertTrue(tablesInDB.size() > 1);
+        TableInDB tablesInDB = dsFactory.getTablesInDB();
+        Assert.assertFalse(tablesInDB.isEmpty());
         EntityName tab = EntityName.parse("SYSTEM." + OracleDSFactoryContainer.testTabName);
         Assert.assertTrue(tablesInDB.contains(tab.getFullName()));
         // tablesInDB.forEach((tab) -> System.out.println(tab));

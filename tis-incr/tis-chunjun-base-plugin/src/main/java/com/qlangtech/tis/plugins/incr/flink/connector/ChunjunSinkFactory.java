@@ -38,7 +38,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.*;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -122,7 +122,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             throw new IllegalStateException("selectedTabs can not be empty");
         }
         IDataxReader reader = dataxProcessor.getReader(null);
-       // List<ISelectedTab> tabs = reader.getSelectedTabs();
+        // List<ISelectedTab> tabs = reader.getSelectedTabs();
 
         // 清空一下tabs的缓存以免有脏数据
         this.selTabs = null;
@@ -226,7 +226,6 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , supportUpsetDML()
                 , this.parallelism);
     }
-
 
 
     private CreateChunjunSinkFunctionResult createSinFunctionResult(
@@ -511,17 +510,22 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     @Override
     public final IStreamTableMeta getStreamTableMeta(String tableName) {
 
-        DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
-        BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) dataXProcessor.getWriter(null);
+        // DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
+        BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) DataxWriter.load(null, this.dataXName);// dataXProcessor.getWriter(null);
+
+        final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
+
 
         return new IStreamTableMeta() {
             @Override
             public List<IColMetaGetter> getColsMeta() {
                 try {
-                    return writer.getDataSourceFactory().getTableMetadata(EntityName.parse(tableName))
+                    // 在创建增量流程过程中可能 sink端的表还不存在
+                    DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
+                    return ds.getTableMetadata(EntityName.parse(tableName))
                             .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                             .collect(Collectors.toList());
-                } catch (TableNotFoundException e) {
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }

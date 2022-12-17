@@ -1,48 +1,39 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 //
+
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
-import com.qlangtech.tis.fs.IFs2Table;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
-import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
-import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.plugin.datax.MREngine;
-import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+
 //
 ///**
 // * @author 百岁（baisui@qlangtech.com）
@@ -50,7 +41,7 @@ import java.util.Objects;
 // */
 public class JoinHiveTask  //extends HiveTask
 {
-//
+    //
 //    private static final MessageFormat SQL_INSERT_TABLE = new MessageFormat("INSERT OVERWRITE TABLE {0} PARTITION (pt,pmod) \n {1}");
 //
     private static final Logger log = LoggerFactory.getLogger(JoinHiveTask.class);
@@ -105,6 +96,7 @@ public class JoinHiveTask  //extends HiveTask
 //        }
 //    }
 //
+
     /**
      * @param fileSystem
      * @param fsFormat
@@ -129,7 +121,7 @@ public class JoinHiveTask  //extends HiveTask
                 //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
                 // 清理hive数据
                 List<FSHistoryFileUtils.PathInfo> deletePts =
-                        (new HiveRemoveHistoryDataTask(fileSystem,mrEngine)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
+                        (new HiveRemoveHistoryDataTask(fileSystem, mrEngine)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
                 // 清理Hdfs数据
                 FSHistoryFileUtils.deleteOldHdfsfile(fileSystem, parentPath, deletePts, 0);
                 //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
@@ -144,7 +136,8 @@ public class JoinHiveTask  //extends HiveTask
             createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
         }
     }
-//
+
+    //
 //    public HiveInsertFromSelectParser getSQLParserResult() throws Exception {
 //        return this.getSQLParserResult(mergeVelocityTemplate(Collections.emptyMap()));
 //    }

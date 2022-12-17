@@ -218,7 +218,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol dateType(DataType type) {
-            return new FlinkCol(meta, type, DataTypes.DATE()
+            return new FlinkCol(meta, type, new AtomicDataType(new DateType(nullable))
                     , new DateConvert()
                     , FlinkCol.LocalDate()
                     , new RowFieldGetterFactory.DateGetter(meta.getName(), colIndex));
@@ -226,7 +226,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
         @Override
         public FlinkCol timestampType(DataType type) {
-            return new FlinkCol(meta, type, DataTypes.TIMESTAMP(3)
+            return new FlinkCol(meta, type, new AtomicDataType(new TimestampType(nullable, 3)) //DataTypes.TIMESTAMP(3)
                     , new TimestampDataConvert()
                     , new FlinkCol.DateTimeProcess()
                     , new RowFieldGetterFactory.TimestampGetter(meta.getName(), colIndex));

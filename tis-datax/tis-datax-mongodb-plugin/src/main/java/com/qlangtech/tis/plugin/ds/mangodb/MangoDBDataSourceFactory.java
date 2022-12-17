@@ -36,6 +36,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,6 +150,15 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void visitFirstConnection(IConnProcessor connProcessor) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
 
     private MongoClient createMongoClient() {
         MongoClient mongoClient = null;

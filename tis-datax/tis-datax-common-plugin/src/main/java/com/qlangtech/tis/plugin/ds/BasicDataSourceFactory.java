@@ -30,6 +30,9 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.web.start.TisAppLaunch;
+import com.qlangtech.tis.web.start.TisSubModule;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -58,8 +61,6 @@ import java.util.stream.Collectors;
  * @create: 2021-06-06 19:48
  **/
 public abstract class BasicDataSourceFactory extends DataSourceFactory implements JdbcUrlBuilder {
-    //
-
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
 
@@ -181,34 +182,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
-
     @Override
-    public final List<String> getTablesInDB() {
-        try {
-            final List<String> tabs = new ArrayList<>();
-
-            this.visitFirstConnection((conn) -> {
-                refectTableInDB(tabs, conn);
-            });
-
-//            final DBConfig dbConfig = getDbConfig();
-//            dbConfig.vistDbName((config, ip, databaseName) -> {
-//                visitConnection(config, ip, databaseName, (conn) -> {
-//                    refectTableInDB(tabs, conn);
-//                });
-//                return true;
-//            });
-            return tabs;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
-        return super.getConnection(jdbcUrl);
-    }
-
     public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet resultSet = null;
@@ -229,6 +203,26 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
+    @Override
+    public List<String> getTablesInDB() {
+        try {
+            final List<String> tabs = new ArrayList<>();
+
+            this.visitFirstConnection((conn) -> {
+                refectTableInDB(tabs, conn);
+            });
+            return tabs;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Connection getConnection(String jdbcUrl) throws SQLException {
+        return super.getConnection(jdbcUrl);
+    }
+
+
     protected String getRefectTablesSql() {
         return "show tables";
     }
@@ -236,8 +230,12 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     public final DBConfig getDbConfig() {
         final DBConfig dbConfig = new DBConfig(this);
         dbConfig.setName(this.getDbName());
-        dbConfig.setDbEnum(DBConfigParser.parseDBEnum(getDbName(), this.nodeDesc));
+        dbConfig.setDbEnum(DBConfigParser.parseDBEnum(getDbName(), getNodeDesc()));
         return dbConfig;
+    }
+
+    protected String getNodeDesc() {
+        return this.nodeDesc;
     }
 
 
@@ -306,7 +304,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
 
         static {
             try {
-                ClientConfig clientConfig = new ClientConfig("http://localhost:8080/next");
+                ClientConfig clientConfig = new ClientConfig(
+                        "http://127.0.0.1:" + TisAppLaunch.getPort(TisSubModule.ZEPPELIN) + "/next");
                 zeppelinClient = new ZeppelinClient(clientConfig);
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -314,7 +313,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
 
         @Override
-        public String createOrGetNotebook(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) throws Exception {
+        public String createOrGetNotebook(
+                IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) throws Exception {
 
             BasicDataSourceFactory dsFactory = postFormVals.newInstance(this, msgHandler);
             String idVal = dsFactory.identityValue();
@@ -328,7 +328,13 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
 
             File interpreterCfg = new File(com.qlangtech.tis.TIS.pluginCfgRoot, "interpreter/" + idVal);
             if (!interpreterCfg.exists()) {
+
+                List<String> jdbcUrls = dsFactory.getJdbcUrls();
+                if (CollectionUtils.isEmpty(jdbcUrls)) {
+                    throw new IllegalStateException("dataSource:" + idVal + " relevant jdbcUrl can not be empty");
+                }
                 FileUtils.write(interpreterCfg, zeppelinClient.createJDBCInterpreter(idVal), TisUTF8.get(), false);
+
             }
 
             notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));

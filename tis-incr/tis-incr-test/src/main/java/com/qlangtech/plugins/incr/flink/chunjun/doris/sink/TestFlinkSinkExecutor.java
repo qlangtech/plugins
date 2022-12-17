@@ -46,9 +46,9 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.ReplaceType;
-import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TabSinkFunc;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.io.FileUtils;
@@ -80,7 +80,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected static String dataXName = "testDataX";
 
-    static final String tableName = "totalpayinfo";
+    protected static final String tableName = "totalpayinfo";
     protected static final String dbName = "tis";
 
     String colEntityId = "entity_id";
@@ -142,6 +142,11 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     private int updateNumVal = 999;
 
     protected DTO[] createTestDTO() {
+        return createTestDTO(true);
+    }
+
+    protected DTO[] createTestDTO(boolean needDelete) {
+
 
         DTO add = createDTO(DTO.EventType.ADD);
         final DTO updateBefore = createDTO(DTO.EventType.UPDATE_BEFORE, (after) -> {
@@ -150,10 +155,14 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         });
         final DTO updateAfter = updateBefore.colone();
         updateAfter.setEventType(DTO.EventType.UPDATE_AFTER);
+        List<DTO> dtos = Lists.newArrayList(add, updateAfter);
 
-        final DTO delete = updateBefore.colone();
-        delete.setEventType(DTO.EventType.DELETE);
-        return new DTO[]{add, updateAfter, delete};
+        if (needDelete) {
+            final DTO delete = updateBefore.colone();
+            delete.setEventType(DTO.EventType.DELETE);
+            dtos.add(delete);
+        }
+        return dtos.toArray(new DTO[dtos.size()]); //new DTO[]{add, updateAfter};
     }
 
     /**
@@ -328,17 +337,20 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     }
 
 
-    interface IStreamScriptRun {
+    public interface IStreamScriptRun {
 
         void runStream(DataxProcessor dataxProcessor
                 , ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception;
     }
 
-
     protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env, TableAlias tableAlia) {
+        return createReaderSource(env, tableAlia, true);
+    }
+
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env, TableAlias tableAlia, boolean needDelete) {
         DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
         ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-                , env.fromElements(this.createTestDTO()).setParallelism(1));
+                , env.fromElements(this.createTestDTO(needDelete)).setParallelism(1));
         readerSource.getSourceStream(env
                 , new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
         return Pair.of(sourceStream, readerSource);

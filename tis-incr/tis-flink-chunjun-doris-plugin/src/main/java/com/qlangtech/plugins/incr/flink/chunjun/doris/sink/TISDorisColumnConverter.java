@@ -175,18 +175,10 @@ public class TISDorisColumnConverter
         });
     }
 
-//    @Override
-//    protected ISerializationConverter<List<String>> createExternalConverter(final BasicDorisStarRocksWriter.DorisType type) {
-//        return getSerializationConverter(type);
-//    }
+
 
     private static ISerializationConverter<List<String>> getSerializationConverter(FlinkCol col) {
         return new DorisSerializationConverter(col.getRowDataValGetter());
-//        return (rowData, index, joiner) -> {
-//            Object val = (rowData.isNullAt(index)) ? null : col.getRowDataValGetter().getFieldOrNull(rowData);
-//            joiner.add(
-//                    val == null ? NULL_VALUE : String.valueOf(val));
-//        };
     }
 
     public static class DorisSerializationConverter implements ISerializationConverter<List<String>> {

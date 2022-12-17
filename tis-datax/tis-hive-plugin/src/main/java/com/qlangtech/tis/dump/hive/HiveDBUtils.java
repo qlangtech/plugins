@@ -21,7 +21,9 @@ import com.qlangtech.tis.common.utils.Assert;
 import com.qlangtech.tis.config.hive.HiveUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.*;
+import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
+import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
+import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -35,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

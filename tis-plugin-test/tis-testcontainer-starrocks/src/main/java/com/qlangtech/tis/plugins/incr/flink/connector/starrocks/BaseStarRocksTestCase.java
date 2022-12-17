@@ -21,18 +21,13 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
-import com.starrocks.connector.flink.manager.StarRocksStreamLoadVisitor;
-import com.starrocks.shade.org.apache.http.ProtocolException;
-import com.starrocks.shade.org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
-import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -76,7 +71,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
     @BeforeClass
     public static void initialize() throws Exception {
         starRocksContainer = new StarRocksContainer();
-       // starRocksContainer.withNetworkMode("host");
+        // starRocksContainer.withNetworkMode("host");
         starRocksContainer.start();
 
         System.out.println(starRocksContainer.getHost());
@@ -136,16 +131,16 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
         starRocksContainer.stop();
     }
 
-    @Test
-    public void testStarRocks() {
+//    @Test
+//    public void testStarRocks() {
 
 //        Integer mappedPort = starRocksContainer.getMappedPort(9030);
 //        Integer mappedPort1 = starRocksContainer.getMappedPort(8030);
 //        System.out.println("mappedPort:" + mappedPort + ",mappedPort1:" + mappedPort1);
 
-    }
+    //}
 
-    protected static StarRocksSourceFactory createSourceFactory() {
+    public static StarRocksSourceFactory createSourceFactory() {
         StarRocksSourceFactory sourceFactory = new StarRocksSourceFactory();
         sourceFactory.loadUrl = "[\"localhost:" + starRocksContainer.getBeStreamLoadPort() + "\"]";
         sourceFactory.userName = "root";

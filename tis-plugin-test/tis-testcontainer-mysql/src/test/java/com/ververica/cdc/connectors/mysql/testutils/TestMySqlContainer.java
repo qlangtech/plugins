@@ -20,7 +20,7 @@ package com.ververica.cdc.connectors.mysql.testutils;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import org.junit.Assert;
 import org.junit.Test;
 import org.testcontainers.lifecycle.Startables;
@@ -49,7 +49,7 @@ public class TestMySqlContainer {
     @Test
     public void testContainer() {
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
-        BasicDataSourceFactory dsFactory = MYSQL_CONTAINER.createMySqlDataSourceFactory(new TargetResName("x"));// MySqlContainer.createMySqlDataSourceFactory(new TargetResName("x"), MYSQL_CONTAINER);
+        DataSourceFactory dsFactory = MYSQL_CONTAINER.createMySqlDataSourceFactory(new TargetResName("x"));// MySqlContainer.createMySqlDataSourceFactory(new TargetResName("x"), MYSQL_CONTAINER);
         dsFactory.visitFirstConnection((conn) -> {
             List<String> tabs = Lists.newArrayList();
             dsFactory.refectTableInDB(tabs, conn);

@@ -40,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -103,6 +105,16 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     //@FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
     public final boolean datetimeFormat = false;
 
+
+    @Override
+    public void visitFirstConnection(IConnProcessor connProcessor) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
 
     public DataDumpers getDataDumpers(TISTable table, Optional<Long> regionId) {
 // target cols

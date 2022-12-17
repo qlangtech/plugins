@@ -56,33 +56,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     public final String getEscapeChar() {
         return "`";
     }
-//    // 数据库名称
-//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String dbName;
-//
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String userName;
-//
-//    @FormField(ordinal = 2, type = FormFieldType.PASSWORD, validate = {})
-//    public String password;
-//
-//    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
-//    public int port;
-//    /**
-//     * 数据库编码
-//     */
-//    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-//    public String encode;
-//    /**
-//     * 附加参数
-//     */
-//    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT)
-//    public String extraParams;
-//    /**
-//     * 节点描述
-//     */
-//    @FormField(ordinal = 6, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String nodeDesc;
+
     @Override
     protected DataType getDataType(String colName, ResultSet cols) throws SQLException {
         DataType type = super.getDataType(colName, cols);
@@ -374,10 +348,6 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                             // 在数据来源为数据库情况下，客户端提供一行的数据对于Solr来说是一个Document
                             row.put(key, value != null ? value : "");
                         }
-
-//                        for (int i = 1; i <= columCount; i++) {
-//
-//                        }
                         return row;
                     }
                 };
@@ -451,128 +421,6 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             }
         }
     }
-
-//    private void closeResultSet(ResultSet rs) {
-//        if (rs != null) {
-//            try {
-//                rs.close();
-//            } catch (SQLException e) {
-//                // ignore
-//                ;
-//            }
-//        }
-//    }
-
-//    @Override
-//    public List<String> getTablesInDB() {
-//        try {
-//            final List<String> tabs = new ArrayList<>();
-//
-//            final DBConfig dbConfig = getDbConfig();
-//
-//            dbConfig.vistDbName((config, ip, databaseName) -> {
-//                visitConnection(config, ip, databaseName, config.getUserName(), config.getPassword(), (conn) -> {
-//                    Statement statement = null;
-//                    ResultSet resultSet = null;
-//                    try {
-//                        statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-//                        statement.execute("show tables");
-//                        resultSet = statement.getResultSet();
-//                        while (resultSet.next()) {
-//                            tabs.add(resultSet.getString(1));
-//                        }
-//                    } finally {
-//                        if (resultSet != null) {
-//                            resultSet.close();
-//                        }
-//                        if (statement != null) {
-//                            statement.close();
-//                        }
-//                    }
-//                });
-//                return true;
-//            });
-//            return tabs;
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
-//    private DBConfig getDbConfig() {
-//        final DBConfig dbConfig = new DBConfig();
-//        dbConfig.setName(this.dbName);
-//        dbConfig.setPassword(this.password);
-//        dbConfig.setUserName(this.userName);
-//        dbConfig.setPort(this.port);
-//        dbConfig.setDbEnum(DBConfigParser.parseDBEnum(dbName, this.nodeDesc));
-//        return dbConfig;
-//    }
-
-//    @Override
-//    public String getName() {
-//        if (StringUtils.isEmpty(this.dbName)) {
-//            throw new IllegalStateException("prop dbName can not be null");
-//        }
-//        return this.dbName;
-//    }
-
-
-//    private void visitConnection(DBConfig db, String ip, String dbName, String username, String password, IConnProcessor p) throws Exception {
-//        if (db == null) {
-//            throw new IllegalStateException("param db can not be null");
-//        }
-//        if (StringUtils.isEmpty(ip)) {
-//            throw new IllegalArgumentException("param ip can not be null");
-//        }
-//        if (StringUtils.isEmpty(dbName)) {
-//            throw new IllegalArgumentException("param dbName can not be null");
-//        }
-//        if (StringUtils.isEmpty(username)) {
-//            throw new IllegalArgumentException("param username can not be null");
-//        }
-////        if (StringUtils.isEmpty(password)) {
-////            throw new IllegalArgumentException("param password can not be null");
-////        }
-//        if (p == null) {
-//            throw new IllegalArgumentException("param IConnProcessor can not be null");
-//        }
-//        Connection conn = null;
-//        String jdbcUrl = "jdbc:mysql://" + ip + ":" + db.getPort() + "/" + dbName + "?useUnicode=yes";
-//        if (StringUtils.isNotEmpty(this.encode)) {
-//            jdbcUrl = jdbcUrl + "&characterEncoding=" + this.encode;
-//        }
-//        if (StringUtils.isNotEmpty(this.extraParams)) {
-//            jdbcUrl = jdbcUrl + "&" + this.extraParams;
-//        }
-//        try {
-//            validateConnection(jdbcUrl, db, username, password, p);
-//        } catch (Exception e) {
-//            //MethodHandles.lookup().lookupClass()
-//            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
-//        }
-//    }
-
-//    private static void validateConnection(String jdbcUrl, DBConfig db, String username, String password, IConnProcessor p) {
-//        Connection conn = null;
-//        try {
-//            conn = getConnection(jdbcUrl, username, password);
-//            p.vist(conn);
-//        } catch (Exception e) {
-//            throw new IllegalStateException(e);
-//        } finally {
-//            if (conn != null) {
-//                try {
-//                    conn.close();
-//                } catch (Throwable e) {
-//                }
-//            }
-//        }
-//    }
-
-//    private static Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-//        // 密码可以为空
-//        return DriverManager.getConnection(jdbcUrl, username, StringUtils.trimToNull(password));
-//    }
 
 
     // @TISExtension

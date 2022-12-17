@@ -196,6 +196,16 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
     }
 
+    @Override
+    public void visitFirstConnection(IConnProcessor connProcessor) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void refectTableInDB(List<String> tabs, Connection conn) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
     interface ISessionVisit {
         void visit(Session session);
     }

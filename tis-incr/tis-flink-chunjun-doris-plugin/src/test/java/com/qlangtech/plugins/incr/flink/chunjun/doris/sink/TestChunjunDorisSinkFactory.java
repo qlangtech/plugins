@@ -289,6 +289,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
         }
     }
 
+    @Override
     protected BasicDataXRdbmsWriter createDataXWriter() {
         DataXDorisWriter dataXWriter = new DataXDorisWriter() {
             @Override
@@ -297,10 +298,11 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
             }
         };
 
-        dataXWriter.loadProps = BasicDorisStarRocksWriter.getDftLoadProps();
+        dataXWriter.loadProps = DataXDorisWriter.getDftLoadProps();
         return dataXWriter;
     }
 
+    @Override
     protected ChunjunSinkFactory getSinkFactory() {
         ChunjunDorisSinkFactory dorisSinkFactory = new ChunjunDorisSinkFactory();
         ChunjunSqlType chunjunSqlType = new ChunjunSqlType();

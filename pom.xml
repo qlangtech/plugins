@@ -61,6 +61,7 @@
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>
         <module>tis-plugin-test/tis-testcontainer-oracle</module>
+        <module>tis-plugin-test/tis-testcontainer-starrocks</module>
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
@@ -163,6 +164,13 @@
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-testcontainer-oracle</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-testcontainer-starrocks</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

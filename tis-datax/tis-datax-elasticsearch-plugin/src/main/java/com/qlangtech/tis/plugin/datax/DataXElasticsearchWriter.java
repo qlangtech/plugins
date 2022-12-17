@@ -116,7 +116,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
 
     public ElasticEndpoint getToken() {
-        ElasticEndpoint aliyunToken = ParamsConfig.getItem(endpoint, ElasticEndpoint.KEY_DISPLAY_NAME);
+        ElasticEndpoint aliyunToken = ParamsConfig.getItem(endpoint, ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME);
         return aliyunToken;
     }
 
@@ -434,7 +434,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_DISPLAY_NAME));
+            registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME));
         }
 
         @Override

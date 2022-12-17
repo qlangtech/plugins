@@ -76,13 +76,6 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
 
         BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
                 , dataxProcessor.getTabAlias().getWithCheckNotNull(sourceTableName), false);
-//        ChunjunSinkFactory.CreateChunjunSinkFunctionResult sinkFunctionResult
-//                = TISDorisDynamicTableFactory.createChunjunSinkFunctionResult(dataXName, sourceTableName);
-
-        // rowDataSinkFunc.
-
-//        TableCols sinkColsMeta = sinkFunctionResult.getSinkColsMeta();
-//        SinkFunction<RowData> sinkFunction = sinkFunctionResult.getSinkFunction();
         return new ChunjunStreamTableSink(false, endType, rowDataSinkFunc);
     }
 
@@ -101,15 +94,8 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
                 , BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc) {
             this.rowDataSinkFunc = rowDataSinkFunc;
             this.endType = endType;
-            // this.sinkColsMeta = sinkColsMeta;
-            // this.parallelism = parallelism;
             this.isAppendOnly = isAppendOnly;
         }
-
-//        @Override
-//        public DataType getConsumedDataType() {
-//            return getTableSchema().toRowDataType();
-//        }
 
         @Override
         public void setKeyFields(String[] primaryKeys) {
@@ -127,54 +113,28 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
             }
         }
 
-//        @Override
-//        public TypeInformation<Tuple2<Boolean, Row>> getOutputType() {
-//            return Types.TUPLE(new TypeInformation[]{Types.BOOLEAN, this.getRecordType()});
-//        }
-
         @Override
         public TypeInformation<Row> getRecordType() {
             return getTableSchema().toRowType();
             //return null;
         }
 
-//        @Override
-//        public DataType getConsumedDataType() {
-//            return super.getConsumedDataType();
-//        }
-
         @Override
         public DataStreamSink<?> consumeDataStream(DataStream<Tuple2<Boolean, Row>> dataStream) {
-            // return dataStream.addSink(sinkFunction).setParallelism(this.parallelism);
-            // TupleTypeInfo<Tuple2<Boolean, Row>> type = (TupleTypeInfo<Tuple2<Boolean, Row>>) dataStream.getType();
             TableSchema schema = getTableSchema();
-            // TypeInformation<RowData> typeAt = type.getTypeAt(1);
-            //  RowRowConverter rConverter = RowRowConverter.create(TypeConversions.fromLegacyInfoToDataType(typeAt));
             RowRowConverter rConverter = RowRowConverter.create(schema.toRowDataType());
             DTOStream rowData = DTOStream.createRowData(dataStream.map((row) -> {
                 return rConverter.toInternal(row.f1);
             }));
 
             return this.rowDataSinkFunc.add2Sink(rowData);
-            //  return .addSink(this.sinkFunction).name("row2rowData").setParallelism(this.parallelism);
         }
-
-//        @Override
-//        public DataStreamSink<?> consumeDataStream(DataStream<RowData> dataStream) {
-//            return dataStream.addSink(sinkFunction).setParallelism(this.parallelism);
-//        }
 
         @Override
         public TableSink<Tuple2<Boolean, Row>> configure(String[] strings, TypeInformation<?>[] typeInformations) {
             // return null;
             throw new UnsupportedOperationException();
         }
-
-//        @Override
-//        public TableSink<RowData> configure(String[] strings, TypeInformation<?>[] typeInformations) {
-//            // return new DorisStreamTableSink(sinkFunction, sinkColsMeta, parallelism);
-//            throw new UnsupportedOperationException();
-//        }
 
         @Override
         public final TableSchema getTableSchema() {
@@ -188,10 +148,6 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
                     pks.add(col.name);
                 }
             }
-//            if (primaryKeys == null || primaryKeys.length < 1) {
-//                throw new IllegalStateException("primary keys can not be empty");
-//            }
-            //   schemaBuilder.primaryKey(primaryKeys);
             if (pks.size() > 0) {
                 schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
             }
@@ -213,7 +169,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
     @Override
     public Map<String, String> requiredContext() {
         Map<String, String> context = Maps.newHashMap();
-        context.put(CONNECTOR_TYPE, ChunjunSqlType.getTableSinkTypeName(this.endType));// TISDorisDynamicTableFactory.IDENTIFIER);
+        context.put(CONNECTOR_TYPE, ChunjunSqlType.getTableSinkTypeName(this.endType));
         context.put(CONNECTOR_PROPERTY_VERSION, "1");
         return context;
     }

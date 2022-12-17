@@ -294,10 +294,9 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
         }
 
 
-        protected abstract String getRowDelimiterKey() ;
+        protected abstract String getRowDelimiterKey();
 
-        protected abstract String getColSeparatorKey() ;
-
+        protected abstract String getColSeparatorKey();
 
 
 //        @Override

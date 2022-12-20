@@ -19,12 +19,14 @@
 package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
@@ -44,6 +46,11 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
     protected static final String DS_TYPE_MYSQL_V8 = DS_TYPE_MYSQL + "-V8";
+    /**
+     * 分表策略
+     */
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public SplitTableStrategy splitTableStrategy;
 
     //https://blog.csdn.net/Shadow_Light/article/details/100749537
     /**
@@ -51,6 +58,25 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
      */
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
+
+    @Override
+    protected TableInDB createTableInDB() {
+        return this.splitTableStrategy.createTableInDB();
+    }
+
+    @Override
+    public List<String> getAllPhysicsTabs(DataXJobSubmit.TableDataXEntity tabEntity) {
+        // return super.getAllPhysicsTabs(tabEntity);
+        return this.splitTableStrategy.getAllPhysicsTabs(this, tabEntity);
+    }
+
+    @Override
+    protected EntityName logicTable2PhysicsTable(String jdbcUrl, EntityName table) {
+        // return super.logicTable2PhysicsTable(table);
+        SplitTableStrategy.DBPhysicsTable physicsTable = this.splitTableStrategy.getMatchedPhysicsTable(this, jdbcUrl, table);
+        return physicsTable.getPhysicsTab();
+    }
+
 
     @Override
     public final String getEscapeChar() {
@@ -249,7 +275,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             int[] count = new int[1];
 
             try {
-                validateConnection(jdbcUrl, (conn) -> {
+                validateConnection(jdbcUrl, (url, conn) -> {
                     Statement statement = null;
                     ResultSet result = null;
                     try {

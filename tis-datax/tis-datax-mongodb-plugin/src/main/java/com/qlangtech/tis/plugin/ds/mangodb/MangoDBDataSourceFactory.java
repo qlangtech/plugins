@@ -36,7 +36,6 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,6 +94,11 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return iface == MongoClient.class;
     }
@@ -115,12 +119,12 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     @Override
     public TableInDB getTablesInDB() {
         MongoClient mongoClient = null;
-        TableInDB tabs = new TableInDB();
+        TableInDB tabs = TableInDB.create();
         try {
             mongoClient = createMongoClient();
             MongoDatabase database = mongoClient.getDatabase(this.dbName);
             for (String tab : database.listCollectionNames()) {
-                tabs.add(tab);
+                tabs.add(this.address, tab);
             }
             //  Lists.newArrayList(database.listCollectionNames());
             return tabs;
@@ -160,10 +164,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
+//    @Override
+//    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+//        throw new UnsupportedOperationException();
+//    }
 
     private MongoClient createMongoClient() {
         MongoClient mongoClient = null;

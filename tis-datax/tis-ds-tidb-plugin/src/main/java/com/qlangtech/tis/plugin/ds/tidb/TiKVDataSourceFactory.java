@@ -40,8 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -95,6 +93,11 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public String identityValue() {
         return this.name;
     }
@@ -111,10 +114,10 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
+//    @Override
+//    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+//        throw new UnsupportedOperationException();
+//    }
 
     public DataDumpers getDataDumpers(TISTable table, Optional<Long> regionId) {
 // target cols
@@ -207,12 +210,12 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     @Override
     public TableInDB getTablesInDB() {
         return this.openTiDB((s, c, d) -> {
-            TableInDB tables = new TableInDB();
+            TableInDB tables = TableInDB.create();
             List<TiTableInfo> tabs = c.listTables(d);
             // either view or sequence shall be filter
             tabs.stream().filter((tbl) -> (tbl != null && !(tbl.isView() || tbl.isSequence())))
                     .map((tt) -> tt.getName()).forEach((tab) -> {
-                tables.add(tab);
+                tables.add(this.pdAddrs, tab);
             });
             return tables;
         });

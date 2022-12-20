@@ -84,7 +84,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet result = null;
         try {
@@ -102,7 +102,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 //        String[] types = {"TABLE"};
 //        ResultSet tablesResult = metaData.getTables(conn.getCatalog(), "public", "%", types);
             while (result.next()) {
-                tabs.add(result.getString(1));
+                tabs.add(jdbcUrl, result.getString(1));
             }
         } finally {
             this.closeResultSet(result);
@@ -177,7 +177,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             try {
                 AtomicBoolean valid = new AtomicBoolean(true);
                 PGDataSourceFactory ds = (PGDataSourceFactory) dsFactory;
-                dsFactory.visitFirstConnection((c) -> {
+                dsFactory.visitFirstConnection((jdbcUrl, c) -> {
                     PgConnection conn = (PgConnection) c;
                     if (!StringUtils.equals(ds.tabSchema, conn.getSchema())) {
                         msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");

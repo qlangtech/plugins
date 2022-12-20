@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugin.ds;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.db.parser.DBConfigParser;
 import com.qlangtech.tis.extension.INotebookable;
@@ -52,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -133,9 +136,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(Connection conn, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, EntityName table) throws TableNotFoundException {
         try {
-            return parseTableColMeta(conn, table);
+            return parseTableColMeta(conn.getUrl(), conn.getConnection(), table);
         } catch (TableNotFoundException e) {
             throw e;
 
@@ -182,8 +185,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
-    @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    //@Override
+    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
@@ -191,7 +194,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
             resultSet = statement.executeQuery(getRefectTablesSql());
             //   resultSet = statement.getResultSet();
             while (resultSet.next()) {
-                tabs.add(resultSet.getString(1));
+                tabs.add(jdbcUrl, resultSet.getString(1));
             }
         } finally {
             if (resultSet != null) {
@@ -203,18 +206,34 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
+    private static transient Cache<String, TableInDB> tabsInDBCache
+            = CacheBuilder.newBuilder().expireAfterWrite(4, TimeUnit.MINUTES)
+            .build();
+
+    @Override
+    public void refresh() {
+        this.tabsInDBCache.invalidate(this.identityValue());
+    }
+
     @Override
     public TableInDB getTablesInDB() {
-        try {
-            final TableInDB tabs = new TableInDB();
 
-            this.visitFirstConnection((conn) -> {
-                refectTableInDB(tabs, conn);
+        try {
+            return tabsInDBCache.get(this.identityValue(), () -> {
+                final TableInDB tabs = createTableInDB();
+
+                this.visitFirstConnection((jdbcUrl, conn) -> {
+                    refectTableInDB(tabs, jdbcUrl, conn);
+                });
+                return tabs;
             });
-            return tabs;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected TableInDB createTableInDB() {
+        return TableInDB.create();
     }
 
     @Override
@@ -372,7 +391,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
             ddlTestFile.add(ddFile);
         }
 
-        this.visitAllConnection((connection) -> {
+        this.visitAllConnection((jdbcUrl, connection) -> {
             for (URL ddl : ddlTestFile) {
                 try (InputStream reader = ddl.openStream()) {
                     try (Statement statement = connection.createStatement()) {

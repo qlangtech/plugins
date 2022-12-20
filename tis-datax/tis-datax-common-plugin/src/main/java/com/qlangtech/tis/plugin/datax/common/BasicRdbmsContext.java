@@ -46,22 +46,26 @@ public abstract class BasicRdbmsContext<PLUGIN, DS extends DataSourceFactory> {
     }
 
     public String getColsQuotes() {
-        return getColumnWithLink((val) -> "\"" + val + "\"");
+        return getEntitiesWithQuotation(this.cols);
     }
 
     public String getCols() {
-        return getColumnWithLink((val) -> val);
+        return getEntitiesWith(this.cols, (val) -> val);
     }
 
     protected String colEscapeChar() {
         return "`";
     }
 
-    private String getColumnWithLink(Function<String, String> wrapper) {
-        if (CollectionUtils.isEmpty(this.cols)) {
+    protected String getEntitiesWithQuotation(List<String> cols) {
+        return getEntitiesWith(cols, (val) -> "\"" + val + "\"");
+    }
+
+    private String getEntitiesWith(List<String> cols, Function<String, String> wrapper) {
+        if (CollectionUtils.isEmpty(cols)) {
             throw new IllegalStateException("cols can not be empty");
         }
-        return this.cols.stream().map(r -> (escapeEntity(r))).map(wrapper).collect(Collectors.joining(","));
+        return cols.stream().map(r -> (escapeEntity(r))).map(wrapper).collect(Collectors.joining(","));
     }
 
     protected String escapeEntity(String e) {

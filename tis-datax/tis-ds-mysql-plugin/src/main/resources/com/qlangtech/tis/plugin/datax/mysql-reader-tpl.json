@@ -6,12 +6,19 @@
         "jdbcUrl": [
           "${reader.jdbcUrl}"
         ],
-        "querySql": [
-          "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
-        ]
+#if($reader.splitTable)
+ "table": [${reader.splitTabs}]
+#else
+ "querySql": [
+     "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
+   ]
+#end
       }
-    ],
-    "dataxName": "${reader.dataXName}",
+    ]
+    #if($reader.splitTable)
+    ,"column": [${reader.colsQuotes}]
+    #else
+    ,"dataxName": "${reader.dataXName}",
     "password": "${reader.password}",
     "username": "${reader.username}"
   }

@@ -154,7 +154,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
                     boolean tableExist = false;
                     try {
-                        dsFactory.getTableMetadata(conn, tab);
+                        dsFactory.getTableMetadata(new DataSourceMeta.JDBCConnection(conn, jdbcUrl), tab);
                         tableExist = true;
                     } catch (TableNotFoundException e) {
                         logger.warn(e.toString());

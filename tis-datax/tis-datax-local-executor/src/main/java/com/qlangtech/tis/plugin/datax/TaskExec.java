@@ -25,9 +25,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
-import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +33,7 @@ import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,7 +45,8 @@ public class TaskExec {
 
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
-            , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, final List<String> dependencyTasks) {
+            , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, Optional<List<String>> ptabs
+            , final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         //  AtomicBoolean success = new AtomicBoolean(false);
@@ -103,10 +103,18 @@ public class TaskExec {
                             return localDataXJobSubmit.getWorkingDirectory();
                         }
                     };
+                    CuratorDataXTaskMessage dataXJob = null;
+                    if (ptabs.isPresent()) {
+                        for (String splitPhysicsTab : ptabs.get()) {
+                            dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+                            jobConsumer.consumeMessage(dataXJob);
+                        }
+                    } else {
+                        dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+                        jobConsumer.consumeMessage(dataXJob);
+                    }
 
-                    CuratorDataXTaskMessage dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
 
-                    jobConsumer.consumeMessage(dataXJob);
                     // success.set(true);
                 } catch (Throwable e) {
                     //  e.printStackTrace();

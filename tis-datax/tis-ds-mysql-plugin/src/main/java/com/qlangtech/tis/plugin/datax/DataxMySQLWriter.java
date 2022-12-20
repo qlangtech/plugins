@@ -115,7 +115,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 && tableMapper.hasNotUseAlias()) {
             DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
             MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-            dsFactory.visitFirstConnection((conn) -> {
+            dsFactory.visitFirstConnection((jdbcUrl, conn) -> {
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom())) {
                         if (!resultSet.next()) {
@@ -213,7 +213,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 //                        if (type.columnSize < 1) {
 //                            throw new IllegalStateException("col:" + col.getName() + type + " colsize can not small than 1");
 //                        }
-                       // return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                        // return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
 
                         return "BIGINT " + type.getUnsignedToken();
                     }

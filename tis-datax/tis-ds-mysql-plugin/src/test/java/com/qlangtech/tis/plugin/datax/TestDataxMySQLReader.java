@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.PluginFormProperties;
@@ -287,10 +288,10 @@ public class TestDataxMySQLReader extends BasicTest {
         assertEquals(16, readerContextCount);
 
 
-        Map<String, List<String>> groupedInfo = subTasks.getGroupedInfo();
+        Map<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = subTasks.getGroupedInfo();
         assertNotNull("groupedInfo can not be null", groupedInfo);
 
-        List<String> subTabs = groupedInfo.get(TestSelectedTabs.tabNameOrderDetail);
+        List<DataXCfgGenerator.DBDataXChildTask> subTabs = groupedInfo.get(TestSelectedTabs.tabNameOrderDetail);
         assertEquals(8, subTabs.size());
 
         subTabs = groupedInfo.get(TestSelectedTabs.tabNameTotalpayinfo);

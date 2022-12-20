@@ -78,7 +78,7 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
         Assert.assertNotNull(dataSourceFactory);
 
         dataSourceFactory.visitFirstConnection((conn) -> {
-            TableInDB tabs = new TableInDB();
+            TableInDB tabs =  TableInDB.create();
             dataSourceFactory.refectTableInDB(tabs, conn);
 
             System.out.println("refectTableInDB:" + tabs.getTabs().stream().collect(Collectors.joining(",")));

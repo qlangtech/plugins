@@ -15,5 +15,9 @@
         "val": false
       }
     ]
+  },
+  "splitTableStrategy": {
+    "label": "表分区策略",
+    "dftVal": "none"
   }
 }

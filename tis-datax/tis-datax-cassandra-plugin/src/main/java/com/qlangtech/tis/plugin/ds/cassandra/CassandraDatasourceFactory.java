@@ -74,6 +74,10 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
+    @Override
+    public void refresh() {
+
+    }
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.identity})
     public Boolean useSSL;
@@ -160,14 +164,14 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
     @Override
     public TableInDB getTablesInDB() {
-        TableInDB tables = new TableInDB();
+        TableInDB tables = TableInDB.create();
         processSession((session) -> {
             ResultSet resultSet = session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = '" + this.dbName + "' ");
             Iterator<Row> rows = resultSet.iterator();
             Row row = null;
             while (rows.hasNext()) {
                 row = rows.next();
-                tables.add(row.getString(0));
+                tables.add(this.nodeDesc, row.getString(0));
             }
         });
         return tables;
@@ -198,13 +202,13 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
+
+//    @Override
+//    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+//        throw new UnsupportedOperationException();
+//    }
 
     interface ISessionVisit {
         void visit(Session session);

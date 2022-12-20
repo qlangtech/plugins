@@ -36,6 +36,12 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
 
     private final IDataSourceDumper dumper;
 
+    /**
+     * @param jobName
+     * @param sourceTableName 逻辑表表名
+     * @param dumper
+     * @param reader
+     */
     public RdbmsReaderContext(String jobName, String sourceTableName, IDataSourceDumper dumper, READER reader) {
         super(reader, (reader != null) ? (DS) reader.getDataSourceFactory() : null);
         this.name = jobName;
@@ -50,10 +56,12 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     public String getSourceTableName() {
         return this.sourceTableName;
     }
+
     @Override
     public String getSourceEntityName() {
         return this.sourceTableName;
     }
+
     public String getJdbcUrl() {
         return this.dumper.getDbHost();
     }
@@ -75,8 +83,6 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     public String getTaskName() {
         return this.name;
     }
-
-
 
 
 }

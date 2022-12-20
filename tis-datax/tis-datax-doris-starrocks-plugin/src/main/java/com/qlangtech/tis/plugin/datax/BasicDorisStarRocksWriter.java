@@ -245,7 +245,8 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
         @Override
         public DorisType decimalType(DataType type) {
-            return new DorisType(type, "DECIMAL(" + type.columnSize + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
+            // doris or starRocks precision 不能超过超过半27
+            return new DorisType(type, "DECIMAL(" + Math.min(type.columnSize, 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
         }
     };
 

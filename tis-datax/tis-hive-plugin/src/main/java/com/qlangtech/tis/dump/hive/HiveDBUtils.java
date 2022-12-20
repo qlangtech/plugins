@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -109,6 +108,26 @@ public class HiveDBUtils {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
+    public static String createHiveJdbcUrl(String hiveHost, String defaultDbName, HiveUserToken userToken) {
+        StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
+
+        userToken.accept(new IHiveUserTokenVisitor() {
+            @Override
+            public void visit(IUserNamePasswordHiveUserToken ut) {
+            }
+
+            @Override
+            public void visit(IKerberosUserToken token) {
+                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+                jdbcUrl.append(";principal=")
+                        .append(kerberosCfg.principal)
+                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+            }
+        });
+        return jdbcUrl.toString();
+    }
+
+
     // private static final String hiveHost;
     private BasicDataSource createDatasource(String hiveHost, String defaultDbName, HiveUserToken userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
@@ -133,7 +152,7 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
+        String jdbcUrl = createHiveJdbcUrl(hiveHost, defaultDbName, userToken);// new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
 
         // if (userToken.isPresent()) {
         userToken.accept(new IHiveUserTokenVisitor() {
@@ -145,10 +164,10 @@ public class HiveDBUtils {
 
             @Override
             public void visit(IKerberosUserToken token) {
-                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
-                jdbcUrl.append(";principal=")
-                        .append(kerberosCfg.principal)
-                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+//                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+//                jdbcUrl.append(";principal=")
+//                        .append(kerberosCfg.principal)
+//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
             }
         });
 

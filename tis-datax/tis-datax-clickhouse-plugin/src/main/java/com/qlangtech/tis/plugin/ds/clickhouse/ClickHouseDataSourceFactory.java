@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -65,7 +64,8 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
         return this.name;
     }
 
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    @Override
+    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
         DatabaseMetaData metaData = conn.getMetaData();
 
         ResultSet tablesResult = metaData.getTables(null, this.dbName, null, new String[]{"TABLE"});
@@ -75,7 +75,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             if (!StringUtils.equals(this.dbName, tablesResult.getString(2))) {
                 continue;
             }
-            tabs.add(tablesResult.getString(3));
+            tabs.add(jdbcUrl, tablesResult.getString(3));
         }
     }
 

@@ -52,7 +52,7 @@ public class TestMySqlContainer {
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         DataSourceFactory dsFactory = MYSQL_CONTAINER.createMySqlDataSourceFactory(new TargetResName("x"));// MySqlContainer.createMySqlDataSourceFactory(new TargetResName("x"), MYSQL_CONTAINER);
         dsFactory.visitFirstConnection((conn) -> {
-            TableInDB tabs = new TableInDB();
+            TableInDB tabs =  TableInDB.create();
             dsFactory.refectTableInDB(tabs, conn);
             List<String> examples = Lists.newArrayList("base", "instancedetail", "stu");
             for (String tab : examples) {

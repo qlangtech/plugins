@@ -132,25 +132,30 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
-        try (Connection conn = this.getConnection(null)) {
-            connProcessor.vist(conn);
+        final String hiveJdbcUrl = createHiveJdbcUrl();
+        try (Connection conn = this.getConnection(hiveJdbcUrl)) {
+            connProcessor.vist(hiveJdbcUrl, conn);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+    private String createHiveJdbcUrl() {
+        return HiveDBUtils.createHiveJdbcUrl(this.hiveAddress, this.dbName, getUserToken());
+    }
+
     @Override
-    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public final TableInDB getTablesInDB() {
-
+        String hiveJdbcUrl = createHiveJdbcUrl();
         try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
-            TableInDB tabs = new TableInDB();
+            TableInDB tabs = TableInDB.create();
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
-            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(tab));
+            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
             return tabs;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -208,7 +213,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
-                dsFactory.visitFirstConnection((conn) -> {
+                dsFactory.visitFirstConnection((jdbcUrl, conn) -> {
                     try (Statement statement = conn.createStatement()) {
                         try (ResultSet result = statement.executeQuery("select 1;")) {
                             if (!result.next()) {

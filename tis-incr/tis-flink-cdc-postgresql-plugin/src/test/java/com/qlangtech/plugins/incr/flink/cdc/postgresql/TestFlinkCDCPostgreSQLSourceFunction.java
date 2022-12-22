@@ -25,6 +25,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -86,9 +87,9 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
             }
 
             @Override
-            protected void startProcessConn(Connection conn) throws SQLException {
+            protected void startProcessConn(DataSourceMeta.JDBCConnection conn) throws SQLException {
                 super.startProcessConn(conn);
-                conn.setAutoCommit(false);
+                conn.getConnection().setAutoCommit(false);
             }
         };
 

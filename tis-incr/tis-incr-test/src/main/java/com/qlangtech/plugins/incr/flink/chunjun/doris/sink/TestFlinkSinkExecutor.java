@@ -64,10 +64,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
+import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -299,7 +296,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 //                jdbcUrls[0] = jdbcUrl;
 //            });
 
-            this.getDsFactory().visitFirstConnection((conn) -> {
+            this.getDsFactory().visitFirstConnection((c) -> {
+                Connection conn = c.getConnection();
                 try (Statement statement = conn.createStatement()) {
                     // + " where id='" + pk + "'"
                     try (ResultSet resultSet = statement.executeQuery(createDDL.getSelectAllScript())) {
@@ -313,23 +311,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
                 }
             });
 
-//            try (Connection conn = this.getDsFactory().getConnection(jdbcUrls[0])) {
-//
-//            }
-
-//            DBConfig dbConfig = dsFactory.getDbConfig();
-//            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-//                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-//
-//
-//
-//                } catch (Exception e) {
-//                    throw new RuntimeException(e);
-//                }
-//            });
             this.verifyAll();
-
-
         } catch (Throwable e) {
             Thread.sleep(14000);
             throw new RuntimeException(e);

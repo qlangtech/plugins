@@ -36,7 +36,6 @@ import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClient;
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.apache.zookeeper.data.Stat;
 import org.easymock.EasyMock;
 
 import java.io.File;
@@ -58,7 +57,8 @@ public class TestLocalDataXJobSubmit extends TestCase {
     }
 
     public static final int TaskId = 1;
-    public static final String dataXfileName = "customer_order_relation_0.json";
+    public static final String dump_table_name = "customer_order_relation";
+    public static final String dataXfileName = dump_table_name + "_0.json";
     public static final String dataXName = "baisuitestTestcase";
     public static final String statusCollectorHost = "127.0.0.1:3489";
 
@@ -88,7 +88,9 @@ public class TestLocalDataXJobSubmit extends TestCase {
         EasyMock.expect(taskContext.getTaskId()).andReturn(TaskId).anyTimes();
 
         int preSuccessTaskId = 99;
-        PhaseStatusCollection preSuccessTask = new PhaseStatusCollection(preSuccessTaskId, new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump));
+        PhaseStatusCollection preSuccessTask
+                = new PhaseStatusCollection(preSuccessTaskId
+                , new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump));
         DumpPhaseStatus preDumpStatus = new DumpPhaseStatus(preSuccessTaskId);
         DumpPhaseStatus.TableDumpStatus tableDumpStatus = preDumpStatus.getTable(dataXfileName);
         tableDumpStatus.setAllRows(LocalDataXJobMainEntrypoint.testAllRows);
@@ -113,20 +115,24 @@ public class TestLocalDataXJobSubmit extends TestCase {
 //         RpcServiceReference statusRpc
 //           IDataxProcessor dataxProcessor
 //        , String dataXfileName,
-        IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName, Collections.emptyList());
+
+        DataXJobSubmit.TableDataXEntity dataXEntity
+                = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXfileName,dump_table_name);
+        IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(
+                dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
 
         // RunningStatus running = getRunningStatus(dataXJob);
         // assertTrue("running.isSuccess", running.isSuccess());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointThrowException.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName, Collections.emptyList());
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
 
 //        running = getRunningStatus(dataXJob);
 //        assertFalse("shall faild", running.isSuccess());
 //        assertTrue("shall complete", running.isComplete());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointCancellable.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXfileName, Collections.emptyList());
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
         //  running = getRunningStatus(dataXJob, false);
         Thread.sleep(2000);
         dataXJob.cancel();

@@ -51,14 +51,14 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         return InstanceType.EMBEDDED;
     }
 
+
     @Override
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , IDataxProcessor dataxProcessor, String dataXfileName, List<String> dependencyTasks) {
+            , IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, List<String> dependencyTasks) {
 
-
-        CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), dataXfileName);
+        CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), tabDataXEntity.getFileName());
         Integer jobId = jobDTO.getJobId();
-        String jobName = jobDTO.getJobName();
+        DataxExecutor.DataXJobInfo jobName = DataxExecutor.DataXJobInfo.parse(jobDTO.getJobName());
         String dataXName = jobDTO.getDataXName();
 
 
@@ -72,7 +72,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {
-                return dataXfileName;
+                return tabDataXEntity.getFileName();
             }
 
             @Override

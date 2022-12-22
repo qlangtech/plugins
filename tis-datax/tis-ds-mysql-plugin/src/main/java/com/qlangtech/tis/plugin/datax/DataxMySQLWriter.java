@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Types;
@@ -115,7 +116,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 && tableMapper.hasNotUseAlias()) {
             DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
             MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-            dsFactory.visitFirstConnection((jdbcUrl, conn) -> {
+            dsFactory.visitFirstConnection((c) -> {
+                Connection conn = c.getConnection();
                 try (Statement statement = conn.createStatement()) {
                     try (ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom())) {
                         if (!resultSet.next()) {

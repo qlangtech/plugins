@@ -41,10 +41,8 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.TISCollectionUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.common.*;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -85,6 +83,7 @@ public class TestDataXHudiWriter {
     // private static final String targetTableName ="";
     private static final Logger logger = LoggerFactory.getLogger(TestDataXHudiWriter.class);
     private static final Integer taskId = 999;
+    final String jdbcUrl = "jdbcurl";
 
     @ClassRule
     public static TemporaryFolder folder = new TemporaryFolder();
@@ -207,7 +206,7 @@ public class TestDataXHudiWriter {
         genCfgs.setGenTime(1);
         genCfgs.setGroupedChildTask(
                 Collections.singletonMap(tableFullTypes
-                        , Lists.newArrayList(tableFullTypes + "_0" + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX)));
+                        , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, tableFullTypes + "_0"))));
         genCfgs.write2GenFile(dataxCfgDir);
 
 
@@ -284,6 +283,7 @@ public class TestDataXHudiWriter {
     @Test
     public void testRealDump() throws Exception {
 
+
         MDC.put(JobCommon.KEY_COLLECTION
                 , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
         MDC.put(JobCommon.KEY_TASK_ID, "123");
@@ -306,7 +306,7 @@ public class TestDataXHudiWriter {
             DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs(dataXCfgDir);
             genCfg.setGenTime(HudiWriter.timestamp);
             genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
-                    , Lists.newArrayList(WriterTemplate.TAB_customer_order_relation + "_0")));
+                    , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, WriterTemplate.TAB_customer_order_relation + "_0"))));
             genCfg.write2GenFile(dataXCfgDir);
 
             //   EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);

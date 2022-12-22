@@ -29,6 +29,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
@@ -86,8 +87,8 @@ public class TestOracleDataSourceFactory {
     @Test
     public void testSqlTime() {
         OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
-        dsFactory.visitAllConnection((conn) -> {
-
+        dsFactory.visitAllConnection((c) -> {
+            Connection conn = c.getConnection();
 //            PreparedStatement statement = conn.prepareStatement("insert into \"time_test\" ( \"id\" , \"time_c\") values(?,?)");
 //
 //            statement.setInt(1, 1234);

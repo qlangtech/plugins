@@ -134,7 +134,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     public void visitFirstConnection(IConnProcessor connProcessor) {
         final String hiveJdbcUrl = createHiveJdbcUrl();
         try (Connection conn = this.getConnection(hiveJdbcUrl)) {
-            connProcessor.vist(hiveJdbcUrl, conn);
+            connProcessor.vist(new JDBCConnection(conn, hiveJdbcUrl));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -213,7 +213,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
-                dsFactory.visitFirstConnection((jdbcUrl, conn) -> {
+                dsFactory.visitFirstConnection((c) -> {
+                    Connection conn = c.getConnection();
                     try (Statement statement = conn.createStatement()) {
                         try (ResultSet result = statement.executeQuery("select 1;")) {
                             if (!result.next()) {

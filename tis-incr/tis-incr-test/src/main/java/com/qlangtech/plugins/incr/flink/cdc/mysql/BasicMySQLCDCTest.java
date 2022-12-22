@@ -44,6 +44,7 @@ import org.junit.Before;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -159,7 +160,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
                 dataSourceFactory.visitFirstConnection((conn) -> {
 
-                    insertTestRow(conn, stuRow);
+                    insertTestRow(conn.getConnection(), stuRow);
 
 //                    Statement statement = conn.createStatement();
 //                    statement.execute("INSERT INTO `stu` (`id`,`name`,`school`,`nickname`,`age`,`class_num`,`score`,`phone`,`email`,`ip`,`address`)\n" +
@@ -316,8 +317,9 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
                 BasicDataSourceFactory dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
                 Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
-                dataSourceFactory.visitFirstConnection((conn) -> {
-                    startProcessConn(conn);
+                dataSourceFactory.visitFirstConnection((cc) -> {
+                    Connection conn = cc.getConnection();
+                    startProcessConn(cc);
 
                     for (TestRow t : exampleRows) {
                         RowValsExample vals = t.vals;

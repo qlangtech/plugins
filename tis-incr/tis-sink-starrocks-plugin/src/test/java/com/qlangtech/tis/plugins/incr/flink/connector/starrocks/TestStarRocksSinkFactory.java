@@ -279,7 +279,7 @@ public class TestStarRocksSinkFactory extends BaseStarRocksTestCase implements T
 
         sourceFactory.visitFirstConnection((conn) -> {
             // boolean findVal = false;
-            try (Statement statement = conn.createStatement()) {
+            try (Statement statement = conn.getConnection().createStatement()) {
 
                 //+ " where " + colId + "='" + pkVal + "'"
 

@@ -38,8 +38,6 @@ import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.TISCollectionUtils;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
@@ -110,7 +108,10 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //        File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, this.hudiWriter.dataXName);
 //        DataXCfgGenerator.GenerateCfgs generateCfgs = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
 //        return generateCfgs.getGroupedChildTask().get(tableName);
-        return this.generateCfgs.getDataXTaskDependencies(hudiTab.getName());
+        List<DataXCfgGenerator.DBDataXChildTask> dependencies
+                = this.generateCfgs.getDataXTaskDependencies(hudiTab.getName());
+
+        throw new UnsupportedOperationException("getTaskDependencies");
     }
 
     @Override

@@ -216,7 +216,7 @@ public abstract class CUDCDCTestSuit {
             System.out.println("start to insert");
             for (TestRow r : exampleRows) {
                 visitConn((conn) -> {
-                    insertTestRow(conn, r);
+                    insertTestRow(conn.getConnection(), r);
                 });
                 sleepForAWhile();
 
@@ -243,7 +243,8 @@ public abstract class CUDCDCTestSuit {
                 List<Map.Entry<String, RowValsUpdate.UpdatedColVal>> cols = exceptRow.getUpdateValsCols();
 
 
-                visitConn((conn) -> {
+                visitConn((c) -> {
+                    Connection conn = c.getConnection();
                     try {
                         String updateSql = String.format("UPDATE " + getColEscape() + createTableName(tabName) + getColEscape() + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
                                 , cols.stream().map((e) -> getColEscape() + e.getKey() + getColEscape() + " = ?").collect(Collectors.joining(","))
@@ -288,7 +289,8 @@ public abstract class CUDCDCTestSuit {
 
             System.out.println("start to test delete");
             // 执行删除
-            this.visitConn((conn) -> {
+            this.visitConn((c) -> {
+                Connection conn = c.getConnection();
                 for (TestRow r : exampleRows) {
                     if (!r.execDelete()) {
                         continue;
@@ -495,8 +497,8 @@ public abstract class CUDCDCTestSuit {
         return statement.executeUpdate(sql);
     }
 
-    protected void startProcessConn(Connection conn) throws SQLException {
-        conn.setAutoCommit(false);
+    protected void startProcessConn(DataSourceMeta.JDBCConnection conn) throws SQLException {
+        conn.getConnection().setAutoCommit(false);
     }
 
     protected IResultRows getTestBasicFlinkSourceHandle(String tabName) {

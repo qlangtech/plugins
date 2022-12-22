@@ -33,6 +33,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -125,7 +126,8 @@ public class OracleDSFactoryContainer {
         System.out.println(oracleContainer.getJdbcUrl());
         System.out.println(oracleDS.toString());
 
-        oracleDS.visitAllConnection((conn) -> {
+        oracleDS.visitAllConnection((c) -> {
+            Connection conn = c.getConnection();
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery("select 1,sysdate from dual")) {
                     Assert.assertTrue(resultSet.next());
@@ -141,7 +143,7 @@ public class OracleDSFactoryContainer {
                 throw new RuntimeException(String.format("table %s not found.", testTabName));
             }
             // conn.getMetaData().getTables()
-            List<ColumnMetaData> cols = oracleDS.getTableMetadata(conn, EntityName.parse(testTabName));
+            List<ColumnMetaData> cols = oracleDS.getTableMetadata(c, EntityName.parse(testTabName));
             for (ColumnMetaData col : cols) {
                 System.out.println("key:" + col.getName() + ",type:" + col.getType());
             }
@@ -172,7 +174,8 @@ public class OracleDSFactoryContainer {
             ddlTestFile.add(ddFile);
         }
 
-        oracleDS.visitAllConnection((connection) -> {
+        oracleDS.visitAllConnection((c) -> {
+            Connection connection = c.getConnection();
             for (URL ddl : ddlTestFile) {
                 try (InputStream reader = ddl.openStream()) {
 

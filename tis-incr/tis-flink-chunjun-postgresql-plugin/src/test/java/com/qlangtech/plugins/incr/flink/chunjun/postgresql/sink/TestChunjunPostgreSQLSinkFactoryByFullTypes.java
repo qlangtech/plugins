@@ -34,10 +34,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 
 /**
@@ -99,7 +96,8 @@ public class TestChunjunPostgreSQLSinkFactoryByFullTypes extends TestFlinkSinkEx
     @Test
     public void testBitCol() {
 
-        pgDSFactory.visitFirstConnection((conn) -> {
+        pgDSFactory.visitFirstConnection((c) -> {
+            Connection conn = c.getConnection();
             Statement statement = conn.createStatement();
 
             statement.execute("CREATE TABLE \"public\".\"full_types_bit\"\n" +

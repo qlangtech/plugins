@@ -138,7 +138,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     @Override
     public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, EntityName table) throws TableNotFoundException {
         try {
-            return parseTableColMeta(conn.getUrl(), conn.getConnection(), table);
+            return parseTableColMeta(conn.getUrl(), conn, table);
         } catch (TableNotFoundException e) {
             throw e;
 
@@ -222,8 +222,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
             return tabsInDBCache.get(this.identityValue(), () -> {
                 final TableInDB tabs = createTableInDB();
 
-                this.visitFirstConnection((jdbcUrl, conn) -> {
-                    refectTableInDB(tabs, jdbcUrl, conn);
+                this.visitFirstConnection((conn) -> {
+                    refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
                 });
                 return tabs;
             });
@@ -391,10 +391,10 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
             ddlTestFile.add(ddFile);
         }
 
-        this.visitAllConnection((jdbcUrl, connection) -> {
+        this.visitAllConnection(( connection) -> {
             for (URL ddl : ddlTestFile) {
                 try (InputStream reader = ddl.openStream()) {
-                    try (Statement statement = connection.createStatement()) {
+                    try (Statement statement = connection.getConnection().createStatement()) {
                         final List<String> statements
                                 = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
                                 .filter(x -> !x.startsWith("--") && !x.isEmpty())

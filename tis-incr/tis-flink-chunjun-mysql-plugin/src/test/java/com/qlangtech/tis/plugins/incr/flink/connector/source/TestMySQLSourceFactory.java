@@ -24,14 +24,12 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
-import org.apache.commons.compress.utils.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -78,8 +76,8 @@ public class TestMySQLSourceFactory extends BasicMySQLCDCTest {
         Assert.assertNotNull(dataSourceFactory);
 
         dataSourceFactory.visitFirstConnection((conn) -> {
-            TableInDB tabs =  TableInDB.create();
-            dataSourceFactory.refectTableInDB(tabs, conn);
+            //  TableInDB.create();
+            TableInDB tabs = dataSourceFactory.getTablesInDB();//.refectTableInDB(tabs, conn);
 
             System.out.println("refectTableInDB:" + tabs.getTabs().stream().collect(Collectors.joining(",")));
         });

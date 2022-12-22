@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
@@ -147,12 +148,12 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         AtomicInteger taskIndex = new AtomicInteger(0);
 
         final int selectedTabsSize = this.selectedTabs.size();
-        ConcurrentHashMap<String, List<String>> groupedInfo = new ConcurrentHashMap();
+        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
         AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
 
         return new IGroupChildTaskIterator() {
             @Override
-            public Map<String, List<String>> getGroupedInfo() {
+            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
                 return groupedInfo;
             }
 
@@ -160,7 +161,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             public boolean hasNext() {
 
                 Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
-
                 if (dumperIt.hasNext()) {
                     return true;
                 } else {
@@ -205,8 +205,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 IDataSourceDumper dumper = dumperIterator.next();
                 SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
                 String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-                List<String> childTasks = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-                childTasks.add(childTask);
+                List<DataXCfgGenerator.DBDataXChildTask> childTasks
+                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
+                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
                 RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
 
                 dataxContext.setWhere(tab.getWhere());
@@ -214,7 +215,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
                 if (isFilterUnexistCol()) {
                     Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
 
-                    dataxContext.setCols(tab.cols.stream().filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
+                    dataxContext.setCols(tab.cols.stream()
+                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
                 } else {
                     dataxContext.setCols(tab.cols);
                 }

@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.postgresql;
 
 import junit.framework.TestCase;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.sql.Time;
@@ -55,8 +56,8 @@ public class TestPGDataSourceFactory extends TestCase {
 
        // System.out.println("tables:" + dsFactory.getTablesInDB().stream().collect(Collectors.joining(" ,")));
 
-        dsFactory.visitAllConnection((conn) -> {
-
+        dsFactory.visitAllConnection((c) -> {
+            Connection conn = c.getConnection();
 
             try (Statement statement = conn.createStatement()) {
                 statement.execute("    CREATE TABLE public.\"instancedetail\"\n" +

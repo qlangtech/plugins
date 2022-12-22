@@ -19,11 +19,12 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.DataXJobSubmit;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClient;
@@ -42,7 +43,8 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
 
     public static final String DATAX_NAME = "baisuitest";
     public static final Integer DATAX_TASK_ID = 123;
-    public static final String DATAX_JOB_FILE_NAME = "customer_order_relation_1.json";
+    public static final String DUMP_TABLE = "customer_order_relation";
+    public static final String DATAX_JOB_FILE_NAME = DUMP_TABLE + "_1.json";
 
     public void testPushMsgToDistributeQueue() {
 
@@ -51,17 +53,19 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 
 
-        DataxProcessor dataxProcessor = IAppSource.load(DATAX_NAME);
+        IDataxProcessor dataxProcessor = EasyMock.createMock("dataXProcessor", IDataxProcessor.class); //IAppSource.load(DATAX_NAME);
         assertNotNull(dataxProcessor);
 
         //IDataxProcessor dataxProcessor = EasyMock.createMock("dataxProcessor", IDataxProcessor.class);
         // EasyMock.expect(dataxProcessor.getDataxCfgDir()).andReturn();
 
         IJoinTaskContext taskContext = EasyMock.createMock("joinTaskContext", IJoinTaskContext.class);
+        ISelectedTab selectTab = EasyMock.createMock("selectTab", ISelectedTab.class);
 
-
-        EasyMock.expect(taskContext.getIndexName()).andReturn(DATAX_NAME);
-        EasyMock.expect(taskContext.getTaskId()).andReturn(DATAX_TASK_ID);
+        // EasyMock.expect(taskContext.getIndexName()).andReturn(DATAX_NAME);
+        //  EasyMock.expect(taskContext.getTaskId()).andReturn(DATAX_TASK_ID);
+        IAppSourcePipelineController pipelineController = EasyMock.createMock("appSourcePipelineController", IAppSourcePipelineController.class);
+        EasyMock.expect(taskContext.getPipelineController()).andReturn(pipelineController);
 
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
         ref.set(StatusRpcClient.AssembleSvcCompsite.MOCK_PRC);
@@ -73,11 +77,15 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         DataXJobSubmit submit = jobSubmit.get();
 
         DataXJobSubmit.IDataXJobContext jobContext = submit.createJobContext(taskContext);
-        EasyMock.replay(taskContext);
-        //IJoinTaskContext taskContext
-        //            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName
-        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, DATAX_JOB_FILE_NAME, Collections.emptyList());
+        EasyMock.replay(taskContext, selectTab, dataxProcessor, pipelineController);
+
+        DataXJobSubmit.TableDataXEntity tableEntity
+                = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(DATAX_JOB_FILE_NAME, DUMP_TABLE);
+
+        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, tableEntity, Collections.emptyList());
         dataXJob.run();
-        EasyMock.verify(taskContext);
+        EasyMock.verify(taskContext, selectTab, dataxProcessor, pipelineController);
     }
+
+
 }

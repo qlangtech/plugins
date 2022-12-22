@@ -177,8 +177,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             try {
                 AtomicBoolean valid = new AtomicBoolean(true);
                 PGDataSourceFactory ds = (PGDataSourceFactory) dsFactory;
-                dsFactory.visitFirstConnection((jdbcUrl, c) -> {
-                    PgConnection conn = (PgConnection) c;
+                dsFactory.visitFirstConnection(( c) -> {
+                    PgConnection conn = (PgConnection) c.getConnection();
                     if (!StringUtils.equals(ds.tabSchema, conn.getSchema())) {
                         msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");
                         valid.set(false);

@@ -28,6 +28,7 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.*;
 import org.junit.rules.TestRule;
@@ -85,8 +86,8 @@ public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
             }
 
             @Override
-            protected void startProcessConn(Connection conn) throws SQLException {
-                conn.setAutoCommit(false);
+            protected void startProcessConn(DataSourceMeta.JDBCConnection conn) throws SQLException {
+                conn.getConnection().setAutoCommit(false);
             }
 
             @Override

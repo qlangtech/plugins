@@ -70,21 +70,22 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
         };
     }
 
+
     @Override
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
-            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, String dataXfileName, final List<String> dependencyTasks) {
+            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
         DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();
         // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
-        return new AsynRemoteJobTrigger(dataXfileName) {
+        return new AsynRemoteJobTrigger(tabDataXEntity.getFileName()) {
             @Override
             public void run() {
                 try {
-                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, dataXfileName);
+                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, tabDataXEntity.getFileName());
                     distributedQueue.put(msg);
                     pipelineController.registerAppSubExecNodeMetrixStatus(
-                            IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), dataXfileName);
+                            IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), tabDataXEntity.getFileName());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

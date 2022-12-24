@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +57,17 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
             , IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, List<String> dependencyTasks) {
 
-        CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), tabDataXEntity.getFileName());
+        IDataxReader reader = dataxProcessor.getReader(null);
+        TableInDB tabsInDB = reader.getTablesInDB();
+
+        DataXJobInfo jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
+
+//        List<String> matchedTabs = tabsInDB.getMatchedTabs(tabDataXEntity.getDbIdenetity(), tabDataXEntity.getSourceTableName());
+//        DataXJobInfo.create(tabDataXEntity.getFileName(), matchedTabs);
+
+        CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
         Integer jobId = jobDTO.getJobId();
-        DataxExecutor.DataXJobInfo jobName = DataxExecutor.DataXJobInfo.parse(jobDTO.getJobName());
+
         String dataXName = jobDTO.getDataXName();
 
 

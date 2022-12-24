@@ -53,7 +53,6 @@ import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.types.RowKind;
 import org.easymock.EasyMock;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -304,7 +303,7 @@ public class TestChunjunClickhouseSinkFactory
         }
     }
 
-    @NotNull
+
     private ClickHouseDataSourceFactory getCKDSFactory(ClickHouseContainer clickhouse) {
         final ClickHouseDataSourceFactory sourceFactory = new ClickHouseDataSourceFactory();
         sourceFactory.userName = clickhouse.getUsername();

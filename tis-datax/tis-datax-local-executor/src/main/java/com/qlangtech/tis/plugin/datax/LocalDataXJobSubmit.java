@@ -26,6 +26,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
@@ -79,15 +80,17 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         logger.info("dataX Job:{},classpath:{},workingDir:{}", tabDataXEntity.getFileName(), this.classpath, workingDirectory.getPath());
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         IDataxReader dataxReader = dataxProcessor.getReader(null);
-        Optional<List<String>> ptabs = null;
-        if (dataxReader instanceof IDataSourceFactoryGetter) {
-            DataSourceFactory dsFactory = ((IDataSourceFactoryGetter) dataxReader).getDataSourceFactory();
-//            tabDataXEntity.getDbIdenetity();
-//            tabDataXEntity.getSourceTableName();
-            ptabs = Optional.of(dsFactory.getAllPhysicsTabs(tabDataXEntity));
-        }
+        //Optional<List<String>> ptabs = null;
+//        if (dataxReader instanceof IDataSourceFactoryGetter) {
+//            DataSourceFactory dsFactory = ((IDataSourceFactoryGetter) dataxReader).getDataSourceFactory();
+////            tabDataXEntity.getDbIdenetity();
+////            tabDataXEntity.getSourceTableName();
+//            ptabs = Optional.of(dsFactory.getAllPhysicsTabs(tabDataXEntity));
+//        }
 
-        return TaskExec.getRemoteJobTrigger(taskContext, this, tabDataXEntity.getFileName(), ptabs, dependencyTasks);
+        TableInDB tablesInDB = dataxReader.getTablesInDB();
+
+        return TaskExec.getRemoteJobTrigger(taskContext, this, tablesInDB.createDataXJobInfo(tabDataXEntity),  dependencyTasks);
     }
 
 
@@ -134,7 +137,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, String dataXfileName) {
-        return super.getDataXJobDTO(taskContext, dataXfileName);
+    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, DataXJobInfo dataXJobInfo) {
+        return super.getDataXJobDTO(taskContext, dataXJobInfo);
     }
 }

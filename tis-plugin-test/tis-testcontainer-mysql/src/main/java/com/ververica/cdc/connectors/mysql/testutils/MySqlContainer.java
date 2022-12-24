@@ -22,7 +22,6 @@ import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.junit.Assert;
@@ -30,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.lifecycle.Startables;
+import org.testcontainers.utility.MountableFile;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -87,19 +86,29 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     }
 
     public static final MySqlContainer createMysqlContainer(String tag, String myConf, String sqlClasspath) {
-        return (MySqlContainer)
-                new MySqlContainer(tag)
+        MySqlContainer container =
+                (MySqlContainer) new MySqlContainer(tag)
                         //.withConfigurationOverride("docker/server-gtids/my.cnf")
                         // .withSetupSQL("docker/setup.sql")
                         .withDatabaseName("flink-test")
                         .withUsername("flinkuser")
                         .withPassword("flinkpw")
-                        .withLogConsumer(new TISLoggerConsumer(LOG))
-                        .withCopyToContainer(Transferable.of(IOUtils.loadResourceFromClasspath(MySqlContainer.class, myConf))
-                                , "/etc/mysql/my.cnf")
-                        .withCopyToContainer(
-                                Transferable.of(IOUtils.loadResourceFromClasspath(MySqlContainer.class, sqlClasspath))
-                                , "/docker-entrypoint-initdb.d/setup.sql");
+                        .withLogConsumer(new TISLoggerConsumer(LOG));
+
+        container.withCopyFileToContainer(MountableFile.forClasspathResource(myConf), "/etc/mysql/my.cnf");
+        container.withCopyFileToContainer(MountableFile.forClasspathResource(sqlClasspath), "/docker-entrypoint-initdb.d/setup.sql");
+
+//        container.copyFileToContainer(
+//                Transferable.of(IOUtils.loadResourceFromClasspath(MySqlContainer.class
+//                        , myConf, true, (i) -> org.apache.commons.io.IOUtils.toByteArray(i)))
+//                , "/etc/mysql/my.cnf");
+//
+//        container.copyFileToContainer(
+//                Transferable.of(IOUtils.loadResourceFromClasspath(MySqlContainer.class
+//                        , sqlClasspath, true, (i) -> org.apache.commons.io.IOUtils.toByteArray(i)))
+//                , "/docker-entrypoint-initdb.d/setup.sql");
+
+        return container;
     }
 
     DataSourceFactory ds;
@@ -127,6 +136,8 @@ public class MySqlContainer extends JdbcDatabaseContainer {
 
         formData.addProp("nodeDesc", NetUtils.getHost());
 
+        formData.addSubForm("splitTableStrategy"
+                , "com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy", new Descriptor.FormData());
         formData.addProp("password", container.getPassword());
         formData.addProp("userName", container.getUsername());
         formData.addProp("port", String.valueOf(container.getMappedPort(MYSQL_PORT)));

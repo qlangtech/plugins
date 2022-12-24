@@ -36,8 +36,7 @@ import java.util.stream.Stream;
  **/
 public class TestMySqlContainer {
     // private static Logger LOG = LoggerFactory.getLogger(TestMySqlContainer.class);
-    protected static final MySqlContainer MYSQL_CONTAINER
-            = MySqlContainer.createMysqlContainer("docker/server-gtids/my.cnf", "docker/setup.sql");
+    protected static final MySqlContainer MYSQL_CONTAINER = MySqlContainer.MYSQL5_CONTAINER; //MySqlContainer.createMysqlContainer("docker/server-gtids/my.cnf", "docker/setup.sql");
 //            (MySqlContainer)
 //                    new MySqlContainer()
 //                            .withConfigurationOverride("docker/server-gtids/my.cnf")

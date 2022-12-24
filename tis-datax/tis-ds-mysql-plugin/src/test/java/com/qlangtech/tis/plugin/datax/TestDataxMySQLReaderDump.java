@@ -18,15 +18,23 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.CenterResource;
+import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.test.BasicTest;
+import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,27 +42,32 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.lifecycle.Startables;
 
 import java.io.File;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-06 19:38
  **/
-public class TestDataxMySQLReaderDump extends BasicTest {
+public class TestDataxMySQLReaderDump {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
 
     protected static final MySqlContainer MYSQL_CONTAINER =
             MySqlContainer.createMysqlContainer("/docker/server-gtids/my.cnf", "/docker/setup.sql");
     static BasicDataSourceFactory dsFactory;
 
     private static BasicDataSourceFactory createDataSource(TargetResName dataxName) {
-        return (BasicDataSourceFactory)MYSQL_CONTAINER.createMySqlDataSourceFactory(dataxName);
-        //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+        return (BasicDataSourceFactory) MYSQL_CONTAINER.createMySqlDataSourceFactory(dataxName);
     }
 
     @BeforeClass
     public static void initialize() {
+        System.setProperty(Config.SYSTEM_KEY_LOGBACK_PATH_KEY, "logback-test.xml");
+        CenterResource.setNotFetchFromCenterRepository();
+        HttpUtils.addMockGlobalParametersConfig();
+
         Startables.deepStart(Stream.of(MYSQL_CONTAINER)).join();
         dsFactory = createDataSource(new TargetResName(TestDataxMySQLReader.dataXName));
     }
@@ -62,15 +75,67 @@ public class TestDataxMySQLReaderDump extends BasicTest {
 
     @Test
     public void testRealDump() throws Exception {
+
+        MySQLDataSourceFactory mysqlDs = (MySQLDataSourceFactory) dsFactory;
+        mysqlDs.splitTableStrategy = new NoneSplitTableStrategy();
+
         File dataxReaderResult = folder.newFile("mysql-datax-reader-result.txt");
         DataxMySQLReader dataxReader = createReader(TestDataxMySQLReader.dataXName);
         DataxReader.dataxReaderGetter = (name) -> {
-            assertEquals(TestDataxMySQLReader.dataXName, name);
+            Assert.assertEquals(TestDataxMySQLReader.dataXName, name);
             return dataxReader;
         };
 
-        ReaderTemplate.realExecute("mysql-datax-reader-test-cfg.json", dataxReaderResult, dataxReader);
+        Configuration conf = IOUtils.loadResourceFromClasspath(
+                dataxReader.getClass(), "mysql-datax-reader-test-cfg.json", true, (writerJsonInput) -> {
+                    return Configuration.from(writerJsonInput);
+                });
+        conf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
+        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
+    }
+
+    /**
+     * 基于分表的数据导入方式
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testRealDumpWithSplitTabs() throws Exception {
+
+        MySQLDataSourceFactory mysqlDs = (MySQLDataSourceFactory) dsFactory;
+        mysqlDs.splitTableStrategy = new DefaultSplitTableStrategy();
+        DataXJobInfo.parse("base_1.json/base_01,base_02");
+        Assert.assertNotNull(DataXJobInfo.getCurrent());
+
+        File dataxReaderResult = folder.newFile("mysql-datax-reader-result.txt");
+        DataxMySQLReader dataxReader = createReader(TestDataxMySQLReader.dataXName);
+        DataxReader.dataxReaderGetter = (name) -> {
+            Assert.assertEquals(TestDataxMySQLReader.dataXName, name);
+            return dataxReader;
+        };
+
+        Configuration conf = IOUtils.loadResourceFromClasspath(
+                dataxReader.getClass(), "mysql-datax-reader-test-cfg-tab-split.json"
+                , true, (writerJsonInput) -> {
+                    return Configuration.from(writerJsonInput);
+                });
+        conf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
+        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
+        System.out.println("content as below:\n");
+        List<String> lines = FileUtils.readLines(dataxReaderResult, TisUTF8.get());
+        Assert.assertEquals(String.join(",", lines), 2, lines.size());
+//        System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
+//        StringU
+
+        DataXJobInfo.parse("base_1.json/base_01");
+        Assert.assertNotNull(DataXJobInfo.getCurrent());
+
+        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
+        lines = FileUtils.readLines(dataxReaderResult, TisUTF8.get());
+        // System.out.println("content as below:\n");
+        // System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
+        Assert.assertEquals(String.join(",", lines), 1, lines.size());
     }
 
     protected DataxMySQLReader createReader(String dataXName) {

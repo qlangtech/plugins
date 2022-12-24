@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: baisui 百岁
@@ -40,7 +41,8 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
         super(name, sourceTableName, null, null);
         this.rdbmsContext = mysqlContext;
         this.dsFactory = dsFactory;
-        this.splitTableStrategy = dsFactory.splitTableStrategy;
+        this.splitTableStrategy = Objects.requireNonNull(dsFactory.splitTableStrategy
+                , "splitTableStrategy can not be null");
     }
 
     /**
@@ -59,7 +61,8 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
      * @return
      */
     public String getSplitTabs() {
-        List<String> allPhysicsTabs = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
+        List<String> allPhysicsTabs
+                = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
         return getEntitiesWithQuotation(allPhysicsTabs);
     }
 
@@ -85,19 +88,4 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext {
         }
         return rdbmsContext.getJdbcUrl();
     }
-
-
-//    public boolean isContainWhere() {
-//        return StringUtils.isNotBlank(this.where);
-//    }
-//
-//    public String getWhere() {
-//        return where;
-//    }
-//
-//    public void setWhere(String where) {
-//        this.where = where;
-//    }
-
-
 }

@@ -20,16 +20,20 @@ package com.qlangtech.tis.plugin.ds.split;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,20 +44,11 @@ import java.util.regex.Pattern;
  * @create: 2022-12-17 21:23
  **/
 public class DefaultSplitTableStrategy extends SplitTableStrategy {
-    //private SplitableTableInDB logicTab2PhysicsMapper;
 
     @Override
     public TableInDB createTableInDB() {
         return new SplitableTableInDB();
     }
-
-    // private static transient LoadingCache<String, SplitableTableInDB> tabsInDBCache;
-
-//    @Override
-//    public List<String> getAllPhysicsTabs(DataSourceFactory dsFactory, DataXJobSubmit.TableDataXEntity tabEntity) {
-//        return getAllPhysicsTabs(dsFactory, tabEntity.getDbIdenetity(), tabEntity.getSourceTableName());
-//    }
-
 
     @Override
     public List<String> getAllPhysicsTabs(DataSourceFactory dsFactory, String jdbcUrl, String sourceTableName) {
@@ -141,18 +136,42 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         @Override
         public void add(String jdbcUrl, String tab) {
             Matcher matcher = PATTERN_PHYSICS_TABLE.matcher(tab);
-            SplitableDB physicsTabs = null;
+
             if (matcher.matches()) {
                 String logicTabName = matcher.group(1);
-                physicsTabs = tabs.get(logicTabName);
-                if (physicsTabs == null) {
-                    physicsTabs = new SplitableDB();
-                    tabs.put(logicTabName, physicsTabs);
-                }
-                physicsTabs.add(jdbcUrl, tab);
+                addPhysicsTab(jdbcUrl, logicTabName, tab);
             } else {
-                tabs.put(tab, (new SplitableDB()).add(jdbcUrl, tab));
+                addPhysicsTab(jdbcUrl, tab, tab);
+              //  tabs.put(tab, (new SplitableDB()).add(jdbcUrl, tab));
             }
+        }
+
+        /**
+         * @param jdbcUrl
+         * @param logicTabName
+         * @param tab          物理表名
+         */
+        private void addPhysicsTab(String jdbcUrl, String logicTabName, String tab) {
+            SplitableDB physicsTabs = tabs.get(logicTabName);
+            if (physicsTabs == null) {
+                physicsTabs = new SplitableDB();
+                tabs.put(logicTabName, physicsTabs);
+            }
+            physicsTabs.add(jdbcUrl, tab);
+        }
+
+        @Override
+        public DataXJobInfo createDataXJobInfo(DataXJobSubmit.TableDataXEntity tabEntity) {
+
+            SplitableDB splitableDB = tabs.get(tabEntity.getSourceTableName());
+            Objects.requireNonNull(splitableDB, "SourceTableName:" + tabEntity.getSourceTableName() + " relevant splitableDB can not be null");
+
+            List<String> matchedTabs = splitableDB.getTabsInDB(tabEntity.getDbIdenetity());
+            if (CollectionUtils.isEmpty(matchedTabs)) {
+                throw new IllegalStateException("jdbcUrl:" + tabEntity.getDbIdenetity() + " relevant matchedTabs can not be empty");
+            }
+            // 目前将所有匹配的表都在一个datax 单独进程中去执行，后期可以根据用户的配置单一个单独的dataX进程中执行部分split表以提高导入速度
+            return DataXJobInfo.create(tabEntity.getFileName(), matchedTabs);
         }
 
         @Override

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -45,7 +46,7 @@ public class TaskExec {
 
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
-            , LocalDataXJobSubmit localDataXJobSubmit, String dataXfileName, Optional<List<String>> ptabs
+            , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo
             , final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -104,15 +105,15 @@ public class TaskExec {
                         }
                     };
                     CuratorDataXTaskMessage dataXJob = null;
-                    if (ptabs.isPresent()) {
-                        for (String splitPhysicsTab : ptabs.get()) {
-                            dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
-                            jobConsumer.consumeMessage(dataXJob);
-                        }
-                    } else {
-                        dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+//                    if (ptabs.isPresent()) {
+//                        for (String splitPhysicsTab : ptabs.get()) {
+//                            dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
+//                            jobConsumer.consumeMessage(dataXJob);
+//                        }
+//                    } else {
+                        dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXJobInfo);
                         jobConsumer.consumeMessage(dataXJob);
-                    }
+                   // }
 
 
                     // success.set(true);
@@ -122,7 +123,7 @@ public class TaskExec {
                     if (this.hasCanceled) {
                         logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
                     } else {
-                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXfileName, e);
+                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXJobInfo.jobFileName, e);
                         // if (!(e instanceof DataXJobSingleProcessorException)) {
                         throw new RuntimeException(e);
                         // }
@@ -134,7 +135,7 @@ public class TaskExec {
 
             @Override
             public String getTaskName() {
-                return dataXfileName;
+                return dataXJobInfo.jobFileName;
             }
 
             @Override

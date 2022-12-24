@@ -61,10 +61,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
     }
 
-//    @Override
-//    public void initWriterTable(String targetTabName, List jdbcUrls) throws Exception {
-//        InitWriterTable.process(this.dataXName, this, targetTabName, jdbcUrls);
-//    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
@@ -163,26 +159,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     }
                 };
             }
-
-            //            @Override
-//            protected String convertType(CMeta col) {
-//                switch (col.getType()) {
-//                    case Long:
-//                        return "bigint(20)";
-//                    case INT:
-//                        return "int(11)";
-//                    case Double:
-//                        return "decimal(18,2)";
-//                    case Date:
-//                        return "date";
-//                    case STRING:
-//                    case Boolean:
-//                    case Bytes:
-//                    default:
-//                        return "varchar(50)";
-//                }
-//            }
-
             /**
              * https://www.runoob.com/mysql/mysql-data-types.html
              * @param col

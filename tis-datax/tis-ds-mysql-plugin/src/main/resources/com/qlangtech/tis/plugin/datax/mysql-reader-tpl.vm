@@ -17,9 +17,9 @@
     ]
     #if($reader.splitTable)
     ,"column": [${reader.colsQuotes}]
-    #else
-    ,"dataxName": "${reader.dataXName}",
-    "password": "${reader.password}",
-    "username": "${reader.username}"
+    #end
+    ,"dataxName": "${reader.dataXName}"
+    ,"password": "${reader.password}"
+    ,"username": "${reader.username}"
   }
 }

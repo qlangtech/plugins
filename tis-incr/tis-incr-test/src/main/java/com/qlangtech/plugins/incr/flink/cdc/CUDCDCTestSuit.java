@@ -50,7 +50,6 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
 import java.sql.*;
@@ -322,7 +321,7 @@ public abstract class CUDCDCTestSuit {
 
     }
 
-    @NotNull
+
     protected DataxProcessor createProcess() {
         DataxProcessor processor = new DataxProcessor() {
             @Override
@@ -359,7 +358,7 @@ public abstract class CUDCDCTestSuit {
         conn.commit();
     }
 
-    @NotNull
+
     private String createInsertScript(String tabName, TestRow r) {
 
         return "insert into " + getColEscape() + createTableName(tabName) + getColEscape() + "("

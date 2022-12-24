@@ -42,6 +42,37 @@ CREATE TABLE `base` (
   PRIMARY KEY (`base_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `base_01` (
+  `base_id` int(11) NOT NULL,
+  `start_time` datetime DEFAULT NULL,
+  `update_date` date DEFAULT NULL,
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `price` decimal(5,2) DEFAULT NULL,
+  `json_content` json DEFAULT NULL,
+  `col_blob` blob,
+  `col_text` text,
+  PRIMARY KEY (`base_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `base_02` (
+  `base_id` int(11) NOT NULL,
+  `start_time` datetime DEFAULT NULL,
+  `update_date` date DEFAULT NULL,
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `price` decimal(5,2) DEFAULT NULL,
+  `json_content` json DEFAULT NULL,
+  `col_blob` blob,
+  `col_text` text,
+  PRIMARY KEY (`base_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+insert into `base_01` (`base_id`,`start_time`,`update_date`,`update_time`,`price`,`json_content`,`col_blob`,`col_text`)
+values (1,now(),now(),now(),1.1,'{}','123','123');
+
+insert into `base_02` (`base_id`,`start_time`,`update_date`,`update_time`,`price`,`json_content`,`col_blob`,`col_text`)
+values (2,now(),now(),now(),1.1,'{}','321','321');
+
+
 
 CREATE TABLE `instancedetail` (
   `instance_id` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',

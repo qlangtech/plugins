@@ -19,10 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.DataXJobConsumer;
-import com.qlangtech.tis.datax.DataXJobSubmit;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -74,6 +71,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
     @Override
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
             , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, final List<String> dependencyTasks) {
+
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
         DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();
@@ -82,7 +80,8 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
             @Override
             public void run() {
                 try {
-                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, tabDataXEntity.getFileName());
+                    IDataxReader reader = dataxProcessor.getReader(null);
+                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, reader.getTablesInDB().createDataXJobInfo(tabDataXEntity));
                     distributedQueue.put(msg);
                     pipelineController.registerAppSubExecNodeMetrixStatus(
                             IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), tabDataXEntity.getFileName());

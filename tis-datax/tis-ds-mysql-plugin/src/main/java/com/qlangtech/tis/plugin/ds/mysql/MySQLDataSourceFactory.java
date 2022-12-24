@@ -72,6 +72,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     protected EntityName logicTable2PhysicsTable(String jdbcUrl, EntityName table) {
+        if (table.isPhysics()) {
+            return table;
+        }
         // return super.logicTable2PhysicsTable(table);
         SplitTableStrategy.DBPhysicsTable physicsTable = this.splitTableStrategy.getMatchedPhysicsTable(this, jdbcUrl, table);
         return physicsTable.getPhysicsTab();

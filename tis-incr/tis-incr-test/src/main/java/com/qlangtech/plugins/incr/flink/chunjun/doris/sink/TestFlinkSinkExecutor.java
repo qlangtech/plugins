@@ -58,7 +58,6 @@ import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
-import org.jetbrains.annotations.NotNull;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -418,7 +417,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         return cm;
     }
 
-    @NotNull
+
     protected UpdateMode createIncrMode() {
         ReplaceType updateMode = new ReplaceType();
         //  updateMode.updateKey = Lists.newArrayList(colId, updateTime);

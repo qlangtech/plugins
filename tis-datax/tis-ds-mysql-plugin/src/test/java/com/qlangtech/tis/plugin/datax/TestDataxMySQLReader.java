@@ -36,6 +36,8 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -307,34 +309,19 @@ public class TestDataxMySQLReader extends BasicTest {
         Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataxMySQLReader.class);
         assertTrue("DataxMySQLReader extraProps shall exist", extraProps.isPresent());
 
-
-        //IPluginContext pluginContext = null;
-
-
-        // IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
-        //IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
-
-        //  EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(null).anyTimes();
-        // IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
-        // IDataxReaderContext dataxReaderContext = EasyMock.mock("dataxReaderContext", IDataxReaderContext.class);
-
-
-//        MySQLDataXReaderContext dataxReaderContext = new MySQLDataXReaderContext(tabName + "_0", tabName);
-//        dataxReaderContext.jdbcUrl = TestDataxMySQLWriter.mysqlJdbcUrl;
-//        dataxReaderContext.tabName = tabName;
-//        dataxReaderContext.username = userName;
-//        dataxReaderContext.password = password;
-//        dataxReaderContext.cols = Lists.newArrayList("col1", "col2", "col3");//tableMetadata.stream().map((t) -> t.getValue()).collect(Collectors.toList());
-
-//        EasyMock.expect(processor.getWriter()).andReturn(dataxWriter).anyTimes();
-//        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
-
-
         MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
+        mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
+
+        DefaultSplitTableStrategy.SplitableTableInDB tabsInDB = new DefaultSplitTableStrategy.SplitableTableInDB();
+        tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
+        tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
+
+        EasyMock.expect(mysqlDataSource.getTablesInDB()).andReturn(tabsInDB).times(1);
+
         EasyMock.expect(mysqlDataSource.getPassword()).andReturn(password).anyTimes();
         EasyMock.expect(mysqlDataSource.getUserName()).andReturn(userName).anyTimes();
         IDataSourceDumper dataDumper = EasyMock.createMock(TestSelectedTabs.tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
-        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).times(2);
+        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).anyTimes();
 // int index, String key, int type, boolean pk
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
@@ -342,19 +329,12 @@ public class TestDataxMySQLReader extends BasicTest {
         EasyMock.expect(mysqlDataSource.getTableMetadata(EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
                 .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
-
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
-//            @Override
-//            protected Connection getConnection(String jdbcUrl, String username, String password) throws SQLException {
-//                throw new UnsupportedOperationException();
-//            }
-
             @Override
             public DataDumpers getDataDumpers(TISTable table) {
                 return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());
             }
-        }).times(2);//.andReturn(new DataDumpers(1, Collections.singletonList(dataDumper).iterator()));
-
+        }).anyTimes();
 
         EasyMock.replay(mysqlDataSource, dataDumper);
 
@@ -372,6 +352,7 @@ public class TestDataxMySQLReader extends BasicTest {
         };
         mySQLReader.dataXName = dataXName;
         mySQLReader.template = DataxMySQLReader.getDftTemplate();
+        //mySQLReader.
 
         SelectedTab selectedTab = new SelectedTab();
         selectedTab.setCols(Lists.newArrayList("col2", "col1", "col3"));
@@ -383,49 +364,20 @@ public class TestDataxMySQLReader extends BasicTest {
 
         ReaderTemplate.validateDataXReader("mysql-datax-reader-assert.json", dataXName, mySQLReader);
 
-//        selectedTab = new SelectedTab();
-//        selectedTab.setCols(Collections.emptyList());
-//        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
-
         mySQLReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
-//        valiateReaderCfgGenerate("mysql-datax-reader-asser-without-option-val.json"
-//                , processor, mySQLReader);
 
         ReaderTemplate.validateDataXReader("mysql-datax-reader-asser-without-option-val.json", dataXName, mySQLReader);
+
+        DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
+        mysqlDataSource.splitTableStrategy = splitTableStrategy;
+        ReaderTemplate.validateDataXReader("mysql-datax-reader-assert-split-tabs.json", dataXName, mySQLReader);
 
         EasyMock.verify(mysqlDataSource, dataDumper);
     }
 
-    //    private void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxMySQLReader mySQLReader) throws IOException {
-////        List<SelectedTab> selectedTabs = Lists.newArrayList();
-////
-////        selectedTabs.add(selectedTab);
-////        mySQLReader.setSelectedTabs(selectedTabs);
-//        MySQLDataXReaderContext dataxReaderContext = null;
-//        Iterator<IDataxReaderContext> subTasks = mySQLReader.getSubTasks();
-//        int dataxReaderContextCount = 0;
-//        while (subTasks.hasNext()) {
-//            dataxReaderContext = (MySQLDataXReaderContext) subTasks.next();
-//            dataxReaderContextCount++;
-//        }
-//        assertEquals(1, dataxReaderContextCount);
-//        assertNotNull(dataxReaderContext);
-//
-//
-//        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(processor) {
-//            @Override
-//            public String getTemplateContent() {
-//                return mySQLReader.getTemplate();
-//            }
-//        };
-//
-//        String readerCfg = dataProcessor.generateDataxConfig(dataxReaderContext, Optional.empty());
-//        assertNotNull(readerCfg);
-//        System.out.println(readerCfg);
-//        JsonUtils.assertJSONEqual(this.getClass(), assertFileName, readerCfg);
-//    }
+
     @Test
-    public void testGetDftTemplate() {
+    public void testGetDftTemplate() throws Exception {
         String dftTemplate = DataxMySQLReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
     }

@@ -31,6 +31,10 @@
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-testcontainer-oracle</artifactId>
 
+    <properties>
+        <testcontainers.version>1.17.3</testcontainers.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.testcontainers</groupId>

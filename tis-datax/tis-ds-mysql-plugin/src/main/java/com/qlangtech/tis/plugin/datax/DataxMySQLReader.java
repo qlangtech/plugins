@@ -46,7 +46,7 @@ public class DataxMySQLReader extends BasicDataXRdbmsReader<MySQLDataSourceFacto
 
 
     public static String getDftTemplate() {
-        return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-reader-tpl.json");
+        return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-reader-tpl.vm");
     }
 
     @Override

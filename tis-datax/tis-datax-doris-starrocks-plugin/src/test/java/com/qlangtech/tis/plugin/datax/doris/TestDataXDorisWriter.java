@@ -210,6 +210,7 @@ public class TestDataXDorisWriter extends TestCase {
         CreateDorisWriter createDorisWriter = new CreateDorisWriter().invoke();
         createDorisWriter.dsFactory.password = "";
         createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
+        createDorisWriter.dsFactory.name = "dorisDB";
 
         createDorisWriter.writer.autoCreateTable = true;
 

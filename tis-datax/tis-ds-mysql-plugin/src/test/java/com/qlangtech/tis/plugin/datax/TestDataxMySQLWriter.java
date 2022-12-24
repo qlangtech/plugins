@@ -30,7 +30,6 @@ import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
-
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
@@ -209,14 +208,7 @@ public class TestDataxMySQLWriter extends BasicTest {
     }
 
     private void validateConfigGenerate(String assertFileName, DataxMySQLWriter mySQLWriter) throws IOException {
-//        IDataxProcessor.TableMap tm = new IDataxProcessor.TableMap();
-//        tm.setFrom("orderinfo");
-//        tm.setTo("orderinfo_new");
-//        tm.setSourceCols(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-//            CMeta meta = new CMeta();
-//            meta.setName(c);
-//            return meta;
-//        }).collect(Collectors.toList()));
+
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
         IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
         Assert.assertNotNull(subTaskCtx);
@@ -253,6 +245,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         });
         EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
     }
+
 
     @Test
     public void testGetDftTemplate() {

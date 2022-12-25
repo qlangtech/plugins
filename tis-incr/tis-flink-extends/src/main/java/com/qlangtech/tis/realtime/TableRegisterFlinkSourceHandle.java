@@ -134,7 +134,21 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         org.apache.flink.table.descriptors.Schema sinkTabSchema
                 = new org.apache.flink.table.descriptors.Schema();
         // 其实无作用骗骗校验器的
+        initWriterTable(alias);
+        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias.getTo());
+        for (FlinkCol c : cols) {
+            sinkTabSchema.field(c.name, c.type);
+        }
+        tabEnv.connect(new ConnectorDescriptor(this.getSinkTypeName(), 1, false) {
+            @Override
+            protected Map<String, String> toConnectorProperties() {
+                return connProps;
+            }
+        }).withSchema(sinkTabSchema) //
+                .inUpsertMode().createTemporaryTable(alias.getTo());
+    }
 
+    protected void initWriterTable(TableAlias alias) {
         DataxWriter dataXWriter = DataxWriter.load(null, this.getDataXName());
         DataSourceFactory dsFactory
                 = ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
@@ -153,17 +167,6 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
                 throw new RuntimeException(e);
             }
         });
-        List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias.getTo());
-        for (FlinkCol c : cols) {
-            sinkTabSchema.field(c.name, c.type);
-        }
-        tabEnv.connect(new ConnectorDescriptor(this.getSinkTypeName(), 1, false) {
-            @Override
-            protected Map<String, String> toConnectorProperties() {
-                return connProps;
-            }
-        }).withSchema(sinkTabSchema) //
-                .inUpsertMode().createTemporaryTable(alias.getTo());
     }
 
     protected abstract String getSinkTypeName();

@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -122,12 +123,59 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         }
     }
 
+    public static class SplitTablePhysics2LogicNameConverter implements Function<String, String> {
+        private final Map<String, String> physics2LogicTabNameConverter;
+
+        public SplitTablePhysics2LogicNameConverter(SplitableTableInDB splitTabInDB) {
+            this.physics2LogicTabNameConverter = Maps.newHashMap();
+            for (Map.Entry<String, SplitableDB> dbEntry : splitTabInDB.tabs.entrySet()) {
+                for (Map.Entry<String, List<String>> logicEntry : dbEntry.getValue().physicsTabInSplitableDB.entrySet()) {
+                    for (String physicsTabName : logicEntry.getValue()) {
+                        this.physics2LogicTabNameConverter.put(physicsTabName, dbEntry.getKey());
+                    }
+                }
+            }
+        }
+
+        @Override
+        public String apply(String physicsName) {
+            String logicalTabName = this.physics2LogicTabNameConverter.get(physicsName);
+            if (logicalTabName == null) {
+                throw new IllegalStateException("physics tabName:" + physicsName
+                        + " can not find relevant logicalTabName,repo size:" + this.physics2LogicTabNameConverter.size());
+            }
+            return logicalTabName;
+        }
+    }
+
     public static class SplitableTableInDB extends TableInDB {
         //<key:逻辑表名,List<String> 物理表列表>
         public Map<String, SplitableDB> tabs = new HashMap<>();
 
 
         private static final Pattern PATTERN_PHYSICS_TABLE = Pattern.compile("(\\S+)_(\\d+)");
+
+        @Override
+        public Function<String, String> getPhysicsTabName2LogicNameConvertor() {
+            return new SplitTablePhysics2LogicNameConverter(this);
+        }
+
+        //        @Override
+//        public List<String> getMatchedTabs(Optional<String> jdbcUrl, String tab) {
+//
+//            SplitableDB splitableDB = tabs.get(tab);
+//            Objects.requireNonNull(splitableDB, "tab:" + tab + " relevant splitableDB can not be null");
+//
+//            if (jdbcUrl.isPresent()) {
+//                return splitableDB.getTabsInDB(jdbcUrl.get());
+//            } else {
+//                Set<String> mergeAllTabs = new HashSet<>();
+//                for (Map.Entry<String, List<String>> entry : splitableDB.physicsTabInSplitableDB.entrySet()) {
+//                    mergeAllTabs.addAll(entry.getValue());
+//                }
+//                return Lists.newArrayList(mergeAllTabs);
+//            }
+//        }
 
         /**
          * @param jdbcUrl 可以标示是哪个分库的
@@ -142,7 +190,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
                 addPhysicsTab(jdbcUrl, logicTabName, tab);
             } else {
                 addPhysicsTab(jdbcUrl, tab, tab);
-              //  tabs.put(tab, (new SplitableDB()).add(jdbcUrl, tab));
+                //  tabs.put(tab, (new SplitableDB()).add(jdbcUrl, tab));
             }
         }
 

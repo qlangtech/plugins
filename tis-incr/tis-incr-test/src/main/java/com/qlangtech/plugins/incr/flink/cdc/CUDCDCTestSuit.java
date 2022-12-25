@@ -149,7 +149,7 @@ public abstract class CUDCDCTestSuit {
         }
 
 
-        IResultRows consumerHandle = getTestBasicFlinkSourceHandle(tabName);
+        IResultRows consumerHandle = getTestBasicFlinkSourceHandle(dataxReader, tabName);
 
         cdcFactory.setConsumerHandle(consumerHandle.getConsumerHandle());
 
@@ -500,20 +500,20 @@ public abstract class CUDCDCTestSuit {
         conn.getConnection().setAutoCommit(false);
     }
 
-    protected IResultRows getTestBasicFlinkSourceHandle(String tabName) {
-        IResultRows consumerHandle = createConsumerHandle(tabName);
+    protected IResultRows getTestBasicFlinkSourceHandle(BasicDataXRdbmsReader dataxReader, String tabName) {
+        IResultRows consumerHandle = createConsumerHandle(dataxReader, tabName);
         return consumerHandle;
     }
 
-    private IResultRows createConsumerHandle(String tabName) {
+    private IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName) {
         // TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
         TISSinkFactory sinkFuncFactory = new StubSinkFactory();
         sinkFuncFactory.dataXName = dataxName.getName();
 
-        return createConsumerHandle(tabName, sinkFuncFactory);
+        return createConsumerHandle(dataxReader, tabName, sinkFuncFactory);
     }
 
-    private class StubSinkFactory extends TISSinkFactory implements IStreamTableMeataCreator {
+    private class StubSinkFactory extends TISSinkFactory implements IStreamTableMeataCreator.ISinkStreamMetaCreator {
         @Override
         public IStreamTableMeta getStreamTableMeta(String tableName) {
             return new IStreamTableMeta() {
@@ -539,7 +539,7 @@ public abstract class CUDCDCTestSuit {
     }
 
 
-    protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+    protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
         TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
         sourceHandle.setSinkFuncFactory(sinkFuncFactory);
         return sourceHandle;

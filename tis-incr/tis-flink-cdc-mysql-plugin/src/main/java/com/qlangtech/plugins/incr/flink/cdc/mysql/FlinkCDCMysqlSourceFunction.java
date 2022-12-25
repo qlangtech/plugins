@@ -29,14 +29,11 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
 import io.debezium.config.CommonConnectorConfig;
@@ -72,6 +69,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
 
     public static class MySQLSourceDTOColValProcess implements ISourceValConvert, Serializable {
         final Map<String, FlinkColMapper> tabColsMapper;
+
 
         public MySQLSourceDTOColValProcess(Map<String, FlinkColMapper> tabColsMapper) {
             this.tabColsMapper = tabColsMapper;
@@ -152,7 +150,10 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
+            BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
+            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
+            TableInDB tablesInDB = dsFactory.getTablesInDB();
             for (ISelectedTab tab : tabs) {
                 FlinkColMapper colsMapper
                         = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), (meta, colIndex) -> {
@@ -161,9 +162,9 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                 tabColsMapper.put(tab.getName(), colsMapper);
             }
             TISDeserializationSchema deserializationSchema
-                    = new TISDeserializationSchema(new MySQLSourceDTOColValProcess(tabColsMapper));
-            BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
-            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
+                    = new TISDeserializationSchema(new MySQLSourceDTOColValProcess(tabColsMapper), tablesInDB.getPhysicsTabName2LogicNameConvertor());
+
+
             SourceChannel sourceChannel = new SourceChannel(
                     SourceChannel.getSourceFunction(
                             dsFactory,

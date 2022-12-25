@@ -89,14 +89,15 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
                 //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
                 return sourceHandle;
             }
 
@@ -220,7 +221,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;
@@ -256,7 +257,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;
@@ -293,7 +294,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 return sourceHandle;

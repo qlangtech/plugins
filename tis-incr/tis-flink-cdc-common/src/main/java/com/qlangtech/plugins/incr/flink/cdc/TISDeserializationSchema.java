@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,13 +49,15 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
     private static final Logger logger = LoggerFactory.getLogger(TISDeserializationSchema.class);
 
     private final ISourceValConvert rawValConvert;
+    private final Function<String, String> physicsTabName2LogicName;
 
-    public TISDeserializationSchema(ISourceValConvert rawValConvert) {
+    public TISDeserializationSchema(ISourceValConvert rawValConvert, Function<String, String> physicsTabName2LogicName) {
         this.rawValConvert = rawValConvert;
+        this.physicsTabName2LogicName = physicsTabName2LogicName;
     }
 
     public TISDeserializationSchema() {
-        this(new DefaultSourceValConvert());
+        this(new DefaultSourceValConvert(), new DefaultTableNameConvert());
     }
 
 //    public TISDeserializationSchema(boolean includeSchema) {
@@ -75,7 +78,7 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
             throw new IllegalStateException("topic is illegal:" + record.topic());
         }
         dto.setDbName(topicMatcher.group(1));
-        dto.setTableName(topicMatcher.group(2));
+        dto.setTableName(physicsTabName2LogicName.apply(topicMatcher.group(2)));
 
         if (op != Envelope.Operation.CREATE && op != Envelope.Operation.READ) {
             if (op == Envelope.Operation.DELETE) {

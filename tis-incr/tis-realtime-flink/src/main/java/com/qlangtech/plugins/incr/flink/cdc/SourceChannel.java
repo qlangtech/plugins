@@ -74,7 +74,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             List<ReaderSource> sourceFuncs = Lists.newArrayList();
             Map<String, List<String>> ip2dbs = Maps.newHashMap();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
-            dbConfig.vistDbName((config, ip, dbName) -> {
+            dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
                 List<String> dbs = ip2dbs.get(ip);
                 if (dbs == null) {
                     dbs = Lists.newArrayList();

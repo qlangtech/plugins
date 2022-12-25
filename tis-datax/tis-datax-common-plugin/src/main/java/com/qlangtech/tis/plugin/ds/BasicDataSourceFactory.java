@@ -120,7 +120,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         List<ColumnMetaData> columns = new ArrayList<>();
         try {
             final DBConfig dbConfig = getDbConfig();
-            dbConfig.vistDbName((config, ip, dbname) -> {
+            dbConfig.vistDbName((config, jdbcUrl, ip, dbname) -> {
                 columns.addAll(parseTableColMeta(table, config, ip, dbname));
                 logger.info("tabmeta:{},colsSize:{},cols:{}"
                         , table
@@ -176,7 +176,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     private final void visitConnection(final IConnProcessor connProcessor, final boolean visitAll) {
         try {
             final DBConfig dbConfig = getDbConfig();
-            dbConfig.vistDbName((config, ip, databaseName) -> {
+            dbConfig.vistDbName((config, jdbcUrl, ip, databaseName) -> {
                 visitConnection(config, ip, databaseName, connProcessor);
                 return !visitAll;
             });
@@ -391,7 +391,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
             ddlTestFile.add(ddFile);
         }
 
-        this.visitAllConnection(( connection) -> {
+        this.visitAllConnection((connection) -> {
             for (URL ddl : ddlTestFile) {
                 try (InputStream reader = ddl.openStream()) {
                     try (Statement statement = connection.getConnection().createStatement()) {

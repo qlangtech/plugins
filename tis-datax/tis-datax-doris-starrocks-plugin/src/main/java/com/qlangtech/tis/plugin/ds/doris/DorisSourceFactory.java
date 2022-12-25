@@ -149,7 +149,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
                 if (valid) {
                     int[] hostCount = new int[1];
                     DBConfig dbConfig = ((DorisSourceFactory) dsFactory).getDbConfig();
-                    dbConfig.vistDbName((config, ip, dbName) -> {
+                    dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
                         hostCount[0]++;
                         return false;
                     });

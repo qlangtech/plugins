@@ -88,15 +88,15 @@ public class MySqlContainer extends JdbcDatabaseContainer {
     public static final MySqlContainer createMysqlContainer(String tag, String myConf, String sqlClasspath) {
         MySqlContainer container =
                 (MySqlContainer) new MySqlContainer(tag)
-                        //.withConfigurationOverride("docker/server-gtids/my.cnf")
-                        // .withSetupSQL("docker/setup.sql")
+                        .withConfigurationOverride(myConf)
+                         .withSetupSQL(sqlClasspath)
                         .withDatabaseName("flink-test")
                         .withUsername("flinkuser")
                         .withPassword("flinkpw")
                         .withLogConsumer(new TISLoggerConsumer(LOG));
 
-        container.withCopyFileToContainer(MountableFile.forClasspathResource(myConf), "/etc/mysql/my.cnf");
-        container.withCopyFileToContainer(MountableFile.forClasspathResource(sqlClasspath), "/docker-entrypoint-initdb.d/setup.sql");
+        //container.withCopyFileToContainer(MountableFile.forClasspathResource(myConf), "/etc/mysql/my.cnf");
+        //container.withCopyFileToContainer(MountableFile.forClasspathResource(sqlClasspath), "/docker-entrypoint-initdb.d/setup.sql");
 
 //        container.copyFileToContainer(
 //                Transferable.of(IOUtils.loadResourceFromClasspath(MySqlContainer.class

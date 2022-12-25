@@ -35,8 +35,10 @@ import org.junit.rules.TestRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.lifecycle.Startables;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Basic class for testing {@link MySqlSource}.
@@ -57,6 +59,8 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
             return this.dsFactory;
         }
         JdbcDatabaseContainer container = this.getMysqlContainer();
+        Startables.deepStart(Stream.of(container)).join();
+
         if (container instanceof MySqlContainer) {
             return this.dsFactory = (BasicDataSourceFactory) ((MySqlContainer) container).createMySqlDataSourceFactory(dataxName);
         } else {

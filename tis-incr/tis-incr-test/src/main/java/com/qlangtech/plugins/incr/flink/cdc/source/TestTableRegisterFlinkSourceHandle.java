@@ -24,6 +24,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.TISTableEnvironment;
 import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
@@ -59,6 +60,11 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
     }
 
     @Override
+    protected Boolean shallRegisterSinkTable() {
+        return false;
+    }
+
+    @Override
     public Object deColFormat(String tableName, String colName, Object val) {
         Assert.assertEquals(tableName, this.tabName);
         FlinkCol flinkCol = flinkColMap.get(colName);
@@ -73,6 +79,11 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 //        return cols;
 //    }
 
+
+    @Override
+    protected void initWriterTable(TableAlias alias) {
+       // super.initWriterTable(alias);
+    }
 
     @Override
     protected List<FlinkCol> getTabColMetas(TargetResName dataxName, String tabName) {

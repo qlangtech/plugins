@@ -249,10 +249,13 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 return "`";
             }
 
+
+
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader,String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
                 return sourceHandle;
             }
         };
@@ -293,9 +296,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected IResultRows createConsumerHandle(String tabName, TISSinkFactory sinkFuncFactory) {
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader,String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
                 return sourceHandle;
             }
 

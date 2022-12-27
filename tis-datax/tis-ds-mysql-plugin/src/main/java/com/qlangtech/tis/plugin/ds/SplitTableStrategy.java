@@ -22,13 +22,14 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-17 21:20
  **/
-public abstract class SplitTableStrategy implements Describable<SplitTableStrategy> {
+public abstract class SplitTableStrategy implements Describable<SplitTableStrategy>, Serializable {
     public abstract TableInDB createTableInDB();
 
     /**

@@ -23,9 +23,11 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.db.parser.DBConfigParser;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -63,7 +65,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 19:48
  **/
-public abstract class BasicDataSourceFactory extends DataSourceFactory implements JdbcUrlBuilder {
+public abstract class BasicDataSourceFactory extends DataSourceFactory implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
 
@@ -213,6 +215,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     @Override
     public void refresh() {
         this.tabsInDBCache.invalidate(this.identityValue());
+    }
+
+    @Override
+    public void afterSaved() {
+        this.refresh();
     }
 
     @Override

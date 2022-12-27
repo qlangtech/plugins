@@ -93,6 +93,9 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
              */
             DataSourceMeta sourceMeta = new DataSourceMeta() {
                 @Override
+                public void refresh() {
+                }
+                @Override
                 public String getEscapeChar() {
                     return "`";
                 }

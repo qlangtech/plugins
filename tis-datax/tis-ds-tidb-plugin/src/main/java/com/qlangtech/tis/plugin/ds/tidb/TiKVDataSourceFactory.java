@@ -92,10 +92,6 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    @Override
-    public void refresh() {
-
-    }
 
     @Override
     public String identityValue() {
@@ -114,7 +110,12 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-//    @Override
+    @Override
+    public void refresh() {
+
+    }
+
+    //    @Override
 //    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
 //        throw new UnsupportedOperationException();
 //    }

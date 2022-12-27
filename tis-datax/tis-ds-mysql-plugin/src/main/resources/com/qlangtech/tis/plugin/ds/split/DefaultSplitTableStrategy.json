@@ -1,3 +1,6 @@
 {
-
+  "tabPattern": {
+    "label": "分表正则式",
+    "placeholder": "com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy.tabPatternPlaceholder()"
+  }
 }

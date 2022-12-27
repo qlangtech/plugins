@@ -273,6 +273,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     @Override
+    public final void refresh() {
+        getDataSourceFactory().refresh();
+    }
+
+    @Override
     public DS getDataSourceFactory() {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
         return (DS) dsStore.getPlugin();

@@ -130,7 +130,9 @@ public class WriterTemplate {
             public List<ISelectedTab> getSelectedTabs() {
                 return null;
             }
-
+            @Override
+            public void refresh() {
+            }
             @Override
             public IGroupChildTaskIterator getSubTasks() {
                 return null;

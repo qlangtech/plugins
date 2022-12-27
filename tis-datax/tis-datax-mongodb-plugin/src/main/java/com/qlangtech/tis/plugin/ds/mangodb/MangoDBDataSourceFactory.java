@@ -81,6 +81,11 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
+    public void refresh() {
+
+    }
+
+    @Override
     public String identityValue() {
         return this.name;
     }
@@ -93,10 +98,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         return (T) createMongoClient();
     }
 
-    @Override
-    public void refresh() {
-
-    }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {

@@ -74,10 +74,6 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String dbName;
 
-    @Override
-    public void refresh() {
-
-    }
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.identity})
     public Boolean useSSL;
@@ -197,6 +193,11 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
             session.close();
             cluster.close();
         }
+
+    }
+
+    @Override
+    public void refresh() {
 
     }
 

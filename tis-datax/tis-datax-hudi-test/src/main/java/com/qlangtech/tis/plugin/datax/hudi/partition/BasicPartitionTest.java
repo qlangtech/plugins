@@ -42,6 +42,9 @@ public class BasicPartitionTest {
     public void verifySQLDDLOfPartition(HudiTablePartition partition) {
         Assert.assertTrue(partition.isSupportPartition());
         DataSourceMeta sourceMeta = new DataSourceMeta() {
+            @Override
+            public void refresh() {
+            }
         };
         CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList()), sourceMeta) {
             @Override

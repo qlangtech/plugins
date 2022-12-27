@@ -18,18 +18,26 @@
 
 package com.qlangtech.tis.plugin.ds.split;
 
+import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,18 +52,34 @@ import java.util.regex.Pattern;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-17 21:23
  **/
-public class DefaultSplitTableStrategy extends SplitTableStrategy {
+public class DefaultSplitTableStrategy extends SplitTableStrategy  {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSplitTableStrategy.class);
+
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
+    public String tabPattern;
 
     @Override
     public TableInDB createTableInDB() {
-        return new SplitableTableInDB();
+        return new SplitableTableInDB(getTabPattern());
+    }
+
+    public static String tabPatternPlaceholder(){
+        return SplitableTableInDB.PATTERN_PHYSICS_TABLE.toString();
+    }
+
+    private Pattern getTabPattern() {
+        return StringUtils.isNotBlank(this.tabPattern)
+                ? Pattern.compile(this.tabPattern)
+                : SplitableTableInDB.PATTERN_PHYSICS_TABLE;
     }
 
     @Override
     public List<String> getAllPhysicsTabs(DataSourceFactory dsFactory, String jdbcUrl, String sourceTableName) {
-        TableInDB tablesInDB = dsFactory.getTablesInDB();// tabsInDBCache.get(dsFactory.identityValue());
+        TableInDB tablesInDB = dsFactory.getTablesInDB();
         if (!(tablesInDB instanceof SplitableTableInDB)) {
-            dsFactory.refresh();
+            if (dsFactory instanceof IRefreshable) {
+                ((IRefreshable) dsFactory).refresh();
+            }
             tablesInDB = dsFactory.getTablesInDB();
             if (!(tablesInDB instanceof SplitableTableInDB)) {
                 throw new IllegalStateException("dbId:" + dsFactory.identityValue()
@@ -152,8 +176,13 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         //<key:逻辑表名,List<String> 物理表列表>
         public Map<String, SplitableDB> tabs = new HashMap<>();
 
+        private final Pattern splitTabPattern;
 
-        private static final Pattern PATTERN_PHYSICS_TABLE = Pattern.compile("(\\S+)_(\\d+)");
+        public SplitableTableInDB(Pattern splitTabPattern) {
+            this.splitTabPattern = splitTabPattern;
+        }
+
+        public static final Pattern PATTERN_PHYSICS_TABLE = Pattern.compile("(\\S+)_(\\d+)");
 
         @Override
         public Function<String, String> getPhysicsTabName2LogicNameConvertor() {
@@ -240,6 +269,21 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
 
     @TISExtension
     public static class DefatDesc extends Descriptor<SplitTableStrategy> {
+
+        public boolean validateTabPattern(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            try {
+                Pattern.compile(value);
+            } catch (Exception e) {
+                logger.warn(e.getMessage(), e);
+                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                return false;
+            }
+
+            return true;
+        }
+
+
         @Override
         public String getDisplayName() {
             return SWITCH_ON;

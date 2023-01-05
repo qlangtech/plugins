@@ -29,10 +29,7 @@ import org.apache.flink.api.common.JobID;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 保存当前增量任务的执行状态
@@ -51,14 +48,14 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
     // 已经废弃的savepoint路径集合
     private final Set<String> discardPaths = Sets.newHashSet();
 
-    public boolean containSavepoint(String path) {
+    public Optional<FlinkSavepoint> containSavepoint(String path) {
 
         for (FlinkSavepoint sp : savepointPaths) {
             if (StringUtils.equals(path, sp.getPath())) {
-                return true;
+                return Optional.of(sp);
             }
         }
-        return false;
+        return Optional.empty();
     }
 
     public void setState(State state) {

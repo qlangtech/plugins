@@ -22,27 +22,20 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESInitialization;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.HttpEndpoint;
-import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.web.start.TisAppLaunch;
-import com.qlangtech.tis.web.start.TisSubModule;
+import com.qlangtech.tis.zeppelin.TISZeppelinClient;
 import io.searchbox.client.JestResult;
 import io.searchbox.cluster.Health;
-import org.apache.commons.io.FileUtils;
-import org.apache.zeppelin.client.ClientConfig;
-import org.apache.zeppelin.client.ZeppelinClient;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,83 +78,64 @@ public class ElasticEndpoint extends HttpEndpoint {
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements INotebookable {
 
-        // copy from  org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter
-        public static final String ELASTICSEARCH_HOST = "elasticsearch.host";
-        public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
-        public static final String ELASTICSEARCH_CLIENT_TYPE = "elasticsearch.client.type";
-        public static final String ELASTICSEARCH_CLUSTER_NAME = "elasticsearch.cluster.name";
-        public static final String ELASTICSEARCH_RESULT_SIZE = "elasticsearch.result.size";
-        public static final String ELASTICSEARCH_BASIC_AUTH_USERNAME = "elasticsearch.basicauth.username";
-        public static final String ELASTICSEARCH_BASIC_AUTH_PASSWORD = "elasticsearch.basicauth.password";
-        static final ZeppelinClient zeppelinClient;
-
-        static {
-            try {
-                ClientConfig clientConfig = new ClientConfig(
-                        "http://127.0.0.1:" + TisAppLaunch.getPort(TisSubModule.ZEPPELIN) + "/next");
-                zeppelinClient = new ZeppelinClient(clientConfig);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
 
         /**
          * see org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter
          *
-         * @param msgHandler
-         * @param context
-         * @param postFormVals
          * @return
          * @throws Exception
          */
         @Override
-        public String createOrGetNotebook(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) throws Exception {
+        public String createOrGetNotebook(Describable describable) throws Exception {
 
-            ParamsConfig cfg = postFormVals.newInstance(this, msgHandler);
+            ParamsConfig cfg = (ParamsConfig) describable; //postFormVals.newInstance(this, msgHandler);
             ElasticEndpoint endpoint = (ElasticEndpoint) cfg;
-            String idVal = cfg.identityValue();
-            String notebookId = null;
-            File notebookDir = this.getConfigFile().getFile().getParentFile();
-            File notebookToken = new File(notebookDir, "notebook_" + idVal);
-            if (notebookToken.exists()) {
-                notebookId = FileUtils.readFileToString(notebookToken, TisUTF8.get());
-                return notebookId;
-            }
+            return TISZeppelinClient.createESNotebook(endpoint);
 
-            File interpreterCfg = new File(com.qlangtech.tis.TIS.pluginCfgRoot, "interpreter/" + idVal);
-            if (!interpreterCfg.exists()) {
-
-                URL endpointURL = new URL(endpoint.getEndpoint());
-                zeppelinClient.deleteInterpreter(idVal);
-                FileUtils.write(interpreterCfg
-                        , zeppelinClient.createInterpreter(idVal, InterpreterGroup.ELASTIC_GROUP, (props) -> {
-                            props.add(ELASTICSEARCH_HOST, endpointURL.getHost());
-                            props.add(ELASTICSEARCH_PORT, String.valueOf(endpointURL.getPort()));
-                            props.add(ELASTICSEARCH_CLIENT_TYPE, "http");
-                            endpoint.accept(new AuthToken.Visitor<Void>() {
-                                @Override
-                                public Void visit(NoneToken noneToken) {
-                                    return null;
-                                }
-                                @Override
-                                public Void visit(AccessKey accessKey) {
-                                    return null;
-                                }
-                                @Override
-                                public Void visit(UsernamePassword token) {
-                                    props.add(ELASTICSEARCH_BASIC_AUTH_USERNAME, token.userName);
-                                    props.add(ELASTICSEARCH_BASIC_AUTH_PASSWORD, token.password);
-                                    return null;
-                                }
-                            });
-
-                        }), TisUTF8.get(), false);
-
-            }
-
-            notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));
-            FileUtils.write(notebookToken, notebookId, TisUTF8.get(), false);
-            return notebookId;
+//            ElasticEndpoint endpoint = (ElasticEndpoint) cfg;
+//            String idVal = cfg.identityValue();
+//            String notebookId = null;
+//            File notebookDir = this.getConfigFile().getFile().getParentFile();
+//            File notebookToken = new File(notebookDir, "notebook_" + idVal);
+//            if (notebookToken.exists()) {
+//                notebookId = FileUtils.readFileToString(notebookToken, TisUTF8.get());
+//                return notebookId;
+//            }
+//
+//            File interpreterCfg = new File(com.qlangtech.tis.TIS.pluginCfgRoot, "interpreter/" + idVal);
+//            if (!interpreterCfg.exists()) {
+//
+//                URL endpointURL = new URL(endpoint.getEndpoint());
+//                zeppelinClient.deleteInterpreter(idVal);
+//                FileUtils.write(interpreterCfg
+//                        , zeppelinClient.createInterpreter(idVal, InterpreterGroup.ELASTIC_GROUP, (props) -> {
+//                            props.add(ELASTICSEARCH_HOST, endpointURL.getHost());
+//                            props.add(ELASTICSEARCH_PORT, String.valueOf(endpointURL.getPort()));
+//                            props.add(ELASTICSEARCH_CLIENT_TYPE, "http");
+//                            endpoint.accept(new AuthToken.Visitor<Void>() {
+//                                @Override
+//                                public Void visit(NoneToken noneToken) {
+//                                    return null;
+//                                }
+//                                @Override
+//                                public Void visit(AccessKey accessKey) {
+//                                    return null;
+//                                }
+//                                @Override
+//                                public Void visit(UsernamePassword token) {
+//                                    props.add(ELASTICSEARCH_BASIC_AUTH_USERNAME, token.userName);
+//                                    props.add(ELASTICSEARCH_BASIC_AUTH_PASSWORD, token.password);
+//                                    return null;
+//                                }
+//                            });
+//
+//                        }), TisUTF8.get(), false);
+//
+//            }
+//
+//            notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));
+//            FileUtils.write(notebookToken, notebookId, TisUTF8.get(), false);
+//            return notebookId;
         }
 
         @Override
@@ -177,7 +151,8 @@ public class ElasticEndpoint extends HttpEndpoint {
                     msgHandler.addErrorMessage(context, result.getErrorMessage());
                 } else {
                     msgHandler.addActionMessage(context
-                            , "cluster '" + result.getValue("cluster_name") + "' is working,status:'" + result.getValue("status") + "'");
+                            , "cluster '" + result.getValue("cluster_name")
+                                    + "' is working,status:'" + result.getValue("status") + "'");
                 }
                 return result.isSucceeded();
             } catch (IOException e) {

@@ -32,24 +32,20 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.realtime.dto.DTOStream;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.table.data.RowData;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -71,8 +67,8 @@ public abstract class ChunjunSourceFunction
         return this.sourceFactory.getConsumerHandle();
     }
 
-    private SourceFunction<RowData> createSourceFunction(String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
-
+    private SourceFunction<RowData> createSourceFunction(
+            String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
 
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
         IStreamTableMeataCreator.IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(sourceTabName);
@@ -84,7 +80,8 @@ public abstract class ChunjunSourceFunction
 
     protected abstract JdbcSourceFactory //
     createChunjunSourceFactory( //
-                                SyncConf conf, BasicDataSourceFactory sourceFactory, IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc);
+                                SyncConf conf, BasicDataSourceFactory sourceFactory
+            , IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc);
 
 
     @Override
@@ -93,13 +90,30 @@ public abstract class ChunjunSourceFunction
         Objects.requireNonNull(dataXProcessor, "dataXProcessor can not be null");
         BasicDataXRdbmsReader reader = (BasicDataXRdbmsReader) dataSource;
         final BasicDataSourceFactory sourceFactory = (BasicDataSourceFactory) reader.getDataSourceFactory();
+        TableInDB tabsInDB = sourceFactory.getTablesInDB();
         List<ReaderSource> sourceFuncs = Lists.newArrayList();
+
         sourceFactory.getDbConfig().vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
+            DataXJobInfo dataXJobInfo = null;
+            Optional<String[]> targetPhysicsNames = null;
+            List<String> physicsNames = null;
             for (ISelectedTab tab : tabs) {
-                SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab);
-                SourceFunction<RowData> sourceFunc = createSourceFunction(tab.getName(), conf, sourceFactory, reader);
-                sourceFuncs.add(ReaderSource.createRowDataSource(
-                        dbHost + ":" + sourceFactory.port + "_" + dbName, tab, sourceFunc));
+                dataXJobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, jdbcUrl, tab.getName()));
+                targetPhysicsNames = dataXJobInfo.getTargetTableNames();
+                if (targetPhysicsNames.isPresent()) {
+                    physicsNames = Lists.newArrayList(targetPhysicsNames.get());
+                } else {
+                    physicsNames = Collections.singletonList(tab.getName());
+                }
+
+                for (String physicsName : physicsNames) {
+                    SyncConf conf = createSyncConf(sourceFactory, jdbcUrl, dbName, (SelectedTab) tab, physicsName);
+                    SourceFunction<RowData> sourceFunc = createSourceFunction(tab.getName(), conf, sourceFactory, reader);
+                    sourceFuncs.add(ReaderSource.createRowDataSource(
+                            dbHost + ":" + sourceFactory.port + "_" + dbName + "." + physicsName, tab, sourceFunc));
+                }
+
+
             }
         });
 
@@ -112,7 +126,7 @@ public abstract class ChunjunSourceFunction
         }
     }
 
-    private SyncConf createSyncConf(BasicDataSourceFactory sourceFactory, String jdbcUrl, String dbName, SelectedTab tab) {
+    private SyncConf createSyncConf(BasicDataSourceFactory sourceFactory, String jdbcUrl, String dbName, SelectedTab tab, String physicsTabName) {
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
@@ -147,7 +161,7 @@ public abstract class ChunjunSourceFunction
         params.put("fullColumn", tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         Map<String, Object> conn = Maps.newHashMap();
         conn.put("jdbcUrl", Collections.singletonList(jdbcUrl));
-        conn.put("table", Lists.newArrayList(tab.getName()));
+        conn.put("table", Lists.newArrayList(physicsTabName));
         //  conn.put("schema", dbName);
         params.put("connection", Lists.newArrayList(conn));
 

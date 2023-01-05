@@ -31,8 +31,8 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
 import org.apache.commons.lang.StringUtils;
@@ -74,29 +74,55 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
             if (StringUtils.isEmpty(schemaSupported.getDBSchema())) {
                 throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
             }
+
+
+            List<ReaderSource> readerSources = SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
+                DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
+
+                return dbs.getDbStream().map((dbname) -> {
+                    SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
+                            //.debeziumProperties()
+                            .hostname(dbHost)
+                            .port(dsFactory.port)
+                            .database(dbname) // monitor postgres database
+                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
+                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                            .username(dsFactory.userName)
+                            .password(dsFactory.password)
+                            .debeziumProperties(debeziumProperties)
+                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+                            .build();
+                    return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
+                }).collect(Collectors.toList());
+
+            });
+
+
             SourceChannel sourceChannel = new SourceChannel(
-                    SourceChannel.getSourceFunction(dsFactory, (tab) -> schemaSupported.getDBSchema() + "." + tab.getTabName()
-                            , tabs
-                            , (dbHost, dbs, tbs, debeziumProperties) -> {
-                                DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
-
-                                return dbs.stream().map((dbname) -> {
-                                    SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
-                                            //.debeziumProperties()
-                                            .hostname(dbHost)
-                                            .port(dsFactory.port)
-                                            .database(dbname) // monitor postgres database
-                                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
-                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
-                                            .username(dsFactory.userName)
-                                            .password(dsFactory.password)
-                                            .debeziumProperties(debeziumProperties)
-                                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                                            .build();
-                                    return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
-                                }).collect(Collectors.toList());
-
-                            }));
+                    readerSources
+//                    SourceChannel.getSourceFunction(dsFactory, (tab) -> schemaSupported.getDBSchema() + "." + tab.getTabName()
+//                            , tabs
+//                            , (dbHost, dbs, tbs, debeziumProperties) -> {
+//                                DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
+//
+//                                return dbs.stream().map((dbname) -> {
+//                                    SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
+//                                            //.debeziumProperties()
+//                                            .hostname(dbHost)
+//                                            .port(dsFactory.port)
+//                                            .database(dbname) // monitor postgres database
+//                                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
+//                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+//                                            .username(dsFactory.userName)
+//                                            .password(dsFactory.password)
+//                                            .debeziumProperties(debeziumProperties)
+//                                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+//                                            .build();
+//                                    return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
+//                                }).collect(Collectors.toList());
+//
+//                            })
+            );
             // for (ISelectedTab tab : tabs) {
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createDispatched);
             //}

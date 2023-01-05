@@ -18,22 +18,27 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.compress.utils.Lists;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -61,44 +66,95 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     public static List<ReaderSource> getSourceFunction(
             DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
-        return getSourceFunction(dsFactory, (tab) -> tab.dbNanme + "." + tab.tab.getName(), tabs, sourceFunctionCreator);
+        return getSourceFunction(dsFactory, (tab) -> {
+            TableInDB tabsInDB = dsFactory.getTablesInDB();
+            DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()));
+            Optional<String[]> targetTableNames = jobInfo.getTargetTableNames();
+            List<String> physicsTabNames = null;
+            if (targetTableNames.isPresent()) {
+                physicsTabNames = Lists.newArrayList(targetTableNames.get());
+            } else {
+                physicsTabNames = Collections.singletonList(tab.getTabName());
+            }
+            return physicsTabNames.stream().map((t) -> tab.dbNanme + "." + t);
+        }, tabs, sourceFunctionCreator);
+    }
+
+    public static class HostDbs {
+        final List<String> dbs;
+        final String jdbcUrl;
+
+        public HostDbs(String jdbcUrl) {
+            if (StringUtils.isEmpty(jdbcUrl)) {
+                throw new IllegalArgumentException("param jdbcUrl can not be null");
+            }
+            this.dbs = Lists.newArrayList();
+            this.jdbcUrl = jdbcUrl;
+        }
+
+        public Stream<String> getDbStream() {
+            return this.dbs.stream();
+        }
+
+        public String[] getDataBases() {
+            return this.dbs.toArray(new String[this.dbs.size()]);
+        }
+
+        public String joinDataBases(String delimiter) {
+            return this.dbs.stream().collect(Collectors.joining(delimiter));
+        }
+
+        public void addDB(String dbName) {
+            dbs.add(dbName);
+        }
+
+        public Set<String> mapPhysicsTabs(Map<String, List<ISelectedTab>> db2tabs
+                , Function<DBTable, Stream<String>> tabnameCreator) {
+            Set<String> tbs = this.dbs.stream().flatMap(
+                    (dbName) -> db2tabs.get(dbName).stream().flatMap((tab) -> {
+                        return tabnameCreator.apply(new DBTable(jdbcUrl, dbName, tab));
+                    })).collect(Collectors.toSet());
+            return tbs;
+        }
     }
 
     //https://ververica.github.io/flink-cdc-connectors/master/
-    public static List<ReaderSource> getSourceFunction(
-            DataSourceFactory dsFactory, Function<DBTable, String> tabnameCreator
+    private static List<ReaderSource> getSourceFunction(
+            DataSourceFactory dsFactory, Function<DBTable, Stream<String>> tabnameCreator
             , List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
 
         try {
             DBConfig dbConfig = dsFactory.getDbConfig();
             List<ReaderSource> sourceFuncs = Lists.newArrayList();
-            Map<String, List<String>> ip2dbs = Maps.newHashMap();
+            Map<String, HostDbs> ip2dbs = Maps.newHashMap();
             Map<String, List<ISelectedTab>> db2tabs = Maps.newHashMap();
             dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
-                List<String> dbs = ip2dbs.get(ip);
+                HostDbs dbs = ip2dbs.get(ip);
                 if (dbs == null) {
-                    dbs = Lists.newArrayList();
+                    dbs = new HostDbs(jdbcUrl);
                     ip2dbs.put(ip, dbs);
                 }
-                dbs.add(dbName);
+                dbs.addDB(dbName);
                 if (db2tabs.get(dbName) == null) {
                     db2tabs.put(dbName, tabs);
                 }
                 return false;
             });
 
-            for (Map.Entry<String /**ip*/, List<String>/**dbs*/> entry : ip2dbs.entrySet()) {
+            for (Map.Entry<String /**ip*/, HostDbs/**dbs*/> entry : ip2dbs.entrySet()) {
 
-                Set<String> tbs = entry.getValue().stream().flatMap(
-                        (dbName) -> db2tabs.get(dbName).stream().map((tab) -> {
-                            return tabnameCreator.apply(new DBTable(dbName, tab));
-                        })).collect(Collectors.toSet());
+//                Set<String> tbs = entry.getValue().stream().flatMap(
+//                        (dbName) -> db2tabs.get(dbName).stream().flatMap((tab) -> {
+//                            return tabnameCreator.apply(new DBTable(dbName, tab));
+//                        })).collect(Collectors.toSet());
+
+                Set<String> tbs = entry.getValue().mapPhysicsTabs(db2tabs, tabnameCreator);
 
                 Properties debeziumProperties = new Properties();
                 debeziumProperties.put("snapshot.locking.mode", "none");// do not use lock
 
                 String dbHost = entry.getKey();
-                List<String> dbs = entry.getValue();
+                HostDbs dbs = entry.getValue();
                 sourceFuncs.addAll(sourceFunctionCreator.create(dbHost, dbs, tbs, debeziumProperties));
             }
 
@@ -111,9 +167,11 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     public static class DBTable {
         public final String dbNanme;
+        public final String jdbcUrl;
         private final ISelectedTab tab;
 
-        public DBTable(String dbNanme, ISelectedTab tab) {
+        public DBTable(String jdbcUrl, String dbNanme, ISelectedTab tab) {
+            this.jdbcUrl = jdbcUrl;
             this.dbNanme = dbNanme;
             this.tab = tab;
         }
@@ -124,7 +182,7 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
     }
 
     public interface ReaderSourceCreator {
-        List<ReaderSource> create(String dbHost, List<String> dbs, Set<String> tbs, Properties debeziumProperties);
+        List<ReaderSource> create(String dbHost, HostDbs dbs, Set<String> tbs, Properties debeziumProperties);
     }
 
     @Override

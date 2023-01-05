@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -101,11 +102,11 @@ public class FlinkTaskNodeController implements IRCController {
     public void relaunch(TargetResName collection, String... targetPod) {
         FlinkIncrJobStatus status = getIncrJobStatus(collection);
         try {
-
+            Optional<IFlinkIncrJobStatus.FlinkSavepoint> savepoint = null;
             for (String savepointPath : targetPod) {
                 if ((status.getState() == IFlinkIncrJobStatus.State.STOPED
                         || !((FlinkJobDeploymentDetails) getRCDeployment(collection)).isRunning())
-                        && status.containSavepoint(savepointPath)) {
+                        && (savepoint = status.containSavepoint(savepointPath)).isPresent()) {
                     File streamUberJar = getStreamUberJarFile(collection);
                     if (!streamUberJar.exists()) {
                         throw new IllegalStateException("streamUberJar is not exist:" + streamUberJar.getAbsolutePath());
@@ -149,8 +150,11 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
     private File getStreamUberJarFile(TargetResName collection) {
-        String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
-        File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
+
+        File streamUberJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), 0);
+
+//        String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
+//        File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
         logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
         return streamUberJar;
     }

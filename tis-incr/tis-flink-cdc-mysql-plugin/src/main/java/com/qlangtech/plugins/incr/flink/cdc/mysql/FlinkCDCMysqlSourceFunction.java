@@ -47,7 +47,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -181,10 +180,10 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                                         MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
                                         , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
 
-                                String[] databases = dbs.toArray(new String[dbs.size()]);
+                                String[] databases = dbs.getDataBases();
 
                                 return Collections.singletonList(ReaderSource.createDTOSource(
-                                        dbHost + ":" + dsFactory.port + ":" + dbs.stream().collect(Collectors.joining("_")),
+                                        dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_"),
                                         MySqlSource.<DTO>builder()
                                                 .hostname(dbHost)
                                                 .port(dsFactory.port)

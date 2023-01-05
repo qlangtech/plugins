@@ -31,21 +31,14 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.web.start.TisAppLaunch;
-import com.qlangtech.tis.web.start.TisSubModule;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.FileUtils;
+import com.qlangtech.tis.zeppelin.TISZeppelinClient;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.zeppelin.client.ClientConfig;
-import org.apache.zeppelin.client.ZeppelinClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
@@ -326,46 +319,14 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     public abstract static class BasicRdbmsDataSourceFactoryDescriptor
             extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory> implements INotebookable {
         private static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\&\\w+?\\=\\w+?)*");
-        private static final ZeppelinClient zeppelinClient;
+        // private static final ZeppelinClient zeppelinClient;
 
-        static {
-            try {
-                ClientConfig clientConfig = new ClientConfig(
-                        "http://127.0.0.1:" + TisAppLaunch.getPort(TisSubModule.ZEPPELIN) + "/next");
-                zeppelinClient = new ZeppelinClient(clientConfig);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
 
         @Override
-        public String createOrGetNotebook(
-                IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) throws Exception {
+        public String createOrGetNotebook(Describable describable) throws Exception {
 
-            BasicDataSourceFactory dsFactory = postFormVals.newInstance(this, msgHandler);
-            String idVal = dsFactory.identityValue();
-            String notebookId = null;
-            File notebookDir = this.getConfigFile().getFile().getParentFile();
-            File notebookToken = new File(notebookDir, "notebook_" + idVal);
-            if (notebookToken.exists()) {
-                notebookId = FileUtils.readFileToString(notebookToken, TisUTF8.get());
-                return notebookId;
-            }
-
-            File interpreterCfg = new File(com.qlangtech.tis.TIS.pluginCfgRoot, "interpreter/" + idVal);
-            if (!interpreterCfg.exists()) {
-
-                List<String> jdbcUrls = dsFactory.getJdbcUrls();
-                if (CollectionUtils.isEmpty(jdbcUrls)) {
-                    throw new IllegalStateException("dataSource:" + idVal + " relevant jdbcUrl can not be empty");
-                }
-                FileUtils.write(interpreterCfg, zeppelinClient.createJDBCInterpreter(idVal), TisUTF8.get(), false);
-
-            }
-
-            notebookId = zeppelinClient.createNoteWithParagraph("/tis/" + idVal, ZeppelinClient.getInterpreterName(idVal));
-            FileUtils.write(notebookToken, notebookId, TisUTF8.get(), false);
-            return notebookId;
+            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;//  ;postFormVals.newInstance(this, msgHandler);
+            return TISZeppelinClient.createJdbcNotebook(dsFactory);
         }
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

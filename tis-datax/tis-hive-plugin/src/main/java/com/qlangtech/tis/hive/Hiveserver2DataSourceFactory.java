@@ -53,8 +53,9 @@ import java.util.Properties;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-14 09:33
+ * @see DefaultHiveConnGetter
  **/
-public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter {
     private static final String NAME_HIVESERVER2 = "Hiveserver2";
 
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -75,11 +76,31 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     public HiveUserToken userToken;
 
     @Override
+    public String getJdbcUrl() {
+        for (String jdbcUrl : this.getJdbcUrls()) {
+            return jdbcUrl;
+        }
+        throw new IllegalStateException("jdbcUrl can not be empty");
+    }
+
+    @Override
+    public String getMetaStoreUrls() {
+        return this.metaStoreUrls;
+    }
+
+    @Override
+    public IHiveMetaStore createMetaStoreClient() {
+        IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken);
+        return hiveMetaStore;
+    }
+
+    @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         return IHiveConnGetter.HIVE2_JDBC_SCHEMA + this.hiveAddress + "/" + dbName;
     }
 
-    private HiveUserToken getUserToken() {
+    @Override
+    public HiveUserToken getUserToken() {
         return this.userToken;
     }
 

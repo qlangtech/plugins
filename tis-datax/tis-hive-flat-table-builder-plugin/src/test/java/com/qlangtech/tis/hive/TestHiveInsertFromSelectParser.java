@@ -18,7 +18,12 @@
 
 package com.qlangtech.tis.hive;
 
+import com.qlangtech.tis.manage.common.TisUTF8;
 import junit.framework.TestCase;
+import org.apache.commons.io.IOUtils;
+
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * @author: baisui 百岁
@@ -27,23 +32,24 @@ import junit.framework.TestCase;
 public class TestHiveInsertFromSelectParser extends TestCase {
 
     public void testSqlParse() throws Exception {
-//        HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser();
-//
-//        try (InputStream input = TestHiveInsertFromSelectParser.class.getResourceAsStream("tmp_pay.sql")) {
-//            parse.start(IOUtils.toString(input, TisUTF8.get()));
-//            System.out.println("getTargetTableName:" + parse.getTargetTableName());
-//            List<HiveColumn> columns = parse.getColsExcludePartitionCols();
-//            assertEquals(5, columns.size());
-//            assertEquals("totalpay_id totalpay_id", columns.get(0).toString());
-//            assertEquals("kindpay kindpay", columns.get(1).toString());
-//            assertEquals("fee fee", columns.get(2).toString());
-//            assertEquals("is_enterprise_card_pay is_enterprise_card_pay", columns.get(3).toString());
-//            assertEquals("pay_customer_ids pay_customer_ids", columns.get(4).toString());
-//
-//            for (HiveColumn c : columns) {
-//                System.out.println(c.getName());
-//            }
-//        }
+        HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser();
+
+        try (InputStream input = TestHiveInsertFromSelectParser.class.getResourceAsStream("tmp_pay.sql")) {
+            parse.start(IOUtils.toString(input, TisUTF8.get()));
+           // parse.start("select p.id from  orderrrr.payinfo p");
+            System.out.println("getTargetTableName:" + parse.getTargetTableName());
+            List<HiveColumn> columns = parse.getColsExcludePartitionCols();
+            assertEquals(5, columns.size());
+            assertEquals("totalpay_id totalpay_id", columns.get(0).toString());
+            assertEquals("kindpay kindpay", columns.get(1).toString());
+            assertEquals("fee fee", columns.get(2).toString());
+            assertEquals("is_enterprise_card_pay is_enterprise_card_pay", columns.get(3).toString());
+            assertEquals("pay_customer_ids pay_customer_ids", columns.get(4).toString());
+
+            for (HiveColumn c : columns) {
+                System.out.println(c.getName());
+            }
+        }
 
 
     }

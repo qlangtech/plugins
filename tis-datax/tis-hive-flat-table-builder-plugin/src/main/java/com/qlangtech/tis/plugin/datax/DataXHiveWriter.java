@@ -25,13 +25,26 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.fs.ITableBuildTask;
+import com.qlangtech.tis.fs.ITaskContext;
+import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
+import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
+import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
+import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
+import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -39,12 +52,15 @@ import java.sql.Connection;
  * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
 @Public
-public class DataXHiveWriter extends BasicFSWriter {
+public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter {
     private static final String DATAX_NAME = "Hive";
 
-
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String hiveConn;
+
+
+    //    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+//    public String hiveConn;
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
@@ -54,7 +70,7 @@ public class DataXHiveWriter extends BasicFSWriter {
     @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
-    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
+    @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     @Override
@@ -71,22 +87,61 @@ public class DataXHiveWriter extends BasicFSWriter {
         return new HiveDataXContext("tishivewriter", tableMap, this.dataXName);
     }
 
+    /**
+     * ========================================================
+     * implements: IFlatTableBuilder
+     *
+     * @see IFlatTableBuilder
+     */
+    @Override
+    public void startTask(ITableBuildTask dumpTask) {
 
+    }
+
+    @Override
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
+            , ITaskContext taskContext, IJoinTaskStatus joinTaskStatus, IFlatTableBuilder flatTableBuilder
+            , IDataSourceFactoryGetter dsGetter, IPrimaryTabFinder primaryTabFinder) {
+//        ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
+//                , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter
+
+        JoinHiveTask joinHiveTask = new JoinHiveTask(nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus, this.getFs().getFileSystem(), MREngine.HIVE, dsGetter);
+        return joinHiveTask;
+    }
+
+    /**
+     * END implements: IFlatTableBuilder
+     * ==================================================================
+     */
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "DataXHiveWriter-tpl.json");
     }
 
     public Connection getConnection() {
+        Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
+        String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            ParamsConfig connGetter = (ParamsConfig) getHiveConnGetter();
-            return connGetter.createConfigInstance();
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+            return dsFactory.getConnection(jdbcUrl);
+        } catch (SQLException e) {
+            throw new RuntimeException(jdbcUrl, e);
         }
     }
 
+    @Override
+    public Hiveserver2DataSourceFactory getDataSourceFactory() {
+        if (StringUtils.isBlank(this.hiveConn)) {
+            throw new IllegalStateException("prop dbName can not be null");
+        }
+        return BasicDataXRdbmsWriter.getDs(this.hiveConn);
+    }
+
+    @Override
+    public Integer getRowFetchSize() {
+        throw new UnsupportedOperationException();
+    }
+
     public IHiveConnGetter getHiveConnGetter() {
-        return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
+        return getDataSourceFactory();
     }
 
     public class HiveDataXContext extends FSDataXContext {

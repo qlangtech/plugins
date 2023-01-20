@@ -19,10 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -33,7 +31,6 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -72,7 +69,7 @@ public class TestDefaultDataxProcessor extends BasicTest {
             TableAliasMapper tabAlias1 = loadDataxProcessor.getTabAlias();
             assertEquals(1, tabAlias1.size());
 
-            tabAlias1.forEach((key,val)->{
+            tabAlias1.forEach((key, val) -> {
                 assertEquals(tabAlias.getFrom(), key);
 
                 assertEquals(tabAlias.getFrom(), val.getFrom());
@@ -84,7 +81,7 @@ public class TestDefaultDataxProcessor extends BasicTest {
 //            }
         } finally {
             try {
-                KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, false, appName, IAppSource.class);
+                KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, KeyedPluginStore.StoreResourceType.parse(false), appName, IAppSource.class);
                 XmlFile storeFile = appKey.getSotreFile();
                 FileUtils.forceDelete(storeFile.getFile().getParentFile());
             } catch (IOException e) {

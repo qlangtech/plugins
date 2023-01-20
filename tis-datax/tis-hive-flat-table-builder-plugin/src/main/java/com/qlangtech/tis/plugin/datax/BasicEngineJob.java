@@ -177,15 +177,14 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         //  (String) TisDataXHiveWriter.jobFileType.get(this)
         fsFormat.setFileType(HdfsFileType.parse(this.fileType));
         return fsFormat;
-//        } catch (IllegalAccessException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
+    /**
+     * https://cwiki.apache.org/confluence/display/hive/languagemanual+ddl#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
+     * @return
+     */
     private List<HiveColumn> getCols() {
-        //try {
-
-        List<Configuration> cols = this.columns; //(List<Configuration>) TisDataXHiveWriter.jobColumnsField.get(this);
+        List<Configuration> cols = this.columns;
         AtomicInteger index = new AtomicInteger();
         return cols.stream().map((c) -> {
             HiveColumn hivCol = new HiveColumn();
@@ -200,9 +199,6 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
             hivCol.setIndex(index.getAndIncrement());
             return hivCol;
         }).collect(Collectors.toList());
-//        } catch (IllegalAccessException e) {
-//            throw new RuntimeException(e);
-//        }
     }
 
 

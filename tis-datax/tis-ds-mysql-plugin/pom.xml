@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.6.0</version>
+        <version>3.7.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -42,6 +42,11 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-plugin</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
 
         <dependency>
@@ -101,10 +106,7 @@
             <version>[5.1.47,)</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-common-rdbms-plugin</artifactId>
-        </dependency>
+
 
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -115,7 +117,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-testcontainer-mysql</artifactId>
-            <version>3.6.0</version>
+            <version>3.7.0</version>
             <scope>test</scope>
         </dependency>
 

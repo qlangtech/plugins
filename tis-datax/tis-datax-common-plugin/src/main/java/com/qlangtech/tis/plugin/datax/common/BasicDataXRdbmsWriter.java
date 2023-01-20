@@ -105,7 +105,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return getDs(this.dbName);
     }
 
-    private static <DS> DS getDs(String dbName) {
+    public  static <DS> DS getDs(String dbName) {
         DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
         return (DS) dsStore.getPlugin();
     }
@@ -139,7 +139,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
         boolean autoCreateTable = dataXWriter.autoCreateTable;
         if (autoCreateTable) {
-            DataxProcessor processor = DataxProcessor.load(null, dataXName);
+            IDataxProcessor processor = DataxProcessor.load(null, dataXName);
 
             File createDDL = new File(processor.getDataxCreateDDLDir(null)
                     , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);

@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.6.0</version>
+        <version>3.7.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -133,7 +133,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-hive-plugin</artifactId>
-            <version>3.6.0</version>
+            <version>3.7.0</version>
             <scope>compile</scope>
         </dependency>
 

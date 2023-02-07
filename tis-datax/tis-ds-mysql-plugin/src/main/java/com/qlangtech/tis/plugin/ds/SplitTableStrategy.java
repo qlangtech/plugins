@@ -30,7 +30,7 @@ import java.util.List;
  * @create: 2022-12-17 21:20
  **/
 public abstract class SplitTableStrategy implements Describable<SplitTableStrategy>, Serializable {
-    public abstract TableInDB createTableInDB();
+    public abstract TableInDB createTableInDB(DBIdentity dbId);
 
     /**
      * 逻辑表名称，没有数据库没有采用分表策略则直接发挥tabName ，如果采用分表则在扩展类中自定义扩展<br/>

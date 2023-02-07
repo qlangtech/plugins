@@ -160,7 +160,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
     @Override
     public TableInDB getTablesInDB() {
-        TableInDB tables = TableInDB.create();
+        TableInDB tables = TableInDB.create(this);
         processSession((session) -> {
             ResultSet resultSet = session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = '" + this.dbName + "' ");
             Iterator<Row> rows = resultSet.iterator();

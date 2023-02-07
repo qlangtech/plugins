@@ -84,8 +84,8 @@ public class DataXMongodbWriter extends DataxWriter
     }
 
     public MangoDBDataSourceFactory getDsFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return (MangoDBDataSourceFactory) dsStore.getPlugin();
+        return  TIS.getDataBasePlugin( PostedDSProp.parse(this.dbName));
+      //  return (MangoDBDataSourceFactory) dsStore.getPlugin();
     }
 
 

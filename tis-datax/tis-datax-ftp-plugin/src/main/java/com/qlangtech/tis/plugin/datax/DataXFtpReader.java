@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -42,6 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -76,6 +78,11 @@ public class DataXFtpReader extends DataxReader {
         return Arrays.stream(Compress.values()).map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
     }
 
+    @Override
+    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+        IDataxReaderContext readerContext = new DataXFtpReaderContext(this);
+        return IGroupChildTaskIterator.create(readerContext);
+    }
 
     @FormField(ordinal = 14, validate = {Validator.require})
     public FileFormat fileFormat;
@@ -103,12 +110,7 @@ public class DataXFtpReader extends DataxReader {
         return Collections.singletonList(parseColsResult.tabMeta);
     }
 
-    @Override
-    public IGroupChildTaskIterator getSubTasks() {
-        IDataxReaderContext readerContext = new DataXFtpReaderContext(this);
-        return IGroupChildTaskIterator.create(readerContext);
-        //return Collections.singletonList(readerContext).iterator();
-    }
+
 
     @Override
     public String getTemplate() {

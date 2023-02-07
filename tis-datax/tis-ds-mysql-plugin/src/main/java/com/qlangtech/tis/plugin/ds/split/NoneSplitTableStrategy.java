@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.split;
 
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
@@ -34,8 +35,8 @@ import java.util.List;
  **/
 public class NoneSplitTableStrategy extends SplitTableStrategy {
     @Override
-    public TableInDB createTableInDB() {
-        return TableInDB.create();
+    public TableInDB createTableInDB(DBIdentity dbId) {
+        return TableInDB.create(dbId);
     }
 
     @Override

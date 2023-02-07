@@ -156,7 +156,7 @@ public class DataXHbase20xsqlReader extends DataxReader {
     }
 
     protected DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore( PostedDSProp.parse(this.dbName));
         return dsStore.getPlugin();
     }
 

@@ -293,11 +293,14 @@ public class HiveInsertFromSelectParser {
             sqlTaskNodeMeta.setSql(sql);
             ISqlTask.RewriteSql rewriteSql = sqlTaskNodeMeta.getColMetaGetterSql(tabPartition);
             List<ColumnMetaData> colsMeta = sqlColMetaGetter.apply(rewriteSql);
-
             List<HiveColumn> cols = this.getColsExcludePartitionCols();
+
+            if (cols.size() != colsMeta.size()) {
+                throw new IllegalStateException("cols.size():" + cols.size() + ",colsMeta.size():" + colsMeta.size() + " is not equal");
+            }
+
             for (int i = 0; i < cols.size(); i++) {
-                colsMeta.get(i);
-                cols.get(i);
+                cols.get(i).setDataType(colsMeta.get(i).getType());
             }
 
         } catch (ParseException e) {

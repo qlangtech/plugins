@@ -59,9 +59,9 @@ public class TestMySQLDataSourceFactory  //extends TestCase
     @Test
     public void testGetPlugin() throws Exception {
 
-        DataSourceFactoryPluginStore dbPluginStore = TIS.getDataBasePluginStore(new PostedDSProp(DB_ORDER));
-
-        DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
+        DataSourceFactory dataSourceFactory = TIS.getDataBasePlugin( PostedDSProp.parse(DB_ORDER));
+        DataSourceFactoryPluginStore dbPluginStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(DB_ORDER));
+        // DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
         assertNotNull(dataSourceFactory);
 
         List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(EntityName.parse("totalpayinfo"));

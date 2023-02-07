@@ -245,7 +245,7 @@ public class TestDataxMySQLReader extends BasicTest {
         IPluginContext pluginContext = EasyMock.createMock("pluginContext", IPluginContext.class);
         pluginContext.addDb(desc, dbName, context, true);
         EasyMock.replay(pluginContext, context);
-        DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
+        DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(dbName));
         assertTrue("save mysql db Config faild", dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
         DataxMySQLReader mySQLReader = new DataxMySQLReader() {
@@ -312,7 +312,8 @@ public class TestDataxMySQLReader extends BasicTest {
         MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
         mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
 
-        DefaultSplitTableStrategy.SplitableTableInDB tabsInDB = new DefaultSplitTableStrategy.SplitableTableInDB();
+        DefaultSplitTableStrategy.SplitableTableInDB tabsInDB
+                = new DefaultSplitTableStrategy.SplitableTableInDB(mysqlDataSource, DefaultSplitTableStrategy.SplitableTableInDB.PATTERN_PHYSICS_TABLE);
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
 

@@ -30,7 +30,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -47,13 +46,13 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
     @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String fileType;
+
+    @FormField(ordinal = 10, validate = {Validator.require})
+    public FSFormat fileType;
 
     @FormField(ordinal = 15, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String writeMode;
-    @FormField(ordinal = 20, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String fieldDelimiter;
+
     @FormField(ordinal = 25, type = FormFieldType.ENUM, validate = {})
     public String compress;
     @FormField(ordinal = 30, type = FormFieldType.ENUM, advance = true, validate = {})
@@ -158,7 +157,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
 
 
         public String getFileType() {
-            return fileType;
+            return fileType.getDescriptor().getDisplayName();
         }
 
         public String getWriteMode() {
@@ -166,7 +165,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         }
 
         public String getFieldDelimiter() {
-            return fieldDelimiter;
+            return String.valueOf(fileType.getFieldDelimiter());
         }
 
         public String getCompress() {

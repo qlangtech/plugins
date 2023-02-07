@@ -15,7 +15,7 @@ FROM
    , concat_ws(',', collect_list(get_json_object(p.ext, '$.customerRegisterId'))) pay_customer_ids
    , p.pt,p.pmod
    FROM
-     `order`.`payinfo` p
+     `order`.`payinfo` as p
    WHERE ((length(p.kindpay_id) > 0) AND (p.is_valid = 1)) AND p.pt='20200603135447'
    GROUP BY p.totalpay_id, p.kindpay_id,p.pt,p.pmod
 )  aa

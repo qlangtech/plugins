@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * @create: 2021-06-20 20:43
  **/
 public class BasicMongoDBContext {
-    private final MangoDBDataSourceFactory dsFactory;
+    protected final MangoDBDataSourceFactory dsFactory;
 
     public BasicMongoDBContext(MangoDBDataSourceFactory dsFactory) {
         this.dsFactory = dsFactory;

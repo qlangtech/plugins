@@ -36,6 +36,11 @@ public class HdfsReaderContext implements IDataxReaderContext {
         this.fileSystemFactory = (HdfsFileSystemFactory) this.reader.getFs();
     }
 
+    @Override
+    public String getReaderContextId() {
+        return fileSystemFactory.identityValue();
+    }
+
     public String getDataXName() {
         return reader.dataXName;
     }

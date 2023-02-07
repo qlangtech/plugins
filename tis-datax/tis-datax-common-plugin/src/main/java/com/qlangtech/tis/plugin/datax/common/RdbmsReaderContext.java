@@ -53,6 +53,11 @@ public class RdbmsReaderContext<READER extends BasicDataXRdbmsReader, DS extends
     }
 
     @Override
+    public final String getReaderContextId() {
+        return dsFactory.identityValue();
+    }
+
+    @Override
     public String getSourceTableName() {
         return this.sourceTableName;
     }

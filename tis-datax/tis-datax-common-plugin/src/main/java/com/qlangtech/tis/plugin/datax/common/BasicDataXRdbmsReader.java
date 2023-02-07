@@ -19,11 +19,8 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
@@ -43,14 +40,11 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.Memoizer;
 import com.qlangtech.tis.util.impl.AttrVals;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +71,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     private transient int preSelectedTabsHash;
     public String dataXName;
 
-    @Override
+   // @Override
     public Integer getRowFetchSize() {
         return this.fetchSize;
     }
@@ -138,96 +132,99 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 //    }
 
     @Override
-    public final IGroupChildTaskIterator getSubTasks() {
+    public final IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
-        DS dsFactory = this.getDataSourceFactory();
+        List<SelectedTab> tabs = this.selectedTabs.stream().filter(filter).collect(Collectors.toList());
+        // DS dsFactory = this.getDataSourceFactory();
 
         Memoizer<String, Map<String, ColumnMetaData>> tabColsMap = getTabsMeta();
 
-        AtomicInteger selectedTabIndex = new AtomicInteger(0);
-        AtomicInteger taskIndex = new AtomicInteger(0);
+        return new DataXRdbmsGroupChildTaskIterator(this, this.isFilterUnexistCol(), tabs, tabColsMap);
 
-        final int selectedTabsSize = this.selectedTabs.size();
-        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
-        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-
-        return new IGroupChildTaskIterator() {
-            @Override
-            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
-                return groupedInfo;
-            }
-
-            @Override
-            public boolean hasNext() {
-
-                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
-                if (dumperIt.hasNext()) {
-                    return true;
-                } else {
-                    if (selectedTabIndex.get() >= selectedTabsSize) {
-                        return false;
-                    } else {
-                        dumperItRef.set(null);
-                        initDataSourceDumperIterator();
-                        return true;
-                    }
-                }
-            }
-
-            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
-                Iterator<IDataSourceDumper> dumperIt;
-                if ((dumperIt = dumperItRef.get()) == null) {
-                    SelectedTab tab = selectedTabs.get(selectedTabIndex.getAndIncrement());
-                    if (StringUtils.isEmpty(tab.getName())) {
-                        throw new IllegalStateException("tableName can not be null");
-                    }
-//                    List<ColumnMetaData> tableMetadata = null;
-//                    IDataSourceDumper dumper = null;
-                    DataDumpers dataDumpers = null;
-                    TISTable tisTab = new TISTable();
-                    tisTab.setTableName(tab.getName());
-                    int[] index = {0};
-                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
-                        return createColumnMetaData(index, c.getName());
-                    }).collect(Collectors.toList()));
-
-                    dataDumpers = dsFactory.getDataDumpers(tisTab);
-                    dumperIt = dataDumpers.dumpers;
-                    dumperItRef.set(dumperIt);
-                }
-                return dumperIt;
-            }
-
-            @Override
-            public IDataxReaderContext next() {
-                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
-                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
-                IDataSourceDumper dumper = dumperIterator.next();
-                SelectedTab tab = selectedTabs.get(selectedTabIndex.get() - 1);
-                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-                List<DataXCfgGenerator.DBDataXChildTask> childTasks
-                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
-                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
-
-                dataxContext.setWhere(tab.getWhere());
-
-                if (isFilterUnexistCol()) {
-                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-
-                    dataxContext.setCols(tab.cols.stream()
-                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
-                } else {
-                    dataxContext.setCols(tab.cols);
-                }
-                return dataxContext;
-            }
-        };
+//        AtomicInteger selectedTabIndex = new AtomicInteger(0);
+//        AtomicInteger taskIndex = new AtomicInteger(0);
+//
+//        final int selectedTabsSize = tabs.size();
+//        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
+//        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
+//
+//        return new IGroupChildTaskIterator() {
+//            @Override
+//            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+//                return groupedInfo;
+//            }
+//
+//            @Override
+//            public boolean hasNext() {
+//
+//                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
+//                if (dumperIt.hasNext()) {
+//                    return true;
+//                } else {
+//                    if (selectedTabIndex.get() >= selectedTabsSize) {
+//                        return false;
+//                    } else {
+//                        dumperItRef.set(null);
+//                        initDataSourceDumperIterator();
+//                        return true;
+//                    }
+//                }
+//            }
+//
+//            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
+//                Iterator<IDataSourceDumper> dumperIt;
+//                if ((dumperIt = dumperItRef.get()) == null) {
+//                    SelectedTab tab = tabs.get(selectedTabIndex.getAndIncrement());
+//                    if (StringUtils.isEmpty(tab.getName())) {
+//                        throw new IllegalStateException("tableName can not be null");
+//                    }
+////                    List<ColumnMetaData> tableMetadata = null;
+////                    IDataSourceDumper dumper = null;
+//                    DataDumpers dataDumpers = null;
+//                    TISTable tisTab = new TISTable();
+//                    tisTab.setTableName(tab.getName());
+//                    int[] index = {0};
+//                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
+//                        return createColumnMetaData(index, c.getName());
+//                    }).collect(Collectors.toList()));
+//
+//                    dataDumpers = dsFactory.getDataDumpers(tisTab);
+//                    dumperIt = dataDumpers.dumpers;
+//                    dumperItRef.set(dumperIt);
+//                }
+//                return dumperIt;
+//            }
+//
+//            @Override
+//            public IDataxReaderContext next() {
+//                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
+//                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
+//                IDataSourceDumper dumper = dumperIterator.next();
+//                SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
+//                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
+//                List<DataXCfgGenerator.DBDataXChildTask> childTasks
+//                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
+//                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
+//                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
+//
+//                dataxContext.setWhere(tab.getWhere());
+//
+//                if (isFilterUnexistCol()) {
+//                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
+//
+//                    dataxContext.setCols(tab.cols.stream()
+//                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
+//                } else {
+//                    dataxContext.setCols(tab.cols);
+//                }
+//                return dataxContext;
+//            }
+//        };
     }
 
-    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
-    }
+//    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
+//        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
+//    }
 
     protected boolean isFilterUnexistCol() {
         return false;
@@ -279,8 +276,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
 
     @Override
     public DS getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return (DS) dsStore.getPlugin();
+        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
+        //  return (DS) dsStore.getPlugin();
     }
 
     @Override

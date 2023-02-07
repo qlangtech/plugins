@@ -14,5 +14,23 @@
   "userToken": {
     "dftVal": "off",
     "help": "当选择为'on', 用户需要填写用户名和密码"
+  },
+  "userName": {
+    "disable": true
+  },
+  "password": {
+    "disable": true
+  },
+  "nodeDesc": {
+    "disable": true
+  },
+  "port": {
+    "disable": true
+  },
+  "encode": {
+    "disable": true
+  },
+  "extraParams": {
+    "disable": true
   }
 }

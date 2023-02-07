@@ -1,6 +1,9 @@
-## tabPrefix
+## tabDecorator
 
-每次导入Hive表，会在对应源表前加一个后缀，这样更加符合数据仓库的规范，一般是加`ods_`, 用户也可以修改成其他值
+进入离线计算引擎的表有时候需要对原始表进行别名处理
+
+* `off`: 保留原始表名称
+* `tabPrefix`: 在原始表之前添加一个前缀，例如：`ods_`
 
 ## partitionRetainNum
 

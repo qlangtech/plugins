@@ -39,4 +39,9 @@ public class MockDataxReaderContext implements IDataxReaderContext {
     public String getSourceEntityName() {
         return null;
     }
+
+    @Override
+    public String getReaderContextId() {
+        return null;
+    }
 }

@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -33,6 +34,7 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
+import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
@@ -79,9 +81,11 @@ public class TestDataXHdfsWriter extends BasicTest {
         DataXHdfsWriter hdfsWriter = new DataXHdfsWriter();
         hdfsWriter.dataXName = mysql2hdfsDataXName;
         hdfsWriter.fsName = "hdfs1";
-        hdfsWriter.fileType = "text";
+        TextFSFormat textFormat = new TextFSFormat();
+        textFormat.fieldDelimiter = Delimiter.Tab.token;
+        hdfsWriter.fileType = textFormat;
         hdfsWriter.writeMode = "nonConflict";
-        hdfsWriter.fieldDelimiter = "\t";
+      //  hdfsWriter.fieldDelimiter = "\t";
         hdfsWriter.compress = "gzip";
         hdfsWriter.encoding = "utf-8";
         hdfsWriter.template = DataXHdfsWriter.getDftTemplate();

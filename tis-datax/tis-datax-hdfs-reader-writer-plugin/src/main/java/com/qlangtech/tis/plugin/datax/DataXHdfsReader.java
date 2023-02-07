@@ -36,12 +36,14 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -139,7 +141,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
     }
 
     @Override
-    public IGroupChildTaskIterator getSubTasks() {
+    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         IDataxReaderContext readerContext = new HdfsReaderContext(this);
         return IGroupChildTaskIterator.create(readerContext);
     }

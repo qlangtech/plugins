@@ -105,9 +105,9 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         return getDs(this.dbName);
     }
 
-    public  static <DS> DS getDs(String dbName) {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(dbName));
-        return (DS) dsStore.getPlugin();
+    public static <DS extends DataSourceFactory> DS getDs(String dbName) {
+        return TIS.getDataBasePlugin(PostedDSProp.parse((dbName)));
+        // return (DS) dsStore.getPlugin();
     }
 
 

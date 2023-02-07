@@ -58,12 +58,12 @@ import java.util.Properties;
 public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter {
     private static final String NAME_HIVESERVER2 = "Hiveserver2";
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String name;
 
     // 数据库名称
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String dbName;
+//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String dbName;
 
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String metaStoreUrls;
@@ -174,20 +174,14 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     public final TableInDB getTablesInDB() {
         String hiveJdbcUrl = createHiveJdbcUrl();
         try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
-            TableInDB tabs = TableInDB.create();
+            TableInDB tabs = TableInDB.create(this);
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
             tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
             return tabs;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new TisException("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
         }
     }
-
-    @Override
-    public String identityValue() {
-        return null;
-    }
-
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDataSourceFactory.BasicRdbmsDataSourceFactoryDescriptor {
@@ -237,7 +231,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                 dsFactory.visitFirstConnection((c) -> {
                     Connection conn = c.getConnection();
                     try (Statement statement = conn.createStatement()) {
-                        try (ResultSet result = statement.executeQuery("select 1;")) {
+                        try (ResultSet result = statement.executeQuery("select 1")) {
                             if (!result.next()) {
                                 throw new TisException("create jdbc connection faild");
                             }

@@ -27,6 +27,7 @@ import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
@@ -227,7 +228,7 @@ public class FlinkTaskNodeController implements IRCController {
 
 
     private FlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
-        DataxProcessor processor = DataxProcessor.load(null, collection.getName());
+        IDataxProcessor processor = DataxProcessor.load(null, collection.getName());
         File dataXWorkDir = processor.getDataXWorkDir(null);
         return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log"));
     }

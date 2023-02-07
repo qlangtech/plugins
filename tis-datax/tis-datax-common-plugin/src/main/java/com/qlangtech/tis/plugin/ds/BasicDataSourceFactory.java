@@ -233,7 +233,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     protected TableInDB createTableInDB() {
-        return TableInDB.create();
+        return TableInDB.create(this);
     }
 
     @Override

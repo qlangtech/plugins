@@ -61,7 +61,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     protected TableInDB createTableInDB() {
-        return this.splitTableStrategy.createTableInDB();
+        return this.splitTableStrategy.createTableInDB(this);
     }
 
     @Override

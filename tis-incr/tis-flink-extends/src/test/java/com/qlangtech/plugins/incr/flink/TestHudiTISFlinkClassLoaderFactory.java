@@ -112,8 +112,8 @@ public class TestHudiTISFlinkClassLoaderFactory {
             }
         });
 
-
-        KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, false, "hudi", null);
+       // IPluginContext pluginContext, StoreResourceType resourceType, String appname, Class<TT> clazz
+        KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, KeyedPluginStore.StoreResourceType.DataApp, "hudi", null);
         String appPath = Config.SUB_DIR_CFG_REPO + File.separator + Config.KEY_TIS_PLUGIN_CONFIG + File.separator + appKey.getSubDirPath();
         HttpUtils.addMockApply(-1, new HttpUtils.MockMatchKey(URLEncoder.encode(appPath, TisUTF8.getName()), false, true), new HttpUtils.IClasspathRes() {
             @Override

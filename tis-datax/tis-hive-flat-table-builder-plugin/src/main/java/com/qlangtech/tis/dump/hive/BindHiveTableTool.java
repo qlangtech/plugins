@@ -192,7 +192,8 @@ public class BindHiveTableTool {
          * @param sqlCommandTailAppend
          * @throws Exception
          */
-        public void createHiveTableAndBindPartition(Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+        public void createHiveTableAndBindPartition(
+                Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
 
 
             int maxColLength = 0;
@@ -217,7 +218,8 @@ public class BindHiveTableTool {
                 if (i != o.getIndex()) {
                     throw new IllegalStateException("i:" + i + " shall equal with index:" + o.getIndex());
                 }
-                hiveSQl.append("  ").append("`").append(String.format(colformat, StringUtils.remove(o.getName(), "`") + '`')).append(" ").append(o.getType());
+                hiveSQl.append("  ").append("`").append(String.format(colformat, StringUtils.remove(o.getName(), "`") + '`'))
+                        .append(" ").append(o.getDataType());
                 if ((i + 1) < colsSize) {
                     hiveSQl.append(",");
                 }
@@ -232,6 +234,8 @@ public class BindHiveTableTool {
             logger.info(hiveSQl.toString());
             HiveDBUtils.executeNoLog(conn, hiveSQl.toString());
         }
+
+
 
 
         /**

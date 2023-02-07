@@ -18,42 +18,114 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
+import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.util.IPluginContext;
+import com.qlangtech.tis.util.UploadPluginMeta;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-01-05 22:10
  **/
-public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource {
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, IdentityName {
+
+
+    @FormField(ordinal = 1, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String name;
+    @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String globalCfg;
 
-    private final String dataFlowName;
+    @Override
+    public String identityValue() {
+        return this.name;
+    }
 
-    public DataFlowDataXProcessor(String dataFlowName) {
-        this.dataFlowName = dataFlowName;
+    @Override
+    public final KeyedPluginStore.StoreResourceType getResType() {
+        return KeyedPluginStore.StoreResourceType.DataFlow;
     }
 
     @Override
     public IDataxReader getReader(IPluginContext pluginCtx) {
-        return DataxReader.load(pluginCtx, true, this.dataFlowName);
+        // return DataxReader.load(pluginCtx, true, this.name);
+        throw new UnsupportedOperationException("dataflow processor not support single reader getter");
+    }
+
+    @Override
+    public TableAliasMapper getTabAlias() {
+        return TableAliasMapper.Null;
+    }
+
+    @Override
+    public List<IDataxReader> getReaders(IPluginContext pluginCtx) {
+
+        try {
+            List<IDataxReader> readers = Lists.newArrayList();
+
+            SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+
+            List<DependencyNode> dumpNodes = topology.getDumpNodes();
+
+
+            Map<String, Set<String>> dbIds = Maps.newHashMap();
+            Set<String> tabs = null;
+            for (DependencyNode dump : dumpNodes) {
+                tabs = dbIds.get(dump.getDbName());
+                if (tabs == null) {
+                    tabs = Sets.newHashSet();
+                    dbIds.put(dump.getDbName(), tabs);
+                }
+                tabs.add(dump.getName());
+                // dbIds.add(dump.getDbName());
+            }
+
+            dbIds.entrySet().forEach((entry) -> {
+                readers.add(new AdapterDataxReader(DataxReader.load(pluginCtx, true, entry.getKey())) {
+                    @Override
+                    public IGroupChildTaskIterator getSubTasks() {
+                        return super.getSubTasks((tab)-> entry.getValue().contains(tab.getName()));
+                    }
+                    //                    @Override
+//                    public <T extends ISelectedTab> List<T> getSelectedTabs() {
+//                        List<T> tabs = super.getSelectedTabs();
+//                        return tabs.stream().filter((tab) -> entry.getValue().contains(tab.getName())).collect(Collectors.toList());
+//                    }
+                });
+            });
+
+            return readers;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -65,13 +137,13 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource {
 
 
     @Override
-    public IDataxWriter getWriter(IPluginContext pluginCtx) {
-        return DataxWriter.load(pluginCtx, KeyedPluginStore.StoreResourceType.DataFlow, this.dataFlowName);
+    public IDataxWriter getWriter(IPluginContext pluginCtx, boolean validateNull) {
+        return DataxWriter.load(pluginCtx, KeyedPluginStore.StoreResourceType.DataFlow, this.name, validateNull);
     }
 
     @Override
     public File getDataXWorkDir(IPluginContext pluginContext) {
-        TopologyDir topoDir = SqlTaskNodeMeta.getTopologyDir(this.dataFlowName);
+        TopologyDir topoDir = SqlTaskNodeMeta.getTopologyDir(this.name);
         return topoDir.getLocalSubFileDir();
     }
 
@@ -103,12 +175,12 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource {
 
     @Override
     public boolean isRDBMS2RDBMS(IPluginContext pluginCtx) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isWriterSupportMultiTableInReader(IPluginContext pluginCtx) {
-        return false;
+        return true;
     }
 
     @Override
@@ -116,8 +188,27 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource {
         return DataxProcessor.getDataxCfgFileNames(pluginCtx, this);
     }
 
-    @Override
-    public TableAliasMapper getTabAlias() {
-        return null;
+
+    @TISExtension()
+    public static class DescriptorImpl extends Descriptor<IAppSource> {
+
+        public DescriptorImpl() {
+            super();
+            this.registerSelectOptions(DefaultDataxProcessor.KEY_FIELD_NAME, () -> ParamsConfig.getItems(IDataxGlobalCfg.KEY_DISPLAY_NAME));
+        }
+
+        public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            UploadPluginMeta pluginMeta = (UploadPluginMeta) context.get(UploadPluginMeta.KEY_PLUGIN_META);
+            Objects.requireNonNull(pluginMeta, "pluginMeta can not be null");
+            if (pluginMeta.isUpdate()) {
+                return true;
+            }
+            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.WORKFLOW_NAME_DUPLICATE, context, fieldName, value);
+        }
+
+        @Override
+        public String getDisplayName() {
+            return DataxProcessor.DEFAULT_WORKFLOW_PROCESSOR_NAME;
+        }
     }
 }

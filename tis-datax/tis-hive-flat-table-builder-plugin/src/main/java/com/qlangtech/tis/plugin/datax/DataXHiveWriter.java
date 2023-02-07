@@ -30,6 +30,7 @@ import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
+import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
 import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
@@ -56,18 +57,18 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     private static final String DATAX_NAME = "Hive";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String hiveConn;
+    public String dbName;
 
 
     //    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
 //    public String hiveConn;
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer partitionRetainNum;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String tabPrefix;
+    @FormField(ordinal = 7, validate = {Validator.require})
+    public TabNameDecorator tabDecorator;
 
-    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String partitionFormat;
 
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
@@ -100,11 +101,8 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
-            , ITaskContext taskContext, IJoinTaskStatus joinTaskStatus, IFlatTableBuilder flatTableBuilder
+            , ITaskContext taskContext, IJoinTaskStatus joinTaskStatus
             , IDataSourceFactoryGetter dsGetter, IPrimaryTabFinder primaryTabFinder) {
-//        ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
-//                , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter
-
         JoinHiveTask joinHiveTask = new JoinHiveTask(nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus, this.getFs().getFileSystem(), MREngine.HIVE, dsGetter);
         return joinHiveTask;
     }
@@ -129,10 +127,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public Hiveserver2DataSourceFactory getDataSourceFactory() {
-        if (StringUtils.isBlank(this.hiveConn)) {
+        if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");
         }
-        return BasicDataXRdbmsWriter.getDs(this.hiveConn);
+        return BasicDataXRdbmsWriter.getDs(this.dbName);
     }
 
     @Override
@@ -155,7 +153,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
         @Override
         public String getTableName() {
-            return StringUtils.trimToEmpty(tabPrefix) + super.getTableName();
+            return tabDecorator.decorate(super.getTableName());// StringUtils.trimToEmpty(tabPrefix) + super.getTableName();
         }
 
         public String getDataxPluginName() {
@@ -172,7 +170,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor {
+    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements IFlatTableBuilderDescriptor {
         public DefaultDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));

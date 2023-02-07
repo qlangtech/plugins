@@ -53,7 +53,7 @@ public class DataXHbase11xsqlReader extends DataxReader {
     public String table;
         @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {  Validator.require })
     public String column;
-    
+
     @FormField(ordinal = 3, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String template;
 
@@ -163,7 +163,7 @@ public class DataXHbase11xsqlReader extends DataxReader {
     }
 
     protected DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore( PostedDSProp.parse(this.dbName));
         return dsStore.getPlugin();
     }
 

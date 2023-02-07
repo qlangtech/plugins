@@ -93,8 +93,8 @@ public class DataXCassandraWriter extends DataxWriter {
     }
 
     public  CassandraDatasourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return (CassandraDatasourceFactory) dsStore.getPlugin();
+        return  TIS.getDataBasePlugin( PostedDSProp.parse(this.dbName));
+      //  return (CassandraDatasourceFactory) dsStore.getPlugin();
     }
 
 

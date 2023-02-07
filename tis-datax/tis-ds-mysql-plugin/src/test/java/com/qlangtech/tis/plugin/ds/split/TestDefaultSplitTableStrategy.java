@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.split;
 
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,9 +36,10 @@ public class TestDefaultSplitTableStrategy {
     @Test
     public void testTabAggre() {
         // final String jdbcUrl = "jdbc_url_1";
+        DBIdentity dbId = DBIdentity.parseId("order2");
         final String dataXCfgFileName = "base_0.json";
         DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
-        TableInDB tableInDB = splitTableStrategy.createTableInDB();
+        TableInDB tableInDB = splitTableStrategy.createTableInDB(dbId);
         String[] splitTabs = new String[]{"base_01", "base", "base_02", "order"};
         for (String tab : splitTabs) {
             tableInDB.add(DataXJobSubmit.TableDataXEntity.TEST_JDBC_URL, tab);

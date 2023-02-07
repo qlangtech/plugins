@@ -215,7 +215,7 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
         IMQListener listener = listenerFactory.create();
         // TargetResName dataxName, IDataxReader rdbmsReader, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor
 
-        DataxProcessor processor = DataxProcessor.load(null, dataxName.getName());
+        IDataxProcessor processor = DataxProcessor.load(null, dataxName.getName());
         IDataxReader reader = processor.getReader(null);
 
         listener.start(dataxName, reader, reader.getSelectedTabs(), processor);

@@ -31,16 +31,14 @@ import java.util.Objects;
  * @author: baisui 百岁
  * @create: 2021-04-20 17:42
  **/
-public class MySQLDataXReaderContext extends RdbmsReaderContext {
+public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader, MySQLDataSourceFactory> {
     private final RdbmsDataxContext rdbmsContext;
     private final SplitTableStrategy splitTableStrategy;
-    private final MySQLDataSourceFactory dsFactory;
 
     public MySQLDataXReaderContext(String name, String sourceTableName
-            , MySQLDataSourceFactory dsFactory, RdbmsDataxContext mysqlContext) {
-        super(name, sourceTableName, null, null);
+            , RdbmsDataxContext mysqlContext, DataxMySQLReader dataXReader) {
+        super(name, sourceTableName, null, Objects.requireNonNull(dataXReader, "dataXReader can not be null"));
         this.rdbmsContext = mysqlContext;
-        this.dsFactory = dsFactory;
         this.splitTableStrategy = Objects.requireNonNull(dsFactory.splitTableStrategy
                 , "splitTableStrategy can not be null");
     }

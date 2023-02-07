@@ -40,6 +40,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -106,7 +108,7 @@ public class DataXOssReader extends DataxReader {
 
 
     @Override
-    public IGroupChildTaskIterator getSubTasks() {
+    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         return IGroupChildTaskIterator.create(new OSSReaderContext(this));
     }
 

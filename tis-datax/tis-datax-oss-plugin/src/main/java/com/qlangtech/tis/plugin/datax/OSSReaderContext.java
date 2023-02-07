@@ -33,6 +33,11 @@ public class OSSReaderContext implements IDataxReaderContext {
     private final DataXOssReader reader;
 
     @Override
+    public String getReaderContextId() {
+        return this.getSourceEntityName();
+    }
+
+    @Override
     public String getTaskName() {
         //throw new UnsupportedOperationException();
         return reader.getTaskName();

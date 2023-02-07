@@ -119,7 +119,7 @@ public class DataXHbase11xWriter extends DataxWriter {
     }
 
     private DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
+        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore( PostedDSProp.parse(this.dbName));
         return dsStore.getPlugin();
     }
 

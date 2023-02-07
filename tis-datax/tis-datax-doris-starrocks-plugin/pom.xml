@@ -93,6 +93,10 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-common-rdbms-plugin</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-common-plugin</artifactId>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.alibaba.datax</groupId>-->
         <!--            <artifactId>plugin-rdbms-util</artifactId>-->

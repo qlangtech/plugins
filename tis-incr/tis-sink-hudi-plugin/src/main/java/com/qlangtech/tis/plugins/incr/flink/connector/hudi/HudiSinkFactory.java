@@ -134,7 +134,7 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
                 throw new IllegalStateException("prop dataXName can not be null");
             }
             tableMetas = Maps.newHashMap();
-            DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
+            IDataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
 
             IDataxReader reader = dataXProcessor.getReader(null);
             Map<String, HudiSelectedTab> selTabs

@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -123,6 +124,11 @@ public class WriterTemplate {
 
         IDataxReader dataxReader = new IDataxReader() {
             @Override
+            public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public IStreamTableMeta getStreamTableMeta(String tableName) {
                throw new UnsupportedOperationException();
             }
@@ -151,10 +157,10 @@ public class WriterTemplate {
             , IDataxProcessor processor, IDataxReader dataXReader) throws IOException {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
-            @Override
-            public String getTemplateContent() {
-                return dataXWriter.getTemplate();
-            }
+//            @Override
+//            public String getTemplateContent() {
+//                return dataXWriter.getTemplate();
+//            }
         };
 
         return dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));

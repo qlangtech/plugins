@@ -29,6 +29,11 @@ public class OSSWriterContext implements IDataxReaderContext {
 
     private final DataXOssWriter writer;
 
+    @Override
+    public String getReaderContextId() {
+        return "oss";
+    }
+
     public OSSWriterContext(DataXOssWriter ossWriter) {
         this.writer = ossWriter;
     }

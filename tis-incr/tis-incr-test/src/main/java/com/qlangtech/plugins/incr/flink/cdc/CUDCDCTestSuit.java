@@ -34,6 +34,7 @@ import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
@@ -324,6 +325,11 @@ public abstract class CUDCDCTestSuit {
 
     protected DataxProcessor createProcess() {
         DataxProcessor processor = new DataxProcessor() {
+            @Override
+            public KeyedPluginStore.StoreResourceType getResType() {
+                throw new UnsupportedOperationException();
+            }
+
             @Override
             public Application buildApp() {
                 throw new UnsupportedOperationException();

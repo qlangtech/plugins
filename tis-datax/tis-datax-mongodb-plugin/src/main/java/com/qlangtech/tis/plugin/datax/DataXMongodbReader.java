@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -80,8 +81,8 @@ public class DataXMongodbReader extends DataxReader {
      * end implements: DBConfigGetter
      */
     public MangoDBDataSourceFactory getDsFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore(new PostedDSProp(this.dbName));
-        return (MangoDBDataSourceFactory) dsStore.getPlugin();
+        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
+        //   return (MangoDBDataSourceFactory) dsStore.getPlugin();
     }
 
 
@@ -89,6 +90,12 @@ public class DataXMongodbReader extends DataxReader {
         return IOUtils.loadResourceFromClasspath(DataXMongodbReader.class, "DataXMongodbReader-tpl.json");
     }
 
+    @Override
+    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+        IDataxReaderContext readerContext = new MongoDBReaderContext(this.collectionName, this);
+        //return Collections.singleton(readerContext).iterator();
+        return IGroupChildTaskIterator.create(readerContext);
+    }
 
     @Override
     public List<ISelectedTab> getSelectedTabs() {
@@ -164,12 +171,7 @@ public class DataXMongodbReader extends DataxReader {
         }
     }
 
-    @Override
-    public IGroupChildTaskIterator getSubTasks() {
-        IDataxReaderContext readerContext = new MongoDBReaderContext(this.collectionName, this);
-        //return Collections.singleton(readerContext).iterator();
-        return IGroupChildTaskIterator.create(readerContext);
-    }
+
 
     @Override
     public String getTemplate() {

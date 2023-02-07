@@ -133,7 +133,7 @@ public class TestDataXHudiWriter {
         Optional<Context> context = Optional.of(new DefaultContext());
         BasicDataSourceFactory dsFactory = (BasicDataSourceFactory)
                 MYSQL_CONTAINER.createMySqlDataSourceFactory(dbName);// MySqlContainer.createMySqlDataSourceFactory(dbName, MYSQL_CONTAINER);
-        TIS.getDataBasePluginStore(new PostedDSProp(dbName.getName()))
+        TIS.getDataSourceFactoryPluginStore( PostedDSProp.parse(dbName.getName()))
                 .setPlugins(IPluginContext.namedContext(dbName.getName()), context
                         , Collections.singletonList(new Descriptor.ParseDescribable(dsFactory)));
 

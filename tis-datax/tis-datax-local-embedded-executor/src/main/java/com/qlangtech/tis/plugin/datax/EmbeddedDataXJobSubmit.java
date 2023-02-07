@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 测试用让实例与assemble节点在同一个VM中跑
@@ -45,6 +46,8 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedDataXJobSubmit.class);
 
+
+
     private transient JarLoader uberClassLoader;
 
     @Override
@@ -52,20 +55,20 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         return InstanceType.EMBEDDED;
     }
 
-
     @Override
-    public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, List<String> dependencyTasks) {
+    protected IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
+            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO, List<String> dependencyTasks) {
 
-        IDataxReader reader = dataxProcessor.getReader(null);
-        TableInDB tabsInDB = reader.getTablesInDB();
 
-        DataXJobInfo jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
+        // IDataxReader reader = dataxProcessor.getReader(null);
+        //TableInDB tabsInDB = reader.getTablesInDB();
+
+//        DataXJobInfo jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
 
 //        List<String> matchedTabs = tabsInDB.getMatchedTabs(tabDataXEntity.getDbIdenetity(), tabDataXEntity.getSourceTableName());
 //        DataXJobInfo.create(tabDataXEntity.getFileName(), matchedTabs);
 
-        CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
+      //  CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
         Integer jobId = jobDTO.getJobId();
 
         String dataXName = jobDTO.getDataXName();
@@ -81,7 +84,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {
-                return tabDataXEntity.getFileName();
+                return jobName.jobFileName;
             }
 
             @Override
@@ -93,7 +96,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
             public void run() {
                 try {
                     dataxExecutor.reportDataXJobStatus(false, false, false, jobId, jobName);
-                    dataxExecutor.exec(uberClassLoader, jobId, jobName, dataXName);
+                    dataxExecutor.exec(uberClassLoader, jobId, jobName, processor);
                     dataxExecutor.reportDataXJobStatus(false, jobId, jobName);
                 } catch (Throwable e) {
                     dataxExecutor.reportDataXJobStatus(true, jobId, jobName);
@@ -110,6 +113,25 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
             }
         };
     }
+
+//    private DataXJobInfo getDataXJobInfo(
+//            TableDataXEntity tabDataXEntity, IDataXJobContext taskContext, IDataxProcessor dataxProcessor) {
+//
+//        List<IDataxReader> readers = taskContext.getTaskContext().getAttribute(KEY_DATAX_READERS
+//                , () -> dataxProcessor.getReaders(null));
+//
+//        DataXJobInfo jobName = null;
+//        for (IDataxReader reader : readers) {
+//            TableInDB tabsInDB = reader.getTablesInDB();
+//            if (tabsInDB.isMatch(tabDataXEntity)) {
+//                jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
+//                break;
+//            }
+//        }
+//
+//        Objects.requireNonNull(jobName, tabDataXEntity.toString());
+//        return jobName;
+//    }
 
     @Override
     public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {

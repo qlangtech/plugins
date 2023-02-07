@@ -120,7 +120,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     @Override
     public TableInDB getTablesInDB() {
         MongoClient mongoClient = null;
-        TableInDB tabs = TableInDB.create();
+        TableInDB tabs = TableInDB.create(this);
         try {
             mongoClient = createMongoClient();
             MongoDatabase database = mongoClient.getDatabase(this.dbName);

@@ -33,6 +33,10 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
     public static final String FTP_TASK = "ftp_datax";
     private final DataXFtpReader reader;
 
+    @Override
+    public String getReaderContextId() {
+        return "ftp";
+    }
 
     public DataXFtpReaderContext(DataXFtpReader reader) {
         this.reader = reader;

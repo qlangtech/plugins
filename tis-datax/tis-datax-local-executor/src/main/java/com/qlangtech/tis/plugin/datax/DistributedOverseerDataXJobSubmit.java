@@ -67,24 +67,24 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
         };
     }
 
-
     @Override
-    public IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
-            , RpcServiceReference statusRpc, IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, final List<String> dependencyTasks) {
+    protected IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
+            , RpcServiceReference statusRpc, DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage msg, List<String> dependencyTasks) {
+
 
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
         IAppSourcePipelineController pipelineController = taskContext.getPipelineController();
         DistributedQueue<CuratorDataXTaskMessage> distributedQueue = getCuratorDistributedQueue();
         // File jobPath = new File(dataxProcessor.getDataxCfgDir(null), dataXfileName);
-        return new AsynRemoteJobTrigger(tabDataXEntity.getFileName()) {
+        return new AsynRemoteJobTrigger(jobName.jobFileName) {
             @Override
             public void run() {
                 try {
-                    IDataxReader reader = dataxProcessor.getReader(null);
-                    CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, reader.getTablesInDB().createDataXJobInfo(tabDataXEntity));
+                    //  IDataxReader reader = dataxProcessor.getReader(null);
+                  //  CuratorDataXTaskMessage msg = getDataXJobDTO(taskContext, jobName);
                     distributedQueue.put(msg);
                     pipelineController.registerAppSubExecNodeMetrixStatus(
-                            IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), tabDataXEntity.getFileName());
+                            IAppSourcePipelineController.DATAX_FULL_PIPELINE + taskContext.getIndexName(), jobName.jobFileName);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

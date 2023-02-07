@@ -27,6 +27,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
@@ -37,7 +38,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,18 +52,18 @@ import java.util.regex.Pattern;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-17 21:23
  **/
-public class DefaultSplitTableStrategy extends SplitTableStrategy  {
+public class DefaultSplitTableStrategy extends SplitTableStrategy {
     private static final Logger logger = LoggerFactory.getLogger(DefaultSplitTableStrategy.class);
 
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {})
     public String tabPattern;
 
     @Override
-    public TableInDB createTableInDB() {
-        return new SplitableTableInDB(getTabPattern());
+    public TableInDB createTableInDB(DBIdentity id) {
+        return new SplitableTableInDB(id, getTabPattern());
     }
 
-    public static String tabPatternPlaceholder(){
+    public static String tabPatternPlaceholder() {
         return SplitableTableInDB.PATTERN_PHYSICS_TABLE.toString();
     }
 
@@ -178,7 +178,8 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy  {
 
         private final Pattern splitTabPattern;
 
-        public SplitableTableInDB(Pattern splitTabPattern) {
+        public SplitableTableInDB(DBIdentity id, Pattern splitTabPattern) {
+            super(id);
             this.splitTabPattern = splitTabPattern;
         }
 
@@ -248,7 +249,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy  {
                 throw new IllegalStateException("jdbcUrl:" + tabEntity.getDbIdenetity() + " relevant matchedTabs can not be empty");
             }
             // 目前将所有匹配的表都在一个datax 单独进程中去执行，后期可以根据用户的配置单一个单独的dataX进程中执行部分split表以提高导入速度
-            return DataXJobInfo.create(tabEntity.getFileName(), matchedTabs);
+            return DataXJobInfo.create(tabEntity.getFileName(), tabEntity, matchedTabs);
         }
 
         @Override
@@ -260,6 +261,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy  {
         public boolean contains(String tableName) {
             return this.tabs.containsKey(tableName);
         }
+
 
         @Override
         public boolean isEmpty() {

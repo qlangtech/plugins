@@ -184,7 +184,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                 @Override
                 public List<HiveTable> getTables(String database) {
                     try {
-                        List<String> tables = storeClient.getTables(database, null);
+                        List<String> tables = storeClient.getTables(database, ".*");
                         return tables.stream().map((tab) -> new HiveTable(tab) {
                             @Override
                             public String getStorageLocation() {

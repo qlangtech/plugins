@@ -24,9 +24,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
-import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,10 +53,10 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         return InstanceType.LOCAL;
     }
 
-
     @Override
-    public IRemoteTaskTrigger createDataXJob(DataXJobSubmit.IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , IDataxProcessor dataxProcessor, TableDataXEntity tabDataXEntity, List<String> dependencyTasks) {
+    protected IRemoteTaskTrigger createDataXJob(
+            IDataXJobContext taskContext, RpcServiceReference statusRpc
+            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO, List<String> dependencyTasks) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
             File localExecutorLibDir = new File(Config.getLibDir(), "plugins/tis-datax-local-executor/WEB-INF/lib");
@@ -77,9 +73,9 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
             this.classpath = assebleDir.getPath() + "/lib/*:" + localExecutorLibDir.getPath()
                     + "/*:" + assebleDir.getPath() + "/conf:" + new File(webStartDir, "*").getPath();
         }
-        logger.info("dataX Job:{},classpath:{},workingDir:{}", tabDataXEntity.getFileName(), this.classpath, workingDirectory.getPath());
+        logger.info("dataX Job:{},classpath:{},workingDir:{}", jobName.jobFileName, this.classpath, workingDirectory.getPath());
         Objects.requireNonNull(statusRpc, "statusRpc can not be null");
-        IDataxReader dataxReader = dataxProcessor.getReader(null);
+        // IDataxReader dataxReader = dataxProcessor.getReader(null);
         //Optional<List<String>> ptabs = null;
 //        if (dataxReader instanceof IDataSourceFactoryGetter) {
 //            DataSourceFactory dsFactory = ((IDataSourceFactoryGetter) dataxReader).getDataSourceFactory();
@@ -88,9 +84,9 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 //            ptabs = Optional.of(dsFactory.getAllPhysicsTabs(tabDataXEntity));
 //        }
 
-        TableInDB tablesInDB = dataxReader.getTablesInDB();
+        //  TableInDB tablesInDB = dataxReader.getTablesInDB();
 
-        return TaskExec.getRemoteJobTrigger(taskContext, this, tablesInDB.createDataXJobInfo(tabDataXEntity),  dependencyTasks);
+        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, dependencyTasks);
     }
 
 
@@ -136,8 +132,8 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         this.classpath = classpath;
     }
 
-    @Override
-    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, DataXJobInfo dataXJobInfo) {
-        return super.getDataXJobDTO(taskContext, dataXJobInfo);
-    }
+//    @Override
+//    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, DataXJobInfo dataXJobInfo) {
+//        return super.getDataXJobDTO(taskContext, dataXJobInfo);
+//    }
 }

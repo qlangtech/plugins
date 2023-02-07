@@ -55,7 +55,7 @@ public class ReaderTemplate {
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
         IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
-        EasyMock.expect(processor.getWriter(null)).andReturn(dataxWriter).anyTimes();
+        EasyMock.expect(processor.getWriter(null, true)).andReturn(dataxWriter).anyTimes();
         IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
         EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
 
@@ -119,10 +119,6 @@ public class ReaderTemplate {
         TestCase.assertEquals(1, dataxReaderContextCount);
         TestCase.assertNotNull(dataxReaderContext);
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, dataXName, processor) {
-            @Override
-            public String getTemplateContent() {
-                return dataXReader.getTemplate();
-            }
         };
 
         return dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());

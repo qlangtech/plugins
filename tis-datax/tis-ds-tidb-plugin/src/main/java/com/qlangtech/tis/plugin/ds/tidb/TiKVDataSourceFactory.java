@@ -211,7 +211,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
     @Override
     public TableInDB getTablesInDB() {
         return this.openTiDB((s, c, d) -> {
-            TableInDB tables = TableInDB.create();
+            TableInDB tables = TableInDB.create(this);
             List<TiTableInfo> tabs = c.listTables(d);
             // either view or sequence shall be filter
             tabs.stream().filter((tbl) -> (tbl != null && !(tbl.isView() || tbl.isSequence())))

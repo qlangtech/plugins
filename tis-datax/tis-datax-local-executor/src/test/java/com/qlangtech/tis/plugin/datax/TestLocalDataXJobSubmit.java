@@ -96,7 +96,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
         tableDumpStatus.setAllRows(LocalDataXJobMainEntrypoint.testAllRows);
 
         preSuccessTask.setDumpPhase(preDumpStatus);
-        EasyMock.expect(taskContext.loadPhaseStatusFromLatest(dataXName)).andReturn(preSuccessTask).times(3);
+        EasyMock.expect(taskContext.loadPhaseStatusFromLatest()).andReturn(preSuccessTask).times(3);
 
         ITISCoordinator zkClient = EasyMock.createMock("TisZkClient", ITISCoordinator.class);
 

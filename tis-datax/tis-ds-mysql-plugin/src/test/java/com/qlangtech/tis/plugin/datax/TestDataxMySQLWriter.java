@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @author: baisui 百岁
@@ -81,7 +82,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             }
 
             @Override
-            public IGroupChildTaskIterator getSubTasks() {
+            public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
                 return null;
             }
 
@@ -173,7 +174,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         pluginContext.addDb(desc, dbWriterName, context, true);
         EasyMock.replay(pluginContext, context);
 
-        DataSourceFactoryPluginStore dbStore = TIS.getDataBasePluginStore(new PostedDSProp(dbWriterName));
+        DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore( PostedDSProp.parse(dbWriterName));
 
         Assert.assertTrue("save mysql db Config faild"
                 , dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
@@ -232,10 +233,6 @@ public class TestDataxMySQLWriter extends BasicTest {
 
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
-            @Override
-            public String getTemplateContent() {
-                return mySQLWriter.getTemplate();
-            }
         };
 
         String cfgResult = dataProcessor.generateDataxConfig(null, mySQLWriter, dataxReader, tableMap);

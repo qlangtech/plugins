@@ -32,6 +32,7 @@ import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
@@ -46,12 +47,14 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-//
-///**
-// * @author 百岁（baisui@qlangtech.com）
-// * @date 2015年12月22日 下午7:14:24
-// */
+
+/**
+ * @author 百岁（baisui@qlangtech.com）
+ * @date 2015年12月22日 下午7:14:24
+ */
 public class JoinHiveTask extends HiveTask {
     //
     private static final MessageFormat SQL_INSERT_TABLE = new MessageFormat("INSERT OVERWRITE TABLE {0} PARTITION (pt,pmod) \n {1}");
@@ -59,15 +62,15 @@ public class JoinHiveTask extends HiveTask {
     private static final Logger log = LoggerFactory.getLogger(JoinHiveTask.class);
 
     private final ITISFileSystem fileSystem;
-    private final IDataSourceFactoryGetter dsFactoryGetter;
+
     // private final IFs2Table fs2Table;
     private final MREngine mrEngine;
 
     public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
             , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter) {
-        super(nodeMeta, isFinalNode, erRules, joinTaskStatus);
+        super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;
-        this.dsFactoryGetter = dsFactoryGetter;
+
         //Objects.nonNull(fs2Table);
         //this.fs2Table = fs2Table;
         this.mrEngine = mrEngine;
@@ -80,7 +83,9 @@ public class JoinHiveTask extends HiveTask {
         // 处理历史表，多余的partition要删除，表不同了需要删除重建
         processJoinTask(rewritedSql);
         final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
-        final String insertSql = SQL_INSERT_TABLE.format(new Object[]{newCreateTab.getFullName(), rewritedSql});
+        final String insertSql = SQL_INSERT_TABLE.format(
+                new Object[]{newCreateTab.getFullName(Optional.of(this.dsFactoryGetter.getDataSourceFactory().getEscapeChar()))
+                        , rewritedSql});
         super.executeSql(taskName, insertSql);
     }
 
@@ -92,11 +97,12 @@ public class JoinHiveTask extends HiveTask {
     private void processJoinTask(String sql) {
         try {
 
-            final Connection conn = this.getTaskContext().getObj();
+            final Connection conn = this.getTaskContextObj();
             final HiveInsertFromSelectParser insertParser = getSQLParserResult(sql, conn);
-            // final DumpTable dumpTable =
-            // DumpTable.createTable(insertParser.getTargetTableName());
-            final EntityName dumpTable = EntityName.parse(this.getName());
+
+            DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
+
+            final EntityName dumpTable = EntityName.create(dsFactory.getDbConfig().getName(), this.getName());
 
             final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable).replaceAll("\\.", Path.SEPARATOR);
             if (fileSystem == null) {
@@ -104,7 +110,7 @@ public class JoinHiveTask extends HiveTask {
             }
             ITISFileSystem fs = fileSystem;
             IPath parent = fs.getPath(path);
-            initializeHiveTable(this.fileSystem, parent, mrEngine, HdfsFormat.DEFAULT_FORMAT, insertParser.getCols()
+            initializeHiveTable(this.fileSystem, parent, this.dsFactoryGetter.getDataSourceFactory(), HdfsFormat.DEFAULT_FORMAT, insertParser.getCols()
                     , insertParser.getColsExcludePartitionCols(), conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -122,14 +128,41 @@ public class JoinHiveTask extends HiveTask {
      * @param partitionRetainNum       保留多少个分区
      * @throws Exception
      */
-    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, MREngine mrEngine, HdfsFormat fsFormat
+    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine, HdfsFormat fsFormat
             , List<HiveColumn> cols, List<HiveColumn> colsExcludePartitionCols
             , Connection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+        initializeHiveTable(fileSystem, parentPath, mrEngine, conn, dumpTable, partitionRetainNum, () -> {
+            try {
+                return BindHiveTableTool.HiveTableBuilder.isTableSame(mrEngine, conn, cols, dumpTable);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, () -> {
+            try {
+                createHiveTable(fileSystem, fsFormat, mrEngine, dumpTable, colsExcludePartitionCols, conn);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+
+    /**
+     * @param fileSystem
+     * @param
+     * @param
+     * @param conn
+     * @param dumpTable
+     * @param partitionRetainNum 保留多少个分区
+     * @throws Exception
+     */
+    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine
+            , Connection conn, EntityName dumpTable, Integer partitionRetainNum, Supplier<Boolean> skipTableSameJudgement, Runnable tableCreator) throws Exception {
         if (partitionRetainNum == null || partitionRetainNum < 1) {
             throw new IllegalArgumentException("illegal param partitionRetainNum ");
         }
         if (BindHiveTableTool.HiveTableBuilder.isTableExists(mrEngine, conn, dumpTable)) {
-            if (BindHiveTableTool.HiveTableBuilder.isTableSame(conn, cols, dumpTable)) {
+            if (skipTableSameJudgement.get()) {
                 log.info("Start clean up history file '{}'", dumpTable);
 
                 // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
@@ -142,13 +175,15 @@ public class JoinHiveTask extends HiveTask {
                 //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
             } else {
                 HiveDBUtils.execute(conn, "drop table " + dumpTable);
-                createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
+                tableCreator.run();
+                // createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
             }
         } else {
             // 说明原表并不存在 直接创建
             log.info("table " + dumpTable + " doesn't exist");
             log.info("create table " + dumpTable);
-            createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
+            tableCreator.run();
+            //createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
         }
     }
 
@@ -215,6 +250,10 @@ public class JoinHiveTask extends HiveTask {
             valueSupplier = mapBuilder.build();
         }
 
+        @Override
+        public void close() throws SQLException {
+
+        }
 
         @Override
         public boolean next() throws SQLException {
@@ -247,18 +286,16 @@ public class JoinHiveTask extends HiveTask {
         Object get() throws SQLException;
     }
 
-    //
-//
-//    /**
-//     * 创建hive表
-//     */
-    public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat, EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
-        // final String user = this.getContext().joinTaskContext().getContextUserName();
+
+    /**
+     * 创建hive表
+     */
+    public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat, DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, Connection conn) throws Exception {
         BindHiveTableTool.HiveTableBuilder tableBuilder = new BindHiveTableTool.HiveTableBuilder("0", fsFormat);
-        tableBuilder.createHiveTableAndBindPartition(conn, dumpTable, cols, (hiveSQl) -> {
+        tableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, dumpTable, cols, (hiveSQl) -> {
             hiveSQl.append("\n LOCATION '").append(
                     FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)
-                            .replaceAll("\\.", "/")).append("'");
+            ).append("'");
         });
     }
 //    // 索引数据: /user/admin/search4totalpay/all/0/output/20160104003306

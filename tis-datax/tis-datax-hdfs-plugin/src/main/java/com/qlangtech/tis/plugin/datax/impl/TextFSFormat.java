@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.impl;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -36,6 +37,11 @@ public class TextFSFormat extends FSFormat {
 
     @FormField(ordinal = 20, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fieldDelimiter;
+
+    @Override
+    public HdfsFileType getType() {
+        return HdfsFileType.TEXTFILE;
+    }
 
     @Override
     public char getFieldDelimiter() {

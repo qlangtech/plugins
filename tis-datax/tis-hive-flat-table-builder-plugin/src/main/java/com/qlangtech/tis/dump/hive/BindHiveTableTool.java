@@ -1,36 +1,35 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.dump.hive;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -42,15 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-
-import static java.sql.Types.*;
 
 /**
  * 将hdfs上的数据和hive database中的表绑定
@@ -60,15 +54,34 @@ import static java.sql.Types.*;
  */
 public class BindHiveTableTool {
     private static final Logger logger = LoggerFactory.getLogger(HiveTableBuilder.class);
-    public static void bindHiveTables(MREngine engine, ITISFileSystem fileSystem, Map<EntityName
-            , Callable<HiveBindConfig>> hiveTables, String timestamp, ITaskContext context) {
+
+    public static void bindHiveTables(DataSourceMeta engine, Connection hiveConn, ITISFileSystem fileSystem, Map<EntityName
+            , Callable<HiveBindConfig>> hiveTables, String timestamp) {
+
         Objects.nonNull(fileSystem);
         Objects.nonNull(timestamp);
         try {
             // Dump 任务结束,开始绑定hive partition
             HiveTableBuilder hiveTableBuilder = new HiveTableBuilder(timestamp);
             hiveTableBuilder.setFileSystem(fileSystem);
-            hiveTableBuilder.bindHiveTables(engine, hiveTables, context);
+            hiveTableBuilder.bindHiveTables(engine, hiveTables, hiveConn);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static void bindHiveTables(DataSourceMeta engine, Connection hiveConn, ITISFileSystem fileSystem
+            , Map<EntityName, Callable<HiveBindConfig>> hiveTables
+            , String timestamp, HiveTableBuilder.IsTableSchemaSame isTableSchemaSame
+            , HiveTableBuilder.CreateHiveTableAndBindPartition createHiveTableAndBindPartition) {
+        Objects.nonNull(fileSystem);
+        Objects.nonNull(timestamp);
+        try {
+            // Dump 任务结束,开始绑定hive partition
+            HiveTableBuilder hiveTableBuilder = new HiveTableBuilder(timestamp);
+            hiveTableBuilder.setFileSystem(fileSystem);
+            hiveTableBuilder.bindHiveTables(engine, hiveTables, hiveConn, isTableSchemaSame, createHiveTableAndBindPartition);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -89,7 +102,8 @@ public class BindHiveTableTool {
                 HiveColumn col = new HiveColumn();
                 col.setName(o.getString("key"));
                 col.setIndex(o.getIntValue("index"));
-                col.setType(getHiveType(o.getIntValue("type")).name());
+                // col.setType(getHiveType(o.getIntValue("type")).name());
+                col.setDataType(new DataType(o.getIntValue("type")));
                 cols.add(col);
             }
         } finally {
@@ -98,31 +112,31 @@ public class BindHiveTableTool {
         return cols;
     }
 
-    private static SupportHiveDataType getHiveType(int type) {
-        // java.sql.Types
-        // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
-        switch (type) {
-            case BIT:
-            case TINYINT:
-            case SMALLINT:
-            case INTEGER:
-                return SupportHiveDataType.INT;
-            case BIGINT:
-                return SupportHiveDataType.BIGINT;
-            case FLOAT:
-            case REAL:
-            case DOUBLE:
-            case NUMERIC:
-            case DECIMAL:
-                return SupportHiveDataType.DOUBLE;
-            case TIMESTAMP:
-                return SupportHiveDataType.TIMESTAMP;
-            case DATE:
-                return SupportHiveDataType.DATE;
-            default:
-                return SupportHiveDataType.STRING; //HiveColumn.HIVE_TYPE_STRING;
-        }
-    }
+//    private static SupportHiveDataType getHiveType(int type) {
+//        // java.sql.Types
+//        // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
+//        switch (type) {
+//            case BIT:
+//            case TINYINT:
+//            case SMALLINT:
+//            case INTEGER:
+//                return SupportHiveDataType.INT;
+//            case BIGINT:
+//                return SupportHiveDataType.BIGINT;
+//            case FLOAT:
+//            case REAL:
+//            case DOUBLE:
+//            case NUMERIC:
+//            case DECIMAL:
+//                return SupportHiveDataType.DOUBLE;
+//            case TIMESTAMP:
+//                return SupportHiveDataType.TIMESTAMP;
+//            case DATE:
+//                return SupportHiveDataType.DATE;
+//            default:
+//                return SupportHiveDataType.STRING; //HiveColumn.HIVE_TYPE_STRING;
+//        }
+//    }
 
     /*
      * 在hive中生成新表，和在新表上创建创建Partition
@@ -193,8 +207,10 @@ public class BindHiveTableTool {
          * @throws Exception
          */
         public void createHiveTableAndBindPartition(
-                Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
-
+                DataSourceMeta sourceMeta, Connection conn, EntityName table, List<HiveColumn> cols, SQLCommandTailAppend sqlCommandTailAppend) throws Exception {
+            if (StringUtils.isEmpty(table.getDbName())) {
+                throw new IllegalArgumentException("table.getDbName can not be empty");
+            }
 
             int maxColLength = 0;
             int tmpLength = 0;
@@ -211,23 +227,22 @@ public class BindHiveTableTool {
             String colformat = "%-" + (++maxColLength) + "s";
             StringBuffer hiveSQl = new StringBuffer();
             HiveDBUtils.executeNoLog(conn, "CREATE DATABASE IF NOT EXISTS " + table.getDbName() + "");
-            hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + table.getFullName() + " (\n");
+            hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + table.getFullName(Optional.of(sourceMeta.getEscapeChar())) + " (\n");
             final int colsSize = cols.size();
             for (int i = 0; i < colsSize; i++) {
                 o = cols.get(i);
                 if (i != o.getIndex()) {
                     throw new IllegalStateException("i:" + i + " shall equal with index:" + o.getIndex());
                 }
-                hiveSQl.append("  ").append("`").append(String.format(colformat, StringUtils.remove(o.getName(), "`") + '`'))
+                hiveSQl.append("  ").append(sourceMeta.getEscapeChar())
+                        .append(String.format(colformat, StringUtils.remove(o.getName(), sourceMeta.getEscapeChar()) + sourceMeta.getEscapeChar()))
                         .append(" ").append(o.getDataType());
                 if ((i + 1) < colsSize) {
                     hiveSQl.append(",");
                 }
                 hiveSQl.append("\n");
             }
-            //hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(pt string,pmod string) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\\t' LINES " + "TERMINATED BY '\\n' NULL DEFINED AS '' STORED AS TEXTFILE ");
             hiveSQl.append(") COMMENT 'tis_tmp_" + table + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-            // hiveSQl.append("ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' with SERDEPROPERTIES ('serialization.null.format'='','line.delim' ='" + this.fsFormat.getLineDelimiter() + "','field.delim'='" + this.fsFormat.getFieldDelimiter() + "')");
             hiveSQl.append(this.fsFormat.getRowFormat());
             hiveSQl.append("STORED AS " + this.fsFormat.getFileType().getType());
             sqlCommandTailAppend.append(hiveSQl);
@@ -235,7 +250,21 @@ public class BindHiveTableTool {
             HiveDBUtils.executeNoLog(conn, hiveSQl.toString());
         }
 
-
+        /**
+         * 和hdfs上已经导入的数据进行绑定
+         *
+         * @param hiveTables
+         * @throws Exception
+         */
+        public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<HiveBindConfig>> hiveTables, Connection conn) throws Exception {
+            bindHiveTables(engine, hiveTables, conn,
+                    (columns, hiveTable) -> {
+                        return isTableSame(engine, conn, columns.colsMeta, hiveTable);
+                    },
+                    (columns, hiveTable) -> {
+                        this.createHiveTableAndBindPartition(engine, conn, columns, hiveTable);
+                    });
+        }
 
 
         /**
@@ -244,23 +273,26 @@ public class BindHiveTableTool {
          * @param hiveTables
          * @throws Exception
          */
-        public void bindHiveTables(MREngine engine, Map<EntityName, Callable<HiveBindConfig>> hiveTables, ITaskContext context) throws Exception {
-            Connection conn = null;
+        public void bindHiveTables(DataSourceMeta engine, Map<EntityName, Callable<HiveBindConfig>> hiveTables, Connection conn
+                , IsTableSchemaSame isTableSchemaSame, CreateHiveTableAndBindPartition createHiveTableAndBindPartition) throws Exception {
+
             try {
                 EntityName hiveTable = null;
-                conn = context.getObj();
+
                 for (Map.Entry<EntityName, Callable<HiveBindConfig>> entry : hiveTables.entrySet()) {
                     // String hivePath = hiveTable.getNameWithPath();
                     hiveTable = entry.getKey();
 
-                    final List<String> tables = engine.getTabs(conn, hiveTable);// getExistTables(conn, hiveTable.getDbName());
+                    final List<String> tables = engine.getTablesInDB().getTabs();// engine.getTabs(conn, hiveTable);// getExistTables(conn, hiveTable.getDbName());
                     HiveBindConfig columns = entry.getValue().call();// getColumns(hiveTable, timestamp);
                     if (tables.contains(hiveTable.getTableName())) {
-                        if (!isTableSame(conn, columns.colsMeta, hiveTable)) {
+                        //isTableSame(conn, columns.colsMeta, hiveTable)
+                        if (!isTableSchemaSame.isSame(columns, hiveTable)) {
                             // 原表有改动，需要把表drop掉
                             logger.info("table:" + hiveTable.getTableName() + " exist but table col metadta has been changed");
                             HiveDBUtils.execute(conn, "DROP TABLE " + hiveTable);
-                            this.createHiveTableAndBindPartition(conn, columns, hiveTable);
+                            createHiveTableAndBindPartition.run(columns, hiveTable);
+                            // this.createHiveTableAndBindPartition(conn, columns, hiveTable);
                             //return;
                         } else {
                             logger.info("table:" + hiveTable.getTableName() + " exist will bind new partition");
@@ -268,7 +300,8 @@ public class BindHiveTableTool {
                     } else {
                         logger.info("table not exist,will create now:" + hiveTable.getTableName() + ",exist table:["
                                 + tables.stream().collect(Collectors.joining(",")) + "]");
-                        this.createHiveTableAndBindPartition(conn, columns, hiveTable);
+                        //  this.createHiveTableAndBindPartition(conn, columns, hiveTable);
+                        createHiveTableAndBindPartition.run(columns, hiveTable);
                         //return;
                     }
 
@@ -276,19 +309,28 @@ public class BindHiveTableTool {
                     this.bindPartition(conn, columns, hiveTable, 0);
                 }
             } finally {
-                try {
-                    conn.close();
-                } catch (Throwable e) {
-                }
+//                try {
+//                    conn.close();
+//                } catch (Throwable e) {
+//                }
             }
         }
 
-        public static boolean isTableSame(Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
+        public interface CreateHiveTableAndBindPartition {
+            void run(HiveBindConfig columns, EntityName hiveTable) throws Exception;
+        }
+
+        public interface IsTableSchemaSame {
+            boolean isSame(HiveBindConfig columns, EntityName hiveTable) throws Exception;
+        }
+
+
+        public static boolean isTableSame(DataSourceMeta mrEngine, Connection conn, List<HiveColumn> columns, EntityName tableName) throws Exception {
             boolean isTableSame;
             final StringBuffer errMsg = new StringBuffer();
             final StringBuffer equalsCols = new StringBuffer("compar equals:");
             final AtomicBoolean compareOver = new AtomicBoolean(false);
-            HiveDBUtils.query(conn, "desc " + tableName, new HiveDBUtils.ResultProcess() {
+            HiveDBUtils.query(conn, "desc " + tableName.getFullName(Optional.of(mrEngine.getEscapeChar())), new HiveDBUtils.ResultProcess() {
 
                 int index = 0;
 
@@ -345,14 +387,14 @@ public class BindHiveTableTool {
          * @return
          * @throws Exception
          */
-        public static boolean isTableExists(MREngine mrEngine, Connection connection, EntityName dumpTable) throws Exception {
+        public static boolean isTableExists(DataSourceMeta mrEngine, Connection connection, EntityName dumpTable) throws Exception {
             // 判断表是否存在
             if (!isDBExists(connection, dumpTable.getDbName())) {
                 // DB都不存在，table肯定就不存在啦
                 logger.debug("dumpTable'DB is not exist:{}", dumpTable);
                 return false;
             }
-            final List<String> tables = mrEngine.getTabs(connection, dumpTable);// new ArrayList<>();
+            final List<String> tables = mrEngine.getTablesInDB().getTabs();// mrEngine.getTabs(connection, dumpTable);// new ArrayList<>();
             // SPARK:
             //        +-----------+---------------+--------------+--+
             //        | database  |   tableName   | isTemporary  |
@@ -419,8 +461,8 @@ public class BindHiveTableTool {
         }
 
 
-        private void createHiveTableAndBindPartition(Connection conn, HiveBindConfig columns, EntityName tableName) throws Exception {
-            createHiveTableAndBindPartition(conn, tableName, columns.colsMeta, (hiveSQl) -> {
+        private void createHiveTableAndBindPartition(DataSourceMeta sourceMeta, Connection conn, HiveBindConfig columns, EntityName tableName) throws Exception {
+            createHiveTableAndBindPartition(sourceMeta, conn, tableName, columns.colsMeta, (hiveSQl) -> {
                         //final String hivePath = tableName.getNameWithPath();
                         int startIndex = 0;
                         //final StringBuffer tableLocation = new StringBuffer();

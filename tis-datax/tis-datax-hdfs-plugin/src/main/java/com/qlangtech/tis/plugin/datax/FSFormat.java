@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.hive.HdfsFileType;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -26,4 +27,7 @@ import com.qlangtech.tis.extension.Describable;
  **/
 public abstract class FSFormat implements Describable<FSFormat> {
     public abstract char getFieldDelimiter();
+
+    public abstract HdfsFileType getType();
+
 }

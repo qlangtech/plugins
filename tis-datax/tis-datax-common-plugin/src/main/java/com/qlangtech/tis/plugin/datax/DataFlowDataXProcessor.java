@@ -32,11 +32,10 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IdentityName;
-import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
@@ -50,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -70,8 +68,8 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
     }
 
     @Override
-    public final KeyedPluginStore.StoreResourceType getResType() {
-        return KeyedPluginStore.StoreResourceType.DataFlow;
+    public final StoreResourceType getResType() {
+        return StoreResourceType.DataFlow;
     }
 
     @Override
@@ -91,7 +89,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         try {
             List<IDataxReader> readers = Lists.newArrayList();
 
-            SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+            SqlTaskNodeMeta.SqlDataFlowTopology topology = getTopology();
 
             List<DependencyNode> dumpNodes = topology.getDumpNodes();
 
@@ -112,7 +110,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
                 readers.add(new AdapterDataxReader(DataxReader.load(pluginCtx, true, entry.getKey())) {
                     @Override
                     public IGroupChildTaskIterator getSubTasks() {
-                        return super.getSubTasks((tab)-> entry.getValue().contains(tab.getName()));
+                        return super.getSubTasks((tab) -> entry.getValue().contains(tab.getName()));
                     }
                     //                    @Override
 //                    public <T extends ISelectedTab> List<T> getSelectedTabs() {
@@ -128,6 +126,10 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         }
     }
 
+    protected SqlTaskNodeMeta.SqlDataFlowTopology getTopology() throws Exception {
+        return SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+    }
+
     @Override
     public IDataxGlobalCfg getDataXGlobalCfg() {
         IDataxGlobalCfg globalCfg = ParamsConfig.getItem(this.globalCfg, IDataxGlobalCfg.KEY_DISPLAY_NAME);
@@ -138,7 +140,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
 
     @Override
     public IDataxWriter getWriter(IPluginContext pluginCtx, boolean validateNull) {
-        return DataxWriter.load(pluginCtx, KeyedPluginStore.StoreResourceType.DataFlow, this.name, validateNull);
+        return DataxWriter.load(pluginCtx, StoreResourceType.DataFlow, this.name, validateNull);
     }
 
     @Override
@@ -159,7 +161,8 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
 
     @Override
     public void saveCreateTableDDL(IPluginContext pluginCtx, StringBuffer createDDL, String sqlFileName, boolean overWrite) throws IOException {
-
+        File createDDLDir = this.getDataxCreateDDLDir(pluginCtx);
+        DataxProcessor.saveCreateTableDDL(createDDL, createDDLDir, sqlFileName, overWrite);
     }
 
 

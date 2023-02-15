@@ -20,6 +20,7 @@ package com.qlangtech.tis.hive;
 import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -229,7 +230,8 @@ public class HiveInsertFromSelectParser {
             }
         }
         column.setIndex(colIndex++);
-        column.setType(SupportHiveDataType.STRING.name());
+       // column.setType(SupportHiveDataType.STRING.name());
+        column.setDataType(DataType.createVarChar(256));
         this.cols.add(column);
         this.colsMap.put(column.getName(), column);
     }
@@ -295,7 +297,7 @@ public class HiveInsertFromSelectParser {
             List<ColumnMetaData> colsMeta = sqlColMetaGetter.apply(rewriteSql);
             List<HiveColumn> cols = this.getColsExcludePartitionCols();
 
-            if (cols.size() != colsMeta.size()) {
+            if (getCols().size() != colsMeta.size()) {
                 throw new IllegalStateException("cols.size():" + cols.size() + ",colsMeta.size():" + colsMeta.size() + " is not equal");
             }
 

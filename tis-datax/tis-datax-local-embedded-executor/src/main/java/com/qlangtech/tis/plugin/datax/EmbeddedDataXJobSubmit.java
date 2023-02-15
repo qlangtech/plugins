@@ -25,13 +25,11 @@ import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 测试用让实例与assemble节点在同一个VM中跑
@@ -45,7 +43,6 @@ import java.util.Objects;
 public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedDataXJobSubmit.class);
-
 
 
     private transient JarLoader uberClassLoader;
@@ -68,7 +65,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 //        List<String> matchedTabs = tabsInDB.getMatchedTabs(tabDataXEntity.getDbIdenetity(), tabDataXEntity.getSourceTableName());
 //        DataXJobInfo.create(tabDataXEntity.getFileName(), matchedTabs);
 
-      //  CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
+        //  CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
         Integer jobId = jobDTO.getJobId();
 
         String dataXName = jobDTO.getDataXName();
@@ -96,7 +93,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
             public void run() {
                 try {
                     dataxExecutor.reportDataXJobStatus(false, false, false, jobId, jobName);
-                    dataxExecutor.exec(uberClassLoader, jobId, jobName, processor);
+                    dataxExecutor.exec(uberClassLoader, jobId, jobName, jobDTO.getResType(), processor);
                     dataxExecutor.reportDataXJobStatus(false, jobId, jobName);
                 } catch (Throwable e) {
                     dataxExecutor.reportDataXJobStatus(true, jobId, jobName);

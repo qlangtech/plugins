@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import org.apache.commons.io.FileUtils;
@@ -81,7 +82,7 @@ public class TestDefaultDataxProcessor extends BasicTest {
 //            }
         } finally {
             try {
-                KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, KeyedPluginStore.StoreResourceType.parse(false), appName, IAppSource.class);
+                KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, StoreResourceType.parse(false), appName, IAppSource.class);
                 XmlFile storeFile = appKey.getSotreFile();
                 FileUtils.forceDelete(storeFile.getFile().getParentFile());
             } catch (IOException e) {

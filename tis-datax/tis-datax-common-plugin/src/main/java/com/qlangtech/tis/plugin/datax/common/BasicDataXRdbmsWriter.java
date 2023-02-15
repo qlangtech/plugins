@@ -19,12 +19,15 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -43,6 +46,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -124,7 +128,6 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);
     }
 
-
     /**
      * 初始化表RDBMS的表，如果表不存在就创建表
      *
@@ -133,61 +136,69 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
      */
     private static void process(String dataXName, BasicDataXRdbmsWriter<BasicDataSourceFactory> dataXWriter
             , String tableName, List<String> jdbcUrls) throws Exception {
+        IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
+        DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
+        for (String jdbcUrl : jdbcUrls) {
+            try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
+                process(dataXName, processor, dataXWriter, dataXWriter, new DataSourceMeta.JDBCConnection(conn, jdbcUrl), tableName);
+            }
+        }
+    }
+
+    public static void process(String dataXName, IDataxProcessor processor
+            , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, DataSourceMeta.JDBCConnection jdbcConn
+            , String tableName) throws Exception {
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalArgumentException("param dataXName can not be null");
         }
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
-        boolean autoCreateTable = dataXWriter.autoCreateTable;
+        boolean autoCreateTable = !dataXWriter.isGenerateCreateDDLSwitchOff();
         if (autoCreateTable) {
-            IDataxProcessor processor = DataxProcessor.load(null, dataXName);
+
 
             File createDDL = new File(processor.getDataxCreateDDLDir(null)
                     , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             if (!createDDL.exists()) {
                 throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
             }
-
-            BasicDataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
+            Connection conn = jdbcConn.getConnection();
+            DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
             String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-            for (String jdbcUrl : jdbcUrls) {
-                final EntityName tab = EntityName.parse(tableName);
-                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                    boolean tableExist = false;
-                    try {
-                        dsFactory.getTableMetadata(new DataSourceMeta.JDBCConnection(conn, jdbcUrl), tab);
-                        tableExist = true;
-                    } catch (TableNotFoundException e) {
-                        logger.warn(e.toString());
+            // for (String jdbcUrlll : jdbcUrls) {
+            final EntityName tab = EntityName.parse(tableName);
+            // try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
+            boolean tableExist = false;
+            List<ColumnMetaData> cols = Lists.newArrayList();
+            try {
+                cols = dsFactory.getTableMetadata(jdbcConn, tab);
+                tableExist = true;
+            } catch (TableNotFoundException e) {
+                logger.warn(e.toString());
+            }
+            // if (!tabs.contains(tableName)) {
+            if (!tableExist) {
+                // 表不存在
+                boolean success = false;
+                try {
+                    try (Statement statement = conn.createStatement()) {
+                        logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
+                        success = statement.execute(createScript);
                     }
-                    // if (!tabs.contains(tableName)) {
-                    if (!tableExist) {
-                        // 表不存在
-                        boolean success = false;
-                        try {
-                            try (Statement statement = conn.createStatement()) {
-                                logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
-                                success = statement.execute(createScript);
-                            }
-                        } catch (SQLException e) {
-                            throw new RuntimeException(createScript, e);
-                        }
+                } catch (SQLException e) {
+                    throw new RuntimeException(createScript, e);
+                }
 //                        if (!success) {
 //                            throw new IllegalStateException("table:" + tableName + " have not been create successful");
 //                        }
-                    } else {
-                        logger.info("table:{} already exist ,skip the create table step", tab.getFullName());
-                    }
-//                    tabs = Lists.newArrayList();
-//                    dsFactory.refectTableInDB(tabs, conn);
-//                    tabs.stream().filter((t) -> t.indexOf(tableName) > -1).forEach((tab) -> {
-//                        System.out.println(tab);
-//                    });
-
-                }
+            } else {
+                logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
+                        , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
             }
+            //  }
+            //  }
         }
-
     }
+
 
     protected static abstract class RdbmsWriterDescriptor extends BaseDataxWriterDescriptor {
         @Override

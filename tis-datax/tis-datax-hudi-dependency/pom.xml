@@ -160,21 +160,7 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-reader-writer-plugin</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>hdfsreader</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>hdfswriter</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+
 
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -200,6 +186,12 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-1.2-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -217,6 +209,10 @@
                     <artifactId>spark-streaming_${scala.binary.version}</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
         </dependency>
         <!--        <dependency>-->
         <!--            <groupId>org.apache.hive</groupId>-->

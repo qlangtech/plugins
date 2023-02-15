@@ -18,10 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.DataXJobInfo;
-import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
-import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
@@ -34,7 +31,6 @@ import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -46,7 +42,7 @@ public class TaskExec {
 
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
-            , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo
+            , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor
             , final List<String> dependencyTasks) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
@@ -111,9 +107,9 @@ public class TaskExec {
 //                            jobConsumer.consumeMessage(dataXJob);
 //                        }
 //                    } else {
-                        dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXJobInfo);
-                        jobConsumer.consumeMessage(dataXJob);
-                   // }
+                    dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXJobInfo, processor.getResType());
+                    jobConsumer.consumeMessage(dataXJob);
+                    // }
 
 
                     // success.set(true);

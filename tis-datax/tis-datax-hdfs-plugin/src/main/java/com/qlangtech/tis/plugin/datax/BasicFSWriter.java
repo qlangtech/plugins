@@ -26,6 +26,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.offline.FileSystemFactoryGetter;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -71,7 +72,11 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     public String dataXName;
 
     public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName) {
-        DataxWriter dataxWriter = load(null, dataxName);
+        return getWriterPlugin(dataxName, StoreResourceType.DataApp);
+    }
+
+    public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName, StoreResourceType resType) {
+        DataxWriter dataxWriter = load(null, resType, dataxName, true);
         if (!(dataxWriter instanceof BasicFSWriter)) {
 
 //            Class<?> superclass = dataxWriter.getClass().getSuperclass();

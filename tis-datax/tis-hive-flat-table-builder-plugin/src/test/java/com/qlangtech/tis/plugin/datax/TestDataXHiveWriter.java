@@ -19,24 +19,36 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.impl.TabPrefixDecorator;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import org.apache.commons.lang.StringUtils;
+import org.easymock.EasyMock;
+import org.junit.Assert;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -81,7 +93,7 @@ public class TestDataXHiveWriter extends BasicTest {
         prefixDecorator.prefix = "ods_";
         hiveWriter.tabDecorator = prefixDecorator;// "ods_";
         hiveWriter.writeMode = "nonConflict";
-      //  hiveWriter.fieldDelimiter = "\t";
+        //  hiveWriter.fieldDelimiter = "\t";
         hiveWriter.compress = "gzip";
         hiveWriter.encoding = "utf-8";
         hiveWriter.template = DataXHiveWriter.getDftTemplate();
@@ -100,6 +112,90 @@ public class TestDataXHiveWriter extends BasicTest {
 
         WriterTemplate.valiateCfgGenerate("hive-datax-writer-assert-without-option-val.json", hiveWriter, tableMap);
 
+    }
+
+    public void testGenerateCreateDDL() {
+
+        FileSystemFactory fsFactory = EasyMock.createMock("fsFactory", FileSystemFactory.class);
+
+
+        ITISFileSystem fs = EasyMock.createMock("fs", ITISFileSystem.class);
+        EasyMock.expect(fs.getRootDir()).andReturn(new HdfsPath("/user/admin"));
+        EasyMock.expect(fsFactory.getFileSystem()).andReturn(fs);
+
+        DataXHiveWriter writer = new DataXHiveWriter() {
+            @Override
+            public Hiveserver2DataSourceFactory getDataSourceFactory() {
+                return new Hiveserver2DataSourceFactory();
+            }
+
+            @Override
+            public FileSystemFactory getFs() {
+                return fsFactory;
+            }
+        };
+        TextFSFormat txtFormat = new TextFSFormat();
+        txtFormat.fieldDelimiter = Delimiter.Char001.token;
+        writer.fileType = txtFormat;
+        Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
+        EasyMock.replay(fsFactory, fs);
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+            CMeta col = new CMeta();
+            col.setPk(true);
+            col.setName("id3");
+            col.setType(DataXReaderColType.Long.dataType);
+            cols.add(col);
+
+            col = new CMeta();
+            col.setName("col4");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+            col = new CMeta();
+            col.setName("col5");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+
+
+            col = new CMeta();
+            col.setPk(true);
+            col.setName("col6");
+            col.setType(DataXReaderColType.STRING.dataType);
+            cols.add(col);
+        }));
+
+        assertNotNull(ddl);
+
+        assertEquals(
+                StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "create-application-ddl.sql"))
+                , ddl.getDDLScript());
+
+        EasyMock.verify(fsFactory, fs);
+    }
+
+    protected IDataxProcessor.TableMap getTabApplication(
+            Consumer<List<CMeta>>... colsProcess) {
+
+        List<CMeta> sourceCols = Lists.newArrayList();
+        CMeta col = new CMeta();
+        col.setPk(true);
+        col.setName("user_id");
+        col.setType(DataXReaderColType.Long.dataType);
+        sourceCols.add(col);
+
+        col = new CMeta();
+        col.setName("user_name");
+        col.setType(DataXReaderColType.STRING.dataType);
+        sourceCols.add(col);
+
+        for (Consumer<List<CMeta>> p : colsProcess) {
+            p.accept(sourceCols);
+        }
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
+        tableMap.setFrom("application");
+        tableMap.setTo("application");
+        //tableMap.setSourceCols(sourceCols);
+        return tableMap;
     }
 
 

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.dump.hive;
@@ -21,7 +21,7 @@ package com.qlangtech.tis.dump.hive;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.plugin.datax.MREngine;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -41,6 +41,10 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
     public void testDropHistoryHiveTable() throws Exception {
         String dbName = "testdb";
         String tabName = "order";
+
+
+        DataSourceMeta sourceMeta = EasyMock.createMock("sourceMeta", DataSourceMeta.class);
+
         ITISFileSystem fileSystem = EasyMock.createMock("fileSystem", ITISFileSystem.class);
         Connection hiveConn = EasyMock.createMock("hiveConn", Connection.class);
 
@@ -111,14 +115,14 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
         int partitionRetainNum = 2;
         EntityName tabOrder = EntityName.create(dbName, tabName);
         //hiveConn.close();
-        EasyMock.replay(fileSystem, hiveConn, showDBStatment, resultSet, showTabsStatement, tabsResult, showPartitionsStatement, showPartitionsResult, dropPtStatement1, dropPtStatement2);
+        EasyMock.replay(sourceMeta, fileSystem, hiveConn, showDBStatment, resultSet, showTabsStatement, tabsResult, showPartitionsStatement, showPartitionsResult, dropPtStatement1, dropPtStatement2);
         List<FSHistoryFileUtils.PathInfo> deletePts =
-                (new HiveRemoveHistoryDataTask(fileSystem, MREngine.HIVE)).dropHistoryHiveTable(tabOrder, hiveConn, partitionRetainNum);
+                (new HiveRemoveHistoryDataTask(fileSystem, sourceMeta)).dropHistoryHiveTable(tabOrder, hiveConn, partitionRetainNum);
 
         assertEquals(2, deletePts.size());
         deletePts.forEach((pt) -> {
             assertTrue("removed partition shall exist:" + pt.getPathName(), removePts.contains(pt.getPathName()));
         });
-        EasyMock.verify(fileSystem, hiveConn, showDBStatment, resultSet, showTabsStatement, tabsResult, showPartitionsStatement, showPartitionsResult, dropPtStatement1, dropPtStatement2);
+        EasyMock.verify(sourceMeta, fileSystem, hiveConn, showDBStatment, resultSet, showTabsStatement, tabsResult, showPartitionsStatement, showPartitionsResult, dropPtStatement1, dropPtStatement2);
     }
 }

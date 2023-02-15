@@ -46,7 +46,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
-import com.qlangtech.tis.plugin.datax.DataXHdfsWriter;
+import com.qlangtech.tis.plugin.datax.HdfsWriterDescriptor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -181,7 +181,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends DataXHdfsWriter.DefaultDescriptor implements DataxWriter.IRewriteSuFormProperties {
+    public static class DefaultDescriptor extends HdfsWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
         private transient SuFormProperties rewriteSubFormProperties;
 
         public DefaultDescriptor() {
@@ -189,10 +189,12 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
+
         @Override
         public boolean isSupportIncr() {
             return true;
         }
+
         @Override
         public PluginVender getVender() {
             return PluginVender.TIS;

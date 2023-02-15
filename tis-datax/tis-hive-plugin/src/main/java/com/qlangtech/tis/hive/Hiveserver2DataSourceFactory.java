@@ -33,10 +33,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
-import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.jdbc.HiveDriver;
@@ -55,7 +52,7 @@ import java.util.Properties;
  * @create: 2022-12-14 09:33
  * @see DefaultHiveConnGetter
  **/
-public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
     private static final String NAME_HIVESERVER2 = "Hiveserver2";
 
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -76,11 +73,21 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     public HiveUserToken userToken;
 
     @Override
+    public String getDBSchema() {
+        return this.dbName;
+    }
+
+    @Override
     public String getJdbcUrl() {
         for (String jdbcUrl : this.getJdbcUrls()) {
             return jdbcUrl;
         }
         throw new IllegalStateException("jdbcUrl can not be empty");
+    }
+
+    @Override
+    public final String getEscapeChar() {
+        return "`";
     }
 
     @Override

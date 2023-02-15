@@ -20,68 +20,33 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
-import com.alibaba.datax.common.spi.Writer;
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.FileFormatUtils;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
-import com.alibaba.datax.plugin.writer.hdfswriter.Key;
-import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.hdfs.impl.HdfsPath;
-import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
+import com.alibaba.datax.plugin.writer.hdfswriter.TextFileUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapred.JobConf;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-27 16:55
+ * @create: 2023-02-09 14:10
  **/
-public class TisDataXHdfsWriter extends Writer {
+public class TisDataXHdfsWriter extends BasicDataXHdfsWriter {
+    public static class Job extends BasicDataXHdfsWriter.Job {
 
-    public static class Job extends BasicHdfsWriterJob<BasicFSWriter> {
-
-        @Override
-        protected Path createPath() throws IOException {
-            ITISFileSystem fs = this.getWriterPlugin().getFs().getFileSystem();
-            this.tabDumpParentPath = createTabDumpParentPath(fs);
-            HdfsPath p = new HdfsPath(this.tabDumpParentPath);
-            if (!fs.exists(p)) {
-                fs.mkdirs(p);
-            }
-            return this.tabDumpParentPath;
-        }
-
-        protected Path createTabDumpParentPath(ITISFileSystem fs) {
-            return new Path(fs.getRootDir().unwrap(Path.class)
-                    , this.cfg.getNecessaryValue(Key.PATH, HdfsWriterErrorCode.REQUIRED_VALUE));
-        }
     }
 
-
-    public static class Task extends HdfsWriter.Task {
-        protected BasicFSWriter writerPlugin;
-
+    public static class Task extends BasicDataXHdfsWriter.Task {
         @Override
-        public void init() {
-            this.writerPlugin = BasicHdfsWriterJob.getHdfsWriterPlugin(this.getPluginJobConf());
-            super.init();
+        protected void orcFileStartWrite(FileSystem fileSystem, JobConf conf
+                , RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            FileFormatUtils.orcFileStartWrite(fileSystem, conf, lineReceiver, config, fileName, taskPluginCollector);
         }
 
         @Override
-        protected void csvFileStartWrite(
-                RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        protected HdfsHelper createHdfsHelper() {
-            return BasicHdfsWriterJob.createHdfsHelper(this.getPluginJobConf(), this.writerPlugin);
-        }
-
-        @Override
-        protected void avroFileStartWrite(RecordReceiver lineReceiver
-                , Configuration writerSliceConfig, String fileName, TaskPluginCollector taskPluginCollector) {
-            throw new UnsupportedOperationException();
+        protected void startTextWrite(HdfsHelper fsHelper, RecordReceiver lineReceiver
+                , Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            TextFileUtils.startTextWrite(fsHelper, lineReceiver, config, fileName, taskPluginCollector);
         }
     }
 

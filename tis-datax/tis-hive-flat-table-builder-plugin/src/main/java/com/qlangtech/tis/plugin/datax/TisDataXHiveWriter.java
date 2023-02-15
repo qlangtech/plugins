@@ -18,12 +18,15 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.plugin.RecordReceiver;
+import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.spi.Writer;
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.plugin.writer.hdfswriter.FileFormatUtils;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.offline.DataxUtils;
+import com.alibaba.datax.plugin.writer.hdfswriter.TextFileUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapred.JobConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +45,7 @@ public class TisDataXHiveWriter extends Writer {
 
     }
 
-    public static class Task extends TisDataXHdfsWriter.Task {
+    public static class Task extends BasicDataXHdfsWriter.Task {
 //        private BasicFSWriter writerPlugin;
 //        @Override
 //        public void init() {
@@ -54,6 +57,19 @@ public class TisDataXHiveWriter extends Writer {
 //        protected HdfsHelper createHdfsHelper() {
 //            return BasicHdfsWriterJob.createHdfsHelper(this.getPluginJobConf(), this.writerPlugin);
 //        }
+
+
+        @Override
+        protected void orcFileStartWrite(FileSystem fileSystem, JobConf conf
+                , RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            FileFormatUtils.orcFileStartWrite(fileSystem, conf, lineReceiver, config, fileName, taskPluginCollector);
+        }
+
+        @Override
+        protected void startTextWrite(HdfsHelper fsHelper, RecordReceiver lineReceiver
+                , Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            TextFileUtils.startTextWrite(fsHelper, lineReceiver, config, fileName, taskPluginCollector);
+        }
     }
 
 

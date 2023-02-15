@@ -72,17 +72,14 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-reader-writer-plugin</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-datax-hdfs-plugin</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-        <!--            <artifactId>tis-hdfs-plugin</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
+
 
 
         <dependency>
@@ -133,8 +130,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-hive-plugin</artifactId>
-            <version>3.7.0</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

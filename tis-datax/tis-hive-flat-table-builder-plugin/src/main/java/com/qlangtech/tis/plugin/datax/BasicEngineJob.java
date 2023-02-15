@@ -21,19 +21,13 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.dump.hive.BindHiveTableTool;
-import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
-import com.qlangtech.tis.hive.HdfsFileType;
-import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,12 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -89,6 +79,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         return Integer.parseInt(this.cfg.getNecessaryValue("ptRetainNum", HdfsWriterErrorCode.REQUIRED_VALUE));
     }
 
+    @Override
     public void prepare() {
         super.prepare();
 
@@ -99,19 +90,18 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         IDumpTable.preservedPsCols.forEach((c) -> {
             HiveColumn hiveCol = new HiveColumn();
             hiveCol.setName(c);
-            hiveCol.setType(SupportHiveDataType.STRING.name());
+            hiveCol.setDataType(DataType.createVarChar(100));
+            // hiveCol.setType(SupportHiveDataType.STRING.name());
             hiveCol.setIndex(appendStartIndex[0]++);
             cols.add(hiveCol);
         });
-        initializeHiveTable(cols);
+        // initializeHiveTable(cols);
     }
 
     @Override
     public Configuration getPluginJobConf() {
         Configuration cfg = super.getPluginJobConf();
         // this.writerPlugin = TisDataXHiveWriter.getHdfsWriterPlugin(cfg);
-
-
         // 写了一个默认的可以骗过父类校验
         return cfg;
     }
@@ -151,36 +141,37 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     }
 
 
-    protected void initializeHiveTable(List<HiveColumn> cols) {
-        try {
-            TT writerPlugin = getWriterPlugin();
-            try (Connection conn = writerPlugin.getConnection()) {
-                Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                ITISFileSystem fs = this.getFileSystem();
-                JoinHiveTask.initializeHiveTable(fs
-                        , fs.getPath(new HdfsPath(this.tabDumpParentPath), "..")
-                        , writerPlugin.getEngineType(), parseFSFormat()
-                        , cols, colsExcludePartitionCols, conn, dumpTable, this.ptRetainNum);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    protected void initializeHiveTable(List<HiveColumn> cols) {
+//        try {
+//            TT writerPlugin = getWriterPlugin();
+//            try (Connection conn = writerPlugin.getConnection()) {
+//                Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
+//                ITISFileSystem fs = this.getFileSystem();
+//                JoinHiveTask.initializeHiveTable(fs
+//                        , fs.getPath(new HdfsPath(this.tabDumpParentPath), "..")
+//                        , writerPlugin.getEngineType(), parseFSFormat()
+//                        , cols, colsExcludePartitionCols, conn, dumpTable, this.ptRetainNum);
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-    private HdfsFormat parseFSFormat() {
-        //try {
-        HdfsFormat fsFormat = new HdfsFormat();
-
-        fsFormat.setFieldDelimiter(this.fieldDelimiter
-                //        (String) TisDataXHiveWriter.jobFieldDelimiter.get(this)
-        );
-        //  (String) TisDataXHiveWriter.jobFileType.get(this)
-        fsFormat.setFileType(HdfsFileType.parse(this.fileType));
-        return fsFormat;
-    }
+//    private HdfsFormat parseFSFormat() {
+//        //try {
+//        HdfsFormat fsFormat = new HdfsFormat();
+//
+//        fsFormat.setFieldDelimiter(this.fieldDelimiter
+//                //        (String) TisDataXHiveWriter.jobFieldDelimiter.get(this)
+//        );
+//        //  (String) TisDataXHiveWriter.jobFileType.get(this)
+//        fsFormat.setFileType(HdfsFileType.parse(this.fileType));
+//        return fsFormat;
+//    }
 
     /**
      * https://cwiki.apache.org/confluence/display/hive/languagemanual+ddl#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
+     *
      * @return
      */
     private List<HiveColumn> getCols() {
@@ -188,14 +179,15 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         AtomicInteger index = new AtomicInteger();
         return cols.stream().map((c) -> {
             HiveColumn hivCol = new HiveColumn();
-            SupportHiveDataType columnType = SupportHiveDataType.valueOf(
-                    StringUtils.upperCase(c.getString(HdfsColMeta.KEY_TYPE)));
+            DataType colType = DataType.ds(c.getString(HdfsColMeta.KEY_TYPE));
+            //SupportHiveDataType columnType = DataType.convert2HiveType();
             String name = StringUtils.remove(c.getString(HdfsColMeta.KEY_NAME), "`");
             if (StringUtils.isBlank(name)) {
                 throw new IllegalStateException("col name can not be blank");
             }
             hivCol.setName(name);
-            hivCol.setType(columnType.name());
+            hivCol.setDataType(colType);
+            //hivCol.setType(columnType.name());
             hivCol.setIndex(index.getAndIncrement());
             return hivCol;
         }).collect(Collectors.toList());
@@ -214,30 +206,24 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
 
 
-        this.bindHiveTables();
+        // this.bindHiveTables();
     }
 
-    protected void bindHiveTables() {
-        try {
-            try (Connection hiveConn = this.getWriterPlugin().getConnection()) {
-
-                BindHiveTableTool.bindHiveTables(this.getWriterPlugin().getEngineType(), this.getFileSystem()
-                        , Collections.singletonMap(this.dumpTable, new Callable<BindHiveTableTool.HiveBindConfig>() {
-                            @Override
-                            public BindHiveTableTool.HiveBindConfig call() throws Exception {
-                                return new BindHiveTableTool.HiveBindConfig(colsExcludePartitionCols, tabDumpParentPath);
-                            }
-                        })
-                        , DataxUtils.getDumpTimeStamp() //
-                        , new ITaskContext() {
-                            @Override
-                            public Connection getObj() {
-                                return hiveConn;
-                            }
-                        });
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    protected void bindHiveTables() {
+//        try {
+//            try (Connection hiveConn = this.getWriterPlugin().getConnection()) {
+//
+//                final Path dumpParentPath = this.tabDumpParentPath;
+//                BindHiveTableTool.bindHiveTables(this.getWriterPlugin().getEngineType(), hiveConn, this.getFileSystem()
+//                        , Collections.singletonMap(this.dumpTable, () -> {
+//                                    return new BindHiveTableTool.HiveBindConfig(colsExcludePartitionCols, dumpParentPath);
+//                                }
+//                        )
+//                        , DataxUtils.getDumpTimeStamp() //
+//                );
+//            }
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

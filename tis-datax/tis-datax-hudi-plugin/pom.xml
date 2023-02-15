@@ -42,7 +42,8 @@
     <properties>
         <!--        <spark.dist.dir.name>spark-${spark2.version}-bin-without-hadoop</spark.dist.dir.name>-->
         <spark.package.name>${spark.dist.dir.name}.tgz</spark.package.name>
-        <classifier>hudi_${hudi.version};spark_${spark2.version};hive_${hive.version};hadoop_${hadoop-version}</classifier>
+        <classifier>hudi_${hudi.version};spark_${spark2.version};hive_${hive.version};hadoop_${hadoop-version}
+        </classifier>
     </properties>
     <build>
         <resources>
@@ -61,8 +62,10 @@
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-reader-writer-plugin</artifactId>
+            <artifactId>tis-datax-hdfs-plugin</artifactId>
+            <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-launcher_${scala.binary.version}</artifactId>
@@ -104,7 +107,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
 
 
         <dependency>
@@ -164,8 +166,8 @@
                         <artifactId>maven-antrun-plugin</artifactId>
                         <executions>
                             <execution>
-<!--                            先暂时不执行    <phase>prepare-package</phase>-->
-<!--                                <phase>none</phase>-->
+                                <!--                            先暂时不执行    <phase>prepare-package</phase>-->
+                                <!--                                <phase>none</phase>-->
                                 <phase>prepare-package</phase>
                                 <!--https://ant.apache.org/manual/index.html-->
                                 <configuration>

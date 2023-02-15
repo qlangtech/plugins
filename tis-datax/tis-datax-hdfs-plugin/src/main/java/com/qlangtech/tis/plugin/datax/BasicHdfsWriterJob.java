@@ -26,7 +26,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
@@ -53,7 +53,9 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
-        return BasicFSWriter.getWriterPlugin(dataxName);
+        StoreResourceType resType = StoreResourceType.parse(
+                cfg.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE));
+        return BasicFSWriter.getWriterPlugin(dataxName, resType);
     }
 
 

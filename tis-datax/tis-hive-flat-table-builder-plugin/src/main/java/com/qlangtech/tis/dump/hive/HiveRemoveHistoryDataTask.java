@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.dump.hive;
 
@@ -22,7 +22,7 @@ import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
-import com.qlangtech.tis.plugin.datax.MREngine;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class HiveRemoveHistoryDataTask {
     private static final String pt = IDumpTable.PARTITION_PT;
 
     private final ITISFileSystem fileSystem;
-    private final MREngine mrEngine;
+    private final DataSourceMeta mrEngine;
 
     public static void main(String[] arg) {
 //        List<PathInfo> timestampList = new ArrayList<PathInfo>();
@@ -63,7 +63,7 @@ public class HiveRemoveHistoryDataTask {
 //        }
     }
 
-    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory, MREngine mrEngine) {
+    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory, DataSourceMeta mrEngine) {
         super();
         this.fileSystem = fsFactory;
         this.mrEngine = mrEngine;
@@ -243,7 +243,7 @@ public class HiveRemoveHistoryDataTask {
                 logger.info(table + " is not exist");
                 return Collections.emptyList();
             }
-            List<String> ptList = getHistoryPts(conn, filter, table);
+            List<String> ptList = getHistoryPts(this.mrEngine, conn, filter, table);
             int count = 0;
 
             for (int i = ptList.size() - 1; i >= 0; i--) {
@@ -271,13 +271,13 @@ public class HiveRemoveHistoryDataTask {
         return deletePts;
     }
 
-    public static List<String> getHistoryPts(Connection conn, final IDumpTable table) throws Exception {
-        return getHistoryPts(conn, (ps) -> true, table);
+    public static List<String> getHistoryPts(DataSourceMeta mrEngine, Connection conn, final EntityName table) throws Exception {
+        return getHistoryPts(mrEngine, conn, (ps) -> true, table);
     }
 
-    private static List<String> getHistoryPts(Connection conn, PartitionFilter filter, final IDumpTable table) throws Exception {
+    private static List<String> getHistoryPts(DataSourceMeta mrEngine, Connection conn, PartitionFilter filter, final EntityName table) throws Exception {
         final Set<String> ptSet = new HashSet<>();
-        final String showPartition = "show partitions " + table.getFullName();
+        final String showPartition = "show partitions " + table.getFullName(Optional.of(mrEngine.getEscapeChar()));
         final Pattern ptPattern = Pattern.compile(pt + "=(\\d+)");
         HiveDBUtils.query(conn, showPartition, result -> {
             Matcher matcher = ptPattern.matcher(result.getString(1));

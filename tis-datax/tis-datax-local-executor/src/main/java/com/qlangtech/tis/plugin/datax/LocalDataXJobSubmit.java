@@ -86,7 +86,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
         //  TableInDB tablesInDB = dataxReader.getTablesInDB();
 
-        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, dependencyTasks);
+        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, processor, dependencyTasks);
     }
 
 

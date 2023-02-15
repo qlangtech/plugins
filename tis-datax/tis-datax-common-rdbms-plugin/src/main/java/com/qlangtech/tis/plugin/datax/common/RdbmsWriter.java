@@ -40,15 +40,16 @@ public class RdbmsWriter {
 
     /**
      * 适用于这种类型的配置
+     * <pre>
      * "connection":[
-     * {
-     * "jdbcUrl":"jdbc:clickhouse://192.168.28.201:8123/tis",
-     * "table":[
-     * "instancedetail"
+     *   {
+     *    "jdbcUrl":"jdbc:clickhouse://192.168.28.201:8123/tis",
+     *    "table":[
+     *      "instancedetail"
+     *    ]
+     *   }
      * ]
-     * }
-     * ],
-     *
+     * <pre>
      * @param cfg
      * @throws Exception
      */

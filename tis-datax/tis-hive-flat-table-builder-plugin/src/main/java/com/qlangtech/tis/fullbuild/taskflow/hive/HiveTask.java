@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 
@@ -23,13 +23,13 @@ import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.AdapterTask;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.IAliasTable;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
-import com.qlangtech.tis.sql.parser.er.ERRules;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -54,6 +53,7 @@ public abstract class HiveTask extends AdapterTask {
 
     protected final ISqlTask nodeMeta;
     protected final boolean isFinalNode;
+    protected final IDataSourceFactoryGetter dsFactoryGetter;
 
     //private static final SqlParser sqlParser = new com.facebook.presto.sql.parser.SqlParser();
 
@@ -62,7 +62,8 @@ public abstract class HiveTask extends AdapterTask {
     /**
      * @param joinTaskStatus
      */
-    protected HiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
+    protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode
+            , IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
@@ -72,6 +73,7 @@ public abstract class HiveTask extends AdapterTask {
         this.joinTaskStatus = joinTaskStatus;
         this.nodeMeta = nodeMeta;
         this.isFinalNode = isFinalNode;
+        this.dsFactoryGetter = dsFactoryGetter;
     }
 
     @Override
@@ -138,7 +140,8 @@ public abstract class HiveTask extends AdapterTask {
     @Override
     protected void executeSql(String taskname, String sql) {
         this.validateDependenciesNode(taskname);
-        final Connection conn = this.getTaskContext().getObj();
+        final Connection conn = this.getTaskContextObj();
+        DataSourceFactory dsFactory = dsFactoryGetter.getDataSourceFactory();
         final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
         //final String newCreatePt = primaryTable.getTabPartition();
         this.getContent();
@@ -149,7 +152,7 @@ public abstract class HiveTask extends AdapterTask {
             // 将当前的join task的partition设置到当前上下文中
             TabPartitions dumpPartition = this.getDumpPartition();
             dumpPartition.putPt(newCreateTab, this.rewriteSql.primaryTable);
-            allpts = HiveRemoveHistoryDataTask.getHistoryPts(conn, newCreateTab);
+            allpts = HiveRemoveHistoryDataTask.getHistoryPts(dsFactory, conn, newCreateTab);
         } catch (Exception e) {
             // TODO 一旦有异常要将整个链路执行都停下来
             throw new RuntimeException("taskname:" + taskname, e);
@@ -163,7 +166,7 @@ public abstract class HiveTask extends AdapterTask {
             child = this.rewriteSql.primaryTable.getChild();
             if (child != null && !child.isSubQueryTable()) {
                 try {
-                    allpts = HiveRemoveHistoryDataTask.getHistoryPts(conn, child.getTable());
+                    allpts = HiveRemoveHistoryDataTask.getHistoryPts(dsFactory, conn, (EntityName) child.getTable());
                 } catch (Exception e) {
                     throw new RuntimeException(child.getTable().getFullName(), e);
                 }

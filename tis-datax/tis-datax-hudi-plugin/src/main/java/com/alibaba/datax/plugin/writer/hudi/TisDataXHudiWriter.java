@@ -24,12 +24,13 @@ import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
+import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.plugin.datax.TisDataXHdfsWriter;
+import com.qlangtech.tis.plugin.datax.BasicDataXHdfsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.HudiDumpPostTask;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
@@ -42,7 +43,9 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +67,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
     private static final Logger logger = LoggerFactory.getLogger(TisDataXHudiWriter.class);
     public static final String KEY_HUDI_TABLE_NAME = "hudiTableName";
 
-    public static class Job extends TisDataXHdfsWriter.Job {
+    public static class Job extends BasicDataXHdfsWriter.Job {
 
         private HudiTableMeta tabMeta;
 
@@ -135,7 +138,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
     }
 
 
-    public static class Task extends TisDataXHdfsWriter.Task {
+    public static class Task extends BasicDataXHdfsWriter.Task {
         private Schema avroSchema;
         private List<IColMetaGetter> colsMeta;
         private HudiTableMeta tabMeta;
@@ -169,6 +172,20 @@ public class TisDataXHudiWriter extends HdfsWriter {
             if (CollectionUtils.isEmpty(this.colsMeta)) {
                 throw new IllegalStateException("colsMeta can not be empty");
             }
+        }
+
+        @Override
+        protected void orcFileStartWrite(FileSystem fileSystem, JobConf conf
+                , RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            //  FileFormatUtils.orcFileStartWrite(fileSystem, conf, lineReceiver, config, fileName, taskPluginCollector);
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        protected void startTextWrite(HdfsHelper fsHelper, RecordReceiver lineReceiver
+                , Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
+            //  TextFileUtils.startTextWrite(fsHelper, lineReceiver, config, fileName, taskPluginCollector);
+            throw new UnsupportedOperationException();
         }
 
 

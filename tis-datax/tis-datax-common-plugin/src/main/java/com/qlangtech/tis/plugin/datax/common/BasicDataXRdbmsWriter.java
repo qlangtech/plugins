@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -147,55 +148,53 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
     public static void process(String dataXName, IDataxProcessor processor
             , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, DataSourceMeta.JDBCConnection jdbcConn
-            , String tableName) throws Exception {
+            , String tableName) {
         if (StringUtils.isEmpty(dataXName)) {
             throw new IllegalArgumentException("param dataXName can not be null");
         }
         Objects.requireNonNull(dataXWriter, "dataXWriter can not be null,dataXName:" + dataXName);
         boolean autoCreateTable = !dataXWriter.isGenerateCreateDDLSwitchOff();
-        if (autoCreateTable) {
+        try {
+            if (autoCreateTable) {
 
 
-            File createDDL = new File(processor.getDataxCreateDDLDir(null)
-                    , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
-            if (!createDDL.exists()) {
-                throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
-            }
-            Connection conn = jdbcConn.getConnection();
-            DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
-            String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
-            // for (String jdbcUrlll : jdbcUrls) {
-            final EntityName tab = EntityName.parse(tableName);
-            // try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-            boolean tableExist = false;
-            List<ColumnMetaData> cols = Lists.newArrayList();
-            try {
-                cols = dsFactory.getTableMetadata(jdbcConn, tab);
-                tableExist = true;
-            } catch (TableNotFoundException e) {
-                logger.warn(e.toString());
-            }
-            // if (!tabs.contains(tableName)) {
-            if (!tableExist) {
-                // 表不存在
-                boolean success = false;
-                try {
-                    try (Statement statement = conn.createStatement()) {
-                        logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
-                        success = statement.execute(createScript);
-                    }
-                } catch (SQLException e) {
-                    throw new RuntimeException(createScript, e);
+                File createDDL = new File(processor.getDataxCreateDDLDir(null)
+                        , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+                if (!createDDL.exists()) {
+                    throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
                 }
-//                        if (!success) {
-//                            throw new IllegalStateException("table:" + tableName + " have not been create successful");
-//                        }
-            } else {
-                logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
-                        , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
+                Connection conn = jdbcConn.getConnection();
+                DataSourceFactory dsFactory = dsGetter.getDataSourceFactory();
+                String createScript = FileUtils.readFileToString(createDDL, TisUTF8.get());
+                final EntityName tab = EntityName.parse(tableName);
+
+                boolean tableExist = false;
+                List<ColumnMetaData> cols = Lists.newArrayList();
+                try {
+                    cols = dsFactory.getTableMetadata(jdbcConn, tab);
+                    tableExist = true;
+                } catch (TableNotFoundException e) {
+                    logger.warn(e.toString());
+                }
+
+                if (!tableExist) {
+                    // 表不存在
+                    boolean success = false;
+                    try {
+                        try (Statement statement = conn.createStatement()) {
+                            logger.info("create table:{}\n   script:{}", tab.getFullName(), createScript);
+                            success = statement.execute(createScript);
+                        }
+                    } catch (SQLException e) {
+                        throw new RuntimeException(createScript, e);
+                    }
+                } else {
+                    logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
+                            , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
+                }
             }
-            //  }
-            //  }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

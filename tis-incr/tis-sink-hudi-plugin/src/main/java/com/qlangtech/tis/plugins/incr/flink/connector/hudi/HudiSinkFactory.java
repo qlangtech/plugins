@@ -146,11 +146,12 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
             Configuration paramCfg = null;
             String table = null;
             HudiTableMeta tableMeta = null;
-            for (File f : dataxCfgFile.getDataXCfgFiles()) {
-                cfg = Configuration.from(f);
+            for (DataXCfgGenerator.DataXCfgFile f : dataxCfgFile.getDataXCfgFiles()) {
+                File file = f.getFile();
+                cfg = Configuration.from(file);
                 paramCfg = cfg.getConfiguration("job.content[0].writer.parameter");
                 if (paramCfg == null) {
-                    throw new NullPointerException("paramCfg can not be null,relevant path:" + f.getAbsolutePath());
+                    throw new NullPointerException("paramCfg can not be null,relevant path:" + file.getAbsolutePath());
                 }
                 table = paramCfg.getString("fileName");
                 if (StringUtils.isEmpty(table)) {

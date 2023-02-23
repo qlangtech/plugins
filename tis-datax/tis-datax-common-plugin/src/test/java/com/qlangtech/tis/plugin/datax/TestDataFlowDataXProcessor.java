@@ -68,10 +68,11 @@ public class TestDataFlowDataXProcessor extends TestCase {
 
         DataXCfgGenerator.GenerateCfgs generateCfgs = gen.startGenerateCfg(dataxCfgDir);
 
-        List<File> cfgFiles = generateCfgs.getDataXCfgFiles();
+        List<DataXCfgGenerator.DataXCfgFile> cfgFiles = generateCfgs.getDataXCfgFiles();
         Assert.assertEquals(2, cfgFiles.size());
-        for (File f : cfgFiles) {
-            Assert.assertTrue(f.getAbsolutePath(), f.exists());
+        for (DataXCfgGenerator.DataXCfgFile f : cfgFiles) {
+            File target = f.getFile();
+            Assert.assertTrue(target.getAbsolutePath(), target.exists());
         }
     }
 }

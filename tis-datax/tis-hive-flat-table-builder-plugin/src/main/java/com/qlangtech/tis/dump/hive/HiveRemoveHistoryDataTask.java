@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/* *
+/**
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年11月26日 上午11:54:31
  */
@@ -253,7 +253,7 @@ public class HiveRemoveHistoryDataTask {
                     pathInfo.setTimeStamp(Long.parseLong(existTimestamp));
                     pathInfo.setPathName(existTimestamp);
                     deletePts.add(pathInfo);
-                    String alterSql = "alter table " + table + " drop partition (  " + pt + " = '" + existTimestamp + "' )";
+                    String alterSql = "alter table " + getFullTabName(table) + " drop partition (  " + pt + " = '" + existTimestamp + "' )";
                     try {
                         HiveDBUtils.execute(conn, alterSql);
                     } catch (Throwable e) {
@@ -269,6 +269,10 @@ public class HiveRemoveHistoryDataTask {
             throw new RuntimeException(e);
         }
         return deletePts;
+    }
+
+    private String getFullTabName(EntityName table) {
+        return table.getFullName(Optional.of(this.mrEngine.getEscapeChar()));
     }
 
     public static List<String> getHistoryPts(DataSourceMeta mrEngine, Connection conn, final EntityName table) throws Exception {

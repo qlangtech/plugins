@@ -178,17 +178,32 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public final TableInDB getTablesInDB() {
+    protected void fillTableInDB(TableInDB tabs) {
+        // super.fillTableInDB(tabs);
         String hiveJdbcUrl = createHiveJdbcUrl();
         try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
-            TableInDB tabs = TableInDB.create(this);
+//            TableInDB tabs = TableInDB.create(this);
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
             tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
-            return tabs;
+            //  return tabs;
         } catch (Exception e) {
             throw new TisException("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
         }
+        // return tabs;
     }
+
+//    @Override
+//    public final TableInDB getTablesInDB() {
+//        String hiveJdbcUrl = createHiveJdbcUrl();
+//        try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
+//            TableInDB tabs = TableInDB.create(this);
+//            List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
+//            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
+//            return tabs;
+//        } catch (Exception e) {
+//            throw new TisException("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
+//        }
+//    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDataSourceFactory.BasicRdbmsDataSourceFactoryDescriptor {

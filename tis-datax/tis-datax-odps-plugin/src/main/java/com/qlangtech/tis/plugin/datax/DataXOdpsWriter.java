@@ -2,58 +2,312 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.TIS;
+import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.assemble.FullbuildPhase;
+import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
+import com.qlangtech.tis.exec.ExecuteResult;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.fs.ITableBuildTask;
+import com.qlangtech.tis.fs.ITaskContext;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
+import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
+import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
+import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
+import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
+import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import org.apache.commons.collections.CollectionUtils;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
+import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXOdpsWriter extends DataxWriter {
-    private static final String DATAX_NAME = "Odps";
+public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost {
+    private static final String DATAX_NAME = "Aliyun-ODPS";
 
-    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String accessId;
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String accessKey;
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String project;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String table;
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {})
-    public String partition;
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
-    public String column;
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String truncate;
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String odpsServer;
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String tunnelServer;
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean truncate;
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA,advance = false , validate = {Validator.require})
-    public String template;
+    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer lifecycle;
+
+    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String partitionFormat;
+
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXOdpsWriter.class, "DataXOdpsWriter-tpl.json");
     }
 
+    @Override
+    public ExecutePhaseRange getPhaseRange() {
+        return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN);
+    }
 
     @Override
-    public String getTemplate() {
-        return this.template;
+    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+        return new IRemoteTaskTrigger() {
+            @Override
+            public String getTaskName() {
+                return IDataXBatchPost.getPreExecuteTaskName(tab);
+            }
+
+            @Override
+            public void run() {
+
+                // 负责初始化表
+                OdpsDataSourceFactory ds = DataXOdpsWriter.this.getDataSourceFactory();
+                EntityName dumpTable = getDumpTab(tab);
+                // ITISFileSystem fs = getFs().getFileSystem();
+                // Path tabDumpParentPath = getTabDumpParentPath(tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+                ds.visitFirstConnection((conn) -> {
+                    try {
+//                        Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
+//                        JoinHiveTask.initializeHiveTable(fs
+//                                , fs.getPath(new HdfsPath(tabDumpParentPath), "..")
+//                                , getDataSourceFactory()
+//                                , conn.getConnection(), dumpTable, partitionRetainNum, () -> true, () -> {
+//                                    try {
+//                                        BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXOdpsWriter.this
+//                                                , DataXOdpsWriter.this, conn, tab.getName());
+//                                    } catch (Exception e) {
+//                                        throw new RuntimeException(e);
+//                                    }
+//                                });
+
+                        try {
+                            BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXOdpsWriter.this
+                                    , DataXOdpsWriter.this, conn, tab.getName());
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        };
+    }
+
+    private EntityName getDumpTab(ISelectedTab tab) {
+        return getDumpTab(tab.getName());
+    }
+
+    private EntityName getDumpTab(String tabName) {
+        return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
+    }
+
+
+    @Override
+    public OdpsDataSourceFactory getDataSourceFactory() {
+        return (OdpsDataSourceFactory) super.getDataSourceFactory();
+    }
+
+    @Override
+    public IRemoteTaskTrigger createPostTask(
+            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+
+        return new IRemoteTaskTrigger() {
+            @Override
+            public String getTaskName() {
+                return "odps_" + tab.getName() + "_bind";
+            }
+
+            @Override
+            public void run() {
+                bindHiveTables(execContext, tab);
+            }
+        };
+    }
+
+    private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
+
+    }
+
+
+    @Override
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
+            , ITaskContext tskContext, IJoinTaskStatus joinTaskStatus, IDataSourceFactoryGetter dsGetter
+            , IPrimaryTabFinder primaryTabFinder) {
+
+        JoinOdpsTask odpsTask = new JoinOdpsTask(dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus);
+        odpsTask.setContext(tplContext, tskContext);
+        return odpsTask;
+    }
+
+    /**
+     * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
+     *
+     * @param tableMapper
+     * @return
+     */
+    @Override
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+        final CreateTableSqlBuilder createTableSqlBuilder
+                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+
+            @Override
+            protected CreateTableName getCreateTableName() {
+                CreateTableName nameBuilder = super.getCreateTableName();
+                // EXTERNAL
+                nameBuilder.setCreateTablePredicate("CREATE TABLE IF NOT EXISTS");
+                return nameBuilder;
+            }
+
+            protected void appendTabMeta(List<ColWrapper> pks) {
+
+                // HdfsFormat fsFormat = parseFSFormat();
+                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo() + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
+                script.append("lifecycle " + lifecycle);
+
+                // script.appendLine(fsFormat.getRowFormat());
+                // script.appendLine("STORED AS " + fsFormat.getFileType().getType());
+
+//                script.appendLine("LOCATION '").append(
+//                        FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), getDumpTab(tableMapper.getTo()))
+//                ).append("'");
+            }
+
+            @Override
+            protected ColWrapper createColWrapper(CMeta c) {
+                return new ColWrapper(c) {
+                    @Override
+                    public String getMapperType() {
+                        return c.getType().accept(typeTransfer);
+                    }
+                };
+            }
+        };
+
+        return createTableSqlBuilder.build();
+    }
+
+    /**
+     * https://help.aliyun.com/document_detail/159540.html?spm=a2c4g.11186623.0.0.6ae36f60bs6Lm2
+     */
+    public static DataType.TypeVisitor<String> typeTransfer = new DataType.TypeVisitor<String>() {
+        @Override
+        public String bigInt(DataType type) {
+            return "BIGINT";
+        }
+
+        @Override
+        public String decimalType(DataType type) {
+            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+        }
+
+        @Override
+        public String intType(DataType type) {
+            return "INT";
+        }
+
+        @Override
+        public String tinyIntType(DataType dataType) {
+            return "TINYINT";
+        }
+
+        @Override
+        public String smallIntType(DataType dataType) {
+            return "SMALLINT";
+        }
+
+        @Override
+        public String boolType(DataType dataType) {
+            return "BOOLEAN";
+        }
+
+        @Override
+        public String floatType(DataType type) {
+            return "FLOAT";
+        }
+
+        @Override
+        public String doubleType(DataType type) {
+            return "DOUBLE";
+        }
+
+        @Override
+        public String dateType(DataType type) {
+            return "DATE";
+        }
+
+        @Override
+        public String timestampType(DataType type) {
+            return "TIMESTAMP";
+        }
+
+        @Override
+        public String bitType(DataType type) {
+            return "STRING";
+        }
+
+        @Override
+        public String blobType(DataType type) {
+            return "BINARY";
+        }
+
+        @Override
+        public String varcharType(DataType type) {
+            return "STRING";
+        }
+    };
+
+    @Override
+    public boolean isGenerateCreateDDLSwitchOff() {
+        return false;
+    }
+
+    @Override
+    public ExecuteResult startTask(ITableBuildTask dumpTask) {
+
+        try (Connection conn = this.getConnection()) {
+            return dumpTask.process(new ITaskContext() {
+                @Override
+                public Connection getObj() {
+                    return conn;
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public Connection getConnection() {
+        OdpsDataSourceFactory dsFactory = getDataSourceFactory();
+        String jdbcUrl = dsFactory.getJdbcUrl();
+        try {
+            return dsFactory.getConnection(jdbcUrl);
+        } catch (SQLException e) {
+            throw new RuntimeException(jdbcUrl, e);
+        }
     }
 
     @Override
@@ -61,81 +315,103 @@ public class DataXOdpsWriter extends DataxWriter {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
-        MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) this.getDataSourceFactory();
-        IDataxProcessor.TableMap tm = tableMap.get();
-        if (CollectionUtils.isEmpty(tm.getSourceCols())) {
-            throw new IllegalStateException("tablemap " + tm + " source cols can not be null");
-        }
-        TISTable table = new TISTable();
-        table.setTableName(tm.getTo());
-        DataDumpers dataDumpers = dsFactory.getDataDumpers(table);
-        if (dataDumpers.splitCount > 1) {
-            throw new IllegalStateException("dbSplit can not max than 1");
-        }
-        MySQLWriterContext context = new MySQLWriterContext();
-        if (dataDumpers.dumpers.hasNext()) {
-            IDataSourceDumper next = dataDumpers.dumpers.next();
-            context.jdbcUrl = next.getDbHost();
-            context.password = dsFactory.password;
-            context.username = dsFactory.userName;
-            context.tabName = table.getTableName();
-            context.cols = tm.getSourceCols();
-            context.dbName = this.dbName;
-            context.writeMode = this.writeMode;
-            context.preSql = this.preSql;
-            context.postSql = this.postSql;
-            context.session = session;
-            context.batchSize = batchSize;
-            return context;
-        }
 
-        throw new RuntimeException("dbName:" + dbName + " relevant DS is empty");
+        return new OdpsContext(this, tableMap.get());
     }
 
-
-    public static class MySQLWriterContext extends MySQLDataxContext {
-
-        private String dbName;
-        private String writeMode;
-        private String preSql;
-        private String postSql;
-        private String session;
-        private Integer batchSize;
-
-        public String getDbName() {
-            return dbName;
-        }
-
-        public String getWriteMode() {
-            return writeMode;
-        }
-
-        public String getPreSql() {
-            return preSql;
-        }
-
-        public String getPostSql() {
-            return postSql;
-        }
-
-        public String getSession() {
-            return session;
-        }
-
-        public Integer getBatchSize() {
-            return batchSize;
-        }
+    @Override
+    public Class<?> getOwnerClass() {
+        return DataXOdpsWriter.class;
     }
 
-    private DataSourceFactory getDataSourceFactory() {
-        DataSourceFactoryPluginStore dsStore = TIS.getDataBasePluginStore( PostedDSProp.parse(this.dbName));
-        return dsStore.getPlugin();
+    public static class OdpsContext implements IDataxContext {
+        private final DataXOdpsWriter odpsWriter;
+        private final IDataxProcessor.TableMap tableMapper;
+        private final AccessKey accessKey;
+        private final OdpsDataSourceFactory dsFactory;
+
+        public OdpsContext(DataXOdpsWriter odpsWriter, IDataxProcessor.TableMap tableMapper) {
+            this.odpsWriter = odpsWriter;
+            this.tableMapper = tableMapper;
+
+            this.dsFactory = odpsWriter.getDataSourceFactory();
+            this.accessKey = this.dsFactory.getAccessKey();
+
+        }
+
+        public String getTable() {
+            return this.tableMapper.getTo();
+        }
+
+        public String getProject() {
+            return this.dsFactory.project;
+        }
+
+        public List<String> getColumn() {
+            return this.tableMapper.getSourceCols()
+                    .stream().map((col) -> col.getName()).collect(Collectors.toList());
+        }
+
+        public String getAccessId() {
+            return this.accessKey.getAccessKeyId();
+        }
+
+        public String getAccessKey() {
+            return this.accessKey.getAccessKeySecret();
+        }
+
+        public boolean isTruncate() {
+            return this.odpsWriter.truncate;
+        }
+
+        public String getOdpsServer() {
+            return this.dsFactory.odpsServer;
+        }
+
+        public String getTunnelServer() {
+            return this.dsFactory.tunnelServer;
+        }
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor
+            implements IFlatTableBuilderDescriptor {
         public DefaultDescriptor() {
             super();
+        }
+
+
+        /**
+         * @param msgHandler
+         * @param context
+         * @param fieldName
+         * @param val
+         * @return
+         */
+        public boolean validateLifecycle(IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
+            int lifecycle = Integer.parseInt(val);
+            final int MIN_Lifecycle = 3;
+            if (lifecycle < MIN_Lifecycle) {
+                msgHandler.addFieldError(context, fieldName, "不能小于" + MIN_Lifecycle + "天");
+                return false;
+            }
+            return true;
+        }
+
+
+        @Override
+        public boolean isSupportTabCreate() {
+            return true;
+        }
+
+        @Override
+        public boolean isSupportIncr() {
+            return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.AliyunODPS;
         }
 
         @Override

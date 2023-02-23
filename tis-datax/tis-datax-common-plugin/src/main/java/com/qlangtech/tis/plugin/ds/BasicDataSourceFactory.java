@@ -216,20 +216,23 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public TableInDB getTablesInDB() {
+    public final TableInDB getTablesInDB() {
 
         try {
             return tabsInDBCache.get(this.identityValue(), () -> {
                 final TableInDB tabs = createTableInDB();
-
-                this.visitFirstConnection((conn) -> {
-                    refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
-                });
+                fillTableInDB(tabs);
                 return tabs;
             });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected void fillTableInDB(TableInDB tabs) {
+        this.visitFirstConnection((conn) -> {
+            refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
+        });
     }
 
     protected TableInDB createTableInDB() {
@@ -257,11 +260,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         return this.nodeDesc;
     }
 
-
     public List<String> getJdbcUrls() {
+        return getJdbcUrls(true);
+    }
+
+
+    protected List<String> getJdbcUrls(boolean resolveHostIp) {
         final DBConfig dbLinkMetaData = this.getDbConfig();
         List<String> jdbcUrls = Lists.newArrayList();
-        dbLinkMetaData.vistDbURL(true, (dbName, dbHost, jdbcUrl) -> {
+        dbLinkMetaData.vistDbURL(resolveHostIp, (dbName, dbHost, jdbcUrl) -> {
             jdbcUrls.add(jdbcUrl);
         }, false);
         return jdbcUrls;

@@ -1,14 +1,14 @@
 {
     "name": "odpswriter",
     "parameter": {
-        "project": "",
-        "table": "",
-        "partition":"",
-        "column": [],
-        "accessId": "",
-        "accessKey": "",
-        "truncate": true,
-        "odpsServer": "",
-        "tunnelServer": ""
+        "project": "${writer.project}",
+        "table": "${writer.table}",
+        "column": [
+#foreach($c in $writer.column) "$c" ,#end],
+        "accessId": "${writer.accessId}",
+        "accessKey": "${writer.accessKey}",
+        "truncate": ${writer.truncate},
+        "odpsServer": "${writer.odpsServer}",
+        "tunnelServer": "${writer.tunnelServer}"
     }
 }

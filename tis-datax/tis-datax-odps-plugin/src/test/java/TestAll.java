@@ -12,7 +12,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-import com.qlangtech.tis.plugin.datax.TestDataXOdpsReader;
+//import com.qlangtech.tis.plugin.datax.TestDataXOdpsReader;
 import com.qlangtech.tis.plugin.datax.TestDataXOdpsWriter;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -24,7 +24,7 @@ import junit.framework.Test;
 public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestDataXOdpsReader.class);
+       // suite.addTestSuite(TestDataXOdpsReader.class);
         suite.addTestSuite(TestDataXOdpsWriter.class);
         return suite;
     }

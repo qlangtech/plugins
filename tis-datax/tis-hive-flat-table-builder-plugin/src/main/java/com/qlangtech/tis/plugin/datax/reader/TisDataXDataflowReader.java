@@ -22,6 +22,7 @@ import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -29,11 +30,12 @@ import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataFlowDataXProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.DBIdentity;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -55,8 +57,49 @@ public class TisDataXDataflowReader extends DataxReader {
     @Override
     public TableInDB getTablesInDB() {
         TableInDB tabsInDB = TableInDB.create(DBIdentity.parseId(this.dataflow));
-        tabsInDB.add(null, "orderinfo");
+
+        SqlTaskNodeMeta.SqlDataFlowTopology topology = this.getTopology();
+
+        Map<String, SqlTaskNodeMeta> nodes = topology.getFinalNodes();
+        for (SqlTaskNodeMeta nodeMeta : nodes.values()) {
+            tabsInDB.add(null, nodeMeta.getExportName());
+        }
         return tabsInDB;
+    }
+
+
+
+    @Override
+    public List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
+
+        SqlTaskNodeMeta.SqlDataFlowTopology topology = this.getTopology();
+        Map<String, SqlTaskNodeMeta> finalNodes = topology.getFinalNodes();
+
+        SqlTaskNodeMeta nodeMeta = finalNodes.get(table.getTabName());
+
+        //  DataSourceFactory writerDS = null;
+
+        DataSourceFactory writerDS = getProcessor().getWriterDataSourceFactory();
+//        if (!(writer instanceof IDataSourceFactoryGetter)) {
+//            throw new IllegalStateException("writer:"
+//                    + writer.getClass().getName() + " must be type of " + IDataSourceFactoryGetter.class.getName());
+//        }
+
+
+        // try {
+        return writerDS.getTableMetadata(table);
+//        } catch (TableNotFoundException e) {
+//
+//            nodeMeta.getSql();
+//
+//            nodeMeta.getDependencies()
+          //  JoinHiveTask.getSQLParserResult();
+//
+//
+//
+//        }
+
+
     }
 
     @Override
@@ -64,9 +107,15 @@ public class TisDataXDataflowReader extends DataxReader {
         return this.selectedTabs;
     }
 
-    public DataFlowDataXProcessor getProcessor() {
+    private DataFlowDataXProcessor getProcessor() {
         return (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, this.dataflow);
     }
+
+    private SqlTaskNodeMeta.SqlDataFlowTopology getTopology() {
+        return getProcessor().getTopology();
+    }
+
+
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
@@ -78,7 +127,7 @@ public class TisDataXDataflowReader extends DataxReader {
         return null;
     }
 
-    @TISExtension
+   // @TISExtension
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         @Override
         public String getDisplayName() {

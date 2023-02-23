@@ -76,7 +76,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return table;
         }
         // return super.logicTable2PhysicsTable(table);
-        SplitTableStrategy.DBPhysicsTable physicsTable = this.splitTableStrategy.getMatchedPhysicsTable(this, jdbcUrl, table);
+        SplitTableStrategy.DBPhysicsTable physicsTable
+                = Objects.requireNonNull(this.splitTableStrategy, "splitTableStrategy can not be null")
+                .getMatchedPhysicsTable(this, jdbcUrl, table);
         return physicsTable.getPhysicsTab();
     }
 

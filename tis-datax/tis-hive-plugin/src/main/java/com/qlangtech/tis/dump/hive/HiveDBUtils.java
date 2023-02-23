@@ -28,6 +28,7 @@ import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.kerberos.KerberosCfg;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingStatement;
@@ -268,6 +269,7 @@ public class HiveDBUtils {
 
     private static Runnable createLogRunnable(Statement statement, IJoinTaskStatus joinTaskStatus) {
         final String collection = MDC.get("app");
+        final String taskId = MDC.get(JobCommon.KEY_TASK_ID);
         HiveStatement hStatement = null;
         if (statement instanceof HiveStatement) {
             hStatement = (HiveStatement) statement;
@@ -287,6 +289,7 @@ public class HiveDBUtils {
 
             @Override
             public void run() {
+                MDC.put(JobCommon.KEY_TASK_ID, taskId);
                 if (collection != null) {
                     MDC.put("app", collection);
                 }

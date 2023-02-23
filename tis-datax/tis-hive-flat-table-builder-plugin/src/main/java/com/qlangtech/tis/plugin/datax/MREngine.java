@@ -23,7 +23,7 @@ package com.qlangtech.tis.plugin.datax;
  * @create: 2021-07-08 14:35
  **/
 public enum MREngine {
-    SPARK("spark"), HIVE("hive");
+    SPARK("spark"), HIVE("hive"), AliyunODPS("odps");
 
     // private final int columnIndexGetTableName;
     private final String token;

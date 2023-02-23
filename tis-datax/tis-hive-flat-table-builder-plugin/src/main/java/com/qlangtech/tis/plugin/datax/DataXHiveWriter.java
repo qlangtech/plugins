@@ -292,14 +292,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 return IDataXBatchPost.getPreExecuteTaskName(tab);
             }
 
-
             @Override
             public void run() {
 
-//                String dataXName, IDataxProcessor processor
-//                        , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, DataSourceMeta.JDBCConnection jdbcConn
-//                        , String tableName
-
+                // 负责初始化表
                 Hiveserver2DataSourceFactory ds = DataXHiveWriter.this.getDataSourceFactory();
                 EntityName dumpTable = getDumpTab(tab);
                 ITISFileSystem fs = getFs().getFileSystem();
@@ -435,7 +431,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     public static class DefaultDescriptor extends HdfsWriterDescriptor implements IFlatTableBuilderDescriptor {
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+            //this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
         @Override

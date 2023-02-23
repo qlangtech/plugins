@@ -32,16 +32,20 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
 import com.qlangtech.tis.sql.parser.meta.DependencyNode;
 import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +111,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
             }
 
             dbIds.entrySet().forEach((entry) -> {
-                readers.add(new AdapterDataxReader(DataxReader.load(pluginCtx, true, entry.getKey())) {
+                readers.add(new AdapterDataxReader(DataxReader.load(null, true, entry.getKey())) {
                     @Override
                     public IGroupChildTaskIterator getSubTasks() {
                         return super.getSubTasks((tab) -> entry.getValue().contains(tab.getName()));
@@ -126,8 +130,12 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         }
     }
 
-    protected SqlTaskNodeMeta.SqlDataFlowTopology getTopology() throws Exception {
-        return SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+    public SqlTaskNodeMeta.SqlDataFlowTopology getTopology() {
+        try {
+            return SqlTaskNodeMeta.getSqlDataFlowTopology(this.name);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -143,10 +151,31 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         return DataxWriter.load(pluginCtx, StoreResourceType.DataFlow, this.name, validateNull);
     }
 
+
+    public DataSourceFactory getWriterDataSourceFactory() {
+        DataSourceFactory writerDS = null;
+
+        IDataxWriter writer = this.getWriter(null);
+        if (!(writer instanceof IDataSourceFactoryGetter)) {
+            throw new IllegalStateException("writer:"
+                    + writer.getClass().getName() + " must be type of " + IDataSourceFactoryGetter.class.getName());
+        }
+
+        writerDS = ((IDataSourceFactoryGetter) writer).getDataSourceFactory();
+        return writerDS;
+    }
+
     @Override
     public File getDataXWorkDir(IPluginContext pluginContext) {
+
+        KeyedPluginStore.KeyVal keyVal = KeyedPluginStore.AppKey.calAppName(pluginContext, this.name);
         TopologyDir topoDir = SqlTaskNodeMeta.getTopologyDir(this.name);
-        return topoDir.getLocalSubFileDir();
+        File localSubFileDir = topoDir.getLocalSubFileDir();
+        if (StringUtils.isEmpty(keyVal.getSuffix())) {
+            return localSubFileDir;
+        } else {
+            return new File(localSubFileDir.getParentFile(), keyVal.getKeyVal());
+        }
     }
 
     @Override

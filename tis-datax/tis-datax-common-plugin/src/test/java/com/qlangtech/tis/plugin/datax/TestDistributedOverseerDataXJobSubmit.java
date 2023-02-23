@@ -72,7 +72,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         RpcServiceReference svcRef = new RpcServiceReference(ref, () -> {
         });
 
-        Optional<DataXJobSubmit> jobSubmit = DataXJobSubmit.getDataXJobSubmit(DataXJobSubmit.InstanceType.DISTRIBUTE);
+        Optional<DataXJobSubmit> jobSubmit = DataXJobSubmit.getDataXJobSubmit(false, DataXJobSubmit.InstanceType.DISTRIBUTE);
         assertTrue(jobSubmit.isPresent());
         DataXJobSubmit submit = jobSubmit.get();
 

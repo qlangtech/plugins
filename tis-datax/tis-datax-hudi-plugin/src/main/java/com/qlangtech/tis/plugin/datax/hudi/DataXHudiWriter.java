@@ -28,6 +28,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -338,7 +339,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                 // 创建hud schema
 
                 FileSystemFactory fsFactory = getFs();
-                IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(), execContext.getPartitionTimestamp(), getHiveConnMeta());
+                IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(), TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis()), getHiveConnMeta());
                 logger.info("create schema on path:{}", HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(), tab.getName(), dumpDir, (HudiSelectedTab) tab));
             }
         };

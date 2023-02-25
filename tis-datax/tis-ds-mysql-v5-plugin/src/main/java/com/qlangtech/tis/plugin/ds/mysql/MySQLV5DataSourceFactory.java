@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.ds.mysql;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -41,7 +40,7 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
     private transient com.mysql.jdbc.Driver driver;
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         if (driver == null) {
             driver = new com.mysql.jdbc.Driver();
         }
@@ -53,7 +52,7 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
         if (password != null) {
             info.put("password", password);
         }
-        return driver.connect(jdbcUrl, info);
+        return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
 
         // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
     }

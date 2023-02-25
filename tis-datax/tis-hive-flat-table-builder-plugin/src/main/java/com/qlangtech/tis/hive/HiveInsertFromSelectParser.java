@@ -17,13 +17,7 @@
  */
 package com.qlangtech.tis.hive;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.SupportHiveDataType;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
-import com.qlangtech.tis.sql.parser.TabPartitions;
 import org.antlr.runtime.tree.Tree;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -35,12 +29,8 @@ import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 宽表解析成AST之后的遍历语意树之后生成的语义模型
@@ -48,9 +38,8 @@ import java.util.stream.Collectors;
  * @author 百岁（baisui@qlangtech.com）
  * @date 2015年12月22日 下午6:27:06
  */
-public class HiveInsertFromSelectParser {
+public class HiveInsertFromSelectParser extends AbstractInsertFromSelectParser {
 
-    private final List<HiveColumn> cols = new ArrayList<>();
 
     private final Map<String, HiveColumn> colsMap = new HashMap<>();
 
@@ -101,16 +90,6 @@ public class HiveInsertFromSelectParser {
         this.sourceTableName = sourceTableName;
     }
 
-    // public List<String> getPs() {
-    // return ps;
-    // }
-    // public void setPs(List<String> ps) {
-    // this.ps = ps;
-    // }
-    public List<HiveColumn> getCols() {
-        return cols;
-    }
-
     public Map<String, HiveColumn> getColsMap() {
         return colsMap;
     }
@@ -123,126 +102,130 @@ public class HiveInsertFromSelectParser {
         this.where = where;
     }
 
-    /**
-     * 除去ps列
-     */
-    public List<HiveColumn> getColsExcludePartitionCols() {
-        return getCols().stream().filter((r) -> !IDumpTable.preservedPsCols.contains(r.getName())).collect(Collectors.toList());
-    }
 
-    private void parseCreateTable(Node node) {
-        ASTNode astNode;
-        for (Node n : node.getChildren()) {
-            astNode = ((ASTNode) n);
-            if (HiveParser.TOK_QUERY == astNode.getType()) {
-                parseCreateTable(astNode);
-            }
-            // 20170201
-            if (HiveParser.TOK_FROM == astNode.getType()) {
-                parseSourceTable(astNode, false);
-            }
-            if (HiveParser.TOK_INSERT == astNode.getType()) {
-                parseCreateTable(astNode);
-            }
-            if (HiveParser.TOK_DESTINATION == astNode.getType()) {
-                parseTargetTable(astNode, false, false);
-            }
-            if (HiveParser.TOK_SELECT == astNode.getType()) {
-                parseCreateTable(astNode);
-            }
-            if (HiveParser.TOK_SELEXPR == astNode.getType()) {
-                parseColumn(astNode);
-            }
-            // 20170201
-            if (HiveParser.TOK_WHERE == astNode.getType()) {
-                where = astNode;
-            }
-        }
-    }
+//    @Override
+//    protected void parseCreateTable(String sql) {
+//        try {
+//            ASTNode astNode = parseDriver.parse(sql, HiveInsertFromSelectParser.parseContext);
+//            parseCreateTable(astNode);
+//        } catch (ParseException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
-    private void parseSourceTable(ASTNode node, boolean isTableName) {
-        for (Node n : node.getChildren()) {
-            ASTNode astNode = (ASTNode) n;
-            if (HiveParser.TOK_TABREF == astNode.getType()) {
-                parseSourceTable(astNode, false);
-                continue;
-            }
-            if (HiveParser.TOK_TABNAME == astNode.getType()) {
-                parseSourceTable(astNode, true);
-                setSourceTableName(StringUtils.join(astNode.getChildren().stream().filter(node1 -> {
-                    ASTNode astNode1 = (ASTNode) node1;
-                    return astNode1.getType() == HiveParser.Identifier;
-                }).toArray(), "."));
-                break;
-            }
-        }
-    }
+//    private void parseCreateTable(Node node) {
+//        ASTNode astNode;
+//        for (Node n : node.getChildren()) {
+//            astNode = ((ASTNode) n);
+//            if (HiveParser.TOK_QUERY == astNode.getType()) {
+//                parseCreateTable(astNode);
+//            }
+//            // 20170201
+//            if (HiveParser.TOK_FROM == astNode.getType()) {
+//                parseSourceTable(astNode, false);
+//            }
+//            if (HiveParser.TOK_INSERT == astNode.getType()) {
+//                parseCreateTable(astNode);
+//            }
+//            if (HiveParser.TOK_DESTINATION == astNode.getType()) {
+//                parseTargetTable(astNode, false, false);
+//            }
+//            if (HiveParser.TOK_SELECT == astNode.getType()) {
+//                parseCreateTable(astNode);
+//            }
+//            if (HiveParser.TOK_SELEXPR == astNode.getType()) {
+//                parseColumn(astNode);
+//            }
+//            // 20170201
+//            if (HiveParser.TOK_WHERE == astNode.getType()) {
+//                where = astNode;
+//            }
+//        }
+//    }
 
-    private void parseTargetTable(ASTNode node, boolean isTableName, boolean isPartition) {
-        ASTNode astNode;
-        for (Node n : node.getChildren()) {
-            astNode = (ASTNode) n;
-            if (HiveParser.TOK_TAB == astNode.getType()) {
-                parseTargetTable(astNode, false, false);
-                continue;
-            }
-            if (HiveParser.TOK_TABNAME == astNode.getType()) {
-                // add by baisui:20170704 支持数据库名称
-                // if (astNode.getChildCount() > 1) {
-                setTargetTableName(StringUtils.join(astNode.getChildren().stream().filter(node1 -> {
-                    ASTNode astNode1 = (ASTNode) node1;
-                    return astNode1.getType() == HiveParser.Identifier;
-                }).toArray(), "."));
-                continue;
-            }
-            if (HiveParser.TOK_PARTSPEC == astNode.getType()) {
-                parseTargetTable(astNode, false, false);
-                continue;
-            }
-            if (HiveParser.TOK_PARTVAL == astNode.getType()) {
-                parseTargetTable(astNode, false, true);
-                continue;
-            }
-            if (isPartition) {
-                //ps.add(astNode.getText());
-            }
-            if (isTableName) {
-                setTargetTableName(astNode.getText());
-            }
-        }
-    }
+//    private void parseSourceTable(ASTNode node, boolean isTableName) {
+//        for (Node n : node.getChildren()) {
+//            ASTNode astNode = (ASTNode) n;
+//            if (HiveParser.TOK_TABREF == astNode.getType()) {
+//                parseSourceTable(astNode, false);
+//                continue;
+//            }
+//            if (HiveParser.TOK_TABNAME == astNode.getType()) {
+//                parseSourceTable(astNode, true);
+//                setSourceTableName(StringUtils.join(astNode.getChildren().stream().filter(node1 -> {
+//                    ASTNode astNode1 = (ASTNode) node1;
+//                    return astNode1.getType() == HiveParser.Identifier;
+//                }).toArray(), "."));
+//                break;
+//            }
+//        }
+//    }
 
-    /**
-     * colume有三种状态 '' AS id id1 AS id id record.id
-     */
-    private void parseColumn(ASTNode astNode) {
-        HiveColumn column = new HiveColumn();
-        for (Node n : astNode.getChildren()) {
-            ASTNode node = (ASTNode) n;
-            if (HiveParser.Identifier == node.getType()) {
-                column.setName(node.getText());
-            } else if (HiveParser.TOK_TABLE_OR_COL == node.getType()) {
-                column.setRawName(getTokTableOrTypeString(node));
-            } else if (HiveParser.StringLiteral == node.getType()) {
-                column.setDefalutValue(node.getText());
-            } else if (HiveParser.DOT == node.getType()) {
-                column.setRawName(node.getChild(1).getText());
-            }
-        }
-        column.setIndex(colIndex++);
-       // column.setType(SupportHiveDataType.STRING.name());
-        column.setDataType(DataType.createVarChar(256));
-        this.cols.add(column);
-        this.colsMap.put(column.getName(), column);
-    }
+//    private void parseTargetTable(ASTNode node, boolean isTableName, boolean isPartition) {
+//        ASTNode astNode;
+//        for (Node n : node.getChildren()) {
+//            astNode = (ASTNode) n;
+//            if (HiveParser.TOK_TAB == astNode.getType()) {
+//                parseTargetTable(astNode, false, false);
+//                continue;
+//            }
+//            if (HiveParser.TOK_TABNAME == astNode.getType()) {
+//                // add by baisui:20170704 支持数据库名称
+//                // if (astNode.getChildCount() > 1) {
+//                setTargetTableName(StringUtils.join(astNode.getChildren().stream().filter(node1 -> {
+//                    ASTNode astNode1 = (ASTNode) node1;
+//                    return astNode1.getType() == HiveParser.Identifier;
+//                }).toArray(), "."));
+//                continue;
+//            }
+//            if (HiveParser.TOK_PARTSPEC == astNode.getType()) {
+//                parseTargetTable(astNode, false, false);
+//                continue;
+//            }
+//            if (HiveParser.TOK_PARTVAL == astNode.getType()) {
+//                parseTargetTable(astNode, false, true);
+//                continue;
+//            }
+//            if (isPartition) {
+//                //ps.add(astNode.getText());
+//            }
+//            if (isTableName) {
+//                setTargetTableName(astNode.getText());
+//            }
+//        }
+//    }
+//
+//    /**
+//     * colume有三种状态 '' AS id id1 AS id id record.id
+//     */
+//    private void parseColumn(ASTNode astNode) {
+//        HiveColumn column = new HiveColumn();
+//        for (Node n : astNode.getChildren()) {
+//            ASTNode node = (ASTNode) n;
+//            if (HiveParser.Identifier == node.getType()) {
+//                column.setName(node.getText());
+//            } else if (HiveParser.TOK_TABLE_OR_COL == node.getType()) {
+//                column.setRawName(getTokTableOrTypeString(node));
+//            } else if (HiveParser.StringLiteral == node.getType()) {
+//                column.setDefalutValue(node.getText());
+//            } else if (HiveParser.DOT == node.getType()) {
+//                column.setRawName(node.getChild(1).getText());
+//            }
+//        }
+//        column.setIndex(colIndex++);
+//        // column.setType(SupportHiveDataType.STRING.name());
+//        column.setDataType(DataType.createVarChar(256));
+//        this.getCols().add(column);
+//        this.colsMap.put(column.getName(), column);
+//    }
 
-    public static String getTokTableOrTypeString(Tree node) {
-        assert (HiveParser.TOK_TABLE_OR_COL == node.getType());
-        return node.getChild(0).getText();
-    }
+//    public static String getTokTableOrTypeString(Tree node) {
+//        assert (HiveParser.TOK_TABLE_OR_COL == node.getType());
+//        return node.getChild(0).getText();
+//    }
 
     public static void main(String[] args) throws Exception {
-        HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser();
+        AbstractInsertFromSelectParser parse = new HiveInsertFromSelectParser();
         // parse.start("INSERT OVERWRITE TABLE totalpay_summary PARTITION (pt,pmod)\n"
         // + " SELECT
         // tp.totalpay_id,tp.curr_date,tp.outfee,tp.source_amount,tp.discount_amount,tp"
@@ -280,35 +263,6 @@ public class HiveInsertFromSelectParser {
 //        int i = 1;
     }
 
-
-    /**
-     * @param sql
-     * @param tabPartition
-     */
-    public void start(String sql, TabPartitions tabPartition, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
-        try {
-            ASTNode astNode = parseDriver.parse(sql, parseContext);
-            //System.out.println(astNode.dump());
-            parseCreateTable(astNode);
-
-            SqlTaskNodeMeta sqlTaskNodeMeta = new SqlTaskNodeMeta();
-            sqlTaskNodeMeta.setSql(sql);
-            ISqlTask.RewriteSql rewriteSql = sqlTaskNodeMeta.getColMetaGetterSql(tabPartition);
-            List<ColumnMetaData> colsMeta = sqlColMetaGetter.apply(rewriteSql);
-            List<HiveColumn> cols = this.getColsExcludePartitionCols();
-
-            if (getCols().size() != colsMeta.size()) {
-                throw new IllegalStateException("cols.size():" + cols.size() + ",colsMeta.size():" + colsMeta.size() + " is not equal");
-            }
-
-            for (int i = 0; i < cols.size(); i++) {
-                cols.get(i).setDataType(colsMeta.get(i).getType());
-            }
-
-        } catch (ParseException e) {
-            throw new RuntimeException(sql, e);
-        }
-    }
 
     /**
      * 重建WHERE條件

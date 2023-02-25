@@ -121,7 +121,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 //    }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
 
         try {
             Class.forName(JDBC_DRIVER);
@@ -129,7 +129,9 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             throw new SQLException(e);
         }
         // return super.getConnection(jdbcUrl, username, password);
-        return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+        return new JDBCConnection(DriverManager.getConnection(
+                jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password))
+                , jdbcUrl);
     }
 
     @Override

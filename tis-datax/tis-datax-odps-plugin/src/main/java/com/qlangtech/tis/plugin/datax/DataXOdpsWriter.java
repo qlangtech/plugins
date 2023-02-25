@@ -7,7 +7,9 @@ import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -15,6 +17,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
+import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -29,14 +32,15 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -50,6 +54,7 @@ import java.util.stream.Collectors;
  **/
 public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost {
     private static final String DATAX_NAME = "Aliyun-ODPS";
+    private static final Logger logger = LoggerFactory.getLogger(DataXOdpsWriter.class);
 
     @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean truncate;
@@ -148,9 +153,24 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
+        String dumpTimeStamp = TimeFormat.parse(this.partitionFormat)
+                .format(execContext.getPartitionTimestampWithMillis());
 
+        recordPt(execContext, getDumpTab(tab.getName()), dumpTimeStamp);
     }
 
+
+    /**
+     * 添加当前任务的pt
+     */
+    private void recordPt(IExecChainContext execContext, EntityName dumpTable, String dumpTimeStamp) {
+        //  Map<IDumpTable, ITabPartition> dateParams = ExecChainContextUtils.getDependencyTablesPartitions(execChainContext);
+        if (StringUtils.isEmpty(dumpTimeStamp)) {
+            throw new IllegalArgumentException("param dumpTimeStamp can not be empty");
+        }
+        TabPartitions dateParams = ExecChainContextUtils.getDependencyTablesPartitions(execContext);
+        dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
+    }
 
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
@@ -287,10 +307,10 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public ExecuteResult startTask(ITableBuildTask dumpTask) {
 
-        try (Connection conn = this.getConnection()) {
+        try (DataSourceMeta.JDBCConnection conn = this.getConnection()) {
             return dumpTask.process(new ITaskContext() {
                 @Override
-                public Connection getObj() {
+                public DataSourceMeta.JDBCConnection getObj() {
                     return conn;
                 }
             });
@@ -300,7 +320,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
     }
 
-    public Connection getConnection() {
+    public DataSourceMeta.JDBCConnection getConnection() {
         OdpsDataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
@@ -371,6 +391,10 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         public String getTunnelServer() {
             return this.dsFactory.tunnelServer;
         }
+
+        public String getPartitionTimeFormat() {
+            return odpsWriter.partitionFormat;
+        }
     }
 
     @TISExtension()
@@ -380,6 +404,19 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
             super();
         }
 
+
+        public boolean validatePartitionFormat(IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
+
+            try {
+                TimeFormat.parse(val);
+            } catch (Exception e) {
+                logger.warn(e.getMessage(), e);
+                msgHandler.addFieldError(context, fieldName, e.getMessage());
+                return false;
+            }
+
+            return true;
+        }
 
         /**
          * @param msgHandler

@@ -30,22 +30,24 @@ import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
-import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
 import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.text.MessageFormat;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 
@@ -55,7 +57,7 @@ import java.util.function.Supplier;
  */
 public class JoinHiveTask extends HiveTask {
     //
-    private static final MessageFormat SQL_INSERT_TABLE = new MessageFormat("INSERT OVERWRITE TABLE {0} PARTITION (pt,pmod) \n {1}");
+
     //
     private static final Logger log = LoggerFactory.getLogger(JoinHiveTask.class);
 
@@ -71,112 +73,62 @@ public class JoinHiveTask extends HiveTask {
         this.mrEngine = mrEngine;
     }
 
-    @Override
-    protected void executeSql(String taskName, String rewritedSql) {
-        // 处理历史表，多余的partition要删除，表不同了需要删除重建
-        boolean dryRun = this.getContext().getExecContext().isDryRun();
-        processJoinTask(rewritedSql);
-        if (dryRun) {
-            log.info("task:{}, as DryRun mode skip remaining tasks", taskName);
-            return;
-        }
-        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
-        final String insertSql = SQL_INSERT_TABLE.format(
-                new Object[]{newCreateTab.getFullName(Optional.of(this.dsFactoryGetter.getDataSourceFactory().getEscapeChar()))
-                        , rewritedSql});
-        super.executeSql(taskName, insertSql);
-    }
+//    @Override
+//    protected void executeSql(String taskName, String rewritedSql) {
+//        // 处理历史表，多余的partition要删除，表不同了需要删除重建
+//        boolean dryRun = this.getContext().getExecContext().isDryRun();
+//        processJoinTask(rewritedSql);
+//        if (dryRun) {
+//            log.info("task:{}, as DryRun mode skip remaining tasks", taskName);
+//            return;
+//        }
+//        final String insertSql = convert2InsertIntoSQL(rewritedSql);
+//        super.executeSql(taskName, insertSql);
+//    }
+
 
     @Override
-    protected void executeSql(String sql, Connection conn) throws SQLException {
+    protected void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException {
         HiveDBUtils.execute(conn, sql, joinTaskStatus);
     }
 
     @Override
     protected List<String> getHistoryPts(
-            DataSourceMeta mrEngine, Connection conn, EntityName table) throws Exception {
+            DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
         return HiveRemoveHistoryDataTask.getHistoryPts(mrEngine, conn, table);
     }
 
-    /**
-     * 处理join表，是否需要自动创建表或者删除重新创建表
-     *
-     * @param sql
-     */
-    private void processJoinTask(String sql) {
-        try {
-
-            final Connection conn = this.getTaskContextObj();
-            final ColsParser insertParser = new ColsParser(sql, conn);
-
-            DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
-
-            final EntityName dumpTable = EntityName.create(dsFactory.getDbConfig().getName(), this.getName());
-
-            final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable);//.replaceAll("\\.", Path.SEPARATOR);
-            if (fileSystem == null) {
-                throw new IllegalStateException("fileSys can not be null");
-            }
-            ITISFileSystem fs = fileSystem;
-            IPath parent = fs.getPath(path);
-            initializeHiveTable(this.fileSystem, parent, this.dsFactoryGetter.getDataSourceFactory(), HdfsFormat.DEFAULT_FORMAT, insertParser
-                    , conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private class ColsParser {
-        private final String sql;
-        private final Connection conn;
-        private HiveInsertFromSelectParser sqlParser;
-
-        public ColsParser(String sql, Connection conn) {
-            this.sql = sql;
-            this.conn = conn;
-        }
-
-        private HiveInsertFromSelectParser getInserSqlParser() {
-            if (sqlParser == null) {
-                sqlParser = getSQLParserResult(sql, conn);
-            }
-            return sqlParser;
-        }
-
-        List<HiveColumn> getAllCols() {
-            return getInserSqlParser().getCols();
-        }
-
-        /**
-         * 除去ps列
-         */
-        public List<HiveColumn> getColsExcludePartitionCols() {
-            return getInserSqlParser().getColsExcludePartitionCols();
-        }
-    }
-
 
     /**
-     * @param fileSystem
-     * @param fsFormat
      * @param insertParser
      * @param conn
      * @param dumpTable
      * @param partitionRetainNum 保留多少个分区
      * @throws Exception
      */
-    private static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine, HdfsFormat fsFormat
+    @Override
+    protected void initializeTable(DataSourceMeta mrEngine
             , ColsParser insertParser
-            , Connection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
-        initializeHiveTable(fileSystem, parentPath, mrEngine, conn, dumpTable, partitionRetainNum, () -> {
-            try {
-                return BindHiveTableTool.HiveTableBuilder.isTableSame(mrEngine, conn, insertParser.getAllCols(), dumpTable);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, () -> {
-            createHiveTable(fileSystem, fsFormat, mrEngine, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
-        });
+            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+
+        final String path = FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable);
+        if (fileSystem == null) {
+            throw new IllegalStateException("fileSys can not be null");
+        }
+        ITISFileSystem fs = fileSystem;
+        IPath parentPath = fs.getPath(path);
+        HdfsFormat fsFormat = HdfsFormat.DEFAULT_FORMAT;
+
+        initializeTable(fileSystem, parentPath, mrEngine, conn, dumpTable, partitionRetainNum
+                , () -> {
+                    try {
+                        return BindHiveTableTool.HiveTableBuilder.isTableSame(mrEngine, conn, insertParser.getAllCols(), dumpTable);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }, () -> {
+                    createHiveTable(fileSystem, fsFormat, mrEngine, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
+                });
     }
 
 
@@ -189,8 +141,8 @@ public class JoinHiveTask extends HiveTask {
      * @param partitionRetainNum 保留多少个分区
      * @throws Exception
      */
-    public static void initializeHiveTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine
-            , Connection conn, EntityName dumpTable, Integer partitionRetainNum, Supplier<Boolean> skipTableSameJudgement, Runnable tableCreator) throws Exception {
+    public static void initializeTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine
+            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum, Supplier<Boolean> skipTableSameJudgement, Runnable tableCreator) throws Exception {
         if (partitionRetainNum == null || partitionRetainNum < 1) {
             throw new IllegalArgumentException("illegal param partitionRetainNum ");
         }
@@ -220,36 +172,15 @@ public class JoinHiveTask extends HiveTask {
         }
     }
 
-    private HiveInsertFromSelectParser getSQLParserResult(String sql, Connection conn) {
-        return getSQLParserResult(sql, this.dsFactoryGetter.getDataSourceFactory(), conn);
+
+    @Override
+    protected HiveInsertFromSelectParser createInsertSQLParser() {
+        return new HiveInsertFromSelectParser();
     }
 
 
-    public static HiveInsertFromSelectParser getSQLParserResult(String sql, DataSourceFactory dsFactory, Connection conn) {
-        final HiveInsertFromSelectParser insertParser = new HiveInsertFromSelectParser();
-
-        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
-            @Override
-            protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
-                return Optional.of(new DumpTabPartition(EntityName.create(dbName, tableName), () -> "-1"));
-            }
-        };
-        insertParser.start(sql, tabPartition, (rewriteSql) -> {
-            try (Statement statement = conn.createStatement()) {
-                try (ResultSet result = statement.executeQuery(rewriteSql.sqlContent)) {
-                    try (ResultSet metaData = convert2ResultSet(result.getMetaData())) {
-                        // 取得结果集数据列类型
-                        return dsFactory.wrapColsMeta(metaData);
-                    }
-                }
-            } catch (SQLException e) {
-                throw new IllegalStateException(e);
-            }
-        });
-        return insertParser;
-    }
-
-    private static ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
+    @Override
+    protected ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
         return new ResultSetMetaDataDelegate(metaData);
     }
 
@@ -330,7 +261,7 @@ public class JoinHiveTask extends HiveTask {
      * 创建hive表
      */
     public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat
-            , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, Connection conn) {
+            , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, DataSourceMeta.JDBCConnection conn) {
         try {
             BindHiveTableTool.HiveTableBuilder tableBuilder = new BindHiveTableTool.HiveTableBuilder("0", fsFormat);
             tableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, dumpTable, cols, (hiveSQl) -> {

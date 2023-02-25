@@ -16,39 +16,19 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ds.starrocks;
+package com.qlangtech.tis.plugin.datax.odps;
 
-import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
+import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-29 10:01
+ * @create: 2023-02-25 10:01
  **/
-@Public
-public class StarRocksSourceFactory extends DorisSourceFactory {
+public class OdpsInsertFromSelectParser extends AbstractInsertFromSelectParser {
 
-    public static final String DISPLAY_NAME = "StarRocks";
 
-    @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
-        return super.getConnection(jdbcUrl);
-    }
-
-    @Override
-    public String getEscapeChar() {
-        return "`";
-    }
-
-    @TISExtension
-    public static class DefaultDescriptor extends DorisSourceFactory.DefaultDescriptor {
-        @Override
-        protected String getDataSourceName() {
-            return DISPLAY_NAME;
-        }
-    }
+//    @Override
+//    protected void parseCreateTable(String sql) {
+//
+//    }
 }

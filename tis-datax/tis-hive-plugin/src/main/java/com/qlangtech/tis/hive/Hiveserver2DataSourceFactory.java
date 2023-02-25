@@ -112,12 +112,12 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         return getConnection(jdbcUrl, false);
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
         try {
 
             if (usingPool) {
@@ -141,7 +141,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                                 .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
                     }
                 });
-                return hiveDriver.connect(jdbcUrl, props);
+                return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
             }
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -161,8 +161,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
         final String hiveJdbcUrl = createHiveJdbcUrl();
-        try (Connection conn = this.getConnection(hiveJdbcUrl)) {
-            connProcessor.vist(new JDBCConnection(conn, hiveJdbcUrl));
+        try (JDBCConnection conn = this.getConnection(hiveJdbcUrl)) {
+            connProcessor.vist(conn);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

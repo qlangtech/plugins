@@ -32,7 +32,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -84,14 +83,14 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToEmpty(this.userName));
         if (StringUtils.isNotEmpty(this.password)) {
             props.put("password", StringUtils.trimToEmpty(this.password));
         }
         try {
-            return mysql5Driver.connect(jdbcUrl, props);
+            return new JDBCConnection(mysql5Driver.connect(jdbcUrl, props), jdbcUrl);
         } catch (SQLException e) {
             throw new TisException(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }

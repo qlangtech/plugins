@@ -76,6 +76,7 @@ public class TestDataXOdpsWriter extends TestCase {
         odpsWriter.truncate = true;
         odpsWriter.template = DataXOdpsWriter.getDftTemplate();
         odpsWriter.dbName = "odpsEndpoint";
+        odpsWriter.partitionFormat = TimeFormat.yyyyMMddHHmmss.name();
         return odpsWriter;
     }
 

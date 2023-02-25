@@ -55,24 +55,6 @@ public class YarnConnStrategy extends SparkConnStrategy {
 
         Utils.setHadoopConfig2Local(cfgDir, IYarnConfig.FILE_NAME_YARN_SITE, yarnSite);
 
-//        try {
-//            File ys = new File(cfgDir, IYarnConfig.FILE_NAME_YARN_SITE);
-////           // String yarnConfigDir = System.getenv("YARN_CONF_DIR");
-////            if (StringUtils.isEmpty(yarnConfigDir) || !yarnConfigDir.equals(cfgDir.getCanonicalPath())) {
-////                throw new IllegalStateException("yarnConfigDir is illegal:" + yarnConfigDir
-////                        + ",cfgDir:" + cfgDir.getCanonicalPath());
-////            }
-//            if (!ys.exists()) {
-//                FileUtils.write(ys, yarnSite, TisUTF8.get(), false);
-//            } else if (!StringUtils.equals(MD5Utils.md5file(yarnSite.getBytes(TisUTF8.get())), MD5Utils.md5file(ys))) {
-//                // 先备份
-//                FileUtils.moveFile(ys, new File(cfgDir, IYarnConfig.FILE_NAME_YARN_SITE + "_bak_" + IParamContext.getCurrentTimeStamp()));
-//                FileUtils.write(ys, yarnSite, TisUTF8.get(), false);
-//            }
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-
         return IYarnConfig.KEY_DISPLAY_NAME;
     }
 

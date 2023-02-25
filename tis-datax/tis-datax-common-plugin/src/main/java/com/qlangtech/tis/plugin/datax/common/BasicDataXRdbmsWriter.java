@@ -140,8 +140,8 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
-            try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                process(dataXName, processor, dataXWriter, dataXWriter, new DataSourceMeta.JDBCConnection(conn, jdbcUrl), tableName);
+            try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl)) {
+                process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
             }
         }
     }

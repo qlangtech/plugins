@@ -113,7 +113,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
@@ -125,7 +125,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         props.setProperty(PGProperty.USER.getName(), this.getUserName());
         props.setProperty(PGProperty.PASSWORD.getName(), this.password);
 
-        return DriverManager.getConnection(jdbcUrl, props);
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, props), jdbcUrl);
 //        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
 //            throw new TisException("invalid tabSchema:" + this.tabSchema);
 //        }
@@ -177,7 +177,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             try {
                 AtomicBoolean valid = new AtomicBoolean(true);
                 PGDataSourceFactory ds = (PGDataSourceFactory) dsFactory;
-                dsFactory.visitFirstConnection(( c) -> {
+                dsFactory.visitFirstConnection((c) -> {
                     PgConnection conn = (PgConnection) c.getConnection();
                     if (!StringUtils.equals(ds.tabSchema, conn.getSchema())) {
                         msgHandler.addFieldError(context, FIELD_TAB_SCHEMA, "Invalid table Schema valid");

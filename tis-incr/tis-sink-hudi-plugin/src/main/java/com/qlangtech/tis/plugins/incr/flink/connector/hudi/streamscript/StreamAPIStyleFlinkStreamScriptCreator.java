@@ -23,10 +23,10 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.plugin.datax.hudi.BatchOpMode;
 import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.HudiTableMeta;
@@ -186,7 +186,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                         if (hudiSinkFactory.baseOnBach) {
                             throw new TisException("没有发现可用的批量导入记录，请先触发批量导入，或者您可以尝试将`baseOnBach`设置成`否`");
                         } else {
-                            return IParamContext.getCurrentTimeStamp();
+                            return TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp());
                         }
                     }
                     Matcher matcher = PATTERN_EXEC_TIMESTAMP.matcher(table.getStorageLocation());

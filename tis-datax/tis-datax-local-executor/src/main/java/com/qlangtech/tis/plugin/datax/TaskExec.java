@@ -107,7 +107,7 @@ public class TaskExec {
 //                            jobConsumer.consumeMessage(dataXJob);
 //                        }
 //                    } else {
-                    dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXJobInfo, processor.getResType());
+                    dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor.getResType());
                     jobConsumer.consumeMessage(dataXJob);
                     // }
 

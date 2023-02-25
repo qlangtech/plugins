@@ -18,8 +18,8 @@
 
 package com.qlangtech.tis.config;
 
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.utils.MD5Utils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -51,7 +51,7 @@ public class Utils {
                 FileUtils.write(ys, content, TisUTF8.get(), false);
             } else if (!StringUtils.equals(MD5Utils.md5file(content.getBytes(TisUTF8.get())), MD5Utils.md5file(ys))) {
                 // 先备份
-                FileUtils.moveFile(ys, new File(cfgDir, fileName + "_bak_" + IParamContext.getCurrentTimeStamp()));
+                FileUtils.moveFile(ys, new File(cfgDir, fileName + "_bak_" + TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp())));
                 FileUtils.write(ys, content, TisUTF8.get(), false);
             }
         } catch (IOException e) {

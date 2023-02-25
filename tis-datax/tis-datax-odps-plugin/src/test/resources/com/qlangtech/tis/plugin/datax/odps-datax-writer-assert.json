@@ -9,6 +9,7 @@
       "col3"
     ],
     "odpsServer":"http://sxxx/api",
+    "partitionTimeFormat":"yyyyMMddHHmmss",
     "project":"chinan_test",
     "table":"orderinfo_new",
     "truncate":true,

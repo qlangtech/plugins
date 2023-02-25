@@ -240,7 +240,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         return super.getConnection(jdbcUrl);
     }
 

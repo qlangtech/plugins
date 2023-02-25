@@ -9,6 +9,7 @@
         "accessKey": "${writer.accessKey}",
         "truncate": ${writer.truncate},
         "odpsServer": "${writer.odpsServer}",
-        "tunnelServer": "${writer.tunnelServer}"
+        "tunnelServer": "${writer.tunnelServer}",
+        "partitionTimeFormat": "${writer.partitionTimeFormat}"
     }
 }

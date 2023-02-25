@@ -30,6 +30,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.kerberos.KerberosCfg;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingStatement;
 import org.apache.commons.lang.StringUtils;
@@ -185,14 +186,14 @@ public class HiveDBUtils {
         return hiveDatasource;
     }
 
-    public Connection createConnection() {
+    public DataSourceMeta.JDBCConnection createConnection() {
         return createConnection(0);
     }
 
-    public Connection createConnection(int retry) {
-        Connection conn = null;
+    public DataSourceMeta.JDBCConnection createConnection(int retry) {
+        DataSourceMeta.JDBCConnection conn = null;
         try {
-            conn = hiveDatasource.getConnection();
+            conn = new DataSourceMeta.JDBCConnection(hiveDatasource.getConnection(),hiveJdbcUrl);
             executeNoLog(conn, "set hive.exec.dynamic.partition.mode=nonstrict");
             return conn;
         } catch (Exception e) {
@@ -215,22 +216,22 @@ public class HiveDBUtils {
         }
     }
 
-    public void close(Connection conn) {
+    public void close(DataSourceMeta.JDBCConnection conn) {
         try {
             conn.close();
         } catch (Throwable e) {
         }
     }
 
-    public static boolean execute(Connection conn, String sql, IJoinTaskStatus joinTaskStatus) throws SQLException {
+    public static boolean execute(DataSourceMeta.JDBCConnection conn, String sql, IJoinTaskStatus joinTaskStatus) throws SQLException {
         return execute(conn, sql, true, /* listenLog */          joinTaskStatus);
     }
 
-    public static boolean execute(Connection conn, String sql) throws SQLException {
+    public static boolean execute(DataSourceMeta.JDBCConnection conn, String sql) throws SQLException {
         return execute(conn, sql, new JoinTaskStatus("dump"));
     }
 
-    public static boolean executeNoLog(Connection conn, String sql) throws SQLException {
+    public static boolean executeNoLog(DataSourceMeta.JDBCConnection conn, String sql) throws SQLException {
         return execute(conn, sql, false, /* listenLog */
                 new JoinTaskStatus("dump"));
     }
@@ -242,9 +243,9 @@ public class HiveDBUtils {
      * @return
      * @throws Exception
      */
-    private static boolean execute(Connection conn, String sql, boolean listenLog, IJoinTaskStatus joinTaskStatus) throws SQLException {
+    private static boolean execute(DataSourceMeta.JDBCConnection conn, String sql, boolean listenLog, IJoinTaskStatus joinTaskStatus) throws SQLException {
         synchronized (HiveDBUtils.class) {
-            try (Statement stmt = conn.createStatement()) {
+            try (Statement stmt = conn.getConnection().createStatement()) {
                 // Future<?> f = null;// exec.submit(createLogRunnable(stmt));
                 try {
                     if (listenLog) {
@@ -344,9 +345,9 @@ public class HiveDBUtils {
      * @param resultProcess
      * @throws Exception
      */
-    public static void query(Connection conn, String sql, ResultProcess resultProcess) throws Exception {
+    public static void query(DataSourceMeta.JDBCConnection conn, String sql, ResultProcess resultProcess) throws Exception {
         synchronized (HiveDBUtils.class) {
-            try (Statement stmt = conn.createStatement()) {
+            try (Statement stmt = conn.getConnection().createStatement()) {
                 try {
                     try (ResultSet result = stmt.executeQuery(sql)) {
                         while (result.next()) {
@@ -378,7 +379,7 @@ public class HiveDBUtils {
 
         HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200", "tis");
 
-        Connection con = dbUtils.createConnection();
+        DataSourceMeta.JDBCConnection con = dbUtils.createConnection();
 
         // // Connection con = DriverManager.getConnection(
         // // "jdbc:hive://10.1.6.211:10000/tis", "", "");
@@ -386,7 +387,7 @@ public class HiveDBUtils {
         // // Connection con = DriverManager.getConnection(
         // // "jdbc:hive2://hadoop6:10001/tis", "", "");
         // System.out.println("create conn");
-        Statement stmt = con.createStatement();
+        Statement stmt = con.getConnection().createStatement();
         //
         ResultSet result = stmt.executeQuery("select 1");
         if (result.next()) {

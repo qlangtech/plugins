@@ -26,7 +26,6 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.regex.Matcher;
@@ -60,14 +59,14 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
             throw new SQLException(e.getMessage(), e);
         }
-        return DriverManager.getConnection(jdbcUrl);
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl), jdbcUrl);
     }
 
     @TISExtension

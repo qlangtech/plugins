@@ -250,7 +250,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         private final String jdbcUrl;
         private final TISTable table;
 
-        private Connection connection;
+        private JDBCConnection connection;
         private Statement statement;
         // private ResultSetMetaData metaData;
 
@@ -284,7 +284,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 ResultSet result = null;
                 try {
                     StringBuffer refactSql = parseRowCountSql();
-                    statement = connection.createStatement(
+                    statement = connection.getConnection().createStatement(
                             ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                     result = statement.executeQuery(refactSql.toString());
                     result.last();
@@ -345,7 +345,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             }
             try {
                 this.connection = getConnection(jdbcUrl);
-                this.statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 this.columCount = metaData.getColumnCount();
@@ -430,7 +430,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
 
-    private void closeResultSet(Connection rs) {
+    private void closeResultSet(JDBCConnection rs) {
         if (rs != null) {
             try {
                 rs.close();

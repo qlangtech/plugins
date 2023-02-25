@@ -221,7 +221,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException e) {
@@ -230,8 +230,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 //        return DriverManager.getConnection(jdbcUrl
 //                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
 
-        return DriverManager.getConnection(jdbcUrl
-                , StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl
+                , StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)), jdbcUrl);
     }
 
 

@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -30,7 +31,6 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -281,7 +281,7 @@ public class HudiTableMeta {
 
     public IPath getDumpDir(ITISFileSystem fs, IHiveConnGetter hiveConn) {
         if (this.tabDumpDir == null) {
-            this.tabDumpDir = getDumpDir(fs, hudiTabName, DataxUtils.getDumpTimeStamp(), hiveConn);
+            this.tabDumpDir = getDumpDir(fs, hudiTabName, TimeFormat.yyyyMMddHHmmss.format(DataxUtils.getDumpTimeStamp()), hiveConn);
         }
         return this.tabDumpDir;
     }

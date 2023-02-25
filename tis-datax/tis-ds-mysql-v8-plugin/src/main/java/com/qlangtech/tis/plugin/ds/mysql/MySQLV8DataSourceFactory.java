@@ -22,7 +22,6 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -36,7 +35,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
     private transient com.mysql.cj.jdbc.Driver mysql8Driver;
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
 
         if (mysql8Driver == null) {
             mysql8Driver = new com.mysql.cj.jdbc.Driver();
@@ -45,7 +44,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory {
         props.put("user", StringUtils.trimToNull(this.userName));
         props.put("password", StringUtils.trimToEmpty(password));
         // 为了避开与Mysql5的连接冲突，需要直接从driver中创建connection对象
-        return mysql8Driver.connect(jdbcUrl, props);
+        return new JDBCConnection(mysql8Driver.connect(jdbcUrl, props), jdbcUrl);
     }
 
     @TISExtension

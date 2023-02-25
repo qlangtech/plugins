@@ -29,6 +29,7 @@ import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
@@ -123,7 +124,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
     public void run() {
 
         ITISFileSystem fs = this.hudiWriter.getFs().getFileSystem();
-        IPath dumpDir = HudiTableMeta.getDumpDir(fs, this.hudiTab.getName(), execContext.getPartitionTimestamp(), this.hiveConnMeta);
+        IPath dumpDir = HudiTableMeta.getDumpDir(fs, this.hudiTab.getName(), TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis()), this.hiveConnMeta);
         IPath fsSourcePropsPath = fs.getPath(dumpDir, "meta/" + this.hudiTab.getName() + "-source.properties");
 
 

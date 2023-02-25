@@ -22,6 +22,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
@@ -50,6 +51,7 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     private static final Logger logger = LoggerFactory.getLogger(BasicEngineJob.class);
     private EntityName dumpTable = null;
     private List<HiveColumn> colsExcludePartitionCols = null;
+    private TimeFormat timeFormat;
 
     private Integer ptRetainNum;
 
@@ -107,7 +109,9 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
     }
 
     protected Path createPath() throws IOException {
-        // SimpleDateFormat timeFormat = new SimpleDateFormat(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
+        // SimpleDateFormat timeFormat = new SimpleDateFormat();
+
+        this.timeFormat = TimeFormat.parse(this.cfg.getNecessaryValue("ptFormat", HdfsWriterErrorCode.REQUIRED_VALUE));
 
         this.dumpTable = this.createDumpTable();
         TT writerPlugin = this.getWriterPlugin();

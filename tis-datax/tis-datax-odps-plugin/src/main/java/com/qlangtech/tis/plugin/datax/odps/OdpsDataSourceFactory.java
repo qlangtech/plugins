@@ -32,10 +32,7 @@ import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
@@ -161,7 +158,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public Connection getConnection(String jdbcUrl) throws SQLException {
+    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl) throws SQLException {
         try {
             Class.forName(DRIVER_NAME);
         } catch (ClassNotFoundException e) {
@@ -173,7 +170,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
                 jdbcUrl,
                 accessKey.getAccessKeyId(), accessKey.getAccessKeySecret());
 
-        return conn;
+        return new JDBCConnection(conn, jdbcUrl);
     }
 
     public Odps createOdps() {

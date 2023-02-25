@@ -21,10 +21,10 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.assemble.FullbuildPhase;
-import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
@@ -57,6 +57,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -114,6 +115,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return new HiveDataXContext("tishivewriter", tableMap, this.dataXName);
     }
 
+
     /**
      * ========================================================
      * implements: IFlatTableBuilder
@@ -124,12 +126,12 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     public ExecuteResult startTask(ITableBuildTask dumpTask) {
 
         try {
-            try (Connection conn = getConnection()) {
-                HiveDBUtils.executeNoLog(conn,"SET hive.exec.dynamic.partition = true");
-                HiveDBUtils.executeNoLog(conn,"SET hive.exec.dynamic.partition.mode = nonstrict");
+            try (DataSourceMeta.JDBCConnection conn = getConnection()) {
+                HiveDBUtils.executeNoLog(conn, "SET hive.exec.dynamic.partition = true");
+                HiveDBUtils.executeNoLog(conn, "SET hive.exec.dynamic.partition.mode = nonstrict");
                 return dumpTask.process(new ITaskContext() {
                     @Override
-                    public Connection getObj() {
+                    public DataSourceMeta.JDBCConnection getObj() {
                         return conn;
                     }
                 });
@@ -203,7 +205,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
-                        return c.getType().accept(HiveColumn.visitor);
+                        return c.getType().accept(HiveColumn.hiveTypeVisitor);
                     }
                 };
             }
@@ -216,7 +218,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "DataXHiveWriter-tpl.json");
     }
 
-    public Connection getConnection() {
+    public DataSourceMeta.JDBCConnection getConnection() {
         Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
@@ -303,10 +305,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 ds.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
-                        JoinHiveTask.initializeHiveTable(fs
+                        JoinHiveTask.initializeTable(fs
                                 , fs.getPath(new HdfsPath(tabDumpParentPath), "..")
                                 , getDataSourceFactory()
-                                , conn.getConnection(), dumpTable, partitionRetainNum, () -> true, () -> {
+                                , conn, dumpTable, partitionRetainNum, () -> true, () -> {
                                     try {
                                         BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXHiveWriter.this, DataXHiveWriter.this, conn, tab.getName());
                                     } catch (Exception e) {
@@ -346,10 +348,13 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         try {
             Path tabDumpParentPath = getTabDumpParentPath(tab);
             Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
-            try (Connection hiveConn = this.getConnection()) {
+            try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
                 EntityName dumpTable = getDumpTab(tab);// EntityName.create(dsFactory.getDbName(), tab.getName());
                 final Path dumpParentPath = tabDumpParentPath;
-                String dumpTimeStamp = DataxUtils.getDumpTimeStamp();
+
+
+                String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
+                //String dumpTimeStamp = DataxUtils.getDumpTimeStamp();
                 BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
                         , Collections.singletonMap(dumpTable, () -> {
                                     return new BindHiveTableTool.HiveBindConfig(Collections.emptyList(), dumpParentPath);

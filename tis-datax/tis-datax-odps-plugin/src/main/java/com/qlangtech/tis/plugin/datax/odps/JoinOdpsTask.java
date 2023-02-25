@@ -26,6 +26,7 @@ import com.aliyun.odps.task.SQLTask;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
+import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +59,7 @@ public class JoinOdpsTask extends HiveTask {
     }
 
     @Override
-    protected void executeSql(String sql, Connection conn) throws SQLException {
+    protected void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException {
 
         OdpsDataSourceFactory dsFactory
                 = (OdpsDataSourceFactory) dsFactoryGetter.getDataSourceFactory();
@@ -156,7 +159,23 @@ public class JoinOdpsTask extends HiveTask {
 
     @Override
     protected List<String> getHistoryPts(
-            DataSourceMeta mrEngine, Connection conn, EntityName table) throws Exception {
+            DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
         return Lists.newArrayList();
+    }
+
+    @Override
+    protected void initializeTable(DataSourceMeta mrEngine, ColsParser insertParser
+            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
+
+    }
+
+    @Override
+    protected ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
+        return null;
+    }
+
+    @Override
+    protected AbstractInsertFromSelectParser createInsertSQLParser() {
+        return new OdpsInsertFromSelectParser();
     }
 }

@@ -159,7 +159,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         EasyMock.expect(context.hasErrors()).andReturn(false);
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
             @Override
-            public Connection getConnection(String jdbcUrl) throws SQLException {
+            public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
                 return null;
             }
         };

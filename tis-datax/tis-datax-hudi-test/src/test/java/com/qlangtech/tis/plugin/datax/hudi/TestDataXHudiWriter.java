@@ -133,7 +133,7 @@ public class TestDataXHudiWriter {
         Optional<Context> context = Optional.of(new DefaultContext());
         BasicDataSourceFactory dsFactory = (BasicDataSourceFactory)
                 MYSQL_CONTAINER.createMySqlDataSourceFactory(dbName);// MySqlContainer.createMySqlDataSourceFactory(dbName, MYSQL_CONTAINER);
-        TIS.getDataSourceFactoryPluginStore( PostedDSProp.parse(dbName.getName()))
+        TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(dbName.getName()))
                 .setPlugins(IPluginContext.namedContext(dbName.getName()), context
                         , Collections.singletonList(new Descriptor.ParseDescribable(dsFactory)));
 
@@ -196,7 +196,7 @@ public class TestDataXHudiWriter {
 
         EasyMock.expect(execContext.getTaskId()).andReturn(taskId).anyTimes();
         EasyMock.expect(execContext.getIndexName()).andReturn(HdfsFileSystemFactoryTestUtils.testDataXName.getName()).anyTimes();
-        EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
+        EasyMock.expect(execContext.getPartitionTimestampWithMillis()).andReturn((HudiWriter.timestamp)).anyTimes();
         DataxProcessor processor = EasyMock.mock("dataxProcessor", DataxProcessor.class);
         DataxProcessor.processorGetter = (name) -> processor;
         File dataxCfgDir = caseFolder.newFolder("dataxCfgDir");
@@ -206,7 +206,7 @@ public class TestDataXHudiWriter {
         genCfgs.setGenTime(1);
         genCfgs.setGroupedChildTask(
                 Collections.singletonMap(tableFullTypes
-                        , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, tableFullTypes + "_0"))));
+                        , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, "dbId", tableFullTypes + "_0"))));
         genCfgs.write2GenFile(dataxCfgDir);
 
 
@@ -306,7 +306,7 @@ public class TestDataXHudiWriter {
             DataXCfgGenerator.GenerateCfgs genCfg = new DataXCfgGenerator.GenerateCfgs(dataXCfgDir);
             genCfg.setGenTime(HudiWriter.timestamp);
             genCfg.setGroupedChildTask(Collections.singletonMap(WriterTemplate.TAB_customer_order_relation
-                    , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, WriterTemplate.TAB_customer_order_relation + "_0"))));
+                    , Lists.newArrayList(new DataXCfgGenerator.DBDataXChildTask(jdbcUrl, "dbId", WriterTemplate.TAB_customer_order_relation + "_0"))));
             genCfg.write2GenFile(dataXCfgDir);
 
             //   EasyMock.expect(dataXProcessor.getDataxCfgDir(null)).andReturn(dataXCfgDir);
@@ -321,7 +321,7 @@ public class TestDataXHudiWriter {
 
 
             IExecChainContext execContext = EasyMock.mock("execContext", IExecChainContext.class);
-            EasyMock.expect(execContext.getPartitionTimestamp()).andReturn(String.valueOf(HudiWriter.timestamp)).anyTimes();
+            EasyMock.expect(execContext.getPartitionTimestampWithMillis()).andReturn((HudiWriter.timestamp)).anyTimes();
 
 
             EasyMock.replay(dataXProcessor, execContext);

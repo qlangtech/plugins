@@ -31,10 +31,7 @@ import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.DataXClickhouseWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.impl.InsertType;
@@ -277,7 +274,7 @@ public class TestChunjunClickhouseSinkFactory
             });
 
             try {
-                try (Connection conn = sourceFactory.getConnection(jdbcUrls[0])) {
+                try (DataSourceMeta.JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0])) {
                     Statement statement = conn.createStatement();
                     //+ " where id='" + colIdVal + "'"
                     ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName);

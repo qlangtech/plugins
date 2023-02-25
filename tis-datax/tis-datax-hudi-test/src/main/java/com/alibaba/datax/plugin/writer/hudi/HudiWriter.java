@@ -17,6 +17,8 @@
  */
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.tis.datax.TimeFormat;
+
 //
 //import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 //import org.apache.hudi.utilities.UtilHelpers;
@@ -44,7 +46,7 @@ public class HudiWriter {
 ////            + "/user/admin/customer_order_relation-source.properties";
 ////    public static final String hdfs_source_schemaFilePath = HdfsFileSystemFactoryTestUtils.DEFAULT_HDFS_ADDRESS + "/user/admin/schema.avsc";
     public static final String targetTableName = "customer_order_relation";
-    public final static long timestamp = 20220311135455l;
+    public final static long timestamp = TimeFormat.getCurrentTimeStamp();
 //
 ////    /**
 ////     * https://hudi.apache.org/docs/next/docker_demo

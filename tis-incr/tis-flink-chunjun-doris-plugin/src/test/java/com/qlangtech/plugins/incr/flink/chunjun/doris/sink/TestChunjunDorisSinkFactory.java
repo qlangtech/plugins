@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -126,7 +127,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 
         String colName = null;
         dsFactory = getDorisSourceFactory(feServiceHost, jdbcPort, loadPort);
-        try (Connection conn = dsFactory.getConnection(
+        try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(
                 dsFactory.buidJdbcUrl(null, feServiceHost, null))) {
 
             try (Statement statement = conn.createStatement()) {

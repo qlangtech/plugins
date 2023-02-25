@@ -20,6 +20,7 @@ package com.qlangtech.tis.dump.hive;
 
 import com.google.common.collect.ImmutableMap;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class TestHiveDBUtils {
     public void testConn() throws Exception {
         HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200:10000", "default");
 
-        try (Connection conn = dbUtils.createConnection()) {
+        try (DataSourceMeta.JDBCConnection conn = dbUtils.createConnection()) {
             Statement statement = conn.createStatement();
             try (ResultSet resultSet = statement.executeQuery("select count(instance_id) as countt,`type` FROM  instancedetail where 1=0 group by type")) {
 

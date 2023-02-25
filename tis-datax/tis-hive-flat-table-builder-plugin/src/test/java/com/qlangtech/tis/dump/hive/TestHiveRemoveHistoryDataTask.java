@@ -46,7 +46,7 @@ public class TestHiveRemoveHistoryDataTask extends TestCase {
         DataSourceMeta sourceMeta = EasyMock.createMock("sourceMeta", DataSourceMeta.class);
 
         ITISFileSystem fileSystem = EasyMock.createMock("fileSystem", ITISFileSystem.class);
-        Connection hiveConn = EasyMock.createMock("hiveConn", Connection.class);
+        DataSourceMeta.JDBCConnection hiveConn = EasyMock.createMock("hiveConn", DataSourceMeta.JDBCConnection.class);
 
         Statement showDBStatment = EasyMock.createMock("showDBStatment", Statement.class);
         ResultSet resultSet = EasyMock.createMock("resultSet", ResultSet.class);

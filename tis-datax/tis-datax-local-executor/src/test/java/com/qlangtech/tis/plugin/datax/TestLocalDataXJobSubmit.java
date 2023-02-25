@@ -65,7 +65,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
     public void testCreateDataXJob() throws Exception {
 
 
-        Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(DataXJobSubmit.InstanceType.LOCAL);
+        Optional<DataXJobSubmit> dataXJobSubmit = DataXJobSubmit.getDataXJobSubmit(false, DataXJobSubmit.InstanceType.LOCAL);
         Assert.assertTrue("dataXJobSubmit shall present", dataXJobSubmit.isPresent());
 
         LocalDataXJobSubmit jobSubmit = (LocalDataXJobSubmit) dataXJobSubmit.get();
@@ -117,7 +117,7 @@ public class TestLocalDataXJobSubmit extends TestCase {
 //        , String dataXfileName,
 
         DataXJobSubmit.TableDataXEntity dataXEntity
-                = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXfileName,dump_table_name);
+                = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXfileName, dump_table_name);
         IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(
                 dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
 

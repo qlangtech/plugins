@@ -106,10 +106,6 @@ public class TestDataXOssWriter extends BasicTest {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
 
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, testDataXName, processor) {
-            @Override
-            public String getTemplateContent() {
-                return ossWriter.getTemplate();
-            }
         };
 
         DataXOssReader ossReader = new DataXOssReader();

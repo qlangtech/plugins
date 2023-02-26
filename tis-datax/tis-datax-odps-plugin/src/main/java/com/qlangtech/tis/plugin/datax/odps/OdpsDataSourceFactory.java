@@ -187,6 +187,17 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
         return odps;
     }
 
+    public TableSchema getTableSchema(EntityName dumpTable) {
+        Table table = getOdpsTable(dumpTable);
+        TableSchema schema = table.getSchema();
+        return schema;
+    }
+
+    public Table getOdpsTable(EntityName dumpTable) {
+        Odps odps = this.createOdps();
+        return odps.tables().get(this.project, dumpTable.getTabName());
+    }
+
     public List<String> getJdbcUrls() {
         return getJdbcUrls(false);
     }

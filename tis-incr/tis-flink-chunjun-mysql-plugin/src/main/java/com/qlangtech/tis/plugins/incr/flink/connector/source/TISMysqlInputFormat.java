@@ -52,7 +52,7 @@ public class TISMysqlInputFormat extends MysqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl());
+                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
     }
 
     @Override

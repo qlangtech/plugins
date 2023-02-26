@@ -96,9 +96,10 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
                     if (!taskContext.getTaskContext().isDryRun()) {
                         dataxExecutor.reportDataXJobStatus(false, false, false, jobId, jobName);
 
-                        DataxExecutor.DataXJobArgs jobArgs = DataxExecutor.createJobArgs(processor, jobId, jobName, jobDTO.getTaskSerializeNum(), jobDTO.getExecEpochMilli());
+                        DataxExecutor.DataXJobArgs jobArgs
+                                = DataxExecutor.DataXJobArgs.createJobArgs(processor, jobId, jobName, jobDTO.getTaskSerializeNum(), jobDTO.getExecEpochMilli());
 
-                        dataxExecutor.exec(uberClassLoader, jobName, jobDTO.getResType(), processor, jobArgs);
+                        dataxExecutor.exec(uberClassLoader, jobName, processor, jobArgs);
                     }
 
                     dataxExecutor.reportDataXJobStatus(false, jobId, jobName);

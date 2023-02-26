@@ -51,7 +51,7 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl());
+                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
     }
 
     @Override

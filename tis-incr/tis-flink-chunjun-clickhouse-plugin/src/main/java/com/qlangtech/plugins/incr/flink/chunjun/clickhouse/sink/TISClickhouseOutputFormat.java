@@ -19,10 +19,9 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
-import com.qlangtech.tis.plugin.ds.ColMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
@@ -55,7 +54,8 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+        DataSourceMeta.JDBCConnection connection = dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+        return connection.getConnection();
     }
 
 //    @Override

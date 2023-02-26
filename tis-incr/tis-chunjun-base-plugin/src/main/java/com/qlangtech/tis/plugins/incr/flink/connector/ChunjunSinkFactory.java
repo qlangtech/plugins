@@ -434,8 +434,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
                 JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
 
-                try (Connection conn = dsFactory.getConnection(jdbcUrl)) {
-                    routputFormat.dbConn = conn;
+                try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl)) {
+                    routputFormat.dbConn = conn.getConnection();
                     routputFormat.initColumnList();
                 } catch (SQLException e) {
                     throw new RuntimeException("jdbcUrl:" + jdbcUrl, e);

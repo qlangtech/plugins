@@ -21,14 +21,15 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +48,8 @@ public class HiveRemoveHistoryDataTask {
     private static final String pt = IDumpTable.PARTITION_PT;
 
     private final ITISFileSystem fileSystem;
-    private final DataSourceMeta mrEngine;
+    private final DataSourceMeta ds;
+    private final MREngine mrEngine;
 
     public static void main(String[] arg) {
 //        List<PathInfo> timestampList = new ArrayList<PathInfo>();
@@ -63,9 +65,10 @@ public class HiveRemoveHistoryDataTask {
 //        }
     }
 
-    public HiveRemoveHistoryDataTask(ITISFileSystem fsFactory, DataSourceMeta mrEngine) {
+    public HiveRemoveHistoryDataTask(MREngine mrEngine, ITISFileSystem fsFactory, DataSourceMeta ds) {
         super();
         this.fileSystem = fsFactory;
+        this.ds = ds;
         this.mrEngine = mrEngine;
     }
 
@@ -239,11 +242,11 @@ public class HiveRemoveHistoryDataTask {
         List<FSHistoryFileUtils.PathInfo> deletePts = Lists.newArrayList();
         try {
             // 判断表是否存在
-            if (!BindHiveTableTool.HiveTableBuilder.isTableExists(this.mrEngine, conn, table)) {
+            if (!HiveTask.isTableExists(this.ds, conn, table)) {
                 logger.info(table + " is not exist");
                 return Collections.emptyList();
             }
-            List<String> ptList = getHistoryPts(this.mrEngine, conn, filter, table);
+            List<String> ptList = getHistoryPts(this.ds, conn, filter, table);
             int count = 0;
 
             for (int i = ptList.size() - 1; i >= 0; i--) {
@@ -272,7 +275,7 @@ public class HiveRemoveHistoryDataTask {
     }
 
     private String getFullTabName(EntityName table) {
-        return table.getFullName(Optional.of(this.mrEngine.getEscapeChar()));
+        return table.getFullName(Optional.of(this.ds.getEscapeChar()));
     }
 
     public static List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, final EntityName table) throws Exception {
@@ -283,7 +286,7 @@ public class HiveRemoveHistoryDataTask {
         final Set<String> ptSet = new HashSet<>();
         final String showPartition = "show partitions " + table.getFullName(Optional.of(mrEngine.getEscapeChar()));
         final Pattern ptPattern = Pattern.compile(pt + "=(\\d+)");
-        HiveDBUtils.query(conn, showPartition, result -> {
+        conn.query(showPartition, result -> {
             Matcher matcher = ptPattern.matcher(result.getString(1));
             if (matcher.find() && filter.accept(matcher.group(1))) {
                 ptSet.add(matcher.group(1));

@@ -18,7 +18,6 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 //
 
-import com.google.common.collect.ImmutableMap;
 import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
@@ -31,24 +30,19 @@ import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.plugin.datax.MREngine;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Supplier;
 
 
 /**
@@ -107,7 +101,7 @@ public class JoinHiveTask extends HiveTask {
      * @throws Exception
      */
     @Override
-    protected void initializeTable(DataSourceMeta mrEngine
+    protected void initializeTable(DataSourceMeta ds
             , ColsParser insertParser
             , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
 
@@ -119,57 +113,34 @@ public class JoinHiveTask extends HiveTask {
         IPath parentPath = fs.getPath(path);
         HdfsFormat fsFormat = HdfsFormat.DEFAULT_FORMAT;
 
-        initializeTable(fileSystem, parentPath, mrEngine, conn, dumpTable, partitionRetainNum
+        initializeTable(ds, conn, dumpTable,
+                new IHistoryTableProcessor() {
+                    @Override
+                    public void cleanHistoryTable() throws IOException {
+                        JoinHiveTask.cleanHistoryTable(fs, parentPath, ds, conn, dumpTable, partitionRetainNum);
+                    }
+                } //
                 , () -> {
                     try {
-                        return BindHiveTableTool.HiveTableBuilder.isTableSame(mrEngine, conn, insertParser.getAllCols(), dumpTable);
+                        return BindHiveTableTool.HiveTableBuilder.isTableSame(ds, conn, insertParser.getAllCols(), dumpTable);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }, () -> {
-                    createHiveTable(fileSystem, fsFormat, mrEngine, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
+                    createHiveTable(fileSystem, fsFormat, ds, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
                 });
     }
 
 
-    /**
-     * @param fileSystem
-     * @param
-     * @param
-     * @param conn
-     * @param dumpTable
-     * @param partitionRetainNum 保留多少个分区
-     * @throws Exception
-     */
-    public static void initializeTable(ITISFileSystem fileSystem, IPath parentPath, DataSourceMeta mrEngine
-            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum, Supplier<Boolean> skipTableSameJudgement, Runnable tableCreator) throws Exception {
-        if (partitionRetainNum == null || partitionRetainNum < 1) {
-            throw new IllegalArgumentException("illegal param partitionRetainNum ");
-        }
-        if (BindHiveTableTool.HiveTableBuilder.isTableExists(mrEngine, conn, dumpTable)) {
-            if (skipTableSameJudgement.get()) {
-                log.info("Start clean up history file '{}'", dumpTable);
-
-                // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
-                //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
-                // 清理hive数据
-                List<FSHistoryFileUtils.PathInfo> deletePts =
-                        (new HiveRemoveHistoryDataTask(fileSystem, mrEngine)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
-                // 清理Hdfs数据
-                FSHistoryFileUtils.deleteOldHdfsfile(fileSystem, parentPath, deletePts, 0);
-                //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
-            } else {
-                HiveDBUtils.execute(conn, "drop table " + dumpTable);
-                tableCreator.run();
-                // createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
-            }
-        } else {
-            // 说明原表并不存在 直接创建
-            log.info("table " + dumpTable + " doesn't exist");
-            log.info("create table " + dumpTable);
-            tableCreator.run();
-            //createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
-        }
+    public static void cleanHistoryTable(ITISFileSystem fileSystem, IPath parentPath
+            , DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws IOException {
+        // 表结构没有变化，需要清理表中的历史数据 清理历史hdfs数据
+        //this.fs2Table.deleteHistoryFile(dumpTable, this.getTaskContext());
+        // 清理hive数据
+        List<FSHistoryFileUtils.PathInfo> deletePts =
+                (new HiveRemoveHistoryDataTask(MREngine.HIVE, fileSystem, mrEngine)).dropHistoryHiveTable(dumpTable, conn, partitionRetainNum);
+        // 清理Hdfs数据
+        FSHistoryFileUtils.deleteOldHdfsfile(fileSystem, parentPath, deletePts, partitionRetainNum);
     }
 
 
@@ -179,82 +150,7 @@ public class JoinHiveTask extends HiveTask {
     }
 
 
-    @Override
-    protected ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
-        return new ResultSetMetaDataDelegate(metaData);
-    }
 
-    private static class ResultSetMetaDataDelegate extends AbstractResultSet {
-        //private final ResultSetMetaData metaData;
-
-        private int columnCursor;
-        private final int colCount;
-
-        private final Map<String, ValSupplier> valueSupplier;
-
-
-        public ResultSetMetaDataDelegate(ResultSetMetaData metaData) throws SQLException {
-            this.colCount = metaData.getColumnCount();
-            ImmutableMap.Builder<String, ValSupplier> mapBuilder = ImmutableMap.builder();
-            mapBuilder.put(DataSourceFactory.KEY_COLUMN_NAME, () -> {
-                return metaData.getColumnName(this.columnCursor);
-            });
-            mapBuilder.put(DataSourceFactory.KEY_REMARKS, () -> {
-                return StringUtils.EMPTY;
-            });
-            mapBuilder.put(DataSourceFactory.KEY_NULLABLE, () -> {
-                return true;
-            });
-            mapBuilder.put(DataSourceFactory.KEY_DECIMAL_DIGITS, () -> {
-                return metaData.getScale(this.columnCursor);
-            });
-            mapBuilder.put(DataSourceFactory.KEY_TYPE_NAME, () -> {
-                return metaData.getColumnTypeName(this.columnCursor);
-            });
-            mapBuilder.put(DataSourceFactory.KEY_DATA_TYPE, () -> {
-                return metaData.getColumnType(this.columnCursor);
-            });
-            mapBuilder.put(DataSourceFactory.KEY_COLUMN_SIZE, () -> {
-                return metaData.getPrecision(this.columnCursor);
-            });
-            valueSupplier = mapBuilder.build();
-        }
-
-        @Override
-        public void close() throws SQLException {
-
-        }
-
-        @Override
-        public boolean next() throws SQLException {
-            return (++this.columnCursor) <= colCount;
-        }
-
-        @Override
-        public int getInt(String columnLabel) throws SQLException {
-            return (Integer) getValue(columnLabel);
-        }
-
-        @Override
-        public String getString(String columnLabel) throws SQLException {
-            return (String) getValue(columnLabel);
-        }
-
-        @Override
-        public boolean getBoolean(String columnLabel) throws SQLException {
-            return (Boolean) getValue(columnLabel);
-        }
-
-        private Object getValue(String columnLabel) throws SQLException {
-            ValSupplier valSupplier = valueSupplier.get(columnLabel);
-            Objects.requireNonNull(valSupplier, "label:" + columnLabel + " relevant supplier must be present");
-            return valSupplier.get();
-        }
-    }
-
-    interface ValSupplier {
-        Object get() throws SQLException;
-    }
 
 
     /**

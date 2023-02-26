@@ -26,10 +26,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
@@ -39,6 +36,7 @@ import java.sql.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -132,22 +130,27 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         //  return conn;
     }
 
-
     @Override
-    protected DataType createColDataType(String colName
-            , String typeName, int dbColType, int colSize) throws SQLException {
-        DataType type = super.createColDataType(colName, typeName, dbColType, colSize);
-        DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
+    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            public DataType bitType(DataType type) {
-                if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
-                    return new DataType(Types.BOOLEAN, type.typeName, type.columnSize);
-                }
-                return null;
+            protected DataType createColDataType(String colName
+                    , String typeName, int dbColType, int colSize) throws SQLException {
+                DataType type = super.createColDataType(colName, typeName, dbColType, colSize);
+                DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
+                    @Override
+                    public DataType bitType(DataType type) {
+                        if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
+                            return new DataType(Types.BOOLEAN, type.typeName, type.columnSize);
+                        }
+                        return null;
+                    }
+                });
+                return fix != null ? fix : type;
             }
         });
-        return fix != null ? fix : type;
     }
+
 
 //    @Override
 //    public DataDumpers getDataDumpers(TISTable table) {

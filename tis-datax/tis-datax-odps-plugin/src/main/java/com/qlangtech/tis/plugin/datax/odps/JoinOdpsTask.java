@@ -18,31 +18,37 @@
 
 package com.qlangtech.tis.plugin.datax.odps;
 
-import com.aliyun.odps.Instance;
-import com.aliyun.odps.Instances;
-import com.aliyun.odps.Odps;
-import com.aliyun.odps.OdpsException;
+import com.aliyun.odps.*;
 import com.aliyun.odps.task.SQLTask;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
+import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.DataXOdpsWriter;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,11 +57,13 @@ import java.util.concurrent.atomic.AtomicReference;
 public class JoinOdpsTask extends HiveTask {
 
     private static final Logger logger = LoggerFactory.getLogger(JoinOdpsTask.class);
+    private final DataXOdpsWriter odpsWriter;
 
-    public JoinOdpsTask(IDataSourceFactoryGetter dsFactoryGetter,
+    public JoinOdpsTask(DataXOdpsWriter odpsWriter, IDataSourceFactoryGetter dsFactoryGetter,
                         ISqlTask nodeMeta, boolean isFinalNode
             , IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
         super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
+        this.odpsWriter = odpsWriter;
     }
 
     @Override
@@ -64,15 +72,17 @@ public class JoinOdpsTask extends HiveTask {
         OdpsDataSourceFactory dsFactory
                 = (OdpsDataSourceFactory) dsFactoryGetter.getDataSourceFactory();
         Instance ist = null;
-       // Instance instance = null;
+        // Instance instance = null;
         Instance.Status status = null;
         Instance.TaskStatus ts = null;
         try {
             Odps odps = dsFactory.createOdps();
-           // odps.projects().updateProject();
+            if (!StringUtils.endsWith(StringUtils.trim(sql), ";")) {
+                sql = (sql + ";");
+            }
             ist = SQLTask.run(odps, sql);
 
-           // Instances instances = odps.instances();
+            // Instances instances = odps.instances();
             TaskStatusCollection taskInfo = new TaskStatusCollection();
 
             while (true) {
@@ -160,19 +170,85 @@ public class JoinOdpsTask extends HiveTask {
     @Override
     protected List<String> getHistoryPts(
             DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
-        return Lists.newArrayList();
+        OdpsDataSourceFactory dsFactory = (OdpsDataSourceFactory) mrEngine;
+        Table tab = dsFactory.getOdpsTable(table);
+        PartitionSpec ptSpec = null;
+        Set<String> pts = Sets.newHashSet();
+        for (Partition pt : tab.getPartitions()) {
+            ptSpec = pt.getPartitionSpec();
+            pts.add(ptSpec.get(IDumpTable.PARTITION_PT));
+        }
+        List<String> result = Lists.newArrayList(pts);
+        Collections.sort(result);
+        return result;
+
     }
 
     @Override
-    protected void initializeTable(DataSourceMeta mrEngine, ColsParser insertParser
+    protected void initializeTable(DataSourceMeta ds, ColsParser insertParser
             , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception {
 
+        OdpsDataSourceFactory dsFactory = (OdpsDataSourceFactory) ds;
+        initializeTable(ds, conn, dumpTable,
+                new IHistoryTableProcessor() {
+                    @Override
+                    public void cleanHistoryTable() throws IOException {
+                        // ODPS有lifecycle控制，不需要主动地去删除历史表
+                    }
+                } //
+                , () -> {
+                    // 判断和已经在ODPS中创建的表是否一致，如不一致需要删除重新创建
+                    try {
+                        return isTableSame(dsFactory, conn, insertParser, dumpTable);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }, () -> {
+                    createTable(ds, dumpTable, insertParser, conn);
+                });
+
     }
 
-    @Override
-    protected ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
-        return null;
+    /**
+     * 创建 ODPS表
+     *
+     * @param mrEngine
+     * @param dumpTable
+     * @param insertParser
+     * @param conn
+     */
+    private void createTable(DataSourceMeta mrEngine, EntityName dumpTable
+            , ColsParser insertParser, DataSourceMeta.JDBCConnection conn) {
+        List<HiveColumn> colsExcludePartitionCols = insertParser.getColsExcludePartitionCols();
+
+        List<IColMetaGetter> cols = colsExcludePartitionCols.stream()
+                .map((c) -> IColMetaGetter.create(c.getName(), c.dataType)).collect(Collectors.toList());
+
+        IDataxProcessor.TableMap tabMapper
+                = IDataxProcessor.TableMap.create(dumpTable.getTabName(), cols);
+
+        CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(tabMapper);
+        StringBuffer ddlScript = createDDL.getDDLScript();
+        try {
+            conn.execute(ddlScript.toString());
+        } catch (Exception e) {
+            throw new RuntimeException(ddlScript.toString(), e);
+        }
     }
+
+    private boolean isTableSame(OdpsDataSourceFactory dsFactory, DataSourceMeta.JDBCConnection conn
+            , ColsParser allCols, EntityName dumpTable) {
+        TableSchema tabSchema = dsFactory.getTableSchema(dumpTable);
+        for (HiveColumn col : allCols.getColsExcludePartitionCols()) {
+            if (!tabSchema.containsColumn(col.getName())) {
+                logger.info("col:" + col.getName() + " is not exist in created table:" + dumpTable.getFullName()
+                        + ",tableschema:" + tabSchema.getColumns().stream().map((c) -> c.getName()).collect(Collectors.joining(",")));
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     @Override
     protected AbstractInsertFromSelectParser createInsertSQLParser() {

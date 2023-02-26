@@ -89,91 +89,98 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    protected DataType getDataType(String colName, ResultSet cols) throws SQLException {
-        DataType type = super.getDataType(colName, cols);
-        DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
+    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+
+        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            public DataType bigInt(DataType type) {
-                if (type.isUnsigned()) {
-                    DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
-                    t.setDecimalDigits(0);
-                    return t;
-                }
-                return null;
-            }
+            protected DataType getDataType(String colName) throws SQLException {
+                DataType type = super.getDataType(colName);
+                DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
+                    @Override
+                    public DataType bigInt(DataType type) {
+                        if (type.isUnsigned()) {
+                            DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
+                            t.setDecimalDigits(0);
+                            return t;
+                        }
+                        return null;
+                    }
 
-            @Override
-            public DataType tinyIntType(DataType dataType) {
-                if (dataType.isUnsigned()) {
-                    // 如果为unsigned则会按照一个byte来进行处理，需要将其变成small int
-                    return new DataType(Types.SMALLINT, type.typeName, type.columnSize);
-                }
-                return null;
-            }
+                    @Override
+                    public DataType tinyIntType(DataType dataType) {
+                        if (dataType.isUnsigned()) {
+                            // 如果为unsigned则会按照一个byte来进行处理，需要将其变成small int
+                            return new DataType(Types.SMALLINT, type.typeName, type.columnSize);
+                        }
+                        return null;
+                    }
 
-            @Override
-            public DataType smallIntType(DataType dataType) {
+                    @Override
+                    public DataType smallIntType(DataType dataType) {
 
-                if (dataType.isUnsigned()) {
-                    // 如果为unsigned则会按照一个short来进行处理，需要将其变成small int
-                    return new DataType(Types.INTEGER, type.typeName, type.columnSize);
-                }
+                        if (dataType.isUnsigned()) {
+                            // 如果为unsigned则会按照一个short来进行处理，需要将其变成small int
+                            return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                        }
 
-                return null;
-            }
+                        return null;
+                    }
 
-            @Override
-            public DataType intType(DataType type) {
-                if (type.isUnsigned()) {
-                    return new DataType(Types.BIGINT, type.typeName, type.columnSize);
-                }
-                return null;
-            }
+                    @Override
+                    public DataType intType(DataType type) {
+                        if (type.isUnsigned()) {
+                            return new DataType(Types.BIGINT, type.typeName, type.columnSize);
+                        }
+                        return null;
+                    }
 
-            @Override
-            public DataType doubleType(DataType type) {
-                return null;
-            }
+                    @Override
+                    public DataType doubleType(DataType type) {
+                        return null;
+                    }
 
-            @Override
-            public DataType dateType(DataType type) {
-                if ("year".equalsIgnoreCase(type.typeName)) {
-                    return new DataType(Types.INTEGER, type.typeName, type.columnSize);
-                }
-                return null;
-            }
+                    @Override
+                    public DataType dateType(DataType type) {
+                        if ("year".equalsIgnoreCase(type.typeName)) {
+                            return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                        }
+                        return null;
+                    }
 
-            @Override
-            public DataType timestampType(DataType type) {
-                return null;
-            }
+                    @Override
+                    public DataType timestampType(DataType type) {
+                        return null;
+                    }
 
-            @Override
-            public DataType bitType(DataType type) {
-                if (type.columnSize > 1) {
-                    return new DataType(Types.BINARY, type.typeName, type.columnSize);
-                }
-                return null;
-            }
+                    @Override
+                    public DataType bitType(DataType type) {
+                        if (type.columnSize > 1) {
+                            return new DataType(Types.BINARY, type.typeName, type.columnSize);
+                        }
+                        return null;
+                    }
 
-            @Override
-            public DataType blobType(DataType type) {
-                return null;
-            }
+                    @Override
+                    public DataType blobType(DataType type) {
+                        return null;
+                    }
 
-            @Override
-            public DataType varcharType(DataType type) {
-                if (type.columnSize < 1) {
-                    // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
-                    DataType n = new DataType(Types.VARCHAR, type.typeName, 2000);
-                    n.setDecimalDigits(type.getDecimalDigits());
-                    return n;
-                }
-                return null;
+                    @Override
+                    public DataType varcharType(DataType type) {
+                        if (type.columnSize < 1) {
+                            // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
+                            DataType n = new DataType(Types.VARCHAR, type.typeName, 2000);
+                            n.setDecimalDigits(type.getDecimalDigits());
+                            return n;
+                        }
+                        return null;
+                    }
+                });
+                return fixType != null ? fixType : type;
             }
         });
-        return fixType != null ? fixType : type;
     }
+
 
     @Override
     public FacadeDataSource createFacadeDataSource() {

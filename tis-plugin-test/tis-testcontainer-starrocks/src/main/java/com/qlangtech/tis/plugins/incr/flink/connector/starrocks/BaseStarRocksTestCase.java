@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import org.apache.commons.io.IOUtils;
@@ -82,7 +83,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
         Thread.sleep(10000);
         DorisSourceFactory ds = createSourceFactory();
 
-        try (Connection conn = ds.getConnection(
+        try (DataSourceMeta.JDBCConnection conn = ds.getConnection(
                 ds.buidJdbcUrl(null, "localhost", null))) {
             try (Statement statement = conn.createStatement()) {
 

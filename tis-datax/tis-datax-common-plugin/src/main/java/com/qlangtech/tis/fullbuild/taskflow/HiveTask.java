@@ -1,33 +1,3 @@
-package com.qlangtech.tis.fullbuild.taskflow;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.qlangtech.tis.assemble.FullbuildPhase;
-import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
-import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
-import com.qlangtech.tis.hive.HiveColumn;
-import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
-import com.qlangtech.tis.sql.parser.IAliasTable;
-import com.qlangtech.tis.sql.parser.ISqlTask;
-import com.qlangtech.tis.sql.parser.TabPartitions;
-import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
-import com.qlangtech.tis.sql.parser.meta.DependencyNode;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.*;
-import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -45,6 +15,38 @@ import java.util.stream.Collectors;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.qlangtech.tis.fullbuild.taskflow;
+
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.assemble.FullbuildPhase;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
+import com.qlangtech.tis.fullbuild.taskflow.hive.AbstractResultSet;
+import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
+import com.qlangtech.tis.hive.HiveColumn;
+import com.qlangtech.tis.order.dump.task.ITableDumpConstant;
+import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.sql.parser.IAliasTable;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+import com.qlangtech.tis.sql.parser.TabPartitions;
+import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
+import com.qlangtech.tis.sql.parser.meta.DependencyNode;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.*;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -54,8 +56,6 @@ public abstract class HiveTask extends AdapterTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HiveTask.class);
 
-    private static final MessageFormat SQL_INSERT_TABLE
-            = new MessageFormat("INSERT OVERWRITE TABLE {0} PARTITION (" + IDumpTable.PARTITION_PT + "," + IDumpTable.PARTITION_PMOD + ") \n {1}");
 
     protected final IJoinTaskStatus joinTaskStatus;
 
@@ -82,6 +82,60 @@ public abstract class HiveTask extends AdapterTask {
         this.dsFactoryGetter = dsFactoryGetter;
     }
 
+    /**
+     * 判断表是否存在
+     *
+     * @param connection
+     * @param dumpTable
+     * @return
+     * @throws Exception
+     */
+    public static boolean isTableExists(DataSourceMeta ds
+            , DataSourceMeta.JDBCConnection connection, EntityName dumpTable) throws Exception {
+        // 判断表是否存在
+//        if (!isDBExists(mrEngine, connection, dumpTable.getDbName())) {
+//            // DB都不存在，table肯定就不存在啦
+//            logger.error("dumpTable'DB is not exist:{}", dumpTable);
+//            // return false;
+//            throw new IllegalStateException("database:" + dumpTable.getDbName() + " is not exist in " + connection.getUrl());
+//        }
+
+        try {
+            ds.getTableMetadata(connection, dumpTable);
+            return true;
+        } catch (TableNotFoundException e) {
+            return false;
+        }
+
+        //  final List<String> tables = mrEngine.getTablesInDB().getTabs();// mrEngine.getTabs(connection, dumpTable);// new ArrayList<>();
+        // SPARK:
+        //        +-----------+---------------+--------------+--+
+        //        | database  |   tableName   | isTemporary  |
+        //        +-----------+---------------+--------------+--+
+        //        | order     | totalpayinfo  | false        |
+        //        +-----------+---------------+--------------+--+
+        // Hive
+//            HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName()
+//                    , result -> tables.add(result.getString(2)));
+//            boolean contain = tables.contains(dumpTable.getTableName());
+//            if (!contain) {
+//                logger.debug("table:{} is not exist in[{}]", dumpTable.getTableName()
+//                        , tables.stream().collect(Collectors.joining(",")));
+//            }
+//            return contain;
+    }
+
+//    public static boolean isDBExists(MREngine mrEngine, DataSourceMeta.JDBCConnection connection, String dbName) throws Exception {
+//        AtomicBoolean dbExist = new AtomicBoolean(false);
+//        connection.query(mrEngine.showDBSQL, result -> {
+//            if (StringUtils.equals(result.getString(1), dbName)) {
+//                dbExist.set(true);
+//            }
+//            return true;
+//        });
+//        return dbExist.get();
+//    }
+
     @Override
     public final String getName() {
         return this.nodeMeta.getExportName();
@@ -99,19 +153,16 @@ public abstract class HiveTask extends AdapterTask {
 
     private ISqlTask.RewriteSql rewriteSql;
 
-    protected String convert2InsertIntoSQL(String rewritedSql) {
-        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
-        return SQL_INSERT_TABLE.format(
-                new Object[]{newCreateTab.getFullName(Optional.of(this.dsFactoryGetter.getDataSourceFactory().getEscapeChar()))
-                        , rewritedSql});
+
+    protected ISqlTask.RewriteSql getRewriteSql() {
+        if (this.rewriteSql == null) {
+            this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition(), this.erRules, this.getExecContext(), this.isFinalNode);
+        }
+        return this.rewriteSql;
     }
 
-    @Override
-    public String getContent() {
-        if (this.rewriteSql == null) {
-            this.rewriteSql = nodeMeta.getRewriteSql(this.getName(), this.getDumpPartition(), this.erRules, this.getContext(), this.isFinalNode);
-        }
-        return this.rewriteSql.sqlContent;
+    protected interface ValSupplier {
+        Object get() throws SQLException;
     }
 
 
@@ -129,27 +180,29 @@ public abstract class HiveTask extends AdapterTask {
     }
 
     @Override
-    protected final void executeSql(String taskname, String sql) {
+    protected final void executeTask(String taskname) {
+        ISqlTask.RewriteSql rewriteSql = this.getRewriteSql();
 
         // 处理历史表，多余的partition要删除，表不同了需要删除重建
-        boolean dryRun = this.getContext().getExecContext().isDryRun();
-        processJoinTask(sql);
+        boolean dryRun = this.getExecContext().isDryRun();
+        processJoinTask(rewriteSql.originSql);
         if (dryRun) {
             logger.info("task:{}, as DryRun mode skip remaining tasks", taskname);
             return;
         }
-        sql = convert2InsertIntoSQL(sql);
+
+        String insertSql = rewriteSql.convert2InsertIntoSQL(this.dsFactoryGetter.getDataSourceFactory(), this.nodeMeta.getExportName());
 
         this.validateDependenciesNode(taskname);
         final DataSourceMeta.JDBCConnection conn = this.getTaskContextObj();
         DataSourceFactory dsFactory = dsFactoryGetter.getDataSourceFactory();
         final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
         //final String newCreatePt = primaryTable.getTabPartition();
-        this.getContent();
+        this.getRewriteSql();
         List<String> allpts = null;
         try {
-            logger.info("\n execute hive task:{} \n{}", taskname, sql);
-            executeSql(sql, conn);
+            logger.info("\n execute hive task:{} \n{}", taskname, insertSql);
+            executeSql(insertSql, conn);
             // 将当前的join task的partition设置到当前上下文中
             TabPartitions dumpPartition = this.getDumpPartition();
             dumpPartition.putPt(newCreateTab, this.rewriteSql.primaryTable);
@@ -237,6 +290,74 @@ public abstract class HiveTask extends AdapterTask {
         }
     }
 
+    protected static class ResultSetMetaDataDelegate extends AbstractResultSet {
+        //private final ResultSetMetaData metaData;
+
+        private int columnCursor;
+        private final int colCount;
+
+        private final Map<String, ValSupplier> valueSupplier;
+
+
+        public ResultSetMetaDataDelegate(ResultSetMetaData metaData) throws SQLException {
+            this.colCount = metaData.getColumnCount();
+            ImmutableMap.Builder<String, ValSupplier> mapBuilder = ImmutableMap.builder();
+            mapBuilder.put(DataSourceFactory.KEY_COLUMN_NAME, () -> {
+                return metaData.getColumnName(this.columnCursor);
+            });
+            mapBuilder.put(DataSourceFactory.KEY_REMARKS, () -> {
+                return StringUtils.EMPTY;
+            });
+            mapBuilder.put(DataSourceFactory.KEY_NULLABLE, () -> {
+                return true;
+            });
+            mapBuilder.put(DataSourceFactory.KEY_DECIMAL_DIGITS, () -> {
+                return metaData.getScale(this.columnCursor);
+            });
+            mapBuilder.put(DataSourceFactory.KEY_TYPE_NAME, () -> {
+                return metaData.getColumnTypeName(this.columnCursor);
+            });
+            mapBuilder.put(DataSourceFactory.KEY_DATA_TYPE, () -> {
+                return metaData.getColumnType(this.columnCursor);
+            });
+            mapBuilder.put(DataSourceFactory.KEY_COLUMN_SIZE, () -> {
+                return metaData.getPrecision(this.columnCursor);
+            });
+            valueSupplier = mapBuilder.build();
+        }
+
+        @Override
+        public void close() throws SQLException {
+
+        }
+
+        @Override
+        public boolean next() throws SQLException {
+            return (++this.columnCursor) <= colCount;
+        }
+
+        @Override
+        public int getInt(String columnLabel) throws SQLException {
+            return (Integer) getValue(columnLabel);
+        }
+
+        @Override
+        public String getString(String columnLabel) throws SQLException {
+            return (String) getValue(columnLabel);
+        }
+
+        @Override
+        public boolean getBoolean(String columnLabel) throws SQLException {
+            return (Boolean) getValue(columnLabel);
+        }
+
+        private Object getValue(String columnLabel) throws SQLException {
+            ValSupplier valSupplier = valueSupplier.get(columnLabel);
+            Objects.requireNonNull(valSupplier, "label:" + columnLabel + " relevant supplier must be present");
+            return valSupplier.get();
+        }
+    }
+
     protected class ColsParser {
         private final String sql;
         private final DataSourceMeta.JDBCConnection conn;
@@ -276,15 +397,19 @@ public abstract class HiveTask extends AdapterTask {
         TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
             @Override
             protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
-                return Optional.of(new DumpTabPartition(EntityName.create(dbName, tableName), () -> "-1"));
+                return Optional.of(new DumpTabPartition((dbNameCriteria ? EntityName.create(dbName, tableName) : EntityName.parse(tableName)), () -> "-1"));
             }
         };
         insertParser.start(sql, tabPartition, (rewriteSql) -> {
             try (Statement statement = conn.createStatement()) {
-                try (ResultSet result = statement.executeQuery(rewriteSql.sqlContent)) {
+                try (ResultSet result = statement.executeQuery(rewriteSql.rewriteSql)) {
                     try (ResultSet metaData = convert2ResultSet(result.getMetaData())) {
                         // 取得结果集数据列类型
-                        return dsFactory.wrapColsMeta(metaData);
+                        List<ColumnMetaData> columnMetas = dsFactory.wrapColsMeta(metaData);
+
+
+
+                        return columnMetas;
                     }
                 }
             } catch (SQLException e) {
@@ -294,7 +419,50 @@ public abstract class HiveTask extends AdapterTask {
         return insertParser;
     }
 
-    protected abstract ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException;
+
+    private ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
+        return new ResultSetMetaDataDelegate(metaData);
+    }
 
     protected abstract AbstractInsertFromSelectParser createInsertSQLParser();
+
+
+    public interface IHistoryTableProcessor {
+        public void cleanHistoryTable() throws IOException;
+    }
+
+    /**
+     * @param
+     * @param
+     * @param conn
+     * @param dumpTable
+     * @throws Exception
+     */
+    public static void initializeTable(DataSourceMeta ds
+            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, IHistoryTableProcessor historyTableProcessor
+            , Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
+//        if (partitionRetainNum == null || partitionRetainNum < 1) {
+//            throw new IllegalArgumentException("illegal param partitionRetainNum ");
+//        }
+        if (isTableExists(ds, conn, dumpTable)) {
+            if (tableSameJudgement.get()) {
+                logger.info("Start clean up history file '{}'", dumpTable);
+                // cleanHistoryTable(fileSystem, parentPath, mrEngine, conn, dumpTable, partitionRetainNum);
+
+                historyTableProcessor.cleanHistoryTable();
+
+                //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
+            } else {
+                conn.execute("drop table " + dumpTable);
+                tableCreator.run();
+                // createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
+            }
+        } else {
+            // 说明原表并不存在 直接创建
+            logger.info("table " + dumpTable + " doesn't exist");
+            logger.info("create table " + dumpTable);
+            tableCreator.run();
+            //createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
+        }
+    }
 }

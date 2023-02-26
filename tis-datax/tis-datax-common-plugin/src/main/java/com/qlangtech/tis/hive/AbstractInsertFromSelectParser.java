@@ -27,6 +27,8 @@ import com.qlangtech.tis.sql.parser.TabPartitions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,15 +72,18 @@ public abstract class AbstractInsertFromSelectParser {
             this.cols.add(hc);
         }
         List<ColumnMetaData> colsMeta = sqlColMetaGetter.apply(rewriteSql);
-        List<HiveColumn> cols = this.getColsExcludePartitionCols();
-        int colWithoutPTSize = cols.size();
-        if (colWithoutPTSize != colsMeta.size()) {
-            throw new IllegalStateException("cols.size():" + colWithoutPTSize + ",colsMeta.size():" + colsMeta.size() + " is not equal");
+        List<HiveColumn> allCols = this.getCols();
+        int allColSize = allCols.size();
+        if (allColSize != colsMeta.size()) {
+            throw new IllegalStateException("cols.size():" + allColSize + ",colsMeta.size():" + colsMeta.size() + " is not equal");
         }
 
-        for (int i = 0; i < cols.size(); i++) {
-            cols.get(i).setDataType(colsMeta.get(i).getType());
-        }
+        Map<String, HiveColumn> colsMapper = allCols.stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> c));
+
+
+        colsMeta.forEach((c) -> Objects.requireNonNull(
+                colsMapper.get(c.getKey()), "col:" + c.getKey() + " can not find in colsMapper").setDataType(c.getType()));
+
     }
 
 }

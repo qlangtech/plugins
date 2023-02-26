@@ -24,7 +24,6 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
-import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -42,7 +41,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -172,12 +170,13 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
     }
 
+
     @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, IExecChainContext tplContext
             , ITaskContext tskContext, IJoinTaskStatus joinTaskStatus, IDataSourceFactoryGetter dsGetter
             , IPrimaryTabFinder primaryTabFinder) {
 
-        JoinOdpsTask odpsTask = new JoinOdpsTask(dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus);
+        JoinOdpsTask odpsTask = new JoinOdpsTask(this, dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus);
         odpsTask.setContext(tplContext, tskContext);
         return odpsTask;
     }

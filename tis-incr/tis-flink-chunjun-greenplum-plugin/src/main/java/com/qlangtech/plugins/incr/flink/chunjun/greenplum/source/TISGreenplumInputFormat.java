@@ -42,12 +42,12 @@ public final class TISGreenplumInputFormat extends PostgresqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl());
+                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
     }
 
     @Override
     protected boolean useCustomReporter() {
-        return false;//jdbcConf.isIncrement() && jdbcConf.getInitReporter();
+        return false;
     }
 
 }

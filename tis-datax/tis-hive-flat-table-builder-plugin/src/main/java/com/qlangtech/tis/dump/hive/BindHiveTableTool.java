@@ -23,14 +23,15 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -40,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -183,20 +183,20 @@ public class BindHiveTableTool {
 //            return tables;
 //        }
 
-        /**
-         * @param
-         * @return
-         * @throws Exception
-         */
-        public static List<String> getExistTables(DataSourceMeta.JDBCConnection conn, String dbName) throws Exception {
-            final List<String> tables = new ArrayList<>();
-            if (!isDBExists(conn, dbName)) {
-                // DB都不存在，table肯定就不存在啦
-                return tables;
-            }
-            HiveDBUtils.query(conn, "show tables from " + dbName, result -> tables.add(result.getString(2)));
-            return tables;
-        }
+//        /**
+//         * @param
+//         * @return
+//         * @throws Exception
+//         */
+//        public static List<String> getExistTables(MREngine mrEngine, DataSourceMeta.JDBCConnection conn, String dbName) throws Exception {
+//            final List<String> tables = new ArrayList<>();
+//            if (!HiveTask.isDBExists(mrEngine, conn, dbName)) {
+//                // DB都不存在，table肯定就不存在啦
+//                return tables;
+//            }
+//            conn.query("show tables from " + dbName, result -> tables.add(result.getString(2)));
+//            return tables;
+//        }
 
         /**
          * Reference:https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable
@@ -331,7 +331,7 @@ public class BindHiveTableTool {
             final StringBuffer errMsg = new StringBuffer();
             final StringBuffer equalsCols = new StringBuffer("compar equals:");
             final AtomicBoolean compareOver = new AtomicBoolean(false);
-            HiveDBUtils.query(conn, "desc " + tableName.getFullName(Optional.of(mrEngine.getEscapeChar())), new HiveDBUtils.ResultProcess() {
+            conn.query("desc " + tableName.getFullName(Optional.of(mrEngine.getEscapeChar())), new DataSourceMeta.ResultProcess() {
 
                 int index = 0;
 
@@ -378,58 +378,6 @@ public class BindHiveTableTool {
                 isTableSame = true;
             }
             return isTableSame;
-        }
-
-        /**
-         * 判断表是否存在
-         *
-         * @param connection
-         * @param dumpTable
-         * @return
-         * @throws Exception
-         */
-        public static boolean isTableExists(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection connection, EntityName dumpTable) throws Exception {
-            // 判断表是否存在
-            if (!isDBExists(connection, dumpTable.getDbName())) {
-                // DB都不存在，table肯定就不存在啦
-                logger.debug("dumpTable'DB is not exist:{}", dumpTable);
-                return false;
-            }
-
-            try {
-                mrEngine.getTableMetadata(connection, dumpTable);
-                return true;
-            } catch (TableNotFoundException e) {
-                return false;
-            }
-
-          //  final List<String> tables = mrEngine.getTablesInDB().getTabs();// mrEngine.getTabs(connection, dumpTable);// new ArrayList<>();
-            // SPARK:
-            //        +-----------+---------------+--------------+--+
-            //        | database  |   tableName   | isTemporary  |
-            //        +-----------+---------------+--------------+--+
-            //        | order     | totalpayinfo  | false        |
-            //        +-----------+---------------+--------------+--+
-            // Hive
-//            HiveDBUtils.query(connection, "show tables in " + dumpTable.getDbName()
-//                    , result -> tables.add(result.getString(2)));
-//            boolean contain = tables.contains(dumpTable.getTableName());
-//            if (!contain) {
-//                logger.debug("table:{} is not exist in[{}]", dumpTable.getTableName()
-//                        , tables.stream().collect(Collectors.joining(",")));
-//            }
-//            return contain;
-        }
-
-        private static boolean isDBExists(DataSourceMeta.JDBCConnection connection, String dbName) throws Exception {
-            AtomicBoolean dbExist = new AtomicBoolean(false);
-            HiveDBUtils.query(connection, "show databases", result -> {
-                if (StringUtils.equals(result.getString(1), dbName)) {
-                    dbExist.set(true);
-                }
-                return true;
-            });
-            return dbExist.get();
         }
 
         /**

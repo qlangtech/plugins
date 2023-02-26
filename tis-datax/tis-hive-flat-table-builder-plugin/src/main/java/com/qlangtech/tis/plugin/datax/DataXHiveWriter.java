@@ -34,10 +34,7 @@ import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.fs.FSHistoryFileUtils;
-import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fs.ITableBuildTask;
-import com.qlangtech.tis.fs.ITaskContext;
+import com.qlangtech.tis.fs.*;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -45,7 +42,6 @@ import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilderDescriptor;
-import com.qlangtech.tis.fullbuild.taskflow.ITemplateContext;
 import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
@@ -68,7 +64,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 
-import java.sql.Connection;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -142,14 +138,15 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     }
 
+
     @Override
-    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, ITemplateContext tplContext, ITaskContext tskContext
+    public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, IExecChainContext execChainContext, ITaskContext tskContext
             , IJoinTaskStatus joinTaskStatus
             , IDataSourceFactoryGetter dsGetter, IPrimaryTabFinder primaryTabFinder) {
         JoinHiveTask joinHiveTask = new JoinHiveTask(nodeMeta, isFinalNode, primaryTabFinder
-                , joinTaskStatus, this.getFs().getFileSystem(), MREngine.HIVE, dsGetter);
+                , joinTaskStatus, this.getFs().getFileSystem(), getEngineType(), dsGetter);
         //  joinHiveTask.setTaskContext(tskContext);
-        joinHiveTask.setContext(tplContext, tskContext);
+        joinHiveTask.setContext(execChainContext, tskContext);
         return joinHiveTask;
     }
 
@@ -305,10 +302,17 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 ds.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
-                        JoinHiveTask.initializeTable(fs
-                                , fs.getPath(new HdfsPath(tabDumpParentPath), "..")
-                                , getDataSourceFactory()
-                                , conn, dumpTable, partitionRetainNum, () -> true, () -> {
+                        Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
+                        final IPath parentPath = fs.getPath(new HdfsPath(tabDumpParentPath), "..");
+                        JoinHiveTask.initializeTable(dsFactory
+                                , conn, dumpTable,
+                                new JoinHiveTask.IHistoryTableProcessor() {
+                                    @Override
+                                    public void cleanHistoryTable() throws IOException {
+                                        JoinHiveTask.cleanHistoryTable(fs, parentPath, dsFactory, conn, dumpTable, partitionRetainNum);
+                                    }
+                                }
+                                , () -> true, () -> {
                                     try {
                                         BasicDataXRdbmsWriter.process(dataXName, execContext.getProcessor(), DataXHiveWriter.this, DataXHiveWriter.this, conn, tab.getName());
                                     } catch (Exception e) {

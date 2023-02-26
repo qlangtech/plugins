@@ -80,7 +80,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl()).getConnection();
     }
 
 

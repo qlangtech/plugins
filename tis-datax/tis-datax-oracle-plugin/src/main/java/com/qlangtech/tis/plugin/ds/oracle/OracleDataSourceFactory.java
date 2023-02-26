@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -32,6 +33,8 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static oracle.jdbc.OracleTypes.*;
@@ -141,11 +144,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     //
-    @Override
-    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
-        // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-        return new DataType(convert2JdbcType(dbColType), typeName, colSize);
-    }
+
 
     private int convert2JdbcType(int dbColType) {
         switch (dbColType) {
@@ -193,7 +192,17 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected DataType getDataType(String keyName, ResultSet cols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+
+            @Override
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+                // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
+                return new DataType(convert2JdbcType(dbColType), typeName, colSize);
+            }
+
+            @Override
+            protected DataType getDataType(String keyName) throws SQLException {
 
 //        int columnCount = cols.getMetaData().getColumnCount();
 //        String colName = null;
@@ -203,22 +212,25 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 //        }
 //        System.out.println();
 
-        DataType type = super.getDataType(keyName, cols);
-        // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
-        if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
-            int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
-            if (decimalDigits < 1) {
-                return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.columnSize);
+                DataType type = super.getDataType(keyName);
+                // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
+                if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
+                    int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
+                    if (decimalDigits < 1) {
+                        return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.columnSize);
+                    }
+                }
+
+                if ("DATE".equalsIgnoreCase(type.typeName)) {
+                    return new DataType(Types.DATE, type.typeName, type.columnSize);
+                }
+
+
+                return type;
             }
-        }
-
-        if ("DATE".equalsIgnoreCase(type.typeName)) {
-            return new DataType(Types.DATE, type.typeName, type.columnSize);
-        }
-
-
-        return type;
+        });
     }
+
 
     @Override
     public JDBCConnection getConnection(String jdbcUrl) throws SQLException {

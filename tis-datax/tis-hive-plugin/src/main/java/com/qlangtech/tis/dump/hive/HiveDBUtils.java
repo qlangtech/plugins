@@ -338,40 +338,9 @@ public class HiveDBUtils {
 //       new String( stmtHandle.getOperationId().getGuid());
 //    }
 
-    /**
-     * 执行一个查询语句
-     *
-     * @param sql
-     * @param resultProcess
-     * @throws Exception
-     */
-    public static void query(DataSourceMeta.JDBCConnection conn, String sql, ResultProcess resultProcess) throws Exception {
-        synchronized (HiveDBUtils.class) {
-            try (Statement stmt = conn.getConnection().createStatement()) {
-                try {
-                    try (ResultSet result = stmt.executeQuery(sql)) {
-                        while (result.next()) {
-                            if (!resultProcess.callback(result)) {
-                                return;
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(sql, e);
-                }
-            }
-        }
-    }
 
-    public interface ResultProcess {
 
-        /**
-         * @param result
-         * @return false: 中断执行
-         * @throws Exception
-         */
-        public boolean callback(ResultSet result) throws Exception;
-    }
+
 
     public static void main(String[] args) throws Exception {
 

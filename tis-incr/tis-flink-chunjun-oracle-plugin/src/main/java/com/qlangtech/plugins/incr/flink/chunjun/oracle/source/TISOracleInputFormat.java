@@ -50,7 +50,7 @@ public class TISOracleInputFormat extends OracleInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl());
+                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
     }
 
 

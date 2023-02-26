@@ -20,15 +20,14 @@ package com.qlangtech.tis.plugin.ds.clickhouse;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -80,16 +79,20 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
-
-        if (Types.VARCHAR == dbColType) {
-            if (colSize < 1) {
-                colSize = Short.MAX_VALUE;
+    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+            @Override
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+                if (Types.VARCHAR == dbColType) {
+                    if (colSize < 1) {
+                        colSize = Short.MAX_VALUE;
+                    }
+                }
+                return new DataType(dbColType, typeName, colSize);
             }
-        }
-
-        return new DataType(dbColType, typeName, colSize);
+        });
     }
+
 
     public final String getJdbcUrl() {
         for (String jdbcUrl : this.getJdbcUrls()) {

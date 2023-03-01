@@ -19,14 +19,20 @@
 package com.qlangtech.tis.plugin.datax.odps;
 
 import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-02-25 10:01
  **/
 public class OdpsInsertFromSelectParser extends AbstractInsertFromSelectParser {
-
-
+    public OdpsInsertFromSelectParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+        super(sql, sqlColMetaGetter);
+    }
 //    @Override
 //    protected void parseCreateTable(String sql) {
 //

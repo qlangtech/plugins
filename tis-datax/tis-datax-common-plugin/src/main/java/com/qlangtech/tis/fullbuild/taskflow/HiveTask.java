@@ -43,7 +43,11 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -185,7 +189,7 @@ public abstract class HiveTask extends AdapterTask {
 
         // 处理历史表，多余的partition要删除，表不同了需要删除重建
         boolean dryRun = this.getExecContext().isDryRun();
-        processJoinTask(rewriteSql.originSql);
+        processJoinTask(rewriteSql);
         if (dryRun) {
             logger.info("task:{}, as DryRun mode skip remaining tasks", taskname);
             return;
@@ -237,7 +241,7 @@ public abstract class HiveTask extends AdapterTask {
      *
      * @param sql
      */
-    private void processJoinTask(String sql) {
+    private void processJoinTask(ISqlTask.RewriteSql sql) {
         try {
             final DataSourceMeta.JDBCConnection conn = this.getTaskContextObj();
             final ColsParser insertParser = new ColsParser(sql, conn);
@@ -359,24 +363,32 @@ public abstract class HiveTask extends AdapterTask {
     }
 
     protected class ColsParser {
-        private final String sql;
+        private final ISqlTask.RewriteSql sql;
         private final DataSourceMeta.JDBCConnection conn;
         private AbstractInsertFromSelectParser sqlParser;
 
-        public ColsParser(String sql, DataSourceMeta.JDBCConnection conn) {
+        public ColsParser(ISqlTask.RewriteSql sql, DataSourceMeta.JDBCConnection conn) {
             this.sql = sql;
             this.conn = conn;
         }
 
+        public ISqlTask.RewriteSql getSql() {
+            return this.sql;
+        }
+
         private AbstractInsertFromSelectParser getInserSqlParser() {
             if (sqlParser == null) {
-                sqlParser = getSQLParserResult(sql, conn);
+                sqlParser = getSQLParserResult(sql.originSql, conn);
             }
             return sqlParser;
         }
 
         public List<HiveColumn> getAllCols() {
             return getInserSqlParser().getCols();
+        }
+
+        public void reflectColsType() {
+            getInserSqlParser().reflectColsType();
         }
 
         /**
@@ -388,25 +400,26 @@ public abstract class HiveTask extends AdapterTask {
     }
 
     private AbstractInsertFromSelectParser getSQLParserResult(String sql, DataSourceMeta.JDBCConnection conn) {
-        return getSQLParserResult(sql, this.dsFactoryGetter.getDataSourceFactory(), conn, createInsertSQLParser());
-    }
-
-    private AbstractInsertFromSelectParser getSQLParserResult(
-            String sql, DataSourceFactory dsFactory, DataSourceMeta.JDBCConnection conn, AbstractInsertFromSelectParser insertParser) {
-
-        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
-            @Override
-            protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
-                return Optional.of(new DumpTabPartition((dbNameCriteria ? EntityName.create(dbName, tableName) : EntityName.parse(tableName)), () -> "-1"));
-            }
-        };
-        insertParser.start(sql, tabPartition, (rewriteSql) -> {
+        DataSourceFactory dsFactory = this.dsFactoryGetter.getDataSourceFactory();
+        Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter = (rewriteSql) -> {
+            List<ColMeta> cols = rewriteSql.getCols();
             try (Statement statement = conn.createStatement()) {
                 try (ResultSet result = statement.executeQuery(rewriteSql.rewriteSql)) {
                     try (ResultSet metaData = convert2ResultSet(result.getMetaData())) {
                         // 取得结果集数据列类型
-                        List<ColumnMetaData> columnMetas = dsFactory.wrapColsMeta(metaData);
-
+                        List<ColumnMetaData> columnMetas
+                                = dsFactory.wrapColsMeta(metaData
+                                , new DataSourceFactory.CreateColumnMeta(Collections.emptySet(), metaData) {
+                                    @Override
+                                    public ColumnMetaData create(String colName, int index) throws SQLException {
+                                        ColMeta colMeta = cols.get(index);
+                                        if (StringUtils.indexOf(colName, colMeta.getName()) < 0) {
+                                            throw new IllegalStateException("colMeta.getName:"
+                                                    + colMeta.getName() + " is not contain in colName:" + colName);
+                                        }
+                                        return super.create(colMeta.getName(), index);
+                                    }
+                                });
 
 
                         return columnMetas;
@@ -415,16 +428,29 @@ public abstract class HiveTask extends AdapterTask {
             } catch (SQLException e) {
                 throw new IllegalStateException(e);
             }
-        });
-        return insertParser;
+        };
+        return createInsertSQLParser(sql, sqlColMetaGetter);
     }
+
+//    private AbstractInsertFromSelectParser getSQLParserResult(
+//            String sql, DataSourceFactory dsFactory, DataSourceMeta.JDBCConnection conn, AbstractInsertFromSelectParser insertParser) {
+//
+//        TabPartitions tabPartition = new TabPartitions(Collections.emptyMap()) {
+//            @Override
+//            protected Optional<DumpTabPartition> findTablePartition(boolean dbNameCriteria, String dbName, String tableName) {
+//                return Optional.of(new DumpTabPartition((dbNameCriteria ? EntityName.create(dbName, tableName) : EntityName.parse(tableName)), () -> "-1"));
+//            }
+//        };
+//        insertParser.start(sql, tabPartition, );
+//        return insertParser;
+//    }
 
 
     private ResultSet convert2ResultSet(ResultSetMetaData metaData) throws SQLException {
         return new ResultSetMetaDataDelegate(metaData);
     }
 
-    protected abstract AbstractInsertFromSelectParser createInsertSQLParser();
+    protected abstract AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter);
 
 
     public interface IHistoryTableProcessor {

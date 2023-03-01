@@ -17,20 +17,19 @@
  */
 package com.qlangtech.tis.hive;
 
-import com.qlangtech.tis.plugin.ds.DataType;
-import org.antlr.runtime.tree.Tree;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.sql.parser.ISqlTask;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.Context;
-import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 宽表解析成AST之后的遍历语意树之后生成的语义模型
@@ -73,6 +72,14 @@ public class HiveInsertFromSelectParser extends AbstractInsertFromSelectParser {
             throw new RuntimeException(e);
         }
     }
+
+    public HiveInsertFromSelectParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+        super(sql, sqlColMetaGetter);
+    }
+
+//    public HiveInsertFromSelectParser() {
+//        super(true);
+//    }
 
     public String getTargetTableName() {
         return targetTableName;
@@ -225,7 +232,7 @@ public class HiveInsertFromSelectParser extends AbstractInsertFromSelectParser {
 //    }
 
     public static void main(String[] args) throws Exception {
-        AbstractInsertFromSelectParser parse = new HiveInsertFromSelectParser();
+        // AbstractInsertFromSelectParser parse = new HiveInsertFromSelectParser();
         // parse.start("INSERT OVERWRITE TABLE totalpay_summary PARTITION (pt,pmod)\n"
         // + " SELECT
         // tp.totalpay_id,tp.curr_date,tp.outfee,tp.source_amount,tp.discount_amount,tp"

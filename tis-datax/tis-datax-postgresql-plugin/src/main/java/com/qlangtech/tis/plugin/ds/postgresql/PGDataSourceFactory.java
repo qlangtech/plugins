@@ -33,10 +33,7 @@ import org.postgresql.PGProperty;
 import org.postgresql.jdbc.PgConnection;
 
 import java.sql.*;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -57,8 +54,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     public String tabSchema;
 
     @Override
-    public String getEscapeChar() {
-        return "\"";
+    public Optional<String> getEscapeChar() {
+        return Optional.of("\"");
     }
 
     @Override

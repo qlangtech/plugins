@@ -84,8 +84,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
 
     @Override
-    public final String getEscapeChar() {
-        return "`";
+    public final Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
     @Override

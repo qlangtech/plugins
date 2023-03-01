@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -66,8 +67,8 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public String getEscapeChar() {
-        return "`";
+    public Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
     @Override

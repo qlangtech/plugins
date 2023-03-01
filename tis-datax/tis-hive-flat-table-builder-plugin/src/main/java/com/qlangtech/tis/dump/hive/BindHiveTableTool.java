@@ -23,12 +23,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.datax.MREngine;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -42,7 +40,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -228,7 +229,7 @@ public class BindHiveTableTool {
             String colformat = "%-" + (++maxColLength) + "s";
             StringBuffer hiveSQl = new StringBuffer();
             HiveDBUtils.executeNoLog(conn, "CREATE DATABASE IF NOT EXISTS " + table.getDbName() + "");
-            hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + table.getFullName(Optional.of(sourceMeta.getEscapeChar())) + " (\n");
+            hiveSQl.append("CREATE EXTERNAL TABLE IF NOT EXISTS " + table.getFullName((sourceMeta.getEscapeChar())) + " (\n");
             final int colsSize = cols.size();
             for (int i = 0; i < colsSize; i++) {
                 o = cols.get(i);
@@ -236,7 +237,7 @@ public class BindHiveTableTool {
                     throw new IllegalStateException("i:" + i + " shall equal with index:" + o.getIndex());
                 }
                 hiveSQl.append("  ").append(sourceMeta.getEscapeChar())
-                        .append(String.format(colformat, StringUtils.remove(o.getName(), sourceMeta.getEscapeChar()) + sourceMeta.getEscapeChar()))
+                        .append(String.format(colformat, sourceMeta.removeEscapeChar(o.getName()) + sourceMeta.getEscapeChar()))
                         .append(" ").append(o.getDataType());
                 if ((i + 1) < colsSize) {
                     hiveSQl.append(",");
@@ -331,7 +332,7 @@ public class BindHiveTableTool {
             final StringBuffer errMsg = new StringBuffer();
             final StringBuffer equalsCols = new StringBuffer("compar equals:");
             final AtomicBoolean compareOver = new AtomicBoolean(false);
-            conn.query("desc " + tableName.getFullName(Optional.of(mrEngine.getEscapeChar())), new DataSourceMeta.ResultProcess() {
+            conn.query("desc " + tableName.getFullName((mrEngine.getEscapeChar())), new DataSourceMeta.ResultProcess() {
 
                 int index = 0;
 

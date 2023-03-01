@@ -96,8 +96,8 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 public void refresh() {
                 }
                 @Override
-                public String getEscapeChar() {
-                    return "`";
+                public Optional<String> getEscapeChar() {
+                    return Optional.of("`");
                 }
             };
             CreateTableSqlBuilder flinkTableDdlBuilder

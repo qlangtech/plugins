@@ -26,10 +26,12 @@ import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.HiveTask;
+import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.HiveInsertFromSelectParser;
 import com.qlangtech.tis.plugin.datax.MREngine;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -39,10 +41,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.function.Function;
 
 
 /**
@@ -127,6 +128,7 @@ public class JoinHiveTask extends HiveTask {
                         throw new RuntimeException(e);
                     }
                 }, () -> {
+                    insertParser.reflectColsType();
                     createHiveTable(fileSystem, fsFormat, ds, dumpTable, insertParser.getColsExcludePartitionCols(), conn);
                 });
     }
@@ -145,13 +147,9 @@ public class JoinHiveTask extends HiveTask {
 
 
     @Override
-    protected HiveInsertFromSelectParser createInsertSQLParser() {
-        return new HiveInsertFromSelectParser();
+    protected AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+        return new HiveInsertFromSelectParser(sql, sqlColMetaGetter);
     }
-
-
-
-
 
     /**
      * 创建hive表

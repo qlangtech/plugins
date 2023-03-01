@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +55,8 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public String getEscapeChar() {
-        return "\"";
+    public Optional<String> getEscapeChar() {
+        return Optional.of("\"");
     }
 
     @Override

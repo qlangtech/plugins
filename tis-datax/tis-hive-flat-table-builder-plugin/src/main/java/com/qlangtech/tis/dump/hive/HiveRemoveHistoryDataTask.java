@@ -275,7 +275,7 @@ public class HiveRemoveHistoryDataTask {
     }
 
     private String getFullTabName(EntityName table) {
-        return table.getFullName(Optional.of(this.ds.getEscapeChar()));
+        return table.getFullName((this.ds.getEscapeChar()));
     }
 
     public static List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, final EntityName table) throws Exception {
@@ -284,7 +284,7 @@ public class HiveRemoveHistoryDataTask {
 
     private static List<String> getHistoryPts(DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, PartitionFilter filter, final EntityName table) throws Exception {
         final Set<String> ptSet = new HashSet<>();
-        final String showPartition = "show partitions " + table.getFullName(Optional.of(mrEngine.getEscapeChar()));
+        final String showPartition = "show partitions " + table.getFullName((mrEngine.getEscapeChar()));
         final Pattern ptPattern = Pattern.compile(pt + "=(\\d+)");
         conn.query(showPartition, result -> {
             Matcher matcher = ptPattern.matcher(result.getString(1));

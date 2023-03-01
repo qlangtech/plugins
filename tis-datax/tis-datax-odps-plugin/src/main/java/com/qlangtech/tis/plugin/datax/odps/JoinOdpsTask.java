@@ -30,6 +30,7 @@ import com.qlangtech.tis.hive.AbstractInsertFromSelectParser;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.DataXOdpsWriter;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -43,11 +44,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -126,7 +125,10 @@ public class JoinOdpsTask extends HiveTask {
                 ts = s.getValue();
                 if ((tskStatInfo = taskInfo.get(s.getKey())) != null) {
                     if (tskStatInfo.change(ts)) {
-                        logger.info(instance.getTaskSummary(s.getKey()).getSummaryText());
+                        Instance.TaskSummary summary = null;
+                        if ((summary = instance.getTaskSummary(s.getKey())) != null) {
+                            logger.info(summary.getSummaryText());
+                        }
                     }
                 } else {
                     taskInfo.put(s.getKey(), new TaskStatusInfo(ts));
@@ -171,7 +173,7 @@ public class JoinOdpsTask extends HiveTask {
     protected List<String> getHistoryPts(
             DataSourceMeta mrEngine, DataSourceMeta.JDBCConnection conn, EntityName table) throws Exception {
         OdpsDataSourceFactory dsFactory = (OdpsDataSourceFactory) mrEngine;
-        Table tab = dsFactory.getOdpsTable(table);
+        Table tab = dsFactory.getOdpsTable(table, Optional.empty());
         PartitionSpec ptSpec = null;
         Set<String> pts = Sets.newHashSet();
         for (Partition pt : tab.getPartitions()) {
@@ -204,7 +206,8 @@ public class JoinOdpsTask extends HiveTask {
                         throw new RuntimeException(e);
                     }
                 }, () -> {
-                    createTable(ds, dumpTable, insertParser, conn);
+                    insertParser.reflectColsType();
+                    createTable(dsFactory, dumpTable, insertParser, conn);
                 });
 
     }
@@ -212,13 +215,29 @@ public class JoinOdpsTask extends HiveTask {
     /**
      * 创建 ODPS表
      *
-     * @param mrEngine
+     * @param dsFactory
      * @param dumpTable
      * @param insertParser
      * @param conn
      */
-    private void createTable(DataSourceMeta mrEngine, EntityName dumpTable
+    private void createTable(OdpsDataSourceFactory dsFactory, EntityName dumpTable
             , ColsParser insertParser, DataSourceMeta.JDBCConnection conn) {
+        // ISqlTask.RewriteSql rewriteSql = insertParser.getSql();
+//        String sql = rewriteSql.rewriteSql;
+//        try {
+//            conn.execute("CREATE TABLE IF NOT EXISTS " + dumpTable.getFullName((dsFactory.getEscapeChar()))
+//                    + " lifecycle " + odpsWriter.lifecycle + " AS \n" + sql);
+//            // 添加分区
+//            Table ntab = dsFactory.getOdpsTable(dumpTable, dsFactory.getEscapeChar());
+//            PartitionSpec spec = new PartitionSpec();
+//            spec.set(IDumpTable.PARTITION_PT, rewriteSql.primaryTable.getPt());
+//            spec.set(IDumpTable.PARTITION_PMOD, "0");
+//            ntab.createPartition(spec, true);
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+
         List<HiveColumn> colsExcludePartitionCols = insertParser.getColsExcludePartitionCols();
 
         List<IColMetaGetter> cols = colsExcludePartitionCols.stream()
@@ -249,9 +268,10 @@ public class JoinOdpsTask extends HiveTask {
         return true;
     }
 
-
     @Override
-    protected AbstractInsertFromSelectParser createInsertSQLParser() {
-        return new OdpsInsertFromSelectParser();
+    protected AbstractInsertFromSelectParser createInsertSQLParser(String sql, Function<ISqlTask.RewriteSql, List<ColumnMetaData>> sqlColMetaGetter) {
+        return new OdpsInsertFromSelectParser(sql, sqlColMetaGetter);
     }
+
+
 }

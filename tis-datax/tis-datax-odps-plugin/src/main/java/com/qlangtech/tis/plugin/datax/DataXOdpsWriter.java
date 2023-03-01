@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -204,7 +205,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
                 // HdfsFormat fsFormat = parseFSFormat();
                 script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo() + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
-                script.append("lifecycle " + lifecycle);
+                script.append("lifecycle " + Objects.requireNonNull(lifecycle, "lifecycle can not be null"));
 
                 // script.appendLine(fsFormat.getRowFormat());
                 // script.appendLine("STORED AS " + fsFormat.getFileType().getType());
@@ -342,6 +343,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     public Class<?> getOwnerClass() {
         return DataXOdpsWriter.class;
     }
+
 
     public static class OdpsContext implements IDataxContext {
         private final DataXOdpsWriter odpsWriter;

@@ -43,6 +43,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -126,8 +127,8 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public final String getEscapeChar() {
-        return "`";
+    public final Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
 //    private OdpsEndpoint getEndpoint() {
@@ -188,14 +189,15 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
     }
 
     public TableSchema getTableSchema(EntityName dumpTable) {
-        Table table = getOdpsTable(dumpTable);
+        Table table = getOdpsTable(dumpTable, Optional.empty());
         TableSchema schema = table.getSchema();
         return schema;
     }
 
-    public Table getOdpsTable(EntityName dumpTable) {
+    public Table getOdpsTable(EntityName dumpTable, Optional<String> escapChar) {
         Odps odps = this.createOdps();
-        return odps.tables().get(this.project, dumpTable.getTabName());
+        //odps.tables().get("dd").createPartition();
+        return odps.tables().get(this.project, dumpTable.getTableName(escapChar));
     }
 
     public List<String> getJdbcUrls() {

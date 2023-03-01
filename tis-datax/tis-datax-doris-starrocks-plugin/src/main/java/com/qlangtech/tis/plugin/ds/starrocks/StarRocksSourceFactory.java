@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -40,8 +41,8 @@ public class StarRocksSourceFactory extends DorisSourceFactory {
     }
 
     @Override
-    public String getEscapeChar() {
-        return "`";
+    public Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
     @TISExtension

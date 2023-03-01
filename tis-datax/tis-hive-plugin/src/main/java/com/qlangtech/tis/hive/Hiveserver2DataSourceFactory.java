@@ -45,6 +45,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -86,8 +87,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public final String getEscapeChar() {
-        return "`";
+    public final Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
     @Override

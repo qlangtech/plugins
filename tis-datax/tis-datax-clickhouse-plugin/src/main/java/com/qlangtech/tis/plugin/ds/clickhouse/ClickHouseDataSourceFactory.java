@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -54,8 +55,8 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public String getEscapeChar() {
-        return "`";
+    public Optional<String> getEscapeChar() {
+        return Optional.of("`");
     }
 
     @Override

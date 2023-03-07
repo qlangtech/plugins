@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.net.URL;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -181,15 +180,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     //@Override
-    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
+    protected void refectTableInDB(TableInDB tabs, JDBCConnection conn) throws SQLException {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            statement = conn.createStatement();//.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             resultSet = statement.executeQuery(getRefectTablesSql());
             //   resultSet = statement.getResultSet();
             while (resultSet.next()) {
-                tabs.add(jdbcUrl, resultSet.getString(1));
+                tabs.add(conn.getUrl(), resultSet.getString(1));
             }
         } finally {
             if (resultSet != null) {
@@ -230,9 +229,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     protected void fillTableInDB(TableInDB tabs) {
-        this.visitFirstConnection((conn) -> {
-            refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
+
+        this.visitAllConnection((conn) -> {
+            refectTableInDB(tabs, conn);
         });
+
+
+//        this.visitFirstConnection((conn) -> {
+//            refectTableInDB(tabs, conn.getUrl(), conn.getConnection());
+//        });
     }
 
     protected TableInDB createTableInDB() {
@@ -307,9 +312,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         String jdbcUrl = buidJdbcUrl(db, ip, dbName);
         try {
             validateConnection(jdbcUrl, p);
+        } catch (TisException e) {
+            throw e;
         } catch (Exception e) {
             //MethodHandles.lookup().lookupClass()
-            throw new TisException("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
+            throw TisException.create("请确认插件:" + this.getClass().getSimpleName() + "配置:" + this.identityValue() + ",jdbcUrl:" + jdbcUrl, e);
         }
     }
 

@@ -459,8 +459,6 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         }
     }
 
-
-    // @TISExtension
     public static abstract class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
         @Override
         public boolean supportFacade() {
@@ -470,6 +468,11 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         @Override
         public Optional<String> getDefaultDataXReaderDescName() {
             return Optional.of(DataxMySQLReader.DATAX_NAME);
+        }
+
+        @Override
+        public final EndType getEndType() {
+            return EndType.MySQL;
         }
 
         @Override

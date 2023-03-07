@@ -85,7 +85,7 @@ public class TiKVKafkaMQListenerFactory extends MQListenerFactory {
 
         @Override
         public IEndTypeGetter.EndType getEndType() {
-            return IEndTypeGetter.EndType.Kafka;
+            return IEndTypeGetter.EndType.TiDB;
         }
 
         @Override

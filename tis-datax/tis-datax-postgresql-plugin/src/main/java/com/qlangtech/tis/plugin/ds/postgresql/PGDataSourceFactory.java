@@ -79,7 +79,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
+    protected void refectTableInDB(TableInDB tabs, JDBCConnection conn) throws SQLException {
         Statement statement = null;
         ResultSet result = null;
         try {
@@ -97,7 +97,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 //        String[] types = {"TABLE"};
 //        ResultSet tablesResult = metaData.getTables(conn.getCatalog(), "public", "%", types);
             while (result.next()) {
-                tabs.add(jdbcUrl, result.getString(1));
+                tabs.add(conn.getUrl(), result.getString(1));
             }
         } finally {
             this.closeResultSet(result);
@@ -122,7 +122,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 
         return new JDBCConnection(DriverManager.getConnection(jdbcUrl, props), jdbcUrl);
 //        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
-//            throw new TisException("invalid tabSchema:" + this.tabSchema);
+//            throw TisException.create("invalid tabSchema:" + this.tabSchema);
 //        }
         //  return conn;
     }
@@ -170,6 +170,11 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         @Override
         public List<String> facadeSourceTypes() {
             return Collections.emptyList();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Postgres;
         }
 
         @Override

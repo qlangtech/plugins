@@ -262,6 +262,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.Oracle;
+        }
+
+        @Override
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             return true;
         }

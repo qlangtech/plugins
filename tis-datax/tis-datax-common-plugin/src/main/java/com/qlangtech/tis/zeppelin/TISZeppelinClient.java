@@ -48,7 +48,7 @@ public class TISZeppelinClient {
     static {
         try {
             ClientConfig clientConfig = new ClientConfig(
-                    "http://127.0.0.1:" + TisAppLaunch.getPort(TisSubModule.ZEPPELIN) + "/next");
+                    "http://127.0.0.1:" + (TisSubModule.ZEPPELIN.getLaunchPort())+ TisSubModule.ZEPPELIN.servletContext);
             zeppelinClient = new ZeppelinClient(clientConfig);
         } catch (Exception e) {
             throw new RuntimeException(e);

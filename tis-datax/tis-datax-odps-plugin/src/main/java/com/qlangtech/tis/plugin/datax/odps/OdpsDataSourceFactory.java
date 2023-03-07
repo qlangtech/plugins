@@ -221,6 +221,11 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.AliyunODPS;
+        }
+
+        @Override
         protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
             OdpsDataSourceFactory endpoint = (OdpsDataSourceFactory) dsFactory;
             final Odps odps = endpoint.createOdps();

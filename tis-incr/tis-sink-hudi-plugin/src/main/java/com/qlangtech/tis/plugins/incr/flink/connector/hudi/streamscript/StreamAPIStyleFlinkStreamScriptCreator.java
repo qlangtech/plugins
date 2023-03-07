@@ -184,7 +184,7 @@ public class StreamAPIStyleFlinkStreamScriptCreator extends BasicFlinkStreamScri
                     HiveTable table = metaStore.getTable(hiveMeta.getDbName(), tabName);
                     if (table == null) {
                         if (hudiSinkFactory.baseOnBach) {
-                            throw new TisException("没有发现可用的批量导入记录，请先触发批量导入，或者您可以尝试将`baseOnBach`设置成`否`");
+                            throw TisException.create("没有发现可用的批量导入记录，请先触发批量导入，或者您可以尝试将`baseOnBach`设置成`否`");
                         } else {
                             return TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp());
                         }

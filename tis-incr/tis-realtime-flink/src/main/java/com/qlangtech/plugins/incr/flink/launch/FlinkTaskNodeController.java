@@ -89,7 +89,7 @@ public class FlinkTaskNodeController implements IRCController {
 //                Collection<JobStatusMessage> jobStatus = status.get();
 //            }
 //        } catch (Exception e) {
-//            throw new TisException("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
+//            throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
 //        }
     }
 
@@ -266,7 +266,7 @@ public class FlinkTaskNodeController implements IRCController {
             }
         } catch (TimeoutException e) {
             FlinkCluster clusterCfg = this.factory.getClusterCfg();
-            throw new TisException("flinkClusterId:" + clusterCfg.getClusterId()
+            throw TisException.create("flinkClusterId:" + clusterCfg.getClusterId()
                     + ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
@@ -494,7 +494,7 @@ public class FlinkTaskNodeController implements IRCController {
         }
 
         protected void processCollectionNotSupportSavePoint(StateBackendFactory stateBackend) {
-            throw new TisException("app:" + collection.getName()
+            throw TisException.create("app:" + collection.getName()
                     + " is not support savePoint,stateFactoryClass:" + stateBackend.getClass().getName());
         }
 

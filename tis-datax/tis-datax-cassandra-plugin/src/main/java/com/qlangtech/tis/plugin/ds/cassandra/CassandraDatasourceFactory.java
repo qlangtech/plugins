@@ -235,6 +235,11 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.Cassandra;
+        }
+
+        @Override
         protected boolean supportFacade() {
             return false;
         }

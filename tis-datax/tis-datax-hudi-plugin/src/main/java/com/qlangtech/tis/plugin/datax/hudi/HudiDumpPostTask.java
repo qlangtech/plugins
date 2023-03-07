@@ -278,7 +278,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
         countDownLatch.await();
         if (sparkAppHandle.getState() != SparkAppHandle.State.FINISHED) {
-            throw new TisException("spark app:" + sparkAppHandle.getAppId()
+            throw TisException.create("spark app:" + sparkAppHandle.getAppId()
                     + " execute result not successful:" + sparkAppHandle.getState());
         }
         return sparkAppHandle;

@@ -120,6 +120,10 @@
             <version>3.7.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
 
 
     </dependencies>

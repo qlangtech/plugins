@@ -80,6 +80,11 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.SqlServer;
+        }
+
+        @Override
         public boolean supportFacade() {
             return false;
         }

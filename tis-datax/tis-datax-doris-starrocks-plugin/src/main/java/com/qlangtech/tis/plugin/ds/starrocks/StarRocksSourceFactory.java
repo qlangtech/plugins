@@ -48,6 +48,10 @@ public class StarRocksSourceFactory extends DorisSourceFactory {
     @TISExtension
     public static class DefaultDescriptor extends DorisSourceFactory.DefaultDescriptor {
         @Override
+        public EndType getEndType() {
+            return EndType.StarRocks;
+        }
+        @Override
         protected String getDataSourceName() {
             return DISPLAY_NAME;
         }

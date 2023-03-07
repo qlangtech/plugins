@@ -65,8 +65,8 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
-        DatabaseMetaData metaData = conn.getMetaData();
+    protected void refectTableInDB(TableInDB tabs, JDBCConnection conn) throws SQLException {
+        DatabaseMetaData metaData = conn.getConnection().getMetaData();
 
         ResultSet tablesResult = metaData.getTables(null, this.dbName, null, new String[]{"TABLE"});
 
@@ -75,7 +75,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             if (!StringUtils.equals(this.dbName, tablesResult.getString(2))) {
                 continue;
             }
-            tabs.add(jdbcUrl, tablesResult.getString(3));
+            tabs.add(conn.getUrl(), tablesResult.getString(3));
         }
     }
 
@@ -168,7 +168,12 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             return false;
         }
 
-// private static Pattern PatternClickHouse = Pattern.compile("jdbc:clickhouse://(.+):\\d+/.*");
+        @Override
+        public EndType getEndType() {
+            return EndType.Clickhouse;
+        }
+
+        // private static Pattern PatternClickHouse = Pattern.compile("jdbc:clickhouse://(.+):\\d+/.*");
 
 //        public boolean validateJdbcUrl(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 //            Matcher matcher = PatternClickHouse.matcher(value);

@@ -457,6 +457,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
             return true;
         }
 
+        @Override
+        public EndType getEndType() {
+            return EndType.HiveMetaStore;
+        }
 //        @Override
 //        protected boolean validate(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 //            return HiveFlatTableBuilder.validateHiveAvailable(msgHandler, context, postFormVals);

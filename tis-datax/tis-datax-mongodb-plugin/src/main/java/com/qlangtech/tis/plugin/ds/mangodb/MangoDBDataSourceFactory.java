@@ -236,6 +236,11 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.MongoDB;
+        }
+
+        @Override
         public boolean supportFacade() {
             return false;
         }

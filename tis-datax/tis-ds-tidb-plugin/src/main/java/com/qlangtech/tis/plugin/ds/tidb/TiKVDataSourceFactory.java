@@ -393,6 +393,11 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         }
 
         @Override
+        public EndType getEndType() {
+            return EndType.TiDB;
+        }
+
+        @Override
         protected List<String> facadeSourceTypes() {
             return Collections.singletonList(DS_TYPE_MYSQL);
         }

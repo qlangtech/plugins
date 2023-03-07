@@ -174,8 +174,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    protected void refectTableInDB(TableInDB tabs, String jdbcUrl, Connection conn) throws SQLException {
-        throw new UnsupportedOperationException();
+    protected void refectTableInDB(TableInDB tabs, JDBCConnection conn) throws SQLException {
+        throw new UnsupportedOperationException(conn.getUrl());
     }
 
     @Override
@@ -188,7 +188,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
             //  return tabs;
         } catch (Exception e) {
-            throw new TisException("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
+            throw TisException.create("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
         }
         // return tabs;
     }
@@ -202,7 +202,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 //            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
 //            return tabs;
 //        } catch (Exception e) {
-//            throw new TisException("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
+//            throw TisException.create("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
 //        }
 //    }
 
@@ -216,6 +216,11 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         @Override
         public boolean supportFacade() {
             return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.HiveMetaStore;
         }
 
         @Override
@@ -256,7 +261,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                     try (Statement statement = conn.createStatement()) {
                         try (ResultSet result = statement.executeQuery("select 1")) {
                             if (!result.next()) {
-                                throw new TisException("create jdbc connection faild");
+                                throw TisException.create("create jdbc connection faild");
                             }
                             result.getInt(1);
                         }

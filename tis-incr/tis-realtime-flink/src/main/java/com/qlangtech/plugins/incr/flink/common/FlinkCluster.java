@@ -83,7 +83,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
                 Collection<JobStatusMessage> jobStatus = status.get();
             }
         } catch (Exception e) {
-            throw new TisException("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
+            throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
         }
     }
 
@@ -174,7 +174,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 //                    return false;
 //                }
 //            } catch (Exception e) {
-//                // throw new TisException(jobManagerAddress.getURL(), e);
+//                // throw TisException.create(jobManagerAddress.getURL(), e);
 //                msgHandler.addErrorMessage(context, "不可用的URL：" + jobManagerAddress.getURL() + "，" + e.getMessage());
 //                logger.warn(jobManagerAddress.getURL(), e);
 //                return false;

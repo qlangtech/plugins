@@ -93,7 +93,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         try {
             return new JDBCConnection(mysql5Driver.connect(jdbcUrl, props), jdbcUrl);
         } catch (SQLException e) {
-            throw new TisException(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
+            throw TisException.create(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }
     }
 
@@ -112,6 +112,11 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         @Override
         public boolean supportFacade() {
             return false;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Doris;
         }
 
         @Override
@@ -148,7 +153,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
             try {
                 if (valid) {
                     int[] hostCount = new int[1];
-                    DBConfig dbConfig = ((DorisSourceFactory) dsFactory).getDbConfig();
+                    DBConfig dbConfig =  dsFactory.getDbConfig();
                     dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
                         hostCount[0]++;
                         return false;

@@ -94,7 +94,14 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
 //            for (String ptab : ) {
 //                return new DBPhysicsTable(jdbcUrl, EntityName.parse(ptab));
 //            }
-            return physics.getTabsInDB(jdbcUrl);
+            List<String> ptabs = physics.getTabsInDB(jdbcUrl);
+            if (CollectionUtils.isEmpty(ptabs)) {
+                throw new IllegalStateException("jdbcUrl:" + jdbcUrl
+                        + "\n,logicTable:" + sourceTableName
+                        + "\n,dsFactory:" + dsFactory.identityValue()
+                        + "\n relevant physicsTab can not be empty");
+            }
+            return ptabs;
         }
         throw new IllegalStateException(sourceTableName + " relevant physics tabs can not be null");
     }

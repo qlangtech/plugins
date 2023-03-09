@@ -23,6 +23,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -30,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.lifecycle.Startables;
-import org.testcontainers.utility.MountableFile;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -89,7 +89,7 @@ public class MySqlContainer extends JdbcDatabaseContainer {
         MySqlContainer container =
                 (MySqlContainer) new MySqlContainer(tag)
                         .withConfigurationOverride(myConf)
-                         .withSetupSQL(sqlClasspath)
+                        .withSetupSQL(sqlClasspath)
                         .withDatabaseName("flink-test")
                         .withUsername("flinkuser")
                         .withPassword("flinkpw")
@@ -115,13 +115,23 @@ public class MySqlContainer extends JdbcDatabaseContainer {
 
     public DataSourceFactory createMySqlDataSourceFactory(
             TargetResName dataxName) {
+        return this.createMySqlDataSourceFactory(dataxName, true);
+    }
+
+    /**
+     * @param dataxName
+     * @param splitTabStrategy 开启分表策略
+     * @return
+     */
+    public DataSourceFactory createMySqlDataSourceFactory(
+            TargetResName dataxName, boolean splitTabStrategy) {
         if (this.ds != null) {
             return this.ds;
         }
-        return this.ds = getBasicDataSourceFactory(dataxName, this.imageTag, this);
+        return this.ds = getBasicDataSourceFactory(dataxName, this.imageTag, this, splitTabStrategy);
     }
 
-    public static DataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, String imageTag, JdbcDatabaseContainer container) {
+    public static DataSourceFactory getBasicDataSourceFactory(TargetResName dataxName, String imageTag, JdbcDatabaseContainer container, boolean splitTabStrategy) {
         LOG.info("Starting containers...");
         Startables.deepStart(Stream.of(container)).join();
         LOG.info("Containers are started.");
@@ -136,8 +146,17 @@ public class MySqlContainer extends JdbcDatabaseContainer {
 
         formData.addProp("nodeDesc", NetUtils.getHost());
 
-        formData.addSubForm("splitTableStrategy"
-                , "com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy", new Descriptor.FormData());
+        if (splitTabStrategy) {
+            Descriptor.FormData splitStrategyForm = new Descriptor.FormData();
+            splitStrategyForm.addProp("tabPattern", SplitTableStrategy.PATTERN_PHYSICS_TABLE.pattern());
+            formData.addSubForm("splitTableStrategy"
+                    , "com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy", splitStrategyForm);
+        } else {
+            formData.addSubForm("splitTableStrategy"
+                    , "com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy", new Descriptor.FormData());
+        }
+
+
         formData.addProp("password", container.getPassword());
         formData.addProp("userName", container.getUsername());
         formData.addProp("port", String.valueOf(container.getMappedPort(MYSQL_PORT)));

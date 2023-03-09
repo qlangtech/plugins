@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  **/
 @Public
 public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
-    public static final String NAME_FLINK_CDC = "Flink-CDC";
+    public static final String NAME_FLINK_CDC = "Flink";
 
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
 //    public String name = NAME_FLINK_CDC;

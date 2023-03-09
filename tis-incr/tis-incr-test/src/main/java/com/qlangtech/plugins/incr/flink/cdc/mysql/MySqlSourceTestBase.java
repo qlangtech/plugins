@@ -64,7 +64,7 @@ public abstract class MySqlSourceTestBase extends AbstractTestBase {
         if (container instanceof MySqlContainer) {
             return this.dsFactory = (BasicDataSourceFactory) ((MySqlContainer) container).createMySqlDataSourceFactory(dataxName);
         } else {
-            this.dsFactory = (BasicDataSourceFactory) MySqlContainer.getBasicDataSourceFactory(dataxName, MySQL8.VERSION_8, container);
+            this.dsFactory = (BasicDataSourceFactory) MySqlContainer.getBasicDataSourceFactory(dataxName, MySQL8.VERSION_8, container, false);
             this.dsFactory.initializeDB(StringUtils.substring(MySqlContainer.INITIAL_DB_SQL, 1));
             return dsFactory;
         }

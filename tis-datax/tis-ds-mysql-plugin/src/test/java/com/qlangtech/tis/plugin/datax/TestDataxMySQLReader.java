@@ -313,7 +313,7 @@ public class TestDataxMySQLReader extends BasicTest {
         mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
 
         DefaultSplitTableStrategy.SplitableTableInDB tabsInDB
-                = new DefaultSplitTableStrategy.SplitableTableInDB(mysqlDataSource, DefaultSplitTableStrategy.SplitableTableInDB.PATTERN_PHYSICS_TABLE);
+                = new DefaultSplitTableStrategy.SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
 

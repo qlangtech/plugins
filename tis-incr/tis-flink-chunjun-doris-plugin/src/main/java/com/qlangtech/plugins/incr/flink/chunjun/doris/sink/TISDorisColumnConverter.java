@@ -56,7 +56,6 @@ public class TISDorisColumnConverter
                                     int fieldCount, List<IDeserializationConverter> toInternalConverters
             , List<Pair<ISerializationConverter<List<String>>, DataType>> toExternalConverters) {
         super(fieldCount, toInternalConverters, toExternalConverters);
-        //   this.options = options;
         this.col2ordMap = col2ordMap;
     }
 

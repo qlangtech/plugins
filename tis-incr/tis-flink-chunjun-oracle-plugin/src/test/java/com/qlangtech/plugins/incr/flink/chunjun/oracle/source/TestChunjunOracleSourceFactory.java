@@ -85,14 +85,14 @@ public class TestChunjunOracleSourceFactory {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return oracleDS;
             }
 
-            @Override
-            protected String getColEscape() {
-                return "\"";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "\"";
+//            }
 
             @Override
             protected List<TestRow> createExampleTestRows() throws Exception {
@@ -151,15 +151,15 @@ public class TestChunjunOracleSourceFactory {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return oracleDS;
             }
 
 
-            @Override
-            protected String getColEscape() {
-                return "\"";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "\"";
+//            }
 
 
             @Override

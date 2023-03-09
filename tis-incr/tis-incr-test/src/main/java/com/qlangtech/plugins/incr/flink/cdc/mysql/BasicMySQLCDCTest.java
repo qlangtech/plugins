@@ -114,7 +114,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 //return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -182,10 +182,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
                 Assert.assertEquals(String.valueOf(new Long(1100001)), pkVal);
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
@@ -209,15 +209,15 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(params) {
 
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
@@ -234,7 +234,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase); //new CDCTestSuitParams("base");
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);// MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
@@ -244,10 +244,10 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //                return tab;
 //            }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
 
 
 
@@ -278,7 +278,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
         CDCTestSuitParams suitParams = tabParamMap.get(tabInstanceDetail);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createDataSource(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -289,11 +289,11 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
 //                return tab;
 //            }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//
+//            }
 
             @Override
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader,String tabName, TISSinkFactory sinkFuncFactory) {

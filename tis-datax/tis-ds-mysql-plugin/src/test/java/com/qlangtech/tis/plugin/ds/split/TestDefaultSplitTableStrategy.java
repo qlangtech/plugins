@@ -23,6 +23,7 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.collections.CollectionUtils;
@@ -82,7 +83,7 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
         DataSourceFactory dsFactory = mock("dsFactory", DataSourceFactory.class);
 
         DefaultSplitTableStrategy.SplitableTableInDB tabsInDB
-                = new DefaultSplitTableStrategy.SplitableTableInDB(dsFactory, DefaultSplitTableStrategy.SplitableTableInDB.PATTERN_PHYSICS_TABLE);
+                = new DefaultSplitTableStrategy.SplitableTableInDB(dsFactory, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
 
         for (String base : splitTabsBase) {
             tabsInDB.add(jdbcUrl, base);

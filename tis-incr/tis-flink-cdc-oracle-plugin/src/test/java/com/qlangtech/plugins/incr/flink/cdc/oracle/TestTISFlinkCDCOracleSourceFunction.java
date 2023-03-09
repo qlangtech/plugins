@@ -81,7 +81,7 @@ public class TestTISFlinkCDCOracleSourceFunction extends AbstractTestBase {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createMySqlDataSourceFactory(dataxName);
             }
 

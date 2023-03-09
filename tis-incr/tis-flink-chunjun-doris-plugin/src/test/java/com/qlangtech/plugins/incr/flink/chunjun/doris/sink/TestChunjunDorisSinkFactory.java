@@ -75,6 +75,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
     private static final int DORIS_BE_LOAD_PORT = 8040;
     private static final String DORIS_FE_SERVICE = "doris-fe_1";
     private static final String DORIS_BE_SERVICE = "doris-be_1";
+    private static final String DORIS_DS_FACTORY_NAME = "dorisDs";
 
     private static final Logger logger = LoggerFactory.getLogger(TestChunjunDorisSinkFactory.class);
 
@@ -325,7 +326,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //                throw new UnsupportedOperationException();
 //            }
         //};
-
+        dataSourceFactory.name = DORIS_DS_FACTORY_NAME;
         dataSourceFactory.dbName = null;
         dataSourceFactory.password = null;
         dataSourceFactory.userName = "root";

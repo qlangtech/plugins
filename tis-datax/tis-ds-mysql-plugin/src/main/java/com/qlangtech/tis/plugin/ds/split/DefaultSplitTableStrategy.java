@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,13 +65,13 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     }
 
     public static String tabPatternPlaceholder() {
-        return SplitableTableInDB.PATTERN_PHYSICS_TABLE.toString();
+        return SplitTableStrategy.PATTERN_PHYSICS_TABLE.toString();
     }
 
     private Pattern getTabPattern() {
         return StringUtils.isNotBlank(this.tabPattern)
                 ? Pattern.compile(this.tabPattern)
-                : SplitableTableInDB.PATTERN_PHYSICS_TABLE;
+                : SplitTableStrategy.PATTERN_PHYSICS_TABLE;
     }
 
     @Override
@@ -154,7 +155,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         }
     }
 
-    public static class SplitTablePhysics2LogicNameConverter implements Function<String, String> {
+    public static class SplitTablePhysics2LogicNameConverter implements Function<String, String>, Serializable {
         private final Map<String, String> physics2LogicTabNameConverter;
 
         public SplitTablePhysics2LogicNameConverter(SplitableTableInDB splitTabInDB) {
@@ -189,8 +190,6 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
             super(id);
             this.splitTabPattern = splitTabPattern;
         }
-
-        public static final Pattern PATTERN_PHYSICS_TABLE = Pattern.compile("(\\S+)_(\\d+)");
 
         @Override
         public Function<String, String> getPhysicsTabName2LogicNameConvertor() {

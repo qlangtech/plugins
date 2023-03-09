@@ -34,7 +34,6 @@ import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
@@ -74,15 +73,20 @@ public abstract class CUDCDCTestSuit {
 
     protected final CDCTestSuitParams suitParam;
     private final String tabName;
+    private final Optional<String> splitTabSuffix;
 
     final Date now = new Date();
     private final Calendar calendar;
     private final AtomicInteger timeGetterCount = new AtomicInteger();
 
-
     public CUDCDCTestSuit(CDCTestSuitParams suitParam) {
+        this(suitParam, Optional.empty());
+    }
+
+    public CUDCDCTestSuit(CDCTestSuitParams suitParam, Optional<String> splitTabSuffix) {
         this.suitParam = suitParam;
         this.tabName = suitParam.tabName;
+        this.splitTabSuffix = splitTabSuffix;
         calendar = Calendar.getInstance();
         calendar.setTime(now);
     }
@@ -394,7 +398,8 @@ public abstract class CUDCDCTestSuit {
 
         int insertCount = 5;
 
-        for (int i = 1; i <= insertCount; i++) {
+        // setup.sql 中已经插入了baseid 为1的记录，为了避免重复，这里id从2开始插入
+        for (int i = 2; i <= insertCount + 1; i++) {
             //  if (i > 1) {
             now = this.getTime();
             // }
@@ -488,11 +493,12 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected String createTableName(String tabName) {
-        return tabName;
+        return tabName + (this.splitTabSuffix.isPresent() ? this.splitTabSuffix.get() : StringUtils.EMPTY);
     }
 
-    protected String getColEscape() {
-        return StringUtils.EMPTY;
+    protected final String getColEscape() {
+        Optional<String> escapeChar = this.dataSourceFactory.getEscapeChar();// StringUtils.EMPTY;
+        return escapeChar.isPresent() ? escapeChar.get() : StringUtils.EMPTY;
     }
 
     protected int executePreparedStatement(Connection connection, PreparedStatement statement) throws SQLException {
@@ -553,7 +559,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     private BasicDataXRdbmsReader createDataxReader(TargetResName dataxName, String tabName) {
-        BasicDataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName);
+        BasicDataSourceFactory dataSourceFactory = createDataSourceFactory(dataxName, this.splitTabSuffix.isPresent());
 
 
         BasicDataXRdbmsReader dataxReader = new BasicDataXRdbmsReader() {
@@ -586,7 +592,7 @@ public abstract class CUDCDCTestSuit {
     }
 
 
-    protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName);
+    protected abstract BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy);
 
 
     protected void assertInsertRow(

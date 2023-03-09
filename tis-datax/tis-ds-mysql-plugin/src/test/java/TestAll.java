@@ -20,6 +20,7 @@ import com.qlangtech.tis.plugin.datax.TestDataxMySQLReader;
 import com.qlangtech.tis.plugin.datax.TestDataxMySQLReaderDump;
 import com.qlangtech.tis.plugin.datax.TestDataxMySQLWriter;
 import com.qlangtech.tis.plugin.ds.mysql.TestMySQLDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.split.TestDefaultSplitTableStrategy;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -32,7 +33,8 @@ import org.junit.runners.Suite;
         TestMySQLDataSourceFactory.class //
         , TestDataxMySQLReader.class //
         , TestDataxMySQLWriter.class //
-        , TestDataxMySQLReaderDump.class})
+        , TestDataxMySQLReaderDump.class
+        , TestDefaultSplitTableStrategy.class})
 public class TestAll  //extends TestCase
 {
 

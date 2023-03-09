@@ -53,6 +53,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -79,6 +80,36 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         return MySqlContainer.MYSQL5_CONTAINER;
     }
 
+    /**
+     * 使用base表（base_01,base_02）的分表策略测试
+     *
+     * @throws Exception
+     */
+    @Test()
+    public void testBaseTableWithSplit() throws Exception {
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        mysqlCDCFactory.startupOptions = "latest";
+        // final String tabName = "base";
+        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);//new CDCTestSuitParams("base");
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams, Optional.of("_01")) {
+            @Override
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
+                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName, useSplitTabStrategy);
+            }
+
+            @Override
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
+                return sourceHandle;
+            }
+        };
+
+        cdcTestSuit.startTest(mysqlCDCFactory);
+
+    }
+
     // @Test(timeout = 20000)
     @Test()
     public void testBinlogConsume() throws Exception {
@@ -88,7 +119,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);//new CDCTestSuitParams("base");
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
                 //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -101,10 +132,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 return sourceHandle;
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
@@ -121,7 +152,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         Assert.assertNotNull(suitParams);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
@@ -227,10 +258,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 return sourceHandle;
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
@@ -246,15 +277,15 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);// new CDCTestSuitParams(tabName);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
                 return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//            }
 
             @Override
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
@@ -282,21 +313,21 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         CDCTestSuitParams suitParams = tabParamMap.get(tabInstanceDetail);//new CDCTestSuitParams(tabName);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
-                //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
-                return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
+                return createDataSource(dataxName);
             }
 
-            @Override
-            protected String getColEscape() {
-                return "`";
-
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return "`";
+//
+//            }
 
             @Override
             protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
                 return sourceHandle;
             }
 
@@ -312,7 +343,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 exampleRows.add(this.parseTestRow(RowKind.INSERT, TestFlinkCDCMySQLSourceFactory.class, tabName + "/insert1.txt"));
 
                 Assert.assertEquals(1, exampleRows.size());
-                imqListener.start(dataxName, dataxReader, tabs, null);
+                imqListener.start(dataxName, dataxReader, tabs, createProcess());
 
                 Thread.sleep(1000);
                 CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
@@ -473,7 +504,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
 
                         Assert.assertEquals(1, executePreparedStatement(conn, statement));
-
+                        conn.commit();
                         statement.close();
                         sleepForAWhile();
 

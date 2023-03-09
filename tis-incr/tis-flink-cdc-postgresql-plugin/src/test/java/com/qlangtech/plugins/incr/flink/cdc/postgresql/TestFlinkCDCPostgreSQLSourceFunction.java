@@ -63,7 +63,7 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return createPGDataSourceFactory(dataxName);
             }
 

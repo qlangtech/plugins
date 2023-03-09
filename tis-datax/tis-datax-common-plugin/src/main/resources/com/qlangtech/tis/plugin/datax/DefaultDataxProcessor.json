@@ -5,7 +5,7 @@
   },
   "dptId": {
     "label": "所属部门",
-    "enum": "com.qlangtech.tis.coredefine.module.action.DataxAction.getDepartments()",
+    "enum": "com.qlangtech.tis.coredefine.module.action.DataxAction.getDepartments():uncache_true",
     "creator": {
       "routerLink": "/base/departmentlist",
       "label": "部门管理"

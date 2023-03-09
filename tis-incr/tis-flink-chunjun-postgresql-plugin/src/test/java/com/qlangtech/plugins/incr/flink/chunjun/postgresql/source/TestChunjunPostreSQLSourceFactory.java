@@ -128,7 +128,7 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
 //            }
 
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
                 return (BasicDataSourceFactory) TestChunjunPostreSQLSourceFactory.this.createPgSourceFactory(dataxName);
             }
 
@@ -290,10 +290,10 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
 //                }
             }
 
-            @Override
-            protected String getColEscape() {
-                return StringUtils.EMPTY;
-            }
+//            @Override
+//            protected String getColEscape() {
+//                return StringUtils.EMPTY;
+//            }
         };
 
 

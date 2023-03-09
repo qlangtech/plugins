@@ -67,11 +67,8 @@ import java.util.Properties;
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
-
-
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
-        // return null;
         throw new UnsupportedOperationException();
     }
 
@@ -85,37 +82,6 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         return true;
     }
 
-    // private transient List<IColMetaGetter> colsMeta;
-
-//    @Override
-//    protected List<IColMetaGetter> getColsMeta(TableAlias tableName
-//            , BasicDataSourceFactory dsFactory, CreateChunjunSinkFunctionResult sinkFunc) {
-//        //return super.getColsMeta(tableName, dsFactory, sinkFunc);
-//
-//        if (colsMeta == null) {
-//
-//            Map<String, IColMetaGetter> colsMap = Maps.newHashMap();
-//            // dsFactory.visitFirstConnection((conn) -> {
-//            colsMap.putAll(ColMetaUtils.getColMetasMap(ChunjunDorisSinkFactory.this, new JdbcConf() {
-//                @Override
-//                public String getTable() {
-//                    return tableName.getTo();
-//                }
-//            }));
-//            //});
-//            // 为了保证RowData创建的字段顺序( 由FieldConfig顺序决定 )
-//            DorisSinkFactory sinkFactory = (DorisSinkFactory) sinkFunc.getSinkFactory();
-//            colsMeta = Lists.newArrayList();
-//            for (FieldConf field : sinkFactory.options.getColumn()) {
-//                colsMeta.add(Objects.requireNonNull(colsMap.get(field.getName())
-//                        , "fileName:" + field.getName() + " relevant colMeta can not be null"));
-//            }
-//            if (CollectionUtils.isEmpty(colsMeta)) {
-//                throw new IllegalStateException("colsMeta can not be empty,tableName:" + tableName.toString());
-//            }
-//        }
-//        return colsMeta;
-//    }
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory

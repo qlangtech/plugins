@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.ck.ClickHouseCommon;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -30,7 +31,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -78,7 +78,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
-                script.append("   ,`__cc_ck_sign` Int8 DEFAULT 1").append("\n");
+                script.append("   ,`" + ClickHouseCommon.KEY_CLICKHOUSE_CK + "` Int8 DEFAULT 1").append("\n");
             }
 
             @Override
@@ -93,7 +93,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
             @Override
             protected void appendTabMeta(List<ColWrapper> pk) {
-                script.append(" ENGINE = CollapsingMergeTree(__cc_ck_sign)").append("\n");
+                script.append(" ENGINE = CollapsingMergeTree(" + ClickHouseCommon.KEY_CLICKHOUSE_CK + ")").append("\n");
                 if (CollectionUtils.isNotEmpty(pk)) {
                     script.append(" ORDER BY ").append(pk.stream().map((p) -> "`" + p.getName() + "`").collect(Collectors.joining(","))).append("\n");
                 }

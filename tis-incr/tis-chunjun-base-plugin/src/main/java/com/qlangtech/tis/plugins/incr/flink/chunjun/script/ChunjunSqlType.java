@@ -47,7 +47,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
         return new SQLStreamScriptCreator(sinkStreamMetaCreator);
     }
 
-    class SQLStreamScriptCreator extends BasicFlinkStreamScriptCreator {
+    protected static class SQLStreamScriptCreator extends BasicFlinkStreamScriptCreator {
 
 
         public SQLStreamScriptCreator(IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaGetter) {

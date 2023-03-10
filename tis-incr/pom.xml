@@ -50,7 +50,9 @@
 
         <module>tis-sink-elasticsearch7-plugin</module>
 
-        <module>tis-sink-starrocks-plugin</module>
+        <!--不需要这个 使用chunjun实现-->
+        <!--
+          <module>tis-sink-starrocks-plugin</module>-->
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>

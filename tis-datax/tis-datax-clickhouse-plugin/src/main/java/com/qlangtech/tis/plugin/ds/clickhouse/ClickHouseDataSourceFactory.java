@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.ds.clickhouse;
 
+import com.alibaba.datax.common.ck.ClickHouseCommon;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.*;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -77,6 +80,13 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             }
             tabs.add(conn.getUrl(), tablesResult.getString(3));
         }
+    }
+
+    @Override
+    protected HashSet<String> createAddedCols() {
+        // 这样就可以将'__cc_ck_sign' 字端过滤掉了
+        HashSet<String> addedCols = Sets.newHashSet(ClickHouseCommon.KEY_CLICKHOUSE_CK);
+        return addedCols;
     }
 
     @Override

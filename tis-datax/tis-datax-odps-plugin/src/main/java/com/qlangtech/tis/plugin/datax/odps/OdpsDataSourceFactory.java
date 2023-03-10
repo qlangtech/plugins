@@ -110,8 +110,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
      */
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        // OdpsEndpoint endpoint = getEndpoint();
-        StringBuffer jdbc = new StringBuffer("jdbc:odps:");//"?project=test_project&useProjectTimeZone=true");
+        StringBuffer jdbc = new StringBuffer("jdbc:odps:");
         jdbc.append(this.odpsServer);
         jdbc.append("?project=").append(this.project);
         jdbc.append("&useProjectTimeZone=").append(this.useProjectTimeZone);

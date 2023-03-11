@@ -19,6 +19,8 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -33,6 +35,9 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -53,6 +58,7 @@ import java.util.stream.Collectors;
 @Public
 public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
     private static final String DATAX_NAME = "MySQL";
+    private static final Logger logger = LoggerFactory.getLogger(DataxMySQLWriter.class);
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
@@ -107,30 +113,46 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-        if (threadBingDataXReader instanceof DataxMySQLReader
-                // 没有使用别名
-                && tableMapper.hasNotUseAlias()) {
-            DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
-            MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-            dsFactory.visitFirstConnection((c) -> {
-                Connection conn = c.getConnection();
-                try (Statement statement = conn.createStatement()) {
-                    try (ResultSet resultSet = statement.executeQuery("show create table " + tableMapper.getFrom())) {
-                        if (!resultSet.next()) {
-                            throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+        try {
+            if (threadBingDataXReader instanceof DataxMySQLReader
+                    // 没有使用别名
+                    && tableMapper.hasNotUseAlias()) {
+                DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
+                MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+                dsFactory.visitFirstConnection((c) -> {
+                    Connection conn = c.getConnection();
+                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(
+                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+                    Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
+                    if (physicsTabNames.isPresent()) {
+                        try (Statement statement = conn.createStatement()) {
+                            // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
+                            try (ResultSet resultSet = statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
+                                if (!resultSet.next()) {
+                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+                                }
+                                String ddl = resultSet.getString(2);
+                                script.append(ddl);
+                            }
                         }
-                        String ddl = resultSet.getString(2);
-                        script.append(ddl);
                     }
-                }
-            });
-            return new CreateTableSqlBuilder.CreateDDL(script, null) {
-                @Override
-                public String getSelectAllScript() {
-                    //return super.getSelectAllScript();
-                    throw new UnsupportedOperationException();
-                }
-            };
+
+                });
+                return new CreateTableSqlBuilder.CreateDDL(script, null) {
+                    @Override
+                    public String getSelectAllScript() {
+                        //return super.getSelectAllScript();
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        } catch (RuntimeException e) {
+            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
+                throw e;
+            } else {
+                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
+                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
+            }
         }
 
         // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
@@ -159,6 +181,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     }
                 };
             }
+
             /**
              * https://www.runoob.com/mysql/mysql-data-types.html
              * @param col

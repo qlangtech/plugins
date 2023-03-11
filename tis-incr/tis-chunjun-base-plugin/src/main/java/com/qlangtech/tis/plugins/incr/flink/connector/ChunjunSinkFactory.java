@@ -66,7 +66,6 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
 
 import java.lang.reflect.Constructor;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -562,6 +561,26 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         @Override
         public final PluginVender getVender() {
             return PluginVender.CHUNJUN;
+        }
+
+
+        /**
+         * 校验batchSize
+         *
+         * @param msgHandler
+         * @param context
+         * @param fieldName
+         * @param value
+         * @return
+         */
+        public boolean validateBatchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int batchSize = Integer.parseInt(value);
+            final int miniSize = 1;
+            if (batchSize < miniSize) {
+                msgHandler.addFieldError(context, fieldName, "不能小于" + miniSize);
+                return false;
+            }
+            return true;
         }
 
         public boolean validateFlushIntervalMills(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

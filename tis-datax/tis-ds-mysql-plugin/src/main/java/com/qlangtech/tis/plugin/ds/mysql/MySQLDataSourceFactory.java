@@ -61,7 +61,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     protected TableInDB createTableInDB() {
-        return this.splitTableStrategy.createTableInDB(this);
+        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null")
+                .createTableInDB(this);
     }
 
     @Override
@@ -98,7 +99,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
                     @Override
                     public DataType bigInt(DataType type) {
-                        if (type.isUnsigned()) {
+                        if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话 建表的ddl会有问题*/) {
                             DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
                             t.setDecimalDigits(0);
                             return t;

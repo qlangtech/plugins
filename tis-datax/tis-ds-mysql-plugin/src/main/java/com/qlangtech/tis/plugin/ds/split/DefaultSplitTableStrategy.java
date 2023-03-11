@@ -100,7 +100,8 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
                 throw new IllegalStateException("jdbcUrl:" + jdbcUrl
                         + "\n,logicTable:" + sourceTableName
                         + "\n,dsFactory:" + dsFactory.identityValue()
-                        + "\n relevant physicsTab can not be empty");
+                        + "\n relevant physicsTab can not be empty"
+                        + "\n exist keys:" + String.join(",", physics.physicsTabInSplitableDB.keySet()));
             }
             return ptabs;
         }

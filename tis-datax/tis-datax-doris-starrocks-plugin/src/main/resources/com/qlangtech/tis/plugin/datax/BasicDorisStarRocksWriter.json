@@ -9,6 +9,7 @@
     "dftVal": "com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter.getDftLoadProps()"
   },
   "maxBatchRows": {
+    "dftVal": 10000
   },
   "batchSize": {
     "label": "maxBatchSize",

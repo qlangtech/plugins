@@ -18,12 +18,14 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -33,6 +35,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -315,7 +319,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends RdbmsWriterDescriptor //implements DataxWriter.IRewriteSuFormProperties
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor
     {
         public DefaultDescriptor() {
             super();
@@ -340,6 +344,19 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         @Override
         public String getDisplayName() {
             return DATAX_NAME;
+        }
+
+        @Override
+        protected boolean validatePostForm(IControlMsgHandler msgHandler, Context context, BasicDataXRdbmsWriter form) {
+
+            DataxMySQLWriter dataxWriter = (DataxMySQLWriter) form;
+            MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) dataxWriter.getDataSourceFactory();
+            if (dsFactory.splitTableStrategy instanceof DefaultSplitTableStrategy) {
+                msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "Writer端不能使用带有分表策略的数据源");
+                return false;
+            }
+
+            return super.validatePostForm(msgHandler, context, dataxWriter);
         }
 
 //        @Override

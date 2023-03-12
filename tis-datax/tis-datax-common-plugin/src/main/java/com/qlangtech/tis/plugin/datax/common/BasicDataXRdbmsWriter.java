@@ -32,6 +32,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.RobustReflectionConverter;
@@ -245,6 +246,17 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 msgHandler.addFieldError(context, fieldName, "不支持分库数据源，目前无法指定数据路由规则，请选择单库数据源");
                 return false;
             }
+            return true;
+        }
+
+        @Override
+        protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals form) {
+            BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter)form.newInstance(this, msgHandler);
+            return validatePostForm(msgHandler, context, dataxWriter);
+        }
+
+        protected boolean validatePostForm(
+                IControlMsgHandler msgHandler, Context context, BasicDataXRdbmsWriter dataxWriter) {
             return true;
         }
     }

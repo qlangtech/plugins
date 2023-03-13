@@ -59,6 +59,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
 
+
     @Override
     protected TableInDB createTableInDB() {
         return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null")

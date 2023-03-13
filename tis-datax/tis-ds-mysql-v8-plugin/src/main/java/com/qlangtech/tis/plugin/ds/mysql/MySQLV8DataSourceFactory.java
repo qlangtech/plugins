@@ -50,6 +50,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         /**
          * https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-connection.html
          * MySQL uses the term "schema" as a synonym of the term "database," while Connector/J historically takes the JDBC term "catalog" as synonymous to "database". This property sets for Connector/J which of the JDBC terms "catalog" and "schema" is used in an application to refer to a database. The property takes one of the two values "CATALOG" or "SCHEMA" and uses it to determine (1) which Connection methods can be used to set/get the current database (e.g. 'setCatalog()' or 'setSchema()'?), (2) which arguments can be used within the various 'DatabaseMetaData' methods to filter results (e.g. the catalog or 'schemaPattern' argument of 'getColumns()'?), and (3) which fields in the result sets returned by 'DatabaseMetaData' methods contain the database identification information (i.e., the 'TABLE_CAT' or 'TABLE_SCHEM' field in the result set returned by 'getTables()'?).
+         * add for : fix multi table with same name located in mulit DataBase ,will get mulit names invoking DatabaseMetaData.getTables()
          */
         props.put(PropertyKey.databaseTerm.getKeyName(), String.valueOf(PropertyDefinitions.DatabaseTerm.SCHEMA));
         // 为了避开与Mysql5的连接冲突，需要直接从driver中创建connection对象

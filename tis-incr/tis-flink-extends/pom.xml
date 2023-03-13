@@ -71,7 +71,11 @@
             <artifactId>tis-sql-parser</artifactId>
             <scope>compile</scope>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
+        <!--        <dependency>-->
 <!--            <groupId>com.alibaba.datax</groupId>-->
 <!--            <artifactId>datax-config</artifactId>-->
 <!--        </dependency>-->

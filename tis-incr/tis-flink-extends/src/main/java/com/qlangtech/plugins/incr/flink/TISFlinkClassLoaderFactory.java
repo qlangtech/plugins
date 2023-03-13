@@ -168,13 +168,19 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                         // 服务器节点级别通过文件来排他
                         try (FileLock fileLock = channel.tryLock()) {
 
-                            for (URL url : libraryURLs) {
-                                cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), url.openStream());
+                            try {
+                                TIS.permitInitialize = false;
+                                for (URL url : libraryURLs) {
+                                    cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), url.openStream());
+                                    break;
+                                }
+                                Objects.requireNonNull(cfgSnapshot, "cfgSnapshot can not be null,libraryURLs size:" + libraryURLs.length);
+                                //  boolean tisInitialized = TIS.initialized;
+                                // PluginAndCfgsSnapshot cfgSnapshot = getTisAppName();
+                                logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
+                            } finally {
+                                TIS.permitInitialize = true;
                             }
-                            Objects.requireNonNull(cfgSnapshot, "cfgSnapshot can not be null,libraryURLs size:" + libraryURLs.length);
-                            //  boolean tisInitialized = TIS.initialized;
-                            // PluginAndCfgsSnapshot cfgSnapshot = getTisAppName();
-                            logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
                             // TIS.clean();
                             // 这里只需要类不需要配置文件了
 //                            PluginMeta flinkPluginMeta
@@ -193,23 +199,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                         }
                     }
 
-//                    for (XStream2.PluginMeta update : shallUpdate) {
-//                        update.copyFromRemote(Collections.emptyList(), true, true);
-//                    }
-//
-//                    PluginManager pluginManager = TIS.get().getPluginManager();
-//                    Set<XStream2.PluginMeta> loaded = Sets.newHashSet();
-//                    for (XStream2.PluginMeta update : shallUpdate) {
-//                        dynamicLoad(pluginManager, update, batch, shallUpdate, loaded);
-//                        // pluginManager.dynamicLoad(update.getPluginPackageFile(), true, batch);
-//                    }
-//
-//                    //if (tisInitialized) {
-//
-//                    pluginManager.start(batch);
-//                    } else {
-//                        TIS.clean();
-//                    }
+
                     final Set<String> relativePluginNames = cfgSnapshot.getPluginNames();
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
                     return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)

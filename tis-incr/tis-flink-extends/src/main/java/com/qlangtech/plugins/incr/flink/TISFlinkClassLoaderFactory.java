@@ -167,7 +167,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     try (FileChannel channel = raf.getChannel()) {
                         // 服务器节点级别通过文件来排他
                         try (FileLock fileLock = channel.tryLock()) {
-
+                            PluginAndCfgsSnapshot localSnaphsot = null;
                             try {
                                 TIS.permitInitialize = false;
                                 for (URL url : libraryURLs) {
@@ -178,19 +178,20 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                                 //  boolean tisInitialized = TIS.initialized;
                                 // PluginAndCfgsSnapshot cfgSnapshot = getTisAppName();
                                 logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
-                            } finally {
-                                TIS.permitInitialize = true;
-                            }
-                            // TIS.clean();
-                            // 这里只需要类不需要配置文件了
+
+                                // TIS.clean();
+                                // 这里只需要类不需要配置文件了
 //                            PluginMeta flinkPluginMeta
 //                                    = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
 //                                    , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
-                            PluginMeta flinkPluginMeta
-                                    = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
-                                    , Config.getMetaProps().getVersion(), Optional.empty());
-                            // 服务端不需要配置文件，只需要能够加载到类就行了
-                            PluginAndCfgsSnapshot localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
+                                PluginMeta flinkPluginMeta
+                                        = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
+                                        , Config.getMetaProps().getVersion(), Optional.empty());
+                                // 服务端不需要配置文件，只需要能够加载到类就行了
+                                localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
+                            } finally {
+                                TIS.permitInitialize = true;
+                            }
                             cfgSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(localCache));
 
 

@@ -1,0 +1,10 @@
+{
+	"topicPattern":{
+		"label":"Topic Pattern",
+		"placeholder":"sample.topic"
+	},
+	"subscriptionType":{
+		"help":"The Topic pattern from which the records will be read.",
+		"dftVal":"subscribe"
+	}
+}

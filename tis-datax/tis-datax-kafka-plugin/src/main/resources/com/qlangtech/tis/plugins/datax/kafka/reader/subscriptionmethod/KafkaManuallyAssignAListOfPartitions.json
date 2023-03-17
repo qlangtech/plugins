@@ -1,0 +1,10 @@
+{
+	"subscriptionType":{
+		"help":"Manually assign a list of partitions to this consumer. This interface does not allow for incremental assignment and will replace the previous assignment (if there is one).\nIf the given list of topic partitions is empty, it is treated the same as unsubscribe().",
+		"dftVal":"assign"
+	},
+	"topicPartitions":{
+		"label":"List of topic:partition Pairs",
+		"placeholder":"sample.topic:0, sample.topic:1"
+	}
+}

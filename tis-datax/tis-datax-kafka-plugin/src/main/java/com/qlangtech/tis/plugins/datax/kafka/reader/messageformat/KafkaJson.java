@@ -16,17 +16,25 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.TestTISFlinkClassLoaderFactory;
-import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugins.datax.kafka.reader.messageformat;
 
-/**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-05 14:46
- **/
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestFlinkCol.class, TestTISFlinkClassLoaderFactory.class})
-public class TestAll {
+public class KafkaJson extends KafkaMessageFormat {
+
+    @Override
+    public String getDeserializationType() {
+        return "JSON";
+    }
+
+    @TISExtension
+    public static class DefaultDescriptor extends Descriptor<KafkaMessageFormat> {
+        @Override
+        public String getDisplayName() {
+            return "JSON";
+        }
+    }
 }

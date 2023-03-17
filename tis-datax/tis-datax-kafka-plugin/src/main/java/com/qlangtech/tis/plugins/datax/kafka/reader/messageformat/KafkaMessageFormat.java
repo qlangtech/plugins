@@ -16,17 +16,14 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.TestTISFlinkClassLoaderFactory;
-import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugins.datax.kafka.reader.messageformat;
+
+import com.qlangtech.tis.extension.Describable;
 
 /**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-05 14:46
- **/
+ *
+ */
+public abstract class KafkaMessageFormat implements Describable<KafkaMessageFormat> {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestFlinkCol.class, TestTISFlinkClassLoaderFactory.class})
-public class TestAll {
+    public abstract String getDeserializationType();
 }

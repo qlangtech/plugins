@@ -16,31 +16,12 @@
  *   limitations under the License.
  */
 
-package com.alibaba.datax.plugin.writer.oraclewriter;
+package com.qlangtech.tis.plugins.datax.kafka.writer;
 
-import com.alibaba.datax.common.util.Configuration;
-import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
+public enum TISKafkaProtocol {
 
-/**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-08-07 11:17
- **/
-public class TISOracleWriter extends OracleWriter {
-    public static class Job extends OracleWriter.Job {
-        @Override
-        public void init() {
-            Configuration cfg = super.getPluginJobConf();
-            // 判断表是否存在，如果不存在则创建表
-            try {
-                RdbmsWriter.initWriterTable(this.containerContext,cfg);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            super.init();
-        }
-    }
+  PLAINTEXT,
+  SASL_PLAINTEXT,
+  SASL_SSL
 
-    public static class Task extends OracleWriter.Task {
-
-    }
 }

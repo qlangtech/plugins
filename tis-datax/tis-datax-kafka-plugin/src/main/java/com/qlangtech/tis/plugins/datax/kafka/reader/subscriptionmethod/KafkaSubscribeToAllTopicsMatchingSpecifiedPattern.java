@@ -29,8 +29,10 @@ public class KafkaSubscribeToAllTopicsMatchingSpecifiedPattern extends KafkaSubs
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String topicPattern;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String subscriptionType;
+    @Override
+    public String getSubscriptionType() {
+        return "subscribe";
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<KafkaSubscriptionMethod> {

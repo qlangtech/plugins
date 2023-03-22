@@ -69,6 +69,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -142,7 +143,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, IExecChainContext execChainContext, ITaskContext tskContext
             , IJoinTaskStatus joinTaskStatus
-            , IDataSourceFactoryGetter dsGetter, IPrimaryTabFinder primaryTabFinder) {
+            , IDataSourceFactoryGetter dsGetter, Supplier<IPrimaryTabFinder> primaryTabFinder) {
         JoinHiveTask joinHiveTask = new JoinHiveTask(nodeMeta, isFinalNode, primaryTabFinder
                 , joinTaskStatus, this.getFs().getFileSystem(), getEngineType(), dsGetter);
         //  joinHiveTask.setTaskContext(tskContext);

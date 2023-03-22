@@ -85,7 +85,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, OperatorConf writer, Map<String, Object> params, final String targetTabName) {
+            , BasicDataXRdbmsWriter dataXWriter, Map<String, Object> params, final String targetTabName) {
         DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
         DataXDorisWriter dataxWriter = (DataXDorisWriter) dataXWriter;
 
@@ -111,7 +111,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         params.put(DorisKeys.DATABASE_KEY, dsFactory.dbName);
         params.put(DorisKeys.TABLE_KEY, targetTabName);
 
-        super.setParameter(dsFactory, dataXWriter, writer, params, targetTabName);
+        super.setParameter(dsFactory, dataXWriter, params, targetTabName);
     }
 
 

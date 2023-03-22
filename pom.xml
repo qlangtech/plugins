@@ -25,12 +25,12 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis</artifactId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
     </parent>
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-plugin-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.7.0</version>
+    <version>3.7.1</version>
     <name>TIS Plugin Parent POM</name>
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
@@ -56,7 +56,7 @@
         <module>tis-plugin-test/customer-plugin-test</module>
 
 
-        <module>tis-kafka-plugin</module>
+<!--        <module>tis-kafka-plugin</module>-->
 
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>

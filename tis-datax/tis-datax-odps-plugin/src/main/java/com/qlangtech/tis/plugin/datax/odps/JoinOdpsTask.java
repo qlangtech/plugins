@@ -47,6 +47,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -60,7 +61,7 @@ public class JoinOdpsTask extends HiveTask {
 
     public JoinOdpsTask(DataXOdpsWriter odpsWriter, IDataSourceFactoryGetter dsFactoryGetter,
                         ISqlTask nodeMeta, boolean isFinalNode
-            , IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
+            , Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
         super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.odpsWriter = odpsWriter;
     }

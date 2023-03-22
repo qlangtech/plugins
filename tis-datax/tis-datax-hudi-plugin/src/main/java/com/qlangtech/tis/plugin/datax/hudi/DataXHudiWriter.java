@@ -176,11 +176,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return this.partitionedBy;
     }
 
-//    @Override
-//    public StringBuffer generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-//        return null;
-//    }
-
     @TISExtension()
     public static class DefaultDescriptor extends HdfsWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
         private transient SuFormProperties rewriteSubFormProperties;
@@ -250,11 +245,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
-//            String overwriteSubField = IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
-//                    , DataXHudiWriter.class.getSimpleName() + "."
-//                            + subformProps.getSubFormFieldName() + IDataxProcessor.DATAX_CREATE_DATAX_CFG_FILE_NAME_SUFFIX, true);
-//            JSONObject subField = JSON.parseObject(overwriteSubField);
-//            final String targetClass = subField.getString(SubForm.FIELD_DES_CLASS);
             Class targetClass = com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.class;
             return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
                     , "subForm clazz:" + targetClass + " can not find relevant Descriptor");

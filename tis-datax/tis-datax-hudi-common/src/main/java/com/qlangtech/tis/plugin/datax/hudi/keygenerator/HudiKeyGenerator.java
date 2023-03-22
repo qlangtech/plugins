@@ -133,7 +133,7 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
 
 
     public static List<Option> getPtCandidateFields() {
-        return HudiSelectedTab.getContextTableCols((cols) -> cols.stream()
+        return SelectedTab.getContextTableCols((cols) -> cols.stream()
                 .filter((col) -> {
                     switch (col.getType().getCollapse()) {
                         // case STRING:

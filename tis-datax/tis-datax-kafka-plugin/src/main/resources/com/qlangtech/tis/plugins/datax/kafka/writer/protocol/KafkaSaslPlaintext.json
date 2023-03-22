@@ -1,7 +1,4 @@
 {
-	"securityProtocol":{
-		"dftVal":"SASL_PLAINTEXT"
-	},
 	"saslMechanism":{
 		"help":"SASL mechanism used for client connections. This may be any mechanism for which a security provider is available.",
 		"dftVal":"PLAIN",

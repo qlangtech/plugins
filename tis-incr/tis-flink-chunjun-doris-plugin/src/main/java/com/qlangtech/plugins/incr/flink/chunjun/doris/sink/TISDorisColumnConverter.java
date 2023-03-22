@@ -43,17 +43,14 @@ import java.util.Map;
 public class TISDorisColumnConverter
         extends AbstractRowConverter<RowData, RowData, List<String>, DataType> {
 
-    private List<String> fullColumn;
-    private List<String> columnNames;
-    // private final DorisConf options;
 
     private static final String NULL_VALUE = "\\N";
 
     private final Map<String, Integer> col2ordMap;
 
-    private TISDorisColumnConverter(//DorisConf options,
-                                    Map<String, Integer> col2ordMap,
-                                    int fieldCount, List<IDeserializationConverter> toInternalConverters
+    private TISDorisColumnConverter(
+            Map<String, Integer> col2ordMap,
+            int fieldCount, List<IDeserializationConverter> toInternalConverters
             , List<Pair<ISerializationConverter<List<String>>, DataType>> toExternalConverters) {
         super(fieldCount, toInternalConverters, toExternalConverters);
         this.col2ordMap = col2ordMap;
@@ -62,8 +59,6 @@ public class TISDorisColumnConverter
 
     public static TISDorisColumnConverter create(TableCols<IColMetaGetter> sinkTabCols  //DorisConf options
     ) {
-        // FieldConf col = null;
-        //DataType dataType = null;
         Map<String, Integer> col2ordMap = Maps.newHashMap();
 
         List<Pair<ISerializationConverter<List<String>>, DataType>>
@@ -74,42 +69,14 @@ public class TISDorisColumnConverter
         int fieldCount = 0;
         List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(sinkTabCols.getCols());
         for (FlinkCol col : flinkCols) {
-
-            // dataType = cmeta.getType();
             col2ordMap.put(col.name, fieldCount);
             extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(col));
             toExternalConverters.add(Pair.of(extrnalColConerter, col.colType));
             fieldCount++;
 
         }
-
-
-//        for (IColMetaGetter cmeta : sinkTabCols.getCols()) {
-//
-//            dataType = cmeta.getType();
-//            col2ordMap.put(cmeta.getName(), fieldCount);
-//            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dataType));
-//            toExternalConverters.add(Pair.of(extrnalColConerter, dataType));
-//            fieldCount++;
-//        }
-
-//        int fieldCount = options.getColumn().size();
-//        for (int i = 0; i < options.getColumn().size(); i++) {
-//            col = options.getColumn().get(i);
-//            dorisType = col.getType();
-//            col2ordMap.put(col.getName(), i);
-//            extrnalColConerter = wrapNullableExternalConverter(getSerializationConverter(dorisType));
-//            toExternalConverters.add(Pair.of(extrnalColConerter, dorisType));
-//        }
         return new TISDorisColumnConverter(col2ordMap, fieldCount, toInternalConverters, toExternalConverters);
     }
-
-//    public TISDorisColumnConverter(DorisConf options) {
-//        super(options.getColumn().size());
-//        this.options = options;
-//
-//    }
-
 
     @Override
     public List<ColVal> getValByColName(RowData value, List<String> cols) {
@@ -135,25 +102,14 @@ public class TISDorisColumnConverter
 
     @Override
     public RowData toInternal(RowData input) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<String> toExternal(RowData rowData, List<String> joiner) throws Exception {
-//        if (fullColumn.size() == options.getColumn().size()) {
         for (int index = 0; index < rowData.getArity(); index++) {
             toExternalConverters.get(index).serialize(rowData, index, joiner);
         }
-//        } else {
-//        for (String columnName : fullColumn) {
-//            if (columnNames.contains(columnName)) {
-//                int index = columnNames.indexOf(columnName);
-//                toExternalConverters.get(index).serialize(rowData, index, joiner);
-//            } else {
-//                joiner.add(NULL_VALUE);
-//            }
-//        }
-        //}
         return joiner;
     }
 
@@ -173,7 +129,6 @@ public class TISDorisColumnConverter
             }
         });
     }
-
 
 
     private static ISerializationConverter<List<String>> getSerializationConverter(FlinkCol col) {
@@ -196,11 +151,9 @@ public class TISDorisColumnConverter
     }
 
     public void setFullColumn(List<String> fullColumn) {
-        this.fullColumn = fullColumn;
     }
 
     public void setColumnNames(List<String> columnNames) {
-        this.columnNames = columnNames;
     }
 
 }

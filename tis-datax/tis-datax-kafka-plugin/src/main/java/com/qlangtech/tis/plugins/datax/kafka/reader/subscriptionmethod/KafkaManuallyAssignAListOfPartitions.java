@@ -29,8 +29,10 @@ public class KafkaManuallyAssignAListOfPartitions extends KafkaSubscriptionMetho
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String topicPartitions;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String subscriptionType;
+    @Override
+    public String getSubscriptionType() {
+        return "assign";
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<KafkaSubscriptionMethod> {

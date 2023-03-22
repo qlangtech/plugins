@@ -69,6 +69,7 @@ import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -221,13 +222,13 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
         return new RowDataSinkFunc(tabName
                 , sinkFunc.getSinkFunction()
-                , AbstractRowDataMapper.getAllTabColsMeta(sinkFunc.tableCols.getCols())
+                , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
                 , this.parallelism);
     }
 
 
-    private CreateChunjunSinkFunctionResult createSinFunctionResult(
+    protected CreateChunjunSinkFunctionResult createSinFunctionResult(
             IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName, boolean shallInitSinkTable) {
 
         AtomicReference<Object[]> exceptionLoader = new AtomicReference<>();
@@ -267,28 +268,16 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     protected abstract boolean supportUpsetDML();
 
-    /**
-     * @param dbName
-     * @param targetTabName
-     * @param tab
-     * @param jdbcUrl
-     * @param dsFactory
-     * @param dataXWriter
-     * @return
-     * @see JdbcSinkFactory
-     */
-    private CreateChunjunSinkFunctionResult createSinkFunction(
-            String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
-            , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
+    protected final SyncConf createSyncConf(SelectedTab tab, Supplier<Map<String, Object>> paramsCreator) {
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
         ContentConf content = new ContentConf();
         OperatorConf writer = new OperatorConf();
         writer.setName("writer");
-        Map<String, Object> params = Maps.newHashMap();
-        params.put("username", dsFactory.getUserName());
-        params.put("password", dsFactory.getPassword());
+        Map<String, Object> params = paramsCreator.get();
+        writer.setParameter(params);
+
 
         IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
         if (desc.getSelectedTableExtendDescriptor() != null) {
@@ -313,15 +302,84 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         params.put("batchSize", this.batchSize);
         params.put("flushIntervalMills", this.flushIntervalMills);
         params.put("semantic", this.semantic);
-        Map<String, Object> conn = Maps.newHashMap();
-        conn.put("jdbcUrl", jdbcUrl);
-        conn.put("table", Lists.newArrayList(targetTabName));
-        setSchema(conn, dbName, dsFactory);
-        params.put("connection", Lists.newArrayList(conn));
-        setParameter(dsFactory, dataXWriter, writer, params, targetTabName);
+
         content.setWriter(writer);
         jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
         syncConf.setJob(jobConf);
+        return syncConf;
+    }
+
+    /**
+     * @param dbName
+     * @param targetTabName
+     * @param tab
+     * @param jdbcUrl
+     * @param dsFactory
+     * @param dataXWriter
+     * @return
+     * @see JdbcSinkFactory
+     */
+    private CreateChunjunSinkFunctionResult createSinkFunction(
+            String dbName, final String targetTabName, SelectedTab tab, String jdbcUrl
+            , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
+
+
+        SyncConf syncConf = createSyncConf(tab, () -> {
+            Map<String, Object> params = Maps.newHashMap();
+            params.put("username", dsFactory.getUserName());
+            params.put("password", dsFactory.getPassword());
+
+
+            Map<String, Object> conn = Maps.newHashMap();
+            conn.put("jdbcUrl", jdbcUrl);
+            conn.put("table", Lists.newArrayList(targetTabName));
+            setSchema(conn, dbName, dsFactory);
+            params.put("connection", Lists.newArrayList(conn));
+            setParameter(dsFactory, dataXWriter, params, targetTabName);
+
+            return params;
+        });
+
+//        JobConf jobConf = new JobConf();
+//        ContentConf content = new ContentConf();
+//        OperatorConf writer = new OperatorConf();
+//        writer.setName("writer");
+//        Map<String, Object> params = Maps.newHashMap();
+//        params.put("username", dsFactory.getUserName());
+//        params.put("password", dsFactory.getPassword());
+//
+//        IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
+//        if (desc.getSelectedTableExtendDescriptor() != null) {
+//            // 有扩展才进行设置，不然会空指针
+//            ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
+//        }
+//
+//        List<Map<String, Object>> cols = Lists.newArrayList();
+//        Map<String, Object> col = null;
+//
+//        //FIXME: 构建sink端的列不应该使用Source端的colMeta信息，你该需要重构
+//        for (CMeta cm : tab.getCols()) {
+//            col = Maps.newHashMap();
+//            col.put("name", cm.getName());
+//            col.put("type", parseType(cm));
+//            cols.add(col);
+//        }
+//
+//
+//        params.put(ConfigConstant.KEY_COLUMN, cols);
+//        params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+//        params.put("batchSize", this.batchSize);
+//        params.put("flushIntervalMills", this.flushIntervalMills);
+//        params.put("semantic", this.semantic);
+//        Map<String, Object> conn = Maps.newHashMap();
+//        conn.put("jdbcUrl", jdbcUrl);
+//        conn.put("table", Lists.newArrayList(targetTabName));
+//        setSchema(conn, dbName, dsFactory);
+//        params.put("connection", Lists.newArrayList(conn));
+//        setParameter(dsFactory, dataXWriter, writer, params, targetTabName);
+//        content.setWriter(writer);
+//        jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
+//        syncConf.setJob(jobConf);
         CreateChunjunSinkFunctionResult sinkFunc
                 = createChunjunSinkFunction(jdbcUrl, targetTabName, dsFactory, dataXWriter, syncConf);
         return sinkFunc;
@@ -333,8 +391,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     protected void setParameter(BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter
-            , OperatorConf writer, Map<String, Object> params, final String targetTabName) {
-        writer.setParameter(params);
+            , Map<String, Object> params, final String targetTabName) {
     }
 
     private CreateChunjunSinkFunctionResult createChunjunSinkFunction(
@@ -364,7 +421,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         private TableCols tableCols;
 
         public void initialize() {
-            sinkFactory.createSink(null);
+            Objects.requireNonNull(sinkFactory, "sinkFactory can not be null").createSink(null);
         }
 
         public SinkFunction<RowData> getSinkFunction() {
@@ -373,6 +430,10 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
         public int getParallelism() {
             return this.parallelism;
+        }
+
+        public void setParallelism(int parallelism) {
+            this.parallelism = parallelism;
         }
 
         public void setSinkFunction(SinkFunction<RowData> sinkFunction) {
@@ -507,7 +568,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
      * ===========================================================
      */
     @Override
-    public final IStreamTableMeta getStreamTableMeta(String tableName) {
+    public IStreamTableMeta getStreamTableMeta(String tableName) {
 
         // DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
         BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) DataxWriter.load(null, this.dataXName);// dataXProcessor.getWriter(null);

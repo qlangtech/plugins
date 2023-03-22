@@ -67,13 +67,13 @@ public abstract class HiveTask extends AdapterTask {
     protected final boolean isFinalNode;
     protected final IDataSourceFactoryGetter dsFactoryGetter;
 
-    private final IPrimaryTabFinder erRules;
+    private final  Supplier<IPrimaryTabFinder> erRules;
 
     /**
      * @param joinTaskStatus
      */
     protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode
-            , IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus) {
+            ,  Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
@@ -189,9 +189,13 @@ public abstract class HiveTask extends AdapterTask {
 
         // 处理历史表，多余的partition要删除，表不同了需要删除重建
         boolean dryRun = this.getExecContext().isDryRun();
+        TabPartitions dumpPartition = this.getDumpPartition();
+        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
         processJoinTask(rewriteSql);
         if (dryRun) {
             logger.info("task:{}, as DryRun mode skip remaining tasks", taskname);
+            dumpPartition.putPt(newCreateTab, rewriteSql.primaryTable);
+            joinTaskStatus.setComplete(true);
             return;
         }
 
@@ -200,7 +204,7 @@ public abstract class HiveTask extends AdapterTask {
         this.validateDependenciesNode(taskname);
         final DataSourceMeta.JDBCConnection conn = this.getTaskContextObj();
         DataSourceFactory dsFactory = dsFactoryGetter.getDataSourceFactory();
-        final EntityName newCreateTab = EntityName.parse(this.nodeMeta.getExportName());
+
         //final String newCreatePt = primaryTable.getTabPartition();
         this.getRewriteSql();
         List<String> allpts = null;
@@ -208,8 +212,8 @@ public abstract class HiveTask extends AdapterTask {
             logger.info("\n execute hive task:{} \n{}", taskname, insertSql);
             executeSql(insertSql, conn);
             // 将当前的join task的partition设置到当前上下文中
-            TabPartitions dumpPartition = this.getDumpPartition();
-            dumpPartition.putPt(newCreateTab, this.rewriteSql.primaryTable);
+
+            dumpPartition.putPt(newCreateTab, rewriteSql.primaryTable);
             allpts = getHistoryPts(dsFactory, conn, newCreateTab);
         } catch (Exception e) {
             // TODO 一旦有异常要将整个链路执行都停下来

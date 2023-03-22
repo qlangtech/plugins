@@ -45,6 +45,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -175,7 +176,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, IExecChainContext tplContext
             , ITaskContext tskContext, IJoinTaskStatus joinTaskStatus, IDataSourceFactoryGetter dsGetter
-            , IPrimaryTabFinder primaryTabFinder) {
+            , Supplier<IPrimaryTabFinder> primaryTabFinder) {
 
         JoinOdpsTask odpsTask = new JoinOdpsTask(this, dsGetter, nodeMeta, isFinalNode, primaryTabFinder, joinTaskStatus);
         odpsTask.setContext(tplContext, tskContext);

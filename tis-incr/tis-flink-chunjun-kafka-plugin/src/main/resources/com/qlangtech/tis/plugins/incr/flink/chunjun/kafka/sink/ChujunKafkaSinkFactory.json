@@ -1,0 +1,8 @@
+{
+  "batchSize": {
+    "disable": true
+  },
+  "flushIntervalMills": {
+    "disable": true
+  }
+}

@@ -39,59 +39,60 @@ import java.util.function.Predicate;
  **/
 public class DataXKafkaReader extends DataxReader {
 
-
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {})
-    public Boolean enableAutoCommit;
-
+    @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String bootstrapServers;
     @FormField(ordinal = 1, validate = {})
     public KafkaMessageFormat MessageFormat;
+
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public KafkaProtocol protocol;
+
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public KafkaSubscriptionMethod subscription;
+
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {})
+    public Boolean enableAutoCommit;
+
 
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer maxRecordsProcess;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {})
     public String clientDnsLookup;
 
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer requestTimeoutMs;
 
-    @FormField(ordinal = 5, validate = {Validator.require})
-    public KafkaSubscriptionMethod methodSubscription;
-
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String bootstrapServers;
 
     @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {})
     public String clientId;
 
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer pollingTime;
 
     @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer retryBackoffMs;
 
-    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer repeatedCalls;
 
-    @FormField(ordinal = 11, validate = {Validator.require})
-    public KafkaProtocol protocol;
 
-    @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer autoCommitIntervalMs;
 
-    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {}, advance = true)
     public String autoOffsetReset;
 
-    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
     public String groupId;
 
-    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
     public String testTopic;
 
-    @FormField(ordinal = 16, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    @FormField(ordinal = 16, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer maxPollRecords;
 
-    @FormField(ordinal = 17, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    @FormField(ordinal = 17, type = FormFieldType.INT_NUMBER, validate = {Validator.integer}, advance = true)
     public Integer receiveBufferBytes;
 
     @Override
@@ -123,8 +124,18 @@ public class DataXKafkaReader extends DataxReader {
         }
 
         @Override
+        public boolean isSupportBatch() {
+            return false;
+        }
+
+        @Override
         public EndType getEndType() {
             return IEndTypeGetter.EndType.Kafka;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return getEndType().name();
         }
     }
 }

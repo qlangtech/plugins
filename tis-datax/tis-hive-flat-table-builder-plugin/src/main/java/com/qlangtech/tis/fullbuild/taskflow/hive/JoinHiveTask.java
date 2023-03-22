@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -61,7 +62,7 @@ public class JoinHiveTask extends HiveTask {
     // private final IFs2Table fs2Table;
     private final MREngine mrEngine;
 
-    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
+    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus
             , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter) {
         super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;

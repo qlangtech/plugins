@@ -225,7 +225,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
 
 
-            EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir);
+            EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir).anyTimes();
 
             DataxProcessor.processorGetter = (name) -> {
                 return dataxProcessor;
@@ -241,11 +241,15 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
 
             // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName(dataXName), MYSQL_CONTAINER);
-            BasicDataXRdbmsWriter dataXWriter = createDataXWriter();
+            DataxWriter dataXWriter = createDataXWriter();
+
+            if (dataXWriter instanceof BasicDataXRdbmsWriter) {
+                BasicDataXRdbmsWriter rdbmsWriter = (BasicDataXRdbmsWriter) dataXWriter;
+                rdbmsWriter.autoCreateTable = true;
+                rdbmsWriter.dataXName = dataXName;
+            }
 
 
-            dataXWriter.autoCreateTable = true;
-            dataXWriter.dataXName = dataXName;
             // dataXWriter.maxBatchRows = 100;
             DataxWriter.dataxWriterGetter = (xName) -> {
                 Assert.assertEquals(dataXName, xName);
@@ -253,11 +257,13 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             };
 
             // Assert.assertTrue("autoCreateTable must be true", dataXWriter.autoCreateTable);
-            CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
-            Assert.assertNotNull("createDDL can not be empty", createDDL);
-            log.info("create table ddl:\n{}", createDDL);
-            FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
-
+            CreateTableSqlBuilder.CreateDDL createDDL = null;
+            if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
+                createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
+                Assert.assertNotNull("createDDL can not be empty", createDDL);
+                log.info("create table ddl:\n{}", createDDL);
+                FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
+            }
             // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 
             //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
@@ -294,21 +300,24 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 //            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
 //                jdbcUrls[0] = jdbcUrl;
 //            });
-
-            this.getDsFactory().visitFirstConnection((c) -> {
-                Connection conn = c.getConnection();
-                try (Statement statement = conn.createStatement()) {
-                    // + " where id='" + pk + "'"
-                    try (ResultSet resultSet = statement.executeQuery(createDDL.getSelectAllScript())) {
-                        if (resultSet.next()) {
-                            IResultRows.printRow(resultSet);
-                            assertResultSetFromStore(resultSet);
-                        } else {
-                            Assert.fail("have not find row with id=" + pk);
+            if (createDDL != null) {
+                final CreateTableSqlBuilder.CreateDDL ddl = createDDL;
+                this.getDsFactory().visitFirstConnection((c) -> {
+                    Connection conn = c.getConnection();
+                    try (Statement statement = conn.createStatement()) {
+                        // + " where id='" + pk + "'"
+                        try (ResultSet resultSet = statement.executeQuery(ddl.getSelectAllScript())) {
+                            if (resultSet.next()) {
+                                IResultRows.printRow(resultSet);
+                                assertResultSetFromStore(resultSet);
+                            } else {
+                                Assert.fail("have not find row with id=" + pk);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
+
 
             this.verifyAll();
         } catch (Throwable e) {
@@ -426,7 +435,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected abstract ChunjunSinkFactory getSinkFactory();
 
-    protected abstract BasicDataXRdbmsWriter createDataXWriter();
+    protected abstract DataxWriter createDataXWriter();
 
     private DTO createDTO(DTO.EventType eventType, Consumer<Map<String, Object>>... consumer) {
         DTO d = new DTO();

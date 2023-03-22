@@ -129,7 +129,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
     private void makeDataDirUseable() {
         try {
-            FileUtils.forceMkdir(Config.getDataDir(false));
+
+            FileUtils.forceMkdir(PluginAndCfgsSnapshot.getPluginRootDir());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

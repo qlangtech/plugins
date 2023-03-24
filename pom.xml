@@ -56,7 +56,7 @@
         <module>tis-plugin-test/customer-plugin-test</module>
 
 
-<!--        <module>tis-kafka-plugin</module>-->
+        <!--        <module>tis-kafka-plugin</module>-->
 
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>
@@ -183,6 +183,14 @@
                     <exclusion>
                         <groupId>commons-dbcp</groupId>
                         <artifactId>commons-dbcp</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.qlangtech.tis</groupId>
+                        <artifactId>tis-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.qlangtech.tis</groupId>
+                        <artifactId>ibator</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -863,7 +871,7 @@
                 <executions>
                     <execution>
                         <id>display-info</id>
-<!--                        <phase>validate</phase>-->
+                        <!--                        <phase>validate</phase>-->
                         <phase>none</phase>
                         <goals>
                             <goal>display-info</goal>

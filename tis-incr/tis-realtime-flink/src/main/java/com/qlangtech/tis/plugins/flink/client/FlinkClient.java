@@ -90,7 +90,9 @@ public class FlinkClient {
                                 org.apache.flink.client.ClientUtils
                                         .waitUntilJobInitializationFinished(
                                                 () -> (JobStatus) clusterClient.getJobStatus(jobId).get(),
-                                                () -> (JobResult) clusterClient.requestJobResult(jobId).get(),
+                                                () -> {
+                                                    return (JobResult) clusterClient.requestJobResult(jobId).get();
+                                                },
                                                 program.getUserCodeClassLoader());
                                 return jobId;
                             })).get();

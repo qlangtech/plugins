@@ -319,7 +319,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor
-            implements FormFieldType.IMultiSelectValidator, SubForm.ISubFormItemValidate {
+            implements FormFieldType.IMultiSelectValidator {
         public BasicDataXRdbmsReaderDescriptor() {
             super();
         }
@@ -345,24 +345,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             return true;
         }
 
-        @Override
-        public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context
-                , BaseSubFormProperties props, IPropertyType.SubFormFilter filter, AttrVals formData) {
 
-            Integer maxReaderTabCount = Integer.MAX_VALUE;
-            try {
-                maxReaderTabCount = Integer.parseInt(filter.uploadPluginMeta.getExtraParam(ESTableAlias.MAX_READER_TABLE_SELECT_COUNT));
-            } catch (Throwable e) {
-
-            }
-
-            if (formData.size() > maxReaderTabCount) {
-                msgHandler.addErrorMessage(context, "导入表不能超过" + maxReaderTabCount + "张");
-                return false;
-            }
-
-            return true;
-        }
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {

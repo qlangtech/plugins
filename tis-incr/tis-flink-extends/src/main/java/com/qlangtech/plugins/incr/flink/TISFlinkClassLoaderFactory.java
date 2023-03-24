@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.ITPIArtifact;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.UberClassLoader;
@@ -31,7 +32,6 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
 import org.apache.flink.runtime.execution.librarycache.FlinkUserCodeClassLoaders;
@@ -51,8 +51,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import static org.apache.flink.util.FlinkUserCodeClassLoader.NOOP_EXCEPTION_HANDLER;
@@ -81,43 +79,35 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
             try {
                 //
                 PluginMeta flinkPluginMeta = null;
-                String tisAppName = null;
+                TargetResName tisAppName = null;
+                PluginAndCfgsSnapshot cfg = null;
                 for (URL cp : libraryURLs) {
                     // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
+                    cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), cp.openStream());
+                    tisAppName = cfg.getAppName();
 
-                    JarFile jar = new JarFile(new File(cp.toURI()));
-                    Manifest manifest = jar.getManifest();
-
-                    tisAppName = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), manifest);
-                    //  String entryPrefix = tisAppName + "/";
-
-//                    File pluginLibDir = Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName, true);
-//                    appPluginDir = new File(pluginLibDir, "../..");
-//                    appPluginDir = appPluginDir.toPath().normalize().toFile();
-                    flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName
+                    flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()
                             , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
                     break;
                 }
-
-                if (StringUtils.isBlank(tisAppName)) {
+                Objects.requireNonNull(cfg, "cfg can not be null");
+                if (tisAppName == null) {
                     throw new IllegalStateException("param tisAppName can not be empty");
                 }
                 if (flinkPluginMeta == null || !flinkPluginMeta.getPluginPackageFile().exists()) {
                     throw new IllegalStateException("appPluginDir can not be empty,path:"
                             + flinkPluginMeta.getPluginPackageFile().getAbsolutePath());
                 }
-                final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName;
+                final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName();
                 ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
 
                 pluginManager.dynamicLoad(ITPIArtifact.create(shotName, flinkPluginMeta.classifier)
                         , flinkPluginMeta.getPluginPackageFile(), true, null);
-//                ClassicPluginStrategy.removeByClassNameInFinders(Config.getGenerateParentPackage()
-//                        + "/" + tisAppName + "/" + StreamComponentCodeGenerator.getIncrScriptClassName(tisAppName));
 
                 return FlinkUserCodeClassLoaders.create(
                         classLoaderResolveOrder,
                         libraryURLs,
-                        pluginManager.uberClassLoader,
+                        new UberClassLoader(pluginManager, cfg.getPluginNames()),
                         alwaysParentFirstPatterns,
                         NOOP_EXCEPTION_HANDLER,
                         checkClassLoaderLeak);
@@ -182,9 +172,6 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
                                 // TIS.clean();
                                 // 这里只需要类不需要配置文件了
-//                            PluginMeta flinkPluginMeta
-//                                    = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
-//                                    , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
                                 PluginMeta flinkPluginMeta
                                         = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
                                         , Config.getMetaProps().getVersion(), Optional.empty());

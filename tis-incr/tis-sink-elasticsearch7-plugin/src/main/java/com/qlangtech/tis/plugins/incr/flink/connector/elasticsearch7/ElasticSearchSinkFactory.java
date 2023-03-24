@@ -138,12 +138,12 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         }
         Objects.requireNonNull(tab, "tab ca not be null");
 
-
+        final List<FlinkCol> colsMeta = AbstractRowDataMapper.getAllTabColsMeta(tab.getCols());
         ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
                 cols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
-                , AbstractRowDataMapper.getAllTabColsMeta(tab.getCols())
+                , colsMeta
                 , firstPK.get().getName()
                 , dataXWriter.getIndexName()));
 
@@ -183,7 +183,8 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build()
-                        , Collections.emptyList(), true, DEFAULT_PARALLELISM));
+                        , colsMeta
+                        , true, DEFAULT_PARALLELISM));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {

@@ -2,8 +2,9 @@
   "name": "elasticsearchwriter",
   "parameter": {
     "endpoint": "${writer.endpoint}",
+#if($writer.containAuth)
     "accessId": "${writer.userName}",
-    "accessKey": "${writer.password}",
+    "accessKey": "${writer.password}",#end
     "index": "${writer.index}",
 #if($writer.containCleanup)    "cleanup": ${writer.cleanup}, #end
 #if($writer.containTrySize)    "trySize": ${writer.trySize}, #end

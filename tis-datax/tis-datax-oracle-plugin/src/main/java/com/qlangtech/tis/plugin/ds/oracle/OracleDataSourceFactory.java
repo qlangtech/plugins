@@ -222,9 +222,10 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
                     }
                 }
 
-                if ("DATE".equalsIgnoreCase(type.typeName)) {
-                    return new DataType(Types.DATE, type.typeName, type.columnSize);
-                }
+//                if ("DATE".equalsIgnoreCase(type.typeName)) {
+                // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
+//                    return new DataType(Types.DATE, type.typeName, type.columnSize);
+//                }
 
 
                 return type;

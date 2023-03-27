@@ -76,6 +76,7 @@
         <module>tis-flink-chunjun-clickhouse-plugin</module>
         <module>tis-flink-chunjun-starrocks-plugin</module>
         <module>tis-flink-chunjun-kafka-plugin</module>
+        <module>tis-flink-chunjun-rabbitmq-plugin</module>
 
 
     </modules>

@@ -42,6 +42,7 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -343,6 +344,11 @@ public abstract class CUDCDCTestSuit {
             @Override
             public IDataxGlobalCfg getDataXGlobalCfg() {
                 throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public boolean isRDBMS2RDBMS(IPluginContext pluginCtx) {
+                return true;
             }
 
             @Override

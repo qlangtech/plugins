@@ -83,7 +83,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 PluginAndCfgsSnapshot cfg = null;
                 for (URL cp : libraryURLs) {
                     // 从对应的资源中将对应的plugin的目录解析出来，放到data目录下去
-                    cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), cp.openStream());
+                    cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), cp.openStream(), false);
                     tisAppName = cfg.getAppName();
 
                     flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()

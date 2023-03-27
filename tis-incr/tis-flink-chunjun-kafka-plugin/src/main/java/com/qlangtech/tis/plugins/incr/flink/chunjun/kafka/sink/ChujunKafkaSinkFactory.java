@@ -50,8 +50,10 @@ import com.qlangtech.tis.plugins.datax.kafka.writer.DataXKafkaWriter;
 import com.qlangtech.tis.plugins.datax.kafka.writer.KafkaSelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.flink.types.RowKind;
 import org.apache.flink.util.Preconditions;
 
 import java.util.List;
@@ -130,9 +132,26 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
                         new CustomerFlinkPartition<>(),
                         keyConverter,
                         KafkaColumnConverter.create(this.syncConf, kafkaConf, serializationConverterFactory)) {
+
+                    private DTO.EventType parseEvnet(RowKind rowKind) {
+                        switch (rowKind) {
+                            case UPDATE_BEFORE:
+                                // return DTO.EventType.UPDATE_BEFORE;
+                                throw new IllegalStateException("unsupport type:" + rowKind);
+                            case UPDATE_AFTER:
+                                return DTO.EventType.UPDATE_AFTER;
+                            case DELETE:
+                                return DTO.EventType.DELETE;
+                            case INSERT:
+                                return DTO.EventType.ADD;
+                        }
+
+                        throw new IllegalStateException("illegal rowKind:" + rowKind);
+                    }
+
                     @Override
-                    public Map<String, Object> createRowVals(String tableName, Map<String, Object> data) {
-                        return DataXKafkaWriter.createRowVals(tableName, data);
+                    public Map<String, Object> createRowVals(String tableName, RowKind rowKind, Map<String, Object> data) {
+                        return DataXKafkaWriter.createRowVals(tableName, parseEvnet(rowKind), data);
                     }
                 };
             }
@@ -142,23 +161,6 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         sinkFuncRef.setSinkFactory(sinkFactory);
         sinkFuncRef.initialize();
         sinkFuncRef.setSinkCols(new TableCols(selectedTab.getCols()));
-        // DBConfig dbConfig = dsFactory.getDbConfig();
-//        dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-//            try {
-//                if (shallInitSinkTable) {
-//                    /**
-//                     * 需要先初始化表MySQL目标库中的表
-//                     */
-//                    dataXWriter.initWriterTable(targetTabName, Collections.singletonList(jdbcUrl));
-//                }
-//
-//// FIXME 这里不能用 MySQLSelectedTab
-//                sinkFuncRef.set(createSinkFunction(dbName, targetTabName, selectedTab, jdbcUrl, dsFactory, dataXWriter));
-//
-//            } catch (Throwable e) {
-//                exceptionLoader.set(new Object[]{jdbcUrl, e});
-//            }
-//        });
 
         //Objects.requireNonNull(sinkFuncRef.get(), "sinkFunc can not be null");
         sinkFuncRef.setParallelism(this.parallelism);
@@ -170,19 +172,10 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         return cm.getType();
     }
 
-//    @Override
-//    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, BasicDataSourceFactory dsFactory
-//            , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
-//        IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
-//        DataXKafkaWriter rocksWriter = (DataXKafkaWriter) dataXWriter;
-//
-//        final CreateChunjunSinkFunctionResult createSinkResult = createSinkFunctionResult(jdbcUrl, rocksWriter, dsFactory, targetTabName, syncConf, tabMeta, this);
-//        return createSinkResult;
-//    }
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override

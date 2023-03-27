@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
+import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
@@ -302,7 +303,7 @@ public class DataXKafkaWriter extends DataxWriter {
                 producer = kafkaFactory.getProducer();
 
                 final String key = UUID.randomUUID().toString();
-                final Map<String, Object> value = createRowVals("test"
+                final Map<String, Object> value = createRowVals("test", DTO.EventType.ADD
                         , ImmutableMap.of("test-key", "test-value"));
 
                 final RecordMetadata metadata = producer.send(new ProducerRecord<>(
@@ -340,11 +341,13 @@ public class DataXKafkaWriter extends DataxWriter {
     public static final String COLUMN_TABLE_NAME = "tableName";
     public static final String COLUMN_NAME_EMITTED_AT = "occure_time";
     public static final String COLUMN_NAME_DATA = "data";
+    public static final String COLUMN_EVENT_TYPE = "event";
 
-    public static Map<String, Object> createRowVals(String tableName, Map<String, Object> data) {
+    public static Map<String, Object> createRowVals(String tableName, DTO.EventType event, Map<String, Object> data) {
         final String key = UUID.randomUUID().toString();
         final Map<String, Object> value = (ImmutableMap.of(
                 COLUMN_NAME_ID, key,
+                COLUMN_EVENT_TYPE, event.getCollapse(),
                 COLUMN_TABLE_NAME, tableName,
                 COLUMN_NAME_EMITTED_AT, System.currentTimeMillis(),
                 COLUMN_NAME_DATA, data));

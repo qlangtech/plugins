@@ -110,7 +110,7 @@ public class DataXKafkaReader extends DataxReader {
         return null;
     }
 
-    @TISExtension
+   // @TISExtension
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
 
         @Override

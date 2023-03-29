@@ -29,7 +29,7 @@
 
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-flink-chunjun-rabbitmq-plugin</artifactId>
-    <packaging>tpi</packaging>
+<!--    <packaging>tpi</packaging>-->
 
     <dependencies>
 

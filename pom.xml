@@ -209,11 +209,11 @@
             <!--                <scope>provided</scope>-->
             <!--            </dependency>-->
 
-            <dependency>
-                <groupId>com.qlangtech.tis.tools</groupId>
-                <artifactId>tis-spark-extends-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.qlangtech.tis.tools</groupId>-->
+<!--                <artifactId>tis-spark-extends-api</artifactId>-->
+<!--                <version>${project.version}</version>-->
+<!--            </dependency>-->
 
             <dependency>
                 <groupId>org.easymock</groupId>

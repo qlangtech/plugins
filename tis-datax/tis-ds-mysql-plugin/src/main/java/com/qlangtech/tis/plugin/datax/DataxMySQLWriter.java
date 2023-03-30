@@ -25,7 +25,6 @@ import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -139,6 +138,9 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                                 script.append(ddl);
                             }
                         }
+                    } else {
+                        throw new IllegalStateException("table:" + tableMapper.getFrom()
+                                + " can not find physicsTabs in datasource:" + dsFactory.identityValue());
                     }
 
                 });
@@ -319,8 +321,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends RdbmsWriterDescriptor
-    {
+    public static class DefaultDescriptor extends RdbmsWriterDescriptor {
         public DefaultDescriptor() {
             super();
         }

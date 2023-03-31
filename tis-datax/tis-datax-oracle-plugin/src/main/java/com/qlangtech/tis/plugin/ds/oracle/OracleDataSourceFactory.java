@@ -22,12 +22,8 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -45,19 +41,25 @@ import static oracle.jdbc.OracleTypes.*;
  * @create: 2021-06-24 13:42
  **/
 @Public
-public class OracleDataSourceFactory extends BasicDataSourceFactory {
+public class OracleDataSourceFactory extends BasicDataSourceFactory implements DataSourceFactory.ISchemaSupported {
 
     public static final String ORACLE = "Oracle";
 
-//    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public Boolean asServiceName;
-//
-
-    @FormField(validate = Validator.require)
+    @FormField(validate = Validator.require, ordinal = 2)
     public ConnEntity connEntity;
 
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean allAuthorized;
+
+//    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public Boolean allAuthorized;
+
+    @FormField(ordinal = 8, validate = {Validator.require})
+    public Authorized allAuthorized;
+
+
+    @Override
+    public String getDBSchema() {
+        return StringUtils.trimToNull(allAuthorized.getSchema());
+    }
 
     @Override
     public String identityValue() {
@@ -83,14 +85,17 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     protected String getRefectTablesSql() {
-        if (allAuthorized != null && allAuthorized) {
-            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
-        } else {
-            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
-            // 带上 tablespace的话后续取colsMeta会取不出
-            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
 
-        }
+        return allAuthorized.getRefectTablesSql();
+
+//        if (allAuthorized != null && allAuthorized) {
+//            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
+//        } else {
+//            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
+//            // 带上 tablespace的话后续取colsMeta会取不出
+//            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
+//
+//        }
     }
 
     @Override

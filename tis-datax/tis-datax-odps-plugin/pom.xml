@@ -36,6 +36,12 @@
             <groupId>com.alibaba.datax</groupId>
             <artifactId>odpswriter</artifactId>
             <version>${alibaba.datax.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.aliyun.odps</groupId>
+                    <artifactId>odps-sdk-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

@@ -112,14 +112,12 @@ public class TaskExec {
                     // }
 
 
-                    // success.set(true);
                 } catch (Throwable e) {
-                    //  e.printStackTrace();
-                    // success.set(false);
+                    final String datax = taskContext.hasIndexName() ? taskContext.getIndexName() : ("workflow:" + taskContext.getTaskId());
                     if (this.hasCanceled) {
-                        logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
+                        logger.warn("datax:" + datax + " has been canceled");
                     } else {
-                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXJobInfo.jobFileName, e);
+                        logger.error("datax:" + datax + ",jobName:" + dataXJobInfo.jobFileName, e);
                         // if (!(e instanceof DataXJobSingleProcessorException)) {
                         throw new RuntimeException(e);
                         // }

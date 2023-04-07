@@ -33,7 +33,6 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter;
-import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -46,9 +45,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -82,11 +83,11 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
 
     private List<ColumnMetaData> getFTPFileMetaData(EntityName table, FtpHelper ftp) {
         String content = null;
-        try {
-            content = IOUtils.toString(
-                    ftp.getInputStream(
-                            this.path + IOUtils.DIR_SEPARATOR
-                                    + table.getTabName() + IOUtils.DIR_SEPARATOR + FtpHelper.KEY_META_FILE), TisUTF8.get());
+        final String ftpPath = this.path + IOUtils.DIR_SEPARATOR
+                + table.getTabName() + IOUtils.DIR_SEPARATOR + FtpHelper.KEY_META_FILE;
+
+        try (InputStream reader = Objects.requireNonNull(ftp.getInputStream(ftpPath), "path:" + ftpPath + " relevant InputStream can not null")) {
+            content = IOUtils.toString(reader, TisUTF8.get());
 
             JSONArray fields = JSONArray.parseArray(content);
             return DefaultMetaDataWriter.deserialize(fields);

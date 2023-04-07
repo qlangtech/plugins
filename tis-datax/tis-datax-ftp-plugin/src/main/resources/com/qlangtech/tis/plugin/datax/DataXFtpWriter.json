@@ -1,7 +1,20 @@
 {
   "linker": {
     "label": "远端连接",
-    "dftVal": "Server"
+    "help": "FTP服务端连接配置",
+    "creator": {
+      "label": "管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "FTPServer"
+        }
+      ]
+    }
+  },
+  "writeMetaData": {
+    "label": "添加元数据",
+    "dftVal": "off"
   },
   "path": {
     "help": "描述：FTP文件系统的路径信息，FtpWriter会写入Path目录下属多个文件。 ",

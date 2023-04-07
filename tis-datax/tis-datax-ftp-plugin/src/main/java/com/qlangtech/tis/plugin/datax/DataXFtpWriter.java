@@ -20,17 +20,26 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.assemble.FullbuildPhase;
+import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
+import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,25 +52,21 @@ import java.util.stream.Collectors;
  * @see com.alibaba.datax.plugin.writer.ftpwriter.FtpWriter
  **/
 @Public
-public class DataXFtpWriter extends DataxWriter {
+public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
+    public static final String KEY_FTP_SERVER_LINK = "linker";
 
-    @FormField(ordinal = 1, validate = {Validator.require})
-    public FTPServer linker;
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String linker;
 
-    //    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String protocol;
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String host;
-//    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-//    public Integer port;
-//    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
-//    public Integer timeout;
-//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-//    public String username;
-//    @FormField(ordinal = 5, type = FormFieldType.PASSWORD, validate = {Validator.require})
-//    public String password;
     @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;
+
+    /**
+     * 写入数据过程中会在ftp目录中写一份source的元数据
+     */
+    @FormField(ordinal = 7, validate = {Validator.require})
+    public MetaDataWriter writeMetaData;
+
     //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
 //    public String fileName;
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -79,9 +84,21 @@ public class DataXFtpWriter extends DataxWriter {
     public String dateFormat;
     @FormField(ordinal = 14, validate = {Validator.require})
     public FileFormat fileFormat;
-//    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
-//    public String suffix;
 
+    @Override
+    public ExecutePhaseRange getPhaseRange() {
+        return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump);
+    }
+
+    @Override
+    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+        return writeMetaData.createMetaDataWriteTask(this, execContext, tab);
+    }
+
+    @Override
+    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+        return null;
+    }
 
     public static List<Option> supportCompress() {
         return Arrays.stream(Compress.values()).filter((c) -> c.supportWriter())
@@ -113,6 +130,7 @@ public class DataXFtpWriter extends DataxWriter {
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
+            registerSelectOptions(KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
         }
 
         @Override

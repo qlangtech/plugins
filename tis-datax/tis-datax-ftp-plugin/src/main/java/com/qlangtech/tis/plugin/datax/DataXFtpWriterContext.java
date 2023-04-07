@@ -20,8 +20,8 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -35,52 +35,54 @@ import java.util.stream.Collectors;
 public class DataXFtpWriterContext implements IDataxContext {
     private final DataXFtpWriter writer;
     private final IDataxProcessor.TableMap tableMapper;
+    private final FTPServer ftpServer;
 
     public DataXFtpWriterContext(DataXFtpWriter writer, IDataxProcessor.TableMap tableMapper) {
         this.writer = writer;
         Objects.requireNonNull(writer.fileFormat, "prop fileFormat can not be null");
         Objects.requireNonNull(writer.linker, "prop linker can not be null");
         this.tableMapper = tableMapper;
+        this.ftpServer = FTPServer.getServer(writer.linker);
     }
 
     public String getProtocol() {
-        return this.writer.linker.protocol;
+        return this.ftpServer.protocol;
     }
 
     public String getHost() {
-        return this.writer.linker.host;
+        return this.ftpServer.host;
     }
 
     public boolean isContainPort() {
-        return this.writer.linker.port != null;
+        return this.ftpServer.port != null;
     }
 
     public Integer getPort() {
-        return this.writer.linker.port;
+        return this.ftpServer.port;
     }
 
     public boolean isContainTimeout() {
-        return this.writer.linker.timeout != null;
+        return this.ftpServer.timeout != null;
     }
 
     public Integer getTimeout() {
-        return this.writer.linker.timeout;
+        return this.ftpServer.timeout;
     }
 
     public String getUsername() {
-        return this.writer.linker.username;
+        return this.ftpServer.username;
     }
 
     public String getPassword() {
-        return this.writer.linker.password;
+        return this.ftpServer.password;
     }
 
     public boolean isContainConnectPattern() {
-        return StringUtils.isNotBlank(this.writer.linker.connectPattern);
+        return StringUtils.isNotBlank(this.ftpServer.connectPattern);
     }
 
     public String getConnectPattern() {
-        return this.writer.linker.connectPattern;
+        return this.ftpServer.connectPattern;
     }
 
     public String getPath() {

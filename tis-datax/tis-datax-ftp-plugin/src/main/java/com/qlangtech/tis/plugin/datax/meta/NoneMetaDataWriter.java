@@ -16,25 +16,31 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXFtpReader;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpReaderWithMeta;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpWriter;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpWriterReal;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugin.datax.meta;
+
+import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
+ * @create: 2023-04-05 15:30
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestDataXFtpReader.class, TestDataXFtpWriter.class, TestDataXFtpWriterReal.class, TestDataXFtpReaderWithMeta.class})
-public class TestAll {
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXFtpReader.class);
-//        suite.addTestSuite(TestDataXFtpWriter.class);
-//        return suite;
-//    }
+public class NoneMetaDataWriter extends MetaDataWriter {
+
+    @Override
+    public IRemoteTaskTrigger createMetaDataWriteTask(DataXFtpWriter ftpWriter, IExecChainContext execContext, ISelectedTab tab) {
+        return null;
+    }
+
+    @TISExtension
+    public static class DftDesc extends Descriptor<MetaDataWriter> {
+        @Override
+        public String getDisplayName() {
+            return SWITCH_OFF;
+        }
+    }
 }

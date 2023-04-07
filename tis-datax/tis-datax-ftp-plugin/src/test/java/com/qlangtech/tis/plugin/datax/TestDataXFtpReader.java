@@ -62,7 +62,7 @@ public class TestDataXFtpReader {
         DataXFtpReader reader = new DataXFtpReader();
         reader.compress = Compress.noCompress.token;
         reader.template = DataXFtpReader.getDftTemplate();
-        reader.linker = FtpWriterUtils.createFtpServer();
+       // reader.linker = FtpWriterUtils.createFtpServer();
 //        reader.protocol = "ftp";
 //        reader.host = "192.168.28.201";
 //        reader.port = 21;
@@ -101,7 +101,7 @@ public class TestDataXFtpReader {
         ftpServer.port = null;
         ftpServer.timeout = null;
         ftpServer.connectPattern = null;
-        reader.linker = ftpServer;
+       // reader.linker = ftpServer;
         reader.fileFormat = FtpWriterUtils.createTextFormat();
 //        reader.port = null;
 //        reader.timeout = null;

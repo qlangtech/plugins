@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.plugin.datax.format.CSVFormat;
+import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
@@ -31,7 +32,8 @@ import java.util.Objects;
 public class DataXFtpReaderContext implements IDataxReaderContext {
 
     public static final String FTP_TASK = "ftp_datax";
-    private final DataXFtpReader reader;
+    protected final DataXFtpReader reader;
+    private final FTPServer ftpServer;
 
     @Override
     public String getReaderContextId() {
@@ -41,38 +43,39 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
     public DataXFtpReaderContext(DataXFtpReader reader) {
         this.reader = reader;
         Objects.requireNonNull(this.reader.linker, "reader.linker can not be null");
+        this.ftpServer = FTPServer.getServer(this.reader.linker);
     }
 
     public String getProtocol() {
-        return this.reader.linker.protocol;
+        return this.ftpServer.protocol;
     }
 
     public String getHost() {
-        return this.reader.linker.host;
+        return this.ftpServer.host;
     }
 
     public boolean isContainPort() {
-        return this.reader.linker.port != null;
+        return this.ftpServer.port != null;
     }
 
     public Integer getPort() {
-        return this.reader.linker.port;
+        return this.ftpServer.port;
     }
 
     public boolean isContainTimeout() {
-        return this.reader.linker.timeout != null;
+        return this.ftpServer.timeout != null;
     }
 
     public Integer getTimeout() {
-        return this.reader.linker.timeout;
+        return this.ftpServer.timeout;
     }
 
     public boolean isContainConnectPattern() {
-        return StringUtils.isNotBlank(this.reader.linker.connectPattern);
+        return StringUtils.isNotBlank(this.ftpServer.connectPattern);
     }
 
     public String getConnectPattern() {
-        return this.reader.linker.connectPattern;
+        return this.ftpServer.connectPattern;
     }
 
     public String getFormat() {
@@ -80,11 +83,11 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
     }
 
     public String getUsername() {
-        return this.reader.linker.username;
+        return this.ftpServer.username;
     }
 
     public String getPassword() {
-        return this.reader.linker.password;
+        return this.ftpServer.password;
     }
 
     public String getPath() {

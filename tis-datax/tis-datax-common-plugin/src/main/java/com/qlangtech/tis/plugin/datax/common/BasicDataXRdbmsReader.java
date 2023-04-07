@@ -22,10 +22,8 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -38,12 +36,12 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
-import com.qlangtech.tis.util.Memoizer;
-import com.qlangtech.tis.util.impl.AttrVals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -71,7 +69,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     private transient int preSelectedTabsHash;
     public String dataXName;
 
-   // @Override
+    // @Override
     public Integer getRowFetchSize() {
         return this.fetchSize;
     }
@@ -87,31 +85,23 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             return selectedTabs;
         }
 
-        Memoizer<String, Map<String, ColumnMetaData>> tabsMeta = getTabsMeta();
+        try (TableColsMeta tabsMeta = getTabsMeta()) {
 
-        this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
-            Map<String, ColumnMetaData> colsMeta = tabsMeta.get(tab.getName());
-            ColumnMetaData colMeta = null;
-            if (colsMeta.size() < 1) {
-                throw new IllegalStateException("table:" + tab.getName() + " relevant cols meta can not be null");
-            }
-            for (CMeta col : tab.getCols()) {
-                colMeta = colsMeta.get(col.getName());
-                if (colMeta == null) {
-                    throw new IllegalStateException("col:" + col.getName() + " can not find relevant 'col' on " + tab.getName() + ",exist Keys:["
-                            + colsMeta.keySet().stream().collect(Collectors.joining(",")) + "]");
-                }
-                col.setPk(colMeta.isPk());
-                col.setType(colMeta.getType());
-                col.setComment(colMeta.getComment());
-                col.setNullable(colMeta.isNullable());
-            }
-            return tab;
-        }).collect(Collectors.toList());
+            this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
+                ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
+                    return tabsMeta.get(t.getName());
+                });
+                return tab;
+            }).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         this.preSelectedTabsHash = selectedTabs.hashCode();
         return this.selectedTabs;
 
     }
+
+
 
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
 
@@ -137,7 +127,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         List<SelectedTab> tabs = this.selectedTabs.stream().filter(filter).collect(Collectors.toList());
         // DS dsFactory = this.getDataSourceFactory();
 
-        Memoizer<String, Map<String, ColumnMetaData>> tabColsMap = getTabsMeta();
+        TableColsMeta tabColsMap = getTabsMeta();
 
         return new DataXRdbmsGroupChildTaskIterator(this, this.isFilterUnexistCol(), tabs, tabColsMap);
 
@@ -231,26 +221,31 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
 
-    private Memoizer<String, Map<String, ColumnMetaData>> getTabsMeta() {
-        return new Memoizer<String, Map<String, ColumnMetaData>>() {
-            @Override
-            public Map<String, ColumnMetaData> compute(String tab) {
+    private TableColsMeta getTabsMeta() {
 
-                DataSourceFactory datasource = getDataSourceFactory();
-                Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
 
-                try {
-                    return datasource.getTableMetadata(EntityName.parse(tab))
-                            .stream().collect(
-                                    Collectors.toMap(
-                                            (m) -> m.getKey()
-                                            , (m) -> m
-                                            , (c1, c2) -> c1));
-                } catch (TableNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
+        return new TableColsMeta(getDataSourceFactory(), this.dbName);
+
+
+//        return new Memoizer<String, Map<String, ColumnMetaData>>() {
+//            @Override
+//            public Map<String, ColumnMetaData> compute(String tab) {
+//
+//
+//                Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
+//
+//                try {
+//                    return datasource.getTableMetadata(conn.get(), EntityName.parse(tab))
+//                            .stream().collect(
+//                                    Collectors.toMap(
+//                                            (m) -> m.getKey()
+//                                            , (m) -> m
+//                                            , (c1, c2) -> c1));
+//                } catch (TableNotFoundException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        };
     }
 
 
@@ -344,7 +339,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
             }
             return true;
         }
-
 
 
         @Override

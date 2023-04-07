@@ -69,7 +69,7 @@ public class TestDataXFtpWriter {
         // dataXWriter.timeout = 33333;
 //        dataXWriter.username = "test";
 //        dataXWriter.password = "test";
-        dataXWriter.linker = ftpServer;
+        dataXWriter.linker = null; //ftpServer;
         dataXWriter.path = "/tmp/data/";
         // dataXWriter.fileName = "yixiao";
         dataXWriter.writeMode = "truncate";

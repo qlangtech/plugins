@@ -23,6 +23,7 @@ import com.alibaba.citrus.turbine.impl.DefaultContext;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -35,7 +36,9 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -54,13 +57,18 @@ import java.util.stream.Collectors;
 @Public
 public class DataXFtpReader extends DataxReader {
     public static final String DATAX_NAME = "FTP";
+    protected static final String KEY_FIELD_PATH = "path";
 
-    @FormField(ordinal = 1, validate = {Validator.require})
-    public FTPServer linker;
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String linker;
 
     @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;
-    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+
+    @FormField(ordinal = 8, validate = {Validator.require})
+    public FileFormat fileFormat;
+
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String column;
 
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -79,13 +87,29 @@ public class DataXFtpReader extends DataxReader {
     }
 
     @Override
+    public final TableInDB getTablesInDB() {
+
+        final TableInDB tableInDB = TableInDB.create(new DBIdentity() {
+            @Override
+            public boolean isEquals(DBIdentity queryDBSourceId) {
+                return true;
+            }
+
+            @Override
+            public String identityValue() {
+                return DATAX_NAME;
+            }
+        });
+        return tableInDB;
+    }
+
+    @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         IDataxReaderContext readerContext = new DataXFtpReaderContext(this);
         return IGroupChildTaskIterator.create(readerContext);
     }
 
-    @FormField(ordinal = 14, validate = {Validator.require})
-    public FileFormat fileFormat;
+
 
     @FormField(ordinal = 16, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
@@ -100,7 +124,7 @@ public class DataXFtpReader extends DataxReader {
     }
 
     @Override
-    public List<ParseColsResult.DataXReaderTabMeta> getSelectedTabs() {
+    public List<ISelectedTab> getSelectedTabs() {
         DefaultContext context = new DefaultContext();
         ParseColsResult parseColsResult = ParseColsResult.parseColsCfg(DataXFtpReaderContext.FTP_TASK,
                 new DefaultFieldErrorHandler(), context, StringUtils.EMPTY, this.column);
@@ -109,7 +133,6 @@ public class DataXFtpReader extends DataxReader {
         }
         return Collections.singletonList(parseColsResult.tabMeta);
     }
-
 
 
     @Override
@@ -122,6 +145,7 @@ public class DataXFtpReader extends DataxReader {
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
+            registerSelectOptions(DataXFtpWriter.KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
         }
 
         @Override

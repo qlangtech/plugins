@@ -16,25 +16,26 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDataXFtpReader;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpReaderWithMeta;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpWriter;
-import com.qlangtech.tis.plugin.datax.TestDataXFtpWriterReal;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugin.datax.meta;
+
+import com.qlangtech.tis.exec.IExecChainContext;
+import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-05-09 09:22
+ * @create: 2023-04-05 15:30
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestDataXFtpReader.class, TestDataXFtpWriter.class, TestDataXFtpWriterReal.class, TestDataXFtpReaderWithMeta.class})
-public class TestAll {
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestDataXFtpReader.class);
-//        suite.addTestSuite(TestDataXFtpWriter.class);
-//        return suite;
-//    }
+public abstract class MetaDataWriter implements Describable<MetaDataWriter> {
+
+
+
+    public abstract IRemoteTaskTrigger createMetaDataWriteTask(
+            DataXFtpWriter ftpWriter, IExecChainContext execContext, ISelectedTab tab);
+
+    public String getFtpTargetDir(DataXFtpWriter writer, String tableName) {
+        return writer.path;
+    }
 }

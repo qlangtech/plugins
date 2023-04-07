@@ -59,7 +59,7 @@ public class TestDataXFtpWriterReal {
         String testDataXName = "mysql_ftp";
 
         final DataXFtpWriter writer = getFTPWriter();
-        FTPServer ftpServer = writer.linker;
+        FTPServer ftpServer = null;//writer.linker;
         ftpServer.host = "127.0.0.1";
         ftpServer.port = ftpContainer.getPort21();
         ftpServer.connectPattern = "PASV"; // PORT
@@ -126,7 +126,7 @@ public class TestDataXFtpWriterReal {
         FileFormat txtFormat = FtpWriterUtils.createTextFormat();
         writer.fileFormat = txtFormat;
         FTPServer ftpServer = FtpWriterUtils.createFtpServer();
-        writer.linker = ftpServer;
+        writer.linker = null; //ftpServer;
         return writer;
     }
 }

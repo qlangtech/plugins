@@ -252,6 +252,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals form) {
             BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter)form.newInstance(this, msgHandler);
+
             return validatePostForm(msgHandler, context, dataxWriter);
         }
 

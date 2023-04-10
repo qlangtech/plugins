@@ -37,7 +37,6 @@
   },
   "nodeDesc": {
     "label": "节点描述",
-    "helpUrl": "http://tis.pub/docs/guide/datasource/multi-ds-rule",
     "rows": 5,
     "placeholder": "127.0.0.1[00-31],127.0.0.2[32-63],127.0.0.3,127.0.0.4[9],baisui.com[0-9]"
   }

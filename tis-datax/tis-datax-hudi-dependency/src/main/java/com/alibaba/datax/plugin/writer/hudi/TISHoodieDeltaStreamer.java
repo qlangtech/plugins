@@ -200,6 +200,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
                 MDC.put(JobCommon.KEY_COLLECTION, mdcCollection);
             }
+            JobCommon.setMDC( Integer.parseInt(taskId), mdcCollection);
             Level level = event.getLevel();
             if (level.isGreaterOrEqual(Level.INFO)) {
                 Logger logger = this.loggerFactory.getLogger(event.getLoggerName());

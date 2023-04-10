@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -193,7 +192,7 @@ public class HiveDBUtils {
     public DataSourceMeta.JDBCConnection createConnection(int retry) {
         DataSourceMeta.JDBCConnection conn = null;
         try {
-            conn = new DataSourceMeta.JDBCConnection(hiveDatasource.getConnection(),hiveJdbcUrl);
+            conn = new DataSourceMeta.JDBCConnection(hiveDatasource.getConnection(), hiveJdbcUrl);
             executeNoLog(conn, "set hive.exec.dynamic.partition.mode=nonstrict");
             return conn;
         } catch (Exception e) {
@@ -290,10 +289,8 @@ public class HiveDBUtils {
 
             @Override
             public void run() {
-                MDC.put(JobCommon.KEY_TASK_ID, taskId);
-                if (collection != null) {
-                    MDC.put("app", collection);
-                }
+
+                JobCommon.setMDC(Integer.parseInt(taskId), collection);
                 // getStatementId(hiveStatement);
                 while (hiveStatement.hasMoreLogs()) {
                     try {
@@ -337,9 +334,6 @@ public class HiveDBUtils {
 //        Objects.requireNonNull(stmtHandle, "stmtHandle can not be null");
 //       new String( stmtHandle.getOperationId().getGuid());
 //    }
-
-
-
 
 
     public static void main(String[] args) throws Exception {

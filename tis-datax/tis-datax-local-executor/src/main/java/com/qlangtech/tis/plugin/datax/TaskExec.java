@@ -59,8 +59,10 @@ public class TaskExec {
             @Override
             public void run() {
                 try {
-                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
-                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
+//                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
+//                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
+
+                    JobCommon.setMDC(taskContext);
 
                     jobConsumer = new DataXJobSingleProcessorExecutor() {
                         @Override

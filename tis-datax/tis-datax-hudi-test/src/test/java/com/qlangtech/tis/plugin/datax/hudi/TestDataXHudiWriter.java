@@ -270,7 +270,9 @@ public class TestDataXHudiWriter {
 
         WriterTemplate.realExecuteDump(readerPluginMeta, writerMeta);
 
-        MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
+        // MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
+
+        JobCommon.setMDC(123);
         HudiDumpPostTask postTask = (HudiDumpPostTask) dataxWriter.createPostTask(execContext, hudiTab, genCfgs);
         Assert.assertNotNull("postTask can not be null", postTask);
         postTask.run();
@@ -284,9 +286,11 @@ public class TestDataXHudiWriter {
     public void testRealDump() throws Exception {
 
 
-        MDC.put(JobCommon.KEY_COLLECTION
-                , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
-        MDC.put(JobCommon.KEY_TASK_ID, "123");
+//        MDC.put(JobCommon.KEY_COLLECTION
+//                , HdfsFileSystemFactoryTestUtils.testDataXName.getName());
+//        MDC.put(JobCommon.KEY_TASK_ID, "123");
+
+        JobCommon.setMDC(123, HdfsFileSystemFactoryTestUtils.testDataXName.getName());
         HudiTest houseTest = HudiTest.createDataXWriter();
 
 
@@ -342,7 +346,8 @@ public class TestDataXHudiWriter {
             // DataXHudiWriter hudiWriter = new DataXHudiWriter();
 //            hudiWriter.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
 //            hudiWriter.createPostTask(execContext, tab);
-            MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
+         //   MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
+            JobCommon.setMDC(123);
             HudiDumpPostTask postTask = (HudiDumpPostTask) houseTest.writer.createPostTask(execContext, houseTest.tab, genCfg);
             Assert.assertNotNull("postTask can not be null", postTask);
 

@@ -139,10 +139,10 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
     }
 
     public boolean isContainMaxTraversalLevel() {
-        return StringUtils.isNotBlank(this.reader.maxTraversalLevel);
+        return (this.reader.maxTraversalLevel != null);
     }
 
-    public String getMaxTraversalLevel() {
+    public Integer getMaxTraversalLevel() {
         return this.reader.maxTraversalLevel;
     }
 

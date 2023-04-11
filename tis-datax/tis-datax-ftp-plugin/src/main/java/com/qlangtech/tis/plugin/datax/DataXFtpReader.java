@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
+import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.qlangtech.tis.annotation.Public;
@@ -39,12 +40,17 @@ import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -56,6 +62,7 @@ import java.util.stream.Collectors;
  **/
 @Public
 public class DataXFtpReader extends DataxReader {
+    private static final Logger logger = LoggerFactory.getLogger(DataXFtpReader.class);
     public static final String DATAX_NAME = "FTP";
     protected static final String KEY_FIELD_PATH = "path";
 
@@ -79,8 +86,8 @@ public class DataXFtpReader extends DataxReader {
 //    public Boolean skipHeader;
     @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
     public String nullFormat;
-    @FormField(ordinal = 14, type = FormFieldType.INT_NUMBER, validate = {})
-    public String maxTraversalLevel;
+    @FormField(ordinal = 14, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer maxTraversalLevel;
 
     public static List<Option> supportCompress() {
         return Arrays.stream(Compress.values()).map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
@@ -108,7 +115,6 @@ public class DataXFtpReader extends DataxReader {
         IDataxReaderContext readerContext = new DataXFtpReaderContext(this);
         return IGroupChildTaskIterator.create(readerContext);
     }
-
 
 
     @FormField(ordinal = 16, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
@@ -179,6 +185,29 @@ public class DataXFtpReader extends DataxReader {
             return PluginFieldValidators.validateCsvReaderConfig(msgHandler, context, fieldName, value);
         }
 
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            DataXFtpReader ftpReader = (DataXFtpReader) postFormVals.newInstance(this, msgHandler);
+
+            FTPServer server = FTPServer.getServer(ftpReader.linker);
+            return server.useFtpHelper((ftp) -> {
+                try {
+                    HashSet<String> allFiles = ftp.getAllFiles(Collections.singletonList(ftpReader.path), 0, ftpReader.maxTraversalLevel);
+                    if (CollectionUtils.isEmpty(allFiles)) {
+                        msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下没有扫描到任何文件，请确认路径是否正确");
+                        return false;
+                    }
+                } catch (DataXException e) {
+                    logger.warn(e.getMessage(), e);
+                    msgHandler.addFieldError(context, KEY_FIELD_PATH, "路径配置有误，请确认路径是否正确");
+                    return false;
+                }
+                return true;
+            });
+
+
+        }
 
         @Override
         public boolean isRdbms() {

@@ -87,7 +87,7 @@ public class TestDataXFtpReader {
         reader.encoding = "utf-8";
         // reader.skipHeader = true;
         reader.nullFormat = "\\\\N";
-        reader.maxTraversalLevel = "99";
+        reader.maxTraversalLevel = 99;
 //        reader.csvReaderConfig = "{\n" +
 //                "        \"safetySwitch\": false,\n" +
 //                "        \"skipEmptyRecords\": false,\n" +

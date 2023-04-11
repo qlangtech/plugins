@@ -48,7 +48,8 @@
     "dftVal": "null"
   },
   "maxTraversalLevel": {
-    "help": "描述：允许遍历文件夹的最大层数。"
+    "help": "描述：允许遍历文件夹的最大层数。",
+    "dftVal": 1
   },
   "template": {
     "dftVal": "com.qlangtech.tis.plugin.datax.DataXFtpReader.getDftTemplate()"

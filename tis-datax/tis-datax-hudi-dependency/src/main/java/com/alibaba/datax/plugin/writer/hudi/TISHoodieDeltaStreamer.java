@@ -196,10 +196,10 @@ public class TISHoodieDeltaStreamer implements Serializable {
         @Override
         protected void append(LoggingEvent event) {
 
-            MDC.put(JobCommon.KEY_TASK_ID, taskId);
-            if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
-                MDC.put(JobCommon.KEY_COLLECTION, mdcCollection);
-            }
+//            MDC.put(JobCommon.KEY_TASK_ID, taskId);
+//            if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
+//                MDC.put(JobCommon.KEY_COLLECTION, mdcCollection);
+//            }
             JobCommon.setMDC( Integer.parseInt(taskId), mdcCollection);
             Level level = event.getLevel();
             if (level.isGreaterOrEqual(Level.INFO)) {

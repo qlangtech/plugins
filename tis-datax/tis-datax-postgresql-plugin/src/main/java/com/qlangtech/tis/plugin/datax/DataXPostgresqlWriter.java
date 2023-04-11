@@ -52,9 +52,9 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
 
         PGDataSourceFactory ds = this.getDataSourceFactory();
         // 多个主键

@@ -88,9 +88,9 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
     @Override
     public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);

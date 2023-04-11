@@ -61,9 +61,9 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
 

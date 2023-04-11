@@ -110,9 +110,9 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");

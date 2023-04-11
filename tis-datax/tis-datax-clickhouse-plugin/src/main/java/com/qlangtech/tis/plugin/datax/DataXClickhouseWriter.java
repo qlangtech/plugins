@@ -72,9 +72,9 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {

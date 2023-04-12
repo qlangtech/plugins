@@ -27,7 +27,6 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.io.File;
 import java.util.List;
@@ -102,14 +101,8 @@ public class TaskExec {
                             return localDataXJobSubmit.getWorkingDirectory();
                         }
                     };
-                    CuratorDataXTaskMessage dataXJob = null;
-//                    if (ptabs.isPresent()) {
-//                        for (String splitPhysicsTab : ptabs.get()) {
-//                            dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
-//                            jobConsumer.consumeMessage(dataXJob);
-//                        }
-//                    } else {
-                    dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor.getResType());
+                    CuratorDataXTaskMessage
+                            dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor);
                     jobConsumer.consumeMessage(dataXJob);
                     // }
 

@@ -1,5 +1,7 @@
 {
   "bulkFlushMaxActions": {},
   "bulkFlushMaxSizeMb": {},
-  "bulkFlushIntervalMs": {}
+  "bulkFlushIntervalMs": {
+    "dftVal": 10000
+  }
 }

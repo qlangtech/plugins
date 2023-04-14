@@ -83,7 +83,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
     public Integer bulkFlushMaxSizeMb;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer bulkFlushIntervalMs;
 
 

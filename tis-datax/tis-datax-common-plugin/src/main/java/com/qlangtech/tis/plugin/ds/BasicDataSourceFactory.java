@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.zeppelin.TISZeppelinClient;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -44,10 +45,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -341,6 +339,17 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
 
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;//  ;postFormVals.newInstance(this, msgHandler);
             return TISZeppelinClient.createJdbcNotebook(dsFactory);
+        }
+
+        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            Map<String, List<String>> dbname = DBConfigParser.parseDBEnum("dbname", value);
+            if (MapUtils.isEmpty(dbname)) {
+                msgHandler.addFieldError(context, fieldName, "请确认格式是否正确");
+                return false;
+            }
+
+            return true;
         }
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

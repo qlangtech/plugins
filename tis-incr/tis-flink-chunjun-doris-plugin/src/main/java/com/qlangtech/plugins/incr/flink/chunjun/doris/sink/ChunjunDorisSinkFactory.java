@@ -103,9 +103,9 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         params.put(DorisKeys.FE_NODES_KEY, dorisDS.getLoadUrls());
         params.put(DorisKeys.FIELD_DELIMITER_KEY, separator.getColumnSeparator());
         params.put(DorisKeys.LINE_DELIMITER_KEY, separator.getRowDelimiter());
-        if (params.get(DorisKeys.BATCH_SIZE_KEY) == null) {
-            throw new IllegalStateException("DorisKeys:" + DorisKeys.BATCH_SIZE_KEY + " can not be empty");
-        }
+//        if (params.get(DorisKeys.BATCH_SIZE_KEY) == null) {
+//            throw new IllegalStateException("DorisKeys:" + DorisKeys.BATCH_SIZE_KEY + " can not be empty");
+//        }
         // params.put(DorisKeys.BATCH_SIZE_KEY, dataxWriter.maxBatchRows);
 
         params.put(DorisKeys.DATABASE_KEY, dsFactory.dbName);
@@ -133,7 +133,6 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         final CreateChunjunSinkFunctionResult createSinkResult = createDorisSinkFunctionResult(syncConf, tabMeta);
         return createSinkResult;
     }
-
 
 
     private static CreateChunjunSinkFunctionResult createDorisSinkFunctionResult(SyncConf syncConf, IStreamTableMeta tabMeta) {

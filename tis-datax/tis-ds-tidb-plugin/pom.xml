@@ -29,7 +29,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>tis-ds-tidb-plugin</artifactId>
-    <packaging>tpi</packaging>
+<!--    <packaging>tpi</packaging>-->
+    <!--先不支持 https://github.com/qlangtech/tis/issues/214-->
+    <packaging>jar</packaging>
 
     <properties>
         <scala.binary.version>2.11</scala.binary.version>
@@ -42,16 +44,16 @@
             <groupId>com.alibaba.datax</groupId>
             <artifactId>datax-common</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.pingcap.tikv</groupId>-->
-<!--            <artifactId>tikv-client</artifactId>-->
-<!--            <version>2.4.2</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.pingcap.tikv</groupId>-->
+        <!--            <artifactId>tikv-client</artifactId>-->
+        <!--            <version>2.4.2</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.pingcap.tikv</groupId>
             <artifactId>tikv-client</artifactId>
-            <version>2.5.0-rc.1</version>
+            <version>3.2.0</version>
         </dependency>
 
         <dependency>
@@ -72,7 +74,7 @@
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

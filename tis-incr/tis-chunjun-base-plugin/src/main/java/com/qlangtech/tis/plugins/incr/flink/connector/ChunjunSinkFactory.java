@@ -97,16 +97,16 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //    参数类型：int
 //    默认值：1
 
-    @FormField(ordinal = 2, validate = {Validator.require})
+    @FormField(ordinal = 4, validate = {Validator.require})
     public ChunjunStreamScriptType scriptType;
 
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public int batchSize;
 
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public int flushIntervalMills;
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    @FormField(ordinal = 12, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer parallelism;
 
     private transient Map<String, SelectedTab> selTabs;

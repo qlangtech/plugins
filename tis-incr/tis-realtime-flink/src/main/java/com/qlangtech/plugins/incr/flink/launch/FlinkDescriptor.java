@@ -21,9 +21,13 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.impl.PropertyType;
+import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Option;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.description.Description;
@@ -32,6 +36,8 @@ import org.apache.flink.configuration.description.HtmlFormatter;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -43,6 +49,55 @@ public class FlinkDescriptor<T extends Describable> extends Descriptor<T> {
 
     protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption) {
         addFieldDescriptor(fieldName, configOption, new OverwriteProps());
+    }
+
+    protected Options createFlinkOptions() {
+        return new Options();
+    }
+
+    public class Options {
+        private final List<Pair<String, ConfigOption>> opts = Lists.newArrayList();
+        private Map<String, /*** fieldname*/PropertyType> props;
+
+        public Options() {
+//            this.props = getPluginFormPropertyTypes().accept(new PluginFormProperties.IVisitor() {
+//                @Override
+//                public Map<String, PropertyType> visit(RootFormProperties props) {
+//                    return props.propertiesType;
+//                }
+//            });
+        }
+
+        public org.apache.flink.configuration.Configuration createFlinkCfg(T instance) {
+            org.apache.flink.configuration.Configuration cfg = new org.apache.flink.configuration.Configuration();
+            PropertyType property = null;
+            for (Pair<String, ConfigOption> opt : opts) {
+                property = Objects.requireNonNull(getProps().get(opt.getKey()), "key:" + opt.getKey() + " relevant props can not be null");
+                Object val = property.getVal(instance);
+                if (val == null) {
+                    continue;
+                }
+                cfg.set(opt.getRight(), val);
+            }
+            return cfg;
+        }
+
+        public void add(String fieldName, ConfigOption option) {
+            addFieldDescriptor(fieldName, option);
+            this.opts.add(Pair.of(fieldName, option));
+        }
+
+        public Map<String, PropertyType> getProps() {
+            if (props == null) {
+                this.props = getPluginFormPropertyTypes().accept(new PluginFormProperties.IVisitor() {
+                    @Override
+                    public Map<String, PropertyType> visit(RootFormProperties props) {
+                        return props.propertiesType;
+                    }
+                });
+            }
+            return props;
+        }
     }
 
     protected void addFieldDescriptor(String fieldName, ConfigOption<?> configOption, OverwriteProps overwriteProps) {

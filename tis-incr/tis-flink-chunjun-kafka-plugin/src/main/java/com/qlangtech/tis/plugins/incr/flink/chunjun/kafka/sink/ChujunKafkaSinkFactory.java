@@ -26,7 +26,6 @@ import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.connector.kafka.conf.KafkaConf;
 import com.dtstack.chunjun.connector.kafka.converter.KafkaColumnConverter;
-import com.dtstack.chunjun.connector.kafka.partitioner.CustomerFlinkPartition;
 import com.dtstack.chunjun.connector.kafka.serialization.RowSerializationSchema;
 import com.dtstack.chunjun.connector.kafka.sink.KafkaProducer;
 import com.dtstack.chunjun.connector.kafka.sink.KafkaSinkFactory;
@@ -40,6 +39,8 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -49,17 +50,17 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.datax.kafka.writer.DataXKafkaWriter;
 import com.qlangtech.tis.plugins.datax.kafka.writer.KafkaSelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
-import org.apache.flink.types.RowKind;
+import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.Preconditions;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,6 +69,10 @@ import java.util.stream.Collectors;
  * @create: 2023-03-17 12:31
  **/
 public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
+
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public FormatFactory format;
+
     @Override
     protected boolean supportUpsetDML() {
         return true;
@@ -113,48 +118,64 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
             }
 
             @Override
+            protected SerializationSchema<RowData> getValSerializationSchema() {
+
+                Function<FieldConf, ISerializationConverter<Map<String, Object>>> serializationConverterFactory = getSerializationConverterFactory();
+                Preconditions.checkNotNull(serializationConverterFactory, "serializationConverterFactory can not be null");
+
+                KafkaColumnConverter valConverter = KafkaColumnConverter.create(this.syncConf, kafkaConf, serializationConverterFactory);
+                List<KafkaSerializationConverter> colConvert = valConverter.getExternalConverters();
+                TableSchema tableSchema = ChunjunTableSinkFactory.ChunjunStreamTableSink.createTableSchema(
+                        colConvert.stream().map((c) -> c.flinkCol).collect(Collectors.toList()));
+
+
+                return Objects.requireNonNull(format.createEncodingFormat(targetTabName), "encodingFormat can not be null")
+                        .createRuntimeEncoder(null, tableSchema.toRowDataType());
+            }
+
+
+            @Override
             protected Function<FieldConf, ISerializationConverter<Map<String, Object>>> getSerializationConverterFactory() {
                 return (fieldCfg) -> {
                     IColMetaGetter cmGetter = IColMetaGetter.create(fieldCfg.getName(), fieldCfg.getType());
-                    //colsMetas.add(cmGetter);
                     FlinkCol flinkCol = AbstractRowDataMapper.mapFlinkCol(cmGetter, fieldCfg.getIndex());
                     return new KafkaSerializationConverter(flinkCol);
                 };
             }
 
-            @Override
-            protected RowSerializationSchema createRowSerializationSchema(KafkaColumnConverter keyConverter) {
+//            @Override
+//            protected RowSerializationSchema createRowSerializationSchema(KafkaColumnConverter keyConverter) {
+//
+//
+//                return new RowSerializationSchema(
+//                        kafkaConf,
+//                        new CustomerFlinkPartition<>(),
+//                        keyConverter,
+//
+//                        ) {
 
-                Function<FieldConf, ISerializationConverter<Map<String, Object>>> serializationConverterFactory = getSerializationConverterFactory();
-                Preconditions.checkNotNull(serializationConverterFactory, "serializationConverterFactory can not be null");
-                return new RowSerializationSchema(
-                        kafkaConf,
-                        new CustomerFlinkPartition<>(),
-                        keyConverter,
-                        KafkaColumnConverter.create(this.syncConf, kafkaConf, serializationConverterFactory)) {
+//                    private DTO.EventType parseEvnet(RowKind rowKind) {
+//                        switch (rowKind) {
+//                            case UPDATE_BEFORE:
+//                                // return DTO.EventType.UPDATE_BEFORE;
+//                                throw new IllegalStateException("unsupport type:" + rowKind);
+//                            case UPDATE_AFTER:
+//                                return DTO.EventType.UPDATE_AFTER;
+//                            case DELETE:
+//                                return DTO.EventType.DELETE;
+//                            case INSERT:
+//                                return DTO.EventType.ADD;
+//                        }
+//
+//                        throw new IllegalStateException("illegal rowKind:" + rowKind);
+//                    }
 
-                    private DTO.EventType parseEvnet(RowKind rowKind) {
-                        switch (rowKind) {
-                            case UPDATE_BEFORE:
-                                // return DTO.EventType.UPDATE_BEFORE;
-                                throw new IllegalStateException("unsupport type:" + rowKind);
-                            case UPDATE_AFTER:
-                                return DTO.EventType.UPDATE_AFTER;
-                            case DELETE:
-                                return DTO.EventType.DELETE;
-                            case INSERT:
-                                return DTO.EventType.ADD;
-                        }
-
-                        throw new IllegalStateException("illegal rowKind:" + rowKind);
-                    }
-
-                    @Override
-                    public Map<String, Object> createRowVals(String tableName, RowKind rowKind, Map<String, Object> data) {
-                        return DataXKafkaWriter.createRowVals(tableName, parseEvnet(rowKind), data);
-                    }
-                };
-            }
+//                    @Override
+//                    public Map<String, Object> createRowVals(String tableName, RowKind rowKind, Map<String, Object> data) {
+//                        return DataXKafkaWriter.createRowVals(tableName, parseEvnet(rowKind), data);
+//                    }
+//                };
+//            }
         };
 
 

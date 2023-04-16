@@ -273,7 +273,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         List<String> jdbcUrls = Lists.newArrayList();
         dbLinkMetaData.vistDbURL(resolveHostIp, (dbName, dbHost, jdbcUrl) -> {
             jdbcUrls.add(jdbcUrl);
-        }, false);
+        });
         return jdbcUrls;
     }
 

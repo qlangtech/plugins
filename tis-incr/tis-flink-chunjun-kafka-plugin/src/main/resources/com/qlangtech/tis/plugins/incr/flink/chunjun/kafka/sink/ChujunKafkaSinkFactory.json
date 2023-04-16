@@ -4,5 +4,9 @@
   },
   "flushIntervalMills": {
     "disable": true
+  },
+  "format": {
+    "label": "传输格式",
+    "dftVal": "debezium-json"
   }
 }

@@ -16,24 +16,29 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISCanalJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISDebeziumJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.TestChujunKafkaSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.TestChujunKafkaSinkFactoryIntegration;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
+
+import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.qlangtech.tis.util.DescriptorsJSON;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-03-21 13:13
+ * @create: 2023-04-15 13:53
  **/
+public class TestTISCanalJsonFormatFactory {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestChujunKafkaSinkFactory.class
-                , TestChujunKafkaSinkFactoryIntegration.class
-                , TestTISCanalJsonFormatFactory.class,
-                TestTISDebeziumJsonFormatFactory.class
-        })
-public class TestAll {
+    @Test
+    public void testDescriptorsJSONGenerate() {
+        TISCanalJsonFormatFactory canalJsonFormatFactory = new TISCanalJsonFormatFactory();
+        DescriptorsJSON descJson = new DescriptorsJSON(canalJsonFormatFactory.getDescriptor());
+        JSONObject descriptorsJSON = descJson.getDescriptorsJSON();
+        JsonUtil.assertJSONEqual(TISCanalJsonFormatFactory.class, "canal-json-format-factory.json"
+                , descriptorsJSON, (m, e, a) -> {
+                    Assert.assertEquals(m, e, a);
+                });
+    }
+
 }

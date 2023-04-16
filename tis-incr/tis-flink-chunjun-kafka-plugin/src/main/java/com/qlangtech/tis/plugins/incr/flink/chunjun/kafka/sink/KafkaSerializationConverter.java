@@ -31,7 +31,7 @@ import java.util.Objects;
  **/
 public class KafkaSerializationConverter implements ISerializationConverter<Map<String, Object>> {
 
-    private final FlinkCol flinkCol;
+    public final FlinkCol flinkCol;
 
     public KafkaSerializationConverter(FlinkCol flinkCol) {
         this.flinkCol = Objects.requireNonNull(flinkCol, "flinkCol can not be null");

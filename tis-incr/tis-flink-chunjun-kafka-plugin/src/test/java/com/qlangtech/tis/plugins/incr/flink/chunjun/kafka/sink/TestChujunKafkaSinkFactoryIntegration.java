@@ -20,10 +20,13 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink;
 
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugins.datax.kafka.writer.DataXKafkaWriter;
+import com.qlangtech.tis.plugins.datax.kafka.writer.KafkaSelectedTab;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaPlaintext;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TISCanalJsonFormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.junit.AfterClass;
@@ -31,6 +34,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -42,7 +47,6 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor
     private static final String TOPIC_NAME = "test.topic";
 
 
-
     @Test
     public void testSinkSync() throws Exception {
         super.testSinkSync();
@@ -52,6 +56,17 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor
     public static void initializeKafka() throws Exception {
         kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:6.2.0"));
         kafka.start();
+    }
+
+    @Override
+    protected SelectedTab createSelectedTab(List<CMeta> metaCols) {
+        //  KafkaSelectedTab kfkTable = (KafkaSelectedTab) selectedTab;
+        return new KafkaSelectedTab() {
+            @Override
+            public List<CMeta> getCols() {
+                return metaCols;
+            }
+        };
     }
 
     @Override
@@ -99,6 +114,7 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor
         ChujunKafkaSinkFactory dorisSinkFactory = new ChujunKafkaSinkFactory();
         ChunjunSqlType chunjunSqlType = new ChunjunSqlType();
         dorisSinkFactory.scriptType = chunjunSqlType;
+        dorisSinkFactory.format = new TISCanalJsonFormatFactory();
         return dorisSinkFactory;
     }
 

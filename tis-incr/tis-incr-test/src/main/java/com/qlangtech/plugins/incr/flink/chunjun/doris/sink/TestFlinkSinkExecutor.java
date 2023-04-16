@@ -402,15 +402,21 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         cm.setType(new DataType(Types.TIMESTAMP));
         metaCols.add(cm);
 
-        SelectedTab totalpayInfo = new SelectedTab() {
+        SelectedTab totalpayInfo = createSelectedTab(metaCols);
+        totalpayInfo.setIncrSinkProps(sinkExt);
+        totalpayInfo.name = tableName;
+        return totalpayInfo;
+    }
+
+
+
+    protected SelectedTab createSelectedTab(List<CMeta> metaCols) {
+        return new SelectedTab() {
             @Override
             public List<CMeta> getCols() {
                 return metaCols;
             }
         };
-        totalpayInfo.setIncrSinkProps(sinkExt);
-        totalpayInfo.name = tableName;
-        return totalpayInfo;
     }
 
     protected ArrayList<String> getUniqueKey() {

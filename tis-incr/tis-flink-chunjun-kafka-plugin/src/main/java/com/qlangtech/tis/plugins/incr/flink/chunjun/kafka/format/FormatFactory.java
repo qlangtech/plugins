@@ -16,24 +16,26 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISCanalJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.TestTISDebeziumJsonFormatFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.TestChujunKafkaSinkFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.TestChujunKafkaSinkFactoryIntegration;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
+
+import com.qlangtech.tis.extension.Describable;
+import org.apache.flink.api.common.serialization.SerializationSchema;
+import org.apache.flink.table.connector.format.EncodingFormat;
+import org.apache.flink.table.data.RowData;
 
 /**
+ * 内容传输格式
+ * https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/connectors/table/formats/overview/
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-03-21 13:13
+ * @create: 2023-04-15 12:24
  **/
+public abstract class FormatFactory implements Describable<FormatFactory> {
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestChujunKafkaSinkFactory.class
-                , TestChujunKafkaSinkFactoryIntegration.class
-                , TestTISCanalJsonFormatFactory.class,
-                TestTISDebeziumJsonFormatFactory.class
-        })
-public class TestAll {
+    /**
+     *
+     * @param targetTabName 目标表名称
+     * @return
+     */
+    public abstract EncodingFormat<SerializationSchema<RowData>> createEncodingFormat(final String targetTabName);
 }

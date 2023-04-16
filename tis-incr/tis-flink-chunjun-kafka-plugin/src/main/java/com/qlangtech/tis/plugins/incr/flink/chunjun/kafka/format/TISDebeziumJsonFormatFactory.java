@@ -37,8 +37,8 @@ import org.apache.flink.table.data.RowData;
  * @create: 2023-04-15 12:25
  **/
 public class TISDebeziumJsonFormatFactory extends FormatFactory {
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = true)
-    public Boolean schemaInclude;
+//    @FormField(ordinal = 0, type = FormFieldType.ENUM, advance = true)
+//    public Boolean schemaInclude;
 
     @FormField(ordinal = 1, type = FormFieldType.ENUM, advance = true)
     public Boolean ignoreParseErrors;
@@ -70,8 +70,8 @@ public class TISDebeziumJsonFormatFactory extends FormatFactory {
         public DftDescriptor() {
             super();
             this.options = this.createFlinkOptions();
-
-            options.add("schemaInclude", DebeziumJsonOptions.SCHEMA_INCLUDE);
+//            // schemaInclude 不支持
+//            options.add("schemaInclude", DebeziumJsonOptions.SCHEMA_INCLUDE);
             options.add("ignoreParseErrors", DebeziumJsonOptions.IGNORE_PARSE_ERRORS);
             options.add("timestampFormat", DebeziumJsonOptions.TIMESTAMP_FORMAT);
             options.add("nullKeyMode", DebeziumJsonOptions.JSON_MAP_NULL_KEY_MODE);

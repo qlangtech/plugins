@@ -18,29 +18,6 @@
             }
           ]
         },
-        "key":"schemaInclude",
-        "ord":0,
-        "pk":false,
-        "required":false,
-        "type":5
-      },
-      {
-        "advance":true,
-        "describable":false,
-        "eprops":{
-          "asyncHelp":true,
-          "dftVal":false,
-          "enum":[
-            {
-              "label":"是",
-              "val":true
-            },
-            {
-              "label":"否",
-              "val":false
-            }
-          ]
-        },
         "key":"ignoreParseErrors",
         "ord":1,
         "pk":false,

@@ -20,17 +20,18 @@ package com.qlangtech.tis.plugin.ds.oracle;
 
 import com.qlangtech.tis.extension.Describable;
 
+import java.io.Serializable;
+
 /**
  * 是否授权
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-03-31 16:16
  **/
-public abstract class Authorized implements Describable<Authorized> {
+public abstract class Authorized implements Describable<Authorized>, Serializable {
 
     public abstract String getSchema();
+
     public abstract String getRefectTablesSql();
-
-
 
 }

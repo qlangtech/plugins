@@ -582,7 +582,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 try {
                     // 在创建增量流程过程中可能 sink端的表还不存在
                     DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
-                    return ds.getTableMetadata(EntityName.parse(tableName))
+                    return ds.getTableMetadata(true, EntityName.parse(tableName))
                             .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
                             .collect(Collectors.toList());
                 } catch (Exception e) {

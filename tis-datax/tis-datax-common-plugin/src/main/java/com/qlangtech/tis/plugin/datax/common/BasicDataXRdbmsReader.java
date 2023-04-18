@@ -40,8 +40,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -100,7 +102,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         return this.selectedTabs;
 
     }
-
 
 
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
@@ -276,9 +277,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     }
 
     @Override
-    public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
+    public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
         DataSourceFactory plugin = getDataSourceFactory();
-        return plugin.getTableMetadata(table);
+        return plugin.getTableMetadata(inSink, table);
     }
 
 //    /**

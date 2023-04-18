@@ -65,7 +65,7 @@ public class TableColsMeta extends Memoizer<String, Map<String, ColumnMetaData>>
         Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
 
         try {
-            return datasource.getTableMetadata(connection, EntityName.parse(tab))
+            return datasource.getTableMetadata(connection, false, EntityName.parse(tab))
                     .stream().collect(
                             Collectors.toMap(
                                     (m) -> m.getKey()

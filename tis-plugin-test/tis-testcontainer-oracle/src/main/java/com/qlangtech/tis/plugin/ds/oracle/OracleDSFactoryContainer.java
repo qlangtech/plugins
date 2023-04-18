@@ -118,7 +118,7 @@ public class OracleDSFactoryContainer {
     public static final String testTabName = "testTab";
 
     //@BeforeClass
-    public static DataSourceFactory initialize() {
+    public static DataSourceFactory initialize(boolean inSink) {
         oracleContainer = new TISOracleContainer();
         oracleContainer.usingSid();
         oracleContainer.start();
@@ -143,7 +143,7 @@ public class OracleDSFactoryContainer {
                 throw new RuntimeException(String.format("table %s not found.", testTabName));
             }
             // conn.getMetaData().getTables()
-            List<ColumnMetaData> cols = oracleDS.getTableMetadata(c, EntityName.parse(testTabName));
+            List<ColumnMetaData> cols = oracleDS.getTableMetadata(c, inSink, EntityName.parse(testTabName));
             for (ColumnMetaData col : cols) {
                 System.out.println("key:" + col.getName() + ",type:" + col.getType());
             }

@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.oracle.auth.NoneAuth;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,16 +61,17 @@ public class TestOracleDataSourceFactory {
 
 //        String createDDL = IOUtils.loadResourceFromClasspath(TestOracleDataSourceFactory.class, "create-sql-instancedetail.sql");
 //        System.out.println(createDDL);
+        final boolean inSink = false;
+        OracleDataSourceFactory dsFactory = createOracleDataSourceFactory(inSink);
 
-        OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
-        Assert.assertTrue("allAuthorized must be true", dsFactory.allAuthorized);
+        Assert.assertNotNull("allAuthorized must be true", dsFactory.allAuthorized);
 
         TableInDB tablesInDB = dsFactory.getTablesInDB();
         Assert.assertFalse(tablesInDB.isEmpty());
         EntityName tab = EntityName.parse("SYSTEM." + OracleDSFactoryContainer.testTabName);
         Assert.assertTrue(tablesInDB.contains(tab.getFullName()));
         // tablesInDB.forEach((tab) -> System.out.println(tab));
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(tab);
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(inSink, tab);
         Assert.assertTrue(cols.size() > 0);
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.isPk() + " " + col.getType());
@@ -77,16 +79,16 @@ public class TestOracleDataSourceFactory {
 
         // 出来的表名应该是没有前缀的
         EntityName tabNonePrefix = EntityName.parse(OracleDSFactoryContainer.testTabName);
-        dsFactory.allAuthorized = false;
+        dsFactory.allAuthorized = new NoneAuth();
         tablesInDB = dsFactory.getTablesInDB();
         Assert.assertTrue(tablesInDB.contains(tabNonePrefix.getFullName()));
-        cols = dsFactory.getTableMetadata(tabNonePrefix);
+        cols = dsFactory.getTableMetadata(inSink, tabNonePrefix);
         Assert.assertTrue(cols.size() > 0);
     }
 
     @Test
     public void testSqlTime() {
-        OracleDataSourceFactory dsFactory = createOracleDataSourceFactory();
+        OracleDataSourceFactory dsFactory = createOracleDataSourceFactory(false);
         dsFactory.visitAllConnection((c) -> {
             Connection conn = c.getConnection();
 //            PreparedStatement statement = conn.prepareStatement("insert into \"time_test\" ( \"id\" , \"time_c\") values(?,?)");
@@ -103,9 +105,9 @@ public class TestOracleDataSourceFactory {
         });
     }
 
-    public static OracleDataSourceFactory createOracleDataSourceFactory() {
+    public static OracleDataSourceFactory createOracleDataSourceFactory(boolean inSink) {
 
-        return (OracleDataSourceFactory) OracleDSFactoryContainer.initialize();
+        return (OracleDataSourceFactory) OracleDSFactoryContainer.initialize(inSink);
 
 //        OracleDataSourceFactory dsFactory = new OracleDataSourceFactory();
 //        dsFactory.name = "xe";

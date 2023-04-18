@@ -92,9 +92,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
 
-        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);

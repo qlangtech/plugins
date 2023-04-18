@@ -74,7 +74,7 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
     public transient List<SelectedTab> selectedTabs;
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink,EntityName table) throws TableNotFoundException {
         FTPServer server = FTPServer.getServer(this.linker);
         return server.useFtpHelper((ftp) -> {
             return getFTPFileMetaData(table, ftp);

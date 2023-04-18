@@ -198,8 +198,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
-        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
@@ -227,10 +227,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
                     }
                 }
 
-//                if ("DATE".equalsIgnoreCase(type.typeName)) {
-                // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
-//                    return new DataType(Types.DATE, type.typeName, type.columnSize);
-//                }
+                // 当MySQL中的Date类型映射到Oracle中时，Oracle作为Sink端应该作为Date类型 https://github.com/qlangtech/tis/issues/192
+                if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
+                    // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
+                    return new DataType(Types.DATE, type.typeName, type.columnSize);
+                }
 
 
                 return type;

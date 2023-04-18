@@ -75,7 +75,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
     public AuthToken authToken;
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, boolean inSink, EntityName table) throws TableNotFoundException {
         List<ColumnMetaData> cols = Lists.newArrayList();
         ColumnMetaData colMeta = null;
         try {

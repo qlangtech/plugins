@@ -20,10 +20,6 @@ package com.qlangtech.tis.plugin.ds.tidb;
 import com.alibaba.citrus.turbine.Context;
 import com.pingcap.com.google.common.collect.Lists;
 import com.pingcap.com.google.common.collect.Maps;
-
-
-
-
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -42,7 +38,6 @@ import org.tikv.common.meta.TiDAGRequest;
 import org.tikv.common.meta.TiDBInfo;
 import org.tikv.common.meta.TiTableInfo;
 import org.tikv.common.util.RangeSplitter;
-
 
 import java.lang.reflect.Field;
 import java.sql.Types;
@@ -250,7 +245,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
         return this.openTiDB((session, c, db) -> {
             TiTableInfo table1 = c.getTable(db, table.getTableName());
             int[] index = new int[1];

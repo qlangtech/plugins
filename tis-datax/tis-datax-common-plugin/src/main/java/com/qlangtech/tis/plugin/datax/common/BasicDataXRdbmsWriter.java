@@ -172,7 +172,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                 boolean tableExist = false;
                 List<ColumnMetaData> cols = Lists.newArrayList();
                 try {
-                    cols = dsFactory.getTableMetadata(jdbcConn, tab);
+                    cols = dsFactory.getTableMetadata(jdbcConn, true, tab);
                     tableExist = true;
                 } catch (TableNotFoundException e) {
                     logger.warn(e.toString());
@@ -251,7 +251,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
         @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals form) {
-            BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter)form.newInstance(this, msgHandler);
+            BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter) form.newInstance(this, msgHandler);
 
             return validatePostForm(msgHandler, context, dataxWriter);
         }

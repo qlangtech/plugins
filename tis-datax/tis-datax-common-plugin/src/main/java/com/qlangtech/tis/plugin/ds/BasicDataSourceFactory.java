@@ -105,7 +105,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(final EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, final EntityName table) {
         if (table == null) {
             throw new IllegalArgumentException("param table can not be null");
         }
@@ -113,7 +113,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         try {
             final DBConfig dbConfig = getDbConfig();
             dbConfig.vistDbName((config, jdbcUrl, ip, dbname) -> {
-                columns.addAll(parseTableColMeta(table, config, ip, dbname));
+                columns.addAll(parseTableColMeta(table, inSink, config, ip, dbname));
                 logger.info("tabmeta:{},colsSize:{},cols:{}"
                         , table
                         , columns.size()
@@ -128,9 +128,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, boolean inSink, EntityName table) throws TableNotFoundException {
         try {
-            return parseTableColMeta(conn.getUrl(), conn, table);
+            return parseTableColMeta(inSink, conn.getUrl(), conn, table);
         } catch (TableNotFoundException e) {
             throw e;
 
@@ -139,11 +139,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
-    private List<ColumnMetaData> parseTableColMeta(EntityName table, DBConfig config, String ip, String dbname) throws Exception {
+    private List<ColumnMetaData> parseTableColMeta(EntityName table, boolean inSink, DBConfig config, String ip, String dbname) throws Exception {
         // List<ColumnMetaData> columns = Lists.newArrayList();
         String jdbcUrl = buidJdbcUrl(config, ip, dbname);
 
-        return parseTableColMeta(table, jdbcUrl);
+        return parseTableColMeta(inSink, table, jdbcUrl);
     }
 
 

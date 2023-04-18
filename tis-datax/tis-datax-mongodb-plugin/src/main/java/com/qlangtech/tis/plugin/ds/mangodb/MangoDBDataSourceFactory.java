@@ -143,7 +143,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
 //        MongoClient mongoClient = null;
 //        try {
 //            mongoClient = createMongoClient();

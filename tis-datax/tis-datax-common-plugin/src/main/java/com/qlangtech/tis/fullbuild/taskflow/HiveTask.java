@@ -67,13 +67,13 @@ public abstract class HiveTask extends AdapterTask {
     protected final boolean isFinalNode;
     protected final IDataSourceFactoryGetter dsFactoryGetter;
 
-    private final  Supplier<IPrimaryTabFinder> erRules;
+    private final Supplier<IPrimaryTabFinder> erRules;
 
     /**
      * @param joinTaskStatus
      */
     protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode
-            ,  Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
+            , Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
@@ -105,7 +105,7 @@ public abstract class HiveTask extends AdapterTask {
 //        }
 
         try {
-            ds.getTableMetadata(connection, dumpTable);
+            ds.getTableMetadata(connection, true, dumpTable);
             return true;
         } catch (TableNotFoundException e) {
             return false;
@@ -412,7 +412,7 @@ public abstract class HiveTask extends AdapterTask {
                     try (ResultSet metaData = convert2ResultSet(result.getMetaData())) {
                         // 取得结果集数据列类型
                         List<ColumnMetaData> columnMetas
-                                = dsFactory.wrapColsMeta(metaData
+                                = dsFactory.wrapColsMeta(true, metaData
                                 , new DataSourceFactory.CreateColumnMeta(Collections.emptySet(), metaData) {
                                     @Override
                                     public ColumnMetaData create(String colName, int index) throws SQLException {

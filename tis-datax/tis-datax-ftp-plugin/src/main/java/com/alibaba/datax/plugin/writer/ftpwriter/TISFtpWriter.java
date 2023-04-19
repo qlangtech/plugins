@@ -19,8 +19,7 @@
 package com.alibaba.datax.plugin.writer.ftpwriter;
 
 import com.alibaba.datax.core.job.IJobContainerContext;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
 
 /**
@@ -36,8 +35,9 @@ public class TISFtpWriter extends FtpWriter {
     }
 
     private static String getFtpTargetDir(String tableName, IJobContainerContext containerContext) {
-        IDataxProcessor processor = DataxProcessor.load(null, containerContext.getTISDataXName());
-        DataXFtpWriter writer = (DataXFtpWriter) processor.getWriter(null);
+        // IDataxProcessor processor = DataxProcessor.load(null, containerContext.getTISDataXName());
+        DataXFtpWriter writer = (DataXFtpWriter) DataxWriter.load(null, containerContext.getTISDataXName());
+        //  DataXFtpWriter writer = (DataXFtpWriter) processor.getWriter(null);
         return writer.writeMetaData.getFtpTargetDir(writer, tableName);
     }
 

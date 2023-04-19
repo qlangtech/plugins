@@ -117,7 +117,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
 
 
-        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias();
+        TableAliasMapper selectedTabs = dataxProcessor.getTabAlias(null);
         if (selectedTabs.isNull()) {
             throw new IllegalStateException("selectedTabs can not be empty");
         }

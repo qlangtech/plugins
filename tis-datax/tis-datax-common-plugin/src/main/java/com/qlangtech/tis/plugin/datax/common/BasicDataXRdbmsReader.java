@@ -276,6 +276,10 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         //  return (DS) dsStore.getPlugin();
     }
 
+    public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
+        return this.getTableMetadata(false, table);
+    }
+
     @Override
     public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
         DataSourceFactory plugin = getDataSourceFactory();

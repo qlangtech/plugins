@@ -18,8 +18,12 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.Collections;
+import java.util.Set;
 
 
 /**
@@ -34,7 +38,7 @@ public class FTPContainer //extends GenericContainer {
     );
 
     private static final int PORT21 = 21;
-    // private static final int PORT20 = 20;
+    private static final int PORT20 = 20;
 
     private static final int MIN_PASV_PORT = 21100;
     private static final int MAX_PAV_PORT = 21110;
@@ -45,13 +49,22 @@ public class FTPContainer //extends GenericContainer {
     public FTPContainer() {
         super("fauria/vsftpd");
         this.addExposedPorts(new int[]{PORT21});
+        // this.addExposedPorts(new int[]{PORT20});
         for (int i = MIN_PASV_PORT; i <= MAX_PAV_PORT; i++) {
-            this.withFixedExposedPort(i, i);
+            // this.withFixedExposedPort(i, i);
+            this.addExposedPorts(new int[]{i});
         }
         this.addEnv("FTP_USER", USER_NAME);
         this.addEnv("FTP_PASS", PASSWORD);
         this.addEnv("PASV_MIN_PORT", String.valueOf(MIN_PASV_PORT));
         this.addEnv("PASV_MAX_PORT", String.valueOf(MAX_PAV_PORT));
+        this.addEnv("PASV_ADDRESS", NetUtils.getHost());
+    }
+
+    @Override
+    public Set<Integer> getLivenessCheckPortNumbers() {
+        // 启动的时候有一些端口（MIN_PASV_PORT-MAX_PAV_PORT）还没有打开，不需要校验
+        return Collections.emptySet();
     }
 
     public int getPort21() {

@@ -75,11 +75,13 @@ public class WriterTemplate {
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
 
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
+        EasyMock.expect(dataxGlobalCfg.getTemplate()).andReturn(IDataxGlobalCfg.getDefaultTemplate()).anyTimes();
         EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
         //EasyMock.expect(processor.getWriter(null)).andReturn(dataXWriter);
 
         IDataxReader dataXReader = EasyMock.createMock("dataXReader", IDataxReader.class);
 
+        // dataXReader.getTemplate()
         //EasyMock.expect(processor.getReader(null)).andReturn(dataXReader);
 
 
@@ -130,15 +132,18 @@ public class WriterTemplate {
 
             @Override
             public IStreamTableMeta getStreamTableMeta(String tableName) {
-               throw new UnsupportedOperationException();
+                throw new UnsupportedOperationException();
             }
+
             @Override
             public List<ISelectedTab> getSelectedTabs() {
                 return null;
             }
+
             @Override
             public void refresh() {
             }
+
             @Override
             public IGroupChildTaskIterator getSubTasks() {
                 return null;
@@ -157,7 +162,11 @@ public class WriterTemplate {
             , IDataxProcessor processor, IDataxReader dataXReader) throws IOException {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
-//            @Override
+            @Override
+            protected String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
+                return dataXWriter.getTemplate();
+            }
+            //            @Override
 //            public String getTemplateContent() {
 //                return dataXWriter.getTemplate();
 //            }
@@ -167,6 +176,10 @@ public class WriterTemplate {
     }
 
     public static void realExecuteDump(final WriterJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+        throw new UnsupportedOperationException("please use: realExecuteDump(String dataXName, final WriterJson writerJson, IDataXPluginMeta dataxWriter)");
+    }
+
+    public static void realExecuteDump(String dataXName, final WriterJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
             @Override
             public DataXMeta getDataxMeta() {
@@ -240,7 +253,12 @@ public class WriterTemplate {
             }
         };
 
-        realExecuteDump(readerMeta, writerMeta);
+        realExecuteDump(dataXName, readerMeta, writerMeta);
+    }
+
+    public static void realExecuteDump(IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
+    ) throws IllegalAccessException {
+        throw new UnsupportedOperationException("please use realExecuteDump(final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta");
     }
 
     /**
@@ -250,7 +268,7 @@ public class WriterTemplate {
      * @param writerMeta
      * @throws IllegalAccessException
      */
-    public static void realExecuteDump(IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
+    public static void realExecuteDump(final String dataXName, IReaderPluginMeta readerPluginMeta, IWriterPluginMeta writerMeta
     ) throws IllegalAccessException {
         // final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
         final JarLoader uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());
@@ -290,7 +308,22 @@ public class WriterTemplate {
         ColumnCast.bind(allConf);
         LoadUtil.bind(allConf);
 
-        JobContainer container = new JobContainer(allConf);
+        JobContainer container = new JobContainer(allConf) {
+            @Override
+            public int getTaskSerializeNum() {
+                return super.getTaskSerializeNum();
+            }
+
+            @Override
+            public String getFormatTime(TimeFormat format) {
+                return super.getFormatTime(format);
+            }
+
+            @Override
+            public String getTISDataXName() {
+                return dataXName;
+            }
+        };
 
         container.start();
     }

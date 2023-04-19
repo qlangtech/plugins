@@ -182,7 +182,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            statement = conn.createStatement();//.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            statement = conn.createStatement();
             resultSet = statement.executeQuery(getRefectTablesSql());
             //   resultSet = statement.getResultSet();
             while (resultSet.next()) {

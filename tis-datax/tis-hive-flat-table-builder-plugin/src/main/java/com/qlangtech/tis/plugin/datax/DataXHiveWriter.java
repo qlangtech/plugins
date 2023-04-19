@@ -47,7 +47,6 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -299,7 +298,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 Hiveserver2DataSourceFactory ds = DataXHiveWriter.this.getDataSourceFactory();
                 EntityName dumpTable = getDumpTab(tab);
                 ITISFileSystem fs = getFs().getFileSystem();
-                Path tabDumpParentPath = getTabDumpParentPath(tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
                 ds.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
@@ -336,22 +335,23 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
     }
 
-    private String getHdfsSubPath(EntityName dumpTable) {
+    private String getHdfsSubPath(IExecChainContext execContext, EntityName dumpTable) {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
+        // return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
+        return dumpTable.getNameWithPath() + "/" + TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis());
     }
 
-    private Path getTabDumpParentPath(ISelectedTab tab) {
+    private Path getTabDumpParentPath(IExecChainContext execContext, ISelectedTab tab) {
         EntityName dumpTable = getDumpTab(tab);
         ITISFileSystem fs = getFs().getFileSystem();
-        Path tabDumpParentPath = new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+        Path tabDumpParentPath = new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(execContext, dumpTable));
         return tabDumpParentPath;
     }
 
 
     private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
         try {
-            Path tabDumpParentPath = getTabDumpParentPath(tab);
+            Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);
             Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
             try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
                 EntityName dumpTable = getDumpTab(tab);// EntityName.create(dsFactory.getDbName(), tab.getName());

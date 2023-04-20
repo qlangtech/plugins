@@ -83,9 +83,14 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
     }
 
     @Override
-    public TableAliasMapper getTabAlias() {
+    public TableAliasMapper getTabAlias(IPluginContext pluginCtx) {
         return TableAliasMapper.Null;
     }
+
+//    @Override
+//    public TableAliasMapper getTabAlias() {
+//        return TableAliasMapper.Null;
+//    }
 
     @Override
     public List<IDataxReader> getReaders(IPluginContext pluginCtx) {

@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -299,7 +300,7 @@ public class WriterTemplate {
                             , writerMeta.getWriterJsonCfg());
 
                     cfg.set("job.content[0].reader", Configuration.from(readerPluginMeta.getReaderJsonCfgContent()));
-
+                    DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
                     return cfg;
                 });
 

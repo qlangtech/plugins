@@ -55,7 +55,8 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
         StoreResourceType resType = StoreResourceType.parse(
                 cfg.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE));
-        return BasicFSWriter.getWriterPlugin(dataxName, resType);
+        return Objects.requireNonNull(BasicFSWriter.getWriterPlugin(dataxName, resType)
+                , "dataName:" + dataxName + ",type:" + resType + " relevant writer can not be null");
     }
 
 

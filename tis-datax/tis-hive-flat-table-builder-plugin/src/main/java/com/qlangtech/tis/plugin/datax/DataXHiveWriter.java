@@ -238,8 +238,8 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         throw new UnsupportedOperationException();
     }
 
-    public IHiveConnGetter getHiveConnGetter() {
-        return getDataSourceFactory();
+    public final IHiveConnGetter getHiveConnGetter() {
+        return this.getDataSourceFactory();
     }
 
 
@@ -284,7 +284,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
-
+        Objects.requireNonNull(partitionRetainNum, "partitionRetainNum can not be null");
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {

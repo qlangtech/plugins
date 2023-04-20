@@ -18,21 +18,24 @@
 
 package com.qlangtech.tis.dump.hive;
 
-import com.google.common.collect.ImmutableMap;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
-import java.sql.*;
-import java.util.Map;
-import java.util.Objects;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-01-17 09:58
  **/
 public class TestHiveDBUtils {
+
+    @Test
+    public void test1() throws Exception {
+        System.out.println(  Class.forName("org.apache.http.conn.HttpClientConnectionManager") );
+    }
+
     @Test
     public void testConn() throws Exception {
         HiveDBUtils dbUtils = HiveDBUtils.getInstance("192.168.28.200:10000", "default");

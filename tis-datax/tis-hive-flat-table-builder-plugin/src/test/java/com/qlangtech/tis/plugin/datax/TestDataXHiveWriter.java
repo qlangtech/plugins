@@ -20,20 +20,14 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
-import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
-import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.impl.TabPrefixDecorator;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
@@ -78,7 +72,7 @@ public class TestDataXHiveWriter extends BasicTest {
         });
     }
 
-    String mysql2hiveDataXName = "mysql2hive";
+    final static String mysql2hiveDataXName = "mysql2hive";
 
     public void testConfigGenerate() throws Exception {
 
@@ -139,7 +133,19 @@ public class TestDataXHiveWriter extends BasicTest {
         writer.fileType = txtFormat;
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
         EasyMock.replay(fsFactory, fs);
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getApplicationTab());
+
+        assertNotNull(ddl);
+
+        assertEquals(
+                StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "create-application-ddl.sql"))
+                , ddl.getDDLScript());
+
+        EasyMock.verify(fsFactory, fs);
+    }
+
+    public static IDataxProcessor.TableMap getApplicationTab() {
+        return getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");
@@ -162,18 +168,12 @@ public class TestDataXHiveWriter extends BasicTest {
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
-        }));
-
-        assertNotNull(ddl);
-
-        assertEquals(
-                StringUtils.trimToEmpty(IOUtils.loadResourceFromClasspath(DataXHiveWriter.class, "create-application-ddl.sql"))
-                , ddl.getDDLScript());
-
-        EasyMock.verify(fsFactory, fs);
+        });
     }
 
-    protected IDataxProcessor.TableMap getTabApplication(
+    private static final String TAB_APPLICATION = "application";
+
+    protected static IDataxProcessor.TableMap getTabApplication(
             Consumer<List<CMeta>>... colsProcess) {
 
         List<CMeta> sourceCols = Lists.newArrayList();
@@ -191,46 +191,11 @@ public class TestDataXHiveWriter extends BasicTest {
         for (Consumer<List<CMeta>> p : colsProcess) {
             p.accept(sourceCols);
         }
-        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(sourceCols);
-        tableMap.setFrom("application");
-        tableMap.setTo("application");
+        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap(Optional.of(TAB_APPLICATION), sourceCols);
+        tableMap.setFrom(TAB_APPLICATION);
+        tableMap.setTo(TAB_APPLICATION);
         //tableMap.setSourceCols(sourceCols);
         return tableMap;
-    }
-
-
-    public void testDataDump() throws Exception {
-
-        HdfsFileSystemFactory hdfsFileSystemFactory = HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
-
-        final DefaultHiveConnGetter hiveConnGetter = new DefaultHiveConnGetter();
-        hiveConnGetter.dbName = "tis";
-        hiveConnGetter.hiveAddress = "192.168.28.200:10000";
-
-        final DataXHiveWriter dataxWriter = new DataXHiveWriter() {
-
-            @Override
-            public IHiveConnGetter getHiveConnGetter() {
-                return hiveConnGetter;
-            }
-
-            @Override
-            public FileSystemFactory getFs() {
-                return hdfsFileSystemFactory;
-            }
-
-            @Override
-            public Class<?> getOwnerClass() {
-                return DataXHiveWriter.class;
-            }
-        };
-
-        DataxWriter.dataxWriterGetter = (name) -> {
-            assertEquals("mysql2hive", name);
-            return dataxWriter;
-        };
-
-        WriterTemplate.realExecuteDump(WriterJson.path("hive-datax-writer-assert-without-option-val.json"), dataxWriter);
     }
 
 

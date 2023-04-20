@@ -57,16 +57,20 @@ public class TestHiveInsertFromSelectParser extends TestCase {
                 createCol(index++, "pay_customer_ids", DataType.createVarChar(256)));
 
 
-        HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser();
         ITabPartition pt = () -> TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp());
         Map<IDumpTable, ITabPartition> ps = Maps.newHashMap();
         ps.put(EntityName.create("order", "payinfo"), pt);
         TabPartitions tabPartition = new TabPartitions(ps);
 
         try (InputStream input = TestHiveInsertFromSelectParser.class.getResourceAsStream("tmp_pay.sql")) {
-            parse.start(IOUtils.toString(input, TisUTF8.get()), tabPartition, (sql) -> {
+
+            HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser(IOUtils.toString(input, TisUTF8.get()), (sql) -> {
                 return cols;
             });
+
+//            parse.start(IOUtils.toString(input, TisUTF8.get()), tabPartition, (sql) -> {
+//                return cols;
+//            });
             // parse.start("select p.id from  orderrrr.payinfo p");
             System.out.println("getTargetTableName:" + parse.getTargetTableName());
             List<HiveColumn> columns = parse.getColsExcludePartitionCols();

@@ -200,7 +200,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                                                 .build())
                                 );
                             }));
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias()
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {

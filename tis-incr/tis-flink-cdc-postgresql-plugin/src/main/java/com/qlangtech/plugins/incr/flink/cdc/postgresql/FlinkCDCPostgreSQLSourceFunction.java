@@ -124,7 +124,7 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
 //                            })
             );
             // for (ISelectedTab tab : tabs) {
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), DTOStream::createDispatched);
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
             //}
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {

@@ -76,7 +76,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
 
         BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
-                , dataxProcessor.getTabAlias().getWithCheckNotNull(sourceTableName), false);
+                , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false);
         return new ChunjunStreamTableSink(false, endType, rowDataSinkFunc);
     }
 

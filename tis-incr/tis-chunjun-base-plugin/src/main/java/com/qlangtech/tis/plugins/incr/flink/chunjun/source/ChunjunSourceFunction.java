@@ -119,7 +119,7 @@ public abstract class ChunjunSourceFunction
 
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
-            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(), (tabName) -> DTOStream.createRowData());
+            sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
             return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

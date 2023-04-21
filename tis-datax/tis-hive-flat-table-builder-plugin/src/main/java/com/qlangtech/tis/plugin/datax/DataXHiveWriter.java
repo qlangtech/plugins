@@ -327,6 +327,24 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         };
     }
 
+    @Override
+    public IRemoteTaskTrigger createPostTask(
+            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+
+        return new IRemoteTaskTrigger() {
+
+            @Override
+            public String getTaskName() {
+                return getEngineType().getToken() + "_" + tab.getName() + "_bind";
+            }
+
+            @Override
+            public void run() {
+                bindHiveTables(execContext, tab);
+            }
+        };
+    }
+
     private EntityName getDumpTab(ISelectedTab tab) {
         return getDumpTab(tab.getName());
     }
@@ -392,22 +410,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
     }
 
-    @Override
-    public IRemoteTaskTrigger createPostTask(
-            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
 
-        return new IRemoteTaskTrigger() {
-            @Override
-            public String getTaskName() {
-                return getEngineType().getToken() + "_" + tab.getName() + "_bind";
-            }
-
-            @Override
-            public void run() {
-                bindHiveTables(execContext, tab);
-            }
-        };
-    }
 
 //    /**
 //     * https://cwiki.apache.org/confluence/display/hive/languagemanual+ddl#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable

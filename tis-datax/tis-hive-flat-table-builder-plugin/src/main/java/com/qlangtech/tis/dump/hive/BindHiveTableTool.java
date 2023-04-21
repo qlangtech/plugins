@@ -285,8 +285,8 @@ public class BindHiveTableTool {
                     // String hivePath = hiveTable.getNameWithPath();
                     hiveTable = entry.getKey();
 
-                    final List<String> tables = engine.getTablesInDB().getTabs();// engine.getTabs(conn, hiveTable);// getExistTables(conn, hiveTable.getDbName());
-                    HiveBindConfig columns = entry.getValue().call();// getColumns(hiveTable, timestamp);
+                    final List<String> tables = engine.getTablesInDB().getTabs();
+                    HiveBindConfig columns = entry.getValue().call();
                     if (tables.contains(hiveTable.getTableName())) {
                         //isTableSame(conn, columns.colsMeta, hiveTable)
                         if (!isTableSchemaSame.isSame(columns, hiveTable)) {
@@ -407,6 +407,10 @@ public class BindHiveTableTool {
                 //path = fs.getPath(this.fileSystem.getRootDir() + "/" + hivePath + "/all/" + timestamp + "/" + (startIndex));
                 path = fs.getPath(new HdfsPath(colsMeta.tabDumpParentPath), String.valueOf(startIndex));
                 if (!fs.exists(path)) {
+                    if (startIndex < 1) {
+                        // 说明一个分区都没有绑定到,可能绑定表的执行逻辑 跑到 dump逻辑前面去了
+                        throw new IllegalStateException("path shall be exist:" + path);
+                    }
                     return path;
                 }
                 if (!pathVisitor.process(startIndex, path)) { return path;}

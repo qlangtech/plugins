@@ -210,11 +210,11 @@
             <!--                <scope>provided</scope>-->
             <!--            </dependency>-->
 
-<!--            <dependency>-->
-<!--                <groupId>com.qlangtech.tis.tools</groupId>-->
-<!--                <artifactId>tis-spark-extends-api</artifactId>-->
-<!--                <version>${project.version}</version>-->
-<!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>com.qlangtech.tis.tools</groupId>-->
+            <!--                <artifactId>tis-spark-extends-api</artifactId>-->
+            <!--                <version>${project.version}</version>-->
+            <!--            </dependency>-->
 
             <dependency>
                 <groupId>org.easymock</groupId>
@@ -435,8 +435,8 @@
                 <version>${hadoop-version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.apache.hadoop</groupId>
-                        <artifactId>hadoop-auth</artifactId>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>com.sun.jersey</groupId>

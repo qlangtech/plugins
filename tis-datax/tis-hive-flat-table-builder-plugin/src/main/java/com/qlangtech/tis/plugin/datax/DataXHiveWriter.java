@@ -356,7 +356,8 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     private String getHdfsSubPath(IExecChainContext execContext, EntityName dumpTable) {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
         // return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
-        return dumpTable.getNameWithPath() + "/" + TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis());
+        return dumpTable.getNameWithPath() + "/"
+                + TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
     }
 
     private Path getTabDumpParentPath(IExecChainContext execContext, ISelectedTab tab) {

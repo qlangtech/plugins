@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,7 +41,7 @@ public class TaskExec {
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
             , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor
-            , final List<String> dependencyTasks) {
+    ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         //  AtomicBoolean success = new AtomicBoolean(false);
@@ -50,10 +49,6 @@ public class TaskExec {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
 
-            @Override
-            public List<String> getTaskDependencies() {
-                return dependencyTasks;
-            }
 
             @Override
             public void run() {

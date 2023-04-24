@@ -34,6 +34,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-msg-format-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.dtstack.chunjun</groupId>
             <artifactId>chunjun-connector-rabbitmq</artifactId>
             <version>${chunjun.version}</version>

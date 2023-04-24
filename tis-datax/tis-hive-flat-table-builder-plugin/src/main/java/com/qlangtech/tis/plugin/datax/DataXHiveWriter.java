@@ -370,30 +370,33 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
         try {
-            Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);
-            Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
-            try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
-                EntityName dumpTable = getDumpTab(tab);// EntityName.create(dsFactory.getDbName(), tab.getName());
-                final Path dumpParentPath = tabDumpParentPath;
 
+            EntityName dumpTable = getDumpTab(tab);
+            String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
 
-                String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
-                //String dumpTimeStamp = DataxUtils.getDumpTimeStamp();
-                BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
-                        , Collections.singletonMap(dumpTable, () -> {
-                                    return new BindHiveTableTool.HiveBindConfig(Collections.emptyList(), dumpParentPath);
-                                }
-                        )
-                        , dumpTimeStamp
-                        , (columns, hiveTable) -> {
-                            return true;
-                        },
-                        (columns, hiveTable) -> {
-                            throw new UnsupportedOperationException("table " + hiveTable.getTabName() + " shall have create in 'createPreExecuteTask'");
-                        }
-                );
-                recordPt(execContext, dumpTable, dumpTimeStamp);
+            if (!execContext.isDryRun()) {
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);
+                Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
+                try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
+                    final Path dumpParentPath = tabDumpParentPath;
+                    BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
+                            , Collections.singletonMap(dumpTable, () -> {
+                                        return new BindHiveTableTool.HiveBindConfig(Collections.emptyList(), dumpParentPath);
+                                    }
+                            )
+                            , dumpTimeStamp
+                            , (columns, hiveTable) -> {
+                                return true;
+                            },
+                            (columns, hiveTable) -> {
+                                throw new UnsupportedOperationException("table " + hiveTable.getTabName() + " shall have create in 'createPreExecuteTask'");
+                            }
+                    );
+
+                }
             }
+
+            recordPt(execContext, dumpTable, dumpTimeStamp);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -410,7 +413,6 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         TabPartitions dateParams = ExecChainContextUtils.getDependencyTablesPartitions(execContext);
         dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
     }
-
 
 
 //    /**

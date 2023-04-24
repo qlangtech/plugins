@@ -72,7 +72,7 @@
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
-        <module>tis-datax-rabbitmq-plugin</module>
+<!--        <module>tis-datax-rabbitmq-plugin</module>-->
 
 
     </modules>

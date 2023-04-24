@@ -154,7 +154,7 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
         protected Schema getAvroSchema() {
-            ITISFileSystem fs = writerPlugin.getFs().getFileSystem();
+            ITISFileSystem fs = writerPlugin.getFsFactory().getFileSystem();
             IPath tabSourceSchema = HudiTableMeta.getTableSourceSchema(
                     fs, this.tabMeta.getDumpDir(fs, ((DataXHudiWriter) writerPlugin).getHiveConnMeta()));
             try (InputStream reader = fs.open(tabSourceSchema)) {

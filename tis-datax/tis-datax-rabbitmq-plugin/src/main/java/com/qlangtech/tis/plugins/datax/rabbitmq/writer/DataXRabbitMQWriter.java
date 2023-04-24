@@ -23,6 +23,9 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 import java.util.Optional;
@@ -32,6 +35,30 @@ import java.util.Optional;
  * @create: 2023-03-25 19:57
  **/
 public class DataXRabbitMQWriter extends DataxWriter {
+    @FormField(ordinal = 7 , type = FormFieldType.INPUTTEXT, validate = {})
+    public String username;
+    @FormField(ordinal = 0 , type = FormFieldType.INPUTTEXT, validate = {})
+    public String password;
+
+    @FormField(ordinal = 1 , type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
+    public Integer port;
+    @FormField(ordinal = 2 , type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String host;
+    @FormField(ordinal = 5 , type = FormFieldType.ENUM, validate = {})
+    public Boolean ssl;
+
+    @FormField(ordinal = 3 , type = FormFieldType.INPUTTEXT, validate = {})
+    public String exchange;
+
+    @FormField(ordinal = 4 , type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String routingKey;
+
+
+
+    @FormField(ordinal = 6 , type = FormFieldType.INPUTTEXT, validate = {})
+    public String virtualHost;
+
+
 
     @Override
     public String getTemplate() {

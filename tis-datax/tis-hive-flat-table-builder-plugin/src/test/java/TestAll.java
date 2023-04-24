@@ -18,6 +18,7 @@
 
 import com.qlangtech.tis.dump.hive.TestHiveDBUtils;
 import com.qlangtech.tis.dump.hive.TestHiveRemoveHistoryDataTask;
+import com.qlangtech.tis.dump.hive.TestHiveTableBuilder;
 import com.qlangtech.tis.hive.TestDefaultHiveConnGetter;
 import com.qlangtech.tis.hive.TestHiveInsertFromSelectParser;
 import com.qlangtech.tis.plugin.datax.TestDataXHiveWriter;
@@ -41,6 +42,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestDataXHiveWriter.class);
         suite.addTestSuite(TestHiveInsertFromSelectParser.class);
         suite.addTestSuite(TestHiveDBUtils.class);
+        suite.addTestSuite(TestHiveTableBuilder.class);
         // suite.addTestSuite(TestYarnTableDumpFactory.class);
         return suite;
     }

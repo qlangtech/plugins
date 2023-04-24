@@ -23,6 +23,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.manage.common.ConfigFileContext;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -32,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -45,6 +49,20 @@ public class Conver2TISProps {
     private static final String PROP_DESCRIBLE_PREFIX = "Kafka";
 
     public static void main(String[] args) throws Exception {
+
+//        JSONObject spec = HttpUtils.processContent(new URL("https://raw.githubusercontent.com/airbytehq/airbyte/master/airbyte-integrations/connectors/destination-rabbitmq/destination_rabbitmq/spec.json"),
+//                new ConfigFileContext.StreamProcess<JSONObject>() {
+//                    @Override
+//                    public JSONObject p(int status, InputStream stream, Map headerFields) {
+//                        try {
+//                            return JSON.parseObject(org.apache.commons.io.IOUtils.toString(stream, TisUTF8.get()));
+//                        } catch (IOException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    }
+//                }
+//        );
+
         JSONObject spec = IOUtils.loadResourceFromClasspath(Conver2TISProps.class
                 , "/source_spec.json", true, (res) -> {
                     return JSON.parseObject(org.apache.commons.io.IOUtils.toString(res, TisUTF8.get()));

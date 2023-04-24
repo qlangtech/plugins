@@ -82,7 +82,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         DataXJobSubmit.TableDataXEntity tableEntity
                 = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(DATAX_JOB_FILE_NAME, DUMP_TABLE);
 
-        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, tableEntity, Collections.emptyList());
+        IRemoteTaskTrigger dataXJob = submit.createDataXJob(jobContext, svcRef, dataxProcessor, tableEntity);
         dataXJob.run();
         EasyMock.verify(taskContext, selectTab, dataxProcessor, pipelineController);
     }

@@ -26,6 +26,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
 import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IFSWriter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.job.common.JobCommon;
@@ -129,7 +130,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
 
         setMockStub(dataName);
 
-        BasicFSWriter writerPlugin = BasicFSWriter.getWriterPlugin(dataName);
+        IFSWriter writerPlugin = BasicFSWriter.getWriterPlugin(dataName);
         boolean success = false;
         try {
             if (!(writerPlugin instanceof IHiveConn)) {

@@ -142,40 +142,6 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
                     return new KafkaSerializationConverter(flinkCol);
                 };
             }
-
-//            @Override
-//            protected RowSerializationSchema createRowSerializationSchema(KafkaColumnConverter keyConverter) {
-//
-//
-//                return new RowSerializationSchema(
-//                        kafkaConf,
-//                        new CustomerFlinkPartition<>(),
-//                        keyConverter,
-//
-//                        ) {
-
-//                    private DTO.EventType parseEvnet(RowKind rowKind) {
-//                        switch (rowKind) {
-//                            case UPDATE_BEFORE:
-//                                // return DTO.EventType.UPDATE_BEFORE;
-//                                throw new IllegalStateException("unsupport type:" + rowKind);
-//                            case UPDATE_AFTER:
-//                                return DTO.EventType.UPDATE_AFTER;
-//                            case DELETE:
-//                                return DTO.EventType.DELETE;
-//                            case INSERT:
-//                                return DTO.EventType.ADD;
-//                        }
-//
-//                        throw new IllegalStateException("illegal rowKind:" + rowKind);
-//                    }
-
-//                    @Override
-//                    public Map<String, Object> createRowVals(String tableName, RowKind rowKind, Map<String, Object> data) {
-//                        return DataXKafkaWriter.createRowVals(tableName, parseEvnet(rowKind), data);
-//                    }
-//                };
-//            }
         };
 
 

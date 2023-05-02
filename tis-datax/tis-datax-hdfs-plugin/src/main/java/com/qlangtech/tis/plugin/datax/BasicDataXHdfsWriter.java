@@ -26,6 +26,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriterErrorCode;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
+import com.qlangtech.tis.datax.IFSWriter;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import org.apache.hadoop.fs.Path;
@@ -59,7 +60,7 @@ public class BasicDataXHdfsWriter extends Writer {
 
 
     public static abstract class Task extends HdfsWriter.Task {
-        protected BasicFSWriter writerPlugin;
+        protected IFSWriter writerPlugin;
 
         @Override
         public void init() {

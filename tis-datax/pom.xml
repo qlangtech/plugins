@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -71,6 +71,8 @@
         <module>tis-datax-hudi-common</module>
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-odps-plugin</module>
+        <module>tis-datax-kafka-plugin</module>
+<!--        <module>tis-datax-rabbitmq-plugin</module>-->
 
 
     </modules>

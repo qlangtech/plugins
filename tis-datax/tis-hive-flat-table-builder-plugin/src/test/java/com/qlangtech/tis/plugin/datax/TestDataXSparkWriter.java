@@ -1,34 +1,33 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
-import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -75,11 +74,11 @@ public class TestDataXSparkWriter extends BasicTest {
         DataXSparkWriter hiveWriter = new DataXSparkWriter();
         hiveWriter.dataXName = mysql2hiveDataXName;
         hiveWriter.fsName = "hdfs1";
-        TextFSFormat textForamt = new  TextFSFormat();
+        TextFSFormat textForamt = new TextFSFormat();
         textForamt.fieldDelimiter = Delimiter.Tab.token;
         hiveWriter.fileType = textForamt;//"text";
         hiveWriter.writeMode = "nonConflict";
-       // hiveWriter.fieldDelimiter = "\t";
+        // hiveWriter.fieldDelimiter = "\t";
         hiveWriter.compress = "gzip";
         hiveWriter.encoding = "utf-8";
         hiveWriter.template = DataXSparkWriter.getDftTemplate();
@@ -105,7 +104,7 @@ public class TestDataXSparkWriter extends BasicTest {
 
         //  final DataxWriter dataxWriter = DataxWriter.load(null, mysql2hiveDataXName);
 
-        HdfsFileSystemFactory hdfsFileSystemFactory =  HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
+        HdfsFileSystemFactory hdfsFileSystemFactory = HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
 
         ITISFileSystem fileSystem = hdfsFileSystemFactory.getFileSystem();
 
@@ -120,8 +119,9 @@ public class TestDataXSparkWriter extends BasicTest {
         final DataXSparkWriter dataxWriter = new DataXSparkWriter() {
 
             @Override
-            public IHiveConnGetter getHiveConnGetter() {
-                return hiveConnGetter;
+            public Hiveserver2DataSourceFactory getDataSourceFactory() {
+                // return super.getDataSourceFactory();
+                throw new UnsupportedOperationException();
             }
 
             @Override
@@ -140,7 +140,7 @@ public class TestDataXSparkWriter extends BasicTest {
             return dataxWriter;
         };
 
-        WriterTemplate.realExecuteDump( WriterJson.path("spark-datax-writer-assert-without-option-val.json"), dataxWriter);
+        WriterTemplate.realExecuteDump(WriterJson.path("spark-datax-writer-assert-without-option-val.json"), dataxWriter);
     }
 
 

@@ -16,16 +16,11 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax;
-
-import junit.framework.TestCase;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.rabbitmq.sink;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-07-14 19:31
+ * @create: 2023-04-24 18:38
  **/
-public class Test extends TestCase {
-    public void testLoad() {
-        System.out.println(Thread.currentThread().getContextClassLoader().getResourceAsStream("common-version-info.properties"));
-    }
+public class TestChujunRabbitMQSinkFactory {
 }

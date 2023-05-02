@@ -20,7 +20,7 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -49,7 +49,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+<!--                <version>3.2.4</version>-->
                 <executions>
                     <execution>
                         <phase>package</phase>

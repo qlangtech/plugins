@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
+import com.qlangtech.plugins.incr.flink.utils.UberJarUtil;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
@@ -30,13 +31,10 @@ import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
-import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
-import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
@@ -48,15 +46,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 /**
@@ -108,7 +103,7 @@ public class FlinkTaskNodeController implements IRCController {
                 if ((status.getState() == IFlinkIncrJobStatus.State.STOPED
                         || !((FlinkJobDeploymentDetails) getRCDeployment(collection)).isRunning())
                         && (savepoint = status.containSavepoint(savepointPath)).isPresent()) {
-                    File streamUberJar = getStreamUberJarFile(collection);
+                    File streamUberJar = UberJarUtil.getStreamUberJarFile(collection);
                     if (!streamUberJar.exists()) {
                         throw new IllegalStateException("streamUberJar is not exist:" + streamUberJar.getAbsolutePath());
                     }
@@ -134,13 +129,8 @@ public class FlinkTaskNodeController implements IRCController {
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
-        File streamUberJar = getStreamUberJarFile(collection);
-        Manifest manifest = PluginAndCfgsSnapshot.createFlinkIncrJobManifestCfgAttrs(collection, timestamp);
-        try (JarOutputStream jaroutput = new JarOutputStream(
-                FileUtils.openOutputStream(streamUberJar, false)
-                , Objects.requireNonNull(manifest, "manifest can not be null"))) {
-            jaroutput.flush();
-        }
+
+        File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
 
         this.deploy(collection, streamUberJar
                 , (request) -> {
@@ -150,15 +140,6 @@ public class FlinkTaskNodeController implements IRCController {
                 });
     }
 
-    private File getStreamUberJarFile(TargetResName collection) {
-
-        File streamUberJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), 0);
-
-//        String streamJar = StreamContextConstant.getIncrStreamJarName(collection.getName());
-//        File streamUberJar = new File(FileUtils.getTempDirectory() + "/tmp", "uber_" + streamJar);
-        logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
-        return streamUberJar;
-    }
 
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {

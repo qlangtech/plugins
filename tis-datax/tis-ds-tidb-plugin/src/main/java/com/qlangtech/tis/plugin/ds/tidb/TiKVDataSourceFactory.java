@@ -20,13 +20,6 @@ package com.qlangtech.tis.plugin.ds.tidb;
 import com.alibaba.citrus.turbine.Context;
 import com.pingcap.com.google.common.collect.Lists;
 import com.pingcap.com.google.common.collect.Maps;
-import com.pingcap.tikv.TiConfiguration;
-import com.pingcap.tikv.TiSession;
-import com.pingcap.tikv.catalog.Catalog;
-import com.pingcap.tikv.meta.TiDAGRequest;
-import com.pingcap.tikv.meta.TiDBInfo;
-import com.pingcap.tikv.meta.TiTableInfo;
-import com.pingcap.tikv.util.RangeSplitter;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -38,6 +31,13 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tikv.common.TiConfiguration;
+import org.tikv.common.TiSession;
+import org.tikv.common.catalog.Catalog;
+import org.tikv.common.meta.TiDAGRequest;
+import org.tikv.common.meta.TiDBInfo;
+import org.tikv.common.meta.TiTableInfo;
+import org.tikv.common.util.RangeSplitter;
 
 import java.lang.reflect.Field;
 import java.sql.Types;
@@ -80,7 +80,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             modifiersField.setAccessible(true);
             modifiersField.setInt(sessionCachedMap, sessionCachedMap.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
 
-            sessionCachedMap.set(null, new HashMap<String, com.pingcap.tikv.TiSession>() {
+            sessionCachedMap.set(null, new HashMap<String, TiSession>() {
                 @Override
                 public boolean containsKey(Object key) {
                     // 将缓存作用废掉
@@ -183,13 +183,13 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
         final List<TiPartition> partitions = Lists.newArrayList();
 
-        List<RangeSplitter.RegionTask> keyWithRegionTasks = RangeSplitter
+        List<org.tikv.common.util.RangeSplitter.RegionTask> keyWithRegionTasks = RangeSplitter
                 .newSplitter(session.getRegionManager())
                 .splitRangeByRegion(dagRequest.getRangesByPhysicalId(physicalId), dagRequest.getStoreType());
 
-        Map<String, List<RangeSplitter.RegionTask>> hostTasksMap = Maps.newHashMap();
-        List<RangeSplitter.RegionTask> tasks = null;
-        for (RangeSplitter.RegionTask task : keyWithRegionTasks) {
+        Map<String, List<org.tikv.common.util.RangeSplitter.RegionTask>> hostTasksMap = Maps.newHashMap();
+        List<org.tikv.common.util.RangeSplitter.RegionTask> tasks = null;
+        for (org.tikv.common.util.RangeSplitter.RegionTask task : keyWithRegionTasks) {
             if (regionId.isPresent() && regionId.get() != task.getRegion().getId()) {
                 // 在task中需要对region进行过滤，每一个task执行一个region的dump任务
                 continue;
@@ -202,7 +202,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             tasks.add(task);
         }
         int index = 0;
-        for (List<RangeSplitter.RegionTask> tks : hostTasksMap.values()) {
+        for (List<org.tikv.common.util.RangeSplitter.RegionTask> tks : hostTasksMap.values()) {
             partitions.add(new TiPartition(index++, tks));
         }
         return partitions;
@@ -228,6 +228,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
             session = getTiSession();
             try (Catalog cat = session.getCatalog()) {
                 TiDBInfo db = cat.getDatabase(dbName);
+                //TiDBInfo db = cat.getDatabase(dbName);
                 return vistTiDB.visit(session, cat, db);
             }
         } finally {
@@ -244,7 +245,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
 
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
         return this.openTiDB((session, c, db) -> {
             TiTableInfo table1 = c.getTable(db, table.getTableName());
             int[] index = new int[1];
@@ -262,7 +263,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         });
     }
 
-    private com.qlangtech.tis.plugin.ds.DataType map2JdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
+    private com.qlangtech.tis.plugin.ds.DataType map2JdbcType(String keyName, org.tikv.common.types.DataType type) {
         int colSize = (int) Long.min(Integer.MAX_VALUE, type.getLength());
         DataType tisType = new DataType(jdbcType(keyName, type), type.getName(), colSize);
         // type.getType()
@@ -270,7 +271,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         return tisType;
     }
 
-    private int jdbcType(String keyName, com.pingcap.tikv.types.DataType type) {
+    private int jdbcType(String keyName, org.tikv.common.types.DataType type) {
         switch (type.getType()) {
             case TypeDecimal:
                 return Types.DECIMAL;
@@ -320,7 +321,7 @@ public class TiKVDataSourceFactory extends DataSourceFactory {
         }
     }
 
-    private ReservedFieldType typeMap(com.pingcap.tikv.types.DataType dtype) {
+    private ReservedFieldType typeMap(org.tikv.common.types.DataType dtype) {
 
         switch (dtype.getType()) {
             case TypeDecimal:

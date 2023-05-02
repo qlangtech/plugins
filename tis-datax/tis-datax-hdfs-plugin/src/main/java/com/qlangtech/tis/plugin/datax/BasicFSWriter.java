@@ -18,13 +18,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-//import com.alibaba.datax.common.util.Configuration;
-
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IFSWriter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.offline.FileSystemFactoryGetter;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -41,7 +39,7 @@ import java.util.Optional;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-01 10:05
  **/
-public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware, FileSystemFactoryGetter {
+public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginStore.IPluginKeyAware, IFSWriter {
 
     protected static final String KEY_FIELD_NAME_HIVE_CONN = "hiveConn";
 
@@ -59,33 +57,18 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     @FormField(ordinal = 30, type = FormFieldType.ENUM, advance = true, validate = {})
     public String encoding;
 
-
-//    public String hadoopConfig;
-//    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
-
-    //    @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String haveKerberos;
-//    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String kerberosKeytabFilePath;
-//    @FormField(ordinal = 14, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String kerberosPrincipal;
     public String dataXName;
 
-    public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName) {
+    public static IFSWriter getWriterPlugin(String dataxName) {
         return getWriterPlugin(dataxName, StoreResourceType.DataApp);
     }
 
-    public static <TT extends BasicFSWriter> TT getWriterPlugin(String dataxName, StoreResourceType resType) {
+    public static IFSWriter getWriterPlugin(String dataxName, StoreResourceType resType) {
         DataxWriter dataxWriter = load(null, resType, dataxName, true);
-        if (!(dataxWriter instanceof BasicFSWriter)) {
-
-//            Class<?> superclass = dataxWriter.getClass().getSuperclass();
-//            StringBuffer buffer = new StringBuffer();
-//            buffer.append("superClass:").append(superclass.getName()).append(",classloader:").append(superclass.getClassLoader());
-
+        if (!(dataxWriter instanceof IFSWriter)) {
             throw new BasicHdfsWriterJob.JobPropInitializeException("datax Writer must be type of 'BasicFSWriter',but now is:" + dataxWriter.getClass());
         }
-        return (TT) dataxWriter;
+        return (IFSWriter) dataxWriter;
     }
 
     @Override
@@ -148,16 +131,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
         }
 
         public List<CMeta> getCols() {
-
             return this.tabMap.getSourceCols();
-
-//            return this.tabMap.getSourceCols().stream().map((c) -> {
-//                HiveColumn col = new HiveColumn();
-//                col.setName(c.getName());
-//                col.setType(c.getType().getS());
-//                col.setNullable(c.isNullable());
-//                return col;
-//            }).collect(Collectors.toList());
         }
 
 

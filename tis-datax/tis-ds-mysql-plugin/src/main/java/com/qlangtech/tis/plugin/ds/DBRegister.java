@@ -51,7 +51,7 @@ public abstract class DBRegister {
     }
 
     private void setApplicationContext(boolean resolveHostIp, boolean facade) {
-        this.dbConfig.vistDbURL(resolveHostIp, (dbName, hostName, jdbcUrl) -> {
+        this.dbConfig.vistDbURL(resolveHostIp, DBConfig.expireSec, (dbName, hostName, jdbcUrl) -> {
             final String dbDefinitionId = (facade ? DBRegister.this.dbName : dbName);
             createDefinition(dbDefinitionId, "com.mysql.jdbc.Driver", jdbcUrl);
         }, facade);

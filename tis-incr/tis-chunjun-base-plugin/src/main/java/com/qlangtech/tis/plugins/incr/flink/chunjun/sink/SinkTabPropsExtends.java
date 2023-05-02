@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.sink;
@@ -31,15 +31,13 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -72,12 +70,48 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
      * @return
      */
     public static List<Option> getPrimaryKeys() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream().filter((col) -> col.isPk()));
+        return buildPrimaryKeys().pks;
+    }
+
+    private static PrimaryKeys buildPrimaryKeys() {
+        boolean[] containPk = new boolean[1];
+        List<Option> pkResult = SelectedTab.getContextTableCols((cols) -> {
+
+            Optional<ColumnMetaData> findPks = cols.stream().filter((c) -> c.isPk()).findFirst();
+            if (findPks.isPresent()) {
+                containPk[0] = true;
+                return cols.stream().filter((c) -> c.isPk());
+            } else {
+                // 如果不存在主键则全选
+                return cols.stream();
+            }
+        });
+
+        return new PrimaryKeys(containPk[0], pkResult);
+    }
+
+    private static class PrimaryKeys {
+        final List<Option> pks;
+        private final boolean containPk;
+
+        public PrimaryKeys(boolean containPk, List<Option> pks) {
+            this.pks = pks;
+            this.containPk = containPk;
+        }
+
+        public List<String> createPkKeys() {
+            if (this.containPk) {
+                return pks.stream()
+                        .map((pk) -> String.valueOf(pk.getValue())).collect(Collectors.toList());
+            } else {
+                return Collections.emptyList();
+            }
+        }
     }
 
     public static List<String> getDeftRecordKeys() {
-        return getPrimaryKeys().stream()
-                .map((pk) -> String.valueOf(pk.getValue())).collect(Collectors.toList());
+        PrimaryKeys primaryKeys = buildPrimaryKeys();
+        return primaryKeys.createPkKeys();
     }
 
     /**

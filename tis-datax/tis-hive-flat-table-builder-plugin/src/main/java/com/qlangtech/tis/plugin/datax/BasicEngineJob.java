@@ -32,7 +32,6 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,15 +57,15 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
     @Override
     public void init() {
-        try {
-            super.init();
-        } catch (Throwable e) {
-            if (ExceptionUtils.indexOfType(e, JobPropInitializeException.class) > -1) {
-                throw new RuntimeException(e);
-            } else {
-                TisDataXHiveWriter.logger.warn("init alibaba hdfs writer Job faild,errmsg:" + StringUtils.substringBefore(e.getMessage(), "\n"));
-            }
-        }
+        //try {
+        super.init();
+//        } catch (Throwable e) {
+//            if (ExceptionUtils.indexOfType(e, JobPropInitializeException.class) > -1) {
+//                throw new RuntimeException(e);
+//            } else {
+//                TisDataXHiveWriter.logger.warn("init alibaba hdfs writer Job faild,errmsg:" + StringUtils.substringBefore(e.getMessage(), "\n"));
+//            }
+//        }
 
         this.ptRetainNum = getPtRetainNum();
         TT writerPlugin = this.getWriterPlugin();
@@ -130,7 +129,8 @@ public abstract class BasicEngineJob<TT extends DataXHiveWriter> extends BasicHd
 
     protected String getHdfsSubPath() {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return this.dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
+        Objects.requireNonNull(timeFormat, "timeFormat can not be null");
+        return this.dumpTable.getNameWithPath() + "/" + timeFormat.format(DataxUtils.getDumpTimeStamp());
     }
 
     protected EntityName createDumpTable() {

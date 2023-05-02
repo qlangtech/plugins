@@ -104,16 +104,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         return fs.getPath(tabDumpDir, "data");
     }
 
-    @Override
-    public List<String> getTaskDependencies() {
-//        File dataXWorkDir = IDataxProcessor.getDataXWorkDir(null, this.hudiWriter.dataXName);
-//        DataXCfgGenerator.GenerateCfgs generateCfgs = DataXCfgGenerator.GenerateCfgs.readFromGen(dataXWorkDir);
-//        return generateCfgs.getGroupedChildTask().get(tableName);
-        List<DataXCfgGenerator.DBDataXChildTask> dependencies
-                = this.generateCfgs.getDataXTaskDependencies(hudiTab.getName());
-
-        throw new UnsupportedOperationException("getTaskDependencies");
-    }
+//    @Override
+//    public List<String> getTaskDependencies() {
+//
+//        List<DataXCfgGenerator.DBDataXChildTask> dependencies
+//                = this.generateCfgs.getDataXTaskDependencies(hudiTab.getName());
+//
+//        throw new UnsupportedOperationException("getTaskDependencies");
+//    }
 
     @Override
     public String getTaskName() {

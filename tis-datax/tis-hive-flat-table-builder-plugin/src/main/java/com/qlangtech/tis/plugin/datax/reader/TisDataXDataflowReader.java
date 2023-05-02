@@ -21,8 +21,6 @@ package com.qlangtech.tis.plugin.datax.reader;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.taskflow.hive.JoinHiveTask;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -68,9 +66,8 @@ public class TisDataXDataflowReader extends DataxReader {
     }
 
 
-
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
 
         SqlTaskNodeMeta.SqlDataFlowTopology topology = this.getTopology();
         Map<String, SqlTaskNodeMeta> finalNodes = topology.getFinalNodes();
@@ -87,13 +84,13 @@ public class TisDataXDataflowReader extends DataxReader {
 
 
         // try {
-        return writerDS.getTableMetadata(table);
+        return writerDS.getTableMetadata(false, table);
 //        } catch (TableNotFoundException e) {
 //
 //            nodeMeta.getSql();
 //
 //            nodeMeta.getDependencies()
-          //  JoinHiveTask.getSQLParserResult();
+        //  JoinHiveTask.getSQLParserResult();
 //
 //
 //
@@ -116,7 +113,6 @@ public class TisDataXDataflowReader extends DataxReader {
     }
 
 
-
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         return null;
@@ -127,7 +123,7 @@ public class TisDataXDataflowReader extends DataxReader {
         return null;
     }
 
-   // @TISExtension
+    // @TISExtension
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         @Override
         public String getDisplayName() {

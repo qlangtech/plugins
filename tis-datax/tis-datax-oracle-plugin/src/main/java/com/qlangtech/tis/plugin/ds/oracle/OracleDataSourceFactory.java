@@ -22,12 +22,8 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.plugin.ds.DBConfig;
-import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -45,19 +41,25 @@ import static oracle.jdbc.OracleTypes.*;
  * @create: 2021-06-24 13:42
  **/
 @Public
-public class OracleDataSourceFactory extends BasicDataSourceFactory {
+public class OracleDataSourceFactory extends BasicDataSourceFactory implements DataSourceFactory.ISchemaSupported {
 
     public static final String ORACLE = "Oracle";
 
-//    @FormField(ordinal = 4, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public Boolean asServiceName;
-//
-
-    @FormField(validate = Validator.require)
+    @FormField(validate = Validator.require, ordinal = 2)
     public ConnEntity connEntity;
 
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean allAuthorized;
+
+//    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public Boolean allAuthorized;
+
+    @FormField(ordinal = 8, validate = {Validator.require})
+    public Authorized allAuthorized;
+
+
+    @Override
+    public String getDBSchema() {
+        return StringUtils.trimToNull(allAuthorized.getSchema());
+    }
 
     @Override
     public String identityValue() {
@@ -83,14 +85,17 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
 
     @Override
     protected String getRefectTablesSql() {
-        if (allAuthorized != null && allAuthorized) {
-            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
-        } else {
-            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
-            // 带上 tablespace的话后续取colsMeta会取不出
-            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
 
-        }
+        return allAuthorized.getRefectTablesSql();
+
+//        if (allAuthorized != null && allAuthorized) {
+//            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
+//        } else {
+//            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
+//            // 带上 tablespace的话后续取colsMeta会取不出
+//            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
+//
+//        }
     }
 
     @Override
@@ -193,8 +198,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
-        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
@@ -222,7 +227,9 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory {
                     }
                 }
 
-                if ("DATE".equalsIgnoreCase(type.typeName)) {
+                // 当MySQL中的Date类型映射到Oracle中时，Oracle作为Sink端应该作为Date类型 https://github.com/qlangtech/tis/issues/192
+                if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
+                    // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
                     return new DataType(Types.DATE, type.typeName, type.columnSize);
                 }
 

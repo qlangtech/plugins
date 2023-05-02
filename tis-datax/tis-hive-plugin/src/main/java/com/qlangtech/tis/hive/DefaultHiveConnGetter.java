@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -182,6 +181,15 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 
             final IMetaStoreClient storeClient = Hive.get(hiveCfg, false).getMSC();
             return new IHiveMetaStore() {
+                @Override
+                public void dropTable(String database, String tableName) {
+                    try {
+                        storeClient.dropTable(database, tableName, true, true);
+                    } catch (TException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
                 @Override
                 public List<HiveTable> getTables(String database) {
                     try {

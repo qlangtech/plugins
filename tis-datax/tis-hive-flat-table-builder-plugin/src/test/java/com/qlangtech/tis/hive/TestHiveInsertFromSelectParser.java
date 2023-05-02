@@ -41,34 +41,33 @@ import java.util.Map;
  * @create: 2020-06-03 13:57
  **/
 public class TestHiveInsertFromSelectParser extends TestCase {
-    private ColumnMetaData createCol(int index, String name, DataType type) {
+    private static ColumnMetaData createCol(int index, String name, DataType type) {
         ColumnMetaData col = new ColumnMetaData(index, name, type, false, true);
         return col;
     }
 
     public void testSqlParse() throws Exception {
-        int index = 0;
 
-        List<ColumnMetaData> cols = Lists.newArrayList(
-                createCol(index++, "totalpay_id", DataType.createVarChar(32)),
-                createCol(index++, "kindpay", new DataType(Types.INTEGER)),
-                createCol(index++, "fee", new DataType(Types.DECIMAL)),
-                createCol(index++, "is_enterprise_card_pay", new DataType(Types.BIT)),
-                createCol(index++, "pay_customer_ids", DataType.createVarChar(256)));
+        List<ColumnMetaData> cols = createPayInfoCols();
 
 
-        HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser();
         ITabPartition pt = () -> TimeFormat.yyyyMMddHHmmss.format(TimeFormat.getCurrentTimeStamp());
         Map<IDumpTable, ITabPartition> ps = Maps.newHashMap();
         ps.put(EntityName.create("order", "payinfo"), pt);
         TabPartitions tabPartition = new TabPartitions(ps);
 
         try (InputStream input = TestHiveInsertFromSelectParser.class.getResourceAsStream("tmp_pay.sql")) {
-            parse.start(IOUtils.toString(input, TisUTF8.get()), tabPartition, (sql) -> {
+
+            HiveInsertFromSelectParser parse = new HiveInsertFromSelectParser(IOUtils.toString(input, TisUTF8.get()), (sql) -> {
                 return cols;
             });
+
+//            parse.start(IOUtils.toString(input, TisUTF8.get()), tabPartition, (sql) -> {
+//                return cols;
+//            });
             // parse.start("select p.id from  orderrrr.payinfo p");
             System.out.println("getTargetTableName:" + parse.getTargetTableName());
+            parse.reflectColsType();
             List<HiveColumn> columns = parse.getColsExcludePartitionCols();
             assertEquals(5, columns.size());
 
@@ -91,5 +90,15 @@ public class TestHiveInsertFromSelectParser extends TestCase {
         }
 
 
+    }
+
+    public  static List<ColumnMetaData> createPayInfoCols() {
+        int index = 0;
+        return Lists.newArrayList(
+                createCol(index++, "totalpay_id", DataType.createVarChar(32)),
+                createCol(index++, "kindpay", new DataType(Types.INTEGER)),
+                createCol(index++, "fee", new DataType(Types.DECIMAL,"decimal",20)),
+                createCol(index++, "is_enterprise_card_pay", new DataType(Types.BIT)),
+                createCol(index++, "pay_customer_ids", DataType.createVarChar(256)));
     }
 }

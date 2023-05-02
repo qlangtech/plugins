@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter;
  **/
 public class FlinkCol implements Serializable {
     public final String name;
-    public final DataType type;
+    public final org.apache.flink.table.types.DataType type;
 
     public final com.qlangtech.tis.plugin.ds.DataType colType;
 
@@ -65,7 +65,7 @@ public class FlinkCol implements Serializable {
         return rowDataValGetter.getFieldOrNull(row);
     }
 
-    public FlinkCol(IColMetaGetter meta , com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
+    public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
         this(meta, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
     }
 

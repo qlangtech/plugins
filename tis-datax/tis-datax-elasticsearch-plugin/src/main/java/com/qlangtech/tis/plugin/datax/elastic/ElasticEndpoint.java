@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * @create: 2022-10-31 09:43
  **/
 public class ElasticEndpoint extends HttpEndpoint {
-
+    public static final String KEY_ELASTIC_SEARCH_DISPLAY_NAME = "elasticToken";
 
     public final ESInitialization createESInitialization() {
         UsernamePassword auth = this.accept(new AuthToken.Visitor<UsernamePassword>() {

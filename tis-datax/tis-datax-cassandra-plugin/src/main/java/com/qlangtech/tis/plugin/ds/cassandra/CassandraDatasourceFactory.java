@@ -35,7 +35,6 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
 import java.net.Inet4Address;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Iterator;
@@ -98,7 +97,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
         List<ColumnMetaData> colsMeta = Lists.newArrayList();
         AtomicInteger index = new AtomicInteger();
         processSession((session) -> {

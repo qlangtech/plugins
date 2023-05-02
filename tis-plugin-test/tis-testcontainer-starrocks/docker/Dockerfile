@@ -5,9 +5,10 @@ FROM apache/incubator-doris:build-env-ldb-toolchain-latest
 #FROM centos:7
 # FROM openjdk:8-jre
 # build :  docker build -t tis/starrocks .
-# 可以设置 –network host 参数直接使用本地网络
-# Start :  docker run -d  -p 9030:9030 -p 8030:8030 -m 600m --name starrocks tis/starrocks
-# Test :  docker run -it  -m 600m --entrypoint /bin/bash  tis/starrocks
+# 可以设置 --network host 参数直接使用本地网络
+# add backend: alter system add backend '192.168.28.201:9050';
+# Start :  docker run -d –-network host  -p 9030:9030 -p 8030:8030 -m 2G --name starrocks tis/starrocks
+# TesTt :  docker run -it  -m 600m --entrypoint /bin/bash  tis/starrocks
 WORKDIR /opt/
 
 

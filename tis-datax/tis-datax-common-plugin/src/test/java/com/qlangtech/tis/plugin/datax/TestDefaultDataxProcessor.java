@@ -67,7 +67,7 @@ public class TestDefaultDataxProcessor extends BasicTest {
             assertEquals(dataxProcessor.dptId, loadDataxProcessor.dptId);
             assertEquals(dataxProcessor.recept, loadDataxProcessor.recept);
 
-            TableAliasMapper tabAlias1 = loadDataxProcessor.getTabAlias();
+            TableAliasMapper tabAlias1 = loadDataxProcessor.getTabAlias(null);
             assertEquals(1, tabAlias1.size());
 
             tabAlias1.forEach((key, val) -> {

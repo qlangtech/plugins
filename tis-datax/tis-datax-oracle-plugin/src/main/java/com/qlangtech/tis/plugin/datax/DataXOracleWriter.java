@@ -71,9 +71,9 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
      */
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {

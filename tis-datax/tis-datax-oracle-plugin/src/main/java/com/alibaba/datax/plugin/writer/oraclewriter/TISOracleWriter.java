@@ -32,7 +32,7 @@ public class TISOracleWriter extends OracleWriter {
             Configuration cfg = super.getPluginJobConf();
             // 判断表是否存在，如果不存在则创建表
             try {
-                RdbmsWriter.initWriterTable(cfg);
+                RdbmsWriter.initWriterTable(this.containerContext,cfg);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

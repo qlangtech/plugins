@@ -46,7 +46,7 @@ public class TestSelectedTab extends SelectedTab {
     public static SelectedTab createSelectedTab(EntityName tabName //
             , DataSourceFactory dataSourceFactory //
             , Consumer<SelectedTab> baseTabSetter) throws TableNotFoundException {
-        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(tabName);
+        List<ColumnMetaData> tableMetadata = dataSourceFactory.getTableMetadata(false, tabName);
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
         }

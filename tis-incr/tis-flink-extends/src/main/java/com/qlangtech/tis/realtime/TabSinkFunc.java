@@ -21,6 +21,7 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.realtime.dto.DTOStream;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -58,6 +59,9 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      */
     public TabSinkFunc(TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
             , final List<FlinkCol> colsMeta, int sinkTaskParallelism) {
+        if (CollectionUtils.isEmpty(colsMeta)) {
+            throw new IllegalArgumentException("colsMeta can not be empty");
+        }
         this.sinkFunction = sinkFunction;
         this.tab = tab;
         if (sinkTaskParallelism < 1) {

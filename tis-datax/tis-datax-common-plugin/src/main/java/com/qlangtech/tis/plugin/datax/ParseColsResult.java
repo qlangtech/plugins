@@ -42,6 +42,11 @@ import java.util.stream.Collectors;
  **/
 public class ParseColsResult {
 
+    public static final String KEY_TYPE = "type";
+    public static final String KEY_INDEX = "index";
+    public static final String KEY_VALUE = "value";
+
+
     private static final Logger logger = LoggerFactory.getLogger(ParseColsResult.class);
 
     public DataXReaderTabMeta tabMeta;
@@ -95,8 +100,8 @@ public class ParseColsResult {
 
                 colMeta = new DataXColMeta(parseType);
                 tabMeta.cols.add(colMeta);
-                index = col.getInteger("index");
-                appValue = col.getString("value");
+                index = col.getInteger(KEY_INDEX);
+                appValue = col.getString(KEY_VALUE);
 
                 if (index == null && appValue == null) {
                     msgHandler.addFieldError(context, fieldName, "index为" + i + "的字段列中，index/value必须选择其一");
@@ -124,7 +129,7 @@ public class ParseColsResult {
     }
 
     public static String getColType(JSONObject col) {
-        return col.getString("type");
+        return col.getString(KEY_TYPE);
     }
 
     public ParseColsResult ok() {

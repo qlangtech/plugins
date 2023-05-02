@@ -18,9 +18,9 @@
 package com.qlangtech.tis.fullbuild.taskflow.hive;
 //
 
-import com.qlangtech.tis.dump.hive.BindHiveTableTool;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.dump.hive.HiveRemoveHistoryDataTask;
+import com.qlangtech.tis.dump.hive.HiveTableBuilder;
 import com.qlangtech.tis.fs.FSHistoryFileUtils;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -61,25 +62,12 @@ public class JoinHiveTask extends HiveTask {
     // private final IFs2Table fs2Table;
     private final MREngine mrEngine;
 
-    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, IPrimaryTabFinder erRules, IJoinTaskStatus joinTaskStatus
+    public JoinHiveTask(ISqlTask nodeMeta, boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus
             , ITISFileSystem fileSystem, MREngine mrEngine, IDataSourceFactoryGetter dsFactoryGetter) {
         super(dsFactoryGetter, nodeMeta, isFinalNode, erRules, joinTaskStatus);
         this.fileSystem = fileSystem;
         this.mrEngine = mrEngine;
     }
-
-//    @Override
-//    protected void executeSql(String taskName, String rewritedSql) {
-//        // 处理历史表，多余的partition要删除，表不同了需要删除重建
-//        boolean dryRun = this.getContext().getExecContext().isDryRun();
-//        processJoinTask(rewritedSql);
-//        if (dryRun) {
-//            log.info("task:{}, as DryRun mode skip remaining tasks", taskName);
-//            return;
-//        }
-//        final String insertSql = convert2InsertIntoSQL(rewritedSql);
-//        super.executeSql(taskName, insertSql);
-//    }
 
 
     @Override
@@ -123,7 +111,7 @@ public class JoinHiveTask extends HiveTask {
                 } //
                 , () -> {
                     try {
-                        return BindHiveTableTool.HiveTableBuilder.isTableSame(ds, conn, insertParser.getAllCols(), dumpTable);
+                        return HiveTableBuilder.isTableSame(ds, conn, insertParser.getAllCols(), dumpTable);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -157,7 +145,7 @@ public class JoinHiveTask extends HiveTask {
     public static void createHiveTable(ITISFileSystem fileSystem, HdfsFormat fsFormat
             , DataSourceMeta sourceMeta, EntityName dumpTable, List<HiveColumn> cols, DataSourceMeta.JDBCConnection conn) {
         try {
-            BindHiveTableTool.HiveTableBuilder tableBuilder = new BindHiveTableTool.HiveTableBuilder("0", fsFormat);
+            HiveTableBuilder tableBuilder = new HiveTableBuilder("0", fsFormat);
             tableBuilder.createHiveTableAndBindPartition(sourceMeta, conn, dumpTable, cols, (hiveSQl) -> {
                 hiveSQl.append("\n LOCATION '").append(
                         FSHistoryFileUtils.getJoinTableStorePath(fileSystem.getRootDir(), dumpTable)

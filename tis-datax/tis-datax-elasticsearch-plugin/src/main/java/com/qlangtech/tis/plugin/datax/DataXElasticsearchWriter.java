@@ -86,28 +86,28 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @FormField(ordinal = 32, type = FormFieldType.INPUTTEXT, validate = {})
     public Integer timeout;
 
-    @FormField(ordinal = 36, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 36, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean discovery;
-    @FormField(ordinal = 40, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 40, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean compression;
-    @FormField(ordinal = 44, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 44, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean multiThread;
-    @FormField(ordinal = 48, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 48, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean ignoreWriteError;
-    @FormField(ordinal = 52, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 52, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean ignoreParseError;
 
-    @FormField(ordinal = 56, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name})
+    @FormField(ordinal = 56, type = FormFieldType.INPUTTEXT, validate = {Validator.db_col_name}, advance = true)
     public String alias;
-    @FormField(ordinal = 60, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 60, type = FormFieldType.ENUM, validate = {}, advance = true)
     public String aliasMode;
-    @FormField(ordinal = 64, type = FormFieldType.TEXTAREA, validate = {})
+    @FormField(ordinal = 64, type = FormFieldType.TEXTAREA, validate = {}, advance = true)
     public String settings;
 
-    @FormField(ordinal = 68, type = FormFieldType.INPUTTEXT, validate = {})
+    @FormField(ordinal = 68, type = FormFieldType.INPUTTEXT, validate = {}, advance = true)
     public String splitter;
 
-    @FormField(ordinal = 75, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 75, type = FormFieldType.ENUM, validate = {}, advance = true)
     public Boolean dynamic;
 
 

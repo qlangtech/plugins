@@ -20,15 +20,16 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
+import com.alibaba.datax.core.job.IJobContainerContext;
 import com.alibaba.datax.plugin.rdbms.writer.Constant;
 import com.alibaba.datax.plugin.rdbms.writer.Key;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.impl.DataxWriter;
-import com.qlangtech.tis.offline.DataxUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,8 +54,9 @@ public class RdbmsWriter {
      * @param cfg
      * @throws Exception
      */
-    public static void initWriterTable(Configuration cfg) {
-        String dataXName = cfg.getNecessaryValue(DataxUtils.DATAX_NAME, RdbmsWriterErrorCode.REQUIRED_DATAX_PARAM_ERROR);
+    public static void initWriterTable(IJobContainerContext containerContext, Configuration cfg) {
+        Objects.requireNonNull(containerContext,"containerContext can not be null");
+        String dataXName = containerContext.getTISDataXName();
 
         String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"
                 , RdbmsWriterErrorCode.REQUIRED_TABLE_NAME_PARAM_ERROR);

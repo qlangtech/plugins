@@ -47,7 +47,6 @@ import com.qlangtech.tis.hdfs.impl.HdfsPath;
 import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.hive.HiveColumn;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -69,6 +68,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -142,7 +142,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     @Override
     public DataflowTask createTask(ISqlTask nodeMeta, boolean isFinalNode, IExecChainContext execChainContext, ITaskContext tskContext
             , IJoinTaskStatus joinTaskStatus
-            , IDataSourceFactoryGetter dsGetter, IPrimaryTabFinder primaryTabFinder) {
+            , IDataSourceFactoryGetter dsGetter, Supplier<IPrimaryTabFinder> primaryTabFinder) {
         JoinHiveTask joinHiveTask = new JoinHiveTask(nodeMeta, isFinalNode, primaryTabFinder
                 , joinTaskStatus, this.getFs().getFileSystem(), getEngineType(), dsGetter);
         //  joinHiveTask.setTaskContext(tskContext);
@@ -238,8 +238,8 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         throw new UnsupportedOperationException();
     }
 
-    public IHiveConnGetter getHiveConnGetter() {
-        return getDataSourceFactory();
+    public final IHiveConnGetter getHiveConnGetter() {
+        return this.getDataSourceFactory();
     }
 
 
@@ -284,7 +284,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
-
+        Objects.requireNonNull(partitionRetainNum, "partitionRetainNum can not be null");
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {
@@ -298,7 +298,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 Hiveserver2DataSourceFactory ds = DataXHiveWriter.this.getDataSourceFactory();
                 EntityName dumpTable = getDumpTab(tab);
                 ITISFileSystem fs = getFs().getFileSystem();
-                Path tabDumpParentPath = getTabDumpParentPath(tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);// new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
                 ds.visitFirstConnection((conn) -> {
                     try {
                         Objects.requireNonNull(tabDumpParentPath, "tabDumpParentPath can not be null");
@@ -327,6 +327,24 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         };
     }
 
+    @Override
+    public IRemoteTaskTrigger createPostTask(
+            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+
+        return new IRemoteTaskTrigger() {
+
+            @Override
+            public String getTaskName() {
+                return getEngineType().getToken() + "_" + tab.getName() + "_bind";
+            }
+
+            @Override
+            public void run() {
+                bindHiveTables(execContext, tab);
+            }
+        };
+    }
+
     private EntityName getDumpTab(ISelectedTab tab) {
         return getDumpTab(tab.getName());
     }
@@ -335,45 +353,50 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return EntityName.create(this.getDataSourceFactory().getDbName(), tabName);
     }
 
-    private String getHdfsSubPath(EntityName dumpTable) {
+    private String getHdfsSubPath(IExecChainContext execContext, EntityName dumpTable) {
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
-        return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
+        // return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
+        return dumpTable.getNameWithPath() + "/"
+                + TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
     }
 
-    private Path getTabDumpParentPath(ISelectedTab tab) {
+    private Path getTabDumpParentPath(IExecChainContext execContext, ISelectedTab tab) {
         EntityName dumpTable = getDumpTab(tab);
         ITISFileSystem fs = getFs().getFileSystem();
-        Path tabDumpParentPath = new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(dumpTable));
+        Path tabDumpParentPath = new Path(fs.getRootDir().unwrap(Path.class), getHdfsSubPath(execContext, dumpTable));
         return tabDumpParentPath;
     }
 
 
     private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
         try {
-            Path tabDumpParentPath = getTabDumpParentPath(tab);
-            Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
-            try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
-                EntityName dumpTable = getDumpTab(tab);// EntityName.create(dsFactory.getDbName(), tab.getName());
-                final Path dumpParentPath = tabDumpParentPath;
 
+            EntityName dumpTable = getDumpTab(tab);
+            String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
 
-                String dumpTimeStamp = TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
-                //String dumpTimeStamp = DataxUtils.getDumpTimeStamp();
-                BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
-                        , Collections.singletonMap(dumpTable, () -> {
-                                    return new BindHiveTableTool.HiveBindConfig(Collections.emptyList(), dumpParentPath);
-                                }
-                        )
-                        , dumpTimeStamp
-                        , (columns, hiveTable) -> {
-                            return true;
-                        },
-                        (columns, hiveTable) -> {
-                            throw new UnsupportedOperationException("table " + hiveTable.getTabName() + " shall have create in 'createPreExecuteTask'");
-                        }
-                );
-                recordPt(execContext, dumpTable, dumpTimeStamp);
+            if (!execContext.isDryRun()) {
+                Path tabDumpParentPath = getTabDumpParentPath(execContext, tab);
+                Hiveserver2DataSourceFactory dsFactory = this.getDataSourceFactory();
+                try (DataSourceMeta.JDBCConnection hiveConn = this.getConnection()) {
+                    final Path dumpParentPath = tabDumpParentPath;
+                    BindHiveTableTool.bindHiveTables(dsFactory, hiveConn, this.getFs().getFileSystem()
+                            , Collections.singletonMap(dumpTable, () -> {
+                                        return new BindHiveTableTool.HiveBindConfig(Collections.emptyList(), dumpParentPath);
+                                    }
+                            )
+                            , dumpTimeStamp
+                            , (columns, hiveTable) -> {
+                                return true;
+                            },
+                            (columns, hiveTable) -> {
+                                throw new UnsupportedOperationException("table " + hiveTable.getTabName() + " shall have create in 'createPreExecuteTask'");
+                            }
+                    );
+
+                }
             }
+
+            recordPt(execContext, dumpTable, dumpTimeStamp);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -391,22 +414,6 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         dateParams.putPt(dumpTable, new DftTabPartition(dumpTimeStamp));
     }
 
-    @Override
-    public IRemoteTaskTrigger createPostTask(
-            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
-
-        return new IRemoteTaskTrigger() {
-            @Override
-            public String getTaskName() {
-                return getEngineType().getToken() + "_" + tab.getName() + "_bind";
-            }
-
-            @Override
-            public void run() {
-                bindHiveTables(execContext, tab);
-            }
-        };
-    }
 
 //    /**
 //     * https://cwiki.apache.org/confluence/display/hive/languagemanual+ddl#LanguageManualDDL-CreateTableCreate/Drop/TruncateTable

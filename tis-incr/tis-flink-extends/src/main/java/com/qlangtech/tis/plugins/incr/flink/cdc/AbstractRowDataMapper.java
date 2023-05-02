@@ -313,15 +313,9 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     }
 
     protected abstract void setRowDataVal(int index, RowData row, Object value);
-//    {
-//        GenericRowData rowData = (GenericRowData) row;
-//        rowData.setField(index, value);
-//    }
+
 
     protected abstract RowData createRowData(DTO dto);
-//    {
-//        return new GenericRowData(DTO2RowMapper.getKind(dto), cols.size());
-//    }
 
     static class ShortConvert extends BiFunction {
         @Override

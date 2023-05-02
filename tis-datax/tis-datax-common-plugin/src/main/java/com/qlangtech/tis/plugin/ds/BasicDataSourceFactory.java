@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.zeppelin.TISZeppelinClient;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -44,10 +45,7 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -107,7 +105,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(final EntityName table) {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, final EntityName table) {
         if (table == null) {
             throw new IllegalArgumentException("param table can not be null");
         }
@@ -115,7 +113,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         try {
             final DBConfig dbConfig = getDbConfig();
             dbConfig.vistDbName((config, jdbcUrl, ip, dbname) -> {
-                columns.addAll(parseTableColMeta(table, config, ip, dbname));
+                columns.addAll(parseTableColMeta(table, inSink, config, ip, dbname));
                 logger.info("tabmeta:{},colsSize:{},cols:{}"
                         , table
                         , columns.size()
@@ -130,9 +128,9 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     }
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(JDBCConnection conn, boolean inSink, EntityName table) throws TableNotFoundException {
         try {
-            return parseTableColMeta(conn.getUrl(), conn, table);
+            return parseTableColMeta(inSink, conn.getUrl(), conn, table);
         } catch (TableNotFoundException e) {
             throw e;
 
@@ -141,11 +139,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         }
     }
 
-    private List<ColumnMetaData> parseTableColMeta(EntityName table, DBConfig config, String ip, String dbname) throws Exception {
+    private List<ColumnMetaData> parseTableColMeta(EntityName table, boolean inSink, DBConfig config, String ip, String dbname) throws Exception {
         // List<ColumnMetaData> columns = Lists.newArrayList();
         String jdbcUrl = buidJdbcUrl(config, ip, dbname);
 
-        return parseTableColMeta(table, jdbcUrl);
+        return parseTableColMeta(inSink, table, jdbcUrl);
     }
 
 
@@ -184,7 +182,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            statement = conn.createStatement();//.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            statement = conn.createStatement();
             resultSet = statement.executeQuery(getRefectTablesSql());
             //   resultSet = statement.getResultSet();
             while (resultSet.next()) {
@@ -275,7 +273,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         List<String> jdbcUrls = Lists.newArrayList();
         dbLinkMetaData.vistDbURL(resolveHostIp, (dbName, dbHost, jdbcUrl) -> {
             jdbcUrls.add(jdbcUrl);
-        }, false);
+        });
         return jdbcUrls;
     }
 
@@ -341,6 +339,17 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
 
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;//  ;postFormVals.newInstance(this, msgHandler);
             return TISZeppelinClient.createJdbcNotebook(dsFactory);
+        }
+
+        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            Map<String, List<String>> dbname = DBConfigParser.parseDBEnum("dbname", value);
+            if (MapUtils.isEmpty(dbname)) {
+                msgHandler.addFieldError(context, fieldName, "请确认格式是否正确");
+                return false;
+            }
+
+            return true;
         }
 
         public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

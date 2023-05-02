@@ -63,7 +63,7 @@ public class TisDataXTiDBReader extends Reader {
             throw new IllegalStateException("param 'pdAddrs' or 'dbName' can not be null,connection:" + connection.toJSON());
         }
 
-        List<ColumnMetaData> tableMetadata = sourceFactory.getTableMetadata(tableName);
+        List<ColumnMetaData> tableMetadata = sourceFactory.getTableMetadata(false, tableName);
 
         TISTable table = new TISTable();
         table.setTableName(tableName.getTableName());

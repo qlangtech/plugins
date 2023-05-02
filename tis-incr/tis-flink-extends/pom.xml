@@ -23,7 +23,7 @@
     <parent>
         <artifactId>tis-incr</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -71,7 +71,11 @@
             <artifactId>tis-sql-parser</artifactId>
             <scope>compile</scope>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
+        <!--        <dependency>-->
 <!--            <groupId>com.alibaba.datax</groupId>-->
 <!--            <artifactId>datax-config</artifactId>-->
 <!--        </dependency>-->

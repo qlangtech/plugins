@@ -20,10 +20,12 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.hive.HdfsFileType;
+import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-01-27 14:28
+ * @see TextFSFormat
  **/
 public abstract class FSFormat implements Describable<FSFormat> {
     public abstract char getFieldDelimiter();

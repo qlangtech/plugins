@@ -54,7 +54,7 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     protected IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO, List<String> dependencyTasks) {
+            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO) {
 
 
         // IDataxReader reader = dataxProcessor.getReader(null);
@@ -84,10 +84,6 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
                 return jobName.jobFileName;
             }
 
-            @Override
-            public List<String> getTaskDependencies() {
-                return dependencyTasks;
-            }
 
             @Override
             public void run() {

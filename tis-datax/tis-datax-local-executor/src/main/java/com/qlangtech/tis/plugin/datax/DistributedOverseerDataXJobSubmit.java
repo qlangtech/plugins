@@ -71,7 +71,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     protected IRemoteTaskTrigger createDataXJob(IDataXJobContext dataXJobContext
-            , RpcServiceReference statusRpc, DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage msg, List<String> dependencyTasks) {
+            , RpcServiceReference statusRpc, DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage msg) {
 
 
         IJoinTaskContext taskContext = dataXJobContext.getTaskContext();
@@ -90,11 +90,6 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-            }
-
-            @Override
-            public List<String> getTaskDependencies() {
-                return dependencyTasks;
             }
 
 //            @Override

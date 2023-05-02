@@ -26,7 +26,6 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
 import java.sql.Types;
@@ -62,9 +61,9 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
 
@@ -111,7 +110,12 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                     case Types.BINARY:
                     case Types.LONGVARBINARY:
                     case Types.VARBINARY:
-                        return "varbinary(" + type.columnSize + ")";
+                        //https://learn.microsoft.com/en-us/sql/t-sql/data-types/binary-and-varbinary-transact-sql?view=sql-server-ver16
+                        // Variable-length binary data. n can be a value from 1 through 8,000.
+                        // type.columnSize 可能为0 所以要用Math.max() 调整一下
+                        return "varbinary(" + Math.min(Math.max(type.columnSize, 300), 8000) + ")";
+                    case Types.LONGVARCHAR:
+                        return "text";
                     default:
                         return "varchar(" + type.columnSize + ")";
                 }

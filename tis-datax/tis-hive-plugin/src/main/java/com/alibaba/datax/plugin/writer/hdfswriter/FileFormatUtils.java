@@ -391,7 +391,7 @@ public class FileFormatUtils {
 
     public static Class<? extends CompressionCodec> getCompressCodec(String compress) {
         Class<? extends CompressionCodec> codecClass = null;
-        if (null == compress) {
+        if ("none".equalsIgnoreCase(compress) || null == compress) {
             codecClass = null;
         } else if ("GZIP".equalsIgnoreCase(compress)) {
             codecClass = org.apache.hadoop.io.compress.GzipCodec.class;

@@ -13,7 +13,6 @@
     ]
   },
   "batchSize": {
-    "dftVal": 1
   },
   "flushIntervalMills": {
     "dftVal": 10000,

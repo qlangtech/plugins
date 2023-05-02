@@ -23,6 +23,7 @@ import com.alibaba.datax.plugin.writer.hdfswriter.HdfsHelper;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsWriter;
 import com.alibaba.datax.plugin.writer.hdfswriter.Key;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.IFSWriter;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -46,21 +47,22 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     protected Path tabDumpParentPath;
 
-    private T writerPlugin = null;
+    private IFSWriter writerPlugin = null;
     private ITISFileSystem fileSystem = null;
     protected Configuration cfg = null;
     private String dumpTimeStamp;
 
-    public static <TT extends BasicFSWriter> TT getHdfsWriterPlugin(Configuration cfg) {
+    public static IFSWriter getHdfsWriterPlugin(Configuration cfg) {
         String dataxName = cfg.getString(DataxUtils.DATAX_NAME);
         StoreResourceType resType = StoreResourceType.parse(
                 cfg.getString(StoreResourceType.KEY_STORE_RESOURCE_TYPE));
-        return BasicFSWriter.getWriterPlugin(dataxName, resType);
+        return Objects.requireNonNull(BasicFSWriter.getWriterPlugin(dataxName, resType)
+                , "dataName:" + dataxName + ",type:" + resType + " relevant writer can not be null");
     }
 
 
     protected T getWriterPlugin() {
-        return this.writerPlugin;
+        return (T) this.writerPlugin;
     }
 
     @Override
@@ -71,7 +73,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
                 Path path = createPath();
                 this.path = String.valueOf(path);
                 Objects.requireNonNull(this.tabDumpParentPath, "tabDumpParentPath can not be null");
-                FileSystemFactory hdfsFactory = writerPlugin.getFs();
+                FileSystemFactory hdfsFactory = writerPlugin.getFsFactory();
                 logger.info("config param {}:{}", Key.PATH, hdfsFactory.getFSAddress());
                 cfg.set(Key.DEFAULT_FS, hdfsFactory.getFSAddress());
             }
@@ -86,7 +88,7 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     public ITISFileSystem getFileSystem() {
         if (fileSystem == null) {
-            this.fileSystem = writerPlugin.getFs().getFileSystem();
+            this.fileSystem = writerPlugin.getFsFactory().getFileSystem();
             Objects.requireNonNull(fileSystem, "fileSystem can not be null");
         }
         return fileSystem;
@@ -115,11 +117,11 @@ public abstract class BasicHdfsWriterJob<T extends BasicFSWriter> extends HdfsWr
 
     protected abstract Path createPath() throws IOException;
 
-    public static HdfsHelper createHdfsHelper(Configuration pluginJobConf, BasicFSWriter hiveWriter) {
+    public static HdfsHelper createHdfsHelper(Configuration pluginJobConf, IFSWriter hiveWriter) {
         Objects.requireNonNull(pluginJobConf, "pluginJobConf can not be null");
         Objects.requireNonNull(hiveWriter, "hiveWriter can not be null");
         try {
-            FileSystemFactory fs = hiveWriter.getFs();
+            FileSystemFactory fs = hiveWriter.getFsFactory();
             FileSystem fileSystem = Objects.requireNonNull(fs.getFileSystem().unwrap(), "fileSystem can not be empty");
             HdfsHelper hdfsHelper = new HdfsHelper(fileSystem);
 

@@ -48,6 +48,7 @@ public class ESContext implements IDataxContext {
             public Optional<UsernamePassword> visit(NoneToken noneToken) {
                 return Optional.empty();
             }
+
             @Override
             public Optional<UsernamePassword> visit(UsernamePassword accessKey) {
                 return Optional.ofNullable(accessKey);
@@ -68,6 +69,11 @@ public class ESContext implements IDataxContext {
     //    public boolean isContainPassword() {
 //        return StringUtils.isNotEmpty(token.getAccessKeySecret());
 //    }
+
+    public boolean isContainAuth() {
+        return this.auth.isPresent();
+    }
+
     // 当用户没有填写认证信息的时候需要有一个占位符，不然提交请求时会报错
     public String getUserName() {
         return auth.isPresent() ? auth.get().userName : "default";

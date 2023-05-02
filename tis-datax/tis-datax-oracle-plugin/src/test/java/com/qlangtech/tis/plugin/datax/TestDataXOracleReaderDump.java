@@ -53,7 +53,7 @@ public class TestDataXOracleReaderDump {
 
     @BeforeClass
     public static void initialize() {
-        dsFactory = (BasicDataSourceFactory) OracleDSFactoryContainer.initialize();
+        dsFactory = (BasicDataSourceFactory) OracleDSFactoryContainer.initialize(false);
         OracleDSFactoryContainer.initializeOracleTable(
                 OracleDSFactoryContainer.sqlfile_column_type_test, "insert_full_types");
 

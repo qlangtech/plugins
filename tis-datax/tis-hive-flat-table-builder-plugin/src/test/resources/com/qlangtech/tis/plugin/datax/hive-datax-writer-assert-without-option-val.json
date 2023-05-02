@@ -4,33 +4,33 @@
     "column":[
       {
         "name":"customerregister_id",
-        "type":"STRING"
+        "type":"12,32,"
       },
       {
         "name":"waitingorder_id",
-        "type":"STRING"
+        "type":"12,32,"
       },
       {
         "name":"kind",
-        "type":"INT"
+        "type":"5,5,"
       },
       {
         "name":"create_time",
-        "type":"BIGINT"
+        "type":"4,10,"
       },
       {
         "name":"last_ver",
-        "type":"INT"
+        "type":"5,5,"
       }
     ],
-    "compress":"gzip",
+    "compress":"NONE",
     "dataxName":"mysql2hive",
     "encoding":"utf-8",
     "fieldDelimiter":"\t",
-    "fileName":"ods_customer_order_relation",
+    "fileName":"application",
     "fileType":"text",
-    "hiveTableName":"ods_customer_order_relation",
-    "ptFormat":"yyyyMMdd",
+    "hiveTableName":"application",
+    "ptFormat":"yyyyMMddHHmmss",
     "ptRetainNum":2,
     "writeMode":"nonConflict"
   }

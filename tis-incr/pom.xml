@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -50,7 +50,9 @@
 
         <module>tis-sink-elasticsearch7-plugin</module>
 
-        <module>tis-sink-starrocks-plugin</module>
+        <!--不需要这个 使用chunjun实现-->
+        <!--
+          <module>tis-sink-starrocks-plugin</module>-->
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>
@@ -73,6 +75,9 @@
 
         <module>tis-flink-chunjun-clickhouse-plugin</module>
         <module>tis-flink-chunjun-starrocks-plugin</module>
+        <module>tis-flink-chunjun-kafka-plugin</module>
+        <module>tis-flink-chunjun-rabbitmq-plugin</module>
+        <module>tis-flink-msg-format-plugin</module>
 
 
     </modules>

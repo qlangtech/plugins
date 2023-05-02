@@ -83,7 +83,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
     public Integer bulkFlushMaxSizeMb;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer bulkFlushIntervalMs;
 
 
@@ -97,7 +97,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         ElasticEndpoint token = dataXWriter.getToken();
 
         ESTableAlias esSchema = null;
-        Optional<TableAlias> first = dataxProcessor.getTabAlias().findFirst();
+        Optional<TableAlias> first = dataxProcessor.getTabAlias(null).findFirst();
         if (first.isPresent()) {
             TableAlias value = first.get();
             if (!(value instanceof ESTableAlias)) {
@@ -138,12 +138,12 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         }
         Objects.requireNonNull(tab, "tab ca not be null");
 
-
+        final List<FlinkCol> colsMeta = AbstractRowDataMapper.getAllTabColsMeta(tab.getCols());
         ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
                 cols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
-                , AbstractRowDataMapper.getAllTabColsMeta(tab.getCols())
+                , colsMeta
                 , firstPK.get().getName()
                 , dataXWriter.getIndexName()));
 
@@ -183,7 +183,8 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build()
-                        , Collections.emptyList(), true, DEFAULT_PARALLELISM));
+                        , colsMeta
+                        , true, DEFAULT_PARALLELISM));
     }
 
     private static class DefaultActionRequestFailureHandler implements ActionRequestFailureHandler, Serializable {

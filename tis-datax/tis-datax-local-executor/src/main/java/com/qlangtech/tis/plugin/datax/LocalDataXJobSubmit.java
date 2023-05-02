@@ -56,7 +56,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     @Override
     protected IRemoteTaskTrigger createDataXJob(
             IDataXJobContext taskContext, RpcServiceReference statusRpc
-            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO, List<String> dependencyTasks) {
+            , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
             File localExecutorLibDir = new File(Config.getLibDir(), "plugins/tis-datax-local-executor/WEB-INF/lib");
@@ -86,7 +86,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
         //  TableInDB tablesInDB = dataxReader.getTablesInDB();
 
-        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, processor, dependencyTasks);
+        return TaskExec.getRemoteJobTrigger(taskContext, this, jobName, processor);
     }
 
 

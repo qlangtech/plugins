@@ -62,7 +62,7 @@ public class TestDataXFtpReader {
         DataXFtpReader reader = new DataXFtpReader();
         reader.compress = Compress.noCompress.token;
         reader.template = DataXFtpReader.getDftTemplate();
-        reader.linker = FtpWriterUtils.createFtpServer();
+        // reader.linker = FtpWriterUtils.createFtpServer();
 //        reader.protocol = "ftp";
 //        reader.host = "192.168.28.201";
 //        reader.port = 21;
@@ -87,7 +87,7 @@ public class TestDataXFtpReader {
         reader.encoding = "utf-8";
         // reader.skipHeader = true;
         reader.nullFormat = "\\\\N";
-        reader.maxTraversalLevel = "99";
+        reader.maxTraversalLevel = 99;
 //        reader.csvReaderConfig = "{\n" +
 //                "        \"safetySwitch\": false,\n" +
 //                "        \"skipEmptyRecords\": false,\n" +
@@ -97,11 +97,11 @@ public class TestDataXFtpReader {
         ReaderTemplate.validateDataXReader("ftp-datax-reader-assert.json", dataXName, reader);
 
 
-        FTPServer ftpServer = FtpWriterUtils.createFtpServer();
+        FTPServer ftpServer = FtpWriterUtils.createFtpServer(null);
         ftpServer.port = null;
         ftpServer.timeout = null;
         ftpServer.connectPattern = null;
-        reader.linker = ftpServer;
+        // reader.linker = ftpServer;
         reader.fileFormat = FtpWriterUtils.createTextFormat();
 //        reader.port = null;
 //        reader.timeout = null;

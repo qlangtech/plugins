@@ -38,7 +38,10 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.jdbc.HiveDriver;
 import org.apache.hive.jdbc.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,9 +56,11 @@ import java.util.Properties;
  * @create: 2022-12-14 09:33
  * @see DefaultHiveConnGetter
  **/
-public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
+        implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
+    private static final Logger logger = LoggerFactory.getLogger(Hiveserver2DataSourceFactory.class);
     private static final String NAME_HIVESERVER2 = "Hiveserver2";
-
+    private static final String FIELD_META_STORE_URLS = "metaStoreUrls";
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public String name;
 
@@ -252,21 +257,34 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
 //        }
 
         @Override
+        protected void validateConnection(JDBCConnection c) throws TisException {
+            Connection conn = c.getConnection();
+            try (Statement statement = conn.createStatement()) {
+                try (ResultSet result = statement.executeQuery("select 1")) {
+                    if (!result.next()) {
+                        throw TisException.create("create jdbc connection faild");
+                    }
+                    result.getInt(1);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
         protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
             boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
-                dsFactory.visitFirstConnection((c) -> {
-                    Connection conn = c.getConnection();
-                    try (Statement statement = conn.createStatement()) {
-                        try (ResultSet result = statement.executeQuery("select 1")) {
-                            if (!result.next()) {
-                                throw TisException.create("create jdbc connection faild");
-                            }
-                            result.getInt(1);
-                        }
-                    }
-                });
+                Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;
+                try (IHiveMetaStore meta = ds.createMetaStoreClient()) {
+                    meta.getTables(ds.getDbName());
+                } catch (IOException e) {
+                    logger.warn(e.getMessage(), e);
+                    msgHandler.addFieldError(context, FIELD_META_STORE_URLS, e.getMessage());
+                    // throw new RuntimeException(e);
+                    return false;
+                }
             }
 //            try {
 //                if (valid) {

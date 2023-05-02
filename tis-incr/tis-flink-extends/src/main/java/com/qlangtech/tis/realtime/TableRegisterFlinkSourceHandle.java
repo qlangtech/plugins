@@ -150,23 +150,26 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
     protected void initWriterTable(TableAlias alias) {
         DataxWriter dataXWriter = DataxWriter.load(null, this.getDataXName());
-        DataSourceFactory dsFactory
-                = ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
-        if (dsFactory == null) {
-            throw new IllegalStateException("dsFactory can not be null");
-        }
-        DBConfig dbConfig = dsFactory.getDbConfig();
-        dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-            try {
-                /**
-                 * 需要先初始化表MySQL目标库中的表
-                 */
-                ((IInitWriterTableExecutor) dataXWriter)
-                        .initWriterTable(alias.getTo(), Collections.singletonList(jdbcUrl));
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        if (dataXWriter instanceof IInitWriterTableExecutor) {
+            DataSourceFactory dsFactory
+                    = ((IDataSourceFactoryGetter) dataXWriter).getDataSourceFactory();
+            if (dsFactory == null) {
+                throw new IllegalStateException("dsFactory can not be null");
             }
-        });
+            DBConfig dbConfig = dsFactory.getDbConfig();
+            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
+                try {
+                    /**
+                     * 需要先初始化表MySQL目标库中的表
+                     */
+                    ((IInitWriterTableExecutor) dataXWriter)
+                            .initWriterTable(alias.getTo(), Collections.singletonList(jdbcUrl));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
     }
 
     protected abstract String getSinkTypeName();

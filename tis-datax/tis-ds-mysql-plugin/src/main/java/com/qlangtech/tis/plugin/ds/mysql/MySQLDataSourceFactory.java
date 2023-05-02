@@ -59,10 +59,13 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
 
+
     @Override
     protected TableInDB createTableInDB() {
-        return this.splitTableStrategy.createTableInDB(this);
+        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null")
+                .createTableInDB(this);
     }
+
 
     @Override
     public List<String> getAllPhysicsTabs(DataXJobSubmit.TableDataXEntity tabEntity) {
@@ -89,16 +92,16 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
 
-        return this.wrapColsMeta(columns1, new CreateColumnMeta(pkCols, columns1) {
+        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
                 DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
                     @Override
                     public DataType bigInt(DataType type) {
-                        if (type.isUnsigned()) {
+                        if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话 建表的ddl会有问题*/) {
                             DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
                             t.setDecimalDigits(0);
                             return t;

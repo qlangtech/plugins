@@ -27,9 +27,9 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
-import com.qlangtech.tis.util.Memoizer;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     private final List<SelectedTab> tabs;
     final int selectedTabsSize;
     AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-    private Memoizer<String, Map<String, ColumnMetaData>> tabColsMap;
+    private TableColsMeta tabColsMap;
     private final boolean isFilterUnexistCol;
     private final BasicDataXRdbmsReader rdbmsReader;
 
@@ -60,7 +60,7 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     }
 
     public DataXRdbmsGroupChildTaskIterator(BasicDataXRdbmsReader rdbmsReader, boolean isFilterUnexistCol, List<SelectedTab> tabs
-            , Memoizer<String, Map<String, ColumnMetaData>> tabColsMap) {
+            , TableColsMeta tabColsMap) {
         this.rdbmsReader = rdbmsReader;
         this.tabs = tabs;
         this.selectedTabsSize = tabs.size();
@@ -119,7 +119,8 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
         String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
         List<DataXCfgGenerator.DBDataXChildTask> childTasks
                 = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), this.rdbmsReader.getDataSourceFactory().identityValue(), childTask));
+        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost()
+                , this.rdbmsReader.getDataSourceFactory().identityValue(), childTask));
         RdbmsReaderContext dataxContext = rdbmsReader.createDataXReaderContext(childTask, tab, dumper);
 
         dataxContext.setWhere(tab.getWhere());
@@ -133,5 +134,10 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
             dataxContext.setCols(tab.cols);
         }
         return dataxContext;
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.tabColsMap.close();
     }
 }

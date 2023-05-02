@@ -88,9 +88,9 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
     @Override
     public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        if (!this.autoCreateTable) {
-            return null;
-        }
+//        if (!this.autoCreateTable) {
+//            return null;
+//        }
         // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
@@ -230,7 +230,8 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
         @Override
         public DorisType varcharType(DataType type) {
-            return new DorisType(type, "VARCHAR(" + Math.min(type.columnSize, 65000) + ")");
+            // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
+            return new DorisType(type, "VARCHAR(" + Math.min(type.columnSize * 3, 65000) + ")");
         }
 
         @Override
@@ -271,6 +272,17 @@ public abstract class BasicDorisStarRocksWriter<DS extends DorisSourceFactory> e
 
         @Override
         public boolean isSupportTabCreate() {
+            return true;
+        }
+
+
+        public boolean validateMaxBatchRows(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            int batchRows = Integer.parseInt(value);
+            final int MaxBatchRows = 10000;
+            if (batchRows < MaxBatchRows) {
+                msgHandler.addFieldError(context, fieldName, "批次提交记录数不能小于:'" + MaxBatchRows + "'");
+                return false;
+            }
             return true;
         }
 

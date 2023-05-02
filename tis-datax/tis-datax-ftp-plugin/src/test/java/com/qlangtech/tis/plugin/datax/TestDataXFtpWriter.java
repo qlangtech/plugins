@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
@@ -62,14 +63,14 @@ public class TestDataXFtpWriter {
         DataXFtpWriter dataXWriter = new DataXFtpWriter();
         dataXWriter.template = DataXFtpWriter.getDftTemplate();
         dataXWriter.compress = Compress.noCompress.token;
-        FTPServer ftpServer = FtpWriterUtils.createFtpServer();
+        FTPServer ftpServer = FtpWriterUtils.createFtpServer(null);
         // dataXWriter.protocol = "ftp";
         /// dataXWriter.host = "192.168.28.201";
         //dataXWriter.port = 21;
         // dataXWriter.timeout = 33333;
 //        dataXWriter.username = "test";
 //        dataXWriter.password = "test";
-        dataXWriter.linker = ftpServer;
+        dataXWriter.linker = null; //ftpServer;
         dataXWriter.path = "/tmp/data/";
         // dataXWriter.fileName = "yixiao";
         dataXWriter.writeMode = "truncate";
@@ -79,6 +80,8 @@ public class TestDataXFtpWriter {
         // dataXWriter.fileFormat = "text";
         // dataXWriter.suffix = "xxxx";
         // dataXWriter.header = true;
+
+        DataxWriter.dataxWriterGetter = (name) -> dataXWriter;
 
         TextFormat tformat = FtpWriterUtils.createTextFormat();
         dataXWriter.fileFormat = tformat;

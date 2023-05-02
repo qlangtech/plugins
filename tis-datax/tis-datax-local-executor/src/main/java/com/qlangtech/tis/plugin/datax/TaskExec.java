@@ -27,10 +27,8 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -43,7 +41,7 @@ public class TaskExec {
 
     static IRemoteTaskTrigger getRemoteJobTrigger(DataXJobSubmit.IDataXJobContext jobContext
             , LocalDataXJobSubmit localDataXJobSubmit, DataXJobInfo dataXJobInfo, IDataxProcessor processor
-            , final List<String> dependencyTasks) {
+    ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
         //  AtomicBoolean success = new AtomicBoolean(false);
@@ -51,16 +49,14 @@ public class TaskExec {
             DataXJobSingleProcessorExecutor jobConsumer;
             boolean hasCanceled;
 
-            @Override
-            public List<String> getTaskDependencies() {
-                return dependencyTasks;
-            }
 
             @Override
             public void run() {
                 try {
-                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
-                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
+//                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
+//                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
+
+                    JobCommon.setMDC(taskContext);
 
                     jobConsumer = new DataXJobSingleProcessorExecutor() {
                         @Override
@@ -100,26 +96,18 @@ public class TaskExec {
                             return localDataXJobSubmit.getWorkingDirectory();
                         }
                     };
-                    CuratorDataXTaskMessage dataXJob = null;
-//                    if (ptabs.isPresent()) {
-//                        for (String splitPhysicsTab : ptabs.get()) {
-//                            dataXJob = localDataXJobSubmit.getDataXJobDTO(taskContext, dataXfileName);
-//                            jobConsumer.consumeMessage(dataXJob);
-//                        }
-//                    } else {
-                    dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor.getResType());
+                    CuratorDataXTaskMessage
+                            dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor);
                     jobConsumer.consumeMessage(dataXJob);
                     // }
 
 
-                    // success.set(true);
                 } catch (Throwable e) {
-                    //  e.printStackTrace();
-                    // success.set(false);
+                    final String datax = taskContext.hasIndexName() ? taskContext.getIndexName() : ("workflow:" + taskContext.getTaskId());
                     if (this.hasCanceled) {
-                        logger.warn("datax:" + taskContext.getIndexName() + " has been canceled");
+                        logger.warn("datax:" + datax + " has been canceled");
                     } else {
-                        logger.error("datax:" + taskContext.getIndexName() + ",jobName:" + dataXJobInfo.jobFileName, e);
+                        logger.error("datax:" + datax + ",jobName:" + dataXJobInfo.jobFileName, e);
                         // if (!(e instanceof DataXJobSingleProcessorException)) {
                         throw new RuntimeException(e);
                         // }

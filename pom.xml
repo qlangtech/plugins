@@ -25,12 +25,12 @@
     <parent>
         <groupId>com.qlangtech.tis</groupId>
         <artifactId>tis</artifactId>
-        <version>3.7.0</version>
+        <version>3.7.1</version>
     </parent>
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-plugin-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.7.0</version>
+    <version>3.7.1</version>
     <name>TIS Plugin Parent POM</name>
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
@@ -56,12 +56,13 @@
         <module>tis-plugin-test/customer-plugin-test</module>
 
 
-        <module>tis-kafka-plugin</module>
+        <!--        <module>tis-kafka-plugin</module>-->
 
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>
         <module>tis-plugin-test/tis-testcontainer-oracle</module>
         <module>tis-plugin-test/tis-testcontainer-starrocks</module>
+        <module>tis-e2e</module>
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->
@@ -184,6 +185,14 @@
                         <groupId>commons-dbcp</groupId>
                         <artifactId>commons-dbcp</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.qlangtech.tis</groupId>
+                        <artifactId>tis-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.qlangtech.tis</groupId>
+                        <artifactId>ibator</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -201,11 +210,11 @@
             <!--                <scope>provided</scope>-->
             <!--            </dependency>-->
 
-            <dependency>
-                <groupId>com.qlangtech.tis.tools</groupId>
-                <artifactId>tis-spark-extends-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            <!--            <dependency>-->
+            <!--                <groupId>com.qlangtech.tis.tools</groupId>-->
+            <!--                <artifactId>tis-spark-extends-api</artifactId>-->
+            <!--                <version>${project.version}</version>-->
+            <!--            </dependency>-->
 
             <dependency>
                 <groupId>org.easymock</groupId>
@@ -244,6 +253,10 @@
                     <exclusion>
                         <groupId>org.apache.derby</groupId>
                         <artifactId>derby</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.web</groupId>
+                        <artifactId>javax.servlet.jsp</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -421,6 +434,10 @@
                 <artifactId>hadoop-common</artifactId>
                 <version>${hadoop-version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>com.sun.jersey</groupId>
                         <artifactId>jersey-server</artifactId>
@@ -863,7 +880,7 @@
                 <executions>
                     <execution>
                         <id>display-info</id>
-<!--                        <phase>validate</phase>-->
+                        <!--                        <phase>validate</phase>-->
                         <phase>none</phase>
                         <goals>
                             <goal>display-info</goal>

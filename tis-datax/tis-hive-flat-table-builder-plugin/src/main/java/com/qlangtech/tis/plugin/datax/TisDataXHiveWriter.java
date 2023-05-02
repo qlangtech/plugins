@@ -46,18 +46,6 @@ public class TisDataXHiveWriter extends Writer {
     }
 
     public static class Task extends BasicDataXHdfsWriter.Task {
-//        private BasicFSWriter writerPlugin;
-//        @Override
-//        public void init() {
-//            this.writerPlugin = getHdfsWriterPlugin(this.getPluginJobConf());
-//            super.init();
-//        }
-//
-//        @Override
-//        protected HdfsHelper createHdfsHelper() {
-//            return BasicHdfsWriterJob.createHdfsHelper(this.getPluginJobConf(), this.writerPlugin);
-//        }
-
 
         @Override
         protected void orcFileStartWrite(FileSystem fileSystem, JobConf conf

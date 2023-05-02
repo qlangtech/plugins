@@ -91,7 +91,7 @@ public class TestDataxMySQLReaderDump {
                     return Configuration.from(writerJsonInput);
                 });
         conf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
+        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, conf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
     }
 
@@ -121,7 +121,7 @@ public class TestDataxMySQLReaderDump {
                     return Configuration.from(writerJsonInput);
                 });
         conf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
+        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, conf, dataxReaderResult, dataxReader);
         System.out.println("content as below:\n");
         List<String> lines = FileUtils.readLines(dataxReaderResult, TisUTF8.get());
         Assert.assertEquals(String.join(",", lines), 2, lines.size());

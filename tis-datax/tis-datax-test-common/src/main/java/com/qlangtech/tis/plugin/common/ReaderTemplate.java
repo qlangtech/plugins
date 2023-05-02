@@ -129,7 +129,7 @@ public class ReaderTemplate {
 //    }
 
 
-    public static void realExecute(final Configuration readerCfg, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+    public static void realExecute(final String dataXName, final Configuration readerCfg, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
         Objects.requireNonNull(readerCfg);
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
@@ -164,7 +164,22 @@ public class ReaderTemplate {
         ColumnCast.bind(allConf);
         LoadUtil.bind(allConf);
 
-        JobContainer container = new JobContainer(allConf);
+        JobContainer container = new JobContainer(allConf) {
+            @Override
+            public int getTaskSerializeNum() {
+                return 999;
+            }
+
+            @Override
+            public String getFormatTime(TimeFormat format) {
+                return super.getFormatTime(format);
+            }
+
+            @Override
+            public String getTISDataXName() {
+                return dataXName;
+            }
+        };
 
         container.start();
     }

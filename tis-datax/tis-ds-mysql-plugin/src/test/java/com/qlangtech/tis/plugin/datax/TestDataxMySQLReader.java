@@ -220,7 +220,7 @@ public class TestDataxMySQLReader extends BasicTest {
 //            }
 
             @Override
-            public List<ColumnMetaData> getTableMetadata(EntityName table) {
+            public List<ColumnMetaData> getTableMetadata(boolean sink, EntityName table) {
                 switch (table.getTabName()) {
                     case TestSelectedTabs.tabNameOrderDetail:
                         return TestSelectedTabs.tabColsMetaOrderDetail;
@@ -327,7 +327,7 @@ public class TestDataxMySQLReader extends BasicTest {
         TISTable targetTable = new TISTable();
         targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
 
-        EasyMock.expect(mysqlDataSource.getTableMetadata(EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+        EasyMock.expect(mysqlDataSource.getTableMetadata(false, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
                 .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
 
         EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {

@@ -19,16 +19,22 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.util.Configuration;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DSKey;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
@@ -79,6 +85,15 @@ public class TestDataxMySQLReaderDump {
         MySQLDataSourceFactory mysqlDs = (MySQLDataSourceFactory) dsFactory;
         mysqlDs.splitTableStrategy = new NoneSplitTableStrategy();
 
+        TIS.dsFactoryPluginStoreGetter = (p) -> {
+            DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
+            return new DataSourceFactoryPluginStore(key, false) {
+                @Override
+                public DataSourceFactory getPlugin() {
+                    return mysqlDs;
+                }
+            };
+        };
         File dataxReaderResult = folder.newFile("mysql-datax-reader-result.txt");
         DataxMySQLReader dataxReader = createReader(TestDataxMySQLReader.dataXName);
         DataxReader.dataxReaderGetter = (name) -> {
@@ -86,12 +101,13 @@ public class TestDataxMySQLReaderDump {
             return dataxReader;
         };
 
-        Configuration conf = IOUtils.loadResourceFromClasspath(
+        Configuration readerConf = IOUtils.loadResourceFromClasspath(
                 dataxReader.getClass(), "mysql-datax-reader-test-cfg.json", true, (writerJsonInput) -> {
                     return Configuration.from(writerJsonInput);
                 });
-        conf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, conf, dataxReaderResult, dataxReader);
+        readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
+        readerConf.set(DataxExecutor.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
+        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, readerConf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
     }
 
@@ -131,7 +147,7 @@ public class TestDataxMySQLReaderDump {
         DataXJobInfo.parse("base_1.json/base_01");
         Assert.assertNotNull(DataXJobInfo.getCurrent());
 
-        ReaderTemplate.realExecute(conf, dataxReaderResult, dataxReader);
+        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, conf, dataxReaderResult, dataxReader);
         lines = FileUtils.readLines(dataxReaderResult, TisUTF8.get());
         // System.out.println("content as below:\n");
         // System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));

@@ -29,8 +29,6 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -39,6 +37,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.*;
 
 /**
  * @author: baisui 百岁
@@ -59,12 +59,12 @@ public class TestMySQLDataSourceFactory  //extends TestCase
     @Test
     public void testGetPlugin() throws Exception {
 
-        DataSourceFactory dataSourceFactory = TIS.getDataBasePlugin( PostedDSProp.parse(DB_ORDER));
+        DataSourceFactory dataSourceFactory = TIS.getDataBasePlugin(PostedDSProp.parse(DB_ORDER));
         DataSourceFactoryPluginStore dbPluginStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(DB_ORDER));
         // DataSourceFactory dataSourceFactory = dbPluginStore.getPlugin();
         assertNotNull(dataSourceFactory);
 
-        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(EntityName.parse("totalpayinfo"));
+        List<ColumnMetaData> cols = dataSourceFactory.getTableMetadata(false, EntityName.parse("totalpayinfo"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }
@@ -73,7 +73,7 @@ public class TestMySQLDataSourceFactory  //extends TestCase
         assertNotNull(datasource);
 
 
-        cols = dataSourceFactory.getTableMetadata(EntityName.parse("base"));
+        cols = dataSourceFactory.getTableMetadata(false, EntityName.parse("base"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getKey() + " " + col.getType());
         }

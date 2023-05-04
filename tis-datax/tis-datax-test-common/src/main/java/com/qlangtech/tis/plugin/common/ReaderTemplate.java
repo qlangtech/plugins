@@ -32,6 +32,8 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -156,6 +158,8 @@ public class ReaderTemplate {
                             "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" +
                             "    }\n" +
                             "}"));
+
+                    DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
                     return cfg;
                 });
 
@@ -191,9 +195,9 @@ public class ReaderTemplate {
      * @param dataxReader
      * @throws IllegalAccessException
      */
-    public static void realExecute(final String readerJson, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+    public static void realExecute(String dataXName, final String readerJson, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
         // Configuration writeCfg = ;
-        realExecute((Configuration) IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
+        realExecute(dataXName, (Configuration) IOUtils.loadResourceFromClasspath(dataxReader.getClass(), readerJson, true, (writerJsonInput) -> {
             return Configuration.from(writerJsonInput);
         }), writeFile, dataxReader);
 //        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});

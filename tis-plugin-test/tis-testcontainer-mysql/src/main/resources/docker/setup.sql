@@ -66,6 +66,12 @@ CREATE TABLE `base_02` (
   PRIMARY KEY (`base_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+insert into `base` (`base_id`,`start_time`,`update_date`,`update_time`,`price`,`json_content`,`col_blob`,`col_text`)
+values (1,now(),now(),now(),1.1,'{}','123','123');
+
+insert into `base` (`base_id`,`start_time`,`update_date`,`update_time`,`price`,`json_content`,`col_blob`,`col_text`)
+values (2,now(),now(),now(),1.1,'{}','321','321');
+
 insert into `base_01` (`base_id`,`start_time`,`update_date`,`update_time`,`price`,`json_content`,`col_blob`,`col_text`)
 values (1,now(),now(),now(),1.1,'{}','123','123');
 

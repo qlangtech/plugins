@@ -147,12 +147,12 @@
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>datax-common</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <artifactId>datax-config</artifactId>

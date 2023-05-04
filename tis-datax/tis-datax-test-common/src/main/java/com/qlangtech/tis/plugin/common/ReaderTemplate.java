@@ -32,7 +32,6 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import junit.framework.TestCase;

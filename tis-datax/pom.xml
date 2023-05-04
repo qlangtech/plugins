@@ -55,7 +55,7 @@
         <module>tis-datax-cassandra-plugin</module>
         <module>tis-datax-oracle-plugin</module>
         <module>tis-datax-doris-starrocks-plugin</module>
-        <module>tis-ds-tidb-plugin</module>
+<!--        <module>tis-ds-tidb-plugin</module>-->
         <module>tis-hive-plugin</module>
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-ds-mysql-plugin</module>
@@ -72,13 +72,27 @@
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
-<!--        <module>tis-datax-rabbitmq-plugin</module>-->
+        <!--        <module>tis-datax-rabbitmq-plugin</module>-->
 
 
     </modules>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+        </dependency>
+    </dependencies>
+
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>com.alibaba.datax</groupId>
+                <artifactId>datax-common</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
@@ -104,12 +118,7 @@
                 </exclusions>
             </dependency>
 
-            <dependency>
-                <groupId>com.alibaba.datax</groupId>
-                <artifactId>datax-common</artifactId>
-                <version>${alibaba.datax.version}</version>
-                <scope>provided</scope>
-            </dependency>
+
 
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>

@@ -99,7 +99,7 @@ public class FileFormatUtils {
                 column = record.getColumn(i);
 
                 //todo as method
-                if (null != column.getRawData()) {
+                if (column.getRawData() != null) {
                     colMeta = columnValGetters.get(i);
 
                     //  String rowData = column.getRawData().toString();
@@ -155,7 +155,7 @@ public class FileFormatUtils {
                         String message = String.format(
                                 "字段类型转换错误：实际字段值为[%s].",
                                 //colMeta.getType(),
-                                column.getRawData().toString());
+                                column.toString());
                         taskPluginCollector.collectDirtyRecord(record, message);
                         transportResult.setRight(true);
                         break;

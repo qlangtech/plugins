@@ -29,8 +29,6 @@ import com.tis.hadoop.rpc.RpcServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 /**
  * 测试用让实例与assemble节点在同一个VM中跑
  * 需要在 tis-assemble工程中添加

@@ -18,9 +18,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.alibaba.datax.common.element.*;
+//import com.alibaba.datax.common.element.*;
+
 import com.alibaba.datax.common.plugin.RecordSender;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
+import com.alibaba.datax.common.element.*;
 import com.alibaba.datax.common.spi.Reader;
 import com.alibaba.datax.common.util.Configuration;
 import com.pingcap.com.google.common.collect.Lists;
@@ -34,6 +36,10 @@ import com.qlangtech.tis.plugin.ds.tidb.TiKVDataSourceFactory;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
@@ -169,26 +175,27 @@ public class TisDataXTiDBReader extends Reader {
         private Column createCol(ColumnMetaData m, Object val) {
 
             if (val == null) {
-                return new StringColumn();
+                return new StringColumn(null);
             }
 
-            DateColumn d = null;
+            Column d = null;
             switch (m.getType().type) {
                 case Types.TINYINT:
                 case Types.INTEGER:
                 case Types.BIGINT:
-                    return new LongColumn((String) val);
+                    return new LongColumn(BigInteger.valueOf(Long.parseLong((String) val)));
                 case Types.DECIMAL:
                 case Types.FLOAT:
                 case Types.DOUBLE:
-                    return new DoubleColumn((String) val);
+                    return new DoubleColumn(new BigDecimal((String) val));
                 case Types.TIMESTAMP:
-                    d = new DateColumn(((Long) val) / 1000);
-                    d.setSubType(DateColumn.DateType.DATETIME);
-                    return d;
+//                    Timestamp t = new Timestamp(((Long) val));
+//                    d = new TimeStampColumn(t);
+//                    return d;
+                    return null;
                 case Types.DATE:
-                    d = new DateColumn(DateUtils.formatDate((Long) (val)));
-                    d.setSubType(DateColumn.DateType.DATE);
+                    d = new DateColumn(new Date(DateUtils.formatDate((Long) (val))));
+                    // d.setSubType(DateColumn.DateType.DATE);
                     return d;
 //                case Types.NULL:
 //                case Types.VARCHAR:

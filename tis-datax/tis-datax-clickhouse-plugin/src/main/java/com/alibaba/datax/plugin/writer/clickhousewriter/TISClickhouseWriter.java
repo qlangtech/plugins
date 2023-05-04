@@ -31,13 +31,14 @@ import org.slf4j.LoggerFactory;
  * @see com.qlangtech.tis.plugin.datax.DataXClickhouseWriter
  **/
 public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickhousewriter.ClickhouseWriter {
-    private static final Logger logger = LoggerFactory.getLogger(TISClickhouseWriter.class);
+  //  private static final Logger logger = LoggerFactory.getLogger(TISClickhouseWriter.class);
 
     public static class Job extends ClickhouseWriter.Job {
 
         @Override
         public void init() {
-            Configuration cfg = super.getPluginJobConf();
+            super.init();
+            Configuration cfg = originalConfig;
             // 判断表是否存在，如果不存在则创建表
             try {
 
@@ -45,7 +46,6 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            super.init();
         }
 
 //        @Override

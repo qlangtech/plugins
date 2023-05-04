@@ -74,10 +74,6 @@
             <exclusions>
                 <exclusion>
                     <groupId>com.alibaba.datax</groupId>
-                    <artifactId>datax-common</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
                     <artifactId>plugin-unstructured-storage-util</artifactId>
                 </exclusion>
 
@@ -89,10 +85,6 @@
             <artifactId>mysqlwriter</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>datax-common</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>plugin-unstructured-storage-util</artifactId>

@@ -48,11 +48,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
@@ -67,14 +62,6 @@
             <artifactId>ftpreader</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>datax-common</artifactId>
-                </exclusion>
-<!--                <exclusion>-->
-<!--                    <groupId>com.alibaba.datax</groupId>-->
-<!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
-<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
@@ -83,10 +70,6 @@
             <artifactId>ftpwriter</artifactId>
             <version>${alibaba.datax.version}</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>datax-common</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>com.alibaba.datax</groupId>
                     <artifactId>plugin-unstructured-storage-util</artifactId>

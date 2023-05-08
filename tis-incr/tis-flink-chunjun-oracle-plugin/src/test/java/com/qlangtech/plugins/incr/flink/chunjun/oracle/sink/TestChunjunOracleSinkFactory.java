@@ -54,7 +54,7 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
     @BeforeClass
     public static void initialize() {
 
-        OracleDSFactoryContainer.initialize();
+        OracleDSFactoryContainer.initialize(false);
         oracleContainer = OracleDSFactoryContainer.oracleContainer;
         oracleDS = OracleDSFactoryContainer.oracleDS;
 //        oracleContainer = new TISOracleContainer();

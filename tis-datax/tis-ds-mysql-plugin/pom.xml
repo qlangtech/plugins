@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-datax</artifactId>
-        <version>3.7.1</version>
+        <version>3.7.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -109,7 +109,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-testcontainer-mysql</artifactId>
-            <version>3.7.1</version>
+            <version>3.7.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>

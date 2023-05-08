@@ -26,6 +26,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 /**
@@ -57,6 +58,12 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         return new JDBCConnection(mysql8Driver.connect(jdbcUrl, props), jdbcUrl);
     }
 
+    @Override
+    public void setReaderStatement(Statement stmt) throws SQLException {
+        com.mysql.cj.jdbc.JdbcStatement statement = (com.mysql.cj.jdbc.JdbcStatement) stmt;
+        // statement.enableStreamingResults();
+        statement.setFetchSize(0);
+    }
 
     /**
      * mysql 中schema 和 database 是相同概念

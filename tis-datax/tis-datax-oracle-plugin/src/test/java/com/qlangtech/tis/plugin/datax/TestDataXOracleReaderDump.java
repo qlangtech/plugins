@@ -114,7 +114,7 @@ public class TestDataXOracleReaderDump {
         };
 
         File readContent = folder.newFile("readContent.txt");
-        ReaderTemplate.realExecute(Configuration.from(cfgResult), readContent, dataxReader);
+        ReaderTemplate.realExecute(dataXName, Configuration.from(cfgResult), readContent, dataxReader);
         String content = FileUtils.readFileToString(readContent, TisUTF8.get());
 
         Assert.assertNotNull(content);

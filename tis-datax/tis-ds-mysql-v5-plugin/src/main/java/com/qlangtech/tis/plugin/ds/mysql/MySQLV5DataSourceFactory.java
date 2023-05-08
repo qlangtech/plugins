@@ -22,6 +22,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -53,8 +54,13 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
             info.put("password", password);
         }
         return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
+    }
 
-        // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(this.password));
+    @Override
+    public void setReaderStatement(Statement stmt) throws SQLException {
+        com.mysql.jdbc.Statement statement = (com.mysql.jdbc.Statement) stmt;
+        statement.enableStreamingResults();
+        //statement.setFetchSize(0);
     }
 
     @TISExtension

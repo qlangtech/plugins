@@ -42,7 +42,7 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
         dataSourceFactory.nodeDesc = "192.168.28.200";
 
 
-        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata( EntityName.parse( "base"));
+        List<ColumnMetaData> baseColsMeta = dataSourceFactory.getTableMetadata(false, EntityName.parse("base"));
         assertEquals(8, baseColsMeta.size());
 
 

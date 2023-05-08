@@ -3,7 +3,7 @@
   <parent>
     <artifactId>tis-incr</artifactId>
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <version>3.7.1</version>
+    <version>3.7.2</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>tis-sink-elasticsearch7</artifactId>
@@ -54,7 +54,7 @@
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
-      <version>3.7.1</version>
+      <version>3.7.2</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

@@ -220,6 +220,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             SelectedTab totalpayInfo = createSelectedTab();
             // tableName = totalpayInfo.getName();
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
+            Map<String, TableAlias> mapper = Maps.newHashMap();
+            mapper.put(tableName, new TableAlias(tableName));
+            TableAliasMapper aliasMapper = new TableAliasMapper(mapper);
+            EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper);
 
             File ddlDir = folder.newFolder("ddl");
             String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
@@ -348,6 +352,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     protected void assertResultSetFromStore(ResultSet resultSet) throws SQLException {
         Assert.assertEquals(updateNumVal, resultSet.getInt(colNum));
+
+        Assert.assertNotNull(resultSet.getTimestamp(updateTime));
+        Assert.assertNotNull(resultSet.getTimestamp(starTime));
     }
 
     protected DataxReader createDataxReader() {
@@ -407,7 +414,6 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         totalpayInfo.name = tableName;
         return totalpayInfo;
     }
-
 
 
     protected SelectedTab createSelectedTab(List<CMeta> metaCols) {

@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-11-29 10:08
+ * @see com.alibaba.datax.plugin.writer.starrockswriter.TISStarRocksWriter
  **/
 @Public
 public class DataXStarRocksWriter extends BasicDorisStarRocksWriter<StarRocksSourceFactory> {

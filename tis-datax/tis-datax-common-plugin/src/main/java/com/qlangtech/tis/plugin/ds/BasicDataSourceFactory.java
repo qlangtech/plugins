@@ -216,7 +216,11 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
     public final TableInDB getTablesInDB() {
 
         try {
-            return tabsInDBCache.get(this.identityValue(), () -> {
+            String id = this.identityValue();
+            if (StringUtils.isEmpty(id)) {
+                throw new IllegalArgumentException("identityValue can not be null");
+            }
+            return tabsInDBCache.get(id, () -> {
                 final TableInDB tabs = createTableInDB();
                 fillTableInDB(tabs);
                 return tabs;

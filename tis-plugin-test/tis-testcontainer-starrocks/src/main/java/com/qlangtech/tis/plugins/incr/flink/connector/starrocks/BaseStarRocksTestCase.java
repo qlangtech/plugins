@@ -143,6 +143,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
 
     public static StarRocksSourceFactory createSourceFactory() {
         StarRocksSourceFactory sourceFactory = new StarRocksSourceFactory();
+        sourceFactory.name = tisDatabase;
         sourceFactory.loadUrl = "[\"localhost:" + starRocksContainer.getBeStreamLoadPort() + "\"]";
         sourceFactory.userName = "root";
         sourceFactory.dbName = tisDatabase;

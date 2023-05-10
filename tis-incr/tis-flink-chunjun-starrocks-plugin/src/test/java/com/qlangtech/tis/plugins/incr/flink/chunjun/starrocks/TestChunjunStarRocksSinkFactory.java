@@ -46,6 +46,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -114,6 +116,14 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
              */
         });
         // Assert.assertEquals("httpPutCount must be 1", 1, httpPutCount.get());
+    }
+
+    // assertResultSetFromStore(resultSet);
+
+
+    @Override
+    protected void assertResultSetFromStore(ResultSet resultSet) throws SQLException {
+        super.assertResultSetFromStore(resultSet);
     }
 
     private static class TotalpayRegisterFlinkSourceHandle extends TestTableRegisterFlinkSourceHandle {

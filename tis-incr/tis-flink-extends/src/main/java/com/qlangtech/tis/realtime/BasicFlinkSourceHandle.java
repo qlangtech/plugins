@@ -96,12 +96,13 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
         Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
-        CountDownLatch countDown = new CountDownLatch(1);
+       // CountDownLatch countDown = new CountDownLatch(1);
 
-        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks, countDown));
+        this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
 
-
-        countDown.await(60, TimeUnit.SECONDS);
+//        if (!countDown.await(60, TimeUnit.SECONDS)) {
+// throw new IllegalStateException("";
+//        }
         return executeFlinkJob(dataxName, env);
     }
 

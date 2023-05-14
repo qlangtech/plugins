@@ -24,7 +24,6 @@ import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -37,11 +36,11 @@ import java.util.stream.Collectors;
 public final class SinkFuncs<TRANSFER_OBJ> {
 
     private transient final Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction;
-    public transient final CountDownLatch countDown;
+    // public transient final CountDownLatch countDown;
 
-    public SinkFuncs(Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction, CountDownLatch countDown) {
+    public SinkFuncs(Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> sinkFunction) {
         this.sinkFunction = sinkFunction;
-        this.countDown = countDown;
+        //   this.countDown = countDown;
     }
 
     public void add2Sink(String originTableName, DTOStream sourceStream) {

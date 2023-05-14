@@ -27,6 +27,7 @@ import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.PackagedProgramUtils;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.runtime.jobgraph.JobGraph;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.jobmaster.JobResult;
@@ -47,7 +48,9 @@ public class FlinkClient {
     private static final Logger logger = LoggerFactory.getLogger(FlinkClient.class);
 
     public JobID submitJar(ClusterClient clusterClient, JarSubmitFlinkRequest request) throws Exception {
-        logger.trace("start submit jar request,entryClass:{}", request.getEntryClass());
+        long start = System.currentTimeMillis();
+
+        logger.info("start submit jar request,entryClass:{}", request.getEntryClass());
         // try {
         File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
         if (!jarFile.exists()) {
@@ -80,10 +83,16 @@ public class FlinkClient {
 
         programBuilder.setSavepointRestoreSettings(savepointSettings);
         PackagedProgram program = programBuilder.build();
-        JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, new Configuration(), request.getParallelism(), false);
+        logger.info("currThread:" + Thread.currentThread().getName()
+                + ",0. PackagedProgram create,Consume:" + (System.currentTimeMillis() - start) + " ms");
+        Configuration conf = new Configuration();
+        conf.setString(PipelineOptions.NAME, request.getJobName());
+        JobGraph jobGraph = PackagedProgramUtils.createJobGraph(program, conf, request.getParallelism(), false);
+        logger.info("1. Flink JobGraph create,Consume:" + (System.currentTimeMillis() - start) + " ms");
         try {
 
             CompletableFuture<JobID> submissionResult = clusterClient.submitJob(jobGraph);
+            logger.info("2. submitJob Consume:" + (System.currentTimeMillis() - start) + " ms");
             return submissionResult.thenApplyAsync(
                     FunctionUtils.uncheckedFunction(
                             jobId -> {
@@ -94,15 +103,19 @@ public class FlinkClient {
                                                     return (JobResult) clusterClient.requestJobResult(jobId).get();
                                                 },
                                                 program.getUserCodeClassLoader());
+                                logger.info("3. waitting Flink Job Initialized,Consume:" + (System.currentTimeMillis() - start) + " ms");
                                 return jobId;
                             })).get();
 
             //submissionResult.complete()
 //            submissionResult.get();
 //            return jobId;
+
         } catch (Exception e) {
             logger.error(" submit sql request fail", e);
             throw new RuntimeException(e);
+        } finally {
+            logger.info("4. submitJar all consume:" + (System.currentTimeMillis() - start) + " ms");
         }
     }
 

@@ -152,6 +152,7 @@ public class FlinkTaskNodeController implements IRCController {
 
 
             JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
+            request.setJobName(collection.getName());
             request.setParallelism(factory.parallelism);
             request.setEntryClass(TISFlinkCDCStart.class.getName());
 
@@ -160,7 +161,7 @@ public class FlinkTaskNodeController implements IRCController {
             request.setDependency(streamUberJar.getAbsolutePath());
             requestSetter.accept(request);
 
-            long start = System.currentTimeMillis();
+
             JobID jobID = flinkClient.submitJar(restClient, request);
 
             afterSuccess.accept(jobID);

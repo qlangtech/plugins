@@ -28,13 +28,13 @@ import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.trigger.jst.ILogListener;
+import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -96,7 +97,7 @@ public class FlinkTaskNodeController implements IRCController {
      */
     @Override
     public void relaunch(TargetResName collection, String... targetPod) {
-        FlinkIncrJobStatus status = getIncrJobStatus(collection);
+        IFlinkIncrJobStatus status = getIncrJobStatus(collection);
         try {
             Optional<IFlinkIncrJobStatus.FlinkSavepoint> savepoint = null;
             for (String savepointPath : targetPod) {
@@ -121,9 +122,10 @@ public class FlinkTaskNodeController implements IRCController {
             throw new RuntimeException(collection.getName(), e);
         }
 
+        List<IFlinkIncrJobStatus.FlinkSavepoint> savepoints = status.getSavepointPaths();
         throw new IllegalStateException("targetPod length:" + targetPod.length
                 + "，jobid:" + status.getLaunchJobID() + ",status:" + status.getState()
-                + ",stored path:" + status.getSavepointPaths().stream().map((p) -> p.getPath()).collect(Collectors.joining(",")));
+                + ",stored path:" + savepoints.stream().map((p) -> p.getPath()).collect(Collectors.joining(",")));
     }
 
     @Override
@@ -135,7 +137,7 @@ public class FlinkTaskNodeController implements IRCController {
         this.deploy(collection, streamUberJar
                 , (request) -> {
                 }, (jobId) -> {
-                    FlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
+                    IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
                     incrJob.createNewJob(jobId);
                 });
     }
@@ -209,17 +211,16 @@ public class FlinkTaskNodeController implements IRCController {
 //    }
 
 
-    private FlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
-        IDataxProcessor processor = DataxProcessor.load(null, collection.getName());
-        File dataXWorkDir = processor.getDataXWorkDir(null);
-        return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log"));
+    private IFlinkIncrJobStatus<JobID> getIncrJobStatus(TargetResName collection) {
+        IncrStreamFactory incrFactory = HeteroEnum.getIncrStreamFactory(collection.getName());
+        return incrFactory.getIncrJobStatus(collection);
     }
 
 
     @Override
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
-        FlinkIncrJobStatus incrJobStatus = this.getIncrJobStatus(collection);
+        IFlinkIncrJobStatus<JobID> incrJobStatus = this.getIncrJobStatus(collection);
         final FlinkJobDeploymentDetails noneStateDetail
                 = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus) {
             @Override
@@ -257,18 +258,7 @@ public class FlinkTaskNodeController implements IRCController {
                 incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
                 return noneStateDetail;
             }
-//            if (cause instanceof RestClientException) {
-//                //cause.getStackTrace()
-//                if (ExceptionUtils.indexOfType(cause, FlinkJobNotFoundException.class) > -1) {
-//                    logger.warn("flink JobId:" + launchJobID.toHexString() + " relevant job instant is not found on ServerSize");
-//                    return null;
-//                }
-//
-//            }
             throw new RuntimeException(e);
-//            if (cause instanceof ) {
-//
-//            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -278,17 +268,6 @@ public class FlinkTaskNodeController implements IRCController {
         return StringUtils.indexOf(cause.getMessage(), "NotFoundException") > -1;
     }
 
-//    private JobID getLaunchJobID(TargetResName collection) {
-//        try {
-//            File incrJobFile = getIncrJobRecordFile(collection);
-//            if (!incrJobFile.exists()) {
-//                return null;
-//            }
-//            return JobID.fromHexString(FileUtils.readFileToString(incrJobFile, TisUTF8.get()));
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
 
     @Override
     public SupportTriggerSavePointResult supportTriggerSavePoint(TargetResName collection) {
@@ -348,7 +327,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     private void processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
         ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection).valiate();
-        FlinkIncrJobStatus status = validateFlinkJob.getStatus();
+        IFlinkIncrJobStatus<JobID> status = validateFlinkJob.getStatus();
         StateBackendFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
 
         try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
@@ -371,7 +350,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     private interface FlinkJobFunc {
         public void apply(RestClusterClient restClient
-                , StateBackendFactory.ISavePointSupport savePoint, FlinkIncrJobStatus status) throws Exception;
+                , StateBackendFactory.ISavePointSupport savePoint, IFlinkIncrJobStatus<JobID> status) throws Exception;
     }
 
 
@@ -391,7 +370,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     @Override
     public void removeInstance(TargetResName collection) throws Exception {
-        FlinkIncrJobStatus status = getIncrJobStatus(collection);
+        IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
         try {
 
             if (status.getLaunchJobID() == null) {
@@ -431,7 +410,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     private class ValidateFlinkJob {
         protected TargetResName collection;
-        private final FlinkIncrJobStatus status;
+        private final IFlinkIncrJobStatus<JobID> status;
         private StateBackendFactory.ISavePointSupport savePoint;
         private boolean validateSucess = true;
 
@@ -445,7 +424,7 @@ public class FlinkTaskNodeController implements IRCController {
             status = getIncrJobStatus(collection);
         }
 
-        public FlinkIncrJobStatus getStatus() {
+        public IFlinkIncrJobStatus<JobID> getStatus() {
             return status;
         }
 

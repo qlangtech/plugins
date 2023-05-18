@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.launch.statbackend.BasicFinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import org.apache.commons.io.FileUtils;
@@ -37,13 +38,13 @@ import java.util.*;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-04-15 12:48
  **/
-public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
+public class FlinkIncrJobStatus extends BasicFinkIncrJobStatus {
     static final String KEY_SAVEPOINT_DISCARD_PREFIX = "discard";
-    private final File incrJobFile;
-    private JobID jobID;
+    //    private final File incrJobFile;
+//    private JobID jobID;
     private List<FlinkSavepoint> savepointPaths = Lists.newArrayList();
     // 当前job的状态
-    private State state;
+    // private State state;
 
     // 已经废弃的savepoint路径集合
     private final Set<String> discardPaths = Sets.newHashSet();
@@ -71,7 +72,7 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
     }
 
     public FlinkIncrJobStatus(File incrJobFile) {
-        this.incrJobFile = incrJobFile;
+        super(incrJobFile);
 
         if (!incrJobFile.exists()) {
             state = State.NONE;
@@ -119,7 +120,9 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
         }
     }
 
-    public void createNewJob(JobID jobID) {
+    @Override
+    public JobID createNewJob(JobID jobID) {
+
         try {
             FileUtils.writeLines(incrJobFile
                     , Lists.newArrayList("#" + this.getClass().getName(),
@@ -127,6 +130,7 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
             this.savepointPaths = Lists.newArrayList();
             this.state = State.RUNNING;
             this.jobID = jobID;
+            return this.jobID;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -174,6 +178,11 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
         }
     }
 
+    public void cancel() {
+        super.cancel();
+        this.savepointPaths = Lists.newArrayList();
+    }
+
     public void discardSavepoint(String savepointDirectory) {
         if (StringUtils.isEmpty(savepointDirectory)) {
             throw new IllegalArgumentException("param savepointDirectory can not be null");
@@ -195,17 +204,6 @@ public class FlinkIncrJobStatus implements IFlinkIncrJobStatus {
                     break;
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void cancel() {
-        try {
-            FileUtils.forceDelete(incrJobFile);
-            this.state = State.NONE;
-            this.jobID = null;
-            this.savepointPaths = Lists.newArrayList();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

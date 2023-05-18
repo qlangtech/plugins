@@ -21,6 +21,8 @@ package com.qlangtech.plugins.incr.flink.launch.statbackend;
 import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -40,11 +42,19 @@ public class MemoryState extends StateBackendFactory {
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean latencyTrackEnable;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER,advance = true, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer trackSampleInterval;
 
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER,advance = true, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.integer, Validator.require})
     public Integer trackHistorySize;
+
+
+    @Override
+    public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
+
+        return NonePersistBackendFlinkIncrJobStatus.getIncrStatus(collection);
+    }
+
 
     @Override
     public void setProps(StreamExecutionEnvironment env) {

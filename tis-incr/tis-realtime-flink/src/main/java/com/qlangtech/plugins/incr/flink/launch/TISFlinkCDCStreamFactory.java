@@ -23,7 +23,11 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -36,6 +40,7 @@ import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -72,6 +77,11 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
     @FormField(ordinal = 6, validate = {Validator.require})
     public StateBackendFactory stateBackend;
+
+    @Override
+    public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
+        return stateBackend.getIncrJobStatus(collection);
+    }
 
     public static List<Option> allRestartStrategy() {
         return Arrays.stream(FlinkJobRestartStrategy.values())

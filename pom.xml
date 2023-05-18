@@ -283,10 +283,16 @@
                     <!--                        <groupId>org.apache.hive</groupId>-->
                     <!--                        <artifactId>hive-shims</artifactId>-->
                     <!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>org.apache.calcite</groupId>-->
+<!--                        <artifactId>calcite-core</artifactId>-->
+<!--                    </exclusion>-->
+
                     <exclusion>
-                        <groupId>org.apache.calcite</groupId>
-                        <artifactId>calcite-core</artifactId>
+                        <groupId>org.pentaho</groupId>
+                        <artifactId>pentaho-aggdesigner-algorithm</artifactId>
                     </exclusion>
+
                     <exclusion>
                         <groupId>org.apache.calcite</groupId>
                         <artifactId>calcite-avatica</artifactId>

@@ -20,9 +20,12 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.order.center.IParamContext;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import java.util.Optional;
 
 /**
  * Flink 状态存储
@@ -32,10 +35,18 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  **/
 @Public
 public abstract class StateBackendFactory implements Describable<StateBackendFactory> {
-   // public static final String OFF = "off";
+    // public static final String OFF = "off";
 
     public abstract void setProps(StreamExecutionEnvironment env);
 
+    /**
+     * 缺的当前执行任务的状态
+     *
+     * @return
+     */
+    public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
+        throw new UnsupportedOperationException(this.getClass().getSimpleName() + " getIncrJobStatus is not supported");
+    }
 
     /**
      * 支持Flink应用Savepoint功能
@@ -49,6 +60,18 @@ public abstract class StateBackendFactory implements Describable<StateBackendFac
         public default String createSavePointPath() {
             return getSavePointRootPath() + "/" + IFlinkIncrJobStatus.KEY_SAVEPOINT_DIR_PREFIX + IParamContext.getCurrentMillisecTimeStamp();
         }
+    }
+
+    /**
+     * 支持从checkpint来恢复程序程序执行状态
+     */
+    public interface IRestoreFromCheckpointSupport {
+        /**
+         * 取得需要从某个需要恢复的checkpoint的路径（完整路径）
+         *
+         * @return
+         */
+        public Optional<String> getHistoryCheckpointPath();
     }
 
 }

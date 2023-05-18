@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugins.flink.client;
 
+import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
+
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +61,11 @@ public class JarSubmitFlinkRequest {
 
     private String savepointPath;
 
+    /**
+     * Flag indicating whether non restored state is allowed if the savepoint contains state for an
+     * operator that is not part of the job.
+     * @see SavepointRestoreSettings
+     */
     private Boolean allowNonRestoredState;
 
 //    public boolean isCache() {

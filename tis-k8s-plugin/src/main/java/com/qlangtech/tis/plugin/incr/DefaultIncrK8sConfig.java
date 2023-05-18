@@ -18,8 +18,9 @@
 package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -41,6 +42,11 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
     public String k8sImage;
 
     private IRCController incrSync;
+
+    @Override
+    public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public IRCController getIncrSync() {

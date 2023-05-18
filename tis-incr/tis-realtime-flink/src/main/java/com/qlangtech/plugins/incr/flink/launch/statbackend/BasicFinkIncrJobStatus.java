@@ -18,36 +18,33 @@
 
 package com.qlangtech.plugins.incr.flink.launch.statbackend;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
-import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
-import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.extension.TISExtension;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.commons.io.FileUtils;
+import org.apache.flink.api.common.JobID;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-03-03 16:38
+ * @create: 2023-05-18 12:57
  **/
-@Public
-public class OFF extends StateBackendFactory {
+public abstract class BasicFinkIncrJobStatus implements IFlinkIncrJobStatus<JobID> {
+    protected JobID jobID;
+    protected final File incrJobFile;
+    protected State state;
 
-    @Override
-    public void setProps(StreamExecutionEnvironment env) {
-
+    public BasicFinkIncrJobStatus(File incrJobFile) {
+        this.incrJobFile = incrJobFile;
     }
 
-    @Override
-    public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
-        return NonePersistBackendFlinkIncrJobStatus.getIncrStatus(collection);
-    }
-
-    @TISExtension()
-    public static class DefaultDescriptor extends FlinkDescriptor<StateBackendFactory> {
-        @Override
-        public String getDisplayName() {
-            return SWITCH_OFF;
+    public void cancel() {
+        try {
+            FileUtils.forceDelete(incrJobFile);
+            this.state = State.NONE;
+            this.jobID = null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

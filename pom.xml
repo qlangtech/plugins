@@ -572,7 +572,13 @@
 
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-doris-starrocks-plugin</artifactId>
+                <artifactId>tis-datax-doris-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-datax-starrocks-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

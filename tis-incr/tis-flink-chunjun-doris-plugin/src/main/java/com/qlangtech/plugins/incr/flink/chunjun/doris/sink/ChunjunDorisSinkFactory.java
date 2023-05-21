@@ -38,18 +38,19 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
+import com.qlangtech.tis.plugin.datax.doris.DorisSelectedTab;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -85,16 +86,16 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
     @Override
     protected void setParameter(BasicDataSourceFactory dsFactory
-            , BasicDataXRdbmsWriter dataXWriter, Map<String, Object> params, final String targetTabName) {
+            , BasicDataXRdbmsWriter dataXWriter, SelectedTab tab, Map<String, Object> params, final String targetTabName) {
         DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
         DataXDorisWriter dataxWriter = (DataXDorisWriter) dataXWriter;
 
-        BasicDorisStarRocksWriter.Separator separator = dataxWriter.getSeparator();
+        DataXDorisWriter.Separator separator = dataxWriter.getSeparator();
         JSONObject loadProps = dataxWriter.getLoadProps();
         Properties lp = new Properties();
         for (Map.Entry<String, Object> entry : loadProps.entrySet()) {
-            if (BasicDorisStarRocksWriter.Separator.COL_SEPARATOR.equals(entry.getKey())
-                    || BasicDorisStarRocksWriter.Separator.ROW_DELIMITER.equals(entry.getKey())) {
+            if (DataXDorisWriter.Separator.COL_SEPARATOR.equals(entry.getKey())
+                    || DataXDorisWriter.Separator.ROW_DELIMITER.equals(entry.getKey())) {
                 continue;
             }
             lp.setProperty(entry.getKey(), String.valueOf(entry.getValue()));
@@ -111,19 +112,24 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         params.put(DorisKeys.DATABASE_KEY, dsFactory.dbName);
         params.put(DorisKeys.TABLE_KEY, targetTabName);
 
-        super.setParameter(dsFactory, dataXWriter, params, targetTabName);
+        DorisSelectedTab dorisTab = (DorisSelectedTab) tab;
+        if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
+            params.put(DorisKeys.COL_SEQUENCE_NAME, dorisTab.seqKey);
+        }
+
+        super.setParameter(dsFactory, dataXWriter, tab, params, targetTabName);
     }
 
 
     /**
      * @param cm
      * @return
-     * @see BasicDorisStarRocksWriter.DorisType
+     * @see DataXDorisWriter.DorisType
      */
     @Override
     protected Object parseType(CMeta cm) {
         // DorisType
-        return cm.getType().accept(BasicDorisStarRocksWriter.columnTokenRecognise);
+        return cm.getType().accept(DataXDorisWriter.columnTokenRecognise);
     }
 
     @Override
@@ -213,7 +219,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
         @Override
         public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return TIS.get().getDescriptor(UniqueKeySetter.class);
+            return TIS.get().getDescriptor(DorisTabProps.class);
         }
 
     }

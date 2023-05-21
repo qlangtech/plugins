@@ -335,7 +335,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             conn.put("table", Lists.newArrayList(targetTabName));
             setSchema(conn, dbName, dsFactory);
             params.put("connection", Lists.newArrayList(conn));
-            setParameter(dsFactory, dataXWriter, params, targetTabName);
+            setParameter(dsFactory, dataXWriter, tab, params, targetTabName);
 
             return params;
         });
@@ -391,7 +391,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     protected void setParameter(BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter
-            , Map<String, Object> params, final String targetTabName) {
+            , SelectedTab tab, Map<String, Object> params, final String targetTabName) {
     }
 
     private CreateChunjunSinkFunctionResult createChunjunSinkFunction(

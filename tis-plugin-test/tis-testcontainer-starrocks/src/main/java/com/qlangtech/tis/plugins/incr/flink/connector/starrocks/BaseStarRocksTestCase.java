@@ -81,7 +81,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
         //27be8d551534
         addBeNode();
         Thread.sleep(10000);
-        DorisSourceFactory ds = createSourceFactory();
+        StarRocksSourceFactory ds = createSourceFactory();
 
         try (DataSourceMeta.JDBCConnection conn = ds.getConnection(
                 ds.buidJdbcUrl(null, "localhost", null))) {

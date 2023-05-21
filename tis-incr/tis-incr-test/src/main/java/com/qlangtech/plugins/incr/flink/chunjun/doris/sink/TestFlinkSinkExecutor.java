@@ -155,6 +155,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         if (needDelete) {
             final DTO delete = updateBefore.colone();
+            delete.setBefore(delete.getAfter());
             delete.setEventType(DTO.EventType.DELETE);
             dtos.add(delete);
         }

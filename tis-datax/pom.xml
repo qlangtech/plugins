@@ -54,7 +54,8 @@
         <module>tis-datax-sqlserver-plugin</module>
         <module>tis-datax-cassandra-plugin</module>
         <module>tis-datax-oracle-plugin</module>
-        <module>tis-datax-doris-starrocks-plugin</module>
+        <module>tis-datax-doris-plugin</module>
+        <module>tis-datax-starrocks-plugin</module>
 <!--        <module>tis-ds-tidb-plugin</module>-->
         <module>tis-hive-plugin</module>
         <module>tis-hive-flat-table-builder-plugin</module>
@@ -72,6 +73,7 @@
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
+
         <!--        <module>tis-datax-rabbitmq-plugin</module>-->
 
 

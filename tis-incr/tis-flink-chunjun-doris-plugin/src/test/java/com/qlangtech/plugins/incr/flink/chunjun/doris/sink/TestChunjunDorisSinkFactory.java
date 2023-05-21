@@ -27,7 +27,6 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.BasicDorisStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
@@ -36,9 +35,9 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.TISTableEnvironment;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
@@ -49,9 +48,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerState;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.output.OutputFrame;
 
 import java.io.File;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
@@ -60,6 +59,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -93,7 +93,13 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
                     .withExposedService(DORIS_FE_SERVICE, DORIS_FE_PORT)
                     .withExposedService(DORIS_FE_SERVICE, DORIS_FE_LOAD_PORT)
                     .withExposedService(DORIS_BE_SERVICE, DORIS_BE_PORT)
-                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_LOAD_PORT);
+                    .withExposedService(DORIS_BE_SERVICE, DORIS_BE_LOAD_PORT)
+                    .withLogConsumer("test", new Consumer<OutputFrame>() {
+                        @Override
+                        public void accept(OutputFrame output) {
+                            System.out.println(output.getType() + ":" + output.getUtf8String());
+                        }
+                    });
 //                    .withExposedService("elasticsearch_1", ELASTICSEARCH_PORT);
 
     protected static DorisSourceFactory dsFactory;

@@ -1,6 +1,6 @@
 {
   "seqKey": {
     "label": "Sequence列",
-    "enum": "com.qlangtech.plugins.incr.flink.chunjun.doris.sink.DorisTabProps.getSeqKeys():uncache_true"
+    "enum": "com.qlangtech.tis.plugin.datax.doris.DorisSelectedTab.getSeqKeys():uncache_true"
   }
 }

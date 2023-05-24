@@ -63,6 +63,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         com.mysql.cj.jdbc.JdbcStatement statement = (com.mysql.cj.jdbc.JdbcStatement) stmt;
         // statement.enableStreamingResults();
         statement.setFetchSize(0);
+        statement.enableStreamingResults();
     }
 
     /**

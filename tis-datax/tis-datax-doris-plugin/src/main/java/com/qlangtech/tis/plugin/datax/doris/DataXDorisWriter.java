@@ -22,6 +22,7 @@ import com.alibaba.datax.plugin.writer.doriswriter.Keys;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
@@ -51,6 +52,14 @@ public class DataXDorisWriter extends BasicDorisWriter {
                 "    \"" + Keys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
                 "    \"" + Keys.LOAD_PROPS_LINE_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
                 "}";
+    }
+
+    @Override
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+        if (!tableMap.isPresent()) {
+            throw new IllegalStateException("tableMap must be present");
+        }
+        return new DorisWriterContext(this, tableMap.get());
     }
 
     @Override

@@ -53,13 +53,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer maxBatchRows;
 
-    @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        if (!tableMap.isPresent()) {
-            throw new IllegalStateException("tableMap must be present");
-        }
-        return new DorisWriterContext(this, tableMap.get());
-    }
+
 
     /**
      * 提增量处理模块使用

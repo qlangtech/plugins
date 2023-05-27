@@ -868,7 +868,7 @@
                     </execution>
                     <execution>
                         <id>make-assembly</id>
-                        <phase/>
+                        <phase>none</phase>
                     </execution>
                 </executions>
             </plugin>

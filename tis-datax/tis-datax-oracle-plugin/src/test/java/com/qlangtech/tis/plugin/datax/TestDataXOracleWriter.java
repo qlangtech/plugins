@@ -94,7 +94,7 @@ public class TestDataXOracleWriter {
     }
 
     private DataXOracleWriter getOracleWriter() {
-        OracleDataSourceFactory dsFactory = TestOracleDataSourceFactory.createOracleDataSourceFactory();
+        OracleDataSourceFactory dsFactory = TestOracleDataSourceFactory.createOracleDataSourceFactory(true);
 
         DataXOracleWriter writer = new DataXOracleWriter() {
             @Override

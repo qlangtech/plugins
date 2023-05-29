@@ -54,7 +54,7 @@ public class TestDataSourceGetter {
         });
 
 
-        List<ColumnMetaData> dmp_user_ = dsFactory.getTableMetadata(EntityName.parse("DMP_USER_"));
+        List<ColumnMetaData> dmp_user_ = dsFactory.getTableMetadata(false, EntityName.parse("DMP_USER_"));
         for (ColumnMetaData col : dmp_user_) {
             System.out.println(col.getName() + "->" + col.getType().toString());
         }

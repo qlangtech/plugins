@@ -6,7 +6,7 @@
 通过TIS中的元配置信息自动填充[FlinkStreamerConfig](https://github.com/apache/hudi/blob/master/hudi-flink-datasource/hudi-flink/src/main/java/org/apache/hudi/streamer/FlinkStreamerConfig.java)
 实例所需要配置属性，依赖配置信息（Avro schemas，Hudi表分区信息及 [Key Generation](https://hudi.apache.org/docs/key_generation)配置），
 
-配合TIS提供的各种Source Flink CDC 组件（MySQL，PostgreSQL，SqlServer等）用户可通过TIS控制台，快速实现各种数据源`实时增量`入湖
+配合TIS提供的各种Source Flink CDC 组件，用户可通过TIS控制台，快速实现各种数据源`实时增量`入湖
 
 依赖组件:
 

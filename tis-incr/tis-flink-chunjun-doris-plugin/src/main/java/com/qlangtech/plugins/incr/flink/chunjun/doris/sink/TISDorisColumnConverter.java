@@ -90,7 +90,7 @@ public class TISDorisColumnConverter
             for (String col : cols) {
                 ord = col2ordMap.get(col);
                 val.clear();
-                toExternalConverters.get(ord).serialize(value, ord, val);
+                toExternalConverters.get(ord).serialize(value, ord, val, ord);
                 result.add(new ColVal(col, val.get(0)));
             }
             return result;
@@ -108,7 +108,7 @@ public class TISDorisColumnConverter
     @Override
     public List<String> toExternal(RowData rowData, List<String> joiner) throws Exception {
         for (int index = 0; index < rowData.getArity(); index++) {
-            toExternalConverters.get(index).serialize(rowData, index, joiner);
+            toExternalConverters.get(index).serialize(rowData, index, joiner, index);
         }
         return joiner;
     }
@@ -121,11 +121,11 @@ public class TISDorisColumnConverter
 
     private static ISerializationConverter<List<String>>
     wrapNullableExternalConverter(ISerializationConverter<List<String>> serializeConverter) {
-        return ((rowData, index, joiner) -> {
+        return ((rowData, index, joiner, statPos) -> {
             if (rowData == null || rowData.isNullAt(index)) {
                 joiner.add(NULL_VALUE);
             } else {
-                serializeConverter.serialize(rowData, index, joiner);
+                serializeConverter.serialize(rowData, index, joiner, statPos);
             }
         });
     }
@@ -143,7 +143,7 @@ public class TISDorisColumnConverter
         }
 
         @Override
-        public void serialize(RowData rowData, int index, List<String> joiner) throws Exception {
+        public void serialize(RowData rowData, int index, List<String> joiner, int statPos) throws Exception {
             Object val = (rowData.isNullAt(index)) ? null : valGetter.getFieldOrNull(rowData);
             joiner.add(
                     val == null ? NULL_VALUE : String.valueOf(val));

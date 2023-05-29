@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.connector;
 
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
+import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.connector.jdbc.source.JdbcInputSplit;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
@@ -126,7 +127,9 @@ public class WriteModeFilterJdbcDialect implements JdbcDialect {
     }
 
     @Override
-    public AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType> getColumnConverter(ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters, List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters) {
+    public AbstractRowConverter<ResultSet, JsonArray, IFieldNamesAttachedStatement, LogicalType> getColumnConverter(
+            ChunJunCommonConf commonConf, int fieldCount, List<IDeserializationConverter> toInternalConverters
+            , List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>> toExternalConverters) {
         return dialect.getColumnConverter(commonConf, fieldCount, toInternalConverters, toExternalConverters);
     }
 

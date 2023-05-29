@@ -62,7 +62,7 @@ public class TestChunjunOracleSourceFactory {
     @BeforeClass
     public static void initialize() throws Exception {
         //TestChunjunOracleSinkFactory.initialize();
-        OracleDSFactoryContainer.initialize();
+        OracleDSFactoryContainer.initialize(false);
         oracleDS = Objects.requireNonNull(OracleDSFactoryContainer.oracleDS, "oracleDS can not be null");
         OracleDSFactoryContainer.initializeOracleTable(sqlfile_column_type_test, "insert_full_types");
 

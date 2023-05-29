@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
+import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
 import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -64,10 +65,10 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
 
         this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta, JdbcColumnConverter::getRowDataValConverter
                 , (flinkCol) -> {
-                    ISerializationConverter<FieldNamedPreparedStatement> statementSetter
+                    ISerializationConverter<IFieldNamesAttachedStatement> statementSetter
                             = JdbcColumnConverter.createJdbcStatementValConverter(flinkCol.type.getLogicalType(), flinkCol.getRowDataValGetter());
                     // pg 的bit类型设置比较特殊
-                    ISerializationConverter<FieldNamedPreparedStatement> fix = flinkCol.colType.accept(new PGTypeVisitor(flinkCol.getRowDataValGetter()));
+                    ISerializationConverter<IFieldNamesAttachedStatement> fix = flinkCol.colType.accept(new PGTypeVisitor(flinkCol.getRowDataValGetter()));
                     if (fix != null) {
                         return fix;
                     }
@@ -84,7 +85,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     }
 
 
-    static class PGTypeVisitor implements DataType.TypeVisitor<ISerializationConverter<FieldNamedPreparedStatement>> {
+    static class PGTypeVisitor implements DataType.TypeVisitor<ISerializationConverter<IFieldNamesAttachedStatement>> {
 
         private RowData.FieldGetter fieldGetter;
 
@@ -93,7 +94,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> bitType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> bitType(DataType type) {
 
             //  try {
 //                final org.postgresql.util.PGobject bit1 = new org.postgresql.util.PGobject();
@@ -104,9 +105,9 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
 //                bit0.setValue("0");
 
 
-            return new ISerializationConverter<FieldNamedPreparedStatement>() {
+            return new ISerializationConverter<IFieldNamesAttachedStatement>() {
                 @Override
-                public void serialize(RowData rowData, int pos, FieldNamedPreparedStatement output) throws Exception {
+                public void serialize(RowData rowData, int pos, IFieldNamesAttachedStatement output, int outPos) throws Exception {
                     byte v = (byte) fieldGetter.getFieldOrNull(rowData);
                     output.setString(pos, v > 0 ? "1" : "0");
                 }
@@ -117,68 +118,68 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> bigInt(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> bigInt(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> doubleType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> doubleType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> dateType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> dateType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> timestampType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> timestampType(DataType type) {
             return null;
         }
 
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> blobType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> blobType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> varcharType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> varcharType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> intType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> intType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> floatType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> floatType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> decimalType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> decimalType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> timeType(DataType type) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> timeType(DataType type) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> tinyIntType(DataType dataType) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> tinyIntType(DataType dataType) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> smallIntType(DataType dataType) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> smallIntType(DataType dataType) {
             return null;
         }
 
         @Override
-        public ISerializationConverter<FieldNamedPreparedStatement> boolType(DataType dataType) {
+        public ISerializationConverter<IFieldNamesAttachedStatement> boolType(DataType dataType) {
             return null;
         }
     }

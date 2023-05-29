@@ -76,7 +76,7 @@ public class TISStarRocksColumnConverter extends StarRocksColumnConverter {
     public Map<String, Object> toExternal(RowData rowData, Map<String, Object> output) throws Exception {
         int index = 0;
         for (ISerializationConverter colSeri : toExternalConverters) {
-            colSeri.serialize(rowData, index++, output);
+            colSeri.serialize(rowData, index++, output, -1);
         }
         output.put(
                 StarRocksSinkOP.COLUMN_KEY, StarRocksSinkOP.parse(rowData.getRowKind()).ordinal());
@@ -95,7 +95,7 @@ public class TISStarRocksColumnConverter extends StarRocksColumnConverter {
         }
 
         @Override
-        public void serialize(RowData rowData, int index, Map<String, Object> vals) throws Exception {
+        public void serialize(RowData rowData, int index, Map<String, Object> vals, int outPos) throws Exception {
             Object val = (rowData.isNullAt(index)) ? null : col.getRowDataVal(rowData);
 //            joiner.add(
 //                    val == null ? NULL_VALUE : String.valueOf(val));

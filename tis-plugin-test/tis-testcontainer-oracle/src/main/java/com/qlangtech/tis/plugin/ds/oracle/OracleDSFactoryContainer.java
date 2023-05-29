@@ -104,7 +104,13 @@ public class OracleDSFactoryContainer {
         formData.addProp("password", oracleContainer.getPassword());
         formData.addProp("userName", oracleContainer.getUsername());
         formData.addProp("port", String.valueOf(oracleContainer.getOraclePort()));
-        formData.addProp("allAuthorized", "true");
+     //   formData.addProp("allAuthorized", "true");
+
+        formData.addSubForm("allAuthorized"
+                , "com.qlangtech.tis.plugin.ds.oracle.auth.NoneAuth", new Descriptor.FormData());
+
+
+
 //        formData.addProp("encode", "utf8");
 //        formData.addProp("useCompression", "true");
 

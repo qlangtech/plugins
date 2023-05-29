@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.common;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
+import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
 import com.dtstack.chunjun.converter.ISerializationConverter;
@@ -31,7 +32,6 @@ import io.vertx.core.json.JsonArray;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import org.apache.flink.table.types.logical.LogicalType;
 
 import java.sql.ResultSet;
@@ -54,13 +54,13 @@ public class DialectUtils {
      * @param externalConverterCreator
      * @return
      */
-    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
+    public static AbstractRowConverter<ResultSet, JsonArray, IFieldNamesAttachedStatement, LogicalType>
     createColumnConverter( //
                            JdbcDialect jdbcDialect //
             , JdbcConf jdbcConf //
             , List<IColMetaGetter> colsMeta //
             , Function<LogicalType, IDeserializationConverter> internalConverterCreator
-            , Function<FlinkCol, ISerializationConverter<FieldNamedPreparedStatement>> externalConverterCreator) {
+            , Function<FlinkCol, ISerializationConverter<IFieldNamesAttachedStatement>> externalConverterCreator) {
         Objects.requireNonNull(jdbcDialect, "jdbcDialect can not be null");
         Objects.requireNonNull(jdbcConf, "jdbcConf can not be null");
         if (CollectionUtils.isEmpty(colsMeta)) {
@@ -68,19 +68,19 @@ public class DialectUtils {
         }
         List<FlinkCol> flinkCols = AbstractRowDataMapper.getAllTabColsMeta(colsMeta.stream().collect(Collectors.toList()));
         List<IDeserializationConverter> toInternalConverters = Lists.newArrayList();
-        List<Pair<ISerializationConverter<FieldNamedPreparedStatement>, LogicalType>> toExternalConverters = Lists.newArrayList();
+        List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>> toExternalConverters = Lists.newArrayList();
         LogicalType type = null;
         for (FlinkCol col : flinkCols) {
             type = col.type.getLogicalType();
             toInternalConverters.add(internalConverterCreator.apply(type));
             toExternalConverters.add(Pair.of(externalConverterCreator.apply(col), type));
         }
-
+// List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>, LogicalType>>
         return jdbcDialect.getColumnConverter(jdbcConf, flinkCols.size(), toInternalConverters, toExternalConverters);
     }
 
 
-    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
+    public static AbstractRowConverter<ResultSet, JsonArray, IFieldNamesAttachedStatement, LogicalType>
     createColumnConverter(JdbcDialect jdbcDialect, JdbcConf jdbcConf, List<IColMetaGetter> colsMeta
     ) {
         return createColumnConverter(jdbcDialect, jdbcConf, colsMeta
@@ -95,14 +95,17 @@ public class DialectUtils {
      * @param internalConverterCreator
      * @return
      */
-    public static AbstractRowConverter<ResultSet, JsonArray, FieldNamedPreparedStatement, LogicalType>
+    public static AbstractRowConverter<ResultSet, JsonArray, IFieldNamesAttachedStatement, LogicalType>
     createColumnConverter(JdbcDialect jdbcDialect, JdbcConf jdbcConf, List<IColMetaGetter> colsMeta
             , Function<LogicalType, IDeserializationConverter> internalConverterCreator
     ) {
+
         return createColumnConverter(jdbcDialect, jdbcConf, colsMeta
                 , internalConverterCreator
-                , (flinkCol) -> JdbcColumnConverter.createJdbcStatementValConverter(
-                        flinkCol.type.getLogicalType(), flinkCol.getRowDataValGetter()));
-    }
+                , (flinkCol) -> {
+                    return JdbcColumnConverter.createJdbcStatementValConverter(
+                            flinkCol.type.getLogicalType(), flinkCol.getRowDataValGetter());
+                });
 
+    }
 }

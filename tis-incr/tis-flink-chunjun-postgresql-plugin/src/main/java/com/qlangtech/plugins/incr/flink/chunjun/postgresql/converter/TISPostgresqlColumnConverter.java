@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.postgresql.converter;
 
 import com.dtstack.chunjun.conf.ChunJunCommonConf;
+import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
 import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConverter;
 import com.dtstack.chunjun.converter.IDeserializationConverter;
@@ -36,7 +37,7 @@ public class TISPostgresqlColumnConverter extends PostgresqlColumnConverter {
 
     public TISPostgresqlColumnConverter(ChunJunCommonConf commonConf, int fieldCount
             , List<IDeserializationConverter> toInternalConverters
-            , List<Pair<ISerializationConverter<FieldNamedPreparedStatement>
+            , List<Pair<ISerializationConverter<IFieldNamesAttachedStatement>
             , LogicalType>> toExternalConverters) {
         super(commonConf, fieldCount, toInternalConverters, toExternalConverters);
     }

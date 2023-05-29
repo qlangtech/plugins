@@ -57,56 +57,6 @@ public class TestChunjunOracleSinkFactory extends TestFlinkSinkExecutor {
         OracleDSFactoryContainer.initialize(false);
         oracleContainer = OracleDSFactoryContainer.oracleContainer;
         oracleDS = OracleDSFactoryContainer.oracleDS;
-//        oracleContainer = new TISOracleContainer();
-//        oracleContainer.usingSid();
-//        oracleContainer.start();
-//        oracleDS = new OracleDataSourceFactory();
-//        oracleDS.userName = oracleContainer.getUsername();
-//        oracleDS.password = oracleContainer.getPassword();
-//        oracleDS.port = oracleContainer.getOraclePort();
-//
-//        //oracleDS.asServiceName = !oracleContainer.isUsingSid();
-//
-//        if (oracleContainer.isUsingSid()) {
-//            SIDConnEntity sidConn = new SIDConnEntity();
-//            sidConn.sid = oracleContainer.getSid();
-//            oracleDS.connEntity = sidConn;
-//        } else {
-//            ServiceNameConnEntity serviceConn = new ServiceNameConnEntity();
-//            serviceConn.serviceName = oracleContainer.getDatabaseName();
-//            oracleDS.connEntity = serviceConn;
-//        }
-//
-//        // oracleDS.dbName = oracleDS.asServiceName ? oracleContainer.getDatabaseName() : oracleContainer.getSid();
-//        oracleDS.nodeDesc = oracleContainer.getHost();//.getJdbcUrl()
-//
-//        oracleDS.allAuthorized = true;
-//        System.out.println(oracleContainer.getJdbcUrl());
-//        System.out.println(oracleDS.toString());
-//        final String testTabName = "testTab";
-//        oracleDS.visitAllConnection((conn) -> {
-//            try (Statement statement = conn.createStatement()) {
-//                try (ResultSet resultSet = statement.executeQuery("select 1,sysdate from dual")) {
-//                    Assert.assertTrue(resultSet.next());
-//                    Assert.assertEquals(1, resultSet.getInt(1));
-//                }
-//                statement.execute("create table \"" + testTabName + "\"( U_ID integer ,birthday DATE ,update_time TIMESTAMP ,U_NAME varchar(20),CONSTRAINT testTab_pk PRIMARY KEY (U_ID))");
-//            }
-//
-//            ResultSet tableRs = conn.getMetaData().getTables(null, null, testTabName, null);
-//            // cataLog和schema需要为空，不然pg不能反射到表的存在
-//            // ResultSet tableRs = dbConn.getMetaData().getTables(null, null, tableName, null);
-//            if (!tableRs.next()) {
-//                throw new ChunJunRuntimeException(String.format("table %s not found.", testTabName));
-//            }
-//            // conn.getMetaData().getTables()
-//            List<ColumnMetaData> cols = oracleDS.getTableMetadata(conn, testTabName);
-//            for (ColumnMetaData col : cols) {
-//                System.out.println("key:" + col.getName() + ",type:" + col.getType());
-//            }
-//        });
-
-
     }
 
     @AfterClass

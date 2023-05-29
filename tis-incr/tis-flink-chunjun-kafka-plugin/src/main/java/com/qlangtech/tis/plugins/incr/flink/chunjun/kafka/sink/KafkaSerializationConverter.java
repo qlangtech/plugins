@@ -38,7 +38,7 @@ public class KafkaSerializationConverter implements ISerializationConverter<Map<
     }
 
     @Override
-    public void serialize(RowData rowData, int pos, Map<String, Object> output) throws Exception {
+    public void serialize(RowData rowData, int pos, Map<String, Object> output, int outPos) throws Exception {
         Object val = flinkCol.getRowDataVal(rowData);
         if (val != null) {
             output.put(flinkCol.name, val);

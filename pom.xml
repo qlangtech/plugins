@@ -88,39 +88,6 @@
             <modules>
 
             </modules>
-            <dependencyManagement>
-                <dependencies>
-
-                    <dependency>
-                        <groupId>org.apache.hive</groupId>
-                        <artifactId>hive-exec</artifactId>
-                        <version>${hive.version}</version>
-                        <exclusions>
-                            <exclusion>
-                                <groupId>asm</groupId>
-                                <artifactId>asm</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.hive</groupId>
-                                <artifactId>hive-ant</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.pentaho</groupId>
-                                <artifactId>pentaho-aggdesigner-algorithm</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.calcite</groupId>
-                                <artifactId>calcite-avatica</artifactId>
-                            </exclusion>
-                            <exclusion>
-                                <groupId>org.apache.calcite.avatica</groupId>
-                                <artifactId>avatica</artifactId>
-                            </exclusion>
-                        </exclusions>
-                    </dependency>
-                </dependencies>
-
-            </dependencyManagement>
         </profile>
     </profiles>
 
@@ -241,19 +208,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!--            <dependency>-->
-            <!--                <groupId>com.qlangtech.tis</groupId>-->
-            <!--                <artifactId>tis-dag</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--                <scope>provided</scope>-->
-            <!--            </dependency>-->
-
-            <!--            <dependency>-->
-            <!--                <groupId>com.qlangtech.tis.tools</groupId>-->
-            <!--                <artifactId>tis-spark-extends-api</artifactId>-->
-            <!--                <version>${project.version}</version>-->
-            <!--            </dependency>-->
-
             <dependency>
                 <groupId>org.easymock</groupId>
                 <artifactId>easymock</artifactId>
@@ -314,8 +268,8 @@
                         <artifactId>hive-ant</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.apache.calcite</groupId>
-                        <artifactId>calcite-core</artifactId>
+                        <groupId>org.pentaho</groupId>
+                        <artifactId>pentaho-aggdesigner-algorithm</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.apache.calcite</groupId>

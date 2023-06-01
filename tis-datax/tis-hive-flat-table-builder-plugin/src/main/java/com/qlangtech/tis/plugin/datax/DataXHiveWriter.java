@@ -406,7 +406,6 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
      * 添加当前任务的pt
      */
     private void recordPt(IExecChainContext execContext, EntityName dumpTable, String dumpTimeStamp) {
-        //  Map<IDumpTable, ITabPartition> dateParams = ExecChainContextUtils.getDependencyTablesPartitions(execChainContext);
         if (StringUtils.isEmpty(dumpTimeStamp)) {
             throw new IllegalArgumentException("param dumpTimeStamp can not be empty");
         }

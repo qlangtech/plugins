@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -64,55 +65,63 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
         this.incrMode.set(params);
     }
 
+    public static List<String> getDeftRecordKeys() {
+        PrimaryKeys primaryKeys = buildPrimaryKeys();
+        return primaryKeys.createPkKeys();
+    }
+
     /**
      * 主键候选字段
      *
      * @return
      */
     public static List<Option> getPrimaryKeys() {
-        return buildPrimaryKeys().pks;
+        return buildPrimaryKeys().allCols.stream().map((c) -> c).collect(Collectors.toList());
     }
 
     private static PrimaryKeys buildPrimaryKeys() {
-        boolean[] containPk = new boolean[1];
+        //  boolean[] containPk = new boolean[1];
+        AtomicReference<List<ColumnMetaData>> colsRef = new AtomicReference<>();
         List<Option> pkResult = SelectedTab.getContextTableCols((cols) -> {
+            colsRef.set(Collections.unmodifiableList(cols));
+            return cols.stream().filter((c) -> c.isPk());
 
-            Optional<ColumnMetaData> findPks = cols.stream().filter((c) -> c.isPk()).findFirst();
-            if (findPks.isPresent()) {
-                containPk[0] = true;
-                return cols.stream().filter((c) -> c.isPk());
-            } else {
-                // 如果不存在主键则全选
-                return cols.stream();
-            }
+//            Optional<ColumnMetaData> findPks = .findFirst();
+//            if (findPks.isPresent()) {
+//                containPk[0] = true;
+//                return cols.stream().filter((c) -> c.isPk());
+//            } else {
+//                // 如果不存在主键则全选
+//                return cols.stream();
+//            }
         });
 
-        return new PrimaryKeys(containPk[0], pkResult);
+        return new PrimaryKeys(pkResult, colsRef.get());
     }
 
     private static class PrimaryKeys {
         final List<Option> pks;
-        private final boolean containPk;
+        final List<ColumnMetaData> allCols;
+        //  private final boolean containPk;
 
-        public PrimaryKeys(boolean containPk, List<Option> pks) {
+        public PrimaryKeys(List<Option> pks, List<ColumnMetaData> allCols) {
             this.pks = pks;
-            this.containPk = containPk;
+            if (CollectionUtils.isEmpty(allCols)) {
+                throw new IllegalStateException("allCols can not be empty");
+            }
+            this.allCols = allCols;
         }
 
         public List<String> createPkKeys() {
-            if (this.containPk) {
-                return pks.stream()
-                        .map((pk) -> String.valueOf(pk.getValue())).collect(Collectors.toList());
-            } else {
-                return Collections.emptyList();
-            }
+            // if (this.containPk) {
+            return pks.stream()
+                    .map((pk) -> String.valueOf(pk.getValue())).collect(Collectors.toList());
+//            } else {
+//                return Collections.emptyList();
+//            }
         }
     }
 
-    public static List<String> getDeftRecordKeys() {
-        PrimaryKeys primaryKeys = buildPrimaryKeys();
-        return primaryKeys.createPkKeys();
-    }
 
     /**
      * 写入支持的三种方式

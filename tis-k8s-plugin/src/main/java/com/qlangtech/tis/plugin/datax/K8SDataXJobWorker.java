@@ -89,9 +89,9 @@ public class K8SDataXJobWorker extends DataXJobWorker {
     private transient ApiClient apiClient;
     private transient K8SController k8SController;
 
-    public static String getDefaultZookeeperAddress() {
-        return processDefaultHost(Config.getZKHost());
-    }
+//    public static String getDefaultZookeeperAddress() {
+//        return processDefaultHost(Config.getZKHost());
+//    }
 
     @Override
     public RcHpaStatus getHpaStatus() {

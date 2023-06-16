@@ -64,10 +64,10 @@ public abstract class EnvVarsBuilder {
         var.setValue(runtime.getKeyName());
         envVars.add(var);
 
-        var = new V1EnvVar();
-        var.setName(Config.KEY_ZK_HOST);
-        var.setValue(processHost(Config.getZKHost()));
-        envVars.add(var);
+//        var = new V1EnvVar();
+//        var.setName(Config.KEY_ZK_HOST);
+//        var.setValue(processHost(Config.getZKHost()));
+//        envVars.add(var);
 
         var = new V1EnvVar();
         var.setName(Config.KEY_ASSEMBLE_HOST);

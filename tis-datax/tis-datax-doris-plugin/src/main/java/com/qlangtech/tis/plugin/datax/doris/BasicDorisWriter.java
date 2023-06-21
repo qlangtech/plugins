@@ -156,8 +156,12 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
                     throw new IllegalStateException("can not find col:" + dorisTab.seqKey);
                 }
 
-                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
-                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
+//                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
+//                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
+
+                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey);
+                       // .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
+
             }
 
             script.append("PROPERTIES(\"replication_num\" = \"1\" " + seqBuffer + " )");

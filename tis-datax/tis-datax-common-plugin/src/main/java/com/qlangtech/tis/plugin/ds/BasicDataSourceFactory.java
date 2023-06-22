@@ -55,12 +55,10 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 19:48
  **/
-public abstract class BasicDataSourceFactory extends DataSourceFactory implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable {
+public abstract class BasicDataSourceFactory extends DataSourceFactory
+        implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
-
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
 
     // 数据库名称
     @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -99,10 +97,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory implement
         return this.password;
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, final EntityName table) {

@@ -53,8 +53,8 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     private static final String DS_TYPE_MONGO_DB = "MongoDB";
 
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+//    public String name;
 
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String address;
@@ -83,11 +83,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     @Override
     public void refresh() {
 
-    }
-
-    @Override
-    public String identityValue() {
-        return this.name;
     }
 
     @Override

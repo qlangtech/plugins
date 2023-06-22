@@ -63,11 +63,6 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public String identityValue() {
-        return this.name;
-    }
-
-    @Override
     protected void refectTableInDB(TableInDB tabs, JDBCConnection conn) throws SQLException {
         DatabaseMetaData metaData = conn.getConnection().getMetaData();
 

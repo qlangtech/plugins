@@ -97,10 +97,6 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         }
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {

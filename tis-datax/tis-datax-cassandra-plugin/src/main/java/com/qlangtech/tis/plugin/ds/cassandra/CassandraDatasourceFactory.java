@@ -51,8 +51,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
     public static final String DATAX_NAME = "Cassandra";
 
-    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String name;
+
 
     /**
      * 节点描述
@@ -77,10 +76,6 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.identity})
     public Boolean useSSL;
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
 
     @Override
     public DBConfig getDbConfig() {

@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.ds.starrocks;
@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.ds.starrocks;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -45,7 +44,7 @@ import java.util.Properties;
 @Public
 public class BasicSourceFactory extends BasicDataSourceFactory {
 
-    public static final String NAME_DORIS = "Doris";
+    // public static final String NAME_DORIS = "Doris";
     public static final String FIELD_KEY_NODEDESC = "nodeDesc";
 
     private static final com.mysql.jdbc.Driver mysql5Driver;
@@ -97,17 +96,13 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
         }
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
 
-    @TISExtension
-    public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
-        @Override
-        protected String getDataSourceName() {
-            return NAME_DORIS;
-        }
+    //  @TISExtension
+    protected abstract static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
+//        @Override
+//        protected String getDataSourceName() {
+//            return NAME_DORIS;
+//        }
 
         @Override
         public boolean supportFacade() {
@@ -153,7 +148,7 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
             try {
                 if (valid) {
                     int[] hostCount = new int[1];
-                    DBConfig dbConfig =  dsFactory.getDbConfig();
+                    DBConfig dbConfig = dsFactory.getDbConfig();
                     dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
                         hostCount[0]++;
                         return false;

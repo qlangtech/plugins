@@ -61,10 +61,6 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         return StringUtils.trimToNull(allAuthorized.getSchema());
     }
 
-    @Override
-    public String identityValue() {
-        return this.name;
-    }
 
     @Override
     public Optional<String> getEscapeChar() {

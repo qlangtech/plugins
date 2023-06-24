@@ -30,7 +30,7 @@
     <groupId>com.qlangtech.tis.plugins</groupId>
     <artifactId>tis-plugin-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.8.0</version>
+    <version>${revision}</version>
     <name>TIS Plugin Parent POM</name>
     <description>The TIS Plugins Parent POM Project</description>
     <inceptionYear>2020</inceptionYear>
@@ -776,7 +776,7 @@
                 <plugin>
                     <groupId>org.jvnet.localizer</groupId>
                     <artifactId>maven-localizer-plugin</artifactId>
-                    <version>1.26</version>
+                    <version>1.24</version>
                 </plugin>
                 <plugin>
                     <groupId>org.kohsuke</groupId>
@@ -820,7 +820,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
+<!--                    <skip>true</skip>-->
                 </configuration>
             </plugin>
 

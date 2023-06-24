@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
-        <version>3.8.0</version>
+        <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -55,7 +55,7 @@
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
-            <version>3.8.0</version>
+            <version>${revision}</version>
         </dependency>
         <!--
         aliyun oss random write example

@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <artifactId>tis-plugin-parent</artifactId>
-        <version>3.8.0</version>
+        <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
-            <version>3.8.0</version>
+            <version>${revision}</version>
             <scope>test</scope>
         </dependency>
 

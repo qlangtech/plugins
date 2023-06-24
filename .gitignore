@@ -10,7 +10,7 @@
 **/*.xml.orig
 **/tree.txt
 **/.idea
-.flattened-pom.xml
+**/.flattened-pom.xml
 *.jar
 *.ipr
 *.iml

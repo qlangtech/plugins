@@ -773,11 +773,11 @@
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
                     <version>${animal.sniffer.version}</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.jvnet.localizer</groupId>
-                    <artifactId>maven-localizer-plugin</artifactId>
-                    <version>1.24</version>
-                </plugin>
+<!--                <plugin>-->
+<!--                    <groupId>org.jvnet.localizer</groupId>-->
+<!--                    <artifactId>maven-localizer-plugin</artifactId>-->
+<!--                    <version>1.24</version>-->
+<!--                </plugin>-->
                 <plugin>
                     <groupId>org.kohsuke</groupId>
                     <artifactId>access-modifier-checker</artifactId>
@@ -1037,22 +1037,22 @@
                     <releaseProfiles>jenkins-release,${releaseProfiles}</releaseProfiles>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.jvnet.localizer</groupId>
-                <artifactId>maven-localizer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <fileMask>Messages.properties</fileMask>
-                            <outputDirectory>target/generated-sources/localizer</outputDirectory>
-                            <accessModifierAnnotations>true</accessModifierAnnotations>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.jvnet.localizer</groupId>-->
+<!--                <artifactId>maven-localizer-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <goals>-->
+<!--                            <goal>generate</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <fileMask>Messages.properties</fileMask>-->
+<!--                            <outputDirectory>target/generated-sources/localizer</outputDirectory>-->
+<!--                            <accessModifierAnnotations>true</accessModifierAnnotations>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <!--
             <plugin>
                 <groupId>org.kohsuke</groupId>

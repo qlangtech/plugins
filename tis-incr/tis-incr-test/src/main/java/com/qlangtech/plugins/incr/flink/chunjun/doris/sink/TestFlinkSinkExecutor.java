@@ -63,6 +63,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -86,6 +87,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     protected String updateTime = "update_time";
     String updateDate = "update_date";
     static String starTime = "start_time";
+    static String price = "price";
 
     String pk = "88888888887";
     @ClassRule(order = 100)
@@ -206,6 +208,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
          `num` int(11) NULL COMMENT "",
          `create_time` bigint(20) NULL COMMENT "",
          `update_date` DATE       NULL,
+         `price` decimal(10 , 2) null,
          `start_time`  DATETIME   NULL
          ) ENGINE=OLAP
          UNIQUE KEY(`id`,`update_time`)
@@ -410,6 +413,14 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         cm.setType(new DataType(Types.TIMESTAMP));
         metaCols.add(cm);
 
+        cm = new CMeta();
+        cm.setName(price);
+        DataType decimal = new DataType(Types.DECIMAL, "decimal", 10);
+        decimal.setDecimalDigits(2);
+        cm.setType(decimal);
+        metaCols.add(cm);
+
+
         SelectedTab totalpayInfo = createSelectedTab(metaCols);
         totalpayInfo.setIncrSinkProps(sinkExt);
         totalpayInfo.name = tableName;
@@ -463,6 +474,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         after.put(updateTime, "2021-12-17 09:21:20");
         after.put(starTime, "2021-12-18 09:21:20");
         after.put(updateDate, "2021-12-09");
+        after.put(price,  new BigDecimal("1314.99"));
         d.setAfter(after);
         if (eventType != DTO.EventType.ADD) {
             d.setBefore(Maps.newHashMap(after));

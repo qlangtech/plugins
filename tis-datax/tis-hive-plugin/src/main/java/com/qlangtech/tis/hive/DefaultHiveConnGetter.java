@@ -21,16 +21,17 @@ package com.qlangtech.tis.hive;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
-import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -86,7 +87,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     public String hiveAddress;
 
     @FormField(ordinal = 5, validate = {Validator.require})
-    public HiveUserToken userToken;
+    public UserToken userToken;
 
     private static boolean validateHiveAvailable(IControlMsgHandler msgHandler, Context context, DefaultHiveConnGetter params) {
 //        String hiveAddress = postFormVals.getField(KEY_HIVE_ADDRESS);
@@ -161,7 +162,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         return getiHiveMetaStore(this.metaStoreUrls, this.getUserToken());
     }
 
-    public static IHiveMetaStore getiHiveMetaStore(String metaStoreUrls, HiveUserToken userToken) {
+    public static IHiveMetaStore getiHiveMetaStore(String metaStoreUrls, UserToken userToken) {
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
@@ -171,10 +172,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             //   HiveUserToken userToken = getUserToken();
             //if (userToken.isPresent()) {
             // HiveUserToken hiveToken = userToken.get();
-            userToken.accept(new IHiveUserTokenVisitor() {
+            userToken.accept(new IUserTokenVisitor() {
                 @Override
                 public void visit(IKerberosUserToken token) {
-                    token.getKerberosCfg().setConfiguration(hiveCfg);
+                    HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hiveCfg);
+                    //  token.getKerberosCfg().setConfiguration(hiveCfg);
                 }
             });
             //}
@@ -238,12 +240,12 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     }
 
     // @Override
-    public HiveUserToken getUserToken() {
+    public UserToken getUserToken() {
 //        return this.useUserToken
 //                ? Optional.of(new HiveUserToken(this.userName, this.password)) : Optional.empty();
         if (this.userToken == null) {
             // throw new IllegalStateException("hive userToken can not be null");
-            return new OffHiveUserToken();
+            return new OffUserToken();
         }
         return this.userToken;
     }

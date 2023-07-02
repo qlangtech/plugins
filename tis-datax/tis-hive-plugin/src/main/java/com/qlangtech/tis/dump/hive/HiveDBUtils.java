@@ -18,18 +18,18 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
-import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
-import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
-import com.qlangtech.tis.config.hive.impl.OffHiveUserToken;
+import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
 import com.qlangtech.tis.job.common.JobCommon;
-import com.qlangtech.tis.kerberos.KerberosCfg;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingStatement;
@@ -81,10 +81,10 @@ public class HiveDBUtils {
 
 
     public static HiveDBUtils getInstance(String hiveHost, String defaultDbName) {
-        return getInstance(hiveHost, defaultDbName, new OffHiveUserToken());
+        return getInstance(hiveHost, defaultDbName, new OffUserToken());
     }
 
-    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, HiveUserToken userToken) {
+    public static HiveDBUtils getInstance(String hiveHost, String defaultDbName, UserToken userToken) {
         if (hiveHelper == null) {
             synchronized (HiveDBUtils.class) {
                 if (hiveHelper == null) {
@@ -105,23 +105,23 @@ public class HiveDBUtils {
 //        }
 //    }
 
-    private HiveDBUtils(String hiveHost, String defaultDbName, HiveUserToken userToken) {
+    private HiveDBUtils(String hiveHost, String defaultDbName, UserToken userToken) {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
-    public static String createHiveJdbcUrl(String hiveHost, String defaultDbName, HiveUserToken userToken) {
+    public static String createHiveJdbcUrl(String hiveHost, String defaultDbName, UserToken userToken) {
         StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
 
-        userToken.accept(new IHiveUserTokenVisitor() {
+        userToken.accept(new IUserTokenVisitor() {
             @Override
-            public void visit(IUserNamePasswordHiveUserToken ut) {
+            public void visit(IUserNamePasswordUserToken ut) {
             }
 
             @Override
             public void visit(IKerberosUserToken token) {
-                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+                IKerberos kerberosCfg = token.getKerberosCfg();
                 jdbcUrl.append(";principal=")
-                        .append(kerberosCfg.principal)
+                        .append(kerberosCfg.getPrincipal())
                         .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
             }
         });
@@ -130,7 +130,7 @@ public class HiveDBUtils {
 
 
     // private static final String hiveHost;
-    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, HiveUserToken userToken) {
+    private BasicDataSource createDatasource(String hiveHost, String defaultDbName, UserToken userToken) {
         if (StringUtils.isEmpty(hiveHost)) {
             throw new IllegalArgumentException("param 'hiveHost' can not be null");
         }
@@ -156,9 +156,9 @@ public class HiveDBUtils {
         String jdbcUrl = createHiveJdbcUrl(hiveHost, defaultDbName, userToken);// new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
 
         // if (userToken.isPresent()) {
-        userToken.accept(new IHiveUserTokenVisitor() {
+        userToken.accept(new IUserTokenVisitor() {
             @Override
-            public void visit(IUserNamePasswordHiveUserToken ut) {
+            public void visit(IUserNamePasswordUserToken ut) {
                 hiveDatasource.setUsername(ut.getUserName());
                 hiveDatasource.setPassword(ut.getPassword());
             }

@@ -28,12 +28,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.ITmpFileStore;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,6 +50,14 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
     public String keytabPath;
 
     private transient TmpFile tmp;
+
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public String getKeytabPath() {
+        return keytabPath;
+    }
 
     @Override
     public String getStoreFileName() {
@@ -90,36 +94,32 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
 
     }
 
-    public static KerberosCfg getKerberosCfg(String idName) {
-        return ParamsConfig.getItem(idName, IKerberos.IDENTITY);
-    }
 
-
-    @Override
-    public <CONFIG> void setConfiguration(CONFIG config) {
-        if (!(config instanceof Configuration)) {
-            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
-        }
-        final Thread t = Thread.currentThread();
-        final ClassLoader contextClassLoader = t.getContextClassLoader();
-        if (StringUtils.isEmpty(this.principal)) {
-            throw new IllegalStateException("prop principal can not be null");
-        }
-
-        File keytab = this.getKeyTabPath();
-        if (!keytab.exists()) {
-            throw new IllegalStateException("keytabPath can is not exist:" + keytabPath);
-        }
-        try {
-            t.setContextClassLoader(KerberosCfg.class.getClassLoader());
-            UserGroupInformation.setConfiguration((Configuration) config);
-            UserGroupInformation.loginUserFromKeytab(this.principal, keytab.getAbsolutePath());
-        } catch (IOException e) {
-            throw new RuntimeException("principal:" + this.principal, e);
-        } finally {
-            t.setContextClassLoader(contextClassLoader);
-        }
-    }
+//    @Override
+//    public <CONFIG> void setConfiguration(CONFIG config) {
+//        if (!(config instanceof Configuration)) {
+//            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
+//        }
+//        final Thread t = Thread.currentThread();
+//        final ClassLoader contextClassLoader = t.getContextClassLoader();
+//        if (StringUtils.isEmpty(this.principal)) {
+//            throw new IllegalStateException("prop principal can not be null");
+//        }
+//
+//        File keytab = this.getKeyTabPath();
+//        if (!keytab.exists()) {
+//            throw new IllegalStateException("keytabPath can is not exist:" + keytabPath);
+//        }
+//        try {
+//            t.setContextClassLoader(KerberosCfg.class.getClassLoader());
+//            UserGroupInformation.setConfiguration((Configuration) config);
+//            UserGroupInformation.loginUserFromKeytab(this.principal, keytab.getAbsolutePath());
+//        } catch (IOException e) {
+//            throw new RuntimeException("principal:" + this.principal, e);
+//        } finally {
+//            t.setContextClassLoader(contextClassLoader);
+//        }
+//    }
 
     @Override
     public Object createConfigInstance() {

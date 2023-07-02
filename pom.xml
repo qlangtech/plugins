@@ -63,6 +63,7 @@
         <module>tis-plugin-test/tis-testcontainer-oracle</module>
         <module>tis-plugin-test/tis-testcontainer-starrocks</module>
         <module>tis-e2e</module>
+        <module>tis-kerberos-plugin</module>
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->

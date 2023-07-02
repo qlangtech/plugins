@@ -21,11 +21,11 @@ package com.qlangtech.tis.plugin.datax.hudi;
 import com.alibaba.datax.plugin.writer.hudi.HudiConfig;
 import com.alibaba.datax.plugin.writer.hudi.TypedPropertiesBuilder;
 import com.google.common.collect.Maps;
-import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
-import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -53,7 +53,6 @@ import org.slf4j.MDC;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -386,16 +385,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 //            props.setProperty("hoodie.datasource.hive_sync.partition_extractor_class"
 //                    , "org.apache.hudi.hive.MultiPartKeysValueExtractor");
 
-            HiveUserToken hiveUserToken = hiveMeta.getUserToken();
+            UserToken hiveUserToken = hiveMeta.getUserToken();
             // if (hiveUserToken.isPresent()) {
-            hiveUserToken.accept(new IHiveUserTokenVisitor() {
+            hiveUserToken.accept(new IUserTokenVisitor() {
                 @Override
                 public void visit(IKerberosUserToken token) {
-
                 }
-
                 @Override
-                public void visit(IUserNamePasswordHiveUserToken token) {
+                public void visit(IUserNamePasswordUserToken token) {
                     props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
                     props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
                 }

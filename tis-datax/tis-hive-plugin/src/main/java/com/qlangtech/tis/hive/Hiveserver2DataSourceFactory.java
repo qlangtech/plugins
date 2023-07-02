@@ -19,16 +19,16 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
-import com.qlangtech.tis.config.hive.impl.IUserNamePasswordHiveUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.kerberos.KerberosCfg;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -76,7 +76,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     public String hiveAddress;
 
     @FormField(ordinal = 5, validate = {Validator.require})
-    public HiveUserToken userToken;
+    public UserToken userToken;
 
     @Override
     public String getDBSchema() {
@@ -113,7 +113,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     }
 
     @Override
-    public HiveUserToken getUserToken() {
+    public UserToken getUserToken() {
         return this.userToken;
     }
 
@@ -132,18 +132,18 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
                 HiveDriver hiveDriver = new HiveDriver();
                 Properties props = new Properties();
                 StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);
-                userToken.accept(new IHiveUserTokenVisitor() {
+                userToken.accept(new IUserTokenVisitor() {
                     @Override
-                    public void visit(IUserNamePasswordHiveUserToken ut) {
+                    public void visit(IUserNamePasswordUserToken ut) {
                         props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
                         props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
                     }
 
                     @Override
                     public void visit(IKerberosUserToken token) {
-                        KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+                        IKerberos kerberosCfg =  token.getKerberosCfg();
                         jdbcUrlBuffer.append(";principal=")
-                                .append(kerberosCfg.principal)
+                                .append(kerberosCfg.getPrincipal())
                                 .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
                     }
                 });

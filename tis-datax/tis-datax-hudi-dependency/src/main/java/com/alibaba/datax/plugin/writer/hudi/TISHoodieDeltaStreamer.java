@@ -20,14 +20,15 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
 import com.gilt.logback.flume.tis.TisFlumeLogstashV1Appender;
-import com.qlangtech.tis.config.hive.HiveUserToken;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.hive.IHiveUserTokenVisitor;
-import com.qlangtech.tis.config.hive.impl.IKerberosUserToken;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IFSWriter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -51,7 +52,6 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -148,12 +148,13 @@ public class TISHoodieDeltaStreamer implements Serializable {
             // 由于hive 版本不兼容所以先用字符串
             hadoopCfg.set("hive.metastore.fastpath", "false");
             TISHadoopFileSystemGetter.initializeDir = true;
-            HiveUserToken userToken = hiveConnMeta.getUserToken();
+            UserToken userToken = hiveConnMeta.getUserToken();
 //            if (userToken.isPresent()) {
-            userToken.accept(new IHiveUserTokenVisitor() {
+            userToken.accept(new IUserTokenVisitor() {
                 @Override
                 public void visit(IKerberosUserToken token) {
-                    token.getKerberosCfg().setConfiguration(hadoopCfg);
+                  //  token.getKerberosCfg().setConfiguration(hadoopCfg);
+                    HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hadoopCfg);
                 }
             });
             //}
@@ -201,7 +202,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
 //            if (org.apache.commons.lang3.StringUtils.isNotEmpty(mdcCollection)) {
 //                MDC.put(JobCommon.KEY_COLLECTION, mdcCollection);
 //            }
-            JobCommon.setMDC( Integer.parseInt(taskId), mdcCollection);
+            JobCommon.setMDC(Integer.parseInt(taskId), mdcCollection);
             Level level = event.getLevel();
             if (level.isGreaterOrEqual(Level.INFO)) {
                 Logger logger = this.loggerFactory.getLogger(event.getLoggerName());

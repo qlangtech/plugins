@@ -21,23 +21,28 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.Utils;
+import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
+import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
+import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
-import com.qlangtech.tis.kerberos.KerberosCfg;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +52,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author 百岁（baisui@qlangtech.com）
@@ -73,8 +81,11 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     @FormField(ordinal = 7, validate = {Validator.require, Validator.absolute_path})
     public String rootDir;
 
-    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, advance = true, validate = {})
-    public String kerberos;
+//    @FormField(ordinal = 8, type = FormFieldType.SELECTABLE, advance = true, validate = {})
+//    public String kerberos;
+
+    @FormField(ordinal = 8, validate = {Validator.require})
+    public UserToken userToken;
 
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
@@ -117,6 +128,16 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         Utils.setHadoopConfig2Local(cfgDir, "hdfs-site.xml", hdfsSiteContent);
     }
 
+
+    public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
+        if (CollectionUtils.isEmpty(descs)) {
+            throw new IllegalArgumentException("param descs can not be null");
+        }
+        return descs.stream().filter((d) -> {
+            return !IUserNamePasswordUserToken.KEY_USER_PASS.equals(((Descriptor) d).getDisplayName());
+        }).collect(Collectors.toList());
+    }
+
     @Override
     public Configuration getConfiguration() {
         final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
@@ -144,11 +165,18 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             // 这个缓存还是需要的，不然如果另外的调用FileSystem实例不是通过调用getFileSystem这个方法的进入,就调用不到了
             conf.setBoolean("fs.hdfs.impl.disable.cache", false);
 
-            if (StringUtils.isNotEmpty(this.kerberos)) {
-                Logger.info("kerberos has been enabled,name:" + this.kerberos);
-                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
-                kerberosCfg.setConfiguration(conf);
-            }
+//            if (StringUtils.isNotEmpty(this.kerberos)) {
+//                Logger.info("kerberos has been enabled,name:" + this.kerberos);
+//                KerberosCfg kerberosCfg = KerberosCfg.getKerberosCfg(this.kerberos);
+//                kerberosCfg.setConfiguration(conf);
+//            }
+
+            userToken.accept(new IUserTokenVisitor() {
+                @Override
+                public void visit(IKerberosUserToken token) {
+                    setConfiguration(token.getKerberosCfg(), conf);
+                }
+            });
 
             conf.reloadConfiguration();
             return conf;
@@ -156,6 +184,33 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             throw new RuntimeException(e);
         } finally {
             Thread.currentThread().setContextClassLoader(contextClassLoader);
+        }
+    }
+
+
+    public static void setConfiguration(IKerberos kerberos, Configuration config) {
+        Objects.requireNonNull(config, "config can not be null");
+//        if (!(config instanceof Configuration)) {
+//            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
+//        }
+        final Thread t = Thread.currentThread();
+        final ClassLoader contextClassLoader = t.getContextClassLoader();
+        if (StringUtils.isEmpty(kerberos.getPrincipal())) {
+            throw new IllegalStateException("prop principal can not be null");
+        }
+
+        File keytab = kerberos.getKeyTabPath();
+        if (!keytab.exists()) {
+            throw new IllegalStateException("keytabPath can is not exist:" + kerberos.getKeytabPath());
+        }
+        try {
+            t.setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+            UserGroupInformation.setConfiguration((Configuration) config);
+            UserGroupInformation.loginUserFromKeytab(kerberos.getPrincipal(), keytab.getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("principal:" + kerberos.getPrincipal(), e);
+        } finally {
+            t.setContextClassLoader(contextClassLoader);
         }
     }
 

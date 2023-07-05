@@ -15,3 +15,17 @@ Kerberos 给 principal 指定 ticket 票据，让他们可以访问用 Kerberos 
 
 Keytab 就是一个包含了（若干）principals 和一个加密了的 principal key的文件。一个 Keytab 文件每个 host 都是唯一的，因为 principal 的定义了包含了 hostname 的。这个文件可以用来认证，而不需要传递公开的密码，因为只要有这个 Keytab 就可以代表这个 principal 来操作 Hadoop 的服务。所以说 Keytab 是需要保管好的。
 
+## krb5Res
+
+maintains key-value pairs of Kerberos configurable constants from configuration file or from user specified system properties.
+
+The content is path of file with default path '/etc/krb5.conf'
+
+There are two types of input method 
+1. Upload 
+
+   By upload a File that the content is compatible with '/etc/krb5.conf'
+    
+2. SystemPath
+ 
+   By reference to the path of `krb5.conf` with default location of '/etc/krb5.conf'

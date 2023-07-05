@@ -254,35 +254,6 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     @Override
     public String getJdbcUrl() {
         return IHiveConnGetter.HIVE2_JDBC_SCHEMA + this.hiveAddress;
-
-//        Objects.requireNonNull(userToken, "userToken can not be null").accept(new IHiveUserTokenVisitor() {
-//            @Override
-//            public void visit(DefaultHiveUserToken token) {
-//
-//            }
-//
-//            @Override
-//            public void visit(KerberosUserToken token) {
-//                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
-//                jdbcUrl.append(";principal=")
-//                        .append(kerberosCfg.principal)
-//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-//            }
-//        });
-//
-//        if (userToken.isPresent()) {
-//            userToken.get().accept(new IHiveUserTokenVisitor() {
-//                @Override
-//                public void visit(DefaultHiveUserToken ut) {
-//                    hiveDatasource.setUsername(ut.userName);
-//                    hiveDatasource.setPassword(ut.password);
-//                }
-//
-//
-//            });
-//
-//        }
-
     }
 
     @TISExtension()

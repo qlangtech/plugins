@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hive.jdbc.HiveDriver;
 import org.apache.hive.jdbc.Utils;
@@ -50,6 +51,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -124,8 +127,9 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
     @Override
     public JDBCConnection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
+        final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
         try {
-
+            Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());
             if (usingPool) {
                 return HiveDBUtils.getInstance(this.hiveAddress, this.dbName, getUserToken()).createConnection();
             } else {
@@ -143,14 +147,17 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
                     public void visit(IKerberosUserToken token) {
                         IKerberos kerberosCfg =  token.getKerberosCfg();
                         jdbcUrlBuffer.append(";principal=")
-                                .append(kerberosCfg.getPrincipal())
-                                .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+                                .append(kerberosCfg.getPrincipal());
+                              //  .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
                     }
                 });
+                jdbcUrl = jdbcUrlBuffer.toString();
                 return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
             }
         } catch (Throwable e) {
             throw new RuntimeException(e);
+        }finally {
+            Thread.currentThread().setContextClassLoader(currentLoader);
         }
     }
 
@@ -255,6 +262,18 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 //
 //            return true;
 //        }
+
+        public boolean validateMetaStoreUrls(IFieldErrorHandler msgHandler, Context context, String fieldName, String metaUrls) {
+            Pattern PATTERN_THRIFT_URL = Pattern.compile("thrift://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
+
+            Matcher matcher = PATTERN_THRIFT_URL.matcher(metaUrls);
+            if (!matcher.matches()) {
+                msgHandler.addFieldError(context, fieldName, "value:\"" + metaUrls + "\" not match " + PATTERN_THRIFT_URL);
+                return false;
+            }
+
+            return true;
+        }
 
         @Override
         protected void validateConnection(JDBCConnection c) throws TisException {

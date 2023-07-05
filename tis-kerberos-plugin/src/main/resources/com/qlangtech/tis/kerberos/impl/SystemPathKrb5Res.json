@@ -1,0 +1,6 @@
+{
+  "path": {
+    "dftVal": "/etc/krb5.conf",
+    "help": "config file `krb5.conf` located in system path"
+  }
+}

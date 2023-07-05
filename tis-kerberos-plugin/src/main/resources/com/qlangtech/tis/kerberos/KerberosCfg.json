@@ -3,5 +3,8 @@
     "placeholder": "username/fully.qualified.domain.name@YOUR_REALM.COM"
   },
   "keytabPath": {
+  },
+  "krb5Res": {
+    "dftVal": "SystemPath"
   }
 }

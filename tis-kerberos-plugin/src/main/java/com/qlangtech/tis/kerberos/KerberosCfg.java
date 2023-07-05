@@ -21,6 +21,7 @@ package com.qlangtech.tis.kerberos;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.kerberos.IKerberos;
+import com.qlangtech.tis.config.kerberos.Krb5Res;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -49,6 +50,9 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
     @FormField(ordinal = 2, type = FormFieldType.FILE, validate = {Validator.require})
     public String keytabPath;
 
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public Krb5Res krb5Res;
+
     private transient TmpFile tmp;
 
     public String getPrincipal() {
@@ -68,6 +72,10 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
         return Objects.requireNonNull(tmp, "tmp file can not be null").tmp;
     }
 
+    @Override
+    public Krb5Res getKrb5Res() {
+        return this.krb5Res;
+    }
 
     @Override
     public void setTmpeFile(TmpFile tmp) {
@@ -140,6 +148,15 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
         public String getDisplayName() {
             return IKerberos.IDENTITY;
         }
+
+//        @Override
+//        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals vals) {
+//
+//            ParamsConfig paramsConfig = vals.newInstance(this, msgHandler);
+//
+//
+//            return true;
+//        }
 
         /**
          * format must be : username/fully.qualified.domain.name@YOUR_REALM.COM

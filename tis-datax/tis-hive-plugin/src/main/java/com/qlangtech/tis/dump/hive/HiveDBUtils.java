@@ -165,7 +165,7 @@ public class HiveDBUtils {
 
             @Override
             public void visit(IKerberosUserToken token) {
-//                KerberosCfg kerberosCfg = (KerberosCfg) token.getKerberosCfg();
+//                IKerberos kerberosCfg =  token.getKerberosCfg();
 //                jdbcUrl.append(";principal=")
 //                        .append(kerberosCfg.principal)
 //                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
@@ -179,7 +179,7 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        hiveJdbcUrl = jdbcUrl.toString();
+        hiveJdbcUrl = jdbcUrl;
         hiveDatasource.setUrl(hiveJdbcUrl);
         log.info("hiveJdbcUrl:" + hiveJdbcUrl);
         return hiveDatasource;

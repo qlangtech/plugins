@@ -85,7 +85,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 //    public String kerberos;
 
     @FormField(ordinal = 8, validate = {Validator.require})
-    public UserToken userToken;
+    public UserToken<Void> userToken;
 
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})
@@ -173,8 +173,9 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
             userToken.accept(new IUserTokenVisitor() {
                 @Override
-                public void visit(IKerberosUserToken token) {
+                public Void visit(IKerberosUserToken token) {
                     setConfiguration(token.getKerberosCfg(), conf);
+                    return null;
                 }
             });
 

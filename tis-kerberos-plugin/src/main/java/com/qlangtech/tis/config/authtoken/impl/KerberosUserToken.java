@@ -34,18 +34,20 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-06-01 12:59
  **/
-public class KerberosUserToken extends UserToken implements IKerberosUserToken {
+public class KerberosUserToken extends UserToken<Object> implements IKerberosUserToken {
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String kerberos;
 
     @Override
-    public void accept(IUserTokenVisitor visitor) {
-        if (!Krb5Res.BaseDescriptor.krb5ConfigTmpSession(getKerberosCfg().getKrb5Res(), () -> {
-            visitor.visit(this);
-        })) {
+    public Object accept(IUserTokenVisitor<Object> visitor) {
+        Object result = null;
+        if ((result = Krb5Res.BaseDescriptor.krb5ConfigTmpSession(getKerberosCfg().getKrb5Res(), () -> {
+            return visitor.visit(this);
+        })) == null) {
             throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
         }
+        return result;
     }
 
     @Override

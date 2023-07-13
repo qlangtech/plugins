@@ -152,9 +152,10 @@ public class TISHoodieDeltaStreamer implements Serializable {
 //            if (userToken.isPresent()) {
             userToken.accept(new IUserTokenVisitor() {
                 @Override
-                public void visit(IKerberosUserToken token) {
+                public Void visit(IKerberosUserToken token) {
                   //  token.getKerberosCfg().setConfiguration(hadoopCfg);
                     HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hadoopCfg);
+                    return null;
                 }
             });
             //}

@@ -174,9 +174,10 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
             // HiveUserToken hiveToken = userToken.get();
             userToken.accept(new IUserTokenVisitor() {
                 @Override
-                public void visit(IKerberosUserToken token) {
+                public Void visit(IKerberosUserToken token) {
                     HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hiveCfg);
                     //  token.getKerberosCfg().setConfiguration(hiveCfg);
+                    return null;
                 }
             });
             //}

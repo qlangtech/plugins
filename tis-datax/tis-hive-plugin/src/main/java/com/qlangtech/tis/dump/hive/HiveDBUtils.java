@@ -24,14 +24,15 @@ import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
-import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.ConnectionFactory;
 import org.apache.commons.dbcp.DelegatingStatement;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hive.jdbc.HiveStatement;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -109,23 +111,25 @@ public class HiveDBUtils {
         this.hiveDatasource = createDatasource(hiveHost, defaultDbName, userToken);
     }
 
-    public static String createHiveJdbcUrl(String hiveHost, String defaultDbName, UserToken userToken) {
+    public static String createHiveJdbcUrl(String hiveHost, String defaultDbName) {
         StringBuffer jdbcUrl = new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
-
-        userToken.accept(new IUserTokenVisitor() {
-            @Override
-            public void visit(IUserNamePasswordUserToken ut) {
-            }
-
-            @Override
-            public void visit(IKerberosUserToken token) {
-                IKerberos kerberosCfg = token.getKerberosCfg();
-                jdbcUrl.append(";principal=")
-                        .append(kerberosCfg.getPrincipal())
-                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-            }
-        });
         return jdbcUrl.toString();
+//        return userToken.accept(new IUserTokenVisitor<String>() {
+//            @Override
+//            public String visit(IUserNamePasswordUserToken ut) {
+//                return jdbcUrl.toString();
+//            }
+//
+//            @Override
+//            public String visit(IKerberosUserToken token) {
+//                IKerberos kerberosCfg = token.getKerberosCfg();
+//                jdbcUrl.append(";principal=")
+//                        .append(kerberosCfg.getPrincipal())
+//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+//                return jdbcUrl.toString();
+//            }
+//        });
+        // return jdbcUrl.toString();
     }
 
 
@@ -137,7 +141,24 @@ public class HiveDBUtils {
         if (StringUtils.isEmpty(defaultDbName)) {
             throw new IllegalArgumentException("param 'defaultDbName' can not be null");
         }
-        BasicDataSource hiveDatasource = new BasicDataSource();
+        String jdbcUrl = createHiveJdbcUrl(hiveHost, defaultDbName);
+        BasicDataSource hiveDatasource = new BasicDataSource() {
+            @Override
+            protected ConnectionFactory createConnectionFactory() throws SQLException {
+                return new ConnectionFactory() {
+                    @Override
+                    public Connection createConnection() throws SQLException {
+                        try {
+                            return Hiveserver2DataSourceFactory.createConnection(jdbcUrl, userToken).getConnection();
+                        } catch (SQLException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new SQLException(e);
+                        }
+                    }
+                };
+            }
+        };
         hiveDatasource.setDriverClassName("org.apache.hive.jdbc.HiveDriver");
         hiveDatasource.setDriverClassLoader(this.getClass().getClassLoader());
 
@@ -153,24 +174,24 @@ public class HiveDBUtils {
             throw new IllegalStateException("hivehost can not be null");
         }
         // String hiveJdbcUrl = "jdbc:hive2://" + hiveHost + "/tis";
-        String jdbcUrl = createHiveJdbcUrl(hiveHost, defaultDbName, userToken);// new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
+        // new StringBuffer(IHiveConnGetter.HIVE2_JDBC_SCHEMA + hiveHost + "/" + defaultDbName);
 
         // if (userToken.isPresent()) {
-        userToken.accept(new IUserTokenVisitor() {
-            @Override
-            public void visit(IUserNamePasswordUserToken ut) {
-                hiveDatasource.setUsername(ut.getUserName());
-                hiveDatasource.setPassword(ut.getPassword());
-            }
-
-            @Override
-            public void visit(IKerberosUserToken token) {
-//                IKerberos kerberosCfg =  token.getKerberosCfg();
-//                jdbcUrl.append(";principal=")
-//                        .append(kerberosCfg.principal)
-//                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-            }
-        });
+//        userToken.accept(new IUserTokenVisitor() {
+//            @Override
+//            public void visit(IUserNamePasswordUserToken ut) {
+//                hiveDatasource.setUsername(ut.getUserName());
+//                hiveDatasource.setPassword(ut.getPassword());
+//            }
+//
+//            @Override
+//            public void visit(IKerberosUserToken token) {
+////                IKerberos kerberosCfg =  token.getKerberosCfg();
+////                jdbcUrl.append(";principal=")
+////                        .append(kerberosCfg.principal)
+////                        .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+//            }
+//        });
 
         //}
         // 测试空闲的连接是否有效

@@ -79,7 +79,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     public String hiveAddress;
 
     @FormField(ordinal = 5, validate = {Validator.require})
-    public UserToken userToken;
+    public UserToken<DataSourceMeta.JDBCConnection> userToken;
 
     @Override
     public String getDBSchema() {
@@ -133,32 +133,43 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
             if (usingPool) {
                 return HiveDBUtils.getInstance(this.hiveAddress, this.dbName, getUserToken()).createConnection();
             } else {
-                HiveDriver hiveDriver = new HiveDriver();
-                Properties props = new Properties();
-                StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);
-                userToken.accept(new IUserTokenVisitor() {
-                    @Override
-                    public void visit(IUserNamePasswordUserToken ut) {
-                        props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
-                        props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
-                    }
+                return createConnection(jdbcUrl, getUserToken());
 
-                    @Override
-                    public void visit(IKerberosUserToken token) {
-                        IKerberos kerberosCfg =  token.getKerberosCfg();
-                        jdbcUrlBuffer.append(";principal=")
-                                .append(kerberosCfg.getPrincipal());
-                              //  .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-                    }
-                });
-                jdbcUrl = jdbcUrlBuffer.toString();
-                return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
             }
         } catch (Throwable e) {
             throw new RuntimeException(e);
-        }finally {
+        } finally {
             Thread.currentThread().setContextClassLoader(currentLoader);
         }
+    }
+
+    public static JDBCConnection createConnection(String jdbcUrl, UserToken<JDBCConnection> userToken) throws Exception {
+        HiveDriver hiveDriver = new HiveDriver();
+        Properties props = new Properties();
+        StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);
+        return userToken.accept(new IUserTokenVisitor<JDBCConnection>() {
+            @Override
+            public JDBCConnection visit(IUserNamePasswordUserToken ut) throws Exception {
+                props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
+                props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
+                return createConnection(hiveDriver, props, jdbcUrlBuffer);
+            }
+
+            @Override
+            public JDBCConnection visit(IKerberosUserToken token) throws Exception {
+                IKerberos kerberosCfg = token.getKerberosCfg();
+                jdbcUrlBuffer.append(";principal=")
+                        .append(kerberosCfg.getPrincipal());
+                //  .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
+                return createConnection(hiveDriver, props, jdbcUrlBuffer);
+            }
+        });
+    }
+
+    private static JDBCConnection createConnection(
+            HiveDriver hiveDriver, Properties props, StringBuffer jdbcUrlBuffer) throws SQLException {
+        String jdbcUrl = jdbcUrlBuffer.toString();
+        return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
     }
 
     @Override
@@ -182,7 +193,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     }
 
     private String createHiveJdbcUrl() {
-        return HiveDBUtils.createHiveJdbcUrl(this.hiveAddress, this.dbName, getUserToken());
+        return HiveDBUtils.createHiveJdbcUrl(this.hiveAddress, this.dbName);
     }
 
     @Override

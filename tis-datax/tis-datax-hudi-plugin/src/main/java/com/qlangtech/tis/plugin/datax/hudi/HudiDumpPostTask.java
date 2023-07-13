@@ -387,16 +387,23 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
 
             UserToken hiveUserToken = hiveMeta.getUserToken();
             // if (hiveUserToken.isPresent()) {
-            hiveUserToken.accept(new IUserTokenVisitor() {
-                @Override
-                public void visit(IKerberosUserToken token) {
-                }
-                @Override
-                public void visit(IUserNamePasswordUserToken token) {
-                    props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
-                    props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
-                }
-            });
+            try {
+                hiveUserToken.accept(new IUserTokenVisitor() {
+                    @Override
+                    public Void visit(IKerberosUserToken token) {
+                        return null;
+                    }
+
+                    @Override
+                    public Void visit(IUserNamePasswordUserToken token) {
+                        props.setProperty("hoodie.datasource.hive_sync.username", token.getUserName());
+                        props.setProperty("hoodie.datasource.hive_sync.password", token.getPassword());
+                        return null;
+                    }
+                });
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
 //
 //                IHiveUserToken token = hiveUserToken.get();

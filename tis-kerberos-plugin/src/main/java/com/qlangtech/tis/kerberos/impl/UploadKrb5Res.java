@@ -20,6 +20,7 @@ package com.qlangtech.tis.kerberos.impl;
 
 import com.qlangtech.tis.config.kerberos.Krb5Res;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IRepositoryTargetFile;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.ITmpFileStore;
@@ -41,12 +42,20 @@ public class UploadKrb5Res extends Krb5Res implements ITmpFileStore {
 
     @Override
     public boolean isKrb5PathNotNull() {
-        return this.tmp != null;
+        return this.getTmpFile() != null;
+    }
+
+    private TmpFile getTmpFile() {
+        if (this.tmp == null) {
+            IRepositoryTargetFile targetFile = IRepositoryTargetFile.TARGET_FILE_CONTEXT.get();
+            this.tmp = this.createTmpFile(targetFile);
+        }
+        return this.tmp;
     }
 
     @Override
     public File getKrb5Path() {
-        return Objects.requireNonNull(this.tmp, "tmp file can not be null").tmp;
+        return Objects.requireNonNull(this.getTmpFile(), "tmp file can not be null").tmp;
     }
 
     @Override
@@ -79,6 +88,7 @@ public class UploadKrb5Res extends Krb5Res implements ITmpFileStore {
             tmp.saveToDir(parentDir, this.getStoreFileName());
         }
     }
+
 
     @TISExtension
     public static final class DftDescriptor extends BaseDescriptor {

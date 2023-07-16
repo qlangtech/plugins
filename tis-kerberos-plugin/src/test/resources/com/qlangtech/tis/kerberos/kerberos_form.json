@@ -1,0 +1,186 @@
+{
+  "dspt": {
+    "impl": "com.qlangtech.tis.kerberos.KerberosCfg",
+    "pkField": "name",
+    "implUrl": "http://tis.pub/docs/plugin/plugins/#comqlangtechtiskerberoskerberoscfg",
+    "displayName": "kerberos",
+    "extendPoint": "com.qlangtech.tis.config.ParamsConfig",
+    "containAdvance": false,
+    "veriflable": false,
+    "extractProps": {
+      "notebook": {
+        "activate": false,
+        "ability": false
+      }
+    },
+    "attrs": [
+      {
+        "ord": 0,
+        "describable": false,
+        "pk": true,
+        "type": 1,
+        "key": "name",
+        "required": true
+      },
+      {
+        "ord": 1,
+        "eprops": {
+          "placeholder": "username/fully.qualified.domain.name@YOUR_REALM.COM",
+          "asyncHelp": true
+        },
+        "describable": false,
+        "pk": false,
+        "type": 1,
+        "key": "principal",
+        "required": true
+      },
+      {
+        "ord": 2,
+        "eprops": {
+          "asyncHelp": true
+        },
+        "describable": false,
+        "pk": false,
+        "type": 9,
+        "key": "keytabPath",
+        "required": true
+      },
+      {
+        "ord": 3,
+        "descriptors": {},
+        "eprops": {
+          "dftVal": "SystemPath",
+          "asyncHelp": true
+        },
+        "describable": true,
+        "pk": false,
+        "type": 1,
+        "key": "krb5Res",
+        "required": true
+      }
+    ]
+  },
+  "updateModel": false,
+  "impl": "com.qlangtech.tis.kerberos.KerberosCfg",
+  "vals": {
+    "name": {
+      "updateModel": true,
+      "_primaryVal": "kerberos_name",
+      "has_set_primaryVal": false,
+      "disabled": false,
+      "key": "name",
+      "pk": true,
+      "_eprops": {},
+      "placeholder": "",
+      "required": true,
+      "type": 1
+    },
+    "principal": {
+      "updateModel": true,
+      "_primaryVal": "principal@taobao",
+      "has_set_primaryVal": false,
+      "disabled": false,
+      "key": "principal",
+      "pk": false,
+      "_eprops": {
+        "placeholder": "username/fully.qualified.domain.name@YOUR_REALM.COM",
+        "asyncHelp": true
+      },
+      "placeholder": "username/fully.qualified.domain.name@YOUR_REALM.COM",
+      "required": true,
+      "type": 1
+    },
+    "keytabPath": {
+      "updateModel": true,
+      "_primaryVal": "/tmp/tis_upload_files/upload_dedd8ab0_944f_4376_8c70_1e38350ff22a_00000008.tmp;tis.keytab",
+      "has_set_primaryVal": false,
+      "disabled": false,
+      "key": "keytabPath",
+      "pk": false,
+      "_eprops": {
+        "asyncHelp": true
+      },
+      "placeholder": "",
+      "required": true,
+      "type": 9
+    },
+    "krb5Res": {
+      "updateModel": true,
+      "has_set_primaryVal": false,
+      "disabled": false,
+      "key": "krb5Res",
+      "pk": false,
+      "_eprops": {
+        "dftVal": "SystemPath",
+        "asyncHelp": true
+      },
+      "dftVal": "SystemPath",
+      "placeholder": "",
+      "required": true,
+      "type": 1,
+      "descVal": {
+        "dspt": {
+          "impl": "com.qlangtech.tis.kerberos.impl.UploadKrb5Res",
+          "implUrl": "http://tis.pub/docs/plugin/plugins/#comqlangtechtiskerberosimpluploadkrb5res",
+          "displayName": "Upload",
+          "extendPoint": "com.qlangtech.tis.config.kerberos.Krb5Res",
+          "containAdvance": false,
+          "veriflable": false,
+          "extractProps": {
+            "notebook": {
+              "activate": false,
+              "ability": false
+            }
+          },
+          "attrs": [
+            {
+              "ord": 1,
+              "describable": false,
+              "pk": false,
+              "type": 9,
+              "key": "file",
+              "required": true
+            }
+          ]
+        },
+        "updateModel": false,
+        "impl": "com.qlangtech.tis.kerberos.impl.UploadKrb5Res",
+        "vals": {
+          "file": {
+            "updateModel": true,
+            "_primaryVal": "/tmp/tis_upload_files/upload_dedd8ab0_944f_4376_8c70_1e38350ff22a_00000008.tmp;krb5.conf",
+            "has_set_primaryVal": false,
+            "disabled": false,
+            "key": "file",
+            "pk": false,
+            "_eprops": {},
+            "placeholder": "",
+            "required": true,
+            "type": 9
+          }
+        },
+        "displayName": "Upload",
+        "showAllField": false,
+        "descriptors": {},
+        "_propVals": [
+          {
+            "updateModel": true,
+            "_primaryVal": "krb5.conf",
+            "has_set_primaryVal": false,
+            "disabled": false,
+            "key": "file",
+            "pk": false,
+            "_eprops": {},
+            "placeholder": "",
+            "required": true,
+            "type": 9
+          }
+        ]
+      }
+    }
+  },
+  "displayName": "kerberos",
+  "showAllField": false,
+  "identityName": "tis",
+  "implUrl": "http://tis.pub/docs/plugin/plugins/#comqlangtechtiskerberoskerberoscfg"
+}

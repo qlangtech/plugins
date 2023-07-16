@@ -79,7 +79,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     public String hiveAddress;
 
     @FormField(ordinal = 5, validate = {Validator.require})
-    public UserToken<DataSourceMeta.JDBCConnection> userToken;
+    public UserToken userToken;
 
     @Override
     public String getDBSchema() {
@@ -143,7 +143,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
         }
     }
 
-    public static JDBCConnection createConnection(String jdbcUrl, UserToken<JDBCConnection> userToken) throws Exception {
+    public static JDBCConnection createConnection(String jdbcUrl, UserToken userToken) throws Exception {
         HiveDriver hiveDriver = new HiveDriver();
         Properties props = new Properties();
         StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);

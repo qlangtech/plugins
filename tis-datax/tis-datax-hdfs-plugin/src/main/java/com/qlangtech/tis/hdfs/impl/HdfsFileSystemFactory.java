@@ -85,7 +85,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 //    public String kerberos;
 
     @FormField(ordinal = 8, validate = {Validator.require})
-    public UserToken<Void> userToken;
+    public UserToken userToken;
 
 
     @FormField(ordinal = 10, type = FormFieldType.TEXTAREA, validate = {Validator.require})

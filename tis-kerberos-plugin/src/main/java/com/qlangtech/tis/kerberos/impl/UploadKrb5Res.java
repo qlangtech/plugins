@@ -20,7 +20,6 @@ package com.qlangtech.tis.kerberos.impl;
 
 import com.qlangtech.tis.config.kerberos.Krb5Res;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.IRepositoryTargetFile;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.ITmpFileStore;
@@ -46,16 +45,17 @@ public class UploadKrb5Res extends Krb5Res implements ITmpFileStore {
     }
 
     private TmpFile getTmpFile() {
-        if (this.tmp == null) {
-            IRepositoryTargetFile targetFile = IRepositoryTargetFile.TARGET_FILE_CONTEXT.get();
-            this.tmp = this.createTmpFile(targetFile);
-        }
         return this.tmp;
     }
 
     @Override
     public File getKrb5Path() {
         return Objects.requireNonNull(this.getTmpFile(), "tmp file can not be null").tmp;
+    }
+
+    @Override
+    public TmpFile getTmpeFile() {
+        return this.tmp;
     }
 
     @Override
@@ -70,24 +70,24 @@ public class UploadKrb5Res extends Krb5Res implements ITmpFileStore {
                 .identityValue() + "_" + this.file;
     }
 
-    @Override
-    public void save(File parentDir) {
-        if (tmp == null) {
-            // 更新流程保持不变
-            File cfg = new File(parentDir, this.getStoreFileName());
-            if (!cfg.exists()) {
-                throw new IllegalStateException("cfg file is not exist:" + cfg.getAbsolutePath());
-            }
-            tmp = new TmpFile(cfg) {
-                @Override
-                public void saveToDir(File dir, String fileName) {
-                    throw new UnsupportedOperationException("fileName can not be replace:" + cfg.getAbsolutePath());
-                }
-            };
-        } else {
-            tmp.saveToDir(parentDir, this.getStoreFileName());
-        }
-    }
+//    @Override
+//    public void save(File parentDir) {
+//        if (tmp == null) {
+//            // 更新流程保持不变
+//            File cfg = new File(parentDir, this.getStoreFileName());
+//            if (!cfg.exists()) {
+//                throw new IllegalStateException("cfg file is not exist:" + cfg.getAbsolutePath());
+//            }
+//            tmp = new TmpFile(cfg) {
+//                @Override
+//                public void saveToDir(File dir, String fileName) {
+//                    throw new UnsupportedOperationException("fileName can not be replace:" + cfg.getAbsolutePath());
+//                }
+//            };
+//        } else {
+//            tmp.saveToDir(parentDir, this.getStoreFileName());
+//        }
+//    }
 
 
     @TISExtension

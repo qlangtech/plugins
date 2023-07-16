@@ -43,6 +43,7 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.Stack;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -58,7 +59,8 @@ public class TestKerberosCfg {
     @Test
     public void testJsonSubmit() throws Exception {
 
-        final String cfgFileName = "xxxx.cfg";
+        final String cfgFileName = "tis.keytab";
+        final String krb5FileName = "krb5.conf";
 
         CompositContext fieldErrorHandler = EasyMock.createMock("fieldErrorHandler", CompositContext.class);
         // IControlMsgHandler controlMsgHandler = EasyMock.createMock("controlMsgHandler", IControlMsgHandler.class);
@@ -66,6 +68,10 @@ public class TestKerberosCfg {
 
         EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_PLUGIN_INDEX)).andReturn(0).anyTimes();
         EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_ITEM_INDEX)).andReturn(0).anyTimes();
+
+        Stack<DefaultFieldErrorHandler.FieldIndex> fieldStack = new Stack<>();
+        EasyMock.expect(context.get(DefaultFieldErrorHandler.KEY_VALIDATE_FIELDS_STACK)).andReturn(fieldStack).anyTimes();
+
 
         JSONObject jsonObject = IOUtils.loadResourceFromClasspath(TestKerberosCfg.class
                 , "kerberos_form.json", true, (input) -> {
@@ -78,12 +84,26 @@ public class TestKerberosCfg {
         jsonObject.getJSONObject("vals").getJSONObject("keytabPath")
                 .put(Descriptor.KEY_primaryVal, tmpFile.getAbsolutePath() + ";" + cfgFileName);
 
+
+        final File krb5File = folder.newFile("00000009.tmp");
+
+        FileUtils.write(krb5File, IOUtils.loadResourceFromClasspath(TestKerberosCfg.class
+                , "krb5.conf", true, (input) -> {
+                    return org.apache.commons.io.IOUtils.toString(input, TisUTF8.get());
+                }), Charset.defaultCharset(), false);
+
+        jsonObject.getJSONObject("vals")
+                .getJSONObject("krb5Res")
+                .getJSONObject("descVal")
+                .getJSONObject("vals")
+                .getJSONObject("file")
+                .put(Descriptor.KEY_primaryVal, krb5File.getAbsolutePath() + ";" + krb5FileName);
+
         UploadPluginMeta pmeta = UploadPluginMeta.parse("params-cfg:require,append_true,targetItemDesc_kerberos");
 
 
         EasyMock.replay(fieldErrorHandler, context);
-        AttrValMap attrValMap = AttrValMap.parseDescribableMap( //fieldErrorHandler,
-                Optional.empty(), jsonObject);
+        AttrValMap attrValMap = AttrValMap.parseDescribableMap(Optional.empty(), jsonObject);
         Assert.assertNotNull(attrValMap);
 
         Descriptor.PluginValidateResult validate = attrValMap.validate(fieldErrorHandler, context, false);
@@ -108,6 +128,10 @@ public class TestKerberosCfg {
         Assert.assertNotNull(saveResult);
         Assert.assertTrue(saveResult.cfgChanged);
         Assert.assertTrue(saveResult.success);
+
+        // 从缓存中加载
+        kerberosCfg = (KerberosCfg) pluginStore.getPlugin();
+        validateKerberosProps(kerberosCfg);
 
         pluginStore.cleanPlugins();
 
@@ -157,7 +181,7 @@ public class TestKerberosCfg {
         Assert.assertNotNull(kerberosCfg);
 
         Assert.assertEquals("principal@taobao", kerberosCfg.principal);
-        Assert.assertEquals("xxxx.cfg", kerberosCfg.keytabPath);
+        Assert.assertEquals("tis.keytab", kerberosCfg.keytabPath);
         Assert.assertEquals("kerberos_name", kerberosCfg.name);
 
         File keyTabPath = kerberosCfg.getKeyTabPath();

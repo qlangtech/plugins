@@ -83,49 +83,26 @@ public class KerberosCfg extends ParamsConfig implements IKerberos, ITmpFileStor
     }
 
     @Override
-    public void save(File parentDir) {
-        if (tmp == null) {
-            // 更新流程保持不变
-            File cfg = new File(parentDir, this.getStoreFileName());
-            if (!cfg.exists()) {
-                throw new IllegalStateException("cfg file is not exist:" + cfg.getAbsolutePath());
-            }
-            tmp = new TmpFile(cfg) {
-                @Override
-                public void saveToDir(File dir, String fileName) {
-                    throw new UnsupportedOperationException("fileName can not be replace:" + cfg.getAbsolutePath());
-                }
-            };
-        } else {
-            tmp.saveToDir(parentDir, this.getStoreFileName());
-        }
-
+    public TmpFile getTmpeFile() {
+        return this.tmp;
     }
 
-
 //    @Override
-//    public <CONFIG> void setConfiguration(CONFIG config) {
-//        if (!(config instanceof Configuration)) {
-//            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
-//        }
-//        final Thread t = Thread.currentThread();
-//        final ClassLoader contextClassLoader = t.getContextClassLoader();
-//        if (StringUtils.isEmpty(this.principal)) {
-//            throw new IllegalStateException("prop principal can not be null");
-//        }
-//
-//        File keytab = this.getKeyTabPath();
-//        if (!keytab.exists()) {
-//            throw new IllegalStateException("keytabPath can is not exist:" + keytabPath);
-//        }
-//        try {
-//            t.setContextClassLoader(KerberosCfg.class.getClassLoader());
-//            UserGroupInformation.setConfiguration((Configuration) config);
-//            UserGroupInformation.loginUserFromKeytab(this.principal, keytab.getAbsolutePath());
-//        } catch (IOException e) {
-//            throw new RuntimeException("principal:" + this.principal, e);
-//        } finally {
-//            t.setContextClassLoader(contextClassLoader);
+//    public void save(File parentDir) {
+//        if (tmp == null) {
+//            // 更新流程保持不变
+//            File cfg = new File(parentDir, this.getStoreFileName());
+//            if (!cfg.exists()) {
+//                throw new IllegalStateException("cfg file is not exist:" + cfg.getAbsolutePath());
+//            }
+//            tmp = new TmpFile(cfg) {
+//                @Override
+//                public void saveToDir(File dir, String fileName) {
+//                    throw new UnsupportedOperationException("fileName can not be replace:" + cfg.getAbsolutePath());
+//                }
+//            };
+//        } else {
+//            tmp.saveToDir(parentDir, this.getStoreFileName());
 //        }
 //    }
 

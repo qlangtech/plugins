@@ -30,22 +30,33 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-06-01 12:59
  **/
-public class KerberosUserToken extends UserToken<Object> implements IKerberosUserToken {
+public class KerberosUserToken extends UserToken implements IKerberosUserToken {
 
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String kerberos;
 
     @Override
-    public Object accept(IUserTokenVisitor<Object> visitor) {
-        Object result = null;
-        if ((result = Krb5Res.BaseDescriptor.krb5ConfigTmpSession(getKerberosCfg().getKrb5Res(), () -> {
+    public <T> T accept(IUserTokenVisitor<T> visitor) {
+        T result = null;
+        AtomicReference<Exception> exRef = new AtomicReference<>();
+        Krb5Res krb5Res = getKerberosCfg().getKrb5Res();
+        if ((result = Krb5Res.BaseDescriptor.krb5ConfigTmpSession(krb5Res, () -> {
             return visitor.visit(this);
+        }, (ex) -> {
+            exRef.set(ex);
         })) == null) {
-            throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
+            Exception ex = null;
+            if ((ex = exRef.get()) != null) {
+                throw new IllegalStateException("krb5:" + krb5Res.getKrb5Path().getAbsolutePath() + ",error:" + ex.getMessage());
+            } else {
+                throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
+            }
         }
         return result;
     }

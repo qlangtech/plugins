@@ -36,6 +36,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.RobustReflectionConverter;
+import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
     @Override
     public final void initWriterTable(String targetTabName, List<String> jdbcUrls) throws Exception {
-        if (RobustReflectionConverter.usedPluginInfo.get().isDryRun()) {
+        if (RobustReflectionConverter2.usedPluginInfo.get().isDryRun()) {
             return;
         }
         process(this.dataXName, (BasicDataXRdbmsWriter<BasicDataSourceFactory>) this, targetTabName, jdbcUrls);

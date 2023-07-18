@@ -24,6 +24,7 @@ import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.util.PluginMeta;
 import com.qlangtech.tis.util.RobustReflectionConverter;
+import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class TestFlinkTaskNodeController {
         TISSinkFactory incrSinkFactory = TISSinkFactory.getIncrSinKFactory("mysql_mysql");
 
         Assert.assertNotNull(incrSinkFactory);
-       RobustReflectionConverter.PluginMetas pluginMetas = RobustReflectionConverter.usedPluginInfo.get();
+       RobustReflectionConverter2.PluginMetas pluginMetas = RobustReflectionConverter2.usedPluginInfo.get();
         Assert.assertTrue(pluginMetas.getMetas().size() > 0);
     }
 

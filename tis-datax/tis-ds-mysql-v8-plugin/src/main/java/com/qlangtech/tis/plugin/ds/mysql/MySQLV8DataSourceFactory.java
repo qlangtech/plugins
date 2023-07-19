@@ -47,6 +47,11 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         Properties props = new Properties();
         props.put(PropertyKey.USER.getKeyName(), StringUtils.trimToNull(this.userName));
         props.put(PropertyKey.PASSWORD.getKeyName(), StringUtils.trimToEmpty(password));
+
+        // https://stackoverflow.com/questions/50379839/connection-java-mysql-public-key-retrieval-is-not-allowed
+        props.put(PropertyKey.allowPublicKeyRetrieval.getKeyName(), String.valueOf(true));
+        props.put(PropertyKey.useSSL.getKeyName(), String.valueOf(false));
+
         //
         /**
          * https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-connection.html

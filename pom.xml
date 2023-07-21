@@ -222,6 +222,10 @@
                 <version>${hive.version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>tomcat</groupId>
+                        <artifactId>jasper-compiler</artifactId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>log4j</groupId>
                         <artifactId>apache-log4j-extras</artifactId>
                     </exclusion>
@@ -260,6 +264,10 @@
                 <artifactId>hive-exec</artifactId>
                 <version>${hive.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>asm</groupId>
                         <artifactId>asm</artifactId>
@@ -774,11 +782,11 @@
                     <artifactId>animal-sniffer-maven-plugin</artifactId>
                     <version>${animal.sniffer.version}</version>
                 </plugin>
-<!--                <plugin>-->
-<!--                    <groupId>org.jvnet.localizer</groupId>-->
-<!--                    <artifactId>maven-localizer-plugin</artifactId>-->
-<!--                    <version>1.24</version>-->
-<!--                </plugin>-->
+                <!--                <plugin>-->
+                <!--                    <groupId>org.jvnet.localizer</groupId>-->
+                <!--                    <artifactId>maven-localizer-plugin</artifactId>-->
+                <!--                    <version>1.24</version>-->
+                <!--                </plugin>-->
                 <plugin>
                     <groupId>org.kohsuke</groupId>
                     <artifactId>access-modifier-checker</artifactId>
@@ -821,7 +829,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>
-<!--                    <skip>true</skip>-->
+                    <!--                    <skip>true</skip>-->
                 </configuration>
             </plugin>
 
@@ -1038,22 +1046,22 @@
                     <releaseProfiles>jenkins-release,${releaseProfiles}</releaseProfiles>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.jvnet.localizer</groupId>-->
-<!--                <artifactId>maven-localizer-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>generate</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <fileMask>Messages.properties</fileMask>-->
-<!--                            <outputDirectory>target/generated-sources/localizer</outputDirectory>-->
-<!--                            <accessModifierAnnotations>true</accessModifierAnnotations>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                <groupId>org.jvnet.localizer</groupId>-->
+            <!--                <artifactId>maven-localizer-plugin</artifactId>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <goals>-->
+            <!--                            <goal>generate</goal>-->
+            <!--                        </goals>-->
+            <!--                        <configuration>-->
+            <!--                            <fileMask>Messages.properties</fileMask>-->
+            <!--                            <outputDirectory>target/generated-sources/localizer</outputDirectory>-->
+            <!--                            <accessModifierAnnotations>true</accessModifierAnnotations>-->
+            <!--                        </configuration>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
             <!--
             <plugin>
                 <groupId>org.kohsuke</groupId>

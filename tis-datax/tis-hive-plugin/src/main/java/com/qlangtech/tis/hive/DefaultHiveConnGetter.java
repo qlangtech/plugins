@@ -21,9 +21,7 @@ package com.qlangtech.tis.hive;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
-import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.*;
 import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
@@ -167,72 +165,98 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         try {
             Thread.currentThread().setContextClassLoader(DefaultHiveConnGetter.class.getClassLoader());
             HiveConf hiveCfg = new HiveConf();
+
             hiveCfg.set(HiveConf.ConfVars.METASTOREURIS.varname, metaStoreUrls);
 
             //   HiveUserToken userToken = getUserToken();
             //if (userToken.isPresent()) {
             // HiveUserToken hiveToken = userToken.get();
-            userToken.accept(new IUserTokenVisitor() {
+            return userToken.accept(new IUserTokenVisitor<IHiveMetaStore>() {
                 @Override
-                public Void visit(IKerberosUserToken token) {
+                public IHiveMetaStore visit(IUserNamePasswordUserToken token) throws Exception {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public IHiveMetaStore visit(IOffUserToken token) throws Exception {
+                    return createHiveMetaStore();
+                }
+
+                @Override
+                public IHiveMetaStore visit(IKerberosUserToken token) {
+                    // 有例子： https://blog.csdn.net/weixin_48231806/article/details/120007737
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL, token.getKerberosCfg().getPrincipal());
+                    hiveCfg.setBoolVar(HiveConf.ConfVars.METASTORE_USE_THRIFT_SASL, true);
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT, "600s");
+                    hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_CONNECT_RETRY_DELAY, "5s");
+
                     HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hiveCfg);
                     //  token.getKerberosCfg().setConfiguration(hiveCfg);
-                    return null;
+                    return createHiveMetaStore();
+                }
+
+                private IHiveMetaStore createHiveMetaStore() {
+                    try {
+                        final IMetaStoreClient storeClient = Hive.getWithFastCheck(hiveCfg, false).getMSC();
+                        return new IHiveMetaStore() {
+                            @Override
+                            public void dropTable(String database, String tableName) {
+                                try {
+                                    storeClient.dropTable(database, tableName, true, true);
+                                } catch (TException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            @Override
+                            public List<HiveTable> getTables(String database) {
+                                try {
+                                    // storeClient.getAllDatabases();
+                                    List<String> tables = storeClient.getTables(database, ".*");
+                                    return tables.stream().map((tab) -> new HiveTable(tab) {
+                                        @Override
+                                        public String getStorageLocation() {
+                                            throw new UnsupportedOperationException();
+                                        }
+                                    }).collect(Collectors.toList());
+                                } catch (TException e) {
+                                    throw new RuntimeException("database:" + database, e);
+                                }
+                            }
+
+                            @Override
+                            public HiveTable getTable(String database, String tableName) {
+                                try {
+                                    // storeClient.getta
+                                    Table table = storeClient.getTable(database, tableName);
+                                    StorageDescriptor storageDesc = table.getSd();
+                                    return new HiveTable(table.getTableName()) {
+                                        @Override
+                                        public String getStorageLocation() {
+                                            return storageDesc.getLocation();
+                                        }
+                                    };
+                                } catch (NoSuchObjectException e) {
+                                    logger.warn(database + "." + tableName + " is not exist in hive:" + metaStoreUrls);
+                                    return null;
+                                } catch (TException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            @Override
+                            public void close() throws IOException {
+                                storeClient.close();
+                            }
+                        };
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
             //}
 
-            final IMetaStoreClient storeClient = Hive.get(hiveCfg, false).getMSC();
-            return new IHiveMetaStore() {
-                @Override
-                public void dropTable(String database, String tableName) {
-                    try {
-                        storeClient.dropTable(database, tableName, true, true);
-                    } catch (TException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
 
-                @Override
-                public List<HiveTable> getTables(String database) {
-                    try {
-                        List<String> tables = storeClient.getTables(database, ".*");
-                        return tables.stream().map((tab) -> new HiveTable(tab) {
-                            @Override
-                            public String getStorageLocation() {
-                                throw new UnsupportedOperationException();
-                            }
-                        }).collect(Collectors.toList());
-                    } catch (TException e) {
-                        throw new RuntimeException("database:" + database, e);
-                    }
-                }
-
-                @Override
-                public HiveTable getTable(String database, String tableName) {
-                    try {
-                        // storeClient.getta
-                        Table table = storeClient.getTable(database, tableName);
-                        StorageDescriptor storageDesc = table.getSd();
-                        return new HiveTable(table.getTableName()) {
-                            @Override
-                            public String getStorageLocation() {
-                                return storageDesc.getLocation();
-                            }
-                        };
-                    } catch (NoSuchObjectException e) {
-                        logger.warn(database + "." + tableName + " is not exist in hive:" + metaStoreUrls);
-                        return null;
-                    } catch (TException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                @Override
-                public void close() throws IOException {
-                    storeClient.close();
-                }
-            };
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

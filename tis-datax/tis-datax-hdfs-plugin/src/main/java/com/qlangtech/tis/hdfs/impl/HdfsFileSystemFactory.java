@@ -42,6 +42,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
@@ -189,17 +190,18 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
     }
 
 
-    public static void setConfiguration(IKerberos kerberos, Configuration config) {
+    public static void setConfiguration(IKerberos kerberos, final Configuration config) {
         Objects.requireNonNull(config, "config can not be null");
 //        if (!(config instanceof Configuration)) {
 //            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
 //        }
+
         final Thread t = Thread.currentThread();
         final ClassLoader contextClassLoader = t.getContextClassLoader();
         if (StringUtils.isEmpty(kerberos.getPrincipal())) {
             throw new IllegalStateException("prop principal can not be null");
         }
-
+        SecurityUtil.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS, config);
         File keytab = kerberos.getKeyTabPath();
         if (!keytab.exists()) {
             throw new IllegalStateException("keytabPath can is not exist:" + kerberos.getKeytabPath());

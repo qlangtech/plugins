@@ -19,26 +19,18 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
-import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hive.jdbc.HiveDriver;
-import org.apache.hive.jdbc.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +42,6 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -71,15 +60,15 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public String dbName;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String metaStoreUrls;
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public HiveMeta metadata;
 
     // "192.168.28.200:10000";
-    @FormField(ordinal = 3, validate = {Validator.require, Validator.host})
-    public String hiveAddress;
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public Hms hms;
 
-    @FormField(ordinal = 5, validate = {Validator.require})
-    public UserToken userToken;
+//    @FormField(ordinal = 5, validate = {Validator.require})
+//    public UserToken userToken;
 
     @Override
     public String getDBSchema() {
@@ -101,23 +90,22 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
     @Override
     public String getMetaStoreUrls() {
-        return this.metaStoreUrls;
+        return this.metadata.metaStoreUrls;
     }
 
     @Override
     public IHiveMetaStore createMetaStoreClient() {
-        IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken);
-        return hiveMetaStore;
+        return metadata.createMetaStoreClient();
     }
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        return IHiveConnGetter.HIVE2_JDBC_SCHEMA + this.hiveAddress + "/" + dbName;
+        return IHiveConnGetter.HIVE2_JDBC_SCHEMA + this.hms.hiveAddress + "/" + dbName;
     }
 
     @Override
     public UserToken getUserToken() {
-        return this.userToken;
+        return this.hms.userToken;
     }
 
     @Override
@@ -127,49 +115,21 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
     @Override
     public JDBCConnection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
-        final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());
-            if (usingPool) {
-                return HiveDBUtils.getInstance(this.hiveAddress, this.dbName, getUserToken()).createConnection();
-            } else {
-                return createConnection(jdbcUrl, getUserToken());
-
-            }
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentLoader);
-        }
-    }
-
-    public static JDBCConnection createConnection(String jdbcUrl, UserToken userToken) throws Exception {
-        HiveDriver hiveDriver = new HiveDriver();
-        Properties props = new Properties();
-        StringBuffer jdbcUrlBuffer = new StringBuffer(jdbcUrl);
-        return userToken.accept(new IUserTokenVisitor<JDBCConnection>() {
-            @Override
-            public JDBCConnection visit(IUserNamePasswordUserToken ut) throws Exception {
-                props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
-                props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
-                return createConnection(hiveDriver, props, jdbcUrlBuffer);
-            }
-
-            @Override
-            public JDBCConnection visit(IKerberosUserToken token) throws Exception {
-                IKerberos kerberosCfg = token.getKerberosCfg();
-                jdbcUrlBuffer.append(";principal=")
-                        .append(kerberosCfg.getPrincipal());
-                //  .append(";sasl.qop=").append(kerberosCfg.getKeyTabPath().getAbsolutePath());
-                return createConnection(hiveDriver, props, jdbcUrlBuffer);
-            }
-        });
-    }
-
-    private static JDBCConnection createConnection(
-            HiveDriver hiveDriver, Properties props, StringBuffer jdbcUrlBuffer) throws SQLException {
-        String jdbcUrl = jdbcUrlBuffer.toString();
-        return new JDBCConnection(hiveDriver.connect(jdbcUrl, props), jdbcUrl);
+        return this.hms.getConnection(jdbcUrl, this.dbName, usingPool);
+//        final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
+//        try {
+//            Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());
+//            if (usingPool) {
+//                return HiveDBUtils.getInstance(this.hms.hiveAddress, this.dbName, getUserToken()).createConnection();
+//            } else {
+//                return Hms.createConnection(jdbcUrl, getUserToken());
+//
+//            }
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            Thread.currentThread().setContextClassLoader(currentLoader);
+//        }
     }
 
     @Override
@@ -177,7 +137,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
         final DBConfig dbConfig = new DBConfig(this);
         dbConfig.setName(this.dbName);
-        String[] addressSplit = StringUtils.split(this.hiveAddress, ":");
+        String[] addressSplit = StringUtils.split(this.hms.hiveAddress, ":");
         dbConfig.setDbEnum(Collections.singletonMap(addressSplit[0], Collections.singletonList(this.dbName)));
         return dbConfig;
     }
@@ -193,7 +153,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     }
 
     private String createHiveJdbcUrl() {
-        return HiveDBUtils.createHiveJdbcUrl(this.hiveAddress, this.dbName);
+        return HiveDBUtils.createHiveJdbcUrl(this.hms.hiveAddress, this.dbName);
     }
 
     @Override
@@ -205,13 +165,13 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     protected void fillTableInDB(TableInDB tabs) {
         // super.fillTableInDB(tabs);
         String hiveJdbcUrl = createHiveJdbcUrl();
-        try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
+        try (IHiveMetaStore hiveMetaStore = metadata.createMetaStoreClient()) {
 //            TableInDB tabs = TableInDB.create(this);
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
             tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
             //  return tabs;
         } catch (Exception e) {
-            throw TisException.create("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
+            throw TisException.create("不正确的MetaStoreUrl:" + this.metadata.metaStoreUrls, e);
         }
         // return tabs;
     }
@@ -274,17 +234,6 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 //            return true;
 //        }
 
-        public boolean validateMetaStoreUrls(IFieldErrorHandler msgHandler, Context context, String fieldName, String metaUrls) {
-            Pattern PATTERN_THRIFT_URL = Pattern.compile("thrift://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]");
-
-            Matcher matcher = PATTERN_THRIFT_URL.matcher(metaUrls);
-            if (!matcher.matches()) {
-                msgHandler.addFieldError(context, fieldName, "value:\"" + metaUrls + "\" not match " + PATTERN_THRIFT_URL);
-                return false;
-            }
-
-            return true;
-        }
 
         @Override
         protected void validateConnection(JDBCConnection c) throws TisException {
@@ -303,7 +252,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
         @Override
         protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
-            boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
+            boolean valid = true; //super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
                 Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;

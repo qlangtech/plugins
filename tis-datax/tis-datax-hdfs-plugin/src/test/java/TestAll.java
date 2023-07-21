@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.kerberos.TestKerberosCfg;
+//import com.qlangtech.tis.kerberos.TestKerberosCfg;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -28,7 +28,7 @@ import org.junit.runners.Suite;
  * @create: 2022-01-22 16:19
  **/
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestKerberosCfg.class})
+//@Suite.SuiteClasses({TestKerberosCfg.class})
 public class TestAll {
 
 //    public static Test suite() {

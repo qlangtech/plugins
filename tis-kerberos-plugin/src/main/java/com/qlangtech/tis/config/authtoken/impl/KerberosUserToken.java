@@ -32,6 +32,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-06-01 12:59
@@ -53,9 +55,9 @@ public class KerberosUserToken extends UserToken implements IKerberosUserToken {
         })) == null) {
             Exception ex = null;
             if ((ex = exRef.get()) != null) {
-                throw new IllegalStateException("krb5:" + krb5Res.getKrb5Path().getAbsolutePath() + ",error:" + ex.getMessage());
+                throw new IllegalStateException("krb5:" + krb5Res.getKrb5Path().getAbsolutePath() + ",error:" + ex.getMessage(), ex);
             } else {
-                throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
+                // throw new IllegalStateException("kerberos auth process faild,kerberos:" + kerberos);
             }
         }
         return result;

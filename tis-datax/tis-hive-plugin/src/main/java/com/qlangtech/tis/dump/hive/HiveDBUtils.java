@@ -18,9 +18,6 @@
 package com.qlangtech.tis.dump.hive;
 
 import com.qlangtech.tis.common.utils.Assert;
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
@@ -28,7 +25,7 @@ import com.qlangtech.tis.dump.IExecLiveLogParser;
 import com.qlangtech.tis.dump.spark.SparkExecLiveLogParser;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus.JoinTaskStatus;
-import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.hive.Hms;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -149,7 +146,7 @@ public class HiveDBUtils {
                     @Override
                     public Connection createConnection() throws SQLException {
                         try {
-                            return Hiveserver2DataSourceFactory.createConnection(jdbcUrl, userToken).getConnection();
+                            return Hms.createConnection(jdbcUrl, userToken).getConnection();
                         } catch (SQLException e) {
                             throw e;
                         } catch (Exception e) {

@@ -21,7 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
      */
     public boolean isSplitTable() {
         // this.splitTableStrategy.getAllPhysicsTabs(this.dsFactory, this.getJdbcUrl(), this.sourceTableName);
-        return this.splitTableStrategy instanceof DefaultSplitTableStrategy;
+        return !(this.splitTableStrategy instanceof NoneSplitTableStrategy);
     }
 
     /**

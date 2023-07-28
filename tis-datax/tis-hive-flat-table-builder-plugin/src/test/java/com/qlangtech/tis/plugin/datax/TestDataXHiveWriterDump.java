@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -30,7 +31,9 @@ import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
+import com.qlangtech.tis.hive.HiveMeta;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.hive.Hms;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
@@ -41,7 +44,10 @@ import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import org.apache.commons.io.FileUtils;
 import org.easymock.EasyMock;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -77,9 +83,16 @@ public class TestDataXHiveWriterDump {
                 Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
                 hiveDS.name = "hive200";
                 hiveDS.dbName = hiveDbName;
-                hiveDS.metaStoreUrls = "thrift://192.168.28.200:9083";
-                hiveDS.hiveAddress = "192.168.28.200:10000";
-                hiveDS.userToken = new com.qlangtech.tis.config.hive.impl.OffHiveUserToken();
+
+                HiveMeta meta = new HiveMeta();
+                meta.metaStoreUrls = "thrift://192.168.28.200:9083";
+                meta.userToken = UserTokenUtils.createKerberosToken();
+                hiveDS.metadata = meta;
+
+                Hms hms2 = new Hms();
+                hms2.hiveAddress = "192.168.28.200:10000";
+                hms2.userToken = UserTokenUtils.createKerberosToken();
+                hiveDS.hms = hms2;
                 return hiveDS;
             }
 

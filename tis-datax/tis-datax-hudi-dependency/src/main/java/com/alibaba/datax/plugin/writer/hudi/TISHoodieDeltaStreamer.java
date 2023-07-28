@@ -20,9 +20,7 @@ package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
 import com.gilt.logback.flume.tis.TisFlumeLogstashV1Appender;
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
-import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.*;
 import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -39,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import org.apache.hudi.utilities.UtilHelpers;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
@@ -151,10 +150,23 @@ public class TISHoodieDeltaStreamer implements Serializable {
             UserToken userToken = hiveConnMeta.getUserToken();
 //            if (userToken.isPresent()) {
             userToken.accept(new IUserTokenVisitor() {
+
+                @Override
+                public Void visit(IUserNamePasswordUserToken token) throws Exception {
+                    UserGroupInformation.setConfiguration(hadoopCfg);
+                    return null;
+                }
+
+                @Override
+                public Void visit(IOffUserToken token) throws Exception {
+                    UserGroupInformation.setConfiguration(hadoopCfg);
+                    return null;
+                }
+
                 @Override
                 public Void visit(IKerberosUserToken token) {
-                  //  token.getKerberosCfg().setConfiguration(hadoopCfg);
-                    HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hadoopCfg);
+                    //  token.getKerberosCfg().setConfiguration(hadoopCfg);
+                    HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), TISHoodieDeltaStreamer.class, hadoopCfg, () -> null);
                     return null;
                 }
             });

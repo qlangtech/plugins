@@ -46,6 +46,7 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +180,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 
                 @Override
                 public IHiveMetaStore visit(IOffUserToken token) throws Exception {
+                    UserGroupInformation.setConfiguration(hiveCfg);
                     return createHiveMetaStore();
                 }
 
@@ -190,9 +192,8 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                     hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT, "600s");
                     hiveCfg.setVar(HiveConf.ConfVars.METASTORE_CLIENT_CONNECT_RETRY_DELAY, "5s");
 
-                    HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), hiveCfg);
+                    return HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), DefaultHiveConnGetter.class, hiveCfg, () -> createHiveMetaStore());
                     //  token.getKerberosCfg().setConfiguration(hiveCfg);
-                    return createHiveMetaStore();
                 }
 
                 private IHiveMetaStore createHiveMetaStore() {

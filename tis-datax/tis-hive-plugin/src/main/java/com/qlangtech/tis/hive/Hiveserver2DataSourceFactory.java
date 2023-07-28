@@ -252,7 +252,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
 
         @Override
         protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
-            boolean valid = true; //super.validateDSFactory(msgHandler, context, dsFactory);
+            boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
                 Hiveserver2DataSourceFactory ds = (Hiveserver2DataSourceFactory) dsFactory;

@@ -21,42 +21,17 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>tis-datax</artifactId>
+        <artifactId>tis-plugin-parent</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
         <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tis-hive-plugin</artifactId>
+
+    <artifactId>tis-split-table-strategy-plugin</artifactId>
     <packaging>tpi</packaging>
 
-    <properties>
-        <classifier>hive_${hive.version};hadoop_${hadoop-version}</classifier>
-    </properties>
-
     <dependencies>
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-hdfs-plugin</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hive</groupId>
-            <artifactId>hive-exec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-base-test</artifactId>

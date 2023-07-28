@@ -18,12 +18,11 @@
 
 package com.qlangtech.tis.hive;
 
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,11 +55,12 @@ public class TestHiveserver2DataSourceFactory {
     }
 
     private UserToken createKerberToken() {
-        Descriptor.FormData kform = new Descriptor.FormData();
-        kform.addProp("kerberos", "k2");
-        Descriptor kuserTokenDesc = TIS.get().getDescriptor("com.qlangtech.tis.config.authtoken.impl.KerberosUserToken");
-        Assert.assertNotNull("kuserTokenDesc can not be null", kuserTokenDesc);
-        return (UserToken) kuserTokenDesc.newInstance("test", kform).getInstance();
+        return UserTokenUtils.createKerberosToken("k2");
+//        Descriptor.FormData kform = new Descriptor.FormData();
+//        kform.addProp("kerberos", "k2");
+//        Descriptor kuserTokenDesc = TIS.get().getDescriptor("com.qlangtech.tis.config.authtoken.impl.KerberosUserToken");
+//        Assert.assertNotNull("kuserTokenDesc can not be null", kuserTokenDesc);
+//        return (UserToken) kuserTokenDesc.newInstance("test", kform).getInstance();
     }
 
     @Test

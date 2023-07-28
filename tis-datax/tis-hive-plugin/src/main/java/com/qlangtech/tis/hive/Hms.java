@@ -18,10 +18,7 @@
 
 package com.qlangtech.tis.hive;
 
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
-import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.*;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Describable;
@@ -32,6 +29,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hive.jdbc.HiveDriver;
 import org.apache.hive.jdbc.Utils;
 
@@ -60,6 +58,13 @@ public class Hms implements Describable<Hms> {
             public DataSourceMeta.JDBCConnection visit(IUserNamePasswordUserToken ut) throws Exception {
                 props.setProperty(Utils.JdbcConnectionParams.AUTH_USER, ut.getUserName());
                 props.setProperty(Utils.JdbcConnectionParams.AUTH_PASSWD, ut.getPassword());
+                UserGroupInformation.setConfiguration(new HiveConf());
+                return createConnection(hiveDriver, props, jdbcUrlBuffer);
+            }
+
+            @Override
+            public DataSourceMeta.JDBCConnection visit(IOffUserToken token) throws Exception {
+                UserGroupInformation.setConfiguration(new HiveConf());
                 return createConnection(hiveDriver, props, jdbcUrlBuffer);
             }
 
@@ -72,8 +77,14 @@ public class Hms implements Describable<Hms> {
                 HiveConf conf = new HiveConf();
 
                 //  UserGroupInformation.setConfiguration(conf);
-                HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), conf);
-                return createConnection(hiveDriver, props, jdbcUrlBuffer);
+                return HdfsFileSystemFactory.setConfiguration(token.getKerberosCfg(), Hms.class, conf, () -> {
+                    try {
+                        return createConnection(hiveDriver, props, jdbcUrlBuffer);
+                    } catch (SQLException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
             }
         });
     }

@@ -1,0 +1,21 @@
+{
+  "hdfsSiteContent": {
+    "dftVal": "com.qlangtech.tis.hdfs.impl.AliayunJindoFSFactory.nullHdfsSiteContent()",
+    "advance": true
+  },
+  "endpoint": {
+    "help": "描述：OSS Server的EndPoint信息",
+    "creator": {
+      "label": "管理",
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "aliyunToken"
+        }
+      ]
+    }
+  },
+  "bucket": {
+    "help": "描述：OSS的bucket  "
+  }
+}

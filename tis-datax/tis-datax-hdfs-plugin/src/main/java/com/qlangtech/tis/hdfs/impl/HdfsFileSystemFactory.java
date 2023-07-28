@@ -21,15 +21,13 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.Utils;
-import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
-import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
-import com.qlangtech.tis.config.authtoken.IUserTokenVisitor;
-import com.qlangtech.tis.config.authtoken.UserToken;
+import com.qlangtech.tis.config.authtoken.*;
 import com.qlangtech.tis.config.kerberos.IKerberos;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -42,6 +40,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.security.SecurityInfo;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
@@ -52,10 +51,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -112,16 +109,84 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 
     @Override
     public ITISFileSystem getFileSystem() {
-        if (fileSystem == null) {
-            Configuration cfg = getConfiguration();
-            String hdfsAddress = getFSAddress();
-            if (StringUtils.isEmpty(hdfsAddress)) {
-                throw new IllegalStateException("hdfsAddress can not be null");
+        try {
+            if (fileSystem == null) {
+                this.fileSystem = createFS(this);
+//                Configuration cfg = getConfiguration();
+//                String hdfsAddress = getFSAddress();
+//                if (StringUtils.isEmpty(hdfsAddress)) {
+//                    throw new IllegalStateException("hdfsAddress can not be null");
+//                }
+//
+//                fileSystem = userToken.accept(new IUserTokenVisitor<ITISFileSystem>() {
+//                    @Override
+//                    public ITISFileSystem visit(IKerberosUserToken token) {
+//                        // SecurityUtil.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS, conf);
+//                        cfg.set(DFSConfigKeys.DFS_NAMENODE_KERBEROS_PRINCIPAL_KEY, token.getKerberosCfg().getPrincipal());
+//                        setConfiguration(token.getKerberosCfg(), cfg);
+//                        return new HdfsFileSystem(HdfsUtils.getFileSystem(
+//                                hdfsAddress, cfg), hdfsAddress, rootDir);
+//                    }
+//                });
+
+
             }
-            fileSystem = new HdfsFileSystem(HdfsUtils.getFileSystem(
-                    hdfsAddress, cfg), hdfsAddress, this.rootDir);
+            return fileSystem;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return fileSystem;
+    }
+
+    public static ITISFileSystem createFS(HdfsFileSystemFactory fsFactory) {
+        // ClassLoader currLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Configuration cfg = fsFactory.getConfiguration();
+            String hdfsAddress = fsFactory.getFSAddress();
+            // Thread.currentThread().setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+            return fsFactory.userToken.accept(new IUserTokenVisitor<ITISFileSystem>() {
+                @Override
+                public ITISFileSystem visit(IOffUserToken token) throws Exception {
+                    final Thread t = Thread.currentThread();
+                    final ClassLoader contextClassLoader = t.getContextClassLoader();
+                    try {
+                        t.setContextClassLoader(fsFactory.getClass().getClassLoader());
+                        cfg.setClassLoader(fsFactory.getClass().getClassLoader());
+                        UserGroupInformation.setConfiguration(cfg);
+                        return create();
+                    } finally {
+                        t.setContextClassLoader(contextClassLoader);
+                    }
+                }
+
+                @Override
+                public ITISFileSystem visit(IUserNamePasswordUserToken token) throws Exception {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public ITISFileSystem visit(IKerberosUserToken token) {
+                    // SecurityUtil.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS, conf);
+                    ServiceLoader<SecurityInfo> securityload
+                            = ServiceLoader.load(SecurityInfo.class, HdfsFileSystemFactory.class.getClassLoader());
+                    List<SecurityInfo> sinfos = new ArrayList<>();
+                    for (SecurityInfo si : securityload) {
+                        sinfos.add(si);
+                    }
+                    SecurityUtil.setSecurityInfoProviders(sinfos.toArray(new SecurityInfo[sinfos.size()]));
+                    cfg.set(DFSConfigKeys.DFS_NAMENODE_KERBEROS_PRINCIPAL_KEY, token.getKerberosCfg().getPrincipal());
+                    return setConfiguration(token.getKerberosCfg(), fsFactory.getClass(), cfg, () -> create());
+                }
+
+                private final ITISFileSystem create() {
+                    return new HdfsFileSystem(HdfsUtils.getFileSystem(
+                            hdfsAddress, cfg), hdfsAddress, fsFactory.rootDir);
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            // Thread.currentThread().setContextClassLoader(currLoader);
+        }
     }
 
     @Override
@@ -172,14 +237,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
 //                kerberosCfg.setConfiguration(conf);
 //            }
 
-            userToken.accept(new IUserTokenVisitor() {
-                @Override
-                public Void visit(IKerberosUserToken token) {
-                    setConfiguration(token.getKerberosCfg(), conf);
-                    return null;
-                }
-            });
-
+            this.setConfiguration(conf);
             conf.reloadConfiguration();
             return conf;
         } catch (Exception e) {
@@ -189,9 +247,15 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         }
     }
 
+    protected void setConfiguration(Configuration config) {
 
-    public static void setConfiguration(IKerberos kerberos, final Configuration config) {
+    }
+
+
+    public static <T> T setConfiguration(
+            IKerberos kerberos, Class<?> ownerClass, final Configuration config, Supplier<T> creator) {
         Objects.requireNonNull(config, "config can not be null");
+        Objects.requireNonNull(ownerClass, "ownerClass can not be null");
 //        if (!(config instanceof Configuration)) {
 //            throw new IllegalArgumentException("param config must be type of Configuration, but now is :" + config.getClass().getName());
 //        }
@@ -207,9 +271,11 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             throw new IllegalStateException("keytabPath can is not exist:" + kerberos.getKeytabPath());
         }
         try {
-            t.setContextClassLoader(HdfsFileSystemFactory.class.getClassLoader());
+            t.setContextClassLoader(ownerClass.getClassLoader());
+            config.setClassLoader(ownerClass.getClassLoader());
             UserGroupInformation.setConfiguration((Configuration) config);
             UserGroupInformation.loginUserFromKeytab(kerberos.getPrincipal(), keytab.getAbsolutePath());
+            return creator.get();
         } catch (IOException e) {
             throw new RuntimeException("principal:" + kerberos.getPrincipal(), e);
         } finally {
@@ -243,11 +309,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
             FileSystem fileSystem = fileSys.get(hdfsAddress);
             if (fileSystem == null) {
                 synchronized (HdfsUtils.class) {
-
-
                     try {
-
-
                         fileSystem = fileSys.get(hdfsAddress);
                         if (fileSystem == null) {
 //                            Configuration conf = new Configuration();
@@ -293,14 +355,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                                     return super.create(f, FsPermission.getDefault(), overwrite, bufferSize, replication, blockSize, progress);
                                 }
 
-                                @Override
-                                public FileStatus[] listStatus(Path f) throws IOException {
-                                    try {
-                                        return super.listStatus(f);
-                                    } catch (Exception e) {
-                                        throw new RuntimeException("path:" + f, e);
-                                    }
-                                }
+//                                @Override
+//                                public FileStatus[] listStatus(Path f) throws IOException {
+//                                    return super.listStatus(f);
+//                                }
 
                                 @Override
                                 public void close() throws IOException {
@@ -314,7 +372,8 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                         }
 
                     } catch (Throwable e) {
-                        throw new RuntimeException("link faild:" + hdfsAddress, e);
+                        // throw new RuntimeException("link faild:" + hdfsAddress, e);
+                        throw TisException.create("link faild:" + hdfsAddress + ",detail:" + e.getMessage(), e);
                     } finally {
 
                     }
@@ -360,8 +419,10 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 return true;
             } catch (Exception e) {
                 Logger.warn(e.getMessage(), e);
-                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,"
-                        + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "=" + hdfsAddress + ",错误:" + e.getMessage());
+                TisException.ErrMsg errMsg = TisException.getErrMsg(e);
+//                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,"
+//                        + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "=" + hdfsAddress + ",错误:" + errMsg.getMessage());
+                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,错误:" + errMsg.getMessage());
                 return false;
             }
         }

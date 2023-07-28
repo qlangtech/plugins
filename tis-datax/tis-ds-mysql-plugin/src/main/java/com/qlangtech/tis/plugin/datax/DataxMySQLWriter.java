@@ -34,7 +34,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -352,7 +352,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
             DataxMySQLWriter dataxWriter = (DataxMySQLWriter) form;
             MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) dataxWriter.getDataSourceFactory();
-            if (dsFactory.splitTableStrategy instanceof DefaultSplitTableStrategy) {
+            if (!(dsFactory.splitTableStrategy instanceof NoneSplitTableStrategy)) {
                 msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "Writer端不能使用带有分表策略的数据源");
                 return false;
             }

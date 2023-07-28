@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  * @create: 2022-10-31 09:52
  **/
 public class AccessKey extends AuthToken {
+    public static final String KEY_ACCESS = "accessKey";
     // 可以为空
     @FormField(ordinal = 2, validate = {Validator.require, Validator.identity})
     public String accessKeyId;
@@ -54,7 +55,7 @@ public class AccessKey extends AuthToken {
     public static class DefaultDescriptor extends Descriptor<AuthToken> {
         @Override
         public String getDisplayName() {
-            return "accessKey";
+            return KEY_ACCESS;
         }
     }
 }

@@ -66,7 +66,11 @@
         </dependency>
 
         <!-- add jindo-core-extended-jar if you need support other platform -->
-
+        <dependency>
+            <groupId>com.aliyun.jindodata</groupId>
+            <artifactId>jindosdk</artifactId>
+            <version>${jindodata.version}</version>
+        </dependency>
 
         <!--        <dependency>-->
         <!--            <groupId>com.aliyun.jindodata</groupId>-->
@@ -100,12 +104,8 @@
                 </os>
             </activation>
             <dependencies>
-                <!-- add jindo-hadoop-sdk -->
-                <dependency>
-                    <groupId>com.aliyun.jindodata</groupId>
-                    <artifactId>jindosdk</artifactId>
-                    <version>${jindodata.version}</version>
-                </dependency>
+
+                <!-- add jindo-core-extended-jar for macos -->
                 <dependency>
                     <groupId>com.aliyun.jindodata</groupId>
                     <artifactId>jindo-core-macos-10_14-x86_64</artifactId>

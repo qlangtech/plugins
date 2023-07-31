@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -28,10 +29,8 @@ import com.qlangtech.tis.plugin.common.WriterJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.curator.shaded.com.google.common.collect.Lists;
 import org.easymock.EasyMock;
 
 import java.io.File;
@@ -254,7 +253,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
             };
             EasyMock.replay(dataXProcessor);
             DataXClickhouseWriter writer = new DataXClickhouseWriter();
-            WriterTemplate.realExecuteDump( WriterJson.path( clickhouse_datax_writer_assert_without_optional), writer);
+            WriterTemplate.realExecuteDump(WriterJson.path(clickhouse_datax_writer_assert_without_optional), writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

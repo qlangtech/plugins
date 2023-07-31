@@ -18,7 +18,9 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
@@ -120,7 +122,12 @@ public class TestDataXHdfsReader extends BasicTest {
             return dataxReader;
         };
 
+        Configuration readerConf = IOUtils.loadResourceFromClasspath(
+                dataxReader.getClass(), "hdfs-datax-reader-assert-without-option-val.json", true, (writerJsonInput) -> {
+                    return Configuration.from(writerJsonInput);
+                });
+
         File rcontent = new File("hdfs-datax-reader-content.txt");
-        ReaderTemplate.realExecute("hdfs-datax-reader-assert-without-option-val.json", rcontent, dataxReader);
+        ReaderTemplate.realExecute(dataXName, readerConf,rcontent, dataxReader);
     }
 }

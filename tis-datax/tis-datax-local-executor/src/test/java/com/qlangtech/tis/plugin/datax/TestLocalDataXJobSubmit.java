@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -118,21 +120,26 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         DataXJobSubmit.TableDataXEntity dataXEntity
                 = DataXJobSubmit.TableDataXEntity.createTableEntity4Test(dataXfileName, dump_table_name);
+        CuratorDataXTaskMessage dataXTaskMessage = new CuratorDataXTaskMessage();
+        DataXJobInfo jobName = DataXJobInfo.parse("base_1.json/base_01,base_02");
+//        DataXJobSubmit.IDataXJobContext taskContext, RpcServiceReference statusRpc
+//                , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO
+
         IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(
-                dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
+                dataXJobContext, statusRpc, jobName ,dataxProcessor, dataXTaskMessage);
 
         // RunningStatus running = getRunningStatus(dataXJob);
         // assertTrue("running.isSuccess", running.isSuccess());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointThrowException.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc,jobName ,dataxProcessor, dataXTaskMessage);
 
 //        running = getRunningStatus(dataXJob);
 //        assertFalse("shall faild", running.isSuccess());
 //        assertTrue("shall complete", running.isComplete());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointCancellable.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, dataxProcessor, dataXEntity, Collections.emptyList());
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc,jobName ,dataxProcessor , dataXTaskMessage);
         //  running = getRunningStatus(dataXJob, false);
         Thread.sleep(2000);
         dataXJob.cancel();

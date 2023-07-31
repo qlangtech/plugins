@@ -125,7 +125,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         Map<String, TableAlias> aliasMap = new HashMap<>();
         TableAlias tab = new TableAlias(tableName);
         aliasMap.put(tableName, tab);
-        EasyMock.expect(dataxProcessor.getTabAlias()).andReturn(new TableAliasMapper(aliasMap));
+        EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(new TableAliasMapper(aliasMap));
 
         this.replay();
 

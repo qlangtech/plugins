@@ -36,8 +36,8 @@ import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -120,7 +120,7 @@ public class TestDataxMySQLReaderDump {
     public void testRealDumpWithSplitTabs() throws Exception {
 
         MySQLDataSourceFactory mysqlDs = (MySQLDataSourceFactory) dsFactory;
-        mysqlDs.splitTableStrategy = new DefaultSplitTableStrategy();
+        mysqlDs.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         DataXJobInfo.parse("base_1.json/base_01,base_02");
         Assert.assertNotNull(DataXJobInfo.getCurrent());
 

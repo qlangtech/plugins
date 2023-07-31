@@ -95,6 +95,16 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
             return sinkStreamMetaGetter.getStreamTableMeta(alia.getTo()).getColsMeta();
         }
 
+        /**
+         * https://github.com/datavane/tis/issues/238
+         *
+         * @param entity
+         * @return
+         */
+        public String escape(String entity) {
+            return "`" + entity + "`";
+        }
+
 
     }
 

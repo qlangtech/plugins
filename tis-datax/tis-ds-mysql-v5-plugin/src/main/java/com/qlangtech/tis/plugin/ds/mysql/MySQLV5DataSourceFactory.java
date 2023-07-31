@@ -53,6 +53,7 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
         if (password != null) {
             info.put("password", password);
         }
+        //info.put("connectTimeout", "60000");
         return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
     }
 

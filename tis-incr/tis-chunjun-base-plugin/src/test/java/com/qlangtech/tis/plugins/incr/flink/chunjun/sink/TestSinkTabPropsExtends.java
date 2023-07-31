@@ -41,6 +41,12 @@ public class TestSinkTabPropsExtends implements TISEasyMock {
         SuFormProperties.subFormGetterProcessThreadLocal.remove();
     }
 
+    @Test
+    public void testGetPrimaryKeys() {
+        List<Option> pks = SinkTabPropsExtends.getPrimaryKeys();
+        Assert.assertNotNull("pks can not be null", pks);
+    }
+
 
     /**
      * 数据库表上有主键

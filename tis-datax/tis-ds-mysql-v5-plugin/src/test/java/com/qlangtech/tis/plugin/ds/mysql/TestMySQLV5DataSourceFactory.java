@@ -22,7 +22,10 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import junit.framework.TestCase;
+import org.junit.Ignore;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,5 +53,60 @@ public class TestMySQLV5DataSourceFactory extends TestCase {
                 , JsonUtil.toString(Collections.singletonMap("cols", baseColsMeta)), (msg, e, a) -> {
                     assertEquals(msg, e, a);
                 });
+    }
+
+
+    @Ignore
+    public void testAliyunAdsSource() {
+        MySQLV5DataSourceFactory dataSourceFactory = new MySQLV5DataSourceFactory();
+        dataSourceFactory.useCompression = false;
+        dataSourceFactory.password = "SLK_20221218";
+        dataSourceFactory.dbName = "local-life";
+        dataSourceFactory.encode = "utf8";
+        dataSourceFactory.port = 3306;
+        dataSourceFactory.userName = "slk";
+        dataSourceFactory.nodeDesc = "am-2ev66ttmhd5ys6k3l167320o.ads.aliyuncs.com";
+
+        dataSourceFactory.visitFirstConnection((connection) -> {
+            try {
+//                connection.execute(
+//                        "CREATE TABLE `cloudcanal_heartbeat_baisui` (\n" +
+//                                "  `id` varchar(32) NOT NULL COMMENT '主键ID',\n" +
+//                                "  `name` varchar(50) NOT NULL COMMENT '姓名',\n" +
+//                                "  `is_valid` int(1) NOT NULL DEFAULT '1' COMMENT '是否有效，1：有效  0 无效',\n" +
+//                                "  `create_time` bigint(20) NOT NULL COMMENT '创建时间',\n" +
+//                                "  `op_time` bigint(20) DEFAULT NULL COMMENT '操作时间',\n" +
+//                                "  `last_ver` int(11) NOT NULL DEFAULT '1' COMMENT '版本号',\n" +
+//                                "  `op_user_id` varchar(32) NOT NULL COMMENT '操作人',\n" +
+//                                "  `ext` varchar(1000) DEFAULT NULL,\n" +
+//                                "  PRIMARY KEY (`id`)\n" +
+//                                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+//                );
+
+//                connection.execute(
+//                        "INSERT INTO `cloudcanal_heartbeat_baisui`(`id`, `name`, `is_valid`, `create_time`, `op_time`, `last_ver`, `op_user_id`, `ext`)\n" +
+//                                "VALUES ('3', 'cloudcanal_heartbeat', '1', 1690275535280, 1690791060013, '2', '', NULL)"
+//                );
+
+                Connection cnn = connection.getConnection();
+                try (PreparedStatement prep = cnn.prepareStatement("insert into `cloudcanal_heartbeat_baisui`(`id`, `name`, `is_valid`, `create_time`, `op_time`, `last_ver`, `op_user_id`, `ext`)" +
+                        " values (?,?,?,?,?,?,?,?)")) {
+
+                    prep.setString(1, "11");
+                    prep.setString(2, "baisui");
+                    prep.setInt(3, 1);
+                    prep.setLong(4, System.currentTimeMillis());
+                    prep.setLong(5, System.currentTimeMillis());
+                    prep.setInt(6, 5);
+                    prep.setString(7, "22");
+                    prep.setString(8, "xxx");
+
+                    prep.execute();
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 }

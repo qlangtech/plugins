@@ -50,7 +50,6 @@ import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -113,8 +112,8 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         params.put(DorisKeys.TABLE_KEY, targetTabName);
 
         DorisSelectedTab dorisTab = (DorisSelectedTab) tab;
-        if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
-            params.put(DorisKeys.COL_SEQUENCE_NAME, dorisTab.seqKey);
+        if (dorisTab.seqKey.isOn()) {
+            params.put(DorisKeys.COL_SEQUENCE_NAME, dorisTab.seqKey.getSeqColName());
         }
 
         super.setParameter(dsFactory, dataXWriter, tab, params, targetTabName);

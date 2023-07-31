@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugin.datax.doris;
 
-import com.alibaba.datax.plugin.writer.doriswriter.Keys;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -57,13 +56,14 @@ public class DorisWriterContext extends RdbmsWriterContext<DataXDorisWriter, Dor
 
     public String getLoadProps() {
 
-        if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
-            JSONObject props = JSON.parseObject(this.plugin.loadProps);
-            props.put(Keys.COL_SEQUENCE_NAME, dorisTab.seqKey);
-            return JsonUtil.toString(props);
-        }
+        // if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
+        JSONObject props = JSON.parseObject(this.plugin.loadProps);
+        dorisTab.seqKey.appendBatchCfgs(props);
+        return JsonUtil.toString(props);
+        //}
 
-        return this.plugin.loadProps;
+
+        //  return this.plugin.loadProps;
     }
 
     public boolean isContainMaxBatchRows() {

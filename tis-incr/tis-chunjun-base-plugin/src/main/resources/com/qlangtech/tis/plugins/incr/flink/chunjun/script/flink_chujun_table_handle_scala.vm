@@ -13,8 +13,8 @@ class ${config.javaName}SourceHandle extends TableRegisterFlinkSourceHandle {
 #foreach($i in $config.dumpTables  )
     #set($cols=${config.getCols($i)})
       tabEnv.insert(
-         """INSERT INTO ${i.to} (#foreach( $col in ${cols})$col.name#if($foreach.hasNext),#end#end)
-            SELECT #foreach( $col in ${cols})$col.name#if($foreach.hasNext),#end#end FROM $config.getSourceTable($i)""")
+         """INSERT INTO ${i.to} (#foreach( $col in ${cols})$config.escape($col.name)#if($foreach.hasNext),#end#end)
+            SELECT #foreach( $col in ${cols})$config.escape($col.name)#if($foreach.hasNext),#end#end FROM $config.getSourceTable($i)""")
 #end
     }
 

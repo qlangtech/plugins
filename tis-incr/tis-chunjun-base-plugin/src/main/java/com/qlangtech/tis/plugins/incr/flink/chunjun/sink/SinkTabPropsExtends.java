@@ -81,7 +81,7 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
 
     private static PrimaryKeys buildPrimaryKeys() {
         //  boolean[] containPk = new boolean[1];
-        AtomicReference<List<ColumnMetaData>> colsRef = new AtomicReference<>();
+        AtomicReference<List<ColumnMetaData>> colsRef = new AtomicReference<>(Collections.emptyList());
         List<Option> pkResult = SelectedTab.getContextTableCols((cols) -> {
             colsRef.set(Collections.unmodifiableList(cols));
             return cols.stream().filter((c) -> c.isPk());
@@ -106,10 +106,7 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
 
         public PrimaryKeys(List<Option> pks, List<ColumnMetaData> allCols) {
             this.pks = pks;
-            if (CollectionUtils.isEmpty(allCols)) {
-                throw new IllegalStateException("allCols can not be empty");
-            }
-            this.allCols = allCols;
+            this.allCols = Objects.requireNonNull(allCols, "param allCols can not be null");
         }
 
         public List<String> createPkKeys() {

@@ -56,7 +56,7 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
         // final String jdbcUrl = "jdbc_url_1";
         DBIdentity dbId = DBIdentity.parseId("order2");
         final String dataXCfgFileName = "base_0.json";
-        DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
+        DefaultSplitTableStrategy splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         TableInDB tableInDB = splitTableStrategy.createTableInDB(dbId);
 
         for (String tab : splitTabs) {
@@ -78,7 +78,7 @@ public class TestDefaultSplitTableStrategy implements TISEasyMock {
         String jdbcUrl = "jdbc:mysql://192.168.28.200:3306/order1?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=Asia%2FShanghai&useCompression=true&characterEncoding=utf8";
 
 
-        DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
+        DefaultSplitTableStrategy splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
 
         DataSourceFactory dsFactory = mock("dsFactory", DataSourceFactory.class);
 

@@ -16,31 +16,36 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.doris;
+package com.qlangtech.tis.plugin.datax.seq;
 
-import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.seq.SeqKey;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-05-21 15:00
+ * @create: 2023-07-31 15:09
  **/
-public class DorisSelectedTab extends SelectedTab {
+public class OffSeqKey extends SeqKey {
 
-    @FormField(ordinal = 4, validate = {})
-    public SeqKey seqKey;
+    @Override
+    public void appendBatchCfgs(JSONObject props) {
+
+    }
+
+    @Override
+    public boolean isOn() {
+        return false;
+    }
 
     @TISExtension
-    public static class DefaultDescriptor extends SelectedTab.DefaultDescriptor {
+    public static class DftDescriptor extends Descriptor<SeqKey> {
+        public DftDescriptor() {
+        }
 
         @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
-            return true;
+        public String getDisplayName() {
+            return SWITCH_OFF;
         }
     }
 }

@@ -55,8 +55,7 @@ import java.util.zip.ZipEntry;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-20 16:35
  **/
-public class
-CompileAndPackage implements ICompileAndPackage {
+public class CompileAndPackage implements ICompileAndPackage {
 
     private final List<PluginWrapper.Dependency> extraPluginDependencies;
     private final Set<PluginManifest.ExplodePluginManifest> classInExtraPlugin;
@@ -67,6 +66,10 @@ CompileAndPackage implements ICompileAndPackage {
 
     public CompileAndPackage(Set<Object> classInExtraPlugin) {
         this(Collections.emptyList(), classInExtraPlugin);
+    }
+
+    public CompileAndPackage() {
+        this(Collections.emptyList());
     }
 
     private CompileAndPackage(List<PluginWrapper.Dependency> extraPluginDependencies, Set<Object> classInExtraPlugin) {
@@ -93,10 +96,6 @@ CompileAndPackage implements ICompileAndPackage {
         }).collect(Collectors.toSet());
     }
 
-
-    public CompileAndPackage() {
-        this(Collections.emptyList());
-    }
 
     /**
      * @param context

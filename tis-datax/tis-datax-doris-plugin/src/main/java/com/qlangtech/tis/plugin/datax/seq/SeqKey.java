@@ -16,31 +16,34 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax.doris;
+package com.qlangtech.tis.plugin.datax.seq;
 
-import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.seq.SeqKey;
-import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.alibaba.fastjson.JSONObject;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.extension.Describable;
 
 /**
+ * https://doris.apache.org/docs/dev/data-operate/update-delete/sequence-column-manual?_highlight=seq
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-05-21 15:00
+ * @create: 2023-07-31 15:05
  **/
-public class DorisSelectedTab extends SelectedTab {
+public abstract class SeqKey implements Describable<SeqKey> {
 
-    @FormField(ordinal = 4, validate = {})
-    public SeqKey seqKey;
-
-    @TISExtension
-    public static class DefaultDescriptor extends SelectedTab.DefaultDescriptor {
-
-        @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
-            return true;
-        }
+    public StringBuffer createDDLScript(IDataxProcessor.TableMap tableMapper) {
+        return new StringBuffer();
     }
+
+    /**
+     * 是否已经开启时间序列功能
+     *
+     * @return
+     */
+    public abstract boolean isOn();
+
+    public String getSeqColName() {
+        throw new UnsupportedOperationException();
+    }
+
+    public abstract void appendBatchCfgs(JSONObject props);
 }

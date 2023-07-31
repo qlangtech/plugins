@@ -36,8 +36,8 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.DefaultSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -312,8 +312,8 @@ public class TestDataxMySQLReader extends BasicTest {
         MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
         mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
 
-        DefaultSplitTableStrategy.SplitableTableInDB tabsInDB
-                = new DefaultSplitTableStrategy.SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
+        SplitTableStrategy.SplitableTableInDB tabsInDB
+                = new SplitTableStrategy.SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
         tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
 
@@ -369,8 +369,8 @@ public class TestDataxMySQLReader extends BasicTest {
 
         ReaderTemplate.validateDataXReader("mysql-datax-reader-asser-without-option-val.json", dataXName, mySQLReader);
 
-        DefaultSplitTableStrategy splitTableStrategy = new DefaultSplitTableStrategy();
-        mysqlDataSource.splitTableStrategy = splitTableStrategy;
+        // DefaultSplitTableStrategy splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
+        mysqlDataSource.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         ReaderTemplate.validateDataXReader("mysql-datax-reader-assert-split-tabs.json", dataXName, mySQLReader);
 
         EasyMock.verify(mysqlDataSource, dataDumper);

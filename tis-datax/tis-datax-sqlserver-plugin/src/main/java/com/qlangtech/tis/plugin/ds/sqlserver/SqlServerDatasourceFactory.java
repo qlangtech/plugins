@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.ds.sqlserver;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -37,7 +36,7 @@ import java.util.regex.Pattern;
  * @create: 2021-06-07 09:47
  **/
 @Public
-public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
+public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory {
     private static final String DS_TYPE_SQL_SERVER = "SqlServer";
 
     @Override
@@ -70,14 +69,16 @@ public class SqlServerDatasourceFactory extends BasicDataSourceFactory {
         return new JDBCConnection(DriverManager.getConnection(jdbcUrl), jdbcUrl);
     }
 
-    @TISExtension
-    public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
+    // @TISExtension
+    public static abstract class BasicDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
         private static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\;\\w+?\\=\\w+?)*");
 
         @Override
-        protected String getDataSourceName() {
-            return DS_TYPE_SQL_SERVER;
+        protected final String getDataSourceName() {
+            return DS_TYPE_SQL_SERVER + "-" + getVersion();
         }
+
+        protected abstract String getVersion();
 
         @Override
         public EndType getEndType() {

@@ -52,6 +52,9 @@
         <module>tis-datax-mongodb-plugin</module>
         <module>tis-datax-ftp-plugin</module>
         <module>tis-datax-sqlserver-plugin</module>
+        <module>tis-datax-sqlserver-v2008-plugin</module>
+        <module>tis-datax-sqlserver-v2019-plugin</module>
+
         <module>tis-datax-cassandra-plugin</module>
         <module>tis-datax-oracle-plugin</module>
         <module>tis-datax-doris-plugin</module>
@@ -74,6 +77,7 @@
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
         <module>tis-datax-hdfs-aliyun-emr-plugin</module>
+
 
         <!--        <module>tis-datax-rabbitmq-plugin</module>-->
 

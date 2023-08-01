@@ -1,10 +1,13 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"SqlServer\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"SqlServer-2019\",\"SqlServer-2008\")",
     "creator": {
       "plugin": [
         {
-          "descName": "SqlServer"
+          "descName": "SqlServer-2019"
+        },
+        {
+          "descName": "SqlServer-2008"
         }
       ]
     }

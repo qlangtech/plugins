@@ -39,11 +39,19 @@
             <version>${project.version}</version>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>com.microsoft.sqlserver</groupId>-->
+<!--            <artifactId>sqljdbc4</artifactId>-->
+<!--            <version>4.0</version>-->
+<!--        </dependency>-->
+
+
         <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>sqljdbc4</artifactId>
-            <version>4.0</version>
+            <groupId>com.qlangtech.tis.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>4.2.jre8</version>
         </dependency>
+
 
     </dependencies>
 

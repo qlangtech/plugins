@@ -46,7 +46,7 @@ public class DataXFtpSelectTableReaderContext extends DataXFtpReaderContext {
 
     @Override
     public String getPath() {
-        String path = this.reader.path;
+        String path = this.reader.dfsLinker.getRootPath();
         boolean endWithSlash = StringUtils.endsWith(path, String.valueOf(IOUtils.DIR_SEPARATOR));
         return path + (endWithSlash ? StringUtils.EMPTY : IOUtils.DIR_SEPARATOR) + tab.getName();
     }

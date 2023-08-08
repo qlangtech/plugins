@@ -1,0 +1,20 @@
+{
+  "bucket": {
+    "help": "描述：OSS的bucket  "
+  },
+  "path": {
+    "label": "object",
+    "help": "描述：OSS的object信息，注意这里可以支持填写多个Object。 "
+  },
+  "linker": {
+    "creator": {
+      "plugin": [
+        {
+          "hetero": "params-cfg",
+          "descName": "aliyunToken"
+        }
+      ],
+      "label": "配置"
+    }
+  }
+}

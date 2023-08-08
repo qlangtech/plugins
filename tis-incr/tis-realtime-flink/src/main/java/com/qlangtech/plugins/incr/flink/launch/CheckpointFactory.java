@@ -30,4 +30,5 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public abstract class CheckpointFactory implements Describable<CheckpointFactory> {
 
     public abstract void setProps(StreamExecutionEnvironment env);
+
 }

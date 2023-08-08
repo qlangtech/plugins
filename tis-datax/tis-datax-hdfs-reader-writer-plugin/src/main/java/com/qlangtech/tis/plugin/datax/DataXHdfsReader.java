@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.plugin.datax.hdfs.HdfsTDFDLinker;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
@@ -166,7 +167,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 //    }
 
 
-    @TISExtension()
+   // @TISExtension()
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         private static final Pattern PATTERN_HDFS_RELATIVE_PATH = Pattern.compile("([\\w\\d\\.\\-_=]+/)*([\\w\\d\\.\\-_=]+|(\\*))");
 
@@ -184,7 +185,8 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 
         @Override
         public EndType getEndType() {
-            return EndType.HDFS;
+           // return EndType.HDFS;
+            throw new UnsupportedOperationException("EndType.HDFS");
         }
 
         @Override
@@ -214,7 +216,7 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
 
         @Override
         public String getDisplayName() {
-            return DataXHdfsWriter.DATAX_NAME;
+            return HdfsTDFDLinker.DATAX_NAME;
         }
     }
 }

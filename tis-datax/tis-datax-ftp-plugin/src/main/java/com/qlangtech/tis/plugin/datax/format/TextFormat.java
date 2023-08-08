@@ -18,29 +18,72 @@
 
 package com.qlangtech.tis.plugin.datax.format;
 
-import com.qlangtech.tis.datax.Delimiter;
-import com.qlangtech.tis.extension.Descriptor;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.TEXTFormat;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredReader;
+import com.alibaba.datax.plugin.unstructuredstorage.writer.TextWriterImpl;
+import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
-import com.qlangtech.tis.plugin.annotation.Validator;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-14 17:03
  **/
-public class TextFormat extends FileFormat {
+public class TextFormat extends BasicPainFormat {
 
-    @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {})
-    public Boolean header;
-
-    @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String fieldDelimiter;
 
     @Override
-    public String getFieldDelimiter() {
-        return String.valueOf(Delimiter.parse(this.fieldDelimiter).val);
+    public UnstructuredWriter createWriter(Writer writer) {
+
+        //Writer writer, DateFormat dateParse, String nullFormat, char fieldDelimiter
+        return new TextWriterImpl(writer, this.getDateFormat(), this.nullFormat, this.getFieldDelimiter()) {
+            @Override
+            public void writeHeader(List<String> headers) throws IOException {
+                if (header) {
+                    this.writeOneRecord(headers);
+                }
+            }
+
+            @Override
+            public void writeOneRecord(List<String> splitedRows) throws IOException {
+                this.textWriter.write(String.format("%s%s",
+                        StringUtils.join(splitedRows, getFieldDelimiter()),
+                        IOUtils.LINE_SEPARATOR));
+            }
+        };
     }
+
+    @Override
+    public UnstructuredReader createReader(BufferedReader reader) {
+        return new TEXTFormat(reader, !header, getFieldDelimiter());
+    }
+
+    @Override
+    public FileHeader readHeader(BufferedReader reader) throws IOException {
+        TEXTFormat textFormat = (TEXTFormat) this.createReader(reader);
+        String[] header = textFormat.getHeader();
+        int colCount;
+        if (header == null) {
+            if (textFormat.hasNext()) {
+                colCount = textFormat.next().length;
+            } else {
+                throw new IllegalStateException("can not read content from textFormat");
+            }
+        } else {
+            colCount = header.length;
+        }
+        return new FileHeader(colCount, header == null ? null : Lists.newArrayList(header));
+    }
+
 
     @Override
     public boolean containHeader() {
@@ -48,7 +91,7 @@ public class TextFormat extends FileFormat {
     }
 
     @TISExtension
-    public static class Desc extends Descriptor<FileFormat> {
+    public static class Desc extends BasicPainFormatDescriptor {
         @Override
         public String getDisplayName() {
             return "TEXT";

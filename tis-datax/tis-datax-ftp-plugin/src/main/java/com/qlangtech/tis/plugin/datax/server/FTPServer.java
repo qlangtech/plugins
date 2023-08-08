@@ -27,6 +27,7 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
 
@@ -75,16 +76,12 @@ public class FTPServer extends ParamsConfig {
         return FtpHelper.createFtpClient(this.protocol, this.host, this.username, this.password, this.port, timeout, this.connectPattern);
     }
 
-    public <T> T useFtpHelper(FtpHelperVisitor<T> helperConsumer) {
+    public <T> T useFtpHelper(TDFSSessionVisitor<T> helperConsumer) {
         try (FtpHelper ftpHelper = this.createFtpHelper(this.timeout)) {
             return helperConsumer.accept(ftpHelper);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public interface FtpHelperVisitor<T> {
-        T accept(FtpHelper helper) throws Exception;
     }
 
     @Override

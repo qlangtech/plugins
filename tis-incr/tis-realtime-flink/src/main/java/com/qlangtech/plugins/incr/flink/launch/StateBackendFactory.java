@@ -22,7 +22,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Describable;
-import com.qlangtech.tis.order.center.IParamContext;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.util.Optional;
@@ -39,6 +39,15 @@ public abstract class StateBackendFactory implements Describable<StateBackendFac
 
     public abstract void setProps(StreamExecutionEnvironment env);
 
+    public static Optional<IncrStreamFactory.ISavePointSupport> getSavePointSupport(StateBackendFactory stateBackend) {
+        if ((stateBackend instanceof IncrStreamFactory.ISavePointSupport)
+                && ((IncrStreamFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
+            return Optional.of(((IncrStreamFactory.ISavePointSupport) stateBackend));
+        }
+        return Optional.empty();
+    }
+
+
     /**
      * 缺的当前执行任务的状态
      *
@@ -48,30 +57,30 @@ public abstract class StateBackendFactory implements Describable<StateBackendFac
         throw new UnsupportedOperationException(this.getClass().getSimpleName() + " getIncrJobStatus is not supported");
     }
 
-    /**
-     * 支持Flink应用Savepoint功能
-     */
-    public interface ISavePointSupport {
+//    /**
+//     * 支持Flink应用Savepoint功能
+//     */
+//    public interface ISavePointSupport {
+//
+//        public boolean supportSavePoint();
+//
+//        public String getSavePointRootPath();
+//
+//        public default String createSavePointPath() {
+//            return getSavePointRootPath() + "/" + IFlinkIncrJobStatus.KEY_SAVEPOINT_DIR_PREFIX + IParamContext.getCurrentMillisecTimeStamp();
+//        }
+//    }
 
-        public boolean supportSavePoint();
-
-        public String getSavePointRootPath();
-
-        public default String createSavePointPath() {
-            return getSavePointRootPath() + "/" + IFlinkIncrJobStatus.KEY_SAVEPOINT_DIR_PREFIX + IParamContext.getCurrentMillisecTimeStamp();
-        }
-    }
-
-    /**
-     * 支持从checkpint来恢复程序程序执行状态
-     */
-    public interface IRestoreFromCheckpointSupport {
-        /**
-         * 取得需要从某个需要恢复的checkpoint的路径（完整路径）
-         *
-         * @return
-         */
-        public Optional<String> getHistoryCheckpointPath();
-    }
+//    /**
+//     * 支持从checkpint来恢复程序程序执行状态
+//     */
+//    public interface IRestoreFromCheckpointSupport {
+//        /**
+//         * 取得需要从某个需要恢复的checkpoint的路径（完整路径）
+//         *
+//         * @return
+//         */
+//        public Optional<String> getHistoryCheckpointPath();
+//    }
 
 }

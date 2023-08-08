@@ -31,6 +31,7 @@ import org.apache.flink.api.common.JobID;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * 保存当前增量任务的执行状态
@@ -48,6 +49,7 @@ public class FlinkIncrJobStatus extends BasicFinkIncrJobStatus {
 
     // 已经废弃的savepoint路径集合
     private final Set<String> discardPaths = Sets.newHashSet();
+    private final Function<JobID, String> savePointRootPathCreator;
 
     public Optional<FlinkSavepoint> containSavepoint(String path) {
 
@@ -71,9 +73,21 @@ public class FlinkIncrJobStatus extends BasicFinkIncrJobStatus {
         return savepointPaths;
     }
 
-    public FlinkIncrJobStatus(File incrJobFile) {
-        super(incrJobFile);
+    public String getSavePointRootPath() {
+        return (this.jobID != null) ? this.savePointRootPathCreator.apply(this.jobID) : null;
+    }
 
+    public FlinkIncrJobStatus(File incrJobFile) {
+        this(incrJobFile, (jid) -> null);
+    }
+
+    /**
+     * @param incrJobFile
+     * @param savePointRootPathCreator
+     */
+    public FlinkIncrJobStatus(File incrJobFile, final Function<JobID, String> savePointRootPathCreator) {
+        super(incrJobFile);
+        this.savePointRootPathCreator = savePointRootPathCreator;
         if (!incrJobFile.exists()) {
             state = State.NONE;
             return;
@@ -139,6 +153,10 @@ public class FlinkIncrJobStatus extends BasicFinkIncrJobStatus {
     @JSONField(serialize = false)
     public JobID getLaunchJobID() {
         return this.jobID;
+    }
+
+    public String getJobId() {
+        return this.jobID != null ? this.jobID.toHexString() : null;
     }
 
     public void stop(String savepointDirectory) {

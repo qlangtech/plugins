@@ -33,10 +33,10 @@ import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter;
-import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -74,16 +74,19 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
     public transient List<SelectedTab> selectedTabs;
 
     @Override
-    public List<ColumnMetaData> getTableMetadata(boolean inSink,EntityName table) throws TableNotFoundException {
-        FTPServer server = FTPServer.getServer(this.linker);
-        return server.useFtpHelper((ftp) -> {
-            return getFTPFileMetaData(table, ftp);
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+        return this.dfsLinker.useTdfsSession((dfs) -> {
+            return getFTPFileMetaData(table, dfs);
         });
+//        FTPServer server = FTPServer.getServer(this.linker);
+//        return server.useFtpHelper((ftp) -> {
+//            return getFTPFileMetaData(table, ftp);
+//        });
     }
 
-    private List<ColumnMetaData> getFTPFileMetaData(EntityName table, FtpHelper ftp) {
+    private List<ColumnMetaData> getFTPFileMetaData(EntityName table, ITDFSSession ftp) {
         String content = null;
-        final String ftpPath = this.path + IOUtils.DIR_SEPARATOR
+        final String ftpPath = this.dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR
                 + table.getTabName() + IOUtils.DIR_SEPARATOR + FtpHelper.KEY_META_FILE;
 
         try (InputStream reader = Objects.requireNonNull(ftp.getInputStream(ftpPath), "path:" + ftpPath + " relevant InputStream can not null")) {
@@ -104,10 +107,10 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
         ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
 
-        FTPServer server = FTPServer.getServer(this.linker);
+//        FTPServer server = FTPServer.getServer(this.linker);
 
-        final FtpHelper ftpHelper = server.createFtpHelper(server.timeout);
-
+        ITDFSSession dfs = this.dfsLinker.createTdfsSession();
+        //  final FtpHelper dfs = server.createFtpHelper(server.timeout);
         return new IGroupChildTaskIterator() {
             int currentIndex = 0;
 
@@ -121,7 +124,7 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
                 SelectedTab tab = tabs.get(currentIndex);
 
                 ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
-                    List<ColumnMetaData> colsMeta = getFTPFileMetaData(EntityName.parse(t.getName()), ftpHelper);
+                    List<ColumnMetaData> colsMeta = getFTPFileMetaData(EntityName.parse(t.getName()), dfs);
                     return colsMeta.stream().collect(Collectors.toMap((c) -> c.getKey(), (c) -> c));
                 });
 
@@ -143,7 +146,7 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
             @Override
             public void close() throws IOException {
                 try {
-                    ftpHelper.close();
+                    dfs.close();
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
@@ -174,12 +177,10 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
 
     public static List<String> getFTPFiles(DataXFtpReaderWithMeta reader) {
 
-
-        FTPServer server = FTPServer.getServer(reader.linker);
-        return server.useFtpHelper((ftp) -> {
+        return reader.dfsLinker.useTdfsSession((ftp) -> {
             List<String> ftpFiles = Lists.newArrayList();
             Matcher matcher = null;
-            HashSet<String> files = ftp.getListFiles(reader.path, 0, 2);
+            HashSet<String> files = ftp.getListFiles(reader.dfsLinker.getRootPath(), 0, 2);
             for (String file : files) {
                 matcher = FTP_FILE_PATTERN.matcher(file);
                 if (matcher.matches()) {
@@ -188,6 +189,21 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
             }
             return ftpFiles;
         });
+
+//
+//        FTPServer server = FTPServer.getServer(reader.linker);
+//        return server.useFtpHelper((ftp) -> {
+//            List<String> ftpFiles = Lists.newArrayList();
+//            Matcher matcher = null;
+//            HashSet<String> files = ftp.getListFiles(reader.path, 0, 2);
+//            for (String file : files) {
+//                matcher = FTP_FILE_PATTERN.matcher(file);
+//                if (matcher.matches()) {
+//                    ftpFiles.add(matcher.group(1));
+//                }
+//            }
+//            return ftpFiles;
+//        });
     }
 
 
@@ -221,7 +237,7 @@ public class DataXFtpReaderWithMeta extends DataXFtpReader {
 
             List<String> ftpFiles = DataXFtpReaderWithMeta.getFTPFiles(dataxReader);
             if (CollectionUtils.isEmpty(ftpFiles)) {
-                msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下未扫描到" + DATAX_NAME + "元数据文件:" + FtpHelper.KEY_META_FILE);
+                msgHandler.addFieldError(context, KEY_DFS_LINKER, "该路径下未扫描到" + super.getDisplayName() + "元数据文件:" + FtpHelper.KEY_META_FILE);
                 return false;
             }
 

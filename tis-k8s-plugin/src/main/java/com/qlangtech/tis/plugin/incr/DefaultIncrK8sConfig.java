@@ -26,6 +26,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 
+import java.util.Optional;
+
 /**
  * @author 百岁（baisui@qlangtech.com）
  * @create: 2020-04-12 11:06
@@ -55,6 +57,11 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
         }
         this.incrSync = new K8sIncrSync(TIS.getPluginStore(K8sImage.class).find(k8sImage));
         return this.incrSync;
+    }
+
+    @Override
+    public Optional<ISavePointSupport> restorable() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

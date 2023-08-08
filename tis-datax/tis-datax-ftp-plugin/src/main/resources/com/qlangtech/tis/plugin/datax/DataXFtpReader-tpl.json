@@ -13,8 +13,6 @@
 ,"connectPattern": "${reader.connectPattern}"
 #end
 ,"fileFormat": "${reader.format}"
-,"username": "${reader.username}"
-,"password": "${reader.password}"
 ,"path": "${reader.path}"
 ,"column": ${reader.column}
 #if($reader.containFieldDelimiter)

@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch.statbackend;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.FlinkIncrJobStatus;
+import com.qlangtech.plugins.incr.flink.launch.FlinkTaskNodeController;
 import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
@@ -29,12 +30,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.OverwriteProps;
-import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.configuration.CheckpointingOptions;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.IllegalConfigurationException;
@@ -46,8 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -55,7 +53,7 @@ import java.util.function.Consumer;
  * @create: 2022-04-11 21:52
  **/
 @Public
-public class FileSystemState extends StateBackendFactory implements StateBackendFactory.ISavePointSupport, StateBackendFactory.IRestoreFromCheckpointSupport {
+public class FileSystemState extends StateBackendFactory implements IncrStreamFactory.ISavePointSupport {
 
     private static final Logger logger = LoggerFactory.getLogger(FileSystemState.class);
 
@@ -78,7 +76,11 @@ public class FileSystemState extends StateBackendFactory implements StateBackend
     public IFlinkIncrJobStatus getIncrJobStatus(TargetResName collection) {
         IDataxProcessor processor = DataxProcessor.load(null, collection.getName());
         File dataXWorkDir = processor.getDataXWorkDir(null);
-        return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log"));
+
+        return new FlinkIncrJobStatus(new File(dataXWorkDir, "incrJob.log")
+                , (jobId) -> {
+            return FlinkTaskNodeController.getRestoreCheckpointPath(jobId, this, "{CheckpointId}");
+        });
     }
 
     @Override
@@ -89,17 +91,6 @@ public class FileSystemState extends StateBackendFactory implements StateBackend
                     , MemorySize.parse(String.valueOf(smallFileThreshold), MemorySize.MemoryUnit.KILO_BYTES));
             config.setInteger(CheckpointingOptions.FS_WRITE_BUFFER_SIZE, this.writeBufferSize);
         }));
-    }
-
-//    public static List<Option> getHistoryCPs() {
-//        List<Option> cps = Lists.newArrayList();
-//
-//        return cps;
-//    }
-
-    @Override
-    public Optional<String> getHistoryCheckpointPath() {
-        return Optional.empty();
     }
 
     @Override

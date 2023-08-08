@@ -25,6 +25,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.hdfs.HdfsTDFDLinker;
 
 /**
  * https://github.com/alibaba/DataX/blob/master/hdfswriter/doc/hdfswriter.md
@@ -35,7 +36,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
  **/
 @Public
 public class DataXHdfsWriter extends BasicFSWriter {
-    public static final String DATAX_NAME = "Hdfs";
 
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.relative_path})
     public String path;
@@ -68,7 +68,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
         }
     }
 
-    @TISExtension()
+  //  @TISExtension()
     public static class DefaultDescriptor extends HdfsWriterDescriptor {
         public DefaultDescriptor() {
             super();
@@ -76,7 +76,7 @@ public class DataXHdfsWriter extends BasicFSWriter {
 
         @Override
         public String getDisplayName() {
-            return DataXHdfsWriter.DATAX_NAME;
+            return HdfsTDFDLinker.DATAX_NAME;
         }
     }
 

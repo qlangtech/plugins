@@ -27,12 +27,11 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
-import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.io.IOUtils;
 
@@ -64,20 +63,23 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
     }
 
     @Override
-    public String getFtpTargetDir(DataXFtpWriter writer, String tableName) {
-        return writer.path + IOUtils.DIR_SEPARATOR + tableName;  //super.getFtpTargetDir(writer);
+    public String getDfsTargetDir(TDFSLinker dfsLinker, String tableName) {
+        return dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR + tableName;  //super.getFtpTargetDir(writer);
     }
 
     /**
      * 写入元数据
      *
-     * @param ftpWriter
+     * @param dfsLinker
      * @param execContext
      * @param tab
      * @return
      */
     @Override
-    public IRemoteTaskTrigger createMetaDataWriteTask(DataXFtpWriter ftpWriter, IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
+        if (dfsLinker == null) {
+            throw new IllegalArgumentException("param dfsLinker can not be null");
+        }
         return new IRemoteTaskTrigger() {
             @Override
             public String getTaskName() {
@@ -86,10 +88,13 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
 
             @Override
             public void run() {
-                FTPServer ftp = FTPServer.getServer(ftpWriter.linker);
 
-                ftp.useFtpHelper((ftpHelper) -> {
-                    String ftpDir = ftpWriter.path + IOUtils.DIR_SEPARATOR + tab.getName();
+//                ftpWriter.dfsLinker.useTdfsSession()
+//
+                // FTPServer ftp = FTPServer.getServer(ftpWriter.dfsLinker);
+
+                dfsLinker.useTdfsSession((ftpHelper) -> {
+                    String ftpDir = dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR + tab.getName();
 
                     ftpHelper.mkDirRecursive(ftpDir);
 

@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.plugin.datax.format.CSVFormat;
-import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Objects;
@@ -33,7 +32,7 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
 
     public static final String FTP_TASK = "ftp_datax";
     protected final DataXFtpReader reader;
-    private final FTPServer ftpServer;
+    //  private final FTPServer ftpServer;
 
     @Override
     public String getReaderContextId() {
@@ -42,69 +41,69 @@ public class DataXFtpReaderContext implements IDataxReaderContext {
 
     public DataXFtpReaderContext(DataXFtpReader reader) {
         this.reader = reader;
-        Objects.requireNonNull(this.reader.linker, "reader.linker can not be null");
-        this.ftpServer = FTPServer.getServer(this.reader.linker);
+        Objects.requireNonNull(this.reader.dfsLinker, "reader.linker can not be null");
+        // this.ftpServer = FTPServer.getServer(this.reader.linker);
     }
 
-    public String getProtocol() {
-        return this.ftpServer.protocol;
-    }
-
-    public String getHost() {
-        return this.ftpServer.host;
-    }
-
-    public boolean isContainPort() {
-        return this.ftpServer.port != null;
-    }
-
-    public Integer getPort() {
-        return this.ftpServer.port;
-    }
-
-    public boolean isContainTimeout() {
-        return this.ftpServer.timeout != null;
-    }
-
-    public Integer getTimeout() {
-        return this.ftpServer.timeout;
-    }
-
-    public boolean isContainConnectPattern() {
-        return StringUtils.isNotBlank(this.ftpServer.connectPattern);
-    }
-
-    public String getConnectPattern() {
-        return this.ftpServer.connectPattern;
-    }
-
-    public String getFormat() {
-        return this.reader.fileFormat.getFormat();
-    }
-
-    public String getUsername() {
-        return this.ftpServer.username;
-    }
-
-    public String getPassword() {
-        return this.ftpServer.password;
-    }
+//    public String getProtocol() {
+//        return this.ftpServer.protocol;
+//    }
+//
+//    public String getHost() {
+//        return this.ftpServer.host;
+//    }
+//
+//    public boolean isContainPort() {
+//        return this.ftpServer.port != null;
+//    }
+//
+//    public Integer getPort() {
+//        return this.ftpServer.port;
+//    }
+//
+//    public boolean isContainTimeout() {
+//        return this.ftpServer.timeout != null;
+//    }
+//
+//    public Integer getTimeout() {
+//        return this.ftpServer.timeout;
+//    }
+//
+//    public boolean isContainConnectPattern() {
+//        return StringUtils.isNotBlank(this.ftpServer.connectPattern);
+//    }
+//
+//    public String getConnectPattern() {
+//        return this.ftpServer.connectPattern;
+//    }
+//
+//    public String getFormat() {
+//        return this.reader.fileFormat.getFormat();
+//    }
+//
+//    public String getUsername() {
+//        return this.ftpServer.username;
+//    }
+//
+//    public String getPassword() {
+//        return this.ftpServer.password;
+//    }
 
     public String getPath() {
-        return this.reader.path;
+        return this.reader.dfsLinker.getRootPath();
     }
 
     public String getColumn() {
         return this.reader.column;
     }
 
-    public String getFieldDelimiter() {
-        return this.reader.fileFormat.getFieldDelimiter();
-    }
-
-    public boolean isContainFieldDelimiter() {
-        return StringUtils.isNotBlank(this.reader.fileFormat.getFieldDelimiter());
-    }
+//    public String getFieldDelimiter() {
+//        return this.reader.fileFormat.getFieldDelimiter();
+//    }
+//
+//    public boolean isContainFieldDelimiter() {
+//        return StringUtils.isNotBlank(this.reader.fileFormat.getFieldDelimiter());
+//    }
 
     public boolean isContainCompress() {
         return StringUtils.isNotBlank(this.reader.compress);

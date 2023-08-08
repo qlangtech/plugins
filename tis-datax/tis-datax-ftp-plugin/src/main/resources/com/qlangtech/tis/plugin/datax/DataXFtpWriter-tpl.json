@@ -1,7 +1,6 @@
 {
     "name": "ftpwriter",
     "parameter": {
-        "host": "${writer.host}"
         #if($writer.containPort)
     ,"port": ${writer.port}
 #end
@@ -11,8 +10,6 @@
 #if($writer.containConnectPattern)
 ,"connectPattern": "${writer.connectPattern}"
 #end
-,"username": "${writer.username}"
-,"password": "${writer.password}"
 ,"path": "${writer.path}"
 ,"fileName": "${writer.fileName}"
 ,"writeMode": "${writer.writeMode}"
@@ -38,6 +35,5 @@
 #if($writer.containHeader)
 ,"header": [${writer.header}]
 #end
-,"protocol": "${writer.protocol}"
     }
 }

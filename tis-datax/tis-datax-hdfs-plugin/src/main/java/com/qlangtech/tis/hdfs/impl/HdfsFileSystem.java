@@ -19,6 +19,7 @@ package com.qlangtech.tis.hdfs.impl;
 
 import com.qlangtech.tis.fs.FSDataInputStream;
 import com.qlangtech.tis.fs.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -239,7 +240,10 @@ public class HdfsFileSystem implements ITISFileSystem {
 
     @Override
     public IPath getPath(IPath parent, String name) {
-        return new HdfsPath(parent, name);
+        return new HdfsPath(parent
+                , StringUtils.startsWith(name, Path.SEPARATOR)
+                ? StringUtils.substring(name, 1)
+                : name);
     }
 
     @Override

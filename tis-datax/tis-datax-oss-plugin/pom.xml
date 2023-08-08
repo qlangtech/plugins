@@ -56,17 +56,17 @@
             <artifactId>tis-common</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>ossreader</artifactId>
-            <version>${alibaba.datax.version}</version>
-            <exclusions>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>ossreader</artifactId>-->
+<!--            <version>${alibaba.datax.version}</version>-->
+<!--            <exclusions>-->
 <!--                <exclusion>-->
 <!--                    <groupId>com.alibaba.datax</groupId>-->
 <!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
 <!--                </exclusion>-->
-            </exclusions>
-        </dependency>
+<!--            </exclusions>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.aliyun.oss</groupId>
@@ -74,17 +74,17 @@
             <version>${revision}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>osswriter</artifactId>
-            <version>${alibaba.datax.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.alibaba.datax</groupId>
-                    <artifactId>plugin-unstructured-storage-util</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>osswriter</artifactId>-->
+<!--            <version>${alibaba.datax.version}</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>com.alibaba.datax</groupId>-->
+<!--                    <artifactId>plugin-unstructured-storage-util</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-datax-common-plugin</artifactId>

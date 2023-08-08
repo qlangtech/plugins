@@ -19,13 +19,27 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
+import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,6 +60,68 @@ public class TestDataXFtpReader {
     }
 
     @Test
+    public void testConvertMeta() throws Exception {
+
+        File meta = new File("/Users/mozhenghua/Downloads/meta.json");
+
+        // JSONArray types = JSON.parseArray(FileUtils.readFileToString(meta, TisUTF8.get()));
+
+        List<ColumnMetaData> types = DefaultMetaDataWriter.deserialize(JSON.parseArray(FileUtils.readFileToString(meta, TisUTF8.get())));
+
+
+        JSONArray convertTypes = new JSONArray();
+        JSONObject convertType = null;
+        int index = 0;
+        for (ColumnMetaData type : types) {
+            convertType = new JSONObject();
+            convertType.put("type", map2Type(type.getType()).name());
+            convertType.put("index", index++);
+            convertTypes.add(convertType);
+        }
+
+        System.out.println(  JsonUtil.toString(convertTypes) );
+    }
+
+    private UnstructuredStorageReaderUtil.Type map2Type(DataType type) {
+        return type.accept(new DataType.TypeVisitor<UnstructuredStorageReaderUtil.Type>() {
+            @Override
+            public UnstructuredStorageReaderUtil.Type bigInt(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.LONG;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type doubleType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.DOUBLE;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type dateType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.DATE;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type timestampType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.DATE;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type bitType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.BOOLEAN;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type blobType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.STRING;
+            }
+
+            @Override
+            public UnstructuredStorageReaderUtil.Type varcharType(DataType type) {
+                return UnstructuredStorageReaderUtil.Type.STRING;
+            }
+        });
+    }
+
+    @Test
     public void testDescGenerate() throws Exception {
 
         // ContextDesc.descBuild(DataXFtpReader.class, true);
@@ -60,6 +136,9 @@ public class TestDataXFtpReader {
         String dataXName = "test";
 
         DataXFtpReader reader = new DataXFtpReader();
+        FtpTDFSLinker ftpLinker = new FtpTDFSLinker();
+        ftpLinker.path = "/home/hanfa.shf/ftpReaderTest/data";
+        reader.dfsLinker = ftpLinker;
         reader.compress = Compress.noCompress.token;
         reader.template = DataXFtpReader.getDftTemplate();
         // reader.linker = FtpWriterUtils.createFtpServer();
@@ -70,7 +149,7 @@ public class TestDataXFtpReader {
 //        reader.connectPattern = "PASV";
 //        reader.username = "test";
 //        reader.password = "test";
-        reader.path = "/home/hanfa.shf/ftpReaderTest/data";
+        // reader.path = "/home/hanfa.shf/ftpReaderTest/data";
         reader.column = " [{\n" +
                 "    \"type\": \"long\",\n" +
                 "    \"index\": 0    \n" +

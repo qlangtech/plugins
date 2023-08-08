@@ -41,7 +41,8 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
     private final JobDetailsInfo jobDetailsInfo;
 
 
-    public ExtendFlinkJobDeploymentDetails(IFlinkClusterConfig clusterCfg, IFlinkIncrJobStatus jobStatus, JobDetailsInfo jobDetailsInfo) {
+    public ExtendFlinkJobDeploymentDetails(IFlinkClusterConfig clusterCfg
+            , IFlinkIncrJobStatus jobStatus, JobDetailsInfo jobDetailsInfo) {
         super(clusterCfg, jobStatus);
         this.jobDetailsInfo = jobDetailsInfo;
     }

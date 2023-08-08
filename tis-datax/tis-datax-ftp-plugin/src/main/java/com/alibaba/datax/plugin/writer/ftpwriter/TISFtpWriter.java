@@ -19,28 +19,70 @@
 package com.alibaba.datax.plugin.writer.ftpwriter;
 
 import com.alibaba.datax.core.job.IJobContainerContext;
+import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
+import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
+
+import java.io.Writer;
+import java.util.Objects;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-04-05 15:38
  **/
 public class TISFtpWriter extends FtpWriter {
+
     public static class Job extends FtpWriter.Job {
+        private DataXFtpWriter writer;
+
+        @Override
+        public void init() {
+            this.writer = getDfsWriter(this.containerContext);
+            super.init();
+        }
+
+
+        @Override
+        protected ITDFSSession createTdfsSession() {
+            return this.writer.dfsLinker.createTdfsSession();
+        }
+
         @Override
         protected String createTargetPath(String tableName) {
-            return getFtpTargetDir(tableName, this.containerContext);
+            return getFtpTargetDir(tableName, this.writer);
         }
     }
 
-    private static String getFtpTargetDir(String tableName, IJobContainerContext containerContext) {
+    private static DataXFtpWriter getDfsWriter(IJobContainerContext containerContext) {
+        return Objects.requireNonNull((DataXFtpWriter) DataxWriter.load(null, containerContext.getTISDataXName())
+                , "writer can not be null");
+    }
+
+    private static String getFtpTargetDir(String tableName, DataXFtpWriter writer) {
         // IDataxProcessor processor = DataxProcessor.load(null, containerContext.getTISDataXName());
-        DataXFtpWriter writer = (DataXFtpWriter) DataxWriter.load(null, containerContext.getTISDataXName());
+        // DataXFtpWriter writer = (DataXFtpWriter) DataxWriter.load(null, containerContext.getTISDataXName());
         //  DataXFtpWriter writer = (DataXFtpWriter) processor.getWriter(null);
-        return writer.writeMetaData.getFtpTargetDir(writer, tableName);
+        return writer.writeMetaData.getDfsTargetDir(writer.dfsLinker, tableName);
     }
 
     public static class Task extends FtpWriter.Task {
+        private DataXFtpWriter writer;
+
+        @Override
+        public void init() {
+            this.writer = getDfsWriter(this.containerContext);
+            super.init();
+        }
+
+        @Override
+        protected ITDFSSession createTdfsSession() {
+            return Objects.requireNonNull(this.writer, "writer can not be null").dfsLinker.createTdfsSession();
+        }
+
+        @Override
+        protected UnstructuredWriter createUnstructuredWriter(Writer w) {
+            return writer.fileFormat.createWriter(w);
+        }
     }
 }

@@ -37,6 +37,7 @@ import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.rest.RestClusterClient;
@@ -47,12 +48,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -64,6 +67,7 @@ import java.util.stream.Collectors;
 public class FlinkTaskNodeController implements IRCController {
     private static final Logger logger = LoggerFactory.getLogger(FlinkTaskNodeController.class);
     private final TISFlinkCDCStreamFactory factory;
+    public static final String CHECKPOINT_DIR_PREFIX = "chk-";
 
     public FlinkTaskNodeController(TISFlinkCDCStreamFactory factory) {
         this.factory = factory;
@@ -97,13 +101,28 @@ public class FlinkTaskNodeController implements IRCController {
      */
     @Override
     public void relaunch(TargetResName collection, String... targetPod) {
-        IFlinkIncrJobStatus status = getIncrJobStatus(collection);
+        this.relaunch(collection, (p) -> {
+            String savepointPath = p.getLeft();
+            IFlinkIncrJobStatus<JobID> status = p.getRight();
+            return (status.containSavepoint(savepointPath)).isPresent();
+        }, targetPod);
+    }
+
+    /**
+     * @param collection
+     * @param savepointValidator 校验savepointpoint Path 是否存在
+     * @param targetPod
+     */
+    private void relaunch(TargetResName collection
+            , Function<Pair<String, IFlinkIncrJobStatus<JobID>>, Boolean> savepointValidator
+            , String... targetPod) {
+        IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
         try {
-            Optional<IFlinkIncrJobStatus.FlinkSavepoint> savepoint = null;
             for (String savepointPath : targetPod) {
                 if ((status.getState() == IFlinkIncrJobStatus.State.STOPED
                         || !((FlinkJobDeploymentDetails) getRCDeployment(collection)).isRunning())
-                        && (savepoint = status.containSavepoint(savepointPath)).isPresent()) {
+                        && savepointValidator.apply(Pair.of(savepointPath, status)) //(status.containSavepoint(savepointPath)).isPresent()
+                ) {
                     File streamUberJar = UberJarUtil.getStreamUberJarFile(collection);
                     if (!streamUberJar.exists()) {
                         throw new IllegalStateException("streamUberJar is not exist:" + streamUberJar.getAbsolutePath());
@@ -126,6 +145,50 @@ public class FlinkTaskNodeController implements IRCController {
         throw new IllegalStateException("targetPod length:" + targetPod.length
                 + "，jobid:" + status.getLaunchJobID() + ",status:" + status.getState()
                 + ",stored path:" + savepoints.stream().map((p) -> p.getPath()).collect(Collectors.joining(",")));
+    }
+
+    @Override
+    public void restoreFromCheckpoint(TargetResName collection, Integer checkpointId) {
+
+        IncrStreamFactory streamFactory = getStreamFactory(collection);
+        Optional<IncrStreamFactory.ISavePointSupport> savePointSupport = streamFactory.restorable();
+        if (!savePointSupport.isPresent()) {
+            throw TisException.create("app:" + collection.getName() + " is not support savePoint");
+        }
+        IncrStreamFactory.ISavePointSupport spSupport = savePointSupport.get();
+
+        final String checkpointPath = getRestoreCheckpointPath(collection, spSupport, String.valueOf(checkpointId));
+
+        //  IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
+        //  JobID jobID = status.getLaunchJobID();
+        // final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
+        //  logger.info("restore flink job with checkpoint path:" + checkpointPath);
+        this.relaunch(collection, (p) -> {
+            return true;
+        }, checkpointPath);
+        // this.relaunch(collection, checkpointPath);
+    }
+
+    public static String getRestoreCheckpointPath(
+            TargetResName collection, IncrStreamFactory.ISavePointSupport spSupport, String checkpointId) {
+        IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
+        return getRestoreCheckpointPath(status.getLaunchJobID(), spSupport, checkpointId);
+//        JobID jobID = status.getLaunchJobID();
+//        final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
+//        logger.info("restore flink job with checkpoint path:" + checkpointPath);
+//        return checkpointPath;
+    }
+
+    public static String getRestoreCheckpointPath(
+            JobID jobID, IncrStreamFactory.ISavePointSupport spSupport, String checkpointId) {
+        Objects.requireNonNull(jobID,"param jobID can not be null");
+        Objects.requireNonNull(spSupport,"param spSupport can not be null");
+        Objects.requireNonNull(checkpointId,"param checkpointId can not be null");
+        // IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
+       // JobID jobID = status.getLaunchJobID();
+        final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
+        logger.info("restore flink job with checkpoint path:" + checkpointPath);
+        return checkpointPath;
     }
 
     @Override
@@ -211,16 +274,20 @@ public class FlinkTaskNodeController implements IRCController {
 //    }
 
 
-    private IFlinkIncrJobStatus<JobID> getIncrJobStatus(TargetResName collection) {
-        IncrStreamFactory incrFactory = HeteroEnum.getIncrStreamFactory(collection.getName());
+    private static IFlinkIncrJobStatus<JobID> getIncrJobStatus(TargetResName collection) {
+        IncrStreamFactory incrFactory = getStreamFactory(collection);
         return incrFactory.getIncrJobStatus(collection);
+    }
+
+    private static IncrStreamFactory getStreamFactory(TargetResName collection) {
+        return HeteroEnum.getIncrStreamFactory(collection.getName());
     }
 
 
     @Override
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
-        IFlinkIncrJobStatus<JobID> incrJobStatus = this.getIncrJobStatus(collection);
+        IFlinkIncrJobStatus<JobID> incrJobStatus = getIncrJobStatus(collection);
         final FlinkJobDeploymentDetails noneStateDetail
                 = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus) {
             @Override
@@ -328,7 +395,7 @@ public class FlinkTaskNodeController implements IRCController {
     private void processFlinkJob(TargetResName collection, FlinkJobFunc jobFunc) {
         ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection).valiate();
         IFlinkIncrJobStatus<JobID> status = validateFlinkJob.getStatus();
-        StateBackendFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
+        IncrStreamFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
 
         try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
             CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
@@ -350,7 +417,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     private interface FlinkJobFunc {
         public void apply(RestClusterClient restClient
-                , StateBackendFactory.ISavePointSupport savePoint, IFlinkIncrJobStatus<JobID> status) throws Exception;
+                , IncrStreamFactory.ISavePointSupport savePoint, IFlinkIncrJobStatus<JobID> status) throws Exception;
     }
 
 
@@ -411,7 +478,7 @@ public class FlinkTaskNodeController implements IRCController {
     private class ValidateFlinkJob {
         protected TargetResName collection;
         private final IFlinkIncrJobStatus<JobID> status;
-        private StateBackendFactory.ISavePointSupport savePoint;
+        private IncrStreamFactory.ISavePointSupport savePoint;
         private boolean validateSucess = true;
 
         public ValidateFlinkJob fail() {
@@ -428,7 +495,7 @@ public class FlinkTaskNodeController implements IRCController {
             return status;
         }
 
-        public StateBackendFactory.ISavePointSupport getSavePoint() {
+        public IncrStreamFactory.ISavePointSupport getSavePoint() {
             return savePoint;
         }
 
@@ -446,11 +513,19 @@ public class FlinkTaskNodeController implements IRCController {
             StateBackendFactory stateBackend = factory.stateBackend;
             savePoint = null;
 
-            if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
-                    || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
+            if (!StateBackendFactory.getSavePointSupport(stateBackend).isPresent()) {
                 processCollectionNotSupportSavePoint(stateBackend);
+                if ((stateBackend instanceof IncrStreamFactory.ISavePointSupport)) {
+                    savePoint = (IncrStreamFactory.ISavePointSupport) stateBackend;
+                }
                 return fail();
             }
+
+//            if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
+//                    || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
+//                processCollectionNotSupportSavePoint(stateBackend);
+//                return fail();
+//            }
             return this;
         }
 

@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.impl.DefaultContext;
-import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.UnstructuredStorageReaderUtil;
 import com.qlangtech.tis.annotation.Public;
@@ -37,20 +36,20 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.impl.DefaultFieldErrorHandler;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -63,14 +62,17 @@ import java.util.stream.Collectors;
 @Public
 public class DataXFtpReader extends DataxReader {
     private static final Logger logger = LoggerFactory.getLogger(DataXFtpReader.class);
-    public static final String DATAX_NAME = "FTP";
-    protected static final String KEY_FIELD_PATH = "path";
+    public static final String KEY_DFS_LINKER = "dfsLinker";
 
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-    public String linker;
 
-    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
-    public String path;
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public TDFSLinker dfsLinker;
+
+//    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+//    public String linker;
+//
+//    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
+//    public String path;
 
     @FormField(ordinal = 8, validate = {Validator.require})
     public FileFormat fileFormat;
@@ -84,8 +86,8 @@ public class DataXFtpReader extends DataxReader {
     public String encoding;
     //    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {})
 //    public Boolean skipHeader;
-    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
-    public String nullFormat;
+//    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String nullFormat;
     @FormField(ordinal = 14, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer maxTraversalLevel;
 
@@ -95,7 +97,7 @@ public class DataXFtpReader extends DataxReader {
 
     @Override
     public final TableInDB getTablesInDB() {
-
+        DefaultDescriptor desc = (DefaultDescriptor) this.getDescriptor();
         final TableInDB tableInDB = TableInDB.create(new DBIdentity() {
             @Override
             public boolean isEquals(DBIdentity queryDBSourceId) {
@@ -104,7 +106,7 @@ public class DataXFtpReader extends DataxReader {
 
             @Override
             public String identityValue() {
-                return DATAX_NAME;
+                return desc.getEndType().getVal();
             }
         });
         return tableInDB;
@@ -151,7 +153,7 @@ public class DataXFtpReader extends DataxReader {
     public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(DataXFtpWriter.KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
+            registerSelectOptions(FtpTDFSLinker.KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
         }
 
         @Override
@@ -161,7 +163,7 @@ public class DataXFtpReader extends DataxReader {
 
         @Override
         public EndType getEndType() {
-            return EndType.FTP;
+            return EndType.TDFS;
         }
 
         public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
@@ -181,32 +183,30 @@ public class DataXFtpReader extends DataxReader {
             ).success;
         }
 
-        public boolean validateCsvReaderConfig(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return PluginFieldValidators.validateCsvReaderConfig(msgHandler, context, fieldName, value);
-        }
+
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            DataXFtpReader ftpReader = (DataXFtpReader) postFormVals.newInstance(this, msgHandler);
+//            DataXFtpReader ftpReader = (DataXFtpReader) postFormVals.newInstance(this, msgHandler);
+//
+//            FTPServer server = FTPServer.getServer(ftpReader.linker);
+//            return server.useFtpHelper((ftp) -> {
+//                try {
+//                    HashSet<String> allFiles = ftp.getAllFiles(Collections.singletonList(ftpReader.path), 0, ftpReader.maxTraversalLevel);
+//                    if (CollectionUtils.isEmpty(allFiles)) {
+//                        msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下没有扫描到任何文件，请确认路径是否正确");
+//                        return false;
+//                    }
+//                } catch (DataXException e) {
+//                    logger.warn(e.getMessage(), e);
+//                    msgHandler.addFieldError(context, KEY_FIELD_PATH, "路径配置有误，请确认路径是否正确");
+//                    return false;
+//                }
+//                return true;
+//            });
 
-            FTPServer server = FTPServer.getServer(ftpReader.linker);
-            return server.useFtpHelper((ftp) -> {
-                try {
-                    HashSet<String> allFiles = ftp.getAllFiles(Collections.singletonList(ftpReader.path), 0, ftpReader.maxTraversalLevel);
-                    if (CollectionUtils.isEmpty(allFiles)) {
-                        msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下没有扫描到任何文件，请确认路径是否正确");
-                        return false;
-                    }
-                } catch (DataXException e) {
-                    logger.warn(e.getMessage(), e);
-                    msgHandler.addFieldError(context, KEY_FIELD_PATH, "路径配置有误，请确认路径是否正确");
-                    return false;
-                }
-                return true;
-            });
-
-
+            return true;
         }
 
         @Override
@@ -216,7 +216,7 @@ public class DataXFtpReader extends DataxReader {
 
         @Override
         public String getDisplayName() {
-            return DATAX_NAME;
+            return this.getEndType().name();
         }
     }
 }

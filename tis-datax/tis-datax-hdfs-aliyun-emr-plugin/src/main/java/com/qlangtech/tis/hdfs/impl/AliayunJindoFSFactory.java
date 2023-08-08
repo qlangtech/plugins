@@ -40,7 +40,7 @@ public class AliayunJindoFSFactory extends HdfsFileSystemFactory {
     @FormField(ordinal = 2, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String endpoint;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String bucket;
 
     public static String nullHdfsSiteContent() {
@@ -74,6 +74,10 @@ public class AliayunJindoFSFactory extends HdfsFileSystemFactory {
         public DefaultDescriptor() {
             super();
             registerSelectOptions(FIELD_ENDPOINT, () -> ParamsConfig.getItems(IHttpToken.KEY_FIELD_ALIYUN_TOKEN));
+        }
+
+        protected boolean isFSDefaultNameKeyInValid(String hdfsAddress) {
+            return false;
         }
 
         @Override

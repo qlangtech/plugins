@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.NoneMetaDataWriter;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.collections.CollectionUtils;
@@ -74,9 +75,10 @@ public class TestDataXFtpWriterReal {
         final String targetTableName = "customer_order_relation";
         String testDataXName = "mysql_ftp_for_test";
 
-        final DataXFtpWriter writer = getFTPWriter();
-       // final FTPServer ftpServer = FtpWriterUtils.createFtpServer(ftpContainer);
-         final FTPServer ftpServer = FtpWriterUtils.createFtpServer(null);
+        final FTPServer ftpServer = FtpWriterUtils.createFtpServer(null);
+        // final FTPServer ftpServer = FtpWriterUtils.createFtpServer(ftpContainer);
+        final DataXFtpWriter writer = getFTPWriter(ftpServer);
+
         SetPluginsResult saveResult = ParamsConfig.getTargetPluginStore(FTPServer.FTP_SERVER)
                 .setPlugins(null, Optional.empty(), Lists.newArrayList(new Descriptor.ParseDescribable(ftpServer)));
         Assert.assertTrue(saveResult.success);
@@ -149,9 +151,19 @@ public class TestDataXFtpWriterReal {
 
     }
 
-    private DataXFtpWriter getFTPWriter() {
+    private DataXFtpWriter getFTPWriter(final FTPServer ftpServer) {
         DataXFtpWriter writer = new DataXFtpWriter();
-        writer.path = FTP_PATH;
+        FtpTDFSLinker ftpLinker = new FtpTDFSLinker() {
+            @Override
+            protected FTPServer getFTPServer() {
+                return ftpServer;
+                // return super.getFTPServer();
+            }
+        };
+        ftpLinker.path = FTP_PATH;
+        ftpLinker.linker = FtpWriterUtils.ftpLink;
+        writer.dfsLinker = ftpLinker;
+        // writer.path = FTP_PATH;
         writer.writeMode = "truncate";
         writer.compress = Compress.noCompress.token;
         writer.template = DataXFtpWriter.getDftTemplate();
@@ -159,7 +171,7 @@ public class TestDataXFtpWriterReal {
         writer.fileFormat = txtFormat;
         writer.writeMetaData = new NoneMetaDataWriter();
         // FTPServer ftpServer = FtpWriterUtils.createFtpServer();
-        writer.linker = FtpWriterUtils.ftpLink; //ftpServer;
+        //  writer.linker = FtpWriterUtils.ftpLink; //ftpServer;
         DataxWriter.dataxWriterGetter = (name) -> writer;
         return writer;
     }

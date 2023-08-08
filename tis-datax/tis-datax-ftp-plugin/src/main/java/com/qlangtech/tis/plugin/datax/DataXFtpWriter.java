@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.assemble.FullbuildPhase;
-import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -38,8 +37,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
-import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,13 +52,9 @@ import java.util.stream.Collectors;
  **/
 @Public
 public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
-    public static final String KEY_FTP_SERVER_LINK = "linker";
 
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-    public String linker;
-
-    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
-    public String path;
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public TDFSLinker dfsLinker;
 
     /**
      * 写入数据过程中会在ftp目录中写一份source的元数据
@@ -78,10 +73,9 @@ public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
 
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {})
     public String encoding;
-    @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {})
-    public String nullFormat;
-    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
-    public String dateFormat;
+
+    //    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
+//    public String dateFormat;
     @FormField(ordinal = 14, validate = {Validator.require})
     public FileFormat fileFormat;
 
@@ -92,7 +86,7 @@ public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
 
     @Override
     public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
-        return writeMetaData.createMetaDataWriteTask(this, execContext, tab);
+        return writeMetaData.createMetaDataWriteTask(this.dfsLinker, execContext, tab);
     }
 
     @Override
@@ -130,7 +124,7 @@ public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
-            registerSelectOptions(KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
+            // registerSelectOptions(KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
         }
 
         @Override
@@ -140,7 +134,7 @@ public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
 
         @Override
         public EndType getEndType() {
-            return EndType.FTP;
+            return EndType.TDFS;
         }
 
         @Override
@@ -150,7 +144,7 @@ public class DataXFtpWriter extends DataxWriter implements IDataXBatchPost {
 
         @Override
         public String getDisplayName() {
-            return DataXFtpReader.DATAX_NAME;
+            return getEndType().name();
         }
     }
 }

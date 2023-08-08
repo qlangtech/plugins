@@ -1,0 +1,22 @@
+{
+  "linker": {
+    "help": "描述：Hadoop hdfs文件系统namenode节点地址。格式：hdfs://ip:端口；例如：hdfs://127.0.0.1:9000",
+    "creator": {
+      "label": "管理",
+      "plugin": [
+        {
+          "hetero": "fs",
+          "descName": "HDFS"
+        },
+        {
+          "hetero": "fs",
+          "descName": "Aliyun-Jindo-HDFS"
+        }
+      ]
+    }
+  },
+  "path": {
+    "placeholder": "/order_db/orderfile",
+    "help": "数据文件保存的路径位置"
+  }
+}

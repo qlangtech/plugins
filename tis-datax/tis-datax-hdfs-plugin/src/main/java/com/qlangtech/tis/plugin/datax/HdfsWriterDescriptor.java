@@ -60,7 +60,8 @@ public abstract class HdfsWriterDescriptor extends DataxWriter.BaseDataxWriterDe
 
     @Override
     public EndType getEndType() {
-        return EndType.HDFS;
+       // return EndType.HDFS;
+        throw new UnsupportedOperationException();
     }
 
     @Override

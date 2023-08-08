@@ -22,8 +22,8 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.plugin.datax.DataXFtpWriter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -32,7 +32,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 public class NoneMetaDataWriter extends MetaDataWriter {
 
     @Override
-    public IRemoteTaskTrigger createMetaDataWriteTask(DataXFtpWriter ftpWriter, IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
         return null;
     }
 

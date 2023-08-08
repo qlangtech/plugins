@@ -70,13 +70,13 @@ public class TestDataXFtpWriter {
         // dataXWriter.timeout = 33333;
 //        dataXWriter.username = "test";
 //        dataXWriter.password = "test";
-        dataXWriter.linker = null; //ftpServer;
-        dataXWriter.path = "/tmp/data/";
+        dataXWriter.dfsLinker = null; //ftpServer;
+       // dataXWriter.path = "/tmp/data/";
         // dataXWriter.fileName = "yixiao";
         dataXWriter.writeMode = "truncate";
         //  dataXWriter.fieldDelimiter = ",";
         dataXWriter.encoding = "utf-8";
-        dataXWriter.nullFormat = "\\\\N";
+      //  dataXWriter.nullFormat = "\\\\N";
         // dataXWriter.fileFormat = "text";
         // dataXWriter.suffix = "xxxx";
         // dataXWriter.header = true;
@@ -98,8 +98,8 @@ public class TestDataXFtpWriter {
         // dataXWriter.fieldDelimiter = null;
         dataXWriter.fileFormat = csvFormat;
         dataXWriter.encoding = null;
-        dataXWriter.nullFormat = null;
-        dataXWriter.dateFormat = null;
+//        dataXWriter.nullFormat = null;
+//        dataXWriter.dateFormat = null;
         //dataXWriter.fileFormat = null;
         //dataXWriter.suffix = null;
         //dataXWriter.header = false;

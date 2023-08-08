@@ -161,6 +161,11 @@ public class K8SController implements IRCController {
     }
 
     @Override
+    public void restoreFromCheckpoint(TargetResName resName, Integer checkpointId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void triggerSavePoint(TargetResName collection) {
         throw new UnsupportedOperationException();
     }

@@ -198,10 +198,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 switch (type.type) {
                     case Types.CHAR: {
                         String keyChar = "CHAR";
-                        if (type.columnSize < 1) {
+                        if (type.getColumnSize() < 1) {
                             return keyChar;
                         }
-                        return keyChar + "(" + type.columnSize + ")";
+                        return keyChar + "(" + type.getColumnSize() + ")";
                     }
                     case Types.BIT:
                     case Types.BOOLEAN:
@@ -209,10 +209,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.REAL:
                         return "REAL";
                     case Types.TINYINT: {
-                        return "TINYINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                        return "TINYINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
                     }
                     case Types.SMALLINT: {
-                        return "SMALLINT(" + type.columnSize + ") " + type.getUnsignedToken();
+                        return "SMALLINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
                     }
                     case Types.INTEGER:
                         return "int(11)";
@@ -230,8 +230,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                         return "DOUBLE";
                     case Types.DECIMAL:
                     case Types.NUMERIC: {
-                        if (type.columnSize > 0) {
-                            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+                        if (type.getColumnSize() > 0) {
+                            return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
                         } else {
                             return "DECIMAL";
                         }
@@ -253,10 +253,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.VARBINARY:
                         return "BLOB";
                     case Types.VARCHAR: {
-                        if (type.columnSize > Short.MAX_VALUE) {
+                        if (type.getColumnSize() > Short.MAX_VALUE) {
                             return "TEXT";
                         }
-                        return "VARCHAR(" + type.columnSize + ")";
+                        return "VARCHAR(" + type.getColumnSize() + ")";
                     }
                     default:
                         return "TINYTEXT";

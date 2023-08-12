@@ -102,7 +102,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType bigInt(DataType type) {
                         if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话 建表的ddl会有问题*/) {
-                            DataType t = new DataType(Types.NUMERIC, type.typeName, type.columnSize);
+                            DataType t = new DataType(Types.NUMERIC, type.typeName, type.getColumnSize());
                             t.setDecimalDigits(0);
                             return t;
                         }
@@ -113,7 +113,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     public DataType tinyIntType(DataType dataType) {
                         if (dataType.isUnsigned()) {
                             // 如果为unsigned则会按照一个byte来进行处理，需要将其变成small int
-                            return new DataType(Types.SMALLINT, type.typeName, type.columnSize);
+                            return new DataType(Types.SMALLINT, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -123,7 +123,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
                         if (dataType.isUnsigned()) {
                             // 如果为unsigned则会按照一个short来进行处理，需要将其变成small int
-                            return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                            return new DataType(Types.INTEGER, type.typeName, type.getColumnSize());
                         }
 
                         return null;
@@ -132,7 +132,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType intType(DataType type) {
                         if (type.isUnsigned()) {
-                            return new DataType(Types.BIGINT, type.typeName, type.columnSize);
+                            return new DataType(Types.BIGINT, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -145,7 +145,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType dateType(DataType type) {
                         if ("year".equalsIgnoreCase(type.typeName)) {
-                            return new DataType(Types.INTEGER, type.typeName, type.columnSize);
+                            return new DataType(Types.INTEGER, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -157,8 +157,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
                     @Override
                     public DataType bitType(DataType type) {
-                        if (type.columnSize > 1) {
-                            return new DataType(Types.BINARY, type.typeName, type.columnSize);
+                        if (type.getColumnSize() > 1) {
+                            return new DataType(Types.BINARY, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -170,7 +170,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
                     @Override
                     public DataType varcharType(DataType type) {
-                        if (type.columnSize < 1) {
+                        if (type.getColumnSize() < 1) {
                             // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
                             DataType n = new DataType(Types.VARCHAR, type.typeName, 2000);
                             n.setDecimalDigits(type.getDecimalDigits());

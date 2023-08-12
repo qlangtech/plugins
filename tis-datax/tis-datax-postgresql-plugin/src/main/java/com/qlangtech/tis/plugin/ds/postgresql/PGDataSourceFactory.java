@@ -138,7 +138,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
                     @Override
                     public DataType bitType(DataType type) {
                         if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
-                            return new DataType(Types.BOOLEAN, type.typeName, type.columnSize);
+                            return new DataType(Types.BOOLEAN, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }

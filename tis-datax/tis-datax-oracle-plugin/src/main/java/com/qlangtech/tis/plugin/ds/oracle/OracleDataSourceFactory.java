@@ -219,14 +219,14 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
                 if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
                     int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
                     if (decimalDigits < 1) {
-                        return new DataType(type.columnSize > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.columnSize);
+                        return new DataType(type.getColumnSize() > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.getColumnSize());
                     }
                 }
 
                 // 当MySQL中的Date类型映射到Oracle中时，Oracle作为Sink端应该作为Date类型 https://github.com/qlangtech/tis/issues/192
                 if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
                     // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
-                    return new DataType(Types.DATE, type.typeName, type.columnSize);
+                    return new DataType(Types.DATE, type.typeName, type.getColumnSize());
                 }
 
 

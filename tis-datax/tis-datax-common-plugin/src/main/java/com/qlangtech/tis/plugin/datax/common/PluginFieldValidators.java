@@ -52,6 +52,19 @@ public class PluginFieldValidators {
 
     static {
         ImmutableMap.Builder<String, ValValidator> builder = ImmutableMap.builder();
+
+        // for writer
+        builder.put("forceQualifier", boolValidator);
+
+       // public char TextQualifier = '"';
+       // public boolean UseTextQualifier = true;
+       // public char Delimiter = ',';
+      //  public char RecordDelimiter = 0;
+       // public char Comment = '#';
+       // public int EscapeMode = 1;
+       // public boolean ForceQualifier = false;
+
+        // for reader
         builder.put("caseSensitive", boolValidator);
         builder.put("textQualifier", charValidator);
         builder.put("trimWhitespace", boolValidator);

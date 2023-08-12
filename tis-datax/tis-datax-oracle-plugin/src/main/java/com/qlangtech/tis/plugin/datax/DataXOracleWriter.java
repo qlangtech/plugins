@@ -112,23 +112,23 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                 switch (type.type) {
                     case Types.CHAR: {
                         String keyChar = "CHAR";
-                        if (type.columnSize < 1) {
+                        if (type.getColumnSize() < 1) {
                             return keyChar;
                         }
-                        return keyChar + "(" + type.columnSize + ")";
+                        return keyChar + "(" + type.getColumnSize() + ")";
                     }
                     case Types.BIT:
                     case Types.BOOLEAN:
                         return "NUMBER(1,0)";
                     case Types.REAL: {
-                        if (type.columnSize > 0 && type.getDecimalDigits() > 0) {
+                        if (type.getColumnSize() > 0 && type.getDecimalDigits() > 0) {
                             // 在PG->Oracle情况下，PG中是Real类型 通过jdbc反射得到columnSize和getDecimalDigits()都为8，这样number(8,8)就没有小数位了，出问题了
                             // 在此进行除2处理
                             int scale = type.getDecimalDigits();
-                            if (scale >= type.columnSize) {
+                            if (scale >= type.getColumnSize()) {
                                 scale = scale / 2;
                             }
-                            return "NUMBER(" + type.columnSize + "," + scale + ")";
+                            return "NUMBER(" + type.getColumnSize() + "," + scale + ")";
                         }
                         return "BINARY_FLOAT";
                     }
@@ -144,8 +144,8 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                         return "BINARY_DOUBLE";
                     case Types.DECIMAL:
                     case Types.NUMERIC: {
-                        if (type.columnSize > 0) {
-                            return "DECIMAL(" + Math.min(type.columnSize, 38) + "," + type.getDecimalDigits() + ")";
+                        if (type.getColumnSize() > 0) {
+                            return "DECIMAL(" + Math.min(type.getColumnSize(), 38) + "," + type.getDecimalDigits() + ")";
                         } else {
                             return "DECIMAL";
                         }
@@ -163,10 +163,10 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                     case Types.VARBINARY:
                         return "BLOB";
                     case Types.VARCHAR: {
-                        if (type.columnSize > Short.MAX_VALUE) {
+                        if (type.getColumnSize() > Short.MAX_VALUE) {
                             return "CLOB";
                         }
-                        return "VARCHAR2(" + type.columnSize + " CHAR)";
+                        return "VARCHAR2(" + type.getColumnSize() + " CHAR)";
                     }
                     default:
                         // return "TINYTEXT";

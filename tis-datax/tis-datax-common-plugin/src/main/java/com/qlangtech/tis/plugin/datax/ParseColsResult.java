@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -56,11 +58,41 @@ public class ParseColsResult {
         public boolean process(int colIndex, JSONObject col);
     }
 
+    public static ParseColsResult parseColsResult(String tabName, FileFormat.FileHeader fileHeader) {
+        ParseColsResult parseOSSColsResult = new ParseColsResult();
+        DataXReaderTabMeta tabMeta = new DataXReaderTabMeta(tabName);
+        parseOSSColsResult.tabMeta = tabMeta;
+        boolean containHeader = fileHeader.containHeader();
+        List<String> headerCols = null;
+        if (containHeader) {
+            headerCols = fileHeader.getHeaderCols();
+        }
+        DataXColMeta colMeta = null;
+        if (fileHeader.getTypes().size() != fileHeader.getHeaderCols().size()) {
+            throw new IllegalStateException("fileHeader.getTypes().size():"
+                    + fileHeader.getTypes().size()
+                    + " is not equal with fileHeader.getHeaderCols().size():"
+                    + fileHeader.getHeaderCols().size()
+                    + " colCount:" + fileHeader.colCount);
+        }
+        List<DataType> types = fileHeader.getTypes();
+        for (int index = 0; index < fileHeader.colCount; index++) {
+            colMeta = new DataXColMeta(types.get(index));
+            colMeta.index = index;
+            if (containHeader) {
+                colMeta.name = Objects.requireNonNull(headerCols, "headerCols can not be null").get(index);
+            }
+            tabMeta.cols.add(colMeta);
+        }
+        return parseOSSColsResult.ok();
+    }
+
     public static ParseColsResult parseColsCfg(String tabName, IFieldErrorHandler msgHandler
             , Context context, String fieldName, String value) {
         return parseColsCfg(tabName, msgHandler, context, fieldName, value, (index, col) -> true);
     }
 
+    @Deprecated
     public static ParseColsResult parseColsCfg(String tabName, IFieldErrorHandler msgHandler
             , Context context, String fieldName, String value, IColProcessor colProcessor) {
         ParseColsResult parseOSSColsResult = new ParseColsResult();
@@ -148,6 +180,7 @@ public class ParseColsResult {
         // index和value两个属性为2选1
         private int index;
         private String value;
+        private String name;
 
         public DataXColMeta(DataType parseType) {
             this.parseType = parseType;
@@ -188,7 +221,9 @@ public class ParseColsResult {
             }
             return cols.stream().map((c) -> {
                 CMeta cmeta = new CMeta();
-                cmeta.setName(null);
+                if (StringUtils.isNotBlank(c.name)) {
+                    cmeta.setName(c.name);
+                }
                 cmeta.setType(c.parseType);
                 return cmeta;
             }).collect(Collectors.toList());

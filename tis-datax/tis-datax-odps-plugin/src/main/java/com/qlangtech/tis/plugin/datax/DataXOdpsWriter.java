@@ -241,7 +241,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
         @Override
         public String decimalType(DataType type) {
-            return "DECIMAL(" + type.columnSize + "," + type.getDecimalDigits() + ")";
+            return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
         }
 
         @Override

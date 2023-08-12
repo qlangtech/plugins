@@ -23,8 +23,10 @@ import com.aliyun.oss.model.*;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,6 +51,11 @@ public class OSSSession implements ITDFSSession {
             oss = ossLinker.createOSSClient();
         }
         return oss;
+    }
+
+    @Override
+    public String getRootPath() {
+        return this.ossLinker.path;
     }
 
     @Override
@@ -83,22 +90,22 @@ public class OSSSession implements ITDFSSession {
     }
 
     @Override
-    public HashSet<String> getAllFiles(List<String> srcPaths, int parentLevel, int maxTraversalLevel) {
-        HashSet<String> allFiles = Sets.newHashSet();
+    public HashSet<Res> getAllFiles(List<String> srcPaths, int parentLevel, int maxTraversalLevel) {
+        HashSet<Res> allFiles = Sets.newHashSet();
         for (String path : srcPaths) {
-            getListFiles(allFiles, path, parentLevel, maxTraversalLevel);
+            getListFiles(allFiles, path, Collections.emptyList(), parentLevel, maxTraversalLevel);
         }
         return allFiles;
     }
 
     @Override
-    public HashSet<String> getListFiles(String directoryPath, int parentLevel, int maxTraversalLevel) {
-        HashSet<String> allFiles = Sets.newHashSet();
-        getListFiles(allFiles, directoryPath, parentLevel, maxTraversalLevel);
+    public HashSet<Res> getListFiles(String directoryPath, int parentLevel, int maxTraversalLevel) {
+        HashSet<Res> allFiles = Sets.newHashSet();
+        getListFiles(allFiles, directoryPath, Collections.emptyList(), parentLevel, maxTraversalLevel);
         return allFiles;
     }
 
-    private void getListFiles(HashSet<String> listFiles, String directoryPath, final int parentLevel, final int maxTraversalLevel) {
+    private void getListFiles(HashSet<Res> listFiles, String directoryPath, List<String> relevantPath, final int parentLevel, final int maxTraversalLevel) {
         if (parentLevel >= maxTraversalLevel) {
             //超出最大递归层数
             String message = String.format("获取path：[%s] 下文件列表时超出最大层数,请确认路径[%s]下不存在软连接文件", directoryPath, directoryPath);
@@ -113,14 +120,14 @@ public class OSSSession implements ITDFSSession {
             ObjectListing children = this.getOSS().listObjects(listReq);
             // 文件列表
             for (OSSObjectSummary obj : children.getObjectSummaries()) {
-                listFiles.add(obj.getKey());
+                listFiles.add(new Res(obj.getKey(), Res.buildRelevantPath(relevantPath, StringUtils.substringAfter(obj.getKey(), directoryPath))));
             }
             if (parentLevel + 1 >= maxTraversalLevel) {
                 return;
             }
             // 文件夹列表
             for (String commonPrefix : children.getCommonPrefixes()) {
-                getListFiles(listFiles, directoryPath + commonPrefix, parentLevel + 1, maxTraversalLevel);
+                getListFiles(listFiles, directoryPath + commonPrefix, Res.appendElement(relevantPath, commonPrefix), parentLevel + 1, maxTraversalLevel);
             }
 
             // getListFiles(listFiles, null, parentLevel + 1, maxTraversalLevel);

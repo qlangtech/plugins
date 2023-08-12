@@ -200,7 +200,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
             @Override
             public String decimalType(DataType type) {
                 // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/#decimal
-                return "DECIMAL(" + type.columnSize + ", " + type.getDecimalDigits() + ")";
+                return "DECIMAL(" + type.getColumnSize() + ", " + type.getDecimalDigits() + ")";
             }
 
             @Override
@@ -217,7 +217,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
 
             @Override
             public String bitType(DataType type) {
-                return "BINARY(" + type.columnSize + ")";
+                return "BINARY(" + type.getColumnSize() + ")";
             }
 
             @Override
@@ -227,7 +227,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
 
             @Override
             public String varcharType(DataType type) {
-                return "VARCHAR(" + type.columnSize + ")";
+                return "VARCHAR(" + type.getColumnSize() + ")";
             }
         });
     }

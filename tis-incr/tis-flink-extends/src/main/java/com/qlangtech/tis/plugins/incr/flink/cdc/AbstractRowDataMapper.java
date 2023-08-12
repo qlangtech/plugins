@@ -193,7 +193,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
 
         public FlinkCol decimalType(DataType type) {
-            int precision = type.columnSize;
+            int precision = type.getColumnSize();
             Integer scale = type.getDecimalDigits();
             if (precision < 1 || precision > 38) {
                 precision = 38;
@@ -270,7 +270,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         public FlinkCol varcharType(DataType type) {
             return new FlinkCol(meta //
                     , type
-                    , new AtomicDataType(new VarCharType(nullable, type.columnSize))
+                    , new AtomicDataType(new VarCharType(nullable, type.getColumnSize()))
                     //, DataTypes.VARCHAR(type.columnSize)
                     , new StringConvert()
                     , FlinkCol.NoOp()

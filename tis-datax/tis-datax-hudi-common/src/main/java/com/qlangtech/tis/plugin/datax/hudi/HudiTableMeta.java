@@ -170,9 +170,9 @@ public class HudiTableMeta {
                     public Void decimalType(DataType type) {
                         Objects.requireNonNull(type, "dataType can not be null");
                         // hive精度有限制 HiveDecimalUtils.validateParameter
-                        validateDecimalParameter(type.columnSize, type.getDecimalDigits());
+                        validateDecimalParameter(type.getColumnSize(), type.getDecimalDigits());
                         Schema schema = LogicalTypes.decimal(
-                                type.columnSize, type.getDecimalDigits()).addToSchema(Schema.create(Schema.Type.BYTES));
+                                type.getColumnSize(), type.getDecimalDigits()).addToSchema(Schema.create(Schema.Type.BYTES));
                         addNullableSchema(fields, schema, meta);
                         return null;
                     }

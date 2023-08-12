@@ -27,10 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +39,11 @@ public class HdfsTDFSSession implements ITDFSSession {
 
     HdfsTDFSSession(HdfsTDFDLinker dfsLinker) {
         this.dfsLinker = Objects.requireNonNull(dfsLinker, "dfsLinker can not be null");
+    }
+
+    @Override
+    public String getRootPath() {
+        return dfsLinker.getRootPath();
     }
 
     private ITISFileSystem getFs() {
@@ -78,8 +80,8 @@ public class HdfsTDFSSession implements ITDFSSession {
     }
 
     @Override
-    public HashSet<String> getAllFiles(List<String> srcPaths, int parentLevel, int maxTraversalLevel) {
-        HashSet<String> paths = new HashSet<>();
+    public HashSet<Res> getAllFiles(List<String> srcPaths, int parentLevel, int maxTraversalLevel) {
+        HashSet<Res> paths = new HashSet<>();
         for (String path : srcPaths) {
             paths.addAll(getListFiles(path, parentLevel, maxTraversalLevel));
         }
@@ -87,25 +89,28 @@ public class HdfsTDFSSession implements ITDFSSession {
     }
 
     @Override
-    public HashSet<String> getListFiles(String directoryPath, int parentLevel, int maxTraversalLevel) {
+    public HashSet<Res> getListFiles(String directoryPath, int parentLevel, int maxTraversalLevel) {
         ITISFileSystem fs = getFs();
-        HashSet<String> sourceFiles = new HashSet<>();
-        this.getListFiles(sourceFiles, fs, fs.getPath(directoryPath), parentLevel, maxTraversalLevel);
+        HashSet<Res> sourceFiles = new HashSet<>();
+        this.getListFiles(sourceFiles, fs, fs.getPath(directoryPath), Collections.emptyList(), parentLevel, maxTraversalLevel);
         return sourceFiles;
     }
 
-    private void getListFiles(HashSet<String> sourceFiles, ITISFileSystem fs, IPath directoryPath, int parentLevel, int maxTraversalLevel) {
+    private void getListFiles(HashSet<Res> sourceFiles, ITISFileSystem fs, IPath directoryPath, List<String> relevantPaths, int parentLevel, int maxTraversalLevel) {
         if (parentLevel < maxTraversalLevel) {
             List<IPathInfo> children = fs.listChildren(directoryPath);
             for (IPathInfo path : children) {
                 if (path.isDir()) {
-                    getListFiles(sourceFiles, fs, path.getPath(), parentLevel + 1, maxTraversalLevel);
+                    getListFiles(sourceFiles, fs, path.getPath()
+                            , Res.appendElement(relevantPaths, path.getName())
+                            , parentLevel + 1, maxTraversalLevel);
                 } else {
-                    sourceFiles.add(String.valueOf(path.getPath()));
+                    sourceFiles.add(new Res(String.valueOf(path.getPath()), Res.buildRelevantPath(relevantPaths, path.getName())));
                 }
             }
         }
     }
+
 
     @Override
     public OutputStream getOutputStream(String filePath, boolean append) {

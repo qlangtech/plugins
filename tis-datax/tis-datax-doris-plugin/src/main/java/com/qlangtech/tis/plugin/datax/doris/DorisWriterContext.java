@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriterContext;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
@@ -31,11 +32,11 @@ import org.apache.commons.lang.StringUtils;
  * @create: 2021-09-07 09:58
  **/
 public class DorisWriterContext extends RdbmsWriterContext<DataXDorisWriter, DorisSourceFactory> {
-    private final DorisSelectedTab dorisTab;
+    private final ISelectedTab dorisTab;
 
     public DorisWriterContext(DataXDorisWriter writer, IDataxProcessor.TableMap tabMapper) {
         super(writer, tabMapper);
-        this.dorisTab = (DorisSelectedTab) tabMapper.getSourceTab();
+        this.dorisTab = tabMapper.getSourceTab();
     }
 
     public String getDataXName() {
@@ -58,7 +59,10 @@ public class DorisWriterContext extends RdbmsWriterContext<DataXDorisWriter, Dor
 
         // if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
         JSONObject props = JSON.parseObject(this.plugin.loadProps);
-        dorisTab.seqKey.appendBatchCfgs(props);
+        if (dorisTab instanceof DorisSelectedTab) {
+            ((DorisSelectedTab) dorisTab).seqKey.appendBatchCfgs(props);
+        }
+
         return JsonUtil.toString(props);
         //}
 

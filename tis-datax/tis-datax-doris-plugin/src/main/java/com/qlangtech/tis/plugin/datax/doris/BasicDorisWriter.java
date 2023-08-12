@@ -22,7 +22,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -32,6 +31,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
@@ -52,7 +52,6 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     public String loadProps;
     @FormField(ordinal = 11, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer maxBatchRows;
-
 
 
     /**
@@ -97,11 +96,12 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
-        private final DorisSelectedTab dorisTab;
+        private final ISelectedTab dorisTab;
 
         public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta) {
             super(tableMapper, dsMeta);
-            this.dorisTab = (DorisSelectedTab) tableMapper.getSourceTab();
+            // (DorisSelectedTab)
+            this.dorisTab = tableMapper.getSourceTab();
         }
 
         @Override
@@ -146,9 +146,11 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             }
             script.append(")\n");
             script.append("BUCKETS 10\n");
-
-
-            StringBuffer seqBuffer =  dorisTab.seqKey.createDDLScript(this.tableMapper);// new StringBuffer();
+            StringBuffer seqBuffer = new StringBuffer();
+            if (dorisTab instanceof DorisSelectedTab) {
+                seqBuffer = ((DorisSelectedTab) dorisTab).seqKey.createDDLScript(this.tableMapper);
+            }
+          //  StringBuffer seqBuffer = dorisTab// new StringBuffer();
 //            if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
 //
 //                List<CMeta> cols = this.tableMapper.getSourceCols();
@@ -248,7 +250,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         public DorisType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
-            return new DorisType(type, "VARCHAR(" + Math.min(type.columnSize * 3, 65000) + ")");
+            return new DorisType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
         }
 
         @Override
@@ -264,7 +266,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         public DorisType decimalType(DataType type) {
             // doris or starRocks precision 不能超过超过半27
-            return new DorisType(type, "DECIMAL(" + Math.min(type.columnSize, 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
+            return new DorisType(type, "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
         }
     };
 
@@ -327,17 +329,5 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         protected abstract String getRowDelimiterKey();
 
         protected abstract String getColSeparatorKey();
-
-
-//        @Override
-//        public  abstract EndType getEndType();
-//        {
-//            return EndType.StarRocks;
-//        }
-
-//        @Override
-//        public String getDisplayName() {
-//            return DorisSourceFactory.NAME_DORIS;
-//        }
     }
 }

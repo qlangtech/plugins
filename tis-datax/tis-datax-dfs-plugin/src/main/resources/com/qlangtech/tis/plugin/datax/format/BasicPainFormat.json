@@ -1,0 +1,43 @@
+{
+  "dateFormat": {
+    "label": "日期格式",
+    "help": "描述：日期类型的数据序列化到文件中时的格式，例如 \"dateFormat\": \"yyyy-MM-dd\"。",
+    "dftVal": "yyyy-MM-dd"
+  },
+  "nullFormat": {
+    "label": "空值替代符",
+    "help": "描述：文本文件中无法使用标准字符串定义null(空指针)，DataX提供nullFormat定义哪些字符串可以表示为null。例如如果用户配置: nullFormat=\"\\N\"，那么如果源头数据是\"\\N\"，DataX视作null字段。",
+    "dftVal": "null"
+  },
+  "fieldDelimiter": {
+    "label": "字段分隔符",
+    "help": "描述：读取的字段分隔符，可以用'\\t','\\001'等字符 ",
+    "dftVal": "comma",
+    "enum": "com.qlangtech.tis.datax.Delimiter.options()"
+  },
+  "header": {
+    "help": "描述：写出时的表头，列名(s)是否在文件头写入",
+    "dftVal": true,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  },
+  "compress": {
+    "label": "压缩格式",
+    "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。 ",
+    "enum": "com.qlangtech.tis.plugin.datax.DataXDFSReader.supportCompress()",
+    "dftVal": "none"
+  },
+  "encoding": {
+    "help": "描述：读取文件的编码配置。",
+    "dftVal": "utf-8",
+    "enum": "com.qlangtech.tis.manage.common.TisUTF8.allSupported()"
+  }
+}

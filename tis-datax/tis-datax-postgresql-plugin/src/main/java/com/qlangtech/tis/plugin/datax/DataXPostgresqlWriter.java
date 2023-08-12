@@ -136,7 +136,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
                     @Override
                     public String varcharType(DataType type) {
-                        return "VARCHAR(" + type.columnSize + ")";
+                        return "VARCHAR(" + type.getColumnSize() + ")";
                     }
 
                     @Override

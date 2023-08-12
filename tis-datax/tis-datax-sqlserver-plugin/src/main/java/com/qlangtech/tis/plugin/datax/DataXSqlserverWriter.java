@@ -113,11 +113,11 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                         //https://learn.microsoft.com/en-us/sql/t-sql/data-types/binary-and-varbinary-transact-sql?view=sql-server-ver16
                         // Variable-length binary data. n can be a value from 1 through 8,000.
                         // type.columnSize 可能为0 所以要用Math.max() 调整一下
-                        return "varbinary(" + Math.min(Math.max(type.columnSize, 300), 8000) + ")";
+                        return "varbinary(" + Math.min(Math.max(type.getColumnSize(), 300), 8000) + ")";
                     case Types.LONGVARCHAR:
                         return "text";
                     default:
-                        return "varchar(" + type.columnSize + ")";
+                        return "varchar(" + type.getColumnSize() + ")";
                 }
             }
 

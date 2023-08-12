@@ -1,0 +1,17 @@
+{
+  "dfsLinker": {
+    "label": "资源",
+    "help": "FTP服务端连接配置"
+  },
+  "resMatcher": {
+    "label": "目标文件匹配",
+    "dftVal": "Wildcard"
+  },
+  "fileFormat": {
+    "help": "可以根据目标文件不同的格式，对文件进行解析",
+    "label": "文件格式"
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.DataXDFSReader.getDftTemplate()"
+  }
+}

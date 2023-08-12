@@ -232,7 +232,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         @Override
         public DorisType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
-            return new DorisType(type, "VARCHAR(" + Math.min(type.columnSize * 3, 65000) + ")");
+            return new DorisType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
         }
 
         @Override
@@ -248,7 +248,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         @Override
         public DorisType decimalType(DataType type) {
             // doris or starRocks precision 不能超过超过半27
-            return new DorisType(type, "DECIMAL(" + Math.min(type.columnSize, 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
+            return new DorisType(type, "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
         }
     };
 

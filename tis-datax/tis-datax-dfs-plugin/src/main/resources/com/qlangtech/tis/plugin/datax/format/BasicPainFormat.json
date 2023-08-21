@@ -1,4 +1,9 @@
 {
+  "guessFieldType": {
+    "label": "猜测字段类型",
+    "help": "通过TIS提供的的内部算法，尝试读取部分DFS文件内容，猜测对应列的类型，以帮助最大化提高录入表单效率。最后通过分析得到的类型不够准确，需要用户手动微调。",
+    "dftVal": "on"
+  },
   "dateFormat": {
     "label": "日期格式",
     "help": "描述：日期类型的数据序列化到文件中时的格式，例如 \"dateFormat\": \"yyyy-MM-dd\"。",
@@ -32,7 +37,7 @@
   "compress": {
     "label": "压缩格式",
     "help": "描述：文本压缩类型，默认不填写意味着没有压缩。支持压缩类型为zip、gzip、bzip2。 ",
-    "enum": "com.qlangtech.tis.plugin.datax.DataXDFSReader.supportCompress()",
+    "enum": "com.qlangtech.tis.plugin.datax.format.BasicPainFormat.supportCompress()",
     "dftVal": "none"
   },
   "encoding": {

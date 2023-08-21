@@ -37,6 +37,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
+ * Hive meta store
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-07-21 16:35
  **/

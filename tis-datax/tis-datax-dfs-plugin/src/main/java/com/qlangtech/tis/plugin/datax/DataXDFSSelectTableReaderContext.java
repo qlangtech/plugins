@@ -18,21 +18,40 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import org.apache.commons.io.IOUtils;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.tdfs.IDFSReader;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import org.apache.commons.lang.StringUtils;
+
+import java.io.File;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-04-07 09:20
  **/
 public class DataXDFSSelectTableReaderContext extends DataXDFSReaderContext {
-    private final SelectedTab tab;
+    private final ISelectedTab tab;
     private final int currentIndex;
 
-    public DataXDFSSelectTableReaderContext(DataXDFSReader reader, SelectedTab tab, int currentIndex) {
+    public DataXDFSSelectTableReaderContext(IDFSReader reader, ISelectedTab tab, int currentIndex) {
         super(reader);
         this.tab = tab;
         this.currentIndex = currentIndex;
+    }
+
+    public static String buildMetaAwareDFSTargetPath(TDFSLinker dfsLinker , String tabName) {
+        String dfsPath = IPath.pathConcat(dfsLinker.getRootPath(), tabName);
+        String[] pathSplit = StringUtils.split(dfsLinker.getRootPath(), File.separator);
+        if (pathSplit.length > 0) {
+            /**
+             * TDFSLinker 的path 设置 为 meta.json 的直接父目录的话，则不需要再在path 添加表名称了，不然路径不对了
+             */
+            if (pathSplit[pathSplit.length - 1].equals(tabName)) {
+                dfsPath = dfsLinker.getRootPath();
+            }
+        }
+        return dfsPath;
     }
 
     @Override
@@ -42,9 +61,12 @@ public class DataXDFSSelectTableReaderContext extends DataXDFSReaderContext {
 
     @Override
     public String getPath() {
-        String path = this.reader.dfsLinker.getRootPath();
-        boolean endWithSlash = StringUtils.endsWith(path, String.valueOf(IOUtils.DIR_SEPARATOR));
-        return path + (endWithSlash ? StringUtils.EMPTY : IOUtils.DIR_SEPARATOR) + tab.getName();
+
+        return buildMetaAwareDFSTargetPath(this.reader.getDfsLinker(), tab.getName());
+//        String path = this.reader.getDfsLinker().getRootPath();
+//        return IPath.pathConcat(path,tab.getName());
+//        boolean endWithSlash = StringUtils.endsWith(path, String.valueOf(IOUtils.DIR_SEPARATOR));
+//        return path + (endWithSlash ? StringUtils.EMPTY : IOUtils.DIR_SEPARATOR) + tab.getName();
     }
 
     @Override

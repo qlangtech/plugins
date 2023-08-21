@@ -39,7 +39,10 @@
     </scm>
 
     <dependencies>
-
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-aliyun-oss-common</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

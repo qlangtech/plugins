@@ -45,6 +45,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-dfs-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-common</artifactId>
             <scope>provided</scope>
@@ -72,14 +78,11 @@
             <scope>provided</scope>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
-<!--            <artifactId>tis-datax-hdfs-plugin</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
-
-
-
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+        <!--            <artifactId>tis-datax-hdfs-plugin</artifactId>-->
+        <!--            <version>${project.version}</version>-->
+        <!--        </dependency>-->
 
 
         <dependency>
@@ -102,8 +105,6 @@
             <artifactId>tis-sql-parser</artifactId>
             <scope>provided</scope>
         </dependency>
-
-
 
 
         <dependency>

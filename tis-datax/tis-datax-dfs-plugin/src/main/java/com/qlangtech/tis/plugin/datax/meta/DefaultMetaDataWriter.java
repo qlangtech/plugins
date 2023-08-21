@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -64,7 +65,7 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
 
     @Override
     public String getDfsTargetDir(TDFSLinker dfsLinker, String tableName) {
-        return dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR + tableName;  //super.getFtpTargetDir(writer);
+        return IPath.pathConcat(dfsLinker.getRootPath(), tableName);  //super.getFtpTargetDir(writer);
     }
 
     /**
@@ -94,13 +95,13 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
                 // FTPServer ftp = FTPServer.getServer(ftpWriter.dfsLinker);
 
                 dfsLinker.useTdfsSession((ftpHelper) -> {
-                    String ftpDir = dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR + tab.getName();
+                    String ftpDir = IPath.pathConcat(dfsLinker.getRootPath(), tab.getName());
 
                     ftpHelper.mkDirRecursive(ftpDir);
 
                     try (OutputStream metaWriter
                                  = ftpHelper.getOutputStream(
-                            ftpDir + IOUtils.DIR_SEPARATOR + FtpHelper.KEY_META_FILE, false)) {
+                            IPath.pathConcat(ftpDir, FtpHelper.KEY_META_FILE), false)) {
 
                         JSONArray fields = new JSONArray();
                         JSONObject field = null;

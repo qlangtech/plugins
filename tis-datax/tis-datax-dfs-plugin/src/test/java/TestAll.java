@@ -22,6 +22,7 @@ import com.qlangtech.tis.plugin.datax.TestDataXDFSWriter;
 import com.qlangtech.tis.plugin.datax.TestDataXDFSWriterReal;
 import com.qlangtech.tis.plugin.datax.format.TestCSVFormat;
 import com.qlangtech.tis.plugin.datax.format.TestTextFormat;
+import com.qlangtech.tis.plugin.datax.resmatcher.TestMetaAwareDFSResMatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -36,7 +37,8 @@ import org.junit.runners.Suite;
                 , TestDataXDFSWriterReal.class
                 , TestDataXDFSReaderWithMeta.class
                 , TestCSVFormat.class
-                , TestTextFormat.class})
+                , TestTextFormat.class
+                , TestMetaAwareDFSResMatcher.class})
 public class TestAll {
 //    public static Test suite() {
 //        TestSuite suite = new TestSuite();

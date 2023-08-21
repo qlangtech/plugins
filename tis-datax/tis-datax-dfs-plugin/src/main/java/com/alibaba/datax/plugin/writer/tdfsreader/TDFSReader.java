@@ -24,13 +24,14 @@ import com.alibaba.datax.plugin.reader.ftpreader.FtpReader;
 import com.alibaba.datax.plugin.unstructuredstorage.reader.ColumnEntry;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.TableAlias;
-import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.plugin.datax.DataXDFSReader;
+import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -42,7 +43,7 @@ import java.util.function.Function;
 public class TDFSReader extends FtpReader {
 
     public static class Job extends FtpReader.Job {
-        private DataXDFSReader reader;
+        private AbstractDFSReader reader;
 
         @Override
         public void init() {
@@ -51,19 +52,24 @@ public class TDFSReader extends FtpReader {
         }
 
         @Override
-        protected Set<ITDFSSession.Res> findAllMatchedRes(ITDFSSession dfsSession) {
-            return reader.resMatcher.findAllRes(dfsSession);
+        protected Set<ITDFSSession.Res> findAllMatchedRes(List<String> targetPath, ITDFSSession dfsSession) {
+            if (CollectionUtils.isEmpty(targetPath)) {
+                throw new IllegalArgumentException("param targetPath can not be null");
+            }
+            return reader.resMatcher.findAllRes(dfsSession, targetPath);
         }
 
         @Override
         protected ITDFSSession createTdfsSession() {
-            return reader.dfsLinker.createTdfsSession();
+            return Objects.requireNonNull(reader.dfsLinker
+                    , "reader.dfsLinker can not be null").createTdfsSession();
         }
     }
 
     public static class Task extends FtpReader.Task {
-        private DataXDFSReader reader;
+        private AbstractDFSReader reader;
         private List<ColumnEntry> cols;
+        private FileFormat fileFormat;
 
         @Override
         public void init() {
@@ -71,29 +77,59 @@ public class TDFSReader extends FtpReader {
             super.init();
         }
 
+        /**
+         * @param paths     value of Key.PATH
+         * @param processor
+         * @return
+         */
+        private DFSResMatcher.SourceColsMeta getSourceColsMeta(ITDFSSession hdfsSession, Optional<String> entityName, List<String> paths, IDataxProcessor processor) {
+            if (CollectionUtils.isEmpty(paths)) {
+                throw new IllegalArgumentException("param path can not be empty");
+            }
+            if (hdfsSession == null) {
+                throw new IllegalArgumentException("param hdfsSession can not be null");
+            }
+            for (String path : paths) {
+                return this.reader.resMatcher.getSourceColsMeta(hdfsSession, entityName, path, processor);
+            }
+            throw new IllegalStateException(" can not find relevant instance of SourceColsMeta");
+        }
+
         @Override
-        protected List<ColumnEntry> createColsMeta() {
+        protected List<ColumnEntry> createColsMeta(Optional<String> entityName) {
 
             if (this.cols == null) {
                 IDataxProcessor processor = DataxProcessor.load(null, containerContext.getTISDataXName());
-                TableAliasMapper tabAlias = processor.getTabAlias(null);
-                Optional<TableAlias> findMapper = tabAlias.findFirst();
-                IDataxProcessor.TableMap tabMapper
-                        = (IDataxProcessor.TableMap) findMapper.orElseThrow(() -> new NullPointerException("TableAlias can not be null"));
-                // BasicPainFormat fileFormat = (BasicPainFormat) reader.fileFormat;
 
+                DFSResMatcher.SourceColsMeta sourceCols = this.getSourceColsMeta(this.hdfsSession, entityName, getPaths(this.getPluginJobConf()), processor);
+
+
+//                TableAliasMapper tabAlias = processor.getTabAlias(null);
+//                Optional<TableAlias> findMapper = tabAlias.findFirst();
+//                IDataxProcessor.TableMap tabMapper
+//                        = (IDataxProcessor.TableMap) findMapper.orElseThrow(() -> new NullPointerException("TableAlias can not be null"));
+//                // BasicPainFormat fileFormat = (BasicPainFormat) reader.fileFormat;
+//                List<CMeta> sourceCols = tabMapper.getSourceCols();
                 this.cols = Lists.newArrayList();
                 ColumnEntry ce = null;
-                List<CMeta> sourceCols = tabMapper.getSourceCols();
+                this.fileFormat = reader.getFileFormat(entityName);
                 Function<String, Column> colValCreator = null;
                 int index = 0;
-                for (CMeta c : sourceCols) {
-                    ce = new ColumnEntry();
-                    ce.setIndex(index++);
-                    colValCreator = reader.fileFormat.buildColValCreator(c);
-                    ce.setColName(c.getName());
-                    ce.setType(c.getType().typeName, colValCreator);
-                    cols.add(ce);
+                for (CMeta c : sourceCols.getColsMeta()) {
+                    try {
+                        if (!sourceCols.colSelected(c.getName())) {
+                            // source 表选择了部分列的情况下
+                            continue;
+                        }
+                        ce = new ColumnEntry();
+                        ce.setIndex(index);
+                        colValCreator = this.fileFormat.buildColValCreator(c);
+                        ce.setColName(c.getName());
+                        ce.setType(c.getType().typeName, colValCreator);
+                        cols.add(ce);
+                    } finally {
+                        index++;
+                    }
                 }
                 this.cols = Collections.unmodifiableList(this.cols);
             }
@@ -106,15 +142,15 @@ public class TDFSReader extends FtpReader {
             //  this.nullFormat = this.reader.fileFormat
 
             this.unstructuredReaderCreator = (reader) -> {
-                return this.reader.fileFormat.createReader(reader);
+                return Objects.requireNonNull(this.fileFormat, "fileFormat can not be null").createReader(reader);
             };
             return reader.dfsLinker.createTdfsSession();
         }
     }
 
 
-    private static DataXDFSReader getDfsReader(IJobContainerContext containerContext) {
-        return Objects.requireNonNull((DataXDFSReader) DataxReader.load(null, containerContext.getTISDataXName())
+    private static AbstractDFSReader getDfsReader(IJobContainerContext containerContext) {
+        return Objects.requireNonNull((AbstractDFSReader) DataxReader.load(null, containerContext.getTISDataXName())
                 , "writer can not be null");
     }
 }

@@ -27,13 +27,14 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
-import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
-import com.qlangtech.tis.plugin.datax.format.WildcardDFSResMatcher;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter;
+import com.qlangtech.tis.plugin.datax.resmatcher.WildcardDFSResMatcher;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -50,6 +51,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,18 +66,53 @@ import java.util.stream.Collectors;
  * @see com.qlangtech.tis.plugin.datax.meta.DefaultMetaDataWriter
  **/
 @Public
-public class DataXDFSReaderWithMeta extends DataXDFSReader {
+public class DataXDFSReaderWithMeta extends AbstractDFSReader {
 
 
-    @SubForm(desClazz = SelectedTab.class
-            , idListGetScript = "return com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta.getDFSFiles(filter);", atLeastOne = true)
-    public transient List<SelectedTab> selectedTabs;
+//    @SubForm(desClazz = SelectedTab.class
+//            , idListGetScript = "return com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta.getDFSFiles(filter);", atLeastOne = true)
+//    public transient List<SelectedTab> selectedTabs;
 
     public DataXDFSReaderWithMeta() {
         WildcardDFSResMatcher matcher = new WildcardDFSResMatcher();
         matcher.maxTraversalLevel = 2;
         matcher.wildcard = "*" + FtpHelper.KEY_META_FILE;
         this.resMatcher = matcher;
+    }
+
+    public static List<ColumnMetaData> getDFSFileMetaData(String metaParentPath, ITDFSSession dfs) {
+        final String dfsPath = IPath.pathConcat(metaParentPath, FtpHelper.KEY_META_FILE);
+        return getMetaData(dfsPath, dfs);
+    }
+
+
+    private static List<ColumnMetaData> getMetaData(final String dfsPath, ITDFSSession dfs) {
+        String content = null;
+        try (InputStream reader = Objects.requireNonNull(dfs.getInputStream(dfsPath)
+                , "path:" + dfsPath + " relevant InputStream can not null")) {
+            content = IOUtils.toString(reader, TisUTF8.get());
+
+            JSONArray fields = JSONArray.parseArray(content);
+            return DefaultMetaDataWriter.deserialize(fields);
+        } catch (Exception e) {
+            throw new RuntimeException(content, e);
+        }
+    }
+
+    private List<ColumnMetaData> getFTPFileMetaData(EntityName table, ITDFSSession dfs) {
+
+        final String ftpPath = IPath.pathConcat(this.dfsLinker.getRootPath(),
+                table.getTabName(), FtpHelper.KEY_META_FILE);
+        return getMetaData(ftpPath, dfs);
+
+//        try (InputStream reader = Objects.requireNonNull(ftp.getInputStream(ftpPath), "path:" + ftpPath + " relevant InputStream can not null")) {
+//            content = IOUtils.toString(reader, TisUTF8.get());
+//
+//            JSONArray fields = JSONArray.parseArray(content);
+//            return DefaultMetaDataWriter.deserialize(fields);
+//        } catch (Exception e) {
+//            throw new RuntimeException(content, e);
+//        }
     }
 
     @Override
@@ -89,20 +126,6 @@ public class DataXDFSReaderWithMeta extends DataXDFSReader {
 //        });
     }
 
-    private List<ColumnMetaData> getFTPFileMetaData(EntityName table, ITDFSSession ftp) {
-        String content = null;
-        final String ftpPath = this.dfsLinker.getRootPath() + IOUtils.DIR_SEPARATOR
-                + table.getTabName() + IOUtils.DIR_SEPARATOR + FtpHelper.KEY_META_FILE;
-
-        try (InputStream reader = Objects.requireNonNull(ftp.getInputStream(ftpPath), "path:" + ftpPath + " relevant InputStream can not null")) {
-            content = IOUtils.toString(reader, TisUTF8.get());
-
-            JSONArray fields = JSONArray.parseArray(content);
-            return DefaultMetaDataWriter.deserialize(fields);
-        } catch (Exception e) {
-            throw new RuntimeException(content, e);
-        }
-    }
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
@@ -171,48 +194,74 @@ public class DataXDFSReaderWithMeta extends DataXDFSReader {
         return this.selectedTabs.stream().collect(Collectors.toList());
     }
 
+    @Override
+    public FileFormat getFileFormat(Optional<String> entityName) {
+        throw new UnsupportedOperationException();
+    }
+
     public static final Pattern FTP_FILE_PATTERN
             = Pattern.compile(".+?([^/]+)" + IOUtils.DIR_SEPARATOR + StringUtils.replace(FtpHelper.KEY_META_FILE, ".", "\\."));
 
     public static List<String> getDFSFiles(IPropertyType.SubFormFilter filter) {
-        DataXDFSReaderWithMeta reader = DataxReader.getDataxReader(filter);
-        return getFTPFiles(reader);
+        AbstractDFSReader reader = DataxReader.getDataxReader(filter);
+        return getFTPFiles(reader).stream().map((meta) -> meta.entityName).collect(Collectors.toList());
+    }
+
+    public static TargetResMeta getTargetResMeta(ITDFSSession.Res meta) {
+        return getTargetResMeta(meta.fullPath);
+    }
+
+    public static TargetResMeta getTargetResMeta(String fullMetapath) {
+        Matcher matcher = FTP_FILE_PATTERN.matcher(fullMetapath);
+        String resEntityName = null;
+        if (matcher.matches()) {
+            resEntityName = (matcher.group(1));
+        } else {
+            // throw new IllegalStateException("target res:" + fullMetapath + " is not match Pattern:" + FTP_FILE_PATTERN);
+            return null;
+        }
+        return new TargetResMeta(resEntityName, (dfs) -> {
+            return getMetaData(fullMetapath, dfs);
+        });
+    }
+
+    public static class TargetResMeta {
+        private final String entityName;
+        private Function<ITDFSSession, List<ColumnMetaData>> colsMetaCreator;
+
+        public TargetResMeta(String entityName, Function<ITDFSSession, List<ColumnMetaData>> colsMetaCreator) {
+            this.entityName = entityName;
+            this.colsMetaCreator = colsMetaCreator;
+        }
+
+        public String getEntityName() {
+            return entityName;
+        }
+
+        public List<ColumnMetaData> getColsMeta(ITDFSSession dfs) {
+            return colsMetaCreator.apply(dfs);
+        }
     }
 
 
-    public static List<String> getFTPFiles(DataXDFSReaderWithMeta reader) {
+    public static List<TargetResMeta> getFTPFiles(AbstractDFSReader reader) {
 
         return reader.dfsLinker.useTdfsSession((ftp) -> {
-            List<String> ftpFiles = Lists.newArrayList();
-            Matcher matcher = null;
-            Set<ITDFSSession.Res> allRes = reader.resMatcher.findAllRes(ftp);
+            List<TargetResMeta> ftpFiles = Lists.newArrayList();
+            Set<ITDFSSession.Res> allRes = ftp.getListFiles(ftp.getRootPath(), 0, reader.resMatcher.maxTraversalLevel);
+            TargetResMeta m = null;
             for (ITDFSSession.Res meta : allRes) {
-                matcher = FTP_FILE_PATTERN.matcher(meta.fullPath);
-                if (matcher.matches()) {
-                    ftpFiles.add(matcher.group(1));
+                m = getTargetResMeta(meta);
+                if (m != null) {
+                    ftpFiles.add(m);
                 }
             }
             return ftpFiles;
         });
-
-//
-//        FTPServer server = FTPServer.getServer(reader.linker);
-//        return server.useFtpHelper((ftp) -> {
-//            List<String> ftpFiles = Lists.newArrayList();
-//            Matcher matcher = null;
-//            HashSet<String> files = ftp.getListFiles(reader.path, 0, 2);
-//            for (String file : files) {
-//                matcher = FTP_FILE_PATTERN.matcher(file);
-//                if (matcher.matches()) {
-//                    ftpFiles.add(matcher.group(1));
-//                }
-//            }
-//            return ftpFiles;
-//        });
     }
 
 
-    @TISExtension()
+    // @TISExtension()
     public static class DefaultDescriptor extends DataXDFSReader.DefaultDescriptor {
         public DefaultDescriptor() {
             super();
@@ -232,15 +281,15 @@ public class DataXDFSReaderWithMeta extends DataXDFSReader {
         }
 
         @Override
-        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
             return this.verify(msgHandler, context, postFormVals);
         }
 
         @Override
-        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
             DataXDFSReaderWithMeta dataxReader = (DataXDFSReaderWithMeta) postFormVals.newInstance(this, msgHandler);
 
-            List<String> ftpFiles = DataXDFSReaderWithMeta.getFTPFiles(dataxReader);
+            List<TargetResMeta> ftpFiles = DataXDFSReaderWithMeta.getFTPFiles(dataxReader);
             if (CollectionUtils.isEmpty(ftpFiles)) {
                 msgHandler.addFieldError(context, KEY_DFS_LINKER, "该路径下未扫描到" + super.getDisplayName() + "元数据文件:" + FtpHelper.KEY_META_FILE);
                 return false;

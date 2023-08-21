@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.Delimiter;
@@ -69,31 +70,19 @@ public class TestDataXHiveWriterDump {
         System.setProperty(DataxUtils.EXEC_TIMESTAMP, String.valueOf(currentTimeStamp));
     }
 
+    static final String hiveDbName = "default";
+
     @Test
     public void testDataDump() throws Exception {
 
         HdfsFileSystemFactory hdfsFileSystemFactory = HdfsFileSystemFactoryTestUtils.getFileSystemFactory();
         IDataxProcessor.TableMap applicationTab = TestDataXHiveWriter.getApplicationTab();
 
-        final String hiveDbName = "default";
 
         final DataXHiveWriter dataxWriter = new DataXHiveWriter() {
             @Override
             public Hiveserver2DataSourceFactory getDataSourceFactory() {
-                Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
-                hiveDS.name = "hive200";
-                hiveDS.dbName = hiveDbName;
-
-                HiveMeta meta = new HiveMeta();
-                meta.metaStoreUrls = "thrift://192.168.28.200:9083";
-                meta.userToken = UserTokenUtils.createKerberosToken();
-                hiveDS.metadata = meta;
-
-                Hms hms2 = new Hms();
-                hms2.hiveAddress = "192.168.28.200:10000";
-                hms2.userToken = UserTokenUtils.createKerberosToken();
-                hiveDS.hms = hms2;
-                return hiveDS;
+                return createHiveserver2DataSourceFactory(UserTokenUtils.createKerberosToken());
             }
 
             @Override
@@ -176,6 +165,23 @@ public class TestDataXHiveWriterDump {
 
 
         EasyMock.verify(execContext, processor);
+    }
+
+    public static Hiveserver2DataSourceFactory createHiveserver2DataSourceFactory(UserToken authToken) {
+        Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
+        hiveDS.name = "hive200";
+        hiveDS.dbName = hiveDbName;
+
+        HiveMeta meta = new HiveMeta();
+        meta.metaStoreUrls = "thrift://192.168.28.200:9083";
+        meta.userToken = authToken; // UserTokenUtils.createKerberosToken();
+        hiveDS.metadata = meta;
+
+        Hms hms2 = new Hms();
+        hms2.hiveAddress = "192.168.28.200:10000";
+        hms2.userToken = authToken;// UserTokenUtils.createKerberosToken();
+        hiveDS.hms = hms2;
+        return hiveDS;
     }
 
 }

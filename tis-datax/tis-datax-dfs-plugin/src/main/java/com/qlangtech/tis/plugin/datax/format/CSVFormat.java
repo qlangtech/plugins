@@ -55,9 +55,6 @@ public class CSVFormat extends BasicPainFormat {
     @FormField(ordinal = 15, type = FormFieldType.TEXTAREA, validate = {}, advance = true)
     public String csvReaderConfig;
 
-    //    private Map<String, Object> parseCsvReaderConfig() {
-//        return parseCsvReaderConfig(csvReaderConfig);
-//    }
     private static Map<String, Object> parseCsvReaderConfig(String csvReaderConfig) {
         return JSON.parseObject(StringUtils.defaultString(csvReaderConfig, "{}"), new TypeReference<HashMap<String, Object>>() {
         });
@@ -99,23 +96,6 @@ public class CSVFormat extends BasicPainFormat {
         }
     }
 
-//    @Override
-//    protected FileHeader readHeader(UnstructuredReader reader) throws IOException {
-//        UnstructuredReader csvFormat = reader;
-//        String[] fileHeader = null;
-//        int colCount;
-//        if (csvFormat.getHeader() != null) {
-//            fileHeader = csvFormat.getHeader();
-//        } else {
-//            if (csvFormat.hasNext()) {
-//                String[] row = csvFormat.next();
-//                colCount = row.length;
-//                //return new FileHeader(row.length);
-//            } else {
-//                throw new IllegalStateException("must read row");
-//            }
-//        }
-//    }
 
     @Override
     public UnstructuredReader createReader(BufferedReader reader) {
@@ -166,15 +146,6 @@ public class CSVFormat extends BasicPainFormat {
                         throw new IllegalStateException("must contain head");
                     }
                 }
-
-//                else {
-//                    if (this.hasNext()) {
-//                        String[] row = this.next();
-//                        fileHeader = new FileHeader(row.length);
-//                    } else {
-//                        throw new IllegalStateException("must read row");
-//                    }
-//                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

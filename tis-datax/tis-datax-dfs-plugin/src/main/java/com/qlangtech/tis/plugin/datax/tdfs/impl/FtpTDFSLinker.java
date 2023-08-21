@@ -109,7 +109,7 @@ public class FtpTDFSLinker extends TDFSLinker {
             return server.useFtpHelper((ftp) -> {
                 try {
                     HashSet<ITDFSSession.Res> allFiles
-                            = ftp.getAllFiles(Collections.singletonList(ftpLinker.path), 0, 10);
+                            = ftp.getAllFiles(Collections.singletonList(ftpLinker.getRootPath()), 0, 10);
                     if (CollectionUtils.isEmpty(allFiles)) {
                         msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下没有扫描到任何文件，请确认路径是否正确");
                         return false;

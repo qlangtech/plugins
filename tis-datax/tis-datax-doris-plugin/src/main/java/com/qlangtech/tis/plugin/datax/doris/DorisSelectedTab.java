@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax.doris;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
-import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.seq.SeqKey;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -32,14 +31,27 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
  **/
 public class DorisSelectedTab extends SelectedTab {
 
+    public static final String KEY_seqKey = "seqKey";
+
     @FormField(ordinal = 4, validate = {})
     public SeqKey seqKey;
 
     @TISExtension
     public static class DefaultDescriptor extends SelectedTab.DefaultDescriptor {
 
+
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, SelectedTab postFormVals) {
+            if (!super.validateAll(msgHandler, context, postFormVals)) {
+                return false;
+            }
+            DorisSelectedTab tab = (DorisSelectedTab) postFormVals;
+            if (tab.seqKey.isOn()) {
+                if (!tab.cols.contains(tab.seqKey.getSeqColName())) {
+                    msgHandler.addFieldError(context, KEY_FIELD_COLS, "必须要选择`" + tab.seqKey.getSeqColName() + "`");
+                    return false;
+                }
+            }
             return true;
         }
     }

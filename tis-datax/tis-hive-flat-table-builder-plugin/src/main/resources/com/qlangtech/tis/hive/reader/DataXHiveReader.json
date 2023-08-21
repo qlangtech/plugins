@@ -1,0 +1,5 @@
+{
+  "dfsLinker": {
+    "subDescEnumFilter": "return com.qlangtech.tis.hive.reader.DataXHiveReader.filter(desc);"
+  }
+}

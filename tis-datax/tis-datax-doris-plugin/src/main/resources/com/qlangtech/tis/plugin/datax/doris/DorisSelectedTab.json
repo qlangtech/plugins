@@ -1,6 +1,7 @@
 {
   "seqKey": {
     "label": "Sequence列",
-    "dftVal": "off"
+    "dftVal": "off",
+    "help": "选择的列需要保证每次记录更新该列对应的值必须严格自增"
   }
 }

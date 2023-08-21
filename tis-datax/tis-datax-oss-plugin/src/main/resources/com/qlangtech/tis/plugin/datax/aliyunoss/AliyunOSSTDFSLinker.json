@@ -3,8 +3,9 @@
     "help": "描述：OSS的bucket  "
   },
   "path": {
-    "label": "object",
-    "help": "描述：OSS的object信息，注意这里可以支持填写多个Object。 "
+    "label": "rootPath",
+    "help": "描述：TIS 查找可用资源文件会从该路径下遍历查找 ",
+    "placeholder": "/user/admin"
   },
   "linker": {
     "creator": {

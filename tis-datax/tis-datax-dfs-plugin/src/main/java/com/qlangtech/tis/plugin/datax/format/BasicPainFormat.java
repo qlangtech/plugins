@@ -26,24 +26,27 @@ import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.format.guesstype.GuessFieldType;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Optional;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,7 +54,7 @@ import java.util.function.Function;
  **/
 public abstract class BasicPainFormat extends FileFormat {
     private static final Logger logger = LoggerFactory.getLogger(BasicPainFormat.class);
-    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, advance = true, validate = {Validator.require})
     public String dateFormat;
 
     @FormField(ordinal = 12, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -60,13 +63,17 @@ public abstract class BasicPainFormat extends FileFormat {
     @FormField(ordinal = 9, type = FormFieldType.ENUM, validate = {Validator.require})
     public String fieldDelimiter;
 
-    @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {})
+    @FormField(ordinal = 16, type = FormFieldType.ENUM, validate = {Validator.require})
     public boolean header;
 
-    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 17, validate = {Validator.require})
+    public GuessFieldType guessFieldType;
+
+
+    @FormField(ordinal = 10, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String compress;
 
-    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 11, type = FormFieldType.ENUM, advance = true, validate = {Validator.require})
     public String encoding;
 
     @Override
@@ -138,13 +145,13 @@ public abstract class BasicPainFormat extends FileFormat {
         });
 
         if (StringUtils.isNotEmpty(this.nullFormat)) {
-            return colValCreator.compose((val) -> StringUtils.equals(nullFormat, val) ? null : val);
+            return colValCreator.compose((val) -> (StringUtils.isBlank(val) || StringUtils.equals(nullFormat, val)) ? null : (val));
         } else {
             return colValCreator;
         }
     }
 
-    protected static SimpleDateFormat getTimeStampFormat() {
+    public static SimpleDateFormat getTimeStampFormat() {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 
@@ -222,105 +229,13 @@ public abstract class BasicPainFormat extends FileFormat {
 
         // guess all col types
         DataType[] types = new DataType[colCount];
-        String[] row = null;
-        DataType guessType = null;
-        final int maxLineReview = 100;
-        int lineIndex = 0;
-        while (textFormat.hasNext() && lineIndex++ < maxLineReview) {
-            row = textFormat.next();
-            for (int i = 0; i < colCount; i++) {
-                // 猜测类型
-                guessType = guessType(row[i]);
-                if (guessType != null) {
-                    if (types[i] == null) {
-                        types[i] = guessType;
-                    } else {
-                        DataType type = types[i];
-                        // 针对String类型 如果碰到更长的字符串长度 将 字符串长度变成
-                        if ((type.type == Types.VARCHAR) && guessType.getColumnSize() > type.getColumnSize()) {
-                            types[i] = guessType;
-                        }
-                    }
-                }
-            }
-            // 判断是否已经全部类型已经判断出了
-            if (isAllTypeJudged(types, Optional.empty())) {
-                break;
-            }
-        }
-
-        // 最后将空缺的类型补充上
-        isAllTypeJudged(types, Optional.of(DataType.createVarChar(32)));
-
+        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null")
+                .processGuess(types, this, textFormat);
         return new FileHeader(colCount, header == null ? null : Lists.newArrayList(header), Lists.newArrayList(types));
     }
 
-    private boolean isAllTypeJudged(DataType[] types, Optional<DataType> dftType) {
-        for (int i = 0; i < types.length; i++) {
-            if (types[i] == null) {
-                if (!dftType.isPresent()) {
-                    return false;
-                } else {
-                    types[i] = dftType.get();
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * 通过文本内容猜测文本类型
-     *
-     * @param colVal
-     * @return
-     */
-    private DataType guessType(String colVal) {
-        if (org.apache.commons.lang3.StringUtils.isEmpty(colVal) || org.apache.commons.lang3.StringUtils.equals(nullFormat, colVal)) {
-            return null;
-        }
-        try {
-            Integer.parseInt(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.INTEGER).getType();
-        } catch (Exception e) {
-
-        }
-
-        try {
-            Long.parseLong(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.BIGINT).getType();
-        } catch (Exception e) {
-
-        }
-
-        try {
-            Float.parseFloat(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.FLOAT).getType();
-        } catch (Exception e) {
-
-        }
-
-        try {
-            Double.parseDouble(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.DOUBLE).getType();
-        } catch (Exception e) {
-
-        }
-
-        try {
-            this.getDateFormat().parse(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.DATE).getType();
-        } catch (Exception e) {
-
-        }
-
-        try {
-            getTimeStampFormat().parse(colVal);
-            return DataTypeMeta.getDataTypeMeta(Types.TIMESTAMP).getType();
-        } catch (Exception e) {
-
-        }
-
-        return DataType.createVarChar(org.apache.commons.lang3.StringUtils.length(colVal) * 2);
+    public static List<Option> supportCompress() {
+        return Arrays.stream(Compress.values()).map((c) -> new Option(c.name(), c.token)).collect(Collectors.toList());
     }
 
     protected static class BasicPainFormatDescriptor extends Descriptor<FileFormat> {

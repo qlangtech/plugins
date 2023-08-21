@@ -53,7 +53,7 @@ public class TestDataXDFSReader {
 
     @Test
     public void testPluginExtraPropsLoad() throws Exception {
-        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXDFSReader.class);
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(AbstractDFSReader.class);
         Assert.assertTrue(extraProps.isPresent());
     }
 
@@ -124,7 +124,7 @@ public class TestDataXDFSReader {
 
         // ContextDesc.descBuild(DataXFtpReader.class, true);
 
-        PluginDesc.testDescGenerate(DataXDFSReader.class, "ftp-datax-reader-descriptor.json");
+        PluginDesc.testDescGenerate(AbstractDFSReader.class, "ftp-datax-reader-descriptor.json");
 
     }
 

@@ -69,7 +69,9 @@ public class HdfsTDFDLinker extends TDFSLinker {
 
     @Override
     public ITDFSSession createTdfsSession() {
-        return new HdfsTDFSSession(this);
+        return new HdfsTDFSSession(this.getRootPath(), () -> {
+            return this.getFs();
+        });
     }
 
     @Override

@@ -1,0 +1,143 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.qlangtech.tis.hive.reader;
+
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.plugin.unstructuredstorage.Compress;
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.datax.Delimiter;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fs.ITISFileSystemFactory;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.IdentityName;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
+import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.utils.DBsGetter;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2023-08-19 15:43
+ **/
+public class HiveDFSLinker extends TDFSLinker {
+    public final static String NAME_DESC = "Hive";
+
+    @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String fsName;
+    public transient FileSystemFactory fileSystem;
+
+    @Override
+    public ITDFSSession createTdfsSession(Integer timeout) {
+        return createTdfsSession();
+    }
+
+    @Override
+    public ITDFSSession createTdfsSession() {
+        return new HiveDFSSession("rootpath", () -> getFs(), this);
+    }
+
+    public FileSystemFactory getFs() {
+        if (fileSystem == null) {
+            this.fileSystem = FileSystemFactory.getFsFactory(fsName);
+        }
+        Objects.requireNonNull(this.fileSystem, "fileSystem has not be initialized");
+        return fileSystem;
+    }
+
+
+    public Hiveserver2DataSourceFactory getDataSourceFactory() {
+        if (StringUtils.isBlank(this.linker)) {
+            throw new IllegalStateException("prop dbName can not be null");
+        }
+        return BasicDataXRdbmsWriter.getDs(this.linker);
+    }
+
+    @Override
+    public <T> T useTdfsSession(TDFSSessionVisitor<T> tdfsSession) {
+        try {
+            return tdfsSession.accept(createTdfsSession());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static final TextFormat txtFormat;
+
+    static {
+        txtFormat = new TextFormat();
+        txtFormat.header = false;
+        txtFormat.fieldDelimiter = Delimiter.Tab.token;
+        txtFormat.compress = Compress.none.token;
+        txtFormat.encoding = "utf-8";
+    }
+
+    public FileFormat getFileFormat(String entityName) {
+        if (StringUtils.isEmpty(entityName)) {
+            throw new IllegalArgumentException("param entityName can not be empty");
+        }
+
+        Hiveserver2DataSourceFactory dfFactory = getDataSourceFactory();
+
+        HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
+
+        return txtFormat;
+    }
+
+
+    @TISExtension
+    public static final class DftDescriptor extends BasicDescriptor {
+
+        public DftDescriptor() {
+            super();
+            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME
+                    , () -> TIS.getPluginStore(FileSystemFactory.class)
+                            .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+        }
+
+        @Override
+        public String getDisplayName() {
+            return NAME_DESC;
+        }
+
+        @Override
+        protected List<? extends IdentityName> createRefLinkers() {
+            return DBsGetter.getInstance().getExistDbs(Hiveserver2DataSourceFactory.NAME_HIVESERVER2);
+        }
+
+        @Override
+        public boolean validateLinker(IFieldErrorHandler msgHandler, Context context, String fieldName, String linker) {
+            return false;
+        }
+    }
+}

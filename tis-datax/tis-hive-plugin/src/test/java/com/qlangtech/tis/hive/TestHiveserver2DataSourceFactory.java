@@ -35,6 +35,8 @@ import java.util.List;
  **/
 public class TestHiveserver2DataSourceFactory {
 
+
+
     @Test
     public void testCreateConnWithKerberOs() throws Exception {
         //  Hiveserver2DataSourceFactory hsource = new Hiveserver2DataSourceFactory();

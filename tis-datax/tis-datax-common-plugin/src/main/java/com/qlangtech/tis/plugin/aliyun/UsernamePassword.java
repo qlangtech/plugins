@@ -37,6 +37,14 @@ public class UsernamePassword extends AuthToken {
     @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
+    public UsernamePassword() {
+    }
+
+    public UsernamePassword(String userName, String password) {
+        this.userName = userName;
+        this.password = password;
+    }
+
     @Override
     public <T> T accept(Visitor<T> visitor) {
         return visitor.visit(this);

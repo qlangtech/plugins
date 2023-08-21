@@ -21,7 +21,8 @@ package com.qlangtech.tis.plugin.datax.aliyunoss;
 import com.alibaba.citrus.turbine.Context;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.model.Bucket;
+import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.BucketInfo;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.TISExtension;
@@ -37,9 +38,10 @@ import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -48,16 +50,23 @@ import java.util.Optional;
 public class AliyunOSSTDFSLinker extends TDFSLinker {
     public static final String DATAX_NAME = "AlyiunOSS";
     public static final String FIELD_BUCKET = "bucket";
+    private static final Logger logger = LoggerFactory.getLogger(AliyunOSSTDFSLinker.class);
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String bucket;
 //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String object;
 
-    private AliyunEndpoint getOSSConfig() {
+
+    @Override
+    public String getRootPath() {
+        return StringUtils.removeStart(this.path, "/");
+    }
+
+    protected AliyunEndpoint getOSSConfig() {
         return IHttpToken.getAliyunEndpoint(this.linker);
     }
 
-    public OSS createOSSClient() {
+    public final OSS createOSSClient() {
         final AliyunEndpoint end = getOSSConfig();
         AccessKey accessKey = end.getAccessKey();
         // OSS ossClient = end.accept(new AuthToken.Visitor<OSS>() {
@@ -143,17 +152,25 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
 //                    }
 //                });
 
-                List<Bucket> buckets = ossClient.listBuckets();
+                BucketInfo bucketInfo = null;
+                try {
+                    bucketInfo = ossClient.getBucketInfo(bucket);
+                } catch (OSSException e) {
+                    logger.error("request bucket info:" + bucket, e);
+                    msgHandler.addFieldError(context, FIELD_BUCKET, e.getMessage());
+                    return false;
+                }
+
+                //   List<Bucket> buckets = ossClient.listBuckets();
 //                if (buckets.size() < 1) {
 //                    msgHandler.addErrorMessage(context, "buckets不能为空");
 //                    return false;
 //                }
-                Optional<Bucket> bucketFind = buckets.stream().filter((b) -> StringUtils.equals(bucket, b.getName())).findFirst();
-                if (!bucketFind.isPresent()) {
-                    //  msgHandler.addErrorMessage(context, );
-                    msgHandler.addFieldError(context, FIELD_BUCKET, "还未创建bucket:" + bucket);
-                    return false;
-                }
+                // Optional<Bucket> bucketFind = buckets.stream().filter((b) -> StringUtils.equals(bucket, b.getName())).findFirst();
+//                if (!bucketInfo.getBucket().getName().equals(bucket)) {
+//                    //  msgHandler.addErrorMessage(context, );
+//
+//                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

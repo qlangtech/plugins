@@ -21,13 +21,19 @@ package com.qlangtech.tis.plugin.datax.hdfs;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.IPathInfo;
 import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -35,19 +41,24 @@ import java.util.stream.Collectors;
  * @create: 2023-08-06 22:26
  **/
 public class HdfsTDFSSession implements ITDFSSession {
-    private final HdfsTDFDLinker dfsLinker;
+    // private final HdfsTDFDLinker dfsLinker;
+    private final String rootPath;
+    private final Supplier<FileSystemFactory> fsFactorySuppier;
 
-    HdfsTDFSSession(HdfsTDFDLinker dfsLinker) {
-        this.dfsLinker = Objects.requireNonNull(dfsLinker, "dfsLinker can not be null");
+
+    public HdfsTDFSSession(String rootPath, Supplier<FileSystemFactory> fsFactorySuppier) {
+        this.rootPath = rootPath;
+        this.fsFactorySuppier = fsFactorySuppier;
+        // this.dfsLinker = Objects.requireNonNull(dfsLinker, "dfsLinker can not be null");
     }
 
     @Override
     public String getRootPath() {
-        return dfsLinker.getRootPath();
+        return rootPath;
     }
 
     private ITISFileSystem getFs() {
-        return this.dfsLinker.getFs().getFileSystem();
+        return fsFactorySuppier.get().getFileSystem();
     }
 
     @Override
@@ -130,6 +141,7 @@ public class HdfsTDFSSession implements ITDFSSession {
 
     @Override
     public void close() throws Exception {
-        this.dfsLinker.getFs().getFileSystem().close();
+        this.getFs().close();
+       // this.fsFactorySuppier.getFs().getFileSystem().close();
     }
 }

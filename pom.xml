@@ -170,6 +170,13 @@
         <dependencies>
 
             <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-aliyun-oss-common</artifactId>
+                <version>1.0.0</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-testcontainer-oracle</artifactId>
                 <version>${project.version}</version>

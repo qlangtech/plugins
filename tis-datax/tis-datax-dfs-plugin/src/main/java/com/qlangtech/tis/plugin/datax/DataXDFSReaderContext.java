@@ -20,7 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.plugin.datax.format.CSVFormat;
-import org.apache.commons.lang.StringUtils;
+import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 
 import java.util.Objects;
 
@@ -31,7 +31,7 @@ import java.util.Objects;
 public class DataXDFSReaderContext implements IDataxReaderContext {
 
     public static final String FTP_TASK = "ftp_datax";
-    protected final DataXDFSReader reader;
+    protected final IDFSReader reader;
     //  private final FTPServer ftpServer;
 
     @Override
@@ -39,9 +39,9 @@ public class DataXDFSReaderContext implements IDataxReaderContext {
         return "ftp";
     }
 
-    public DataXDFSReaderContext(DataXDFSReader reader) {
+    public DataXDFSReaderContext(IDFSReader reader) {
         this.reader = reader;
-        Objects.requireNonNull(this.reader.dfsLinker, "reader.linker can not be null");
+        Objects.requireNonNull(this.reader.getDfsLinker(), "reader.linker can not be null");
         // this.ftpServer = FTPServer.getServer(this.reader.linker);
     }
 
@@ -90,7 +90,7 @@ public class DataXDFSReaderContext implements IDataxReaderContext {
 //    }
 
     public String getPath() {
-        return this.reader.dfsLinker.getRootPath();
+        return this.reader.getDfsLinker().getRootPath();
     }
 
 //    public String getColumn() {
@@ -106,45 +106,46 @@ public class DataXDFSReaderContext implements IDataxReaderContext {
 //    }
 
     public boolean isContainCompress() {
-       // return StringUtils.isNotBlank(this.reader.compress);
+        // return StringUtils.isNotBlank(this.reader.compress);
         return false;
     }
 
     public String getCompress() {
-      throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     public boolean isContainEncoding() {
-      return false;
+        return false;
     }
 
     public String getEncoding() {
-       throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     public boolean isContainSkipHeader() {
         return true;
     }
 
-    public Boolean getSkipHeader() {
-        return !this.reader.fileFormat.containHeader();
-    }
+//    public Boolean getSkipHeader() {
+//       // return !this.reader.getFileFormat().containHeader();
+//    }
 
     public boolean isContainNullFormat() {
-      //  return StringUtils.isNotBlank(this.reader.nullFormat);
+        //  return StringUtils.isNotBlank(this.reader.nullFormat);
         return false;
     }
 
     public boolean isContainCsvReaderConfig() {
-        if (!(this.reader.fileFormat instanceof CSVFormat)) {
-            return false;
-        }
-        return StringUtils.isNotBlank(((CSVFormat) this.reader.fileFormat).csvReaderConfig);
+        return true;
+//        if (!(this.reader.getFileFormat() instanceof CSVFormat)) {
+//            return false;
+//        }
+//        return StringUtils.isNotBlank(((CSVFormat) this.reader.getFileFormat()).csvReaderConfig);
     }
 
-    public String getCsvReaderConfig() {
-        return ((CSVFormat) this.reader.fileFormat).csvReaderConfig;
-    }
+//    public String getCsvReaderConfig() {
+//        return ((CSVFormat) this.reader.getFileFormat()).csvReaderConfig;
+//    }
 
     @Override
     public String getTaskName() {

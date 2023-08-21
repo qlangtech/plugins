@@ -1,13 +1,14 @@
 {
   "writeMetaData": {
     "label": "添加元数据",
-    "dftVal": "off"
+    "dftVal": "on"
   },
   "fileName": {
-    "help": "描述：FtpWriter写入的文件名，该文件名会添加随机的后缀作为每个线程写入实际文件名。 "
+    "help": "描述：DFS Writer写入的文件名，该文件名会添加随机的后缀作为每个线程写入实际文件名。 "
   },
   "writeMode": {
     "dftVal": "truncate",
+    "label": "替换规则",
     "enum": [
       {
         "val": "truncate",

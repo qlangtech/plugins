@@ -78,7 +78,7 @@ public class OnSeqKey extends SeqKey {
 //                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
 //                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
 
-        seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(seqKey);
+        seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(seqKey).append("'");
         // .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
 
         // }

@@ -33,6 +33,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -41,10 +42,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
-import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
@@ -53,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -213,8 +212,19 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                             public List<HiveTable> getTables(String database) {
                                 try {
                                     // storeClient.getAllDatabases();
+                                    // storeClient.createTable();
                                     List<String> tables = storeClient.getTables(database, ".*");
                                     return tables.stream().map((tab) -> new HiveTable(tab) {
+                                        @Override
+                                        public StoredAs getStoredAs() {
+                                            throw new UnsupportedOperationException();
+                                        }
+
+                                        @Override
+                                        public List<String> listPartitions(Optional<String> filter) {
+                                            throw new UnsupportedOperationException();
+                                        }
+
                                         @Override
                                         public String getStorageLocation() {
                                             throw new UnsupportedOperationException();
@@ -230,8 +240,52 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                                 try {
                                     // storeClient.getta
                                     Table table = storeClient.getTable(database, tableName);
+
                                     StorageDescriptor storageDesc = table.getSd();
+
+
                                     return new HiveTable(table.getTableName()) {
+                                        @Override
+                                        public StoredAs getStoredAs() {
+                                            return new StoredAs(storageDesc.getInputFormat(), storageDesc.getOutputFormat());
+                                        }
+                                        @Override
+                                        public List<String> listPartitions(Optional<String> filter) {
+                                            try {
+                                                short maxPtsCount = (short) 999;
+                                                List<Partition> pts = null;
+                                                if (filter.isPresent()) {
+                                                    pts = storeClient.listPartitionsByFilter(database, tableName, filter.get(), maxPtsCount);
+                                                } else {
+                                                    pts = storeClient.listPartitions(database, tableName, maxPtsCount);
+                                                }
+
+
+                                                return pts.stream().map((pt) -> String.join(",", pt.getValues())).collect(Collectors.toList());
+                                            } catch (TException e) {
+                                                throw new RuntimeException("table:" + tableName, e);
+                                            }
+                                        }
+                                        //                                        @Override
+//                                        public List<ColumnMetaData> getSchema() {
+//                                            try {
+//                                                List<ColumnMetaData> cols = Lists.newArrayList();
+//                                                ColumnMetaData cm = null;
+//                                                int index = 0;
+//                                                List<FieldSchema> schema = storeClient.getSchema(database, tableName);
+//                                                for (FieldSchema field : schema) {
+//
+//                                                    field.getType();
+//                                                    // int index, String key, DataType type, boolean pk
+//                                                    cm = new ColumnMetaData(index++, field.getName(), DataType.createVarChar(32), false);
+//                                                    cols.add(cm);
+//                                                }
+//                                                return cols;
+//                                            } catch (TException e) {
+//                                                throw new RuntimeException(e);
+//                                            }
+//                                        }
+
                                         @Override
                                         public String getStorageLocation() {
                                             return storageDesc.getLocation();

@@ -86,8 +86,6 @@
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-aliyun-oss-common</artifactId>
-            <version>1.0.0</version>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

@@ -38,6 +38,14 @@ public class AccessKey extends AuthToken {
     @FormField(ordinal = 3, type = FormFieldType.PASSWORD, validate = {Validator.require})
     public String accessKeySecret;
 
+    public AccessKey() {
+    }
+
+    public AccessKey(String accessKeyId, String accessKeySecret) {
+        this.accessKeyId = accessKeyId;
+        this.accessKeySecret = accessKeySecret;
+    }
+
     public String getAccessKeyId() {
         return this.accessKeyId;
     }

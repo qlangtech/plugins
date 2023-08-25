@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
 import org.postgresql.jdbc.PgConnection;
@@ -90,8 +91,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             if (StringUtils.isEmpty(this.dbName)) {
                 throw new IllegalStateException("prop dbName can not be null");
             }
-            result = statement.executeQuery(
-                    "SELECT table_name FROM information_schema.tables  WHERE table_schema = '" + this.tabSchema + "' and table_catalog='" + this.dbName + "'");
+            result = statement.executeQuery("SELECT table_name FROM information_schema.tables  WHERE table_schema = '" + this.tabSchema + "' and table_catalog='" + this.dbName + "'");
 
 //        DatabaseMetaData metaData = conn.getMetaData();
 //        String[] types = {"TABLE"};
@@ -103,7 +103,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             this.closeResultSet(result);
             try {
                 statement.close();
-            } catch (Throwable e) { }
+            } catch (Throwable e) {
+            }
         }
     }
 
@@ -128,11 +129,10 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
-        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            protected DataType createColDataType(String colName
-                    , String typeName, int dbColType, int colSize) throws SQLException {
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
                 DataType type = super.createColDataType(colName, typeName, dbColType, colSize);
                 DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
                     @Override

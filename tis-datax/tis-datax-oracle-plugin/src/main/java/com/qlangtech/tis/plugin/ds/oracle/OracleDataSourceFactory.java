@@ -98,24 +98,14 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     public String toString() {
         return "{" +
                 // "asServiceName=" + asServiceName +
-                ", allAuthorized=" + allAuthorized +
-                ", name='" + name + '\'' +
-                ", dbName='" + dbName + '\'' +
-                ", userName='" + userName + '\'' +
-                ", password='********" + '\'' +
-                ", nodeDesc='" + nodeDesc + '\'' +
-                ", port=" + port +
-                ", encode='" + encode + '\'' +
-                ", extraParams='" + extraParams + '\'' +
-                '}';
+                ", allAuthorized=" + allAuthorized + ", name='" + name + '\'' + ", dbName='" + dbName + '\'' + ", userName='" + userName + '\'' + ", password='********" + '\'' + ", nodeDesc='" + nodeDesc + '\'' + ", port=" + port + ", encode='" + encode + '\'' + ", extraParams='" + extraParams + '\'' + '}';
     }
 
     @Override
     protected ResultSet getColumnsMeta(EntityName table, DatabaseMetaData metaData1) throws SQLException {
         return getColRelevantMeta(table, (tab) -> {
             try {
-                return metaData1.getColumns(null
-                        , tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
+                return metaData1.getColumns(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName, null);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -128,16 +118,14 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         return getColRelevantMeta(table, (tab) -> {
             try {
 
-                return metaData1.getPrimaryKeys(null
-                        , tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName);
+                return metaData1.getPrimaryKeys(null, tab.owner.isPresent() ? tab.owner.get() : null, tab.tabName);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    private ResultSet getColRelevantMeta(EntityName table
-            , Function<OracleTab, ResultSet> containSchema) throws SQLException {
+    private ResultSet getColRelevantMeta(EntityName table, Function<OracleTab, ResultSet> containSchema) throws SQLException {
         try {
             return containSchema.apply(OracleTab.create(table.getFullName()));
         } catch (Exception e) {
@@ -194,8 +182,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
-        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
@@ -246,8 +234,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 //        return DriverManager.getConnection(jdbcUrl
 //                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
 
-        return new JDBCConnection(DriverManager.getConnection(jdbcUrl
-                , StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)), jdbcUrl);
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)), jdbcUrl);
     }
 
 

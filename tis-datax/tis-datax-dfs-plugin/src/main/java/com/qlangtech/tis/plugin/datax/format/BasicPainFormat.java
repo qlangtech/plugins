@@ -41,10 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -186,19 +183,19 @@ public abstract class BasicPainFormat extends FileFormat {
     protected abstract UnstructuredWriter createWriter(Writer writer);
 
     @Override
-    public final UnstructuredReader createReader(InputStream input) {
+    public UnstructuredReader createReader(InputStream input, List<CMeta> sourceCols) {
         try {
-            return createReader(Compress.parse(compress).decorate(input, encoding));
+            return createReader(Compress.parse(compress).decorate(input, encoding), sourceCols);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    protected abstract UnstructuredReader createReader(BufferedReader reader) throws IOException;
+    protected abstract UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) throws IOException;
 
     @Override
     public final FileHeader readHeader(InputStream input) throws IOException {
-        return readHeader(createReader(input));
+        return readHeader(createReader(input, Collections.emptyList()));
     }
 
     // protected abstract FileHeader readHeader(UnstructuredReader reader) throws IOException;
@@ -229,8 +226,7 @@ public abstract class BasicPainFormat extends FileFormat {
 
         // guess all col types
         DataType[] types = new DataType[colCount];
-        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null")
-                .processGuess(types, this, textFormat);
+        Objects.requireNonNull(this.guessFieldType, "guessFieldType can not be null").processGuess(types, this, textFormat);
         return new FileHeader(colCount, header == null ? null : Lists.newArrayList(header), Lists.newArrayList(types));
     }
 

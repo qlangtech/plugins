@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,8 +50,7 @@ import java.util.Optional;
  * @create: 2022-12-14 09:33
  * @see DefaultHiveConnGetter
  **/
-public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
-        implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
     private static final Logger logger = LoggerFactory.getLogger(Hiveserver2DataSourceFactory.class);
     public static final String NAME_HIVESERVER2 = "Hiveserver2";
     private static final String FIELD_META_STORE_URLS = "metaStoreUrls";
@@ -73,6 +74,13 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory
     @Override
     public String getDBSchema() {
         return this.dbName;
+    }
+
+    @Override
+    protected HashSet<String> createAddedCols(EntityName table) {
+        // 去除表的pt键
+        HiveTable t = metadata.createMetaStoreClient().getTable(this.dbName, table.getTableName());
+        return new HashSet<>(t.getPartitionKeys());
     }
 
     @Override

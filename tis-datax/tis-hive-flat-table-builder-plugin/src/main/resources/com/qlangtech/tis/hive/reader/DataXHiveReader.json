@@ -1,5 +1,15 @@
 {
   "dfsLinker": {
     "subDescEnumFilter": "return com.qlangtech.tis.hive.reader.DataXHiveReader.filter(desc);"
+  },
+  "ptFilter": {
+    "label": "目标分区",
+    "dftVal": "com.qlangtech.tis.hive.reader.DataXHiveReader.getPtDftVal()"
+  },
+  "resMatcher": {
+    "disable": true
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.hive.reader.DataXHiveReader.getDftTemplate()"
   }
 }

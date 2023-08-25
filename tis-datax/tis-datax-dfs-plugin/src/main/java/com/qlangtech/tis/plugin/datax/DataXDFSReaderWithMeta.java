@@ -80,6 +80,11 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
         this.resMatcher = matcher;
     }
 
+    @Override
+    public List<TargetResMeta> getSelectedEntities() {
+        throw new UnsupportedOperationException();
+    }
+
     public static List<ColumnMetaData> getDFSFileMetaData(String metaParentPath, ITDFSSession dfs) {
         final String dfsPath = IPath.pathConcat(metaParentPath, FtpHelper.KEY_META_FILE);
         return getMetaData(dfsPath, dfs);
@@ -246,18 +251,9 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
 
     public static List<TargetResMeta> getFTPFiles(AbstractDFSReader reader) {
 
-        return reader.dfsLinker.useTdfsSession((ftp) -> {
-            List<TargetResMeta> ftpFiles = Lists.newArrayList();
-            Set<ITDFSSession.Res> allRes = ftp.getListFiles(ftp.getRootPath(), 0, reader.resMatcher.maxTraversalLevel);
-            TargetResMeta m = null;
-            for (ITDFSSession.Res meta : allRes) {
-                m = getTargetResMeta(meta);
-                if (m != null) {
-                    ftpFiles.add(m);
-                }
-            }
-            return ftpFiles;
-        });
+        return reader.getSelectedEntities();
+
+
     }
 
 

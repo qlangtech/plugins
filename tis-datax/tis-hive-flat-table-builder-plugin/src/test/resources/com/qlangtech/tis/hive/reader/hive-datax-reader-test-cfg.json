@@ -1,9 +1,6 @@
 {
   "parameter": {
-    "path": [
-      "hdfs://192.168.28.200/user/admin/default/instancedetail/20230819140753/0"
-    ],
     "entityName": "instancedetail"
   },
-  "name": "ftpreader"
+  "name": "hivereader"
 }

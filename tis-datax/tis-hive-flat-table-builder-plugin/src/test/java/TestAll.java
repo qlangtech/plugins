@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+import com.alibaba.datax.plugin.unstructuredstorage.reader.TestTEXTFormat;
 import com.qlangtech.tis.dump.hive.TestHiveDBUtils;
 import com.qlangtech.tis.dump.hive.TestHiveRemoveHistoryDataTask;
 import com.qlangtech.tis.dump.hive.TestHiveTableBuilder;
@@ -43,6 +44,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestHiveInsertFromSelectParser.class);
         suite.addTestSuite(TestHiveDBUtils.class);
         suite.addTestSuite(TestHiveTableBuilder.class);
+        suite.addTestSuite(TestTEXTFormat.class);
         // suite.addTestSuite(TestYarnTableDumpFactory.class);
         return suite;
     }

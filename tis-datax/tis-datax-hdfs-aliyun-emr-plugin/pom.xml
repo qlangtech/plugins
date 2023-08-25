@@ -33,7 +33,7 @@
     <packaging>tpi</packaging>
     <properties>
         <classifier>hadoop_${hadoop-version}</classifier>
-        <jindodata.version>4.6.11</jindodata.version>
+        <jindodata.version>6.0.1</jindodata.version>
     </properties>
 
     <repositories>
@@ -58,7 +58,7 @@
         <!--        </dependency>-->
 
         <!-- add jindo-core -->
-        <!--https://github.com/aliyun/alibabacloud-jindodata/blob/master/docs/user/4.x/4.6.x/4.6.11/jindofs/hadoop/jindosdk_ide_hadoop.md-->
+        <!--https://github.com/aliyun/alibabacloud-jindodata/blob/master/docs/user/6.x/6.0.1/oss-maven.md-->
         <dependency>
             <groupId>com.aliyun.jindodata</groupId>
             <artifactId>jindo-core</artifactId>
@@ -68,7 +68,7 @@
         <!-- add jindo-core-extended-jar if you need support other platform -->
         <dependency>
             <groupId>com.aliyun.jindodata</groupId>
-            <artifactId>jindosdk</artifactId>
+            <artifactId>jindo-sdk</artifactId>
             <version>${jindodata.version}</version>
         </dependency>
 
@@ -92,25 +92,46 @@
 
     <profiles>
 
-        <profile>
-            <id>dev</id>
-            <activation>
-                <!--根据当前操作系统-->
-                <os>
-                    <family>mac</family>
-                    <arch>x86_64</arch>
-                </os>
-            </activation>
-            <dependencies>
+<!--        <profile>-->
+<!--            <id>dev_x86</id>-->
+<!--            <activation>-->
+<!--                &lt;!&ndash;根据当前操作系统&ndash;&gt;-->
+<!--                &lt;!&ndash;inspect by: mvn enforcer:display-info&ndash;&gt;-->
+<!--                <os>-->
+<!--                    <family>mac</family>-->
+<!--                    <arch>x86_64</arch>-->
+<!--                </os>-->
+<!--            </activation>-->
+<!--            <dependencies>-->
 
-                <!-- add jindo-core-extended-jar for macos -->
-                <dependency>
-                    <groupId>com.aliyun.jindodata</groupId>
-                    <artifactId>jindo-core-macos-10_14-x86_64</artifactId>
-                    <version>${jindodata.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
+<!--                &lt;!&ndash; add jindo-core-extended-jar for macos &ndash;&gt;-->
+<!--                <dependency>-->
+<!--                    <groupId>com.aliyun.jindodata</groupId>-->
+<!--                    <artifactId>jindo-core-macos-10_14-x86_64</artifactId>-->
+<!--                    <version>${jindodata.version}</version>-->
+<!--                </dependency>-->
+<!--            </dependencies>-->
+<!--        </profile>-->
+
+<!--        <profile>-->
+<!--            <id>dev_aarch64</id>-->
+<!--            <activation>-->
+<!--                &lt;!&ndash;根据当前操作系统&ndash;&gt;-->
+<!--                &lt;!&ndash;inspect by: mvn enforcer:display-info&ndash;&gt;-->
+<!--&lt;!&ndash;                <os>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <family>mac</family>&ndash;&gt;-->
+<!--&lt;!&ndash;                    <arch>aarch64</arch>&ndash;&gt;-->
+<!--&lt;!&ndash;                </os>&ndash;&gt;-->
+<!--            </activation>-->
+<!--            <dependencies>-->
+<!--                &lt;!&ndash; add jindo-core-extended-jar for macos &ndash;&gt;-->
+<!--                <dependency>-->
+<!--                    <groupId>com.aliyun.jindodata</groupId>-->
+<!--                    <artifactId>jindo-core-macos-10_14-aarch64</artifactId>-->
+<!--                    <version>${jindodata.version}</version>-->
+<!--                </dependency>-->
+<!--            </dependencies>-->
+<!--        </profile>-->
 
         <profile>
             <id>centos</id>

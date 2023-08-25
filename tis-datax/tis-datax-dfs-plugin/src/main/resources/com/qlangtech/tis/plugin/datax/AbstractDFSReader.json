@@ -1,7 +1,7 @@
 {
   "dfsLinker": {
     "label": "资源",
-    "help": "FTP服务端连接配置"
+    "help": "DFS服务端连接配置"
   },
   "resMatcher": {
     "label": "目标文件匹配",

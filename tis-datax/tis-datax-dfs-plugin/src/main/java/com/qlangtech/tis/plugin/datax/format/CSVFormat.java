@@ -29,6 +29,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -98,7 +99,7 @@ public class CSVFormat extends BasicPainFormat {
 
 
     @Override
-    public UnstructuredReader createReader(BufferedReader reader) {
+    public UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) {
 
         return new TISCSVFormat(reader);
     }
@@ -132,8 +133,7 @@ public class CSVFormat extends BasicPainFormat {
             } else {
                 //默认关闭安全模式, 放开10W字节的限制
                 csvReader.setSafetySwitch(false);
-                logger.info(String.format("CsvReader使用默认值[%s],csvReaderConfig值为[%s]"
-                        , JSON.toJSONString(csvReader), JSON.toJSONString(csvReaderCfg)));
+                logger.info(String.format("CsvReader使用默认值[%s],csvReaderConfig值为[%s]", JSON.toJSONString(csvReader), JSON.toJSONString(csvReaderCfg)));
             }
 
             try {

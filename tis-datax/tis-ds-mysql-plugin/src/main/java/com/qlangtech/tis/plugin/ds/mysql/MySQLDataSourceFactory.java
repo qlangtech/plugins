@@ -62,8 +62,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     protected TableInDB createTableInDB() {
-        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null")
-                .createTableInDB(this);
+        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null").createTableInDB(this);
     }
 
 
@@ -79,9 +78,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return table;
         }
         // return super.logicTable2PhysicsTable(table);
-        SplitTableStrategy.DBPhysicsTable physicsTable
-                = Objects.requireNonNull(this.splitTableStrategy, "splitTableStrategy can not be null")
-                .getMatchedPhysicsTable(this, jdbcUrl, table);
+        SplitTableStrategy.DBPhysicsTable physicsTable = Objects.requireNonNull(this.splitTableStrategy, "splitTableStrategy can not be null").getMatchedPhysicsTable(this, jdbcUrl, table);
         return physicsTable.getPhysicsTab();
     }
 
@@ -92,9 +89,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
 
-        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
+        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType getDataType(String colName) throws SQLException {
                 DataType type = super.getDataType(colName);
@@ -206,8 +203,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         try {
-            StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName
-                    + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
+            StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }
@@ -294,8 +290,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 ResultSet result = null;
                 try {
                     StringBuffer refactSql = parseRowCountSql();
-                    statement = connection.getConnection().createStatement(
-                            ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                    statement = connection.getConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
                     result = statement.executeQuery(refactSql.toString());
                     result.last();
                     final int rowSize = result.getRow();
@@ -338,8 +333,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             List<ColumnMetaData> result = new ArrayList<>();
             try {
                 for (int i = 1; i <= columCount; i++) {
-                    result.add(
-                            new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new DataType(metaData.getColumnType(i)), false, true));
+                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new DataType(metaData.getColumnType(i)), false, true));
                 }
                 return result;
             } catch (SQLException e) {

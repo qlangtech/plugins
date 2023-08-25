@@ -19,6 +19,7 @@
 package com.qlangtech.tis.hive;
 
 import com.alibaba.citrus.turbine.Context;
+import com.beust.jcommander.internal.Sets;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.authtoken.*;
@@ -33,7 +34,6 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -44,14 +44,17 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -62,6 +65,16 @@ import java.util.stream.Collectors;
  **/
 @Public
 public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGetter {
+    private static Pattern latestPattern = Pattern.compile("((_([a-zA-Z0-9]_?)*)|([a-zA-Z0-9](_?[a-zA-Z0-9])*_?))\\s*([=><]{1,2})\\s*" + HiveTable.KEY_PT_LATEST);
+
+
+    public static String replaceLastestPtCriteria(String latestFilter, java.util.function.Function<String, String> latest) {
+        Matcher matcher = latestPattern.matcher(latestFilter);
+        if (!matcher.find()) {
+            throw new IllegalStateException("param latestFilter:" + latestFilter + " is not match pattern " + latestPattern);
+        }
+        return matcher.replaceFirst("$1 $6 '" + latest.apply(matcher.group(1)) + "'");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultHiveConnGetter.class);
 
@@ -125,7 +138,8 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         } finally {
             try {
                 conn.close();
-            } catch (Throwable e) {}
+            } catch (Throwable e) {
+            }
         }
         return true;
     }
@@ -221,6 +235,11 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                                         }
 
                                         @Override
+                                        public List<String> getPartitionKeys() {
+                                          throw new UnsupportedOperationException();
+                                        }
+
+                                        @Override
                                         public List<String> listPartitions(Optional<String> filter) {
                                             throw new UnsupportedOperationException();
                                         }
@@ -246,45 +265,77 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
 
                                     return new HiveTable(table.getTableName()) {
                                         @Override
-                                        public StoredAs getStoredAs() {
-                                            return new StoredAs(storageDesc.getInputFormat(), storageDesc.getOutputFormat());
+                                        public List<String> getPartitionKeys() {
+                                            return table.getPartitionKeys().stream().map((pt) -> pt.getName()).collect(Collectors.toList());
                                         }
+                                        /**
+                                         * @see LazySimpleSerDe
+                                         * @return
+                                         */
+                                        @Override
+                                        public StoredAs getStoredAs() {
+                                            SerDeInfo serdeInfo = storageDesc.getSerdeInfo();
+//                                            Map<String, String> params = serdeInfo.getParameters();
+//                                            try {
+//                                              if(Class.forName(serdeInfo.getSerializationLib()) == LazySimpleSerDe.class){
+//                                                  params.get(serdeConstants.FIELD_DELIM);
+//                                              }
+//                                            } catch (ClassNotFoundException e) {
+//                                                throw new RuntimeException(e);
+//                                            }
+                                            return new StoredAs(storageDesc.getInputFormat(), storageDesc.getOutputFormat(), serdeInfo);
+                                        }
+
                                         @Override
                                         public List<String> listPartitions(Optional<String> filter) {
                                             try {
                                                 short maxPtsCount = (short) 999;
                                                 List<Partition> pts = null;
                                                 if (filter.isPresent()) {
-                                                    pts = storeClient.listPartitionsByFilter(database, tableName, filter.get(), maxPtsCount);
+
+                                                    String criteria = filter.get();
+                                                    if (StringUtils.indexOf(criteria, HiveTable.KEY_PT_LATEST) > -1) {
+
+                                                        criteria = replaceLastestPtCriteria(criteria, (ptKey) -> {
+                                                            int index = 0;
+                                                            int matchedIndex = -1;
+                                                            for (FieldSchema pt : table.getPartitionKeys()) {
+                                                                if (StringUtils.equals(ptKey, pt.getName())) {
+                                                                    matchedIndex = index;
+                                                                    break;
+                                                                }
+                                                                index++;
+                                                            }
+
+                                                            if (matchedIndex < 0) {
+                                                                throw new IllegalStateException("has not find ptKey:" + ptKey + " in pt schema:" //
+                                                                        + table.getPartitionKeys().stream().map((p) -> p.getName()).collect(Collectors.joining(",")));
+                                                            }
+                                                            Optional<String> maxPt = Optional.empty();
+                                                            Set<String> latestPts = Sets.newHashSet();
+                                                            try {
+                                                                for (Partition p : storeClient.listPartitions(database, tableName, maxPtsCount)) {
+                                                                    latestPts.add(p.getValues().get(matchedIndex));
+                                                                }
+                                                                maxPt = latestPts.stream().max((pt1, pt2) -> {
+                                                                    return pt1.compareTo(pt2);
+                                                                });
+                                                            } catch (TException e) {
+                                                                throw new RuntimeException(e);
+                                                            }
+                                                            return maxPt.orElseThrow(() -> new IllegalStateException("can not find maxPt latestPts.size()=" + latestPts.size()));
+                                                        });
+                                                    }
+
+                                                    pts = storeClient.listPartitionsByFilter(database, tableName, criteria, maxPtsCount);
                                                 } else {
                                                     pts = storeClient.listPartitions(database, tableName, maxPtsCount);
                                                 }
-
-
-                                                return pts.stream().map((pt) -> String.join(",", pt.getValues())).collect(Collectors.toList());
+                                                return pts.stream().map((pt) -> String.join(File.separator, pt.getValues())).collect(Collectors.toList());
                                             } catch (TException e) {
                                                 throw new RuntimeException("table:" + tableName, e);
                                             }
                                         }
-                                        //                                        @Override
-//                                        public List<ColumnMetaData> getSchema() {
-//                                            try {
-//                                                List<ColumnMetaData> cols = Lists.newArrayList();
-//                                                ColumnMetaData cm = null;
-//                                                int index = 0;
-//                                                List<FieldSchema> schema = storeClient.getSchema(database, tableName);
-//                                                for (FieldSchema field : schema) {
-//
-//                                                    field.getType();
-//                                                    // int index, String key, DataType type, boolean pk
-//                                                    cm = new ColumnMetaData(index++, field.getName(), DataType.createVarChar(32), false);
-//                                                    cols.add(cm);
-//                                                }
-//                                                return cols;
-//                                            } catch (TException e) {
-//                                                throw new RuntimeException(e);
-//                                            }
-//                                        }
 
                                         @Override
                                         public String getStorageLocation() {
@@ -390,7 +441,8 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
                 Thread.currentThread().setContextClassLoader(currentLoader);
                 try {
                     Hive.closeCurrent();
-                } catch (Throwable e) { }
+                } catch (Throwable e) {
+                }
             }
 
 

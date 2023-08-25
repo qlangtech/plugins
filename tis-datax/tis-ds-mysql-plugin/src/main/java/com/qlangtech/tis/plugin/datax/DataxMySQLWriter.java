@@ -34,7 +34,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -124,8 +123,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
                 dsFactory.visitFirstConnection((c) -> {
                     Connection conn = c.getConnection();
-                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(
-                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
                     Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
                     if (physicsTabNames.isPresent()) {
                         try (Statement statement = conn.createStatement()) {
@@ -139,8 +137,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                             }
                         }
                     } else {
-                        throw new IllegalStateException("table:" + tableMapper.getFrom()
-                                + " can not find physicsTabs in datasource:" + dsFactory.identityValue());
+                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find physicsTabs in datasource:" + dsFactory.identityValue());
                     }
 
                 });
@@ -168,8 +165,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             @Override
             protected void appendExtraColDef(List<ColWrapper> pks) {
                 if (!pks.isEmpty()) {
-                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
-                            .collect(Collectors.joining(","))).append(")").append("\n");
+                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`").collect(Collectors.joining(","))).append(")").append("\n");
                 }
             }
 
@@ -352,7 +348,8 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
             DataxMySQLWriter dataxWriter = (DataxMySQLWriter) form;
             MySQLDataSourceFactory dsFactory = (MySQLDataSourceFactory) dataxWriter.getDataSourceFactory();
-            if (!(dsFactory.splitTableStrategy instanceof NoneSplitTableStrategy)) {
+            // if (!(dsFactory.splitTableStrategy instanceof NoneSplitTableStrategy)) {
+            if (dsFactory.splitTableStrategy.isSplittable()) {
                 msgHandler.addFieldError(context, KEY_DB_NAME_FIELD_NAME, "Writer端不能使用带有分表策略的数据源");
                 return false;
             }

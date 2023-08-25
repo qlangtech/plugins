@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,15 +79,15 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected HashSet<String> createAddedCols() {
+    protected HashSet<String> createAddedCols( EntityName table) {
         // 这样就可以将'__cc_ck_sign' 字端过滤掉了
         HashSet<String> addedCols = Sets.newHashSet(ClickHouseCommon.KEY_CLICKHOUSE_CK);
         return addedCols;
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, ResultSet columns1, Set<String> pkCols) throws SQLException {
-        return this.wrapColsMeta(inSink, columns1, new CreateColumnMeta(pkCols, columns1) {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
                 if (Types.VARCHAR == dbColType) {
@@ -138,9 +139,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
             throw new SQLException(e);
         }
         // return super.getConnection(jdbcUrl, username, password);
-        return new JDBCConnection(DriverManager.getConnection(
-                jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password))
-                , jdbcUrl);
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)), jdbcUrl);
     }
 
     @Override

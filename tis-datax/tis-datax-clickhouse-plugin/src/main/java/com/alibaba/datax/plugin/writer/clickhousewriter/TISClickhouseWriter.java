@@ -20,8 +20,6 @@ package com.alibaba.datax.plugin.writer.clickhousewriter;
 
 import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 这个扩展是想实现Clickhouse的自动建表
@@ -37,8 +35,7 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
 
         @Override
         public void init() {
-            super.init();
-            Configuration cfg = originalConfig;
+            Configuration cfg = this.getPluginJobConf();
             // 判断表是否存在，如果不存在则创建表
             try {
 
@@ -46,6 +43,7 @@ public class TISClickhouseWriter extends com.alibaba.datax.plugin.writer.clickho
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
+            super.init();
         }
 
 //        @Override

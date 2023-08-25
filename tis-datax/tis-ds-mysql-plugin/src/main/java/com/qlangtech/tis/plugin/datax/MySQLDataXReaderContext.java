@@ -21,7 +21,6 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
@@ -35,12 +34,10 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
     private final RdbmsDataxContext rdbmsContext;
     private final SplitTableStrategy splitTableStrategy;
 
-    public MySQLDataXReaderContext(String name, String sourceTableName
-            , RdbmsDataxContext mysqlContext, DataxMySQLReader dataXReader) {
+    public MySQLDataXReaderContext(String name, String sourceTableName, RdbmsDataxContext mysqlContext, DataxMySQLReader dataXReader) {
         super(name, sourceTableName, null, Objects.requireNonNull(dataXReader, "dataXReader can not be null"));
         this.rdbmsContext = mysqlContext;
-        this.splitTableStrategy = Objects.requireNonNull(dsFactory.splitTableStrategy
-                , "splitTableStrategy can not be null");
+        this.splitTableStrategy = Objects.requireNonNull(dsFactory.splitTableStrategy, "splitTableStrategy can not be null");
     }
 
     /**
@@ -50,7 +47,8 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
      */
     public boolean isSplitTable() {
         // this.splitTableStrategy.getAllPhysicsTabs(this.dsFactory, this.getJdbcUrl(), this.sourceTableName);
-        return !(this.splitTableStrategy instanceof NoneSplitTableStrategy);
+        // return !(this.splitTableStrategy instanceof NoneSplitTableStrategy);
+        return this.splitTableStrategy.isSplittable();
     }
 
     /**
@@ -59,8 +57,7 @@ public class MySQLDataXReaderContext extends RdbmsReaderContext<DataxMySQLReader
      * @return
      */
     public String getSplitTabs() {
-        List<String> allPhysicsTabs
-                = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
+        List<String> allPhysicsTabs = this.splitTableStrategy.getAllPhysicsTabs(dsFactory, this.getJdbcUrl(), this.sourceTableName);
         return getEntitiesWithQuotation(allPhysicsTabs);
     }
 

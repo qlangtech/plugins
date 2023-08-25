@@ -1,0 +1,9 @@
+{
+  "parameter": {
+    "path": [
+      "hdfs://192.168.28.200/user/admin/default/instancedetail/20230822221816/0"
+    ],
+    "entityName": "${reader.sourceTableName}"
+  },
+  "name": "hivereader"
+}

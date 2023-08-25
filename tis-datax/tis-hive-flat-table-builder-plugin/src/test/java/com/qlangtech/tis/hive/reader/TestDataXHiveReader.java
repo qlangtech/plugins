@@ -18,121 +18,84 @@
 
 package com.qlangtech.tis.hive.reader;
 
-import com.alibaba.datax.common.util.Configuration;
-import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.config.authtoken.UserTokenUtils;
-import com.qlangtech.tis.datax.DataxExecutor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
-import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
-import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
-import com.qlangtech.tis.plugin.datax.DefaultDataxProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.TestDataXHiveWriterDump;
-import com.qlangtech.tis.plugin.ds.DSKey;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import junit.framework.TestCase;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
+import org.junit.Test;
 
-import java.io.File;
 import java.util.Collections;
-import java.util.List;
+import java.util.Optional;
 
-/**
- * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-08-20 09:00
- **/
 public class TestDataXHiveReader extends TestCase {
 
-    private static String dataXName = "test";
-    private static final String NAME_TAB = "instancedetail";
+    private static final String dataXName = "testDataXName";
+
+    @Test
+    public void testTempateGenerate() throws Exception {
+
+        Optional<PluginExtraProps> extraProps = PluginExtraProps.load(DataXHiveReader.class);
+        assertTrue("DataXHiveReader extraProps shall exist", extraProps.isPresent());
+
+//        MySQLDataSourceFactory mysqlDataSource = EasyMock.createMock("mysqlDataSourceFactory", MySQLDataSourceFactory.class);
+//        mysqlDataSource.splitTableStrategy = new NoneSplitTableStrategy();
+//
+//        SplitTableStrategy.SplitableTableInDB tabsInDB
+//                = new SplitTableStrategy.SplitableTableInDB(mysqlDataSource, SplitTableStrategy.PATTERN_PHYSICS_TABLE);
+//        tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_01");
+//        tabsInDB.add(TestDataxMySQLWriter.mysqlJdbcUrl, TestSelectedTabs.tabNameOrderDetail + "_02");
+//
+//        EasyMock.expect(mysqlDataSource.getTablesInDB()).andReturn(tabsInDB).times(1);
+//
+//        EasyMock.expect(mysqlDataSource.getPassword()).andReturn(password).anyTimes();
+//        EasyMock.expect(mysqlDataSource.getUserName()).andReturn(userName).anyTimes();
+//        IDataSourceDumper dataDumper = EasyMock.createMock(TestSelectedTabs.tabNameOrderDetail + "TableDumper", IDataSourceDumper.class);
+//        EasyMock.expect(dataDumper.getDbHost()).andReturn(TestDataxMySQLWriter.mysqlJdbcUrl).anyTimes();
+//// int index, String key, int type, boolean pk
+//        TISTable targetTable = new TISTable();
+//        targetTable.setTableName(TestSelectedTabs.tabNameOrderDetail);
+//
+//        EasyMock.expect(mysqlDataSource.getTableMetadata(false, EntityName.parse(TestSelectedTabs.tabNameOrderDetail)))
+//                .andReturn(TestSelectedTabs.tabColsMetaOrderDetail).anyTimes();
+//
+//        EasyMock.expect(mysqlDataSource.getDataDumpers(targetTable)).andDelegateTo(new MySQLDataSourceFactory() {
+//            @Override
+//            public DataDumpers getDataDumpers(TISTable table) {
+//                return new DataDumpers(1, Collections.singletonList(dataDumper).iterator());
+//            }
+//        }).anyTimes();
+//
+//        EasyMock.replay(mysqlDataSource, dataDumper);
 
 
-    // @Test
-    public void testRealDump() throws Exception {
-        DataxProcessor.processorGetter = (dataXName) -> {
-            DefaultDataxProcessor processor = new DefaultDataxProcessor();
-            processor.name = dataXName;
-            return processor;
+        DataXHiveReader mySQLReader = new DataXHiveReader() {
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXHiveReader.class;
+            }
         };
-        Hiveserver2DataSourceFactory dsFactory
-                = TestDataXHiveWriterDump.createHiveserver2DataSourceFactory(UserTokenUtils.createNoneAuthToken());
+        mySQLReader.dataXName = dataXName;
+        mySQLReader.template = DataXHiveReader.getDftTemplate();
+        //mySQLReader.
 
-        TIS.dsFactoryPluginStoreGetter = (p) -> {
-            DSKey key = new DSKey(TIS.DB_GROUP_NAME, p, DataSourceFactory.class);
-            return new DataSourceFactoryPluginStore(key, false) {
-                @Override
-                public DataSourceFactory getPlugin() {
-                    return dsFactory;
-                }
-            };
-        };
-        File dataxReaderResult = new File("./mysql-datax-reader-result.txt");
-        FileUtils.touch(dataxReaderResult);
-        try {
-            DataXHiveReader dataxReader = createReader(dataXName);
-            DataxReader.dataxReaderGetter = (name) -> {
-                Assert.assertEquals(TestDataXHiveReader.dataXName, name);
-                return dataxReader;
-            };
+        SelectedTab selectedTab = TestDataXHiveReaderRealDump.parseTab();
+//        selectedTab.setCols(Lists.newArrayList("col2", "col1", "col3"));
+//        selectedTab.setWhere("delete = 0");
+//        selectedTab.name = TestSelectedTabs.tabNameOrderDetail;
+        mySQLReader.selectedTabs = (Collections.singletonList(selectedTab));
+        //校验证列和 where条件都设置的情况
+        // valiateReaderCfgGenerate("mysql-datax-reader-assert.json", processor, mySQLReader);
 
-            Configuration readerConf = IOUtils.loadResourceFromClasspath(
-                    dataxReader.getClass(), "hive-datax-reader-test-cfg.json", true, (writerJsonInput) -> {
-                        return Configuration.from(writerJsonInput);
-                    });
-            readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-            readerConf.set(DataxExecutor.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
-            ReaderTemplate.realExecute(dataXName, readerConf, dataxReaderResult, dataxReader);
-            System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
-        } finally {
-            org.apache.commons.io.FileUtils.deleteQuietly(dataxReaderResult);
-        }
-    }
+        ReaderTemplate.validateDataXReader("hive-datax-reader-assert.json", dataXName, mySQLReader);
 
-    private static SelectedTab parseTab() {
-        return IOUtils.loadResourceFromClasspath(
-                TestDataXHiveReader.class, NAME_TAB + "_schema.csv", true, (writerJsonInput) -> {
-                    SelectedTab tab = new SelectedTab();
-                    tab.name = NAME_TAB;
-                    List<String> lines = org.apache.commons.io.IOUtils.readLines(writerJsonInput, TisUTF8.get());
-                    for (String l : lines) {
-                        tab.cols.add(StringUtils.substringBefore(l, ","));
-                    }
-                    return tab;
-                });
-    }
-
-    private static DataXHiveReader createReader(String dataXName) {
-        DataXHiveReader hiveReader = new DataXHiveReader();
-        SelectedTab tab = parseTab();
-        hiveReader.selectedTabs = Collections.singletonList(tab);
-        HiveDFSLinker hiveDFSLinker = new HiveDFSLinker();
-
-        HdfsFileSystemFactory fsFactory = new HdfsFileSystemFactory();
-        fsFactory.rootDir = "/user/admin";
-        fsFactory.userToken = UserTokenUtils.createNoneAuthToken();
-        fsFactory.hdfsSiteContent //
-                = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "\n" +
-                "<configuration>\n" +
-                "  <property>\n" +
-                "    <name>fs.defaultFS</name>\n" +
-                "    <value>hdfs://192.168.28.200</value>\n" +
-                "  </property>\n" +
-                "</configuration>";
-        // fsFactory.getFileSystem();
-
-
-        hiveDFSLinker.fileSystem = fsFactory;
-        hiveDFSLinker.linker = "hiveSourceRef";
-        hiveReader.dfsLinker = hiveDFSLinker;
-        return hiveReader;
+//        mySQLReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
+//
+//        ReaderTemplate.validateDataXReader("mysql-datax-reader-asser-without-option-val.json", dataXName, mySQLReader);
+//
+//        // DefaultSplitTableStrategy splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
+//        mysqlDataSource.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
+//        ReaderTemplate.validateDataXReader("mysql-datax-reader-assert-split-tabs.json", dataXName, mySQLReader);
+//
+//        EasyMock.verify(mysqlDataSource, dataDumper);
     }
 }

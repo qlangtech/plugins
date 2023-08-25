@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
@@ -44,6 +45,14 @@ public class TDFSReader extends FtpReader {
 
     public static class Job extends FtpReader.Job {
         private AbstractDFSReader reader;
+
+        protected TDFSLinker getDFSLinker() {
+            return Objects.requireNonNull(reader.dfsLinker, "reader.dfsLinker can not be null");
+        }
+
+        protected <T extends AbstractDFSReader> T getReader() {
+            return (T) this.reader;
+        }
 
         @Override
         public void init() {
@@ -61,8 +70,7 @@ public class TDFSReader extends FtpReader {
 
         @Override
         protected ITDFSSession createTdfsSession() {
-            return Objects.requireNonNull(reader.dfsLinker
-                    , "reader.dfsLinker can not be null").createTdfsSession();
+            return this.getDFSLinker().createTdfsSession();
         }
     }
 
@@ -132,6 +140,9 @@ public class TDFSReader extends FtpReader {
                     }
                 }
                 this.cols = Collections.unmodifiableList(this.cols);
+                this.unstructuredReaderCreator = (reader) -> {
+                    return Objects.requireNonNull(this.fileFormat, "fileFormat can not be null").createReader(reader, sourceCols.getColsMeta());
+                };
             }
 
             return this.cols;
@@ -141,16 +152,13 @@ public class TDFSReader extends FtpReader {
         protected ITDFSSession createTdfsSession() {
             //  this.nullFormat = this.reader.fileFormat
 
-            this.unstructuredReaderCreator = (reader) -> {
-                return Objects.requireNonNull(this.fileFormat, "fileFormat can not be null").createReader(reader);
-            };
+
             return reader.dfsLinker.createTdfsSession();
         }
     }
 
 
     private static AbstractDFSReader getDfsReader(IJobContainerContext containerContext) {
-        return Objects.requireNonNull((AbstractDFSReader) DataxReader.load(null, containerContext.getTISDataXName())
-                , "writer can not be null");
+        return Objects.requireNonNull((AbstractDFSReader) DataxReader.load(null, containerContext.getTISDataXName()), "writer can not be null");
     }
 }

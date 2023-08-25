@@ -24,6 +24,7 @@ import com.alibaba.datax.plugin.unstructuredstorage.writer.TextWriterImpl;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import org.apache.commons.collections.CollectionUtils;
@@ -59,19 +60,15 @@ public class TextFormat extends BasicPainFormat {
 
             @Override
             public void writeOneRecord(List<String> splitedRows) throws IOException {
-                this.textWriter.write(String.format("%s%s",
-                        StringUtils.join(splitedRows, getFieldDelimiter()),
-                        IOUtils.LINE_SEPARATOR));
+                this.textWriter.write(String.format("%s%s", StringUtils.join(splitedRows, getFieldDelimiter()), IOUtils.LINE_SEPARATOR));
             }
         };
     }
 
     @Override
-    public UnstructuredReader createReader(BufferedReader reader) {
-        return new TEXTFormat(reader, !header, getFieldDelimiter());
+    public UnstructuredReader createReader(BufferedReader reader, List<CMeta> sourceCols) {
+        return new TEXTFormat(reader, !header, sourceCols.size(), getFieldDelimiter());
     }
-
-
 
 
     @TISExtension

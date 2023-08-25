@@ -18,10 +18,23 @@
 
 package com.qlangtech.tis.hive.reader;
 
+import com.beust.jcommander.internal.Lists;
+import com.qlangtech.tis.config.hive.meta.HiveTable;
+import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
+import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
@@ -33,6 +46,8 @@ import java.util.stream.Collectors;
  * @create: 2023-08-19 15:42
  **/
 public class DataXHiveReader extends AbstractDFSReader {
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String ptFilter;
 
     public DataXHiveReader() {
         this.resMatcher = new HiveDFSResMatcher();
@@ -41,6 +56,47 @@ public class DataXHiveReader extends AbstractDFSReader {
     @Override
     public HiveDFSLinker getDfsLinker() {
         return (HiveDFSLinker) super.getDfsLinker();
+    }
+
+    public static String getDftTemplate() {
+        return IOUtils.loadResourceFromClasspath(DataXHiveReader.class, "DataXHiveReader-tpl.json");
+    }
+
+    @Override
+    public boolean hasMulitTable() {
+        return CollectionUtils.isNotEmpty(this.selectedTabs);
+    }
+
+    @Override
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+        // return super.getTableMetadata(conn, inSink, table);
+        Hiveserver2DataSourceFactory dsFactory = this.getDfsLinker().getDataSourceFactory();
+        return dsFactory.getTableMetadata(false, table);
+    }
+
+
+
+    @Override
+    public List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities() {
+
+        List<DataXDFSReaderWithMeta.TargetResMeta> result = Lists.newArrayList();
+        DataXDFSReaderWithMeta.TargetResMeta resMeta = null;
+
+        Hiveserver2DataSourceFactory dsFactory = this.getDfsLinker().getDataSourceFactory();
+        IHiveMetaStore msClient = dsFactory.createMetaStoreClient();
+        List<HiveTable> tabs = msClient.getTables(dsFactory.dbName);
+        for (HiveTable tab : tabs) {
+            resMeta = new DataXDFSReaderWithMeta.TargetResMeta(tab.getTableName(), (session) -> {
+                return dsFactory.getTableMetadata(false, EntityName.parse(tab.getTableName()));
+            });
+            result.add(resMeta);
+        }
+
+        return result;
+    }
+
+    public static String getPtDftVal() {
+        return IDumpTable.PARTITION_PT + " = " + HiveTable.KEY_PT_LATEST;
     }
 
     public static List<? extends Descriptor> filter(List<? extends Descriptor> descs) {
@@ -54,8 +110,7 @@ public class DataXHiveReader extends AbstractDFSReader {
 
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {
-        return this.getDfsLinker().getFileFormat(
-                entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
+        return this.getDfsLinker().getFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
     }
 
 
@@ -78,6 +133,12 @@ public class DataXHiveReader extends AbstractDFSReader {
         @Override
         public EndType getEndType() {
             return EndType.HiveMetaStore;
+        }
+
+
+        @Override
+        public String getDisplayName() {
+            return this.getEndType().name();
         }
     }
 }

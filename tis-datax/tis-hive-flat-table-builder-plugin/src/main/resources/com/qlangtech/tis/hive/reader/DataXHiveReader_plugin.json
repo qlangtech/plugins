@@ -1,6 +1,6 @@
 {
-  "name": "ftpreader",
-  "class": "com.alibaba.datax.plugin.writer.tdfsreader.TDFSReader",
+  "name": "hivereader",
+  "class": "com.alibaba.datax.plugin.reader.hive.HiveReader",
   "description": "",
   "developer": "alibaba"
 }

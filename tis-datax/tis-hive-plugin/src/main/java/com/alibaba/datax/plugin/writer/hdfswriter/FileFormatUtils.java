@@ -7,6 +7,8 @@ import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.plugin.TaskPluginCollector;
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.hive.HdfsFileType;
+import com.qlangtech.tis.hive.HdfsFormat;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang3.StringUtils;
@@ -43,9 +45,7 @@ public class FileFormatUtils {
      * @param fileName
      * @param taskPluginCollector
      */
-    public static void orcFileStartWrite(
-            FileSystem fileSystem, JobConf conf, RecordReceiver lineReceiver, Configuration config, String fileName,
-            TaskPluginCollector taskPluginCollector) {
+    public static void orcFileStartWrite(FileSystem fileSystem, JobConf conf, RecordReceiver lineReceiver, Configuration config, String fileName, TaskPluginCollector taskPluginCollector) {
         List<IColMetaGetter> colsMeta = HdfsColMeta.getColsMeta(config);
         // List<Configuration> columns = config.getListConfiguration(Key.COLUMN);
         String compress = config.getString(Key.COMPRESS, null);
@@ -84,9 +84,7 @@ public class FileFormatUtils {
         }
     }
 
-    public static MutablePair<Object[], Boolean> transportOneRecord(
-            Record record, Object[] rowVals, List<Function<Column, Object>> columnValGetters,
-            TaskPluginCollector taskPluginCollector) {
+    public static MutablePair<Object[], Boolean> transportOneRecord(Record record, Object[] rowVals, List<Function<Column, Object>> columnValGetters, TaskPluginCollector taskPluginCollector) {
 
         MutablePair<Object[], Boolean> transportResult = new MutablePair<Object[], Boolean>();
         transportResult.setRight(false);
@@ -152,8 +150,7 @@ public class FileFormatUtils {
 //                        }
                     } catch (Exception e) {
                         // warn: 此处认为脏数据
-                        String message = String.format(
-                                "字段类型转换错误：实际字段值为[%s].",
+                        String message = String.format("字段类型转换错误：实际字段值为[%s].",
                                 //colMeta.getType(),
                                 column.toString());
                         taskPluginCollector.collectDirtyRecord(record, message);
@@ -163,7 +160,7 @@ public class FileFormatUtils {
                 } else {
                     // warn: it's all ok if nullFormat is null
                     // recordList.add(null);
-                    rowVals[i] = null;
+                    rowVals[i] = HdfsFormat.TEXT_FORMAT_NULL_FORMAT;
                 }
             }
         }
@@ -202,14 +199,12 @@ public class FileFormatUtils {
         public StructObjectInspector getStructObjectInspector() {
 
             if (colsMeta.size() != columnTypeInspectors.size() || colsMeta.size() != columnValGetters.size()) {
-                throw new IllegalStateException("colsMeta size:" + colsMeta.size() + " is not equal with columnTypeInspectors.size():"
-                        + columnTypeInspectors.size() + ", columnValGetters.size:" + columnValGetters.size());
+                throw new IllegalStateException("colsMeta size:" + colsMeta.size() + " is not equal with columnTypeInspectors.size():" + columnTypeInspectors.size() + ", columnValGetters.size:" + columnValGetters.size());
             }
 
             List<String> columnNames = colsMeta.stream().map((c) -> c.getName()).collect(Collectors.toList());
 
-            StructObjectInspector inspector = ObjectInspectorFactory
-                    .getStandardStructObjectInspector(columnNames, this.columnTypeInspectors);
+            StructObjectInspector inspector = ObjectInspectorFactory.getStandardStructObjectInspector(columnNames, this.columnTypeInspectors);
             return inspector;
         }
 
@@ -231,30 +226,25 @@ public class FileFormatUtils {
             eachColumnConf.getType().accept(new DataType.TypeVisitor<Void>() {
                 @Override
                 public Void bigInt(DataType type) {
-                    typeValInspectors.add(
-                            ObjectInspectorFactory.getReflectionObjectInspector(Long.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asLong());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Long.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asLong());
                     return null;
                 }
 
                 @Override
                 public Void doubleType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Double.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asDouble());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Double.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asDouble());
                     return null;
                 }
 
                 @Override
                 public Void dateType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Date.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> new java.sql.Date(col.asDate().getTime()));
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Date.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> new java.sql.Date(col.asDate().getTime()));
                     return null;
                 }
 
                 @Override
                 public Void timestampType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Timestamp.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA)
-                            , (col) -> new java.sql.Timestamp(col.asDate().getTime()));
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Timestamp.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> new java.sql.Timestamp(col.asDate().getTime()));
                     return null;
                 }
 
@@ -271,23 +261,19 @@ public class FileFormatUtils {
 
                 @Override
                 public Void varcharType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(String.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA)
-                            , (col) -> col.asString());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(String.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asString());
                     return null;
                 }
 
                 @Override
                 public Void intType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Integer.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA)
-                            , (col) -> col.asLong().intValue());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Integer.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asLong().intValue());
                     return null;
                 }
 
                 @Override
                 public Void floatType(DataType type) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Float.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asDouble().floatValue()
-                    );
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Float.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asDouble().floatValue());
                     return null;
                 }
 
@@ -303,22 +289,19 @@ public class FileFormatUtils {
 
                 @Override
                 public Void tinyIntType(DataType dataType) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Byte.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asLong().byteValue());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Byte.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asLong().byteValue());
                     return null;
                 }
 
                 @Override
                 public Void smallIntType(DataType dataType) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Short.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asLong().shortValue());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Short.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asLong().shortValue());
                     return null;
                 }
 
                 @Override
                 public Void boolType(DataType dataType) {
-                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Boolean.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA),
-                            (col) -> col.asBoolean());
+                    typeValInspectors.add(ObjectInspectorFactory.getReflectionObjectInspector(Boolean.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA), (col) -> col.asBoolean());
                     return null;
                 }
             });
@@ -373,11 +356,8 @@ public class FileFormatUtils {
         return typeValInspectors;
     }
 
-    public static MutablePair<Text, Boolean> transportOneRecord(
-            Record record, char fieldDelimiter, Object[] tmpRowVals
-            , List<Function<Column, Object>> columnsConfiguration, TaskPluginCollector taskPluginCollector) {
-        MutablePair<Object[], Boolean> transportResultList
-                = transportOneRecord(record, tmpRowVals, columnsConfiguration, taskPluginCollector);
+    public static MutablePair<Text, Boolean> transportOneRecord(Record record, char fieldDelimiter, Object[] tmpRowVals, List<Function<Column, Object>> columnsConfiguration, TaskPluginCollector taskPluginCollector) {
+        MutablePair<Object[], Boolean> transportResultList = transportOneRecord(record, tmpRowVals, columnsConfiguration, taskPluginCollector);
         //保存<转换后的数据,是否是脏数据>
         MutablePair<Text, Boolean> transportResult = new MutablePair<Text, Boolean>();
         transportResult.setRight(false);
@@ -403,8 +383,7 @@ public class FileFormatUtils {
             // org.apache.hadoop.hive.ql.io.orc.ZlibCodec.class  not public
             //codecClass = org.apache.hadoop.hive.ql.io.orc.ZlibCodec.class;
         } else {
-            throw DataXException.asDataXException(HdfsWriterErrorCode.ILLEGAL_VALUE,
-                    String.format("目前不支持您配置的 compress 模式 : [%s]", compress));
+            throw DataXException.asDataXException(HdfsWriterErrorCode.ILLEGAL_VALUE, String.format("目前不支持您配置的 compress 模式 : [%s]", compress));
         }
         return codecClass;
     }

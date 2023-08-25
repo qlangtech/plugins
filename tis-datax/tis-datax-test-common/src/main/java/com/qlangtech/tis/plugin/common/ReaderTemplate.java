@@ -75,8 +75,7 @@ public class ReaderTemplate {
         EasyMock.verify(processor, dataxGlobalCfg, dataxWriter, dataxContext);
     }
 
-    private static void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor
-            , DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
+    private static void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
         String readerCfg = generateReaderCfg(processor, dataXReader, dataxWriter, dataXName);
         TestCase.assertNotNull(readerCfg);
         System.out.println(readerCfg);
@@ -111,7 +110,7 @@ public class ReaderTemplate {
     private static String generateReaderCfg(IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
 
         IDataxReaderContext dataxReaderContext = null;
-        Iterator<IDataxReaderContext> subTasks = dataXReader.getSubTasks();
+        Iterator<IDataxReaderContext> subTasks = Objects.requireNonNull(dataXReader.getSubTasks(), "subTasks can not be null");
         int dataxReaderContextCount = 0;
         while (subTasks.hasNext()) {
             dataxReaderContext = subTasks.next();
@@ -120,6 +119,10 @@ public class ReaderTemplate {
         TestCase.assertEquals(1, dataxReaderContextCount);
         TestCase.assertNotNull(dataxReaderContext);
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, dataXName, processor) {
+            @Override
+            protected final String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
+                return dataXReader.getTemplate();
+            }
         };
 
         return dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());
@@ -134,29 +137,21 @@ public class ReaderTemplate {
         Objects.requireNonNull(readerCfg);
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
-        DataxExecutor.initializeClassLoader(
-                Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
+        DataxExecutor.initializeClassLoader(Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
 
         Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
                 , "container.json", true, (input) -> {
                     Configuration cfg = Configuration.from(input);
 
 
-                    cfg.set("plugin.writer.streamwriter.class"
-                            , "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
+                    cfg.set("plugin.writer.streamwriter.class", "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
 
-                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class"
-                            , dataxReader.getDataxMeta().getImplClass());
+                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].reader" //
                             , readerCfg);
-                    cfg.set("job.content[0].writer", Configuration.from("{\n" +
-                            "    \"name\": \"streamwriter\",\n" +
-                            "    \"parameter\": {\n" +
+                    cfg.set("job.content[0].writer", Configuration.from("{\n" + "    \"name\": \"streamwriter\",\n" + "    \"parameter\": {\n" +
                             //"        \"print\": true\n" +
-                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" +
-                            "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" +
-                            "    }\n" +
-                            "}"));
+                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
 
                     DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
                     return cfg;

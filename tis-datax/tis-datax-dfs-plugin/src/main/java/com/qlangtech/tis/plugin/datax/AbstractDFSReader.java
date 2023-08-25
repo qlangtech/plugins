@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.impl.DataXBasicProcessMeta;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -47,18 +45,18 @@ import java.util.function.Supplier;
  * @see com.alibaba.datax.plugin.reader.ftpreader.FtpReader
  **/
 @Public
-public abstract class AbstractDFSReader extends DataxReader implements DataXBasicProcessMeta.IRDBMSSupport, Supplier<List<ISelectedTab>>, IDFSReader, KeyedPluginStore.IPluginKeyAware {
+public abstract class AbstractDFSReader extends DataxReader implements Supplier<List<ISelectedTab>>, IDFSReader, KeyedPluginStore.IPluginKeyAware {
     private static final Logger logger = LoggerFactory.getLogger(AbstractDFSReader.class);
     public static final String KEY_DFS_LINKER = "dfsLinker";
     public static final String KEY_RES_MATCHER = "resMatcher";
 
-    public String dataXName;
+    public transient String dataXName;
 
 
     @FormField(ordinal = 1, validate = {Validator.require})
     public TDFSLinker dfsLinker;
 
-    @FormField(ordinal = 2, validate = {Validator.require})
+    @FormField(ordinal = 3, validate = {Validator.require})
     public DFSResMatcher resMatcher;
 
 
@@ -67,14 +65,14 @@ public abstract class AbstractDFSReader extends DataxReader implements DataXBasi
      * support rdbms start
      * ================================================================================
      */
-    @SubForm(desClazz = SelectedTab.class
-            , idListGetScript = "return com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta.getDFSFiles(filter);", atLeastOne = true)
+    @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta.getDFSFiles(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
+
+    public abstract List<DataXDFSReaderWithMeta.TargetResMeta> getSelectedEntities();
 
     @Override
     public List<ISelectedTab> get() {
-        return this.selectedTabs != null
-                ? Collections.unmodifiableList(this.selectedTabs) : Collections.emptyList();
+        return this.selectedTabs != null ? Collections.unmodifiableList(this.selectedTabs) : Collections.emptyList();
     }
 
     @Override
@@ -116,11 +114,6 @@ public abstract class AbstractDFSReader extends DataxReader implements DataXBasi
      * ================================================================================
      */
 
-
-    @Override
-    public boolean isRDBMSSupport() {
-        return Objects.requireNonNull(resMatcher, "resMatcher can not be null").isRDBMSSupport();
-    }
 
     @Override
     public final TableInDB getTablesInDB() {

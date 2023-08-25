@@ -20,7 +20,6 @@ package com.qlangtech.tis.hive.reader;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.resmatcher.BasicDFSResMatcher;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -52,8 +51,7 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
     }
 
     @Override
-    public SourceColsMeta getSourceColsMeta(
-            ITDFSSession session, Optional<String> entitName, String path, IDataxProcessor processor) {
+    public SourceColsMeta getSourceColsMeta(ITDFSSession session, Optional<String> entitName, String path, IDataxProcessor processor) {
 
         final HiveDFSSession hiveSession = (HiveDFSSession) session;
         String tabName = entitName.orElseThrow(() -> new IllegalStateException("param entityName must be present"));
@@ -67,7 +65,7 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
 
     @Override
     public List<ColumnMetaData> getTableMetadata(IDFSReader dfsReader, EntityName table) throws TableNotFoundException {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -77,7 +75,7 @@ public class HiveDFSResMatcher extends BasicDFSResMatcher {
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter, IDFSReader dfsReader) {
-        return null;
+        return new HiveGroupChildTaskIterator(dfsReader.getSelectedTabs());
     }
 
     @Override

@@ -27,6 +27,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -41,8 +42,11 @@ import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.serde.serdeConstants;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -56,6 +60,11 @@ public class HiveDFSLinker extends TDFSLinker {
     @FormField(ordinal = 5, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String fsName;
     public transient FileSystemFactory fileSystem;
+
+    @Override
+    public String getRootPath() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public ITDFSSession createTdfsSession(Integer timeout) {
@@ -92,16 +101,21 @@ public class HiveDFSLinker extends TDFSLinker {
         }
     }
 
-    static final TextFormat txtFormat;
+//    static final TextFormat txtFormat;
+//
+//    static {
+//        txtFormat = new TextFormat();
+//        txtFormat.header = false;
+//        txtFormat.fieldDelimiter = Delimiter.Tab.token;
+//        txtFormat.compress = Compress.none.token;
+//        txtFormat.encoding = "utf-8";
+//    }
 
-    static {
-        txtFormat = new TextFormat();
-        txtFormat.header = false;
-        txtFormat.fieldDelimiter = Delimiter.Tab.token;
-        txtFormat.compress = Compress.none.token;
-        txtFormat.encoding = "utf-8";
-    }
-
+    /**
+     * @param entityName
+     * @return
+     * @see org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+     */
     public FileFormat getFileFormat(String entityName) {
         if (StringUtils.isEmpty(entityName)) {
             throw new IllegalArgumentException("param entityName can not be empty");
@@ -110,9 +124,87 @@ public class HiveDFSLinker extends TDFSLinker {
         Hiveserver2DataSourceFactory dfFactory = getDataSourceFactory();
 
         HiveTable table = dfFactory.metadata.createMetaStoreClient().getTable(dfFactory.dbName, entityName);
+        HiveTable.StoredAs storedAs = table.getStoredAs();
+        SerDeInfo sdInfo = storedAs.getSerdeInfo();
+        Map<String, String> sdParams = sdInfo.getParameters();
+        try {
+            Class<?> outputFormatClass = Class.forName(storedAs.outputFormat, false, HiveDFSLinker.class.getClassLoader());
+            if (org.apache.hadoop.mapred.TextOutputFormat.class.isAssignableFrom(outputFormatClass)) {
 
-        return txtFormat;
+
+                TextFormat txtFormat = new TextFormat();
+                txtFormat.header = false;
+
+                txtFormat.fieldDelimiter = Delimiter.parseByVal(sdParams.get(serdeConstants.FIELD_DELIM)).token;
+                txtFormat.nullFormat = sdParams.get(serdeConstants.SERIALIZATION_NULL_FORMAT);
+                txtFormat.dateFormat = "yyyy-MM-dd";
+                txtFormat.compress = Compress.none.token;
+                txtFormat.encoding = TisUTF8.getName();
+                return txtFormat;
+            } else {
+                throw new IllegalStateException("outputFormatClass:" + outputFormatClass.getName() + " can not be resolved");
+            }
+            // HiveIgnoreKey
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        //  storedAs.inputFormat;
+
+//        Map<String, String> params = sdInfo.getParameters();
+//        try {
+//            if (Class.forName(sdInfo.getSerializationLib()) == LazySimpleSerDe.class) {
+//                params.get(serdeConstants.FIELD_DELIM);
+//            }
+//        } catch (ClassNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+        // return txtFormat;
     }
+
+//    private class HdfsTextReader extends TextFormat {
+//        private final byte[] lineDelimite;
+//
+//        public HdfsTextReader(byte[] lineDelimite) {
+//            this.lineDelimite = lineDelimite;
+//        }
+//
+//        @Override
+//        public UnstructuredReader createReader(InputStream input) {
+//
+//            org.apache.hadoop.util.LineReader lineReader //
+//                    = new org.apache.hadoop.util.LineReader(input, lineDelimite);
+//            Text line = new Text();
+//            return new UnstructuredReader() {
+//                @Override
+//                public boolean hasNext() throws IOException {
+//                    line.clear();
+//                    return lineReader.readLine(line) > 0;
+//                }
+//
+//                @Override
+//                public String[] next() throws IOException {
+//
+//                    // line.
+//                    line.write();
+//                    return new String[59];
+//                }
+//
+//                @Override
+//                public String[] getHeader() {
+//                    throw new UnsupportedOperationException();
+//                }
+//
+//                @Override
+//                public void close() throws IOException {
+//                    IOUtils.close(input);
+//                }
+//            };
+//
+//
+//        }
+//    }
 
 
     @TISExtension
@@ -120,9 +212,7 @@ public class HiveDFSLinker extends TDFSLinker {
 
         public DftDescriptor() {
             super();
-            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME
-                    , () -> TIS.getPluginStore(FileSystemFactory.class)
-                            .getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
         }
 
         @Override
@@ -137,7 +227,7 @@ public class HiveDFSLinker extends TDFSLinker {
 
         @Override
         public boolean validateLinker(IFieldErrorHandler msgHandler, Context context, String fieldName, String linker) {
-            return false;
+            return true;
         }
     }
 }

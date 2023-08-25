@@ -72,8 +72,7 @@ public abstract class HiveTask extends AdapterTask {
     /**
      * @param joinTaskStatus
      */
-    protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode
-            , Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
+    protected HiveTask(IDataSourceFactoryGetter dsFactoryGetter, ISqlTask nodeMeta, boolean isFinalNode, Supplier<IPrimaryTabFinder> erRules, IJoinTaskStatus joinTaskStatus) {
         super(nodeMeta.getId());
         if (joinTaskStatus == null) {
             throw new IllegalStateException("param joinTaskStatus can not be null");
@@ -94,8 +93,7 @@ public abstract class HiveTask extends AdapterTask {
      * @return
      * @throws Exception
      */
-    public static boolean isTableExists(DataSourceMeta ds
-            , DataSourceMeta.JDBCConnection connection, EntityName dumpTable) throws Exception {
+    public static boolean isTableExists(DataSourceMeta ds, DataSourceMeta.JDBCConnection connection, EntityName dumpTable) throws Exception {
         // 判断表是否存在
 //        if (!isDBExists(mrEngine, connection, dumpTable.getDbName())) {
 //            // DB都不存在，table肯定就不存在啦
@@ -223,8 +221,7 @@ public abstract class HiveTask extends AdapterTask {
         // 校验最新的Partition 是否已经生成
         if (!allpts.contains(this.rewriteSql.primaryTable.getPt())) {
             StringBuffer errInfo = new StringBuffer();
-            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + this.rewriteSql.primaryTable
-                    + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
+            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + this.rewriteSql.primaryTable + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
             child = this.rewriteSql.primaryTable.getChild();
             if (child != null && !child.isSubQueryTable()) {
                 try {
@@ -232,9 +229,7 @@ public abstract class HiveTask extends AdapterTask {
                 } catch (Exception e) {
                     throw new RuntimeException(child.getTable().getFullName(), e);
                 }
-                errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT)
-                        .append(":").append(this.rewriteSql.primaryTable)
-                        .append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
+                errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT).append(":").append(this.rewriteSql.primaryTable).append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
             }
             throw new IllegalStateException(errInfo.toString());
         }
@@ -254,8 +249,7 @@ public abstract class HiveTask extends AdapterTask {
 
             final EntityName dumpTable = EntityName.create(dsFactory.getDbConfig().getName(), this.getName());
 
-            initializeTable(this.dsFactoryGetter.getDataSourceFactory(), insertParser
-                    , conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
+            initializeTable(this.dsFactoryGetter.getDataSourceFactory(), insertParser, conn, dumpTable, ITableDumpConstant.MAX_PARTITION_SAVE);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -268,9 +262,7 @@ public abstract class HiveTask extends AdapterTask {
      * @param partitionRetainNum 保留多少个分区
      * @throws Exception
      */
-    protected abstract void initializeTable(DataSourceMeta mrEngine
-            , ColsParser insertParser
-            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception;
+    protected abstract void initializeTable(DataSourceMeta mrEngine, ColsParser insertParser, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, Integer partitionRetainNum) throws Exception;
 
     protected abstract void executeSql(String sql, DataSourceMeta.JDBCConnection conn) throws SQLException;
 
@@ -287,14 +279,7 @@ public abstract class HiveTask extends AdapterTask {
         }
         if (!lackDependencies.isEmpty()) {
             // 说明有依赖到的node没有被执行
-            throw new IllegalStateException("taskname:" + taskname + " lackDependencies:"
-                    + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.parseEntityName()
-                    + ",status:" + (r.dependencyWorkStatus == null ? "notExecute" : r.dependencyWorkStatus) + ")")
-                    .collect(Collectors.joining())
-                    + "/n TaskWorkStatus:"
-                    + this.getTaskWorkStatus().entrySet().stream()
-                    .map((e) -> "[" + e.getKey() + "->" + e.getValue() + "]")
-                    .collect(Collectors.joining(",")));
+            throw new IllegalStateException("taskname:" + taskname + " lackDependencies:" + lackDependencies.stream().map((r) -> "(" + r.taskNode.getId() + "," + r.taskNode.parseEntityName() + ",status:" + (r.dependencyWorkStatus == null ? "notExecute" : r.dependencyWorkStatus) + ")").collect(Collectors.joining()) + "/n TaskWorkStatus:" + this.getTaskWorkStatus().entrySet().stream().map((e) -> "[" + e.getKey() + "->" + e.getValue() + "]").collect(Collectors.joining(",")));
         }
     }
 
@@ -412,18 +397,16 @@ public abstract class HiveTask extends AdapterTask {
                     try (ResultSet metaData = convert2ResultSet(result.getMetaData())) {
                         // 取得结果集数据列类型
                         List<ColumnMetaData> columnMetas
-                                = dsFactory.wrapColsMeta(true, metaData
-                                , new DataSourceFactory.CreateColumnMeta(Collections.emptySet(), metaData) {
-                                    @Override
-                                    public ColumnMetaData create(String colName, int index) throws SQLException {
-                                        ColMeta colMeta = cols.get(index);
-                                        if (StringUtils.indexOf(colName, colMeta.getName()) < 0) {
-                                            throw new IllegalStateException("colMeta.getName:"
-                                                    + colMeta.getName() + " is not contain in colName:" + colName);
-                                        }
-                                        return super.create(colMeta.getName(), index);
-                                    }
-                                });
+                                = dsFactory.wrapColsMeta(true, null, metaData, new DataSourceFactory.CreateColumnMeta(Collections.emptySet(), metaData) {
+                            @Override
+                            public ColumnMetaData create(String colName, int index) throws SQLException {
+                                ColMeta colMeta = cols.get(index);
+                                if (StringUtils.indexOf(colName, colMeta.getName()) < 0) {
+                                    throw new IllegalStateException("colMeta.getName:" + colMeta.getName() + " is not contain in colName:" + colName);
+                                }
+                                return super.create(colMeta.getName(), index);
+                            }
+                        });
 
 
                         return columnMetas;
@@ -468,9 +451,7 @@ public abstract class HiveTask extends AdapterTask {
      * @param dumpTable
      * @throws Exception
      */
-    public static void initializeTable(DataSourceMeta ds
-            , DataSourceMeta.JDBCConnection conn, EntityName dumpTable, IHistoryTableProcessor historyTableProcessor
-            , Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
+    public static void initializeTable(DataSourceMeta ds, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, IHistoryTableProcessor historyTableProcessor, Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
 //        if (partitionRetainNum == null || partitionRetainNum < 1) {
 //            throw new IllegalArgumentException("illegal param partitionRetainNum ");
 //        }

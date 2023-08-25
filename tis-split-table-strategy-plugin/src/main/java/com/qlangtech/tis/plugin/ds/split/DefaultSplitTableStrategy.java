@@ -19,10 +19,6 @@
 package com.qlangtech.tis.plugin.ds.split;
 
 import com.alibaba.citrus.turbine.Context;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.qlangtech.tis.datax.DataXJobInfo;
-import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -38,13 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -60,6 +50,11 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     public String tabPattern;
 
     @Override
+    public boolean isSplittable() {
+        return true;
+    }
+
+    @Override
     public TableInDB createTableInDB(DBIdentity id) {
         return new SplitableTableInDB(id, getTabPattern());
     }
@@ -69,9 +64,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
     }
 
     private Pattern getTabPattern() {
-        return StringUtils.isNotBlank(this.tabPattern)
-                ? Pattern.compile(this.tabPattern)
-                : SplitTableStrategy.PATTERN_PHYSICS_TABLE;
+        return StringUtils.isNotBlank(this.tabPattern) ? Pattern.compile(this.tabPattern) : SplitTableStrategy.PATTERN_PHYSICS_TABLE;
     }
 
     @Override
@@ -83,9 +76,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
             }
             tablesInDB = dsFactory.getTablesInDB();
             if (!(tablesInDB instanceof SplitableTableInDB)) {
-                throw new IllegalStateException("dbId:" + dsFactory.identityValue()
-                        + " relevant TableInDB must be " + SplitableTableInDB.class.getName()
-                        + ",but now is " + tablesInDB.getClass().getName());
+                throw new IllegalStateException("dbId:" + dsFactory.identityValue() + " relevant TableInDB must be " + SplitableTableInDB.class.getName() + ",but now is " + tablesInDB.getClass().getName());
             }
         }
         SplitableTableInDB tabsMapper = (SplitableTableInDB) tablesInDB;
@@ -97,11 +88,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
 //            }
             List<String> ptabs = physics.getTabsInDB(jdbcUrl);
             if (CollectionUtils.isEmpty(ptabs)) {
-                throw new IllegalStateException("jdbcUrl:" + jdbcUrl
-                        + "\n,logicTable:" + sourceTableName
-                        + "\n,dsFactory:" + dsFactory.identityValue()
-                        + "\n relevant physicsTab can not be empty"
-                        + "\n exist keys:" + String.join(",", physics.physicsTabInSplitableDB.keySet()));
+                throw new IllegalStateException("jdbcUrl:" + jdbcUrl + "\n,logicTable:" + sourceTableName + "\n,dsFactory:" + dsFactory.identityValue() + "\n relevant physicsTab can not be empty" + "\n exist keys:" + String.join(",", physics.physicsTabInSplitableDB.keySet()));
             }
             return ptabs;
         }

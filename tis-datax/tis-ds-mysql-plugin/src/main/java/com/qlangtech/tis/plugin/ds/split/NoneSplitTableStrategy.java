@@ -40,6 +40,11 @@ public class NoneSplitTableStrategy extends SplitTableStrategy {
     }
 
     @Override
+    public boolean isSplittable() {
+        return false;
+    }
+
+    @Override
     public DBPhysicsTable getMatchedPhysicsTable(DataSourceFactory dsFactory, String jdbcUrl, EntityName tabName) {
 
 //        DBConfig dbConfig = dsFactory.getDbConfig();

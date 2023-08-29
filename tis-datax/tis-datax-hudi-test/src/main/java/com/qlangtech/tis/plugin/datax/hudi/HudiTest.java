@@ -47,7 +47,8 @@ import java.util.stream.Collectors;
  * @create: 2022-03-25 09:31
  **/
 public class HudiTest {
-    public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional.json";
+    public static final String hudi_datax_writer_assert_without_optional = "hudi-datax-writer-assert-without-optional"
+            + ".json";
     public static final String cfgPathParameter = "parameter";
     public final DataXHudiWriter writer;
     public final IDataxProcessor.TableMap tableMap;
@@ -72,23 +73,24 @@ public class HudiTest {
         DataXHudiWriter writer = createDataXHudiWriter(fsFactory);
         // HdfsColMeta
         // IColMetaGetter
-        List<IColMetaGetter> colsMeta
-                = HdfsColMeta.getColsMeta(Configuration.from(IOUtils.loadResourceFromClasspath(writer.getClass()
-                , hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
+        List<IColMetaGetter> colsMeta =
+                HdfsColMeta.getColsMeta(Configuration.from(IOUtils.loadResourceFromClasspath(writer.getClass(),
+                        hudi_datax_writer_assert_without_optional)).getConfiguration(cfgPathParameter));
         HudiSelectedTab tab = new HudiSelectedTab() {
-            @Override
-            public List<CMeta> getCols() {
-                return colsMeta.stream().map((cc) -> {
-                    HdfsColMeta c = (HdfsColMeta) cc;
-                    CMeta col = new CMeta();
-                    col.setName(c.getName());
-                    col.setPk(c.pk);
-                    col.setType(c.type);
-                    col.setNullable(c.nullable);
-                    return col;
-                }).collect(Collectors.toList());
-            }
+            //            @Override
+            //            public List<CMeta> getCols() {
+            //                return
+            //            }
         };
+        tab.cols.addAll(colsMeta.stream().map((cc) -> {
+            HdfsColMeta c = (HdfsColMeta) cc;
+            CMeta col = new CMeta();
+            col.setName(c.getName());
+            col.setPk(c.pk);
+            col.setType(c.type);
+            col.setNullable(c.nullable);
+            return col;
+        }).collect(Collectors.toList()));
         tab.name = WriterTemplate.TAB_customer_order_relation;
 
         SimpleKeyGenerator simpleKeyGenerator = new SimpleKeyGenerator();
@@ -107,17 +109,17 @@ public class HudiTest {
 
     public static DataXHudiWriter createDataXHudiWriter(Optional<FileSystemFactory> fsFactory) {
         //ISparkConnGetter
-//        final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
-//            @Override
-//            public String getSparkMaster(File cfgDir) {
-//                return "spark://sparkmaster:7077";
-//            }
-//
-//            @Override
-//            public String identityValue() {
-//                return "default";
-//            }
-//        };
+        //        final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
+        //            @Override
+        //            public String getSparkMaster(File cfgDir) {
+        //                return "spark://sparkmaster:7077";
+        //            }
+        //
+        //            @Override
+        //            public String identityValue() {
+        //                return "default";
+        //            }
+        //        };
 
         final ISparkConnGetter sparkConnGetter = new ISparkConnGetter() {
             @Override
@@ -126,8 +128,8 @@ public class HudiTest {
                 File sparkHome = HudiConfig.getSparkHome();
                 File sparkCfgDir = new File(sparkHome, "conf");
 
-                com.qlangtech.tis.config.Utils.setHadoopConfig2Local(sparkCfgDir, IYarnConfig.FILE_NAME_YARN_SITE
-                        , IOUtils.loadResourceFromClasspath(HudiTest.class, IYarnConfig.FILE_NAME_YARN_SITE));
+                com.qlangtech.tis.config.Utils.setHadoopConfig2Local(sparkCfgDir, IYarnConfig.FILE_NAME_YARN_SITE,
+                        IOUtils.loadResourceFromClasspath(HudiTest.class, IYarnConfig.FILE_NAME_YARN_SITE));
                 return IYarnConfig.KEY_DISPLAY_NAME;
             }
 
@@ -137,8 +139,8 @@ public class HudiTest {
             }
         };
 
-//        sparkConnGetter.name = "default";
-//        sparkConnGetter.master = "spark://sparkmaster:7077";
+        //        sparkConnGetter.name = "default";
+        //        sparkConnGetter.master = "spark://sparkmaster:7077";
 
         DataXHudiWriter writer = new DataXHudiWriter() {
             @Override
@@ -176,28 +178,28 @@ public class HudiTest {
         writer.sparkSubmitParam = sparkSubmitParams;
 
 
-//        writer.batchByteSize = 3456;
-//        writer.batchSize = 9527;
-//        writer.dbName = dbName;
+        //        writer.batchByteSize = 3456;
+        //        writer.batchSize = 9527;
+        //        writer.dbName = dbName;
         writer.writeMode = "append";
         // writer.autoCreateTable = true;
-//        writer.postSql = "drop table @table";
-//        writer.preSql = "drop table @table";
+        //        writer.postSql = "drop table @table";
+        //        writer.preSql = "drop table @table";
 
         // writer.dataXName = HdfsFileSystemFactoryTestUtils.testDataXName.getName();
         //  writer.dbName = dbName;
 
-//        HudiSelectedTab hudiTab = new HudiSelectedTab() {
-//            @Override
-//            public List<ColMeta> getCols() {
-//                return WriterTemplate.createColMetas();
-//            }
-//        };
-//        //hudiTab.partitionPathField = WriterTemplate.kind;
-//        hudiTab.recordField = WriterTemplate.customerregisterId;
-//        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
-//        hudiTab.setWhere("1=1");
-//        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
+        //        HudiSelectedTab hudiTab = new HudiSelectedTab() {
+        //            @Override
+        //            public List<ColMeta> getCols() {
+        //                return WriterTemplate.createColMetas();
+        //            }
+        //        };
+        //        //hudiTab.partitionPathField = WriterTemplate.kind;
+        //        hudiTab.recordField = WriterTemplate.customerregisterId;
+        //        hudiTab.sourceOrderingField = WriterTemplate.lastVer;
+        //        hudiTab.setWhere("1=1");
+        //        hudiTab.name = WriterTemplate.TAB_customer_order_relation;
         return writer;
     }
 }

@@ -33,7 +33,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.partition.HudiTablePartition;
 import org.apache.commons.collections.CollectionUtils;
@@ -133,17 +132,16 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
 
 
     public static List<Option> getPtCandidateFields() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream()
-                .filter((col) -> {
-                    switch (col.getType().getCollapse()) {
-                        // case STRING:
-                        case INT:
-                        case Long:
-                        case Date:
-                            return true;
-                    }
-                    return false;
-                }));
+        return SelectedTab.getContextOpts((cols) -> cols.stream().filter((col) -> {
+            switch (col.getType().getCollapse()) {
+                // case STRING:
+                case INT:
+                case Long:
+                case Date:
+                    return true;
+            }
+            return false;
+        }));//.stream().map((c) -> new Option(c.getName())).collect(Collectors.toList());
 
     }
 
@@ -153,7 +151,8 @@ public abstract class HudiKeyGenerator implements Describable<HudiKeyGenerator> 
      * @return
      */
     public static List<Option> getPrimaryKeys() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream().filter((col) -> col.isPk()));
+        return SelectedTab.getContextTableCols((cols) -> cols.stream() //
+                .filter((col) -> col.isPk())).stream().map((c) -> new Option(c.getName())).collect(Collectors.toList());
     }
 
     public static List<String> getDeftRecordKeys() {

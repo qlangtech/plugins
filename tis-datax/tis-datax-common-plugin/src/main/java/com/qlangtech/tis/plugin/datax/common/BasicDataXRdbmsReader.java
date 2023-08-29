@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -52,8 +51,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
-        extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -65,8 +63,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
     @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
-    @SubForm(desClazz = SelectedTab.class
-            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
+    @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
     private transient int preSelectedTabsHash;
@@ -87,21 +84,33 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         if (this.preSelectedTabsHash == selectedTabs.hashCode()) {
             return selectedTabs;
         }
+        boolean shallFillSelectedTabMeta = shallFillSelectedTabMeta();
 
-        try (TableColsMeta tabsMeta = getTabsMeta()) {
 
-            this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
-                ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
-                    return tabsMeta.get(t.getName());
-                });
-                return tab;
-            }).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (shallFillSelectedTabMeta) {
+            try (TableColsMeta tabsMeta = getTabsMeta()) {
+                this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
+                    ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
+                        return tabsMeta.get(t.getName());
+                    });
+                    return tab;
+                }).collect(Collectors.toList());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         this.preSelectedTabsHash = selectedTabs.hashCode();
         return this.selectedTabs;
 
+    }
+
+    protected boolean shallFillSelectedTabMeta() {
+        for (SelectedTab tab : this.selectedTabs) {
+            for (CMeta c : tab.cols) {
+                return (c.getType() == null);
+            }
+        }
+        return true;
     }
 
 
@@ -319,8 +328,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         return BasicDataXRdbmsReaderDescriptor.class;
     }
 
-    public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor
-            implements FormFieldType.IMultiSelectValidator {
+    public static abstract class BasicDataXRdbmsReaderDescriptor extends DataxReader.BaseDataxReaderDescriptor implements FormFieldType.IMultiSelectValidator {
         public BasicDataXRdbmsReaderDescriptor() {
             super();
         }
@@ -351,8 +359,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             try {
-                ParseDescribable<Describable> readerDescribable
-                        = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+                ParseDescribable<Describable> readerDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
                 BasicDataXRdbmsReader rdbmsReader = readerDescribable.getInstance();
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
@@ -366,8 +373,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory>
         }
 
         @Override
-        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter
-                , Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
+        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter, Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
 
             return true;
         }

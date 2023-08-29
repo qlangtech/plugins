@@ -55,7 +55,7 @@ public class SelectedTabPropsExtends extends IncrSelectedTabExtend {
      * @return
      */
     public static List<Option> getSplitPkCols() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream()
+        return SelectedTab.getContextOpts((cols) -> cols.stream()
                 .filter((col) -> {
 //                    switch (col.getType().getCollapse()) {
 //                        case DataXReaderColType.INT:

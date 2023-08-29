@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * @create: 2022-09-28 16:23
  **/
 public class TestSelectedTab extends SelectedTab {
-    final List<CMeta> colsMeta;
+   // final List<CMeta> colsMeta;
 
     public static SelectedTab createSelectedTab(EntityName tabName
             , DataSourceFactory dataSourceFactory) throws TableNotFoundException {
@@ -68,11 +68,11 @@ public class TestSelectedTab extends SelectedTab {
 
     public TestSelectedTab(String name, List<CMeta> colsMeta) {
         super(name);
-        this.colsMeta = colsMeta;
+        this.cols.addAll(colsMeta);
     }
 
-    @Override
-    public List<CMeta> getCols() {
-        return colsMeta;
-    }
+//    @Override
+//    public List<CMeta> getCols() {
+//        return colsMeta;
+//    }
 }

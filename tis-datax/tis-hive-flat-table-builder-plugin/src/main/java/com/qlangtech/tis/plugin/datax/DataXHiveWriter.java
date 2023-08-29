@@ -174,7 +174,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
                 return nameBuilder;
             }
 
-            protected void appendTabMeta(List<ColWrapper> pks) {
+            protected void appendTabMeta(List<String> pks) {
 
                 HdfsFormat fsFormat = parseFSFormat();
 

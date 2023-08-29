@@ -18,14 +18,18 @@
 
 package com.qlangtech.tis.hive.reader;
 
+import com.beust.jcommander.internal.Lists;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
 
     private final AtomicInteger taskIndex = new AtomicInteger(0);
-
+    ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
     private final Iterator<ISelectedTab> tabs;
 
     private ISelectedTab current;
@@ -60,8 +64,24 @@ public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
     }
 
     @Override
+    public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+        return groupedInfo;
+
+
+        //   return IGroupChildTaskIterator.super.getGroupedInfo();
+    }
+
+    @Override
     public IDataxReaderContext next() {
-        return new HiveDataxReaderContext(current, taskIndex.getAndIncrement());
+
+        HiveDataxReaderContext readerContext = new HiveDataxReaderContext(current, taskIndex.getAndIncrement());
+        List<DataXCfgGenerator.DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(current.getName(),
+                (tabName) -> {
+            return Lists.newArrayList();
+        });
+        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(readerContext.getReaderContextId(),
+                readerContext.getReaderContextId(), readerContext.getTaskName()));
+        return readerContext;
     }
 
 
@@ -76,7 +96,8 @@ public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
 
         @Override
         public String getReaderContextId() {
-            throw new UnsupportedOperationException();
+            // throw new UnsupportedOperationException();
+            return "hive";
         }
 
         @Override

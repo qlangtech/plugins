@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi.streamscript;
 
-import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
@@ -114,8 +113,8 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                         protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
                             // super.appendExtraConstraint(ddlScript);
                             // appendExtraConstraint
-                            Optional<ColWrapper> f
-                                    = pks.stream().filter((pk) -> pk.getName().equals(meta.getName())).findFirst();
+                            Optional<String> f
+                                    = pks.stream().filter((pk) -> pk.equals(meta.getName())).findFirst();
                             if (f.isPresent()) {
                                 ddlScript.append(" PRIMARY KEY NOT ENFORCED");
                             }
@@ -124,7 +123,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 }
 
                 @Override
-                protected void appendExtraColDef(List<ColWrapper> pks) {
+                protected void appendExtraColDef(List<String> pks) {
 
                     Objects.requireNonNull(tab.getKeyGenerator().getPartition(), "partition can not be null")
                             .addPartitionsOnSQLDDL(Collections.singletonList(dataXWriter.getPartitionedBy()), this);
@@ -132,7 +131,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 }
 
                 @Override
-                protected void appendTabMeta(List<ColWrapper> pks) {
+                protected void appendTabMeta(List<String> pks) {
                     //                        with (
                     //                                'connector' = 'hudi',
                     //                                'path' = '$HUDI_DEMO/t2', -- $HUDI_DEMO 替换成的绝对路径

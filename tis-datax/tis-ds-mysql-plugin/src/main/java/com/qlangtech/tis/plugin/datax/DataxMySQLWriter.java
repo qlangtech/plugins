@@ -109,9 +109,9 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
+        //        if (!this.autoCreateTable) {
+        //            return null;
+        //        }
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
@@ -123,21 +123,25 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
                 dsFactory.visitFirstConnection((c) -> {
                     Connection conn = c.getConnection();
-                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
+                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
                     Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
                     if (physicsTabNames.isPresent()) {
                         try (Statement statement = conn.createStatement()) {
                             // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
-                            try (ResultSet resultSet = statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
+                            try (ResultSet resultSet =
+                                         statement.executeQuery("show create table " + dsFactory.getEscapedEntity(physicsTabNames.get()[0]))) {
                                 if (!resultSet.next()) {
-                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not exec show create table script");
+                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
+                                            "exec" + " show create table script");
                                 }
                                 String ddl = resultSet.getString(2);
                                 script.append(ddl);
                             }
                         }
                     } else {
-                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find physicsTabs in datasource:" + dsFactory.identityValue());
+                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
+                                "physicsTabs" + " in datasource:" + dsFactory.identityValue());
                     }
 
                 });
@@ -161,16 +165,17 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
         final AtomicInteger timestampCount = new AtomicInteger();
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper,
+                this.getDataSourceFactory()) {
             @Override
-            protected void appendExtraColDef(List<ColWrapper> pks) {
+            protected void appendExtraColDef(List<String> pks) {
                 if (!pks.isEmpty()) {
-                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`").collect(Collectors.joining(","))).append(")").append("\n");
+                    script.append(" , PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk + "`").collect(Collectors.joining(","))).append(")").append("\n");
                 }
             }
 
             @Override
-            protected void appendTabMeta(List<ColWrapper> pks) {
+            protected void appendTabMeta(List<String> pks) {
                 script.append(" ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci").append("\n");
             }
 
@@ -213,9 +218,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
                     case Types.INTEGER:
                         return "int(11)";
                     case Types.BIGINT: {
-//                        if (type.columnSize < 1) {
-//                            throw new IllegalStateException("col:" + col.getName() + type + " colsize can not small than 1");
-//                        }
+                        //                        if (type.columnSize < 1) {
+                        //                            throw new IllegalStateException("col:" + col.getName() + type +
+                        //                            " colsize can not small than 1");
+                        //                        }
                         // return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
 
                         return "BIGINT " + type.getUnsignedToken();
@@ -357,21 +363,22 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             return super.validatePostForm(msgHandler, context, dataxWriter);
         }
 
-//        @Override
-//        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
-//
-//            final String targetClass = MySQLSelectedTab.class.getName();
-//
-//            Descriptor newSubDescriptor = Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
-//                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
-//
-//            SuFormProperties rewriteSubFormProperties = SuFormProperties.copy(
-//                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), MySQLSelectedTab.class))
-//                    , MySQLSelectedTab.class
-//                    , newSubDescriptor
-//                    , subformProps);
-//            return rewriteSubFormProperties;
-//
-//        }
+        //        @Override
+        //        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws
+        //        Exception {
+        //
+        //            final String targetClass = MySQLSelectedTab.class.getName();
+        //
+        //            Descriptor newSubDescriptor = Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
+        //                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+        //
+        //            SuFormProperties rewriteSubFormProperties = SuFormProperties.copy(
+        //                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), MySQLSelectedTab.class))
+        //                    , MySQLSelectedTab.class
+        //                    , newSubDescriptor
+        //                    , subformProps);
+        //            return rewriteSubFormProperties;
+        //
+        //        }
     }
 }

@@ -21,9 +21,11 @@ package com.qlangtech.tis.hive.reader;
 import com.beust.jcommander.internal.Lists;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -31,8 +33,10 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.AbstractDFSReader;
 import com.qlangtech.tis.plugin.datax.DataXDFSReaderWithMeta;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
@@ -63,6 +67,11 @@ public class DataXHiveReader extends AbstractDFSReader {
     }
 
     @Override
+    public List<ISelectedTab> getSelectedTabs() {
+        return this.selectedTabs.stream().collect(Collectors.toList());
+    }
+
+    @Override
     public boolean hasMulitTable() {
         return CollectionUtils.isNotEmpty(this.selectedTabs);
     }
@@ -73,7 +82,6 @@ public class DataXHiveReader extends AbstractDFSReader {
         Hiveserver2DataSourceFactory dsFactory = this.getDfsLinker().getDataSourceFactory();
         return dsFactory.getTableMetadata(false, table);
     }
-
 
 
     @Override
@@ -110,12 +118,12 @@ public class DataXHiveReader extends AbstractDFSReader {
 
     @Override
     public FileFormat getFileFormat(Optional<String> entityName) {
-        return this.getDfsLinker().getFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param entityName can not be null")));
+        return this.getDfsLinker().getFileFormat(entityName.orElseThrow(() -> new IllegalArgumentException("param " + "entityName can not be null")));
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
+    public static class DefaultDescriptor extends BaseDataxReaderDescriptor implements DataxWriter.IRewriteSuFormProperties {
         public DefaultDescriptor() {
             super();
         }
@@ -135,6 +143,15 @@ public class DataXHiveReader extends AbstractDFSReader {
             return EndType.HiveMetaStore;
         }
 
+        @Override
+        public <TAB extends SelectedTab> Descriptor<TAB> getRewriterSelectTabDescriptor() {
+            return null;
+        }
+
+        @Override
+        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+            return null;
+        }
 
         @Override
         public String getDisplayName() {

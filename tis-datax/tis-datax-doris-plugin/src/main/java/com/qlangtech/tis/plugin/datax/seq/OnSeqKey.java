@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -96,7 +97,7 @@ public class OnSeqKey extends SeqKey {
                 DataXReaderColType t = c.getType().getCollapse();
                 return t == DataXReaderColType.INT || t == DataXReaderColType.Long || t == DataXReaderColType.Date;
             });
-        });
+        }).stream().map((c)-> new Option(c.getName())).collect(Collectors.toList());
         return result;
     }
 

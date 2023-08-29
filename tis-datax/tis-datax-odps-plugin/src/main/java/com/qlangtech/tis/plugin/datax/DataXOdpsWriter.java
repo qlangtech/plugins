@@ -202,10 +202,12 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
                 return nameBuilder;
             }
 
-            protected void appendTabMeta(List<ColWrapper> pks) {
+            @Override
+            protected void appendTabMeta(List<String> pks) {
 
                 // HdfsFormat fsFormat = parseFSFormat();
-                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo() + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
+                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
+                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
                 script.append("lifecycle " + Objects.requireNonNull(lifecycle, "lifecycle can not be null"));
 
                 // script.appendLine(fsFormat.getRowFormat());

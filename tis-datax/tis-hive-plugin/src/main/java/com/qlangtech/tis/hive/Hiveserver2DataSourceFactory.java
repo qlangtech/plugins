@@ -40,26 +40,25 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-12-14 09:33
  * @see DefaultHiveConnGetter
  **/
-public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter, DataSourceFactory.ISchemaSupported {
+public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter,
+        DataSourceFactory.ISchemaSupported {
     private static final Logger logger = LoggerFactory.getLogger(Hiveserver2DataSourceFactory.class);
     public static final String NAME_HIVESERVER2 = "Hiveserver2";
     private static final String FIELD_META_STORE_URLS = "metaStoreUrls";
-//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String name;
+    //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
+    //    Validator.identity})
+    //    public String name;
 
     // 数据库名称
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String dbName;
+    //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    //    public String dbName;
 
     @FormField(ordinal = 2, validate = {Validator.require})
     public HiveMeta metadata;
@@ -68,8 +67,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @FormField(ordinal = 3, validate = {Validator.require})
     public Hms hms;
 
-//    @FormField(ordinal = 5, validate = {Validator.require})
-//    public UserToken userToken;
+    //    @FormField(ordinal = 5, validate = {Validator.require})
+    //    public UserToken userToken;
 
     @Override
     public String getDBSchema() {
@@ -124,20 +123,26 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @Override
     public JDBCConnection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
         return this.hms.getConnection(jdbcUrl, this.dbName, usingPool);
-//        final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
-//        try {
-//            Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());
-//            if (usingPool) {
-//                return HiveDBUtils.getInstance(this.hms.hiveAddress, this.dbName, getUserToken()).createConnection();
-//            } else {
-//                return Hms.createConnection(jdbcUrl, getUserToken());
-//
-//            }
-//        } catch (Throwable e) {
-//            throw new RuntimeException(e);
-//        } finally {
-//            Thread.currentThread().setContextClassLoader(currentLoader);
-//        }
+        //        final ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
+        //        try {
+        //            Thread.currentThread().setContextClassLoader(Hiveserver2DataSourceFactory.class.getClassLoader());
+        //            if (usingPool) {
+        //                return HiveDBUtils.getInstance(this.hms.hiveAddress, this.dbName, getUserToken())
+        //                .createConnection();
+        //            } else {
+        //                return Hms.createConnection(jdbcUrl, getUserToken());
+        //
+        //            }
+        //        } catch (Throwable e) {
+        //            throw new RuntimeException(e);
+        //        } finally {
+        //            Thread.currentThread().setContextClassLoader(currentLoader);
+        //        }
+    }
+
+    @Override
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+        return this.wrapColsMeta(inSink, table, columns1, new HiveColumnMetaCreator(pkCols, columns1));
     }
 
     @Override
@@ -177,7 +182,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         // super.fillTableInDB(tabs);
         String hiveJdbcUrl = createHiveJdbcUrl();
         try (IHiveMetaStore hiveMetaStore = metadata.createMetaStoreClient()) {
-//            TableInDB tabs = TableInDB.create(this);
+            //            TableInDB tabs = TableInDB.create(this);
             List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
             tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
             //  return tabs;
@@ -187,18 +192,19 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         // return tabs;
     }
 
-//    @Override
-//    public final TableInDB getTablesInDB() {
-//        String hiveJdbcUrl = createHiveJdbcUrl();
-//        try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this.userToken)) {
-//            TableInDB tabs = TableInDB.create(this);
-//            List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
-//            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
-//            return tabs;
-//        } catch (Exception e) {
-//            throw TisException.create("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
-//        }
-//    }
+    //    @Override
+    //    public final TableInDB getTablesInDB() {
+    //        String hiveJdbcUrl = createHiveJdbcUrl();
+    //        try (IHiveMetaStore hiveMetaStore = DefaultHiveConnGetter.getiHiveMetaStore(this.metaStoreUrls, this
+    //        .userToken)) {
+    //            TableInDB tabs = TableInDB.create(this);
+    //            List<HiveTable> tables = hiveMetaStore.getTables(this.dbName);
+    //            tables.stream().map((t) -> t.getTableName()).forEach((tab) -> tabs.add(hiveJdbcUrl, tab));
+    //            return tabs;
+    //        } catch (Exception e) {
+    //            throw TisException.create("不正确的MetaStoreUrl:" + this.metaStoreUrls, e);
+    //        }
+    //    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDataSourceFactory.BasicRdbmsDataSourceFactoryDescriptor {
@@ -222,28 +228,29 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
             return Collections.emptyList();
         }
 
-//        public boolean validateLoadUrl(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-//
-//            try {
-//                List<String> loadUrls = getLoadUrls(value);
-//                if (loadUrls.size() < 1) {
-//                    msgHandler.addFieldError(context, fieldName, "请填写至少一个loadUrl");
-//                    return false;
-//                }
-//
-//                for (String loadUrl : loadUrls) {
-//                    if (!Validator.host.validate(msgHandler, context, fieldName, loadUrl)) {
-//                        return false;
-//                    }
-//                }
-//
-//            } catch (Exception e) {
-//                msgHandler.addFieldError(context, fieldName, e.getMessage());
-//                return false;
-//            }
-//
-//            return true;
-//        }
+        //        public boolean validateLoadUrl(IFieldErrorHandler msgHandler, Context context, String fieldName,
+        //        String value) {
+        //
+        //            try {
+        //                List<String> loadUrls = getLoadUrls(value);
+        //                if (loadUrls.size() < 1) {
+        //                    msgHandler.addFieldError(context, fieldName, "请填写至少一个loadUrl");
+        //                    return false;
+        //                }
+        //
+        //                for (String loadUrl : loadUrls) {
+        //                    if (!Validator.host.validate(msgHandler, context, fieldName, loadUrl)) {
+        //                        return false;
+        //                    }
+        //                }
+        //
+        //            } catch (Exception e) {
+        //                msgHandler.addFieldError(context, fieldName, e.getMessage());
+        //                return false;
+        //            }
+        //
+        //            return true;
+        //        }
 
 
         @Override
@@ -262,7 +269,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
         }
 
         @Override
-        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
+        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context,
+                                            BasicDataSourceFactory dsFactory) {
             boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
 
             if (valid) {
@@ -276,22 +284,22 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                     return false;
                 }
             }
-//            try {
-//                if (valid) {
-//                    int[] hostCount = new int[1];
-//                    DBConfig dbConfig = ((DorisSourceFactory) dsFactory).getDbConfig();
-//                    dbConfig.vistDbName((config, ip, dbName) -> {
-//                        hostCount[0]++;
-//                        return false;
-//                    });
-//                    if (hostCount[0] != 1) {
-//                        msgHandler.addFieldError(context, FIELD_KEY_NODEDESC, "只能定义一个节点");
-//                        return false;
-//                    }
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
+            //            try {
+            //                if (valid) {
+            //                    int[] hostCount = new int[1];
+            //                    DBConfig dbConfig = ((DorisSourceFactory) dsFactory).getDbConfig();
+            //                    dbConfig.vistDbName((config, ip, dbName) -> {
+            //                        hostCount[0]++;
+            //                        return false;
+            //                    });
+            //                    if (hostCount[0] != 1) {
+            //                        msgHandler.addFieldError(context, FIELD_KEY_NODEDESC, "只能定义一个节点");
+            //                        return false;
+            //                    }
+            //                }
+            //            } catch (Exception e) {
+            //                throw new RuntimeException(e);
+            //            }
             return valid;
         }
 

@@ -68,15 +68,15 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
             }
 
             @Override
-            protected void appendExtraColDef(List<ColWrapper> pks) {
+            protected void appendExtraColDef(List<String> pks) {
 //                if (!pks.isEmpty()) {
 //                    script.append("  PRIMARY KEY (").append(pks.stream().map((pk) -> "`" + pk.getName() + "`")
 //                            .collect(Collectors.joining(","))).append(")").append("\n");
 //                }
                 if (multiPk) {
-                    this.script.append(", CONSTRAINT ").append("uk_" + tableMapper.getTo() + "_unique_" + pks.stream().map((c) -> c.getName()).collect(Collectors.joining("_")))
+                    this.script.append(", CONSTRAINT ").append("uk_" + tableMapper.getTo() + "_unique_" + pks.stream().map((c) -> c).collect(Collectors.joining("_")))
                             .append(" UNIQUE(")
-                            .append(pks.stream().map((c) -> c.getName()).collect(Collectors.joining(","))).append(")");
+                            .append(pks.stream().map((c) -> c).collect(Collectors.joining(","))).append(")");
                 }
             }
 
@@ -92,7 +92,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
             }
 
             @Override
-            protected void appendTabMeta(List<ColWrapper> pks) {
+            protected void appendTabMeta(List<String> pks) {
 
             }
 

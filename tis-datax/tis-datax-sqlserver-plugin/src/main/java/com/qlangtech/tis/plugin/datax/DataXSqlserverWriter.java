@@ -123,12 +123,12 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
 
             @Override
-            protected void appendExtraColDef(List<ColWrapper> pk) {
+            protected void appendExtraColDef(List<String> pk) {
 
             }
 
             @Override
-            protected void appendTabMeta(List<ColWrapper> pk) {
+            protected void appendTabMeta(List<String> pk) {
 
             }
         };

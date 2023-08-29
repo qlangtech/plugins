@@ -27,7 +27,6 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
@@ -78,17 +77,17 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
-            protected void appendExtraColDef(List<ColWrapper> pks) {
+            protected void appendExtraColDef(List<String> pks) {
                 if (pks.isEmpty()) {
                     return;
                 }
                 script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
-                        .append(pks.stream().map((pk) -> wrapWithEscape(pk.getName()))
+                        .append(pks.stream().map((pk) -> wrapWithEscape(pk))
                                 .collect(Collectors.joining(","))).append(")").append("\n");
             }
 
             @Override
-            protected void appendTabMeta(List<ColWrapper> pks) {
+            protected void appendTabMeta(List<String> pks) {
             }
 
             @Override

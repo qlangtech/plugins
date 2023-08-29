@@ -36,7 +36,7 @@ public class KafkaSelectedTab extends SelectedTab {
     public List<String> partitionFields;
 
     public static List<Option> getPtCandidateFields() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream()
+        return SelectedTab.getContextOpts((cols) -> cols.stream()
                 .filter((col) -> {
                     return true;
 //                    switch (col.getType().getCollapse()) {

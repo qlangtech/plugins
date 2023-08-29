@@ -119,13 +119,14 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         // env.fromElements(new DTO[]{d, update}).addSink(new PrintSinkFunction<>());
 
         DTOStream sourceStream = DTOStream.createDispatched(tableName);
-//
-        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource", env.fromElements(new DTO[]{d, update}));
-//
-        readerSource.getSourceStream(env
-                , new Tab2OutputTag<>(Collections.singletonMap(new TableAlias(tableName), sourceStream)));
-//
-//
+        //
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
+                env.fromElements(new DTO[]{d, update}));
+        //
+        readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(new TableAlias(tableName),
+                sourceStream)));
+        //
+        //
         //  dtoStream.addSink(new PrintSinkFunction<>());
         sourceStream.getStream().addSink(new PrintSinkFunction<>());
 
@@ -220,7 +221,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         try {
 
-            //   String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate, starTime};
+            //   String[] colNames = new String[]{colEntityId, colNum, colId, colCreateTime, updateTime, updateDate,
+            //   starTime};
             SelectedTab totalpayInfo = createSelectedTab();
             // tableName = totalpayInfo.getName();
             DataxProcessor dataxProcessor = mock("dataxProcessor", DataxProcessor.class);
@@ -242,13 +244,14 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             List<ISelectedTab> selectedTabs = Lists.newArrayList();
 
 
-//            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
+            //            EasyMock.expect(sinkExt.getCols()).andReturn(metaCols).times(3);
             selectedTabs.add(totalpayInfo);
             EasyMock.expect(dataxReader.getSelectedTabs()).andReturn(selectedTabs).anyTimes();
 
             EasyMock.expect(dataxProcessor.getReader(null)).andReturn(dataxReader).anyTimes();
 
-            // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName(dataXName), MYSQL_CONTAINER);
+            // BasicDataSourceFactory dsFactory = MySqlContainer.createMySqlDataSourceFactory(new TargetResName
+            // (dataXName), MYSQL_CONTAINER);
             DataxWriter dataXWriter = createDataXWriter();
 
             if (dataXWriter instanceof BasicDataXRdbmsWriter) {
@@ -274,7 +277,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             }
             // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
 
-            //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28.201:9030/tis"));
+            //   dataXWriter.initWriterTable(tableName, Collections.singletonList("jdbc:mysql://192.168.28
+            //   .201:9030/tis"));
 
             EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter).anyTimes();
 
@@ -304,10 +308,10 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
             // DBConfig dbConfig = this.getDsFactory().getDbConfig();
 
-//            String[] jdbcUrls = new String[1];
-//            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
-//                jdbcUrls[0] = jdbcUrl;
-//            });
+            //            String[] jdbcUrls = new String[1];
+            //            dbConfig.vistDbURL(false, (dbName, dbHost, jdbcUrl) -> {
+            //                jdbcUrls[0] = jdbcUrl;
+            //            });
             if (createDDL != null) {
                 final CreateTableSqlBuilder.CreateDDL ddl = createDDL;
                 this.getDsFactory().visitFirstConnection((c) -> {
@@ -337,20 +341,21 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
     public interface IStreamScriptRun {
 
-        void runStream(DataxProcessor dataxProcessor
-                , ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env, SelectedTab selectedTab) throws Exception;
+        void runStream(DataxProcessor dataxProcessor, ChunjunSinkFactory sinkFactory, StreamExecutionEnvironment env,
+                       SelectedTab selectedTab) throws Exception;
     }
 
-    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env, TableAlias tableAlia) {
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env,
+                                                                    TableAlias tableAlia) {
         return createReaderSource(env, tableAlia, true);
     }
 
-    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env, TableAlias tableAlia, boolean needDelete) {
+    protected Pair<DTOStream, ReaderSource<DTO>> createReaderSource(StreamExecutionEnvironment env,
+                                                                    TableAlias tableAlia, boolean needDelete) {
         DTOStream sourceStream = DTOStream.createDispatched(tableAlia.getFrom());
-        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource"
-                , env.fromElements(this.createTestDTO(needDelete)).setParallelism(1));
-        readerSource.getSourceStream(env
-                , new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
+        ReaderSource<DTO> readerSource = ReaderSource.createDTOSource("testStreamSource",
+                env.fromElements(this.createTestDTO(needDelete)).setParallelism(1));
+        readerSource.getSourceStream(env, new Tab2OutputTag<>(Collections.singletonMap(tableAlia, sourceStream)));
         return Pair.of(sourceStream, readerSource);
     }
 
@@ -429,12 +434,9 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
 
     protected SelectedTab createSelectedTab(List<CMeta> metaCols) {
-        return new SelectedTab() {
-            @Override
-            public List<CMeta> getCols() {
-                return metaCols;
-            }
-        };
+        SelectedTab tab = new SelectedTab();
+        tab.cols.addAll(metaCols);
+        return tab;
     }
 
     protected ArrayList<String> getUniqueKey() {
@@ -474,7 +476,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         after.put(updateTime, "2021-12-17 09:21:20");
         after.put(starTime, "2021-12-18 09:21:20");
         after.put(updateDate, "2021-12-09");
-        after.put(price,  new BigDecimal("1314.99"));
+        after.put(price, new BigDecimal("1314.99"));
         d.setAfter(after);
         if (eventType != DTO.EventType.ADD) {
             d.setBefore(Maps.newHashMap(after));

@@ -82,9 +82,9 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
     @Override
     public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-//        if (!this.autoCreateTable) {
-//            return null;
-//        }
+        //        if (!this.autoCreateTable) {
+        //            return null;
+        //        }
         // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
@@ -105,7 +105,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        protected void appendExtraColDef(List<ColWrapper> pks) {
+        protected void appendExtraColDef(List<String> pks) {
 
         }
 
@@ -113,9 +113,10 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<CMeta> cols) {
+        protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
             // 将主键排在最前面
-            List<ColWrapper> result = Lists.newArrayList(pks);
+            List<ColWrapper> result =
+                    Lists.newArrayList(cols.stream().filter((c) -> c.isPk()).map((c) -> createColWrapper(c)).collect(Collectors.toList()));
             cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
                 result.add(createColWrapper(c));
             });
@@ -123,18 +124,14 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        protected void appendTabMeta(List<ColWrapper> pks) {
+        protected void appendTabMeta(List<String> pks) {
             script.append(" ENGINE=olap").append("\n");
             if (pks.size() > 0) {
-                script.append(getUniqueKeyToken() + "(").append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk.getName()))
-                        .collect(Collectors.joining(","))).append(")\n");
+                script.append(getUniqueKeyToken() + "(").append(pks.stream().map((pk) -> wrapWithEscape(pk)).collect(Collectors.joining(","))).append(")\n");
             }
             script.append("DISTRIBUTED BY HASH(");
             if (pks.size() > 0) {
-                script.append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk.getName()))
-                        .collect(Collectors.joining(",")));
+                script.append(pks.stream().map((pk) -> wrapWithEscape(pk)).collect(Collectors.joining(",")));
             } else {
                 List<CMeta> cols = this.getCols();
                 Optional<CMeta> firstCol = cols.stream().findFirst();
@@ -150,22 +147,25 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             if (dorisTab instanceof DorisSelectedTab) {
                 seqBuffer = ((DorisSelectedTab) dorisTab).seqKey.createDDLScript(this.tableMapper);
             }
-          //  StringBuffer seqBuffer = dorisTab// new StringBuffer();
-//            if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
-//
-//                List<CMeta> cols = this.tableMapper.getSourceCols();
-//                Optional<CMeta> p = cols.stream().filter((c) -> dorisTab.seqKey.equals(c.getName())).findFirst();
-//                if (!p.isPresent()) {
-//                    throw new IllegalStateException("can not find col:" + dorisTab.seqKey);
-//                }
-//
-////                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
-////                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
-//
-//                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey);
-//                       // .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper(p.get()).getMapperType()).append("'");
-//
-//            }
+            //  StringBuffer seqBuffer = dorisTab// new StringBuffer();
+            //            if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
+            //
+            //                List<CMeta> cols = this.tableMapper.getSourceCols();
+            //                Optional<CMeta> p = cols.stream().filter((c) -> dorisTab.seqKey.equals(c.getName()))
+            //                .findFirst();
+            //                if (!p.isPresent()) {
+            //                    throw new IllegalStateException("can not find col:" + dorisTab.seqKey);
+            //                }
+            //
+            ////                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
+            ////                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper
+            // (p.get()).getMapperType()).append("'");
+            //
+            //                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey);
+            //                       // .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper
+            //                       (p.get()).getMapperType()).append("'");
+            //
+            //            }
 
             script.append("PROPERTIES(\"replication_num\" = \"1\" " + seqBuffer + " )");
 
@@ -205,8 +205,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
     }
 
-    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise
-            = new DataType.TypeVisitor<DorisType>() {
+    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new DataType.TypeVisitor<DorisType>() {
         @Override
         public DorisType tinyIntType(DataType dataType) {
             return new DorisType(dataType, "TINYINT");
@@ -249,7 +248,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
         @Override
         public DorisType varcharType(DataType type) {
-            // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N) 三倍，doris中是按照utf-8字节数计算的
+            // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N)
+            // 三倍，doris中是按照utf-8字节数计算的
             return new DorisType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
         }
 
@@ -266,13 +266,15 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         public DorisType decimalType(DataType type) {
             // doris or starRocks precision 不能超过超过半27
-            return new DorisType(type, "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ? type.getDecimalDigits() : 0) + ")");
+            return new DorisType(type,
+                    "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ?
+                            type.getDecimalDigits() : 0) + ")");
         }
     };
 
-//    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
-//        return columnTokenRecognise;
-//    }
+    //    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
+    //        return columnTokenRecognise;
+    //    }
 
     protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
         public BaseDescriptor() {
@@ -295,7 +297,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
 
-        public boolean validateMaxBatchRows(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public boolean validateMaxBatchRows(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                            String value) {
             int batchRows = Integer.parseInt(value);
             final int MaxBatchRows = 10000;
             if (batchRows < MaxBatchRows) {
@@ -305,7 +308,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             return true;
         }
 
-        public boolean validateLoadProps(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public boolean validateLoadProps(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                         String value) {
             try {
                 JSONObject props = JSON.parseObject(value);
                 boolean valid = true;

@@ -82,7 +82,7 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
     private static PrimaryKeys buildPrimaryKeys() {
         //  boolean[] containPk = new boolean[1];
         AtomicReference<List<ColumnMetaData>> colsRef = new AtomicReference<>(Collections.emptyList());
-        List<Option> pkResult = SelectedTab.getContextTableCols((cols) -> {
+        List<Option> pkResult = SelectedTab.getContextOpts((cols) -> {
             colsRef.set(Collections.unmodifiableList(cols));
             return cols.stream().filter((c) -> c.isPk());
 

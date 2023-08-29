@@ -127,11 +127,10 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
 
         if (isFilterUnexistCol) {
             Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-
-            dataxContext.setCols(tab.cols.stream()
+            dataxContext.setCols(tab.getColKeys().stream()
                     .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
         } else {
-            dataxContext.setCols(tab.cols);
+            dataxContext.setCols(tab.getColKeys());
         }
         return dataxContext;
     }

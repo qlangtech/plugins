@@ -80,7 +80,7 @@ public class RunInterval extends Polling {
      * @return
      */
     public static List<Option> getCols() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream()
+        return SelectedTab.getContextOpts((cols) -> cols.stream()
                 .filter((col) -> {
 //                    switch (col.getType().getCollapse()) {
 //                        case DataXReaderColType.INT:

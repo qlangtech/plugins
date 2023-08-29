@@ -108,7 +108,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         }
 
         @Override
-        protected void appendExtraColDef(List<ColWrapper> pks) {
+        protected void appendExtraColDef(List<String> pks) {
 //                if (pk != null) {
 //                    script.append("  PRIMARY KEY (`").append(pk.getName()).append("`)").append("\n");
 //                }
@@ -118,27 +118,28 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<ColWrapper> pks, List<CMeta> cols) {
+        protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
             // 将主键排在最前面
-            List<ColWrapper> result = Lists.newArrayList(pks);
-            cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
-                result.add(createColWrapper(c));
-            });
-            return result;
+//            List<String> result = Lists.newArrayList(pks);
+//            cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
+//                result.add(createColWrapper(c));
+//            });
+//            return result;
+            return null;
         }
 
         @Override
-        protected void appendTabMeta(List<ColWrapper> pks) {
+        protected void appendTabMeta(List<String> pks) {
             script.append(" ENGINE=olap").append("\n");
             if (pks.size() > 0) {
                 script.append(getUniqueKeyToken() + "(").append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk.getName()))
+                        .map((pk) -> wrapWithEscape(pk))
                         .collect(Collectors.joining(","))).append(")\n");
             }
             script.append("DISTRIBUTED BY HASH(");
             if (pks.size() > 0) {
                 script.append(pks.stream()
-                        .map((pk) -> wrapWithEscape(pk.getName()))
+                        .map((pk) -> wrapWithEscape(pk))
                         .collect(Collectors.joining(",")));
             } else {
                 List<CMeta> cols = this.getCols();

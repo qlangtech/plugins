@@ -71,7 +71,7 @@ public class HudiSelectedTab extends SelectedTab {
      * @return
      */
     public static List<Option> getPartitionKeys() {
-        return SelectedTab.getContextTableCols((cols) -> cols.stream()
+        return SelectedTab.getContextOpts((cols) -> cols.stream()
                 .filter((col) -> {
 //                    switch (col.getType().getCollapse()) {
 //                        case DataXReaderColType.INT:

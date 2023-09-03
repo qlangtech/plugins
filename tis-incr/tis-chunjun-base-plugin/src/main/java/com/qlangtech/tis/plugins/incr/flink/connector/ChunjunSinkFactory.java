@@ -43,11 +43,11 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.*;
-import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
+import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
@@ -279,7 +279,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         writer.setParameter(params);
 
 
-        IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
+        ISelectedTabExtendFactory desc = (ISelectedTabExtendFactory) this.getDescriptor();
         if (desc.getSelectedTableExtendDescriptor() != null) {
             // 有扩展才进行设置，不然会空指针
             ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
@@ -348,7 +348,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //        params.put("username", dsFactory.getUserName());
 //        params.put("password", dsFactory.getPassword());
 //
-//        IIncrSelectedTabExtendFactory desc = (IIncrSelectedTabExtendFactory) this.getDescriptor();
+//        ISelectedTabExtendFactory desc = (ISelectedTabExtendFactory) this.getDescriptor();
 //        if (desc.getSelectedTableExtendDescriptor() != null) {
 //            // 有扩展才进行设置，不然会空指针
 //            ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
@@ -608,7 +608,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     protected abstract void initChunjunJdbcConf(JdbcConf jdbcConf);
 
-    public static abstract class BasicChunjunSinkDescriptor extends BaseSinkFunctionDescriptor implements IIncrSelectedTabExtendFactory {
+    public static abstract class BasicChunjunSinkDescriptor extends BaseSinkFunctionDescriptor implements ISelectedTabExtendFactory {
         @Override
         public final String getDisplayName() {
             return DISPLAY_NAME_FLINK_CDC_SINK + this.getTargetType().name();
@@ -667,7 +667,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         }
 
         @Override
-        public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
+        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(SinkTabPropsExtends.class);
         }
     }

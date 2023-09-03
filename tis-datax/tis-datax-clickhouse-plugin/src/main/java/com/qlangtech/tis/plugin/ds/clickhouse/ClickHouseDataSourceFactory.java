@@ -95,7 +95,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
                         colSize = Short.MAX_VALUE;
                     }
                 }
-                return new DataType(dbColType, typeName, colSize);
+                return  DataType.create(dbColType, typeName, colSize);
             }
         });
     }

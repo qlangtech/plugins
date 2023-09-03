@@ -28,10 +28,12 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.BasicPainFormat;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
 import java.io.IOException;
-import java.sql.Types;
+
+import static com.qlangtech.tis.plugin.ds.JDBCTypes.VARCHAR;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -97,7 +99,7 @@ public class GuessOn extends GuessFieldType {
             }
 
             // 针对String类型 如果碰到更长的字符串长度 将 字符串长度变成
-            if ((this.type.type == Types.VARCHAR) && type.getColumnSize() > guessType.type.getColumnSize()) {
+            if ((this.type.getJdbcType() == VARCHAR) && type.getColumnSize() > guessType.type.getColumnSize()) {
                 return true;
             }
             return false;
@@ -116,42 +118,42 @@ public class GuessOn extends GuessFieldType {
         }
         try {
             Integer.parseInt(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.INTEGER).getType(), 1);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.INTEGER).getType(), 1);
         } catch (Exception e) {
 
         }
 
         try {
             Long.parseLong(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.BIGINT).getType(), 2);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.BIGINT).getType(), 2);
         } catch (Exception e) {
 
         }
 
         try {
             Float.parseFloat(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.FLOAT).getType(), 3);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.FLOAT).getType(), 3);
         } catch (Exception e) {
 
         }
 
         try {
             Double.parseDouble(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.DOUBLE).getType(), 4);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.DOUBLE).getType(), 4);
         } catch (Exception e) {
 
         }
 
         try {
             textFormat.getDateFormat().parse(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.DATE).getType(), 5);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.DATE).getType(), 5);
         } catch (Exception e) {
 
         }
 
         try {
             BasicPainFormat.getTimeStampFormat().parse(colVal);
-            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(Types.TIMESTAMP).getType(), 6);
+            return new PriorityDataType(DataTypeMeta.getDataTypeMeta(JDBCTypes.TIMESTAMP).getType(), 6);
         } catch (Exception e) {
 
         }

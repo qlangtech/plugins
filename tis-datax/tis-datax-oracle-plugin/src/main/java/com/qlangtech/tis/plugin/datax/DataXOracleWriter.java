@@ -30,7 +30,6 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 
-import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -108,18 +107,18 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
              */
             private String convertType(CMeta col) {
                 DataType type = col.getType();
-                switch (type.type) {
-                    case Types.CHAR: {
+                switch (type.getJdbcType()) {
+                    case CHAR: {
                         String keyChar = "CHAR";
                         if (type.getColumnSize() < 1) {
                             return keyChar;
                         }
                         return keyChar + "(" + type.getColumnSize() + ")";
                     }
-                    case Types.BIT:
-                    case Types.BOOLEAN:
+                    case BIT:
+                    case BOOLEAN:
                         return "NUMBER(1,0)";
-                    case Types.REAL: {
+                    case REAL: {
                         if (type.getColumnSize() > 0 && type.getDecimalDigits() > 0) {
                             // 在PG->Oracle情况下，PG中是Real类型 通过jdbc反射得到columnSize和getDecimalDigits()都为8，这样number(8,8)就没有小数位了，出问题了
                             // 在此进行除2处理
@@ -131,37 +130,37 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
                         }
                         return "BINARY_FLOAT";
                     }
-                    case Types.TINYINT:
-                    case Types.SMALLINT:
+                    case TINYINT:
+                    case SMALLINT:
                         return "SMALLINT";
-                    case Types.INTEGER:
-                    case Types.BIGINT:
+                    case INTEGER:
+                    case BIGINT:
                         return "INTEGER";
-                    case Types.FLOAT:
+                    case FLOAT:
                         return "BINARY_FLOAT";
-                    case Types.DOUBLE:
+                    case DOUBLE:
                         return "BINARY_DOUBLE";
-                    case Types.DECIMAL:
-                    case Types.NUMERIC: {
+                    case DECIMAL:
+                    case NUMERIC: {
                         if (type.getColumnSize() > 0) {
                             return "DECIMAL(" + Math.min(type.getColumnSize(), 38) + "," + type.getDecimalDigits() + ")";
                         } else {
                             return "DECIMAL";
                         }
                     }
-                    case Types.DATE:
+                    case DATE:
                         return "DATE";
-                    case Types.TIME:
+                    case TIME:
                         return "TIMESTAMP(0)";
                     // return "TIME";
-                    case Types.TIMESTAMP:
+                    case TIMESTAMP:
                         return "TIMESTAMP";
-                    case Types.BLOB:
-                    case Types.BINARY:
-                    case Types.LONGVARBINARY:
-                    case Types.VARBINARY:
+                    case BLOB:
+                    case BINARY:
+                    case LONGVARBINARY:
+                    case VARBINARY:
                         return "BLOB";
-                    case Types.VARCHAR: {
+                    case VARCHAR: {
                         if (type.getColumnSize() > Short.MAX_VALUE) {
                             return "CLOB";
                         }

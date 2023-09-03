@@ -1,9 +1,6 @@
 package com.qlangtech.tis.hive;
 
-import com.qlangtech.tis.plugin.ds.ColSizeRange;
-import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.DataTypeMeta;
+import com.qlangtech.tis.plugin.ds.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +16,7 @@ public class HiveColumnMetaCreator extends DataSourceFactory.CreateColumnMeta {
     }
 
     protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
-        DataTypeMeta dataTypeMeta = DataTypeMeta.typeMetasDic.get(dbColType);
+        DataTypeMeta dataTypeMeta = DataTypeMeta.getDataTypeMeta(JDBCTypes.parse(dbColType));
         ColSizeRange colsSizeRange = null;
         if (dataTypeMeta == null) {
             return super.createColDataType(colName, typeName, dbColType, colSize);

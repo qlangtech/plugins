@@ -1,31 +1,35 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -47,10 +51,10 @@ public class TestDataXMongodbReader extends TestCase {
         DataXMongodbReader reader = new DataXMongodbReader();
         DescriptorsJSON descJson = new DescriptorsJSON(reader.getDescriptor());
 
-        JsonUtil.assertJSONEqual(DataXMongodbReader.class, "mongdodb-datax-reader-descriptor.json"
-                , descJson.getDescriptorsJSON(), (m, e, a) -> {
-                    assertEquals(m, e, a);
-                });
+        JsonUtil.assertJSONEqual(DataXMongodbReader.class, "mongdodb-datax-reader-descriptor.json",
+                descJson.getDescriptorsJSON(), (m, e, a) -> {
+            assertEquals(m, e, a);
+        });
 
     }
 
@@ -61,7 +65,7 @@ public class TestDataXMongodbReader extends TestCase {
 
         DataXMongodbReader reader = new DataXMongodbReader() {
             @Override
-            public MangoDBDataSourceFactory getDsFactory() {
+            public MangoDBDataSourceFactory getDataSourceFactory() {
                 return dsFactory;
             }
 
@@ -70,17 +74,37 @@ public class TestDataXMongodbReader extends TestCase {
                 return DataXMongodbReader.class;
             }
         };
-        reader.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
-        reader.query = "this is my query";
-        reader.collectionName = "employee";
+        //        reader.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
+        //        reader.query = "this is my query";
+        //        reader.collectionName = "employee";
         reader.template = DataXMongodbReader.getDftTemplate();
 
 
         ReaderTemplate.validateDataXReader("mongodb-datax-reader-assert.json", dataXName, reader);
 
-        reader.query = null;
+        // reader.query = null;
         dsFactory.password = null;
         ReaderTemplate.validateDataXReader("mongodb-datax-reader-assert-without-option.json", dataXName, reader);
+    }
+
+
+    public void testGetTableMetadata() throws Exception {
+        DataXMongodbReader reader = new DataXMongodbReader() {
+
+            @Override
+            public MangoDBDataSourceFactory getDataSourceFactory() {
+                return TestMangoDBDataSourceFactory.createMangoDBDS();
+            }
+
+            @Override
+            public Class<?> getOwnerClass() {
+                return DataXMongodbReader.class;
+            }
+        };
+        reader.inspectRowCount = 200;
+        EntityName tab = EntityName.parse("user");
+        List<ColumnMetaData> tableMetadata = reader.getTableMetadata(false, tab);
+        Assert.assertTrue(tableMetadata.size() > 0);
     }
 
     public static MangoDBDataSourceFactory getDataSourceFactory() {

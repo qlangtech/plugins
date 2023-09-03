@@ -23,7 +23,6 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.*;
 
-import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,16 +38,16 @@ public class TestSelectedTabs {
     public static final String tabNameTotalpayinfo = "totalpayinfo";
     public static List<ColumnMetaData> tabColsMetaOrderDetail
             = Lists.newArrayList(
-            new ColumnMetaData(0, "col1", new DataType(Types.VARCHAR), true, false),
-            new ColumnMetaData(1, "col2", new DataType(Types.VARCHAR), false, true)
-            , new ColumnMetaData(2, "col3", new DataType(Types.VARCHAR), false, true)
-            , new ColumnMetaData(3, "col4", new DataType(Types.VARCHAR), false, true)
+            new ColumnMetaData(0, "col1", new DataType(JDBCTypes.VARCHAR), true, false),
+            new ColumnMetaData(1, "col2", new DataType(JDBCTypes.VARCHAR), false, true)
+            , new ColumnMetaData(2, "col3", new DataType(JDBCTypes.VARCHAR), false, true)
+            , new ColumnMetaData(3, "col4", new DataType(JDBCTypes.VARCHAR), false, true)
     );
     public static List<ColumnMetaData> tabColsMetaTotalpayinfo
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", new DataType(Types.VARCHAR), true, false)
-            , new ColumnMetaData(1, "col2", new DataType(Types.VARCHAR), false, true)
-            , new ColumnMetaData(2, "col3", new DataType(Types.VARCHAR), false, true)
-            , new ColumnMetaData(3, "col4", new DataType(Types.VARCHAR), false, true)
+            = Lists.newArrayList(new ColumnMetaData(0, "col1", new DataType(JDBCTypes.VARCHAR), true, false)
+            , new ColumnMetaData(1, "col2", new DataType(JDBCTypes.VARCHAR), false, true)
+            , new ColumnMetaData(2, "col3", new DataType(JDBCTypes.VARCHAR), false, true)
+            , new ColumnMetaData(3, "col4", new DataType(JDBCTypes.VARCHAR), false, true)
     );
 
     public static List<SelectedTab> createSelectedTabs() {

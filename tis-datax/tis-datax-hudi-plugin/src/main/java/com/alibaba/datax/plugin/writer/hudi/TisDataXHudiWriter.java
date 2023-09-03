@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.sql.Types;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
@@ -235,36 +234,36 @@ public class TisDataXHudiWriter extends HdfsWriter {
         }
 
         private Object parseAvroVal(IColMetaGetter meta, Column colVal) {
-            switch (meta.getType().type) {
-                case Types.TINYINT:
-                case Types.INTEGER:
-                case Types.SMALLINT:
+            switch (meta.getType().getJdbcType()) {
+                case TINYINT:
+                case INTEGER:
+                case SMALLINT:
                     return colVal.asBigInteger().intValue();
-                case Types.BIGINT:
+                case BIGINT:
                     return colVal.asBigInteger().longValue();
-                case Types.FLOAT:
-                case Types.DOUBLE:
+                case FLOAT:
+                case DOUBLE:
                     return colVal.asDouble();
-                case Types.DECIMAL:
+                case DECIMAL:
                     return colVal.asBigDecimal();
-                case Types.DATE:
+                case DATE:
                     return colVal.asDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                case Types.TIME:
+                case TIME:
                     return colVal.asDate().toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
-                case Types.TIMESTAMP:
+                case TIMESTAMP:
                     return colVal.asDate().toInstant();
-                case Types.BIT:
-                case Types.BOOLEAN:
+                case BIT:
+                case BOOLEAN:
                     return colVal.asBoolean();
-                case Types.BLOB:
-                case Types.BINARY:
-                case Types.LONGVARBINARY:
-                case Types.VARBINARY:
+                case BLOB:
+                case BINARY:
+                case LONGVARBINARY:
+                case VARBINARY:
                     return ByteBuffer.wrap(colVal.asBytes());
-                case Types.VARCHAR:
-                case Types.LONGNVARCHAR:
-                case Types.NVARCHAR:
-                case Types.LONGVARCHAR:
+                case VARCHAR:
+                case LONGNVARCHAR:
+                case NVARCHAR:
+                case LONGVARCHAR:
                     // return visitor.varcharType(this);
                 default:
                     return colVal.asString();// "VARCHAR(" + type.columnSize + ")";

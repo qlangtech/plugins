@@ -65,7 +65,8 @@ import java.util.Optional;
  * @create: 2022-01-21 13:02
  **/
 @Public
-public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn, IDataXBatchPost, IDataXHudiWriter {
+public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn,
+        IDataXBatchPost, IDataXHudiWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(DataXHudiWriter.class);
 
@@ -84,9 +85,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String partitionedBy;
 
-//    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
-//    // 目标源中是否自动创建表，这样会方便不少
-//    public boolean autoCreateTable;
+    //    @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {Validator.require})
+    //    // 目标源中是否自动创建表，这样会方便不少
+    //    public boolean autoCreateTable;
 
 
     @Override
@@ -99,7 +100,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
         return this.fsName;
     }
 
-    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 10, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require,
+            Validator.integer})
     public Integer shuffleParallelism;
 
     @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -121,14 +123,14 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     }
 
 
-//    /**
-//     * @return
-//     */
-//    public static List<Option> allPrimaryKeys(Object contextObj) {
-//        List<Option> pks = Lists.newArrayList();
-//        pks.add(new Option("base_id"));
-//        return pks;
-//    }
+    //    /**
+    //     * @return
+    //     */
+    //    public static List<Option> allPrimaryKeys(Object contextObj) {
+    //        List<Option> pks = Lists.newArrayList();
+    //        pks.add(new Option("base_id"));
+    //        return pks;
+    //    }
 
     @Override
     protected HudiDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
@@ -182,8 +184,10 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN, () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
-            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN, () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+            this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN,
+                    () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
+            this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN,
+                    () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
         }
 
         @Override
@@ -235,52 +239,51 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             }
 
             Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
-            rewriteSubFormProperties = SuFormProperties.copy(
-                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), newSubDescriptor.clazz))
-                    , newSubDescriptor.clazz
-                    , newSubDescriptor
-                    , subformProps);
+            rewriteSubFormProperties =
+                    SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor),
+                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
             return rewriteSubFormProperties;
         }
 
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
             Class targetClass = com.qlangtech.tis.plugin.datax.hudi.HudiSelectedTab.class;
-            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass)
-                    , "subForm clazz:" + targetClass + " can not find relevant Descriptor");
+            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass), "subForm clazz:" + targetClass + " "
+                    + "can not find relevant Descriptor");
         }
 
-//        @Override
-//        public SuFormProperties.SuFormPropertiesBehaviorMeta overwriteBehaviorMeta(
-//                SuFormProperties.SuFormPropertiesBehaviorMeta behaviorMeta) throws Exception {
+        //        @Override
+        //        public SuFormProperties.SuFormPropertiesBehaviorMeta overwriteBehaviorMeta(
+        //                SuFormProperties.SuFormPropertiesBehaviorMeta behaviorMeta) throws Exception {
 
 
-//            {
-//                "clickBtnLabel": "设置",
-//                    "onClickFillData": {
-//                "cols": {
-//                    "method": "getTableMetadata",
-//                    "params": ["id"]
-//                }
-//            }
-//            }
+        //            {
+        //                "clickBtnLabel": "设置",
+        //                    "onClickFillData": {
+        //                "cols": {
+        //                    "method": "getTableMetadata",
+        //                    "params": ["id"]
+        //                }
+        //            }
+        //            }
 
         // Map<String, SuFormProperties.SuFormPropertyGetterMeta> onClickFillData = behaviorMeta.getOnClickFillData();
 
-//            SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
-//            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
-//            propProcess.setParams(Collections.singletonList("id"));
-//            onClickFillData.put(HudiSelectedTab.KEY_RECORD_FIELD, propProcess);
-//
-//            propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
-//            propProcess.setMethod(DataSourceMeta.METHOD_GET_PARTITION_KEYS);
-//            propProcess.setParams(Collections.singletonList("id"));
-//            onClickFillData.put(HudiSelectedTab.KEY_PARTITION_PATH_FIELD, propProcess);
-//            onClickFillData.put(HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD, propProcess);
+        //            SuFormProperties.SuFormPropertyGetterMeta propProcess = new SuFormProperties
+        //            .SuFormPropertyGetterMeta();
+        //            propProcess.setMethod(DataSourceMeta.METHOD_GET_PRIMARY_KEYS);
+        //            propProcess.setParams(Collections.singletonList("id"));
+        //            onClickFillData.put(HudiSelectedTab.KEY_RECORD_FIELD, propProcess);
+        //
+        //            propProcess = new SuFormProperties.SuFormPropertyGetterMeta();
+        //            propProcess.setMethod(DataSourceMeta.METHOD_GET_PARTITION_KEYS);
+        //            propProcess.setParams(Collections.singletonList("id"));
+        //            onClickFillData.put(HudiSelectedTab.KEY_PARTITION_PATH_FIELD, propProcess);
+        //            onClickFillData.put(HudiSelectedTab.KEY_SOURCE_ORDERING_FIELD, propProcess);
 
 
-//            return behaviorMeta;
-//        }
+        //            return behaviorMeta;
+        //        }
 
         @Override
         public boolean isRdbms() {
@@ -301,13 +304,14 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     //private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs;
 
     @Override
-    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs genCfg) {
+    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab,
+                                             DataXCfgGenerator.GenerateCfgs genCfg) {
 
-//        if (generateCfgs == null) {
-//            generateCfgs = new AtomicReference<>();
-//        }
-//                = generateCfgs.updateAndGet((pre) -> {
-//            if (pre == null) {
+        //        if (generateCfgs == null) {
+        //            generateCfgs = new AtomicReference<>();
+        //        }
+        //                = generateCfgs.updateAndGet((pre) -> {
+        //            if (pre == null) {
         //  return pre;
         //}
         //  return pre;
@@ -329,8 +333,11 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
                 // 创建hud schema
 
                 FileSystemFactory fsFactory = getFs();
-                IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(), TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis()), getHiveConnMeta());
-                logger.info("create schema on path:{}", HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(), tab.getName(), dumpDir, (HudiSelectedTab) tab));
+                IPath dumpDir = HudiTableMeta.getDumpDir(fsFactory.getFileSystem(), tab.getName(),
+                        TimeFormat.yyyyMMddHHmmss.format(execContext.getPartitionTimestampWithMillis()),
+                        getHiveConnMeta());
+                logger.info("create schema on path:{}", HudiTableMeta.createFsSourceSchema(fsFactory.getFileSystem(),
+                        tab.getName(), dumpDir, (HudiSelectedTab) tab));
             }
         };
     }
@@ -343,8 +350,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             super(tabMap, dataxName);
             ISelectedTab tab = tabMap.getSourceTab();
             if (!(tab instanceof HudiSelectedTab)) {
-                throw new IllegalStateException(" param tabMap.getSourceTab() must be type of "
-                        + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
+                throw new IllegalStateException(" param tabMap.getSourceTab() must be type of " + HudiSelectedTab.class.getSimpleName() + " but now is :" + tab.getClass());
             }
             this.hudiTab = (HudiSelectedTab) tab;
             if (this.hudiTab == null) {

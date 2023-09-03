@@ -29,7 +29,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-07-18 11:51
  **/
-public class SinkTabPropsExtends extends IncrSelectedTabExtend {
+public class SinkTabPropsExtends extends SelectedTabExtend {
     public static final String KEY_UNIQUE_KEY = "uniqueKey";
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public UpdateMode incrMode;
@@ -154,9 +154,10 @@ public class SinkTabPropsExtends extends IncrSelectedTabExtend {
         }).collect(Collectors.toList());
     }
 
+
     @Override
-    public boolean isSource() {
-        return false;
+    public ExtendType getExtendType() {
+        return ExtendType.INCR_SINK;
     }
 
     @TISExtension

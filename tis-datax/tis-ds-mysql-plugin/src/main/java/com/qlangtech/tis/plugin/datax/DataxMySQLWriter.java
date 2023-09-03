@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -196,28 +195,28 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
              */
             private String convertType(CMeta col) {
                 DataType type = col.getType();
-                switch (type.type) {
-                    case Types.CHAR: {
+                switch (type.getJdbcType()) {
+                    case CHAR: {
                         String keyChar = "CHAR";
                         if (type.getColumnSize() < 1) {
                             return keyChar;
                         }
                         return keyChar + "(" + type.getColumnSize() + ")";
                     }
-                    case Types.BIT:
-                    case Types.BOOLEAN:
+                    case BIT:
+                    case BOOLEAN:
                         return "BOOLEAN";
-                    case Types.REAL:
+                    case REAL:
                         return "REAL";
-                    case Types.TINYINT: {
+                    case TINYINT: {
                         return "TINYINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
                     }
-                    case Types.SMALLINT: {
+                    case SMALLINT: {
                         return "SMALLINT(" + type.getColumnSize() + ") " + type.getUnsignedToken();
                     }
-                    case Types.INTEGER:
+                    case INTEGER:
                         return "int(11)";
-                    case Types.BIGINT: {
+                    case BIGINT: {
                         //                        if (type.columnSize < 1) {
                         //                            throw new IllegalStateException("col:" + col.getName() + type +
                         //                            " colsize can not small than 1");
@@ -226,35 +225,35 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
 
                         return "BIGINT " + type.getUnsignedToken();
                     }
-                    case Types.FLOAT:
+                    case FLOAT:
                         return "FLOAT";
-                    case Types.DOUBLE:
+                    case DOUBLE:
                         return "DOUBLE";
-                    case Types.DECIMAL:
-                    case Types.NUMERIC: {
+                    case DECIMAL:
+                    case NUMERIC: {
                         if (type.getColumnSize() > 0) {
                             return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
                         } else {
                             return "DECIMAL";
                         }
                     }
-                    case Types.DATE:
+                    case DATE:
                         return "DATE";
-                    case Types.TIME:
+                    case TIME:
                         return "TIME";
-                    case Types.TIMESTAMP: {
+                    case TIMESTAMP: {
                         if (timestampCount.getAndIncrement() < 1) {
                             return "TIMESTAMP";
                         } else {
                             return "DATETIME";
                         }
                     }
-                    case Types.BLOB:
-                    case Types.BINARY:
-                    case Types.LONGVARBINARY:
-                    case Types.VARBINARY:
+                    case BLOB:
+                    case BINARY:
+                    case LONGVARBINARY:
+                    case VARBINARY:
                         return "BLOB";
-                    case Types.VARCHAR: {
+                    case VARCHAR: {
                         if (type.getColumnSize() > Short.MAX_VALUE) {
                             return "TEXT";
                         }

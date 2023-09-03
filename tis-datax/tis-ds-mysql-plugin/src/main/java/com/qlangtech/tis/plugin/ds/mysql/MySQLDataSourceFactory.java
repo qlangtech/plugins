@@ -62,7 +62,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
     @Override
     protected TableInDB createTableInDB() {
-        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " relevant prop splitTableStrategy can not be null").createTableInDB(this);
+        return Objects.requireNonNull(this.splitTableStrategy, "MySQL DataSourceFactory:" + this.identityValue() + " "
+                + "relevant prop splitTableStrategy can not be null").createTableInDB(this);
     }
 
 
@@ -78,7 +79,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return table;
         }
         // return super.logicTable2PhysicsTable(table);
-        SplitTableStrategy.DBPhysicsTable physicsTable = Objects.requireNonNull(this.splitTableStrategy, "splitTableStrategy can not be null").getMatchedPhysicsTable(this, jdbcUrl, table);
+        SplitTableStrategy.DBPhysicsTable physicsTable = Objects.requireNonNull(this.splitTableStrategy,
+                "splitTableStrategy can not be null").getMatchedPhysicsTable(this, jdbcUrl, table);
         return physicsTable.getPhysicsTab();
     }
 
@@ -89,7 +91,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+                                             Set<String> pkCols) throws SQLException {
 
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
@@ -98,8 +101,9 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 DataType fixType = type.accept(new DataType.TypeVisitor<DataType>() {
                     @Override
                     public DataType bigInt(DataType type) {
-                        if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话 建表的ddl会有问题*/) {
-                            DataType t = new DataType(Types.NUMERIC, type.typeName, type.getColumnSize());
+                        if (type.isUnsigned() && !pkCols.contains(colName) /**不能是主键，例如转换成doris时候 主键如果是decimal的话
+                         建表的ddl会有问题*/) {
+                            DataType t = DataType.create(Types.NUMERIC, type.typeName, type.getColumnSize());
                             t.setDecimalDigits(0);
                             return t;
                         }
@@ -110,7 +114,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     public DataType tinyIntType(DataType dataType) {
                         if (dataType.isUnsigned()) {
                             // 如果为unsigned则会按照一个byte来进行处理，需要将其变成small int
-                            return new DataType(Types.SMALLINT, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.SMALLINT, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -120,7 +124,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
 
                         if (dataType.isUnsigned()) {
                             // 如果为unsigned则会按照一个short来进行处理，需要将其变成small int
-                            return new DataType(Types.INTEGER, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.INTEGER, type.typeName, type.getColumnSize());
                         }
 
                         return null;
@@ -129,7 +133,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType intType(DataType type) {
                         if (type.isUnsigned()) {
-                            return new DataType(Types.BIGINT, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.BIGINT, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -142,7 +146,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType dateType(DataType type) {
                         if ("year".equalsIgnoreCase(type.typeName)) {
-                            return new DataType(Types.INTEGER, type.typeName, type.getColumnSize());
+                            return  DataType.create(Types.INTEGER, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -155,7 +159,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType bitType(DataType type) {
                         if (type.getColumnSize() > 1) {
-                            return new DataType(Types.BINARY, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.BINARY, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -169,7 +173,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     public DataType varcharType(DataType type) {
                         if (type.getColumnSize() < 1) {
                             // 数据库中如果是json类型的，colSize会是0，在这里需要将它修正一下
-                            DataType n = new DataType(Types.VARCHAR, type.typeName, 2000);
+                            DataType n = DataType.create(Types.VARCHAR, type.typeName, 2000);
                             n.setDecimalDigits(type.getDecimalDigits());
                             return n;
                         }
@@ -203,7 +207,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         try {
-            StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName + "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
+            StringBuffer jdbcUrl = new StringBuffer("jdbc:mysql://" + ip + ":" + this.port + "/" + dbName +
+                    "?useUnicode=yes&useCursorFetch=true&useSSL=false&serverTimezone=" + URLEncoder.encode(DEFAULT_SERVER_TIME_ZONE.getId(), TisUTF8.getName()));
             if (this.useCompression != null) {
                 jdbcUrl.append("&useCompression=").append(this.useCompression);
             }
@@ -290,7 +295,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 ResultSet result = null;
                 try {
                     StringBuffer refactSql = parseRowCountSql();
-                    statement = connection.getConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                    statement = connection.getConnection().createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                            ResultSet.CONCUR_READ_ONLY);
                     result = statement.executeQuery(refactSql.toString());
                     result.last();
                     final int rowSize = result.getRow();
@@ -333,7 +339,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             List<ColumnMetaData> result = new ArrayList<>();
             try {
                 for (int i = 1; i <= columCount; i++) {
-                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i), new DataType(metaData.getColumnType(i)), false, true));
+                    result.add(new ColumnMetaData((i - 1), metaData.getColumnLabel(i),
+                            new DataType(JDBCTypes.parse(metaData.getColumnType(i))), false, true));
                 }
                 return result;
             } catch (SQLException e) {
@@ -349,7 +356,8 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             }
             try {
                 this.connection = getConnection(jdbcUrl);
-                this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                        ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 this.columCount = metaData.getColumnCount();
@@ -404,7 +412,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
             return null;
         }
 
-        if (colMeta.getType().type == Types.VARCHAR || colMeta.getType().type == Types.BLOB) {
+        if (colMeta.getType().getJdbcType() == JDBCTypes.VARCHAR || colMeta.getType().getJdbcType() == JDBCTypes.BLOB) {
             return filter(value);
         } else {
             return value;

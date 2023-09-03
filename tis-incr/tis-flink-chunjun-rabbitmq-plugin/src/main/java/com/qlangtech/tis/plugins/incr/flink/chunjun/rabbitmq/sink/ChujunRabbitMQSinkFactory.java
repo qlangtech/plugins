@@ -18,36 +18,20 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.rabbitmq.sink;
 
-import com.dtstack.chunjun.conf.FieldConf;
-import com.dtstack.chunjun.conf.SyncConf;
-import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
-import com.dtstack.chunjun.converter.ISerializationConverter;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format.FormatFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.qlangtech.tis.realtime.transfer.DTO;
-import org.apache.flink.types.RowKind;
-import org.apache.flink.util.Preconditions;
-
-import java.util.Map;
-import java.util.Properties;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * https://blog.csdn.net/weixin_39801446/article/details/124470698
@@ -182,7 +166,7 @@ public class ChujunRabbitMQSinkFactory extends ChunjunSinkFactory {
         }
 
         @Override
-        public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
+        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
             return null;
         }
     }

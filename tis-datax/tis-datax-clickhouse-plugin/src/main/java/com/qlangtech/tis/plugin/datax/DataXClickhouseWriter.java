@@ -35,7 +35,6 @@ import com.qlangtech.tis.plugin.ds.clickhouse.ClickHouseDataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -102,30 +101,30 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
 
             private String convertType(CMeta col) {
                 DataType type = col.getType();
-                switch (type.type) {
-                    case Types.INTEGER:
-                    case Types.TINYINT:
-                    case Types.SMALLINT:
+                switch (type.getJdbcType()) {
+                    case INTEGER:
+                    case TINYINT:
+                    case SMALLINT:
                         return "Int32";
-                    case Types.BIGINT:
+                    case BIGINT:
                         return "Int64";
-                    case Types.FLOAT:
+                    case FLOAT:
                         return "Float32";
-                    case Types.DOUBLE:
-                    case Types.DECIMAL:
+                    case DOUBLE:
+                    case DECIMAL:
                         return "Float64";
-                    case Types.DATE:
+                    case DATE:
                         return "Date";
-                    case Types.TIME:
-                    case Types.TIMESTAMP:
+                    case TIME:
+                    case TIMESTAMP:
                         return "DateTime";
-                    case Types.BIT:
-                    case Types.BOOLEAN:
+                    case BIT:
+                    case BOOLEAN:
                         return "UInt8";
-                    case Types.BLOB:
-                    case Types.BINARY:
-                    case Types.LONGVARBINARY:
-                    case Types.VARBINARY:
+                    case BLOB:
+                    case BINARY:
+                    case LONGVARBINARY:
+                    case VARBINARY:
                     default:
                         return "String";
                 }

@@ -52,7 +52,6 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     public static final String DATAX_NAME = "Cassandra";
 
 
-
     /**
      * 节点描述
      */
@@ -97,16 +96,15 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
         AtomicInteger index = new AtomicInteger();
         processSession((session) -> {
             ColumnMetaData cmeta = null;
-            ResultSet resultSet = session.execute(
-                    "SELECT column_name,type FROM system_schema.columns WHERE keyspace_name = '"
-                            + this.dbName + "' AND table_name = '" + table.getTabName() + "'");
+            ResultSet resultSet = session.execute("SELECT column_name,type FROM system_schema.columns WHERE " +
+                    "keyspace_name = '" + this.dbName + "' AND table_name = '" + table.getTabName() + "'");
             Iterator<Row> rows = resultSet.iterator();
             Row row = null;
             while (rows.hasNext()) {
                 row = rows.next();
                 //int index, String key, int type, boolean pk
-                cmeta = new ColumnMetaData(index.getAndIncrement(), row.getString(0)
-                        , new DataType(convertType(row.getString(1))), false, true);
+                cmeta = new ColumnMetaData(index.getAndIncrement(), row.getString(0),
+                        new DataType(JDBCTypes.parse(convertType(row.getString(1)))), false, true);
                 // tables.add(row.getString(0));
                 colsMeta.add(cmeta);
             }
@@ -156,7 +154,8 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
     public TableInDB getTablesInDB() {
         TableInDB tables = TableInDB.create(this);
         processSession((session) -> {
-            ResultSet resultSet = session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = '" + this.dbName + "' ");
+            ResultSet resultSet = session.execute("SELECT table_name FROM system_schema.tables WHERE keyspace_name = "
+                    + "'" + this.dbName + "' ");
             Iterator<Row> rows = resultSet.iterator();
             Row row = null;
             while (rows.hasNext()) {
@@ -171,7 +170,8 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
         Cluster cluster = null;
         Session session = null;
         if (StringUtils.isNotEmpty(this.userName)) {
-            Cluster.Builder clusterBuilder = Cluster.builder().withCredentials(userName, password).withPort(this.port).addContactPoints(getHosts());
+            Cluster.Builder clusterBuilder =
+                    Cluster.builder().withCredentials(userName, password).withPort(this.port).addContactPoints(getHosts());
             if (useSSL != null && useSSL) {
                 clusterBuilder = clusterBuilder.withSSL();
             }
@@ -200,10 +200,10 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-//    @Override
-//    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
-//        throw new UnsupportedOperationException();
-//    }
+    //    @Override
+    //    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    //        throw new UnsupportedOperationException();
+    //    }
 
     interface ISessionVisit {
         void visit(Session session);
@@ -238,7 +238,8 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
             return false;
         }
 
-        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public boolean validateNodeDesc(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                        String value) {
 
             String[] hosts = StringUtils.split(value, ",");
             try {

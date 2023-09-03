@@ -133,7 +133,7 @@ public class TDFSReader extends FtpReader {
                         ce.setIndex(index);
                         colValCreator = this.fileFormat.buildColValCreator(c);
                         ce.setColName(c.getName());
-                        ce.setType(c.getType().typeName, colValCreator);
+                        ce.setType(c.getType().getJdbcType().getLiteria(), colValCreator);
                         cols.add(ce);
                     } finally {
                         index++;

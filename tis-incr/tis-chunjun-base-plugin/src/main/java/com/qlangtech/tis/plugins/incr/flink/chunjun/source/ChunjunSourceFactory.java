@@ -25,8 +25,8 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
-import com.qlangtech.tis.plugin.incr.IIncrSelectedTabExtendFactory;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
+import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.table.data.RowData;
 
@@ -66,7 +66,7 @@ public abstract class ChunjunSourceFactory extends MQListenerFactory {
 
 
     public static abstract class BaseChunjunDescriptor
-            extends BaseDescriptor implements IIncrSelectedTabExtendFactory {
+            extends BaseDescriptor implements ISelectedTabExtendFactory {
         @Override
         public String getDisplayName() {
             return DESC_NAME + getEndType().name();
@@ -76,7 +76,7 @@ public abstract class ChunjunSourceFactory extends MQListenerFactory {
             return PluginVender.CHUNJUN;
         }
         @Override
-        public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
+        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(SelectedTabPropsExtends.class);
         }
     }

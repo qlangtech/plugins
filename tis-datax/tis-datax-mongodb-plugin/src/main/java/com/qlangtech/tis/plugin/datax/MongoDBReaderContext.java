@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,7 +29,7 @@ public class MongoDBReaderContext extends BasicMongoDBContext implements IDataxR
     private final String taskName;
 
     public MongoDBReaderContext(String taskName, DataXMongodbReader mongodbReader) {
-        super(mongodbReader.getDsFactory());
+        super(mongodbReader.getDataSourceFactory());
         this.mongodbReader = mongodbReader;
         this.taskName = taskName;
     }
@@ -41,19 +40,23 @@ public class MongoDBReaderContext extends BasicMongoDBContext implements IDataxR
     }
 
     public String getCollectionName() {
-        return mongodbReader.collectionName;
+        //        return mongodbReader.collectionName;
+        return null;
     }
 
     public String getColumn() {
-        return this.mongodbReader.column;
+        // return this.mongodbReader.column;
+        return null;
     }
 
     public boolean isContainQuery() {
-        return StringUtils.isNotEmpty(this.mongodbReader.query);
+        //  return StringUtils.isNotEmpty(this.mongodbReader.query);
+        return true;
     }
 
     public String getQuery() {
-        return this.mongodbReader.query;
+        //  return this.mongodbReader.query;
+        return null;
     }
 
     @Override

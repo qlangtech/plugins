@@ -11,7 +11,7 @@
         "column": ${writer.column},
         "dataxName" : "${writer.dataXName}",
 #if($writer.containUpsertInfo)
-        "upsertInfo": ${writer.upsertInfo}
+        "writeMode": ${writer.upsertInfo}
 #end
     }
 }

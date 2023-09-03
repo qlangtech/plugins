@@ -63,7 +63,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
-    @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
+    @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.coredefine.module.action" +
+            ".DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
     private transient int preSelectedTabsHash;
@@ -114,7 +115,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
 
-    protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper);
+    protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab,
+                                                                   IDataSourceDumper dumper);
 
 
     @Override
@@ -122,15 +124,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         this.dataXName = key.keyVal.getVal();
     }
 
-//    @Override
-//    public DBConfig getDbConfig() {
-//        return getBasicDataSource().getDbConfig();
-//    }
-//
-//    @Override
-//    public BasicDataSourceFactory getBasicDataSource() {
-//        return (BasicDataSourceFactory) getDataSourceFactory();
-//    }
+    //    @Override
+    //    public DBConfig getDbConfig() {
+    //        return getBasicDataSource().getDbConfig();
+    //    }
+    //
+    //    @Override
+    //    public BasicDataSourceFactory getBasicDataSource() {
+    //        return (BasicDataSourceFactory) getDataSourceFactory();
+    //    }
 
     @Override
     public final IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
@@ -142,90 +144,92 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
         return new DataXRdbmsGroupChildTaskIterator(this, this.isFilterUnexistCol(), tabs, tabColsMap);
 
-//        AtomicInteger selectedTabIndex = new AtomicInteger(0);
-//        AtomicInteger taskIndex = new AtomicInteger(0);
-//
-//        final int selectedTabsSize = tabs.size();
-//        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
-//        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-//
-//        return new IGroupChildTaskIterator() {
-//            @Override
-//            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
-//                return groupedInfo;
-//            }
-//
-//            @Override
-//            public boolean hasNext() {
-//
-//                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
-//                if (dumperIt.hasNext()) {
-//                    return true;
-//                } else {
-//                    if (selectedTabIndex.get() >= selectedTabsSize) {
-//                        return false;
-//                    } else {
-//                        dumperItRef.set(null);
-//                        initDataSourceDumperIterator();
-//                        return true;
-//                    }
-//                }
-//            }
-//
-//            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
-//                Iterator<IDataSourceDumper> dumperIt;
-//                if ((dumperIt = dumperItRef.get()) == null) {
-//                    SelectedTab tab = tabs.get(selectedTabIndex.getAndIncrement());
-//                    if (StringUtils.isEmpty(tab.getName())) {
-//                        throw new IllegalStateException("tableName can not be null");
-//                    }
-////                    List<ColumnMetaData> tableMetadata = null;
-////                    IDataSourceDumper dumper = null;
-//                    DataDumpers dataDumpers = null;
-//                    TISTable tisTab = new TISTable();
-//                    tisTab.setTableName(tab.getName());
-//                    int[] index = {0};
-//                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
-//                        return createColumnMetaData(index, c.getName());
-//                    }).collect(Collectors.toList()));
-//
-//                    dataDumpers = dsFactory.getDataDumpers(tisTab);
-//                    dumperIt = dataDumpers.dumpers;
-//                    dumperItRef.set(dumperIt);
-//                }
-//                return dumperIt;
-//            }
-//
-//            @Override
-//            public IDataxReaderContext next() {
-//                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
-//                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
-//                IDataSourceDumper dumper = dumperIterator.next();
-//                SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
-//                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-//                List<DataXCfgGenerator.DBDataXChildTask> childTasks
-//                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-//                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
-//                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
-//
-//                dataxContext.setWhere(tab.getWhere());
-//
-//                if (isFilterUnexistCol()) {
-//                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-//
-//                    dataxContext.setCols(tab.cols.stream()
-//                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
-//                } else {
-//                    dataxContext.setCols(tab.cols);
-//                }
-//                return dataxContext;
-//            }
-//        };
+        //        AtomicInteger selectedTabIndex = new AtomicInteger(0);
+        //        AtomicInteger taskIndex = new AtomicInteger(0);
+        //
+        //        final int selectedTabsSize = tabs.size();
+        //        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new
+        //        ConcurrentHashMap();
+        //        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
+        //
+        //        return new IGroupChildTaskIterator() {
+        //            @Override
+        //            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+        //                return groupedInfo;
+        //            }
+        //
+        //            @Override
+        //            public boolean hasNext() {
+        //
+        //                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
+        //                if (dumperIt.hasNext()) {
+        //                    return true;
+        //                } else {
+        //                    if (selectedTabIndex.get() >= selectedTabsSize) {
+        //                        return false;
+        //                    } else {
+        //                        dumperItRef.set(null);
+        //                        initDataSourceDumperIterator();
+        //                        return true;
+        //                    }
+        //                }
+        //            }
+        //
+        //            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
+        //                Iterator<IDataSourceDumper> dumperIt;
+        //                if ((dumperIt = dumperItRef.get()) == null) {
+        //                    SelectedTab tab = tabs.get(selectedTabIndex.getAndIncrement());
+        //                    if (StringUtils.isEmpty(tab.getName())) {
+        //                        throw new IllegalStateException("tableName can not be null");
+        //                    }
+        ////                    List<ColumnMetaData> tableMetadata = null;
+        ////                    IDataSourceDumper dumper = null;
+        //                    DataDumpers dataDumpers = null;
+        //                    TISTable tisTab = new TISTable();
+        //                    tisTab.setTableName(tab.getName());
+        //                    int[] index = {0};
+        //                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
+        //                        return createColumnMetaData(index, c.getName());
+        //                    }).collect(Collectors.toList()));
+        //
+        //                    dataDumpers = dsFactory.getDataDumpers(tisTab);
+        //                    dumperIt = dataDumpers.dumpers;
+        //                    dumperItRef.set(dumperIt);
+        //                }
+        //                return dumperIt;
+        //            }
+        //
+        //            @Override
+        //            public IDataxReaderContext next() {
+        //                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
+        //                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" +
+        //                selectedTabIndex.get());
+        //                IDataSourceDumper dumper = dumperIterator.next();
+        //                SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
+        //                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
+        //                List<DataXCfgGenerator.DBDataXChildTask> childTasks
+        //                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
+        //                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
+        //                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
+        //
+        //                dataxContext.setWhere(tab.getWhere());
+        //
+        //                if (isFilterUnexistCol()) {
+        //                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
+        //
+        //                    dataxContext.setCols(tab.cols.stream()
+        //                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
+        //                } else {
+        //                    dataxContext.setCols(tab.cols);
+        //                }
+        //                return dataxContext;
+        //            }
+        //        };
     }
 
-//    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-//        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
-//    }
+    //    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
+    //        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
+    //    }
 
     protected boolean isFilterUnexistCol() {
         return false;
@@ -238,25 +242,25 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return new TableColsMeta(getDataSourceFactory(), this.dbName);
 
 
-//        return new Memoizer<String, Map<String, ColumnMetaData>>() {
-//            @Override
-//            public Map<String, ColumnMetaData> compute(String tab) {
-//
-//
-//                Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
-//
-//                try {
-//                    return datasource.getTableMetadata(conn.get(), EntityName.parse(tab))
-//                            .stream().collect(
-//                                    Collectors.toMap(
-//                                            (m) -> m.getKey()
-//                                            , (m) -> m
-//                                            , (c1, c2) -> c1));
-//                } catch (TableNotFoundException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        };
+        //        return new Memoizer<String, Map<String, ColumnMetaData>>() {
+        //            @Override
+        //            public Map<String, ColumnMetaData> compute(String tab) {
+        //
+        //
+        //                Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
+        //
+        //                try {
+        //                    return datasource.getTableMetadata(conn.get(), EntityName.parse(tab))
+        //                            .stream().collect(
+        //                                    Collectors.toMap(
+        //                                            (m) -> m.getKey()
+        //                                            , (m) -> m
+        //                                            , (c1, c2) -> c1));
+        //                } catch (TableNotFoundException e) {
+        //                    throw new RuntimeException(e);
+        //                }
+        //            }
+        //        };
     }
 
 
@@ -283,7 +287,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     @Override
     public DS getDataSourceFactory() {
         return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
-        //  return (DS) dsStore.getPlugin();
     }
 
     public final List<ColumnMetaData> getTableMetadata(EntityName table) throws TableNotFoundException {
@@ -291,36 +294,36 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     @Override
-    public final List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTableMetadata(inSink, table);
     }
 
-//    /**
-//     * 取表的主键
-//     *
-//     * @param table
-//     * @return
-//     */
-//    public List<ColumnMetaData> getPrimaryKeys(String table) {
-//        return this.getTableMetadata(table).stream()
-//                .filter((col) -> col.isPk()).collect(Collectors.toList());
-//    }
-//
-//
-//    public List<ColumnMetaData> getPartitionKeys(String table) {
-//        return this.getTableMetadata(table).stream()
-//                .filter((col) -> {
-//                    switch (col.getType().getCollapse()) {
-//                        // case STRING:
-//                        case INT:
-//                        case Long:
-//                        case Date:
-//                            return true;
-//                    }
-//                    return false;
-//                }).collect(Collectors.toList());
-//    }
+    //    /**
+    //     * 取表的主键
+    //     *
+    //     * @param table
+    //     * @return
+    //     */
+    //    public List<ColumnMetaData> getPrimaryKeys(String table) {
+    //        return this.getTableMetadata(table).stream()
+    //                .filter((col) -> col.isPk()).collect(Collectors.toList());
+    //    }
+    //
+    //
+    //    public List<ColumnMetaData> getPartitionKeys(String table) {
+    //        return this.getTableMetadata(table).stream()
+    //                .filter((col) -> {
+    //                    switch (col.getType().getCollapse()) {
+    //                        // case STRING:
+    //                        case INT:
+    //                        case Long:
+    //                        case Date:
+    //                            return true;
+    //                    }
+    //                    return false;
+    //                }).collect(Collectors.toList());
+    //    }
 
 
     @Override
@@ -338,7 +341,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
             return true;
         }
 
-        public boolean validateFetchSize(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public boolean validateFetchSize(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                         String value) {
             try {
                 int fetchSize = Integer.parseInt(value);
                 if (fetchSize < 1) {
@@ -359,13 +363,15 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             try {
-                ParseDescribable<Describable> readerDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+                ParseDescribable<Describable> readerDescribable = this.newInstance((IPluginContext) msgHandler,
+                        postFormVals.rawFormData, Optional.empty());
                 BasicDataXRdbmsReader rdbmsReader = readerDescribable.getInstance();
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
                 logger.warn(e.getMessage(), e);
                 // msgHandler.addErrorMessage(context, );
-                msgHandler.addFieldError(context, BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME, "数据源连接不正常," + TisException.getErrMsg(e));
+                msgHandler.addFieldError(context, BasicDataXRdbmsWriter.KEY_DB_NAME_FIELD_NAME,
+                        "数据源连接不正常," + TisException.getErrMsg(e));
                 return false;
             }
 
@@ -373,7 +379,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         }
 
         @Override
-        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter, Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
+        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter,
+                                Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
 
             return true;
         }

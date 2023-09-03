@@ -20,31 +20,32 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTab;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.trigger.util.JsonUtil;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -52,8 +53,8 @@ import java.util.Optional;
  * @create: 2021-04-07 15:30
  **/
 @Public
-public class DataXMongodbWriter extends DataxWriter
-        implements IDataxProcessor.INullTableMapCreator, KeyedPluginStore.IPluginKeyAware, IDataSourceFactoryGetter {
+public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcessor.INullTableMapCreator,
+        KeyedPluginStore.IPluginKeyAware, IDataSourceFactoryGetter {
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbWriter.class);
     private static final String KEY_FIELD_UPSERT_INFO = "upsertInfo";
     private static final String KEY_FIELD_COLUMN = "column";
@@ -61,15 +62,15 @@ public class DataXMongodbWriter extends DataxWriter
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String collectionName;
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String column;
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+//    public String collectionName;
+//    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+//    public String column;
 
-    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
-    public String upsertInfo;
+//    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
+//    public String upsertInfo;
 
-    @FormField(ordinal = 11, type = FormFieldType.TEXTAREA,advance = false, validate = {Validator.require})
+    @FormField(ordinal = 11, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
     public String dataXName;
@@ -84,8 +85,8 @@ public class DataXMongodbWriter extends DataxWriter
     }
 
     public MangoDBDataSourceFactory getDsFactory() {
-        return  TIS.getDataBasePlugin( PostedDSProp.parse(this.dbName));
-      //  return (MangoDBDataSourceFactory) dsStore.getPlugin();
+        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
+        //  return (MangoDBDataSourceFactory) dsStore.getPlugin();
     }
 
 
@@ -99,61 +100,25 @@ public class DataXMongodbWriter extends DataxWriter
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * 取得默认的列内容
-     *
-     * @return
-     */
-    public static String getDftColumn() {
-//[{"name":"user_id","type":"string"},{"name":"user_name","type":"array","splitter":","}]
 
-        JSONArray fields = new JSONArray();
 
-        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
-        if (dataReader == null) {
-            return "[]";
-        }
-
-        try {
-            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
-            if (CollectionUtils.isEmpty(selectedTabs)) {
-                return "[]";
-            }
-            for (ISelectedTab tab : selectedTabs) {
-                tab.getCols().forEach((col) -> {
-                    JSONObject field = new JSONObject();
-                    field.put("name", col.getName());
-                    field.put("type", col.getType().getCollapse().getLiteria());
-                    fields.add(field);
-                });
-
-                break;
-            }
-        } catch (Exception e) {
-            logger.warn(e.getMessage(), e);
-            return "[]";
-        }
-
-        return JsonUtil.toString(fields);
-    }
-
-//    public static String getDftCollectionName() {
-//        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
-//        if (dataReader == null) {
-//            return StringUtils.EMPTY;
-//        }
-//
-//        try {
-//            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
-//            for (ISelectedTab tab : selectedTabs) {
-//                return tab.getName();
-//            }
-//        } catch (Throwable e) {
-//            logger.warn(dataReader.getDescriptor().getDisplayName(), e);
-//        }
-//
-//        return StringUtils.EMPTY;
-//    }
+    //    public static String getDftCollectionName() {
+    //        DataxReader dataReader = DataxReader.getThreadBingDataXReader();
+    //        if (dataReader == null) {
+    //            return StringUtils.EMPTY;
+    //        }
+    //
+    //        try {
+    //            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
+    //            for (ISelectedTab tab : selectedTabs) {
+    //                return tab.getName();
+    //            }
+    //        } catch (Throwable e) {
+    //            logger.warn(dataReader.getDescriptor().getDisplayName(), e);
+    //        }
+    //
+    //        return StringUtils.EMPTY;
+    //    }
 
 
     @Override
@@ -163,16 +128,18 @@ public class DataXMongodbWriter extends DataxWriter
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        if (tableMap.isPresent()) {
-            throw new IllegalStateException("tableMap must not be present");
-        }
-        MongoDBWriterContext context = new MongoDBWriterContext(this);
+        //        if (tableMap.isPresent()) {
+        //            throw new IllegalStateException("tableMap must not be present");
+        //        }
+        MongoDBWriterContext context = new MongoDBWriterContext(this,
+                tableMap.orElseThrow(() -> new IllegalStateException("tableMap can not be null")));
         return context;
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
+        private transient SuFormProperties rewriteSubFormProperties;
         public DefaultDescriptor() {
             super();
         }
@@ -184,7 +151,7 @@ public class DataXMongodbWriter extends DataxWriter
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            JSONArray cols = JSON.parseArray(postFormVals.getField(KEY_FIELD_COLUMN));
+           // JSONArray cols = JSON.parseArray(postFormVals.getField(KEY_FIELD_COLUMN));
             JSONObject col = null;
             try {
                 String upsertinfo = postFormVals.getField(KEY_FIELD_UPSERT_INFO);
@@ -200,16 +167,16 @@ public class DataXMongodbWriter extends DataxWriter
                             return false;
                         }
                         boolean findField = false;
-                        for (int i = 0; i < cols.size(); i++) {
-                            col = cols.getJSONObject(i);
-                            if (StringUtils.equals(upsertKey, col.getString("name"))) {
-                                findField = true;
-                            }
-                        }
+//                        for (int i = 0; i < cols.size(); i++) {
+//                            col = cols.getJSONObject(i);
+//                            if (StringUtils.equals(upsertKey, col.getString("name"))) {
+//                                findField = true;
+//                            }
+//                        }
 
                         if (!findField) {
-                            msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO
-                                    , "属性'upsertKey':" + upsertinfo + "在" + KEY_FIELD_COLUMN + "没有找到");
+                            msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, "属性'upsertKey':" + upsertinfo +
+                                    "在" + KEY_FIELD_COLUMN + "没有找到");
                             return false;
                         }
                     }
@@ -241,17 +208,42 @@ public class DataXMongodbWriter extends DataxWriter
 
         @Override
         public boolean isSupportMultiTable() {
-            return false;
+            return true;
         }
 
         @Override
         public boolean isRdbms() {
-            return false;
+            return true;
         }
 
         @Override
         public String getDisplayName() {
             return DataXMongodbReader.DATAX_NAME;
         }
+
+        /**
+         * implements DataxWriter.IRewriteSuFormProperties Start
+         */
+        @Override
+        public  Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
+            Class targetClass = MongoSelectedTab.class;
+            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass), "subForm clazz:" + targetClass + " "
+                    + "can not find relevant Descriptor");
+        }
+
+        @Override
+        public SuFormProperties overwriteSubPluginFormPropertyTypes(SuFormProperties subformProps) throws Exception {
+            if (rewriteSubFormProperties != null) {
+                return rewriteSubFormProperties;
+            }
+            Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
+            rewriteSubFormProperties =
+                    SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor),
+                            newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
+            return rewriteSubFormProperties;
+        }
+        /**
+         * implements DataxWriter.IRewriteSuFormProperties End
+         */
     }
 }

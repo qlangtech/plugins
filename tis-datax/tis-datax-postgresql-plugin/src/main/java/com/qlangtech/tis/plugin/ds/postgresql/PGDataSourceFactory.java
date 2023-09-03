@@ -67,7 +67,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         //https://jdbc.postgresql.org/documentation/head/connect.html#connection-parameters
-        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName + "?ssl=false&stringtype=unspecified";
+        String jdbcUrl = "jdbc:postgresql://" + ip + ":" + this.port + "/" + dbName + "?ssl=false&stringtype" +
+                "=unspecified";
         // boolean hasParam = false;
         if (StringUtils.isNotEmpty(this.encode)) {
             // hasParam = true;
@@ -91,11 +92,12 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
             if (StringUtils.isEmpty(this.dbName)) {
                 throw new IllegalStateException("prop dbName can not be null");
             }
-            result = statement.executeQuery("SELECT table_name FROM information_schema.tables  WHERE table_schema = '" + this.tabSchema + "' and table_catalog='" + this.dbName + "'");
+            result =
+                    statement.executeQuery("SELECT table_name FROM information_schema.tables  WHERE table_schema = " + "'" + this.tabSchema + "' and table_catalog='" + this.dbName + "'");
 
-//        DatabaseMetaData metaData = conn.getMetaData();
-//        String[] types = {"TABLE"};
-//        ResultSet tablesResult = metaData.getTables(conn.getCatalog(), "public", "%", types);
+            //        DatabaseMetaData metaData = conn.getMetaData();
+            //        String[] types = {"TABLE"};
+            //        ResultSet tablesResult = metaData.getTables(conn.getCatalog(), "public", "%", types);
             while (result.next()) {
                 tabs.add(conn.getUrl(), result.getString(1));
             }
@@ -122,14 +124,15 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         props.setProperty(PGProperty.PASSWORD.getName(), this.password);
 
         return new JDBCConnection(DriverManager.getConnection(jdbcUrl, props), jdbcUrl);
-//        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
-//            throw TisException.create("invalid tabSchema:" + this.tabSchema);
-//        }
+        //        if (!StringUtils.equals(this.tabSchema, conn.getSchema())) {
+        //            throw TisException.create("invalid tabSchema:" + this.tabSchema);
+        //        }
         //  return conn;
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+                                             Set<String> pkCols) throws SQLException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
@@ -138,7 +141,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
                     @Override
                     public DataType bitType(DataType type) {
                         if (StringUtils.lastIndexOfIgnoreCase(type.typeName, "bool") > -1) {
-                            return new DataType(Types.BOOLEAN, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.BOOLEAN, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -149,11 +152,11 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
     }
 
 
-//    @Override
-//    public DataDumpers getDataDumpers(TISTable table) {
-//        Iterator<IDataSourceDumper> dumpers = null;
-//        return new DataDumpers(1, dumpers);
-//    }
+    //    @Override
+    //    public DataDumpers getDataDumpers(TISTable table) {
+    //        Iterator<IDataSourceDumper> dumpers = null;
+    //        return new DataDumpers(1, dumpers);
+    //    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
@@ -178,7 +181,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
         }
 
         @Override
-        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
+        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context,
+                                            BasicDataSourceFactory dsFactory) {
             try {
                 AtomicBoolean valid = new AtomicBoolean(true);
                 PGDataSourceFactory ds = (PGDataSourceFactory) dsFactory;

@@ -49,8 +49,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     public ConnEntity connEntity;
 
 
-//    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public Boolean allAuthorized;
+    //    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    //    public Boolean allAuthorized;
 
     @FormField(ordinal = 8, validate = {Validator.require})
     public Authorized allAuthorized;
@@ -74,8 +74,9 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-//        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") + dbName;
-//        return jdbcUrl;
+        //        String jdbcUrl = "jdbc:oracle:thin:@" + ip + ":" + this.port + (this.asServiceName ? "/" : ":") +
+        //        dbName;
+        //        return jdbcUrl;
         return this.connEntity.buidJdbcUrl(ip, this.port);
     }
 
@@ -84,21 +85,24 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
         return allAuthorized.getRefectTablesSql();
 
-//        if (allAuthorized != null && allAuthorized) {
-//            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1";
-//        } else {
-//            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
-//            // 带上 tablespace的话后续取colsMeta会取不出
-//            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
-//
-//        }
+        //        if (allAuthorized != null && allAuthorized) {
+        //            return "SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\
+        //            .$]+') < 1";
+        //        } else {
+        //            //  return "SELECT tablespace_name ||'.'||  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR
+        //            (TABLE_NAME,'[\\.$]+') < 1 AND tablespace_name is not null";
+        //            // 带上 tablespace的话后续取colsMeta会取不出
+        //            return "SELECT  (TABLE_NAME) FROM user_tables WHERE REGEXP_INSTR(TABLE_NAME,'[\\.$]+') < 1 AND
+        //            tablespace_name is not null";
+        //
+        //        }
     }
 
     @Override
     public String toString() {
         return "{" +
                 // "asServiceName=" + asServiceName +
-                ", allAuthorized=" + allAuthorized + ", name='" + name + '\'' + ", dbName='" + dbName + '\'' + ", userName='" + userName + '\'' + ", password='********" + '\'' + ", nodeDesc='" + nodeDesc + '\'' + ", port=" + port + ", encode='" + encode + '\'' + ", extraParams='" + extraParams + '\'' + '}';
+                ", allAuthorized=" + allAuthorized + ", name='" + name + '\'' + ", dbName='" + dbName + '\'' + ", " + "userName='" + userName + '\'' + ", password='********" + '\'' + ", nodeDesc='" + nodeDesc + '\'' + ", port=" + port + ", encode='" + encode + '\'' + ", extraParams='" + extraParams + '\'' + '}';
     }
 
     @Override
@@ -138,8 +142,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     private int convert2JdbcType(int dbColType) {
         switch (dbColType) {
-//            case OracleTypes.ARRAY:
-//            case OracleTypes.BIGINT:
+            //            case OracleTypes.ARRAY:
+            //            case OracleTypes.BIGINT:
             case BIT:// = -7;
                 return Types.BIT;
             case TINYINT: // = -6;
@@ -182,39 +186,41 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
     }
 
     @Override
-    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+                                             Set<String> pkCols) throws SQLException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
                 // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-                return new DataType(convert2JdbcType(dbColType), typeName, colSize);
+                return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
             }
 
             @Override
             protected DataType getDataType(String keyName) throws SQLException {
 
-//        int columnCount = cols.getMetaData().getColumnCount();
-//        String colName = null;
-//        for (int i = 1; i <= columnCount; i++) {
-//            colName = cols.getMetaData().getColumnName(i);
-//            System.out.print(colName + ":" + cols.getString(colName) + ",");
-//        }
-//        System.out.println();
+                //        int columnCount = cols.getMetaData().getColumnCount();
+                //        String colName = null;
+                //        for (int i = 1; i <= columnCount; i++) {
+                //            colName = cols.getMetaData().getColumnName(i);
+                //            System.out.print(colName + ":" + cols.getString(colName) + ",");
+                //        }
+                //        System.out.println();
 
                 DataType type = super.getDataType(keyName);
                 // Oracle会将int，smallint映射到Oracle数据库都是number类型，number类型既能表示浮点和整型，所以这里要用进度来鉴别是整型还是浮点
-                if (type.type == Types.DECIMAL || type.type == Types.NUMERIC) {
+                if (type.getJdbcType() == JDBCTypes.DECIMAL || type.getJdbcType() == JDBCTypes.NUMERIC) {
                     int decimalDigits = type.getDecimalDigits();// cols.getInt("decimal_digits");
                     if (decimalDigits < 1) {
-                        return new DataType(type.getColumnSize() > 8 ? Types.BIGINT : Types.INTEGER, type.typeName, type.getColumnSize());
+                        return DataType.create(type.getColumnSize() > 8 ? Types.BIGINT : Types.INTEGER,
+                                type.typeName, type.getColumnSize());
                     }
                 }
 
                 // 当MySQL中的Date类型映射到Oracle中时，Oracle作为Sink端应该作为Date类型 https://github.com/qlangtech/tis/issues/192
                 if (inSink && "DATE".equalsIgnoreCase(type.typeName)) {
                     // 由于Oracle的Date类型在实际上是精确到秒的，不能简单输出成Date类型
-                    return new DataType(Types.DATE, type.typeName, type.getColumnSize());
+                    return DataType.create(Types.DATE, type.typeName, type.getColumnSize());
                 }
 
 
@@ -231,10 +237,12 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-//        return DriverManager.getConnection(jdbcUrl
-//                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils.trimToNull(password));
+        //        return DriverManager.getConnection(jdbcUrl
+        //                , StringUtils.trimToNull(this.asServiceName ? "system" : this.userName), StringUtils
+        //                .trimToNull(password));
 
-        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password)), jdbcUrl);
+        return new JDBCConnection(DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName),
+                StringUtils.trimToNull(password)), jdbcUrl);
     }
 
 
@@ -257,7 +265,8 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         }
 
         @Override
-        public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public boolean validateExtraParams(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                           String value) {
             return true;
         }
     }

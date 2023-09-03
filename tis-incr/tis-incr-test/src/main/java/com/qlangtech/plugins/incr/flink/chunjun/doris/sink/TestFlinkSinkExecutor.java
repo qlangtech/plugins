@@ -37,10 +37,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -386,23 +383,23 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         List<CMeta> metaCols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
-        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
+        cm.setType( DataType.create(Types.VARCHAR, "VARCHAR", 6));
         metaCols.add(cm);
 
         cm = new CMeta();
         cm.setName(colNum);
-        cm.setType(new DataType(Types.INTEGER));
+        cm.setType(new DataType(JDBCTypes.INTEGER));
         metaCols.add(cm);
 
         cm = new CMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
+        cm.setType(DataType.create(Types.VARCHAR, "VARCHAR", 32));
         cm.setPk(true);
         metaCols.add(cm);
 
         cm = new CMeta();
         cm.setName(colCreateTime);
-        cm.setType(new DataType(Types.BIGINT, "bigint", 8));
+        cm.setType( DataType.create(Types.BIGINT, "bigint", 8));
         metaCols.add(cm);
 
         cm = createUpdateTime();
@@ -410,17 +407,17 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         cm = new CMeta();
         cm.setName(updateDate);
-        cm.setType(new DataType(Types.DATE));
+        cm.setType(new DataType(JDBCTypes.DATE));
         metaCols.add(cm);
 
         cm = new CMeta();
         cm.setName(starTime);
-        cm.setType(new DataType(Types.TIMESTAMP));
+        cm.setType(new DataType(JDBCTypes.TIMESTAMP));
         metaCols.add(cm);
 
         cm = new CMeta();
         cm.setName(price);
-        DataType decimal = new DataType(Types.DECIMAL, "decimal", 10);
+        DataType decimal =  DataType.create(Types.DECIMAL, "decimal", 10);
         decimal.setDecimalDigits(2);
         cm.setType(decimal);
         metaCols.add(cm);

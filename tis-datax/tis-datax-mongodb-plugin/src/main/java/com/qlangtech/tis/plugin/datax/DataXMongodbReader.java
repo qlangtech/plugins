@@ -22,31 +22,40 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.datax.IGroupChildTaskIterator;
-import com.qlangtech.tis.datax.impl.DataxReader;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
+import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
+import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
+import org.bson.BsonDocument;
+import org.bson.BsonValue;
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 /**
  * https://gitee.com/mirrors/DataX/blob/master/mongodbreader/doc/mongodbreader.md
@@ -56,64 +65,101 @@ import java.util.stream.Collectors;
  * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
  **/
 @Public
-public class DataXMongodbReader extends DataxReader {
+public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceFactory> {
 
     public static final String DATAX_NAME = "MongoDB";
     public static final String TYPE_ARRAY = "array";
-    public static final Set<String> acceptTypes = Sets.newHashSet("int", "long", "double", "string", TYPE_ARRAY, "date", "boolean", "bytes");
+    public static final Set<String> acceptTypes = Sets.newHashSet("int", "long", "double", "string", TYPE_ARRAY,
+            "date", "boolean", "bytes");
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 
-    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String dbName;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    public String collectionName;
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    public String column;
+    //    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    //    public String dbName;
+    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    //    public String collectionName;
+    //    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    //    public String column;
 
-    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    public String query;
+    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public Integer inspectRowCount;
 
-    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
-    public String template;
+
+    //    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
+    //    public String query;
+
+    //    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
+    //    public String template;
+
+    @Override
+    public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
+        MangoDBDataSourceFactory plugin = getDataSourceFactory();
+        Map<String, MongoColumnMetaData> colsSchema = Maps.newHashMap();
+        try {
+            MongoClient mongoClient = Objects.requireNonNull(plugin.unwrap(MongoClient.class), " mongoClient can not "
+                    + "be null ");
+
+            MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
+            MongoCollection<Document> user = database.getCollection(table.getTableName());
+            BsonValue val = null;
+            BsonDocument bdoc = null;
+            MongoColumnMetaData colMeta = null;
+
+            for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
+                    "inspectRowCount can not " + "be" + " null"))) {
+
+                bdoc = doc.toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
+
+                MongoColumnMetaData.parseMongoDocTypes(false, Collections.emptyList(), colsSchema, bdoc);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
+        return result;
+    }
 
     /**
      * end implements: DBConfigGetter
      */
-    public MangoDBDataSourceFactory getDsFactory() {
-        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
-        //   return (MangoDBDataSourceFactory) dsStore.getPlugin();
-    }
-
-
+    //    public MangoDBDataSourceFactory getDsFactory() {
+    //        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
+    //        //   return (MangoDBDataSourceFactory) dsStore.getPlugin();
+    //    }
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXMongodbReader.class, "DataXMongodbReader-tpl.json");
     }
 
-    @Override
-    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
-        IDataxReaderContext readerContext = new MongoDBReaderContext(this.collectionName, this);
-        //return Collections.singleton(readerContext).iterator();
-        return IGroupChildTaskIterator.create(readerContext);
-    }
+    //    @Override
+    //    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+    //        IDataxReaderContext readerContext = new MongoDBReaderContext(this.collectionName, this);
+    //        //return Collections.singleton(readerContext).iterator();
+    //        return IGroupChildTaskIterator.create(readerContext);
+    //    }
+
+    //    @Override
+    //    public List<ISelectedTab> getSelectedTabs() {
+    //        if (StringUtils.isEmpty(this.collectionName)) {
+    //            throw new IllegalStateException("property collectionName can not be empty");
+    //        }
+    //        MongoDBTable tab = new MongoDBTable(this.collectionName);
+    //
+    //
+    //        List<ColCfg> cols = JSON.parseArray(this.column, ColCfg.class);
+    //        tab.cols = cols.stream().map((c) -> {
+    //            CMeta colMeta = new CMeta();
+    //            colMeta.setName(c.getName());
+    //            colMeta.setType(convertType(c.getType()));
+    //            return colMeta;
+    //        }).collect(Collectors.toList());
+    //
+    //        return Collections.singletonList(tab);
+    //    }
 
     @Override
-    public List<ISelectedTab> getSelectedTabs() {
-        if (StringUtils.isEmpty(this.collectionName)) {
-            throw new IllegalStateException("property collectionName can not be empty");
-        }
-        MongoDBTable tab = new MongoDBTable(this.collectionName);
-
-
-        List<ColCfg> cols = JSON.parseArray(this.column, ColCfg.class);
-        tab.cols = cols.stream().map((c) -> {
-            CMeta colMeta = new CMeta();
-            colMeta.setName(c.getName());
-            colMeta.setType(convertType(c.getType()));
-            return colMeta;
-        }).collect(Collectors.toList());
-
-        return Collections.singletonList(tab);
+    protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
+        return null;
     }
 
     private DataType convertType(String type) {
@@ -172,20 +218,44 @@ public class DataXMongodbReader extends DataxReader {
     }
 
 
-
-    @Override
-    public String getTemplate() {
-        return this.template;
-    }
+    //    @Override
+    //    public String getTemplate() {
+    //        return this.template;
+    //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxReaderDescriptor {
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor implements ISelectedTabExtendFactory {
         public DefaultDescriptor() {
             super();
         }
+        public boolean validateInspectRowCount(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                               String value) {
 
-        public boolean validateColumn(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return validateColumnContent(msgHandler, context, fieldName, value);
+            Integer inspectRowCount = Integer.parseInt(value);
+            if (inspectRowCount < 1) {
+                msgHandler.addFieldError(context, fieldName, "必须大于0的整数");
+                return false;
+            }
+
+            final int maxInspectRowCount = 1000;
+            if (inspectRowCount > maxInspectRowCount) {
+                msgHandler.addFieldError(context, fieldName, "不能大于" + maxInspectRowCount + "的整数");
+                return false;
+            }
+            //  return validateColumnContent(msgHandler, context, fieldName, value);
+
+            return true;
+        }
+
+
+        @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return super.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        public final Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
+            return TIS.get().getDescriptor(MongoSelectedTabExtend.class);
         }
 
         @Override
@@ -199,17 +269,13 @@ public class DataXMongodbReader extends DataxReader {
         }
 
         @Override
-        public boolean isRdbms() {
-            return false;
-        }
-
-        @Override
         public String getDisplayName() {
             return DATAX_NAME;
         }
     }
 
-    public static boolean validateColumnContent(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+    public static boolean validateColumnContent(IFieldErrorHandler msgHandler, Context context, String fieldName,
+                                                String value) {
         try {
             JSONObject col = null;
             String attrName = null;
@@ -227,7 +293,8 @@ public class DataXMongodbReader extends DataxReader {
                 } else {
                     Matcher matcher = ValidatorCommons.PATTERN_DB_COL_NAME.matcher(attrName);
                     if (!matcher.matches()) {
-                        msgHandler.addFieldError(context, fieldName, "第" + (i + 1) + "个列name属性" + ValidatorCommons.MSG_DB_COL_NAME_ERROR);
+                        msgHandler.addFieldError(context, fieldName,
+                                "第" + (i + 1) + "个列name属性" + ValidatorCommons.MSG_DB_COL_NAME_ERROR);
                         return false;
                     }
                 }
@@ -243,7 +310,8 @@ public class DataXMongodbReader extends DataxReader {
                     if (TYPE_ARRAY.equals(attrType)) {
                         String spliter = col.getString("splitter");
                         if (StringUtils.isBlank(spliter)) {
-                            msgHandler.addFieldError(context, fieldName, "第" + (i + 1) + "个列'type'为'" + TYPE_ARRAY + "'的属性必须有'splitter'属性");
+                            msgHandler.addFieldError(context, fieldName, "第" + (i + 1) + "个列'type'为'" + TYPE_ARRAY +
+                                    "'的属性必须有'splitter'属性");
                             return false;
                         }
                     }

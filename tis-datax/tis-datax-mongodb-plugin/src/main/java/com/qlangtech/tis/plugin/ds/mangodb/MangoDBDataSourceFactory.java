@@ -27,11 +27,13 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
@@ -53,8 +55,9 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     private static final String DS_TYPE_MONGO_DB = "MongoDB";
 
 
-//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String name;
+    //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
+    //    Validator.identity})
+    //    public String name;
 
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String address;
@@ -139,19 +142,19 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
-//        MongoClient mongoClient = null;
-//        try {
-//            mongoClient = createMongoClient();
-//            MongoDatabase database = mongoClient.getDatabase(this.dbName);
-//            MongoCollection collection = database.getCollection(table);
-//            //collection.getReadConcern()
-//            //  collection.find().map()
-//        } finally {
-//            try {
-//                mongoClient.close();
-//            } catch (Throwable e) {
-//            }
-//        }
+        //        MongoClient mongoClient = null;
+        //        try {
+        //            mongoClient = createMongoClient();
+        //            MongoDatabase database = mongoClient.getDatabase(this.dbName);
+        //            MongoCollection collection = database.getCollection(table);
+        //            //collection.getReadConcern()
+        //            //  collection.find().map()
+        //        } finally {
+        //            try {
+        //                mongoClient.close();
+        //            } catch (Throwable e) {
+        //            }
+        //        }
         throw new UnsupportedOperationException();
     }
 
@@ -160,10 +163,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-//    @Override
-//    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
-//        throw new UnsupportedOperationException();
-//    }
+    //    @Override
+    //    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
+    //        throw new UnsupportedOperationException();
+    //    }
 
     private MongoClient createMongoClient() {
         MongoClient mongoClient = null;
@@ -174,16 +177,19 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
             AuthenticationMechanism aMechanism = AuthenticationMechanism.fromMechanismName(this.authMechanism);
             switch (aMechanism) {
                 case PLAIN:
-                    credential = MongoCredential.createPlainCredential(this.username, this.userSource, password.toCharArray());
+                    credential = MongoCredential.createPlainCredential(this.username, this.userSource,
+                            password.toCharArray());
                     break;
                 case GSSAPI:
                     credential = MongoCredential.createGSSAPICredential(this.username);
                     break;
                 case MONGODB_CR:
-                    credential = MongoCredential.createMongoCRCredential(this.username, this.userSource, password.toCharArray());
+                    credential = MongoCredential.createMongoCRCredential(this.username, this.userSource,
+                            password.toCharArray());
                     break;
                 case SCRAM_SHA_1:
-                    credential = MongoCredential.createScramSha1Credential(this.username, this.userSource, password.toCharArray());
+                    credential = MongoCredential.createScramSha1Credential(this.username, this.userSource,
+                            password.toCharArray());
                     break;
                 case MONGODB_X509:
                     credential = MongoCredential.createMongoX509Credential(this.username);
@@ -201,9 +207,8 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
 
     public static List<Option> allAuthMechanism() {
-        return Arrays.stream(AuthenticationMechanism.values())
-                .map((e) -> new Option(e.getMechanismName(), e.getMechanismName()))
-                .collect(Collectors.toList());
+        return Arrays.stream(AuthenticationMechanism.values()).map((e) -> new Option(e.getMechanismName(),
+                e.getMechanismName())).collect(Collectors.toList());
     }
 
 
@@ -224,7 +229,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
 
     @TISExtension
-    public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor {
+    public static class DefaultDescriptor extends DataSourceFactory.BaseDataSourceFactoryDescriptor<MangoDBDataSourceFactory> {
         @Override
         protected String getDataSourceName() {
             return DS_TYPE_MONGO_DB;
@@ -261,5 +266,17 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
             return true;
         }
 
+        @Override
+        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context,
+                                            MangoDBDataSourceFactory dsFactory) {
+
+            try {
+                TableInDB tabs = dsFactory.getTablesInDB();
+            } catch (Exception e) {
+                throw TisException.create(e.getMessage(), e);
+            }
+
+            return true;
+        }
     }
 }

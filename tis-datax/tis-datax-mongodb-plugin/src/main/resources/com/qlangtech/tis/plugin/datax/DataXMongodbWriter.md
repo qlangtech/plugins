@@ -15,9 +15,4 @@
  | Date     | date  |
  | Boolean  | boolean |
  | Bytes    | bytes |
-## upsertInfo
- 
- 指定了传输数据时更新的信息。填写JSONObject格式，需要有两个属性'isUpsert'(当设置为true时，表示针对相同的upsertKey做更新操作),'upsertKey'(upsertKey指定了没行记录的业务主键。用来做更新时使用)【选填】,例子：
- ```json
-  {"isUpsert":true,"upsertKey":"unique_id"}
-  ```
+

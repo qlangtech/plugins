@@ -1,0 +1,6 @@
+{
+  "cols": {
+    "elementCreator": "com.qlangtech.tis.plugin.datax.mongo.MongoCMetaCreatorFactory",
+    "viewtype": "tuplelist"
+  }
+}

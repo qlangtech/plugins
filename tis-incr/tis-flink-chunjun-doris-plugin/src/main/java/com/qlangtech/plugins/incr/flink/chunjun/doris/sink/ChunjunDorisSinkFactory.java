@@ -38,7 +38,7 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.IncrSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
@@ -217,7 +217,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         }
 
         @Override
-        public Descriptor<IncrSelectedTabExtend> getSelectedTableExtendDescriptor() {
+        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
             return TIS.get().getDescriptor(DorisTabProps.class);
         }
 

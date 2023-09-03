@@ -77,6 +77,12 @@
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.12.14</version>
+        </dependency>
+
     </dependencies>
 
 </project>

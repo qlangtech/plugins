@@ -28,7 +28,6 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
-import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,33 +87,33 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
             private String getSqlServerType(CMeta col) {
                 DataType type = col.getType();
-                switch (type.type) {
-                    case Types.INTEGER:
-                    case Types.TINYINT:
-                    case Types.SMALLINT:
+                switch (type.getJdbcType()) {
+                    case INTEGER:
+                    case TINYINT:
+                    case SMALLINT:
                         return "int";
-                    case Types.BIGINT:
+                    case BIGINT:
                         return "bigint";
-                    case Types.FLOAT:
-                    case Types.DOUBLE:
-                    case Types.DECIMAL:
+                    case FLOAT:
+                    case DOUBLE:
+                    case DECIMAL:
                         return "decimal(8,4)";
-                    case Types.DATE:
-                    case Types.TIME:
-                    case Types.TIMESTAMP:
+                    case DATE:
+                    case TIME:
+                    case TIMESTAMP:
                         return "datetime";
-                    case Types.BIT:
-                    case Types.BOOLEAN:
+                    case BIT:
+                    case BOOLEAN:
                         return "bit";
-                    case Types.BLOB:
-                    case Types.BINARY:
-                    case Types.LONGVARBINARY:
-                    case Types.VARBINARY:
+                    case BLOB:
+                    case BINARY:
+                    case LONGVARBINARY:
+                    case VARBINARY:
                         //https://learn.microsoft.com/en-us/sql/t-sql/data-types/binary-and-varbinary-transact-sql?view=sql-server-ver16
                         // Variable-length binary data. n can be a value from 1 through 8,000.
                         // type.columnSize 可能为0 所以要用Math.max() 调整一下
                         return "varbinary(" + Math.min(Math.max(type.getColumnSize(), 300), 8000) + ")";
-                    case Types.LONGVARCHAR:
+                    case LONGVARCHAR:
                         return "text";
                     default:
                         return "varchar(" + type.getColumnSize() + ")";

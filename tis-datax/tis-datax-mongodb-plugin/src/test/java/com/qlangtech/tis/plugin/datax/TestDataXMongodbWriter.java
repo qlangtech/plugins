@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
@@ -96,20 +95,20 @@ public class TestDataXMongodbWriter extends TestCase {
                 return DataXMongodbWriter.class;
             }
         };
-        writer.collectionName = "employee";
+       // writer.collectionName = "employee";
 
-        writer.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
+       // writer.column = IOUtils.loadResourceFromClasspath(this.getClass(), "mongodb-reader-column.json");
         writer.template = DataXMongodbWriter.getDftTemplate();
         writer.dbName = "order1";
         writer.dataXName = "mongodb_doris";
-        writer.upsertInfo = "{\"isUpsert\":true,\"upsertKey\":\"user_id\"}";
+       // writer.upsertInfo = "{\"isUpsert\":true,\"upsertKey\":\"user_id\"}";
         // IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
         WriterTemplate.valiateCfgGenerate(
                 "mongodb-datax-writer-assert.json", writer, null);
 
         dsFactory.username = null;
         dsFactory.password = null;
-        writer.upsertInfo = null;
+     //   writer.upsertInfo = null;
 
         WriterTemplate.valiateCfgGenerate(
                 "mongodb-datax-writer-assert-without-option.json", writer, null);

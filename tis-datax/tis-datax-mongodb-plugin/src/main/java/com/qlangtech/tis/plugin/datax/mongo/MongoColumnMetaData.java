@@ -64,9 +64,9 @@ public class MongoColumnMetaData extends ColumnMetaData {
             val = entry.getValue();
             keys = ListUtils.union(parentKeys, Collections.singletonList(entry.getKey()));
             key = String.join(MongoCMeta.KEY_MONOG_NEST_PROP_SEPERATOR, keys);
-            if (val.getBsonType() == BsonType.OBJECT_ID) {
-                continue;
-            }
+//            if (val.getBsonType() == BsonType.OBJECT_ID) {
+//                continue;
+//            }
             colMeta = colsSchema.get(key);
             if (colMeta == null) {
                 colMeta = new MongoColumnMetaData(index++, key, val.getBsonType());

@@ -15,11 +15,13 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+
 import com.qlangtech.tis.plugin.datax.TestDataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.TestDataXMongodbWriter;
+import com.qlangtech.tis.plugin.datax.mongo.TestMongoCMeta;
+import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.framework.Test;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-09 09:22
@@ -29,6 +31,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(TestDataXMongodbReader.class);
         suite.addTestSuite(TestDataXMongodbWriter.class);
+        suite.addTestSuite(TestMongoCMeta.class);
         return suite;
     }
 }

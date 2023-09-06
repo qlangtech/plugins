@@ -123,7 +123,7 @@ public class HdfsTDFDLinker extends TDFSLinker {
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            HdfsTDFDLinker dfsLinker = (HdfsTDFDLinker) postFormVals.newInstance(this, msgHandler);
+            HdfsTDFDLinker dfsLinker = (HdfsTDFDLinker) postFormVals.newInstance();
             return verifyForm(msgHandler, context, dfsLinker);
         }
 

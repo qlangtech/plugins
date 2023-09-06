@@ -414,7 +414,7 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-            DefaultHiveConnGetter params = (DefaultHiveConnGetter) postFormVals.newInstance(this, msgHandler);
+            DefaultHiveConnGetter params = (DefaultHiveConnGetter) postFormVals.newInstance();
 
 //            String metaUrls = postFormVals.getField(KEY_META_STORE_URLS);
 //            String dbName = postFormVals.getField(KEY_DB_NAME);

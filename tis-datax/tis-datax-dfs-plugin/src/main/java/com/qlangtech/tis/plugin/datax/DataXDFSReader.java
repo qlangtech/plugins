@@ -99,7 +99,7 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         }
 
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals, boolean showRecognizedResMsg) {
-            AbstractDFSReader dataxReader = (AbstractDFSReader) postFormVals.newInstance(this, msgHandler);
+            AbstractDFSReader dataxReader = (AbstractDFSReader) postFormVals.newInstance();
 
             Set<ITDFSSession.Res> matchRes = dataxReader.dfsLinker.useTdfsSession((session) -> {
                 return dataxReader.resMatcher.findAllRes(session);

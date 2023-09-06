@@ -290,7 +290,7 @@ public class DataXKafkaWriter extends DataxWriter {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             DataXKafkaWriter dataxWriter
-                    = (DataXKafkaWriter) postFormVals.newInstance(this, msgHandler);
+                    = (DataXKafkaWriter) postFormVals.newInstance();
             if (StringUtils.isEmpty(dataxWriter.testTopic)) {
                 msgHandler.addFieldError(context, "testTopic", ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
                 return false;

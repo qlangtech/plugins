@@ -103,7 +103,7 @@ public class FtpTDFSLinker extends TDFSLinker {
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            FtpTDFSLinker ftpLinker = (FtpTDFSLinker) postFormVals.newInstance(this, msgHandler);
+            FtpTDFSLinker ftpLinker = (FtpTDFSLinker) postFormVals.newInstance();
 
             FTPServer server = FTPServer.getServer(ftpLinker.linker);
             return server.useFtpHelper((ftp) -> {

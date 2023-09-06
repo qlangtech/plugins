@@ -174,7 +174,7 @@ public class TimeStampKeyGenerator extends HudiKeyGenerator {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             TimeStampKeyGenerator generator
-                    = (TimeStampKeyGenerator) postFormVals.newInstance(this, msgHandler);
+                    = (TimeStampKeyGenerator) postFormVals.newInstance();
 
             if (!validateForm(msgHandler, context, generator)) {
                 return false;

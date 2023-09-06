@@ -140,7 +140,7 @@ public class ElasticEndpoint extends HttpEndpoint {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            ElasticEndpoint cfg = (ElasticEndpoint) postFormVals.newInstance(this, msgHandler);
+            ElasticEndpoint cfg = (ElasticEndpoint) postFormVals.newInstance();
             ESInitialization es = cfg.createESInitialization();
             // Health
             Health.Builder hbuild = new Health.Builder();

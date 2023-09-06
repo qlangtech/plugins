@@ -100,7 +100,7 @@ public class FTPServer extends ParamsConfig {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            FTPServer server = (FTPServer) postFormVals.newInstance(this, msgHandler);
+            FTPServer server = (FTPServer) postFormVals.newInstance();
             try (FtpHelper ftpHelper = server.createFtpHelper(2000, new FtpTDFSLinker())) {
             } catch (Exception e) {
                 throw TisException.create("请检查配置参数是否正确", e);

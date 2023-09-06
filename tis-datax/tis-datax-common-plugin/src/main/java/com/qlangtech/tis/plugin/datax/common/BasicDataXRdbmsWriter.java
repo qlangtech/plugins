@@ -35,7 +35,6 @@ import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.util.RobustReflectionConverter;
 import com.qlangtech.tis.util.RobustReflectionConverter2;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -252,7 +251,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
         @Override
         protected final boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals form) {
-            BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter) form.newInstance(this, msgHandler);
+            BasicDataXRdbmsWriter dataxWriter = (BasicDataXRdbmsWriter) form.newInstance();
 
             return validatePostForm(msgHandler, context, dataxWriter);
         }

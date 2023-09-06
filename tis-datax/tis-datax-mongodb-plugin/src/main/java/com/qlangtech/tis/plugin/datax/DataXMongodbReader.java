@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.mongodb.MongoClient;
@@ -30,14 +31,18 @@ import com.mongodb.client.MongoDatabase;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
 import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.*;
@@ -46,6 +51,7 @@ import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.impl.AttrVals;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -55,7 +61,9 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 /**
  * https://gitee.com/mirrors/DataX/blob/master/mongodbreader/doc/mongodbreader.md
@@ -224,10 +232,11 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor implements ISelectedTabExtendFactory {
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor implements ISelectedTabExtendFactory, SubForm.ISubFormItemValidate {
         public DefaultDescriptor() {
             super();
         }
+
         public boolean validateInspectRowCount(IFieldErrorHandler msgHandler, Context context, String fieldName,
                                                String value) {
 
@@ -247,6 +256,119 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             return true;
         }
 
+        @Override
+        public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context,
+                                            BaseSubFormProperties props, IPropertyType.SubFormFilter subFormFilter,
+                                            AttrVals formData) {
+            // 校验一次提交的全部selectForm
+            return true;
+        }
+
+
+        @Override
+        public boolean validateSubForm(IControlMsgHandler msgHandler, Context context, SelectedTab tab) {
+
+            MongoCMeta mongoCMeta = null;
+
+
+            String jsonPath = null;
+            String name = null;
+            DataType type = null;
+            int colIndex = 0;
+
+            final String nameKey = "name";
+
+            for (CMeta cmeta : tab.cols) {
+                mongoCMeta = (MongoCMeta) cmeta;
+
+                int docSplitFieldIndex = 0;
+                for (MongoCMeta.MongoDocSplitCMeta splitCMeta : mongoCMeta.getDocFieldSplitMetas()) {
+
+                    String fieldJsonPathKey = joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex,
+                            docSplitFieldIndex), "jsonPath");
+
+                    jsonPath = splitCMeta.getJsonPath();
+
+                    if (Validator.require.validate(msgHandler, context, fieldJsonPathKey, jsonPath)) {
+
+                        Validator.validatePattern(msgHandler, context,
+                                Validator.rule(MongoCMeta.MongoDocSplitCMeta.PATTERN_JSON_PATH, "需由带点字段名组成"),
+                                fieldJsonPathKey, jsonPath);
+
+                    }
+
+                    name = splitCMeta.getName();
+                    final String fieldNameKey = joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex,
+                            docSplitFieldIndex), nameKey);
+
+                    if (Validator.require.validate(msgHandler, context, fieldNameKey, name) //
+                            && Validator.db_col_name.validate(msgHandler, context, fieldNameKey, name)) {
+
+                    }
+
+                    type = splitCMeta.getType();
+
+                    docSplitFieldIndex++;
+                }
+
+                colIndex++;
+            }
+
+            if (context.hasErrors()) {
+                return false;
+            }
+
+            // 校验字段是否有重复
+            AtomicInteger keyIndex = new AtomicInteger();
+            Map<String, List<Integer>> existKeys = tab.cols.stream().collect(Collectors.toMap((c) -> c.getName(),
+                    (c) -> Collections.singletonList(keyIndex.getAndIncrement())));
+            List<Integer> fieldIndex = null;
+            colIndex = 0;
+            for (CMeta cmeta : tab.cols) {
+                mongoCMeta = (MongoCMeta) cmeta;
+                int docSplitFieldIndex = 0;
+                for (MongoCMeta.MongoDocSplitCMeta splitCMeta : mongoCMeta.getDocFieldSplitMetas()) {
+
+                    name = splitCMeta.getName();
+
+                    if ((fieldIndex = existKeys.get(name)) != null) {
+
+                        msgHandler.addFieldError(context, joinField(SelectedTab.KEY_FIELD_COLS, fieldIndex, nameKey),
+                                "字段重复");
+
+                        msgHandler.addFieldError(context, joinField(SelectedTab.KEY_FIELD_COLS,
+                                Lists.newArrayList(colIndex, docSplitFieldIndex), nameKey), "字段重复");
+
+                        return false;
+                    } else {
+                        existKeys.put(name, Lists.newArrayList(colIndex, docSplitFieldIndex));
+                    }
+
+                    docSplitFieldIndex++;
+                }
+                colIndex++;
+            }
+
+
+            return true;
+        }
+
+        private String joinField(String fkey, Object... keys) {
+
+            List<String> joins = Lists.newArrayList(fkey);
+            for (Object key : keys) {
+                if (key instanceof String) {
+                    joins.add(".");
+                    joins.add((String) key);
+                } else if (key instanceof List) {
+                    joins.add((String) ((List) key).stream().map((k) -> "[" + k + "]").collect(Collectors.joining()));
+                } else {
+                    throw new IllegalStateException("illegal type:" + key);
+                }
+            }
+
+            return joins.stream().collect(Collectors.joining());
+        }
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
@@ -274,6 +396,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         }
     }
 
+    @Deprecated
     public static boolean validateColumnContent(IFieldErrorHandler msgHandler, Context context, String fieldName,
                                                 String value) {
         try {

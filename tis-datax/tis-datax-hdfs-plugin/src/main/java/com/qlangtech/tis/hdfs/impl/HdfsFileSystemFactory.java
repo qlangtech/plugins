@@ -418,7 +418,7 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             // String hdfsAddress = null;
             try {
-                FileSystemFactory hdfsFactory = postFormVals.newInstance(this, msgHandler);
+                FileSystemFactory hdfsFactory = postFormVals.newInstance();
                 //Configuration conf = hdfsFactory.getConfiguration();
                 ITISFileSystem hdfs = hdfsFactory.getFileSystem();
                 final IPath rootPath = hdfs.getRootDir();

@@ -136,7 +136,7 @@ public class AliyunOSSTDFSLinker extends TDFSLinker {
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            AliyunOSSTDFSLinker osstdfsLinker = (AliyunOSSTDFSLinker) postFormVals.newInstance(this, msgHandler);
+            AliyunOSSTDFSLinker osstdfsLinker = (AliyunOSSTDFSLinker) postFormVals.newInstance();
             return verifyFormOSSRelative(msgHandler, context, osstdfsLinker);
         }
 

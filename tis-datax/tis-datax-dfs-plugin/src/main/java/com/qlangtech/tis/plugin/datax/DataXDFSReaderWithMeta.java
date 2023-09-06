@@ -283,7 +283,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, Descriptor.PostFormVals postFormVals) {
-            DataXDFSReaderWithMeta dataxReader = (DataXDFSReaderWithMeta) postFormVals.newInstance(this, msgHandler);
+            DataXDFSReaderWithMeta dataxReader = (DataXDFSReaderWithMeta) postFormVals.newInstance();
 
             List<TargetResMeta> ftpFiles = DataXDFSReaderWithMeta.getFTPFiles(dataxReader);
             if (CollectionUtils.isEmpty(ftpFiles)) {

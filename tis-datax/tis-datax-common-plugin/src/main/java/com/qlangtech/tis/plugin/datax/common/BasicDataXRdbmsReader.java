@@ -140,9 +140,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         List<SelectedTab> tabs = this.selectedTabs.stream().filter(filter).collect(Collectors.toList());
         // DS dsFactory = this.getDataSourceFactory();
 
-        TableColsMeta tabColsMap = getTabsMeta();
 
-        return new DataXRdbmsGroupChildTaskIterator(this, this.isFilterUnexistCol(), tabs, tabColsMap);
+        return new DataXRdbmsGroupChildTaskIterator(this, this.getUnexistColFilter(), tabs);
 
         //        AtomicInteger selectedTabIndex = new AtomicInteger(0);
         //        AtomicInteger taskIndex = new AtomicInteger(0);
@@ -231,12 +230,12 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     //        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
     //    }
 
-    protected boolean isFilterUnexistCol() {
-        return false;
+    protected DataXRdbmsGroupChildTaskIterator.FilterUnexistCol getUnexistColFilter() {
+        return DataXRdbmsGroupChildTaskIterator.FilterUnexistCol.noneFilter();
     }
 
 
-    private TableColsMeta getTabsMeta() {
+    TableColsMeta getTabsMeta() {
 
 
         return new TableColsMeta(getDataSourceFactory(), this.dbName);

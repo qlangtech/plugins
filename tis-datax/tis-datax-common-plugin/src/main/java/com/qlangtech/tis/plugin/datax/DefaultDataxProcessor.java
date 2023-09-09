@@ -39,6 +39,7 @@ import com.qlangtech.tis.util.UploadPluginMeta;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * @author: baisui 百岁
@@ -88,16 +89,16 @@ public class DefaultDataxProcessor extends DataxProcessor {
     @Override
     public IStreamTemplateResource getFlinkStreamGenerateTplResource() {
 
-        return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTplResource()
-                , () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTplResource());
+        return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTplResource(),
+                () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTplResource());
 
-//        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
-//        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
-//        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
-//            return ((IStreamIncrGenerateStrategy) sinKFactory).getFlinkStreamGenerateTemplateFileName();
-//        }
-//
-//        return super.getFlinkStreamGenerateTemplateFileName();
+        //        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
+        //        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
+        //        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
+        //            return ((IStreamIncrGenerateStrategy) sinKFactory).getFlinkStreamGenerateTemplateFileName();
+        //        }
+        //
+        //        return super.getFlinkStreamGenerateTemplateFileName();
     }
 
     @Override
@@ -122,18 +123,27 @@ public class DefaultDataxProcessor extends DataxProcessor {
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<IAppSource> {
 
+        private static final Pattern PATTERN_START_WITH_NUMBER = Pattern.compile("^\\d.+");
+
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IDataxGlobalCfg.KEY_DISPLAY_NAME));
         }
 
         public boolean validateName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            if (PATTERN_START_WITH_NUMBER.matcher(value).matches()) {
+                msgHandler.addFieldError(context, fieldName, "不能以数字开头");
+                return false;
+            }
+
             UploadPluginMeta pluginMeta = (UploadPluginMeta) context.get(UploadPluginMeta.KEY_PLUGIN_META);
             Objects.requireNonNull(pluginMeta, "pluginMeta can not be null");
             if (pluginMeta.isUpdate()) {
                 return true;
             }
-            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.APP_NAME_DUPLICATE, context, fieldName, value);
+            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.APP_NAME_DUPLICATE, context, fieldName,
+                    value);
         }
 
         @Override

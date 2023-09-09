@@ -19,30 +19,27 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
+import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTab;
+import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 14:53
  **/
-public class MongoDBReaderContext extends BasicMongoDBContext implements IDataxReaderContext {
-    private final DataXMongodbReader mongodbReader;
-    private final String taskName;
+public class MongoDBReaderContext extends RdbmsReaderContext implements IDataxReaderContext {
 
-    public MongoDBReaderContext(String taskName, DataXMongodbReader mongodbReader) {
-        super(mongodbReader.getDataSourceFactory());
-        this.mongodbReader = mongodbReader;
-        this.taskName = taskName;
+    private final MongoSelectedTab mongoTable;
+    private final MongoSelectedTabExtend tabExtend;
+
+    public MongoDBReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper,
+                                DataXMongodbReader mongodbReader) {
+        super(jobName, tab.getName(), dumper, mongodbReader);
+        this.mongoTable = (MongoSelectedTab) tab;
+        this.tabExtend = (MongoSelectedTabExtend) this.mongoTable.getSourceProps();
     }
 
-    @Override
-    public String getReaderContextId() {
-        return this.dsFactory.identityValue();
-    }
-
-    public String getCollectionName() {
-        //        return mongodbReader.collectionName;
-        return null;
-    }
 
     public String getColumn() {
         // return this.mongodbReader.column;
@@ -59,10 +56,6 @@ public class MongoDBReaderContext extends BasicMongoDBContext implements IDataxR
         return null;
     }
 
-    @Override
-    public String getTaskName() {
-        return this.taskName;
-    }
 
     @Override
     public String getSourceTableName() {

@@ -37,11 +37,16 @@ public class MongoColumnMetaData extends ColumnMetaData {
     }
 
     public MongoColumnMetaData(int index, String key, BsonType mongoFieldType, int containValCount) {
-        this(index, key, mapType(mongoFieldType), mongoFieldType, containValCount);
+        this(index, key, mongoFieldType, containValCount, false);
     }
 
-    public MongoColumnMetaData(int index, String key, DataType dataType, BsonType mongoFieldType, int containValCount) {
-        super(index, key, dataType, false);
+    public MongoColumnMetaData(int index, String key, BsonType mongoFieldType, int containValCount, boolean pk) {
+        this(index, key, mapType(mongoFieldType), mongoFieldType, containValCount, pk);
+    }
+
+    public MongoColumnMetaData(int index, String key, DataType dataType, BsonType mongoFieldType, int containValCount
+            , boolean pk) {
+        super(index, key, dataType, pk);
         this.mongoFieldType = mongoFieldType;
         this.containValCount = containValCount;
     }
@@ -52,8 +57,8 @@ public class MongoColumnMetaData extends ColumnMetaData {
      * @param colsSchema
      * @param bdoc
      */
-    public static void parseMongoDocTypes(boolean parseChildDoc, List<String> parentKeys, Map<String,
-            MongoColumnMetaData> colsSchema, BsonDocument bdoc) {
+    public static void parseMongoDocTypes(boolean parseChildDoc, List<String> parentKeys //
+            , Map<String, MongoColumnMetaData> colsSchema, BsonDocument bdoc) {
         int index = 0;
         BsonValue val;
         String key;
@@ -64,12 +69,13 @@ public class MongoColumnMetaData extends ColumnMetaData {
             val = entry.getValue();
             keys = ListUtils.union(parentKeys, Collections.singletonList(entry.getKey()));
             key = String.join(MongoCMeta.KEY_MONOG_NEST_PROP_SEPERATOR, keys);
-//            if (val.getBsonType() == BsonType.OBJECT_ID) {
-//                continue;
-//            }
+            //            if (val.getBsonType() == BsonType.OBJECT_ID) {
+            //                continue;
+            //            }
             colMeta = colsSchema.get(key);
             if (colMeta == null) {
-                colMeta = new MongoColumnMetaData(index++, key, val.getBsonType());
+                colMeta = new MongoColumnMetaData(index++, key, val.getBsonType(), 0,
+                        (val.getBsonType() == BsonType.OBJECT_ID));
                 colsSchema.put(key, colMeta);
             } else {
                 if (colMeta.getMongoFieldType() != BsonType.STRING //
@@ -82,11 +88,7 @@ public class MongoColumnMetaData extends ColumnMetaData {
             }
 
             if (colMeta.getMongoFieldType() == BsonType.DOCUMENT && val.isDocument()) {
-                // BsonValue val = null;
-
                 parseMongoDocTypes(true, keys, parseChildDoc ? colsSchema : colMeta.docTypeFieldEnum, val.asDocument());
-
-                //colMeta.flatMapMongoDocument(val.asDocument());
             }
 
 
@@ -119,11 +121,12 @@ public class MongoColumnMetaData extends ColumnMetaData {
                     if (col.getMaxStrLength() > DataTypeMeta.getDataTypeMeta(JDBCTypes.VARCHAR).getColsSizeRange().getMax()) {
                         // 超过了varchar colsSize的上限了直接设置为TEXT（LONGVARCHAR）类型
                         result.set(i, new MongoColumnMetaData(col.getIndex(), col.getKey(),
-                                DataType.getType(JDBCTypes.LONGVARCHAR), BsonType.STRING, col.getContainValCount()));
+                                DataType.getType(JDBCTypes.LONGVARCHAR), BsonType.STRING, col.getContainValCount(),
+                                false));
                     } else {
                         result.set(i, new MongoColumnMetaData(col.getIndex(), col.getKey(),
                                 DataType.create(JDBCTypes.VARCHAR.getType(), JDBCTypes.VARCHAR.getLiteria(),
-                                        col.getMaxStrLength()), BsonType.STRING, col.getContainValCount()));
+                                        col.getMaxStrLength()), BsonType.STRING, col.getContainValCount(), false));
                     }
                 }
             }

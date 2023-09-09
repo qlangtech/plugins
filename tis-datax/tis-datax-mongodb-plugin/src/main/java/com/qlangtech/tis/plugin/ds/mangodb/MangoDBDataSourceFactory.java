@@ -112,7 +112,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public DataDumpers getDataDumpers(TISTable table) {
-        throw new UnsupportedOperationException();
+        return DataDumpers.create(Collections.singletonList(this.address), table);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public DBConfig getDbConfig() {
-        throw new IllegalStateException();
+        throw new UnsupportedOperationException("getDbConfig");
     }
 
     @Override

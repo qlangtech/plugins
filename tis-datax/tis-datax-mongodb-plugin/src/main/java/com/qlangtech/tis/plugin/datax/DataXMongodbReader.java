@@ -35,6 +35,7 @@ import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.plugin.CompanionPluginFactory;
 import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -43,14 +44,15 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMetaCreatorFactory;
 import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
 import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
-import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.util.impl.AttrVals;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
@@ -71,6 +73,7 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
+ *  @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader.Task
  **/
 @Public
 public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceFactory> {
@@ -166,64 +169,70 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     //    }
 
     @Override
+    protected boolean shallFillSelectedTabMeta() {
+        // 不需要填充字段类型
+        return false;
+    }
+
+    @Override
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
-        return null;
+        return new MongoDBReaderContext(jobName, tab, dumper, this);
     }
 
-    private DataType convertType(String type) {
-        if (!acceptTypes.contains(type)) {
-            throw new IllegalArgumentException("illegal type:" + type);
-        }
-        switch (type) {
-            case "int":
-            case "long":
-                return DataXReaderColType.Long.dataType;
-            case "double":
-                return DataXReaderColType.Double.dataType;
-            case "string":
-            case "array":
-                return DataXReaderColType.STRING.dataType;
-            case "date":
-                return DataXReaderColType.Date.dataType;
-            case "boolean":
-                return DataXReaderColType.Boolean.dataType;
-            case "bytes":
-                return DataXReaderColType.Bytes.dataType;
-            default:
-                throw new IllegalStateException("illegal type:" + type);
-        }
-    }
+    //    private DataType convertType(String type) {
+    //        if (!acceptTypes.contains(type)) {
+    //            throw new IllegalArgumentException("illegal type:" + type);
+    //        }
+    //        switch (type) {
+    //            case "int":
+    //            case "long":
+    //                return DataXReaderColType.Long.dataType;
+    //            case "double":
+    //                return DataXReaderColType.Double.dataType;
+    //            case "string":
+    //            case "array":
+    //                return DataXReaderColType.STRING.dataType;
+    //            case "date":
+    //                return DataXReaderColType.Date.dataType;
+    //            case "boolean":
+    //                return DataXReaderColType.Boolean.dataType;
+    //            case "bytes":
+    //                return DataXReaderColType.Bytes.dataType;
+    //            default:
+    //                throw new IllegalStateException("illegal type:" + type);
+    //        }
+    //    }
 
 
-    public static class ColCfg {
-        private String name;
-        private String type;
-        private String splitter;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public String getSplitter() {
-            return splitter;
-        }
-
-        public void setSplitter(String splitter) {
-            this.splitter = splitter;
-        }
-    }
+    //    public static class ColCfg {
+    //        private String name;
+    //        private String type;
+    //        private String splitter;
+    //
+    //        public String getName() {
+    //            return name;
+    //        }
+    //
+    //        public void setName(String name) {
+    //            this.name = name;
+    //        }
+    //
+    //        public String getType() {
+    //            return type;
+    //        }
+    //
+    //        public void setType(String type) {
+    //            this.type = type;
+    //        }
+    //
+    //        public String getSplitter() {
+    //            return splitter;
+    //        }
+    //
+    //        public void setSplitter(String splitter) {
+    //            this.splitter = splitter;
+    //        }
+    //    }
 
 
     //    @Override
@@ -232,9 +241,25 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     //    }
 
     @TISExtension()
-    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor implements ISelectedTabExtendFactory, SubForm.ISubFormItemValidate {
+    public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor //
+            implements SubForm.ISubFormItemValidate, CompanionPluginFactory<SelectedTabExtend> {
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public SelectedTabExtend getCompanionPlugin(UploadPluginMeta pluginMeta) {
+            String tabName = pluginMeta.getExtraParam(IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE);
+            if (StringUtils.isEmpty(tabName)) {
+                throw new IllegalArgumentException("param:" + IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE + " is not exsit in pluginMeta");
+            }
+            return SelectedTabExtend.getBatchPluginStore(pluginMeta.getPluginContext(),
+                    pluginMeta.getDataXName(true)).find(tabName, false);
+        }
+
+        @Override
+        public Descriptor<SelectedTabExtend> getCompanionDescriptor() {
+            return TIS.get().getDescriptor(MongoSelectedTabExtend.class);
         }
 
         public boolean validateInspectRowCount(IFieldErrorHandler msgHandler, Context context, String fieldName,
@@ -264,6 +289,12 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             return true;
         }
 
+        private String splitMetas(int colIndex, int docSplitFieldIndex, String fieldKey) {
+            return joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex),
+                    MongoCMetaCreatorFactory.KEY_DOC_FIELD_SPLIT_METAS, Lists.newArrayList(docSplitFieldIndex),
+                    fieldKey);
+        }
+
 
         @Override
         public boolean validateSubForm(IControlMsgHandler msgHandler, Context context, SelectedTab tab) {
@@ -284,8 +315,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                 int docSplitFieldIndex = 0;
                 for (MongoCMeta.MongoDocSplitCMeta splitCMeta : mongoCMeta.getDocFieldSplitMetas()) {
 
-                    String fieldJsonPathKey = joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex,
-                            docSplitFieldIndex), "jsonPath");
+                    final String fieldJsonPathKey = splitMetas(colIndex, docSplitFieldIndex, "jsonPath");
 
                     jsonPath = splitCMeta.getJsonPath();
 
@@ -298,8 +328,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                     }
 
                     name = splitCMeta.getName();
-                    final String fieldNameKey = joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex,
-                            docSplitFieldIndex), nameKey);
+                    final String fieldNameKey = splitMetas(colIndex, docSplitFieldIndex, nameKey);
 
                     if (Validator.require.validate(msgHandler, context, fieldNameKey, name) //
                             && Validator.db_col_name.validate(msgHandler, context, fieldNameKey, name)) {
@@ -335,9 +364,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
                         msgHandler.addFieldError(context, joinField(SelectedTab.KEY_FIELD_COLS, fieldIndex, nameKey),
                                 "字段重复");
-
-                        msgHandler.addFieldError(context, joinField(SelectedTab.KEY_FIELD_COLS,
-                                Lists.newArrayList(colIndex, docSplitFieldIndex), nameKey), "字段重复");
+                        msgHandler.addFieldError(context, splitMetas(colIndex, docSplitFieldIndex, nameKey), "字段重复");
 
                         return false;
                     } else {
@@ -375,14 +402,10 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             return super.verify(msgHandler, context, postFormVals);
         }
 
-        @Override
-        public final Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return TIS.get().getDescriptor(MongoSelectedTabExtend.class);
-        }
 
         @Override
         public boolean isSupportIncr() {
-            return true;
+            return false;
         }
 
         @Override

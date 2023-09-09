@@ -50,8 +50,8 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     private final List<SelectedTab> tabs;
     final int selectedTabsSize;
     AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-    private TableColsMeta tabColsMap;
-    private final boolean isFilterUnexistCol;
+    //  private TableColsMeta tabColsMap;
+    private final FilterUnexistCol filterUnexistCol;
     private final BasicDataXRdbmsReader rdbmsReader;
 
     @Override
@@ -59,13 +59,49 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
         return groupedInfo;
     }
 
-    public DataXRdbmsGroupChildTaskIterator(BasicDataXRdbmsReader rdbmsReader, boolean isFilterUnexistCol, List<SelectedTab> tabs
-            , TableColsMeta tabColsMap) {
+    public DataXRdbmsGroupChildTaskIterator(BasicDataXRdbmsReader rdbmsReader, FilterUnexistCol filterUnexistCol,
+                                            List<SelectedTab> tabs) {
         this.rdbmsReader = rdbmsReader;
         this.tabs = tabs;
         this.selectedTabsSize = tabs.size();
-        this.tabColsMap = tabColsMap;
-        this.isFilterUnexistCol = isFilterUnexistCol;
+        this.filterUnexistCol = filterUnexistCol;
+        //  this.tabColsMap = tabColsMap;
+        // this.filterUnexistCol = this.filterUnexistCol;
+    }
+
+    interface FilterUnexistCol extends AutoCloseable {
+
+        static FilterUnexistCol noneFilter() {
+            return new FilterUnexistCol() {
+                @Override
+                public List<String> getCols(SelectedTab tab) {
+                    return tab.getColKeys();
+                }
+
+                @Override
+                public void close() throws Exception {
+
+                }
+            };
+        }
+
+        static FilterUnexistCol filterByRealtimeSchema(BasicDataXRdbmsReader rdbmsReader) {
+            final TableColsMeta tabColsMap = rdbmsReader.getTabsMeta();
+            return new FilterUnexistCol() {
+                @Override
+                public List<String> getCols(SelectedTab tab) {
+                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
+                    return tab.getColKeys().stream().filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList());
+                }
+
+                @Override
+                public void close() throws Exception {
+                    tabColsMap.close();
+                }
+            };
+        }
+
+        public List<String> getCols(SelectedTab tab);
     }
 
     @Override
@@ -92,15 +128,15 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
             if (StringUtils.isEmpty(tab.getName())) {
                 throw new IllegalStateException("tableName can not be null");
             }
-//                    List<ColumnMetaData> tableMetadata = null;
-//                    IDataSourceDumper dumper = null;
+            //                    List<ColumnMetaData> tableMetadata = null;
+            //                    IDataSourceDumper dumper = null;
             DataDumpers dataDumpers = null;
             TISTable tisTab = new TISTable();
             tisTab.setTableName(tab.getName());
-//            int[] index = {0};
-//            tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
-//                return createColumnMetaData(index, c.getName());
-//            }).collect(Collectors.toList()));
+            //            int[] index = {0};
+            //            tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
+            //                return createColumnMetaData(index, c.getName());
+            //            }).collect(Collectors.toList()));
 
             dataDumpers = this.rdbmsReader.getDataSourceFactory().getDataDumpers(tisTab);
             dumperIt = dataDumpers.dumpers;
@@ -113,30 +149,31 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     @Override
     public IDataxReaderContext next() {
         Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
-        Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
+        Objects.requireNonNull(dumperIterator,
+                "dumperIterator can not be null,selectedTabIndex:" + selectedTabIndex.get());
         IDataSourceDumper dumper = dumperIterator.next();
         SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
         String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-        List<DataXCfgGenerator.DBDataXChildTask> childTasks
-                = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost()
-                , this.rdbmsReader.getDataSourceFactory().identityValue(), childTask));
+        List<DataXCfgGenerator.DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(tab.getName(),
+                (tabname) -> Lists.newArrayList());
+        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(),
+                this.rdbmsReader.getDataSourceFactory().identityValue(), childTask));
         RdbmsReaderContext dataxContext = rdbmsReader.createDataXReaderContext(childTask, tab, dumper);
 
         dataxContext.setWhere(tab.getWhere());
 
-        if (isFilterUnexistCol) {
-            Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-            dataxContext.setCols(tab.getColKeys().stream()
-                    .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
-        } else {
-            dataxContext.setCols(tab.getColKeys());
-        }
+        dataxContext.setCols(filterUnexistCol.getCols(tab));
+
+
         return dataxContext;
     }
 
     @Override
     public void close() throws IOException {
-        this.tabColsMap.close();
+        try {
+            this.filterUnexistCol.close();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 }

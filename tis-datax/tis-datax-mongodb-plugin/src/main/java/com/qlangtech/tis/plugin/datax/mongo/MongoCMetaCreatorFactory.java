@@ -14,7 +14,7 @@ import java.util.List;
  * @date 2023/9/3
  */
 public class MongoCMetaCreatorFactory implements CMeta.ElementCreatorFactory {
-    private static final String KEY_DOC_FIELD_SPLIT_METAS = "docFieldSplitMetas";
+    public static final String KEY_DOC_FIELD_SPLIT_METAS = "docFieldSplitMetas";
 
     /**
      * @param targetCol

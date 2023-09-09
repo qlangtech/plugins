@@ -48,9 +48,9 @@ public class DataXCassandraReader extends BasicDataXRdbmsReader<CassandraDatasou
     @FormField(ordinal = 10, type = FormFieldType.ENUM, validate = {})
     public String consistancyLevel;
 
-    protected boolean isFilterUnexistCol() {
-        return false;
-    }
+//    protected boolean getUnexistColFilter() {
+//        return false;
+//    }
 
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXCassandraReader.class, "DataXCassandraReader-tpl.json");

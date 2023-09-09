@@ -51,6 +51,9 @@ import java.util.Optional;
 /**
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
+ * @see com.alibaba.datax.plugin.writer.mongodbwriter.MongoDBWriter
+ * @see com.alibaba.datax.plugin.writer.mongodbwriter.MongoDBWriter.Job
+ * @see com.alibaba.datax.plugin.writer.mongodbwriter.MongoDBWriter.Task
  **/
 @Public
 public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcessor.INullTableMapCreator,
@@ -62,13 +65,13 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String dbName;
 
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-//    public String collectionName;
-//    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-//    public String column;
+    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
+    //    public String collectionName;
+    //    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
+    //    public String column;
 
-//    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
-//    public String upsertInfo;
+    //    @FormField(ordinal = 8, type = FormFieldType.TEXTAREA, validate = {})
+    //    public String upsertInfo;
 
     @FormField(ordinal = 11, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
@@ -99,7 +102,6 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
     public Integer getRowFetchSize() {
         throw new UnsupportedOperationException();
     }
-
 
 
     //    public static String getDftCollectionName() {
@@ -140,6 +142,7 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
     @TISExtension()
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
         private transient SuFormProperties rewriteSubFormProperties;
+
         public DefaultDescriptor() {
             super();
         }
@@ -151,7 +154,7 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
-           // JSONArray cols = JSON.parseArray(postFormVals.getField(KEY_FIELD_COLUMN));
+            // JSONArray cols = JSON.parseArray(postFormVals.getField(KEY_FIELD_COLUMN));
             JSONObject col = null;
             try {
                 String upsertinfo = postFormVals.getField(KEY_FIELD_UPSERT_INFO);
@@ -167,12 +170,12 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
                             return false;
                         }
                         boolean findField = false;
-//                        for (int i = 0; i < cols.size(); i++) {
-//                            col = cols.getJSONObject(i);
-//                            if (StringUtils.equals(upsertKey, col.getString("name"))) {
-//                                findField = true;
-//                            }
-//                        }
+                        //                        for (int i = 0; i < cols.size(); i++) {
+                        //                            col = cols.getJSONObject(i);
+                        //                            if (StringUtils.equals(upsertKey, col.getString("name"))) {
+                        //                                findField = true;
+                        //                            }
+                        //                        }
 
                         if (!findField) {
                             msgHandler.addFieldError(context, KEY_FIELD_UPSERT_INFO, "属性'upsertKey':" + upsertinfo +
@@ -225,10 +228,10 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
          * implements DataxWriter.IRewriteSuFormProperties Start
          */
         @Override
-        public  Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
+        public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
             Class targetClass = MongoSelectedTab.class;
-            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass), "subForm clazz:" + targetClass + " "
-                    + "can not find relevant Descriptor");
+            return Objects.requireNonNull(TIS.get().getDescriptor(targetClass),
+                    "subForm clazz:" + targetClass + " " + "can not find relevant Descriptor");
         }
 
         @Override

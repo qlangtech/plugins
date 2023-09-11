@@ -19,12 +19,17 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.plugin.reader.mongodbreader.util.IMongoTable;
+import com.alibaba.datax.plugin.reader.mongodbreader.util.IMongoTableFinder;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.mongodb.Function;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -42,19 +47,27 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.common.FilterUnexistCol;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMetaCreatorFactory;
 import com.qlangtech.tis.plugin.datax.mongo.MongoColumnMetaData;
+import com.qlangtech.tis.plugin.datax.mongo.MongoDataXColUtils;
 import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import com.qlangtech.tis.util.impl.AttrVals;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -62,7 +75,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -73,10 +90,10 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader
- *  @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader.Task
+ * @see com.alibaba.datax.plugin.reader.mongodbreader.MongoDBReader.Task
  **/
 @Public
-public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceFactory> {
+public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceFactory> implements IMongoTableFinder {
 
     public static final String DATAX_NAME = "MongoDB";
     public static final String TYPE_ARRAY = "array";
@@ -129,6 +146,100 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         }
         List<ColumnMetaData> result = MongoColumnMetaData.reorder(colsSchema);
         return result;
+    }
+
+    @Override
+    public IMongoTable findMongoTable(String tableName) {
+        for (SelectedTab tab : this.selectedTabs) {
+            if (StringUtils.equals(tableName, tab.getName())) {
+                return new DefaultMongoTable(tab);
+            }
+        }
+        throw new IllegalStateException("can not find table:" + tableName + " relevant selected tablek");
+    }
+
+    @Override
+    protected FilterUnexistCol getUnexistColFilter() {
+
+        return new FilterUnexistCol() {
+            @Override
+            public List<String> getCols(SelectedTab tab) {
+                DefaultMongoTable mongoTable = (DefaultMongoTable) findMongoTable(tab.getName());
+                List<Pair<MongoCMeta, Function<Document, Column>>> cols = mongoTable.getMongoPresentCols();
+                return cols.stream().map((p) -> p.getKey().getName()).collect(Collectors.toList());
+            }
+
+            @Override
+            public void close() throws Exception {
+
+            }
+        };
+    }
+
+    static class DefaultMongoTable implements IMongoTable {
+        private final SelectedTab table;
+        private final MongoSelectedTabExtend tabExtend;
+        private List<Pair<MongoCMeta, Function<Document, Column>>> presentCols;
+
+        public DefaultMongoTable(SelectedTab table) {
+            this.table = table;
+            this.tabExtend = Objects.requireNonNull((MongoSelectedTabExtend) table.getSourceProps(),
+                    "source extend " + "can not be null");
+        }
+
+        @Override
+        public Record convert2RecordByItem(Record record, Document item) {
+
+            for (Pair<MongoCMeta, Function<Document, Column>> p : this.getMongoPresentCols()) {
+                record.addColumn(p.getValue().apply(item));
+            }
+
+            return record;
+        }
+
+
+        List<Pair<MongoCMeta, Function<Document, Column>>> getMongoPresentCols() {
+            if (this.presentCols == null) {
+                presentCols = Lists.newArrayList();
+
+                List<CMeta> cols = table.getCols();
+
+                List<MongoCMeta.MongoDocSplitCMeta> splitFieldMetas = null;
+                for (CMeta col : cols) {
+
+                    MongoCMeta mongoCol = (MongoCMeta) col;
+                    if (mongoCol.isMongoDocType()) {
+                        splitFieldMetas = mongoCol.getDocFieldSplitMetas();
+                        for (MongoCMeta.MongoDocSplitCMeta scol : splitFieldMetas) {
+                            presentCols.add(Pair.of(scol, (doc) -> {
+                                Object val = doc.getEmbedded(scol.getEmbeddedKeys(), null);
+                                return MongoDataXColUtils.createCol(scol, val);
+                            }));
+                        }
+                    }
+
+                    if (col.isDisable()) {
+                        continue;
+                    }
+
+                    presentCols.add(Pair.of(mongoCol, (doc) -> {
+                        Object val = doc.get(mongoCol.getName(), null);
+                        return MongoDataXColUtils.createCol(mongoCol, val);
+                    }));
+                }
+                if (CollectionUtils.isEmpty(presentCols)) {
+                    throw new IllegalStateException("presetnCols can not be empty");
+                }
+                presentCols = Collections.unmodifiableList(presentCols);
+            }
+
+            return presentCols;
+        }
+
+        @Override
+        public Document getCollectionQueryFilter() {
+            return tabExtend.filter.createFilter();
+        }
     }
 
     /**

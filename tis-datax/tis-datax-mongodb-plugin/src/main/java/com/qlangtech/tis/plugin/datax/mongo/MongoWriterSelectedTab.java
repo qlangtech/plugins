@@ -8,10 +8,12 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 /**
+ * 用在writer 写入扩展类
+ *
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/8/30
  */
-public class MongoSelectedTab extends SelectedTab {
+public class MongoWriterSelectedTab extends SelectedTab {
 
     @FormField(ordinal = 4, validate = {Validator.require})
     public UpsertSupport upsert;

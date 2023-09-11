@@ -30,7 +30,6 @@ public class ReaderFilterOn extends ReaderFilter {
 
     @Override
     public Document createFilter() {
-        Document fitler = super.createFilter();
 
         Document filter = new Document();
         if (StringUtils.isEmpty(lowerBound)) {
@@ -47,7 +46,7 @@ public class ReaderFilterOn extends ReaderFilter {
                             .append("$lt", usingObjectId ? new ObjectId(upperBound) : upperBound));
         }
 
-        return fitler;
+        return filter;
     }
 
     @TISExtension

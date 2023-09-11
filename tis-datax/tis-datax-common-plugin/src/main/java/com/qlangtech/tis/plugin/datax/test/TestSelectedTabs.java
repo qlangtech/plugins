@@ -25,6 +25,7 @@ import com.qlangtech.tis.plugin.ds.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -36,51 +37,74 @@ import java.util.stream.Collectors;
 public class TestSelectedTabs {
     public static final String tabNameOrderDetail = "orderdetail";
     public static final String tabNameTotalpayinfo = "totalpayinfo";
-    public static List<ColumnMetaData> tabColsMetaOrderDetail
-            = Lists.newArrayList(
-            new ColumnMetaData(0, "col1", new DataType(JDBCTypes.VARCHAR), true, false),
-            new ColumnMetaData(1, "col2", new DataType(JDBCTypes.VARCHAR), false, true)
-            , new ColumnMetaData(2, "col3", new DataType(JDBCTypes.VARCHAR), false, true)
-            , new ColumnMetaData(3, "col4", new DataType(JDBCTypes.VARCHAR), false, true)
-    );
-    public static List<ColumnMetaData> tabColsMetaTotalpayinfo
-            = Lists.newArrayList(new ColumnMetaData(0, "col1", new DataType(JDBCTypes.VARCHAR), true, false)
-            , new ColumnMetaData(1, "col2", new DataType(JDBCTypes.VARCHAR), false, true)
-            , new ColumnMetaData(2, "col3", new DataType(JDBCTypes.VARCHAR), false, true)
-            , new ColumnMetaData(3, "col4", new DataType(JDBCTypes.VARCHAR), false, true)
-    );
+    public static List<ColumnMetaData> tabColsMetaOrderDetail = Lists.newArrayList(new ColumnMetaData(0, "col1",
+            new DataType(JDBCTypes.VARCHAR), true, false), new ColumnMetaData(1, "col2",
+            new DataType(JDBCTypes.VARCHAR), false, true), new ColumnMetaData(2, "col3",
+            new DataType(JDBCTypes.VARCHAR), false, true), new ColumnMetaData(3, "col4",
+            new DataType(JDBCTypes.VARCHAR), false, true));
+    public static List<ColumnMetaData> tabColsMetaTotalpayinfo = Lists.newArrayList(new ColumnMetaData(0, "col1",
+            new DataType(JDBCTypes.VARCHAR), true, false), new ColumnMetaData(1, "col2",
+            new DataType(JDBCTypes.VARCHAR), false, true), new ColumnMetaData(2, "col3",
+            new DataType(JDBCTypes.VARCHAR), false, true), new ColumnMetaData(3, "col4",
+            new DataType(JDBCTypes.VARCHAR), false, true));
 
     public static List<SelectedTab> createSelectedTabs() {
         return createSelectedTabs(Integer.MAX_VALUE);
     }
 
     public static List<SelectedTab> createSelectedTabs(int count) {
-        List<SelectedTab> selectedTabs = Lists.newArrayList();
-        SelectedTab selectedTab = new SelectedTab();
-        selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3"));
-        selectedTab.setWhere("delete = 0");
-        selectedTab.name = tabNameOrderDetail;
-        selectedTabs.add(selectedTab);
-
-        if (count > 1) {
-            selectedTab = new SelectedTab();
-            selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3", "col4"));
-            selectedTab.setWhere("delete = 0");
-            selectedTab.name = tabNameTotalpayinfo;
-            selectedTabs.add(selectedTab);
+        try {
+            return createSelectedTabs(count, SelectedTab.class, Optional.empty(), (tab) -> {
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return selectedTabs;
+    }
+
+    public static <T extends SelectedTab> List<T> createSelectedTabs(int count, Class<T> clazz,
+                                                                     Optional<CMeta.ElementCreatorFactory> elementCreator, Consumer<T> postProcess) {
+
+
+        try {
+            List<T> selectedTabs = Lists.newArrayList();
+            T selectedTab = clazz.newInstance();
+            selectedTab.cols = Lists.newArrayList( //
+                    CMeta.create(elementCreator, "col1", JDBCTypes.VARCHAR) //
+                    , CMeta.create(elementCreator, "col2", JDBCTypes.BIGINT) //
+                    , CMeta.create(elementCreator, "col3", JDBCTypes.TIMESTAMP));// .setCols
+
+            selectedTab.setWhere("delete = 0");
+            selectedTab.name = tabNameOrderDetail;
+            postProcess.accept(selectedTab);
+            selectedTabs.add(selectedTab);
+
+            if (count > 1) {
+                selectedTab = clazz.newInstance();
+                selectedTab.cols = Lists.newArrayList( //
+                        CMeta.create(elementCreator, "col1", JDBCTypes.VARCHAR) //
+                        , CMeta.create(elementCreator, "col2", JDBCTypes.BIGINT) //
+                        , CMeta.create(elementCreator, "col3", JDBCTypes.TIMESTAMP) //
+                        , CMeta.create(elementCreator, "col4", JDBCTypes.TIMESTAMP));
+                // selectedTab.setCols(Lists.newArrayList("col1", "col2", "col3", "col4"));
+                selectedTab.setWhere("delete = 0");
+                selectedTab.name = tabNameTotalpayinfo;
+                postProcess.accept(selectedTab);
+                selectedTabs.add(selectedTab);
+            }
+            return selectedTabs;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Optional<IDataxProcessor.TableMap> createTableMapper() {
-        IDataxProcessor.TableMap tm
-                = new IDataxProcessor.TableMap(
-                Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
-                    CMeta meta = new CMeta();
-                    meta.setName(c);
-                    meta.setType(DataXReaderColType.STRING.dataType);
-                    return meta;
-                }).collect(Collectors.toList()));
+        IDataxProcessor.TableMap tm =
+                new IDataxProcessor.TableMap(Lists.newArrayList("col1", "col2", "col3").stream().map((c) -> {
+            CMeta meta = new CMeta();
+            meta.setName(c);
+            meta.setType(DataXReaderColType.STRING.dataType);
+            return meta;
+        }).collect(Collectors.toList()));
         tm.setFrom("orderinfo");
         tm.setTo("orderinfo_new");
 

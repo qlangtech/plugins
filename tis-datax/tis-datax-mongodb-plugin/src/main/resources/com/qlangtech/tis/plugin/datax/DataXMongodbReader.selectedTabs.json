@@ -1,7 +1,4 @@
 {
-  "sourceProps": {
-    "impl": "com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend"
-  },
   "where": {
     "disable": true
   },

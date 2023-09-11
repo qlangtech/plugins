@@ -18,11 +18,23 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.element.Column;
+import com.mongodb.Function;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReaderContext;
+import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTab;
-import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bson.Document;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,40 +42,50 @@ import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
  **/
 public class MongoDBReaderContext extends RdbmsReaderContext implements IDataxReaderContext {
 
-    private final MongoSelectedTab mongoTable;
-    private final MongoSelectedTabExtend tabExtend;
+     final SelectedTab mongoTable;
+    //  private final MongoSelectedTabExtend tabExtend;
 
     public MongoDBReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper,
                                 DataXMongodbReader mongodbReader) {
         super(jobName, tab.getName(), dumper, mongodbReader);
-        this.mongoTable = (MongoSelectedTab) tab;
-        this.tabExtend = (MongoSelectedTabExtend) this.mongoTable.getSourceProps();
+        this.mongoTable = tab;
+        //    this.tabExtend = (MongoSelectedTabExtend) this.mongoTable.getSourceProps();
+        //
+
+        //  this.setCols(cols.stream().map((c) -> c.getKey().getName()).collect(Collectors.toList()));
+
+
     }
 
-
-    public String getColumn() {
-        // return this.mongodbReader.column;
-        return null;
+    @Override
+    public IDataxProcessor.TableMap createTableMap(TableAlias tableAlias, ISelectedTab selectedTab) {
+        if (!StringUtils.equals(this.mongoTable.getName(), selectedTab.getName())) {
+            throw new IllegalStateException("this.mongoTable.getName():" + this.mongoTable.getName()//
+                    + ",selectedTab" + ".getName():" + selectedTab.getName() + " shall be equal");
+        }
+        return new IDataxProcessor.TableMap(tableAlias, selectedTab) {
+            @Override
+            public List<CMeta> getSourceCols() {
+                DataXMongodbReader.DefaultMongoTable mtable =
+                        (DataXMongodbReader.DefaultMongoTable) ((DataXMongodbReader) plugin).findMongoTable(selectedTab.getName());
+                List<Pair<MongoCMeta, Function<Document, Column>>> cols = mtable.getMongoPresentCols();
+                return cols.stream().map((p) -> p.getKey()).collect(Collectors.toList());
+            }
+        };
     }
 
-    public boolean isContainQuery() {
-        //  return StringUtils.isNotEmpty(this.mongodbReader.query);
-        return true;
-    }
-
-    public String getQuery() {
-        //  return this.mongodbReader.query;
-        return null;
+    public String getDataSourceFactoryId() {
+        return Objects.requireNonNull(dsFactory.identityValue(), "dataSourceId factory id can not be empty");//
     }
 
 
     @Override
     public String getSourceTableName() {
-        return DataXMongodbReader.DATAX_NAME;
+        return this.mongoTable.getName();
     }
 
     @Override
     public String getSourceEntityName() {
-        return DataXMongodbReader.DATAX_NAME;
+        return this.mongoTable.getName();
     }
 }

@@ -79,6 +79,7 @@ public class TestMangoDBDataSourceFactory extends TestCase implements TISEasyMoc
 
     public static MangoDBDataSourceFactory createMangoDBDS() {
         MangoDBDataSourceFactory mongoDS = new MangoDBDataSourceFactory();
+        mongoDS.name = "testMongoDS";
         mongoDS.username = "admin";
         mongoDS.password = "123456";
         mongoDS.address = "192.168.28.201:27017";

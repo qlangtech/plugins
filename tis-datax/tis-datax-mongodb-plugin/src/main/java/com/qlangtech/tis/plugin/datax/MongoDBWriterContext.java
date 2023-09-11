@@ -22,7 +22,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTab;
+import com.qlangtech.tis.plugin.datax.mongo.MongoWriterSelectedTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.slf4j.Logger;
@@ -36,14 +36,14 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
     private static final Logger logger = LoggerFactory.getLogger(MongoDBWriterContext.class);
     private final DataXMongodbWriter writer;
     private final IDataxProcessor.TableMap tableMapMapper;
-    private final MongoSelectedTab selectedTab;
+    private final MongoWriterSelectedTab selectedTab;
 
 
     public MongoDBWriterContext(DataXMongodbWriter writer, IDataxProcessor.TableMap tableMapMapper) {
         super(writer.getDsFactory());
         this.tableMapMapper = tableMapMapper;
         this.writer = writer;
-        this.selectedTab = (MongoSelectedTab) tableMapMapper.getSourceTab();
+        this.selectedTab = (MongoWriterSelectedTab) tableMapMapper.getSourceTab();
     }
 
     /**

@@ -16,6 +16,11 @@ import java.util.List;
 public class MongoCMetaCreatorFactory implements CMeta.ElementCreatorFactory {
     public static final String KEY_DOC_FIELD_SPLIT_METAS = "docFieldSplitMetas";
 
+    @Override
+    public CMeta createDefault() {
+        return new MongoCMeta();
+    }
+
     /**
      * @param targetCol
      * @return
@@ -26,7 +31,7 @@ public class MongoCMetaCreatorFactory implements CMeta.ElementCreatorFactory {
         if (targetCol == null) {
             throw new IllegalArgumentException("param targetCol can not be null");
         }
-        MongoCMeta cMeta = new MongoCMeta();
+        MongoCMeta cMeta = (MongoCMeta) createDefault();
         JSONArray fieldSplitterMetas = null;
         JSONObject fieldSplit = null;
         cMeta.setMongoFieldType(BsonType.valueOf(targetCol.getString("mongoFieldType")));

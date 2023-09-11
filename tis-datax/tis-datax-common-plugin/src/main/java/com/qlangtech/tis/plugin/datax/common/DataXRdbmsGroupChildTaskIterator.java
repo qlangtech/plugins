@@ -23,7 +23,6 @@ import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
@@ -37,7 +36,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -67,41 +65,6 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
         this.filterUnexistCol = filterUnexistCol;
         //  this.tabColsMap = tabColsMap;
         // this.filterUnexistCol = this.filterUnexistCol;
-    }
-
-    interface FilterUnexistCol extends AutoCloseable {
-
-        static FilterUnexistCol noneFilter() {
-            return new FilterUnexistCol() {
-                @Override
-                public List<String> getCols(SelectedTab tab) {
-                    return tab.getColKeys();
-                }
-
-                @Override
-                public void close() throws Exception {
-
-                }
-            };
-        }
-
-        static FilterUnexistCol filterByRealtimeSchema(BasicDataXRdbmsReader rdbmsReader) {
-            final TableColsMeta tabColsMap = rdbmsReader.getTabsMeta();
-            return new FilterUnexistCol() {
-                @Override
-                public List<String> getCols(SelectedTab tab) {
-                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-                    return tab.getColKeys().stream().filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList());
-                }
-
-                @Override
-                public void close() throws Exception {
-                    tabColsMap.close();
-                }
-            };
-        }
-
-        public List<String> getCols(SelectedTab tab);
     }
 
     @Override

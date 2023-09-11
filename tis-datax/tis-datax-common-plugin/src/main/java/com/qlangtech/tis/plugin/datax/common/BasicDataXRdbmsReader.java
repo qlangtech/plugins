@@ -63,8 +63,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     @FormField(ordinal = 99, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
-    @SubForm(desClazz = SelectedTab.class, idListGetScript = "return com.qlangtech.tis.coredefine.module.action" +
-            ".DataxAction.getTablesInDB(filter);", atLeastOne = true)
+    @SubForm(desClazz = SelectedTab.class //
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action" + ".DataxAction.getTablesInDB"
+            + "(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
     private transient int preSelectedTabsHash;
@@ -230,8 +231,8 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     //        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
     //    }
 
-    protected DataXRdbmsGroupChildTaskIterator.FilterUnexistCol getUnexistColFilter() {
-        return DataXRdbmsGroupChildTaskIterator.FilterUnexistCol.noneFilter();
+    protected FilterUnexistCol getUnexistColFilter() {
+        return FilterUnexistCol.noneFilter();
     }
 
 

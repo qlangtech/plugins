@@ -31,6 +31,7 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
+import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public class TestDataXMongodbWriter extends TestCase {
     public void testTemplateGenerate() throws Exception {
 
 
-        MangoDBDataSourceFactory dsFactory = TestDataXMongodbReader.getDataSourceFactory();
+        MangoDBDataSourceFactory dsFactory = TestMangoDBDataSourceFactory.createMangoDBDS();
         DataXMongodbWriter writer = new DataXMongodbWriter() {
             @Override
             public MangoDBDataSourceFactory getDsFactory() {

@@ -34,7 +34,7 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTab;
+import com.qlangtech.tis.plugin.datax.mongo.MongoWriterSelectedTab;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -229,7 +229,7 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
          */
         @Override
         public Descriptor<SelectedTab> getRewriterSelectTabDescriptor() {
-            Class targetClass = MongoSelectedTab.class;
+            Class targetClass = MongoWriterSelectedTab.class;
             return Objects.requireNonNull(TIS.get().getDescriptor(targetClass),
                     "subForm clazz:" + targetClass + " " + "can not find relevant Descriptor");
         }

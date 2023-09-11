@@ -1,5 +1,7 @@
 package com.qlangtech.tis.plugin.datax.mongo;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import org.apache.commons.collections.CollectionUtils;
@@ -62,6 +64,29 @@ public class MongoCMeta extends CMeta {
 
         public String getJsonPath() {
             return jsonPath;
+        }
+
+        private List<String> embeddedKeys;
+
+        @JSONField(serialize = false)
+        public List<String> getEmbeddedKeys() {
+            if (this.embeddedKeys == null) {
+                this.embeddedKeys = Lists.newArrayList(StringUtils.split(getJsonPath(), KEY_MONOG_NEST_PROP_SEPERATOR));
+                if (CollectionUtils.isEmpty(this.embeddedKeys)) {
+                    throw new IllegalStateException("embeddedKeys can not be null");
+                }
+            }
+            return this.embeddedKeys;
+        }
+
+        @Override
+        public void setDocFieldSplitMetas(List<MongoDocSplitCMeta> docFieldSplitMetas) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<MongoDocSplitCMeta> getDocFieldSplitMetas() {
+            return Collections.emptyList();
         }
 
         public void setJsonPath(String jsonPath) {

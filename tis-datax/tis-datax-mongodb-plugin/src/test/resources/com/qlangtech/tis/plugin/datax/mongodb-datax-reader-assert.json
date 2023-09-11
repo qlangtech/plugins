@@ -1,29 +1,16 @@
 {
+  "name":"mongodbreader",
   "parameter":{
-    "userPassword":"123456",
-    "address":[
-      "192.168.28.200:27017",
-      "192.168.28.201:27017"
-    ],
-    "dbName":"order1",
-    "query":"this is my query",
+    "collectionName":"orderdetail",
     "column":[
-      {
-        "name":"user_id",
-        "type":"long"
-      },
-      {
-        "name":"user_name",
-        "type":"string"
-      },
-      {
-        "name":"hobby",
-        "type":"array",
-        "splitter":","
-      }
+      "`col1`",
+      "`col2`",
+      "`col3`",
+      "`doc_type_split_field1`",
+      "`doc_type_split_field2`",
+      "`document_type_field`"
     ],
-    "userName":"root",
-    "collectionName":"employee"
-  },
-  "name":"mongodbreader"
+    "dataSourceFactoryId":"testMongoDS",
+    "storeResType":"ap"
+  }
 }

@@ -72,7 +72,7 @@ public class ReaderFilterOn extends ReaderFilter {
 
         @Override
         public String getDisplayName() {
-            return "range";
+            return "rangeQuery";
         }
     }
 

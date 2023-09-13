@@ -1,0 +1,5 @@
+{
+  "query": {
+    "placeholder": "{ <field1>: { <operator1>: <value1> }, ... }"
+  }
+}

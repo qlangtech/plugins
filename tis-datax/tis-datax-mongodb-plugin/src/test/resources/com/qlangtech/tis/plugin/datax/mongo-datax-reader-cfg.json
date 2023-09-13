@@ -1,0 +1,18 @@
+{
+  "parameter":{
+    "storeResType":"ap",
+    "dbName":"tis",
+    "column":[
+      "`array`",
+      "`profile_attr1`",
+      "`profile_attr2`",
+      "`profile`",
+      "`_id`",
+      "`name`",
+      "`age`"
+    ],
+    "dataSourceFactoryId":"mongodb-test",
+    "collectionName":"user"
+  },
+  "name":"mongodbreader"
+}

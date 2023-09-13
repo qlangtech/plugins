@@ -11,6 +11,7 @@
       "`document_type_field`"
     ],
     "dataSourceFactoryId":"testMongoDS",
+    "dbName":"tis",
     "storeResType":"ap"
   }
 }

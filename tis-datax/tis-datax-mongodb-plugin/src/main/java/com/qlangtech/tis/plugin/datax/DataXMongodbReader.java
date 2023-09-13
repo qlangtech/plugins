@@ -136,9 +136,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
                     "inspectRowCount can not " + "be" + " null"))) {
 
-                bdoc = doc.toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
 
-                MongoColumnMetaData.parseMongoDocTypes(false, Collections.emptyList(), colsSchema, bdoc);
+
+                MongoColumnMetaData.parseMongoDocTypes( colsSchema, doc);
             }
 
         } catch (SQLException e) {
@@ -202,7 +202,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             if (this.presentCols == null) {
                 presentCols = Lists.newArrayList();
 
-                List<CMeta> cols = table.getCols();
+                List<CMeta> cols = table.cols;
 
                 List<MongoCMeta.MongoDocSplitCMeta> splitFieldMetas = null;
                 for (CMeta col : cols) {
@@ -212,7 +212,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                         splitFieldMetas = mongoCol.getDocFieldSplitMetas();
                         for (MongoCMeta.MongoDocSplitCMeta scol : splitFieldMetas) {
                             presentCols.add(Pair.of(scol, (doc) -> {
-                                Object val = doc.getEmbedded(scol.getEmbeddedKeys(), null);
+                                Object val = doc.getEmbedded(scol.getEmbeddedKeys(), Object.class);
                                 return MongoDataXColUtils.createCol(scol, val);
                             }));
                         }
@@ -223,7 +223,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                     }
 
                     presentCols.add(Pair.of(mongoCol, (doc) -> {
-                        Object val = doc.get(mongoCol.getName(), null);
+                        Object val = doc.get(mongoCol.getName(), Object.class);
                         return MongoDataXColUtils.createCol(mongoCol, val);
                     }));
                 }

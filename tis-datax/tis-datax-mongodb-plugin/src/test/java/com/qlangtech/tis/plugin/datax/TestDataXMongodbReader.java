@@ -64,6 +64,9 @@ public class TestDataXMongodbReader extends TestCase {
     private List<String> assertCols = Lists.newArrayList("col1", "col2", "col3", DOC_TYPE_SPLIT_FIELD1,
             DOC_TYPE_SPLIT_FIELD2, DOC_TYPE_FIELD);
 
+    private List<String> assertColsWithoutDocTypeField //
+            = Lists.newArrayList("col1", "col2", "col3", DOC_TYPE_SPLIT_FIELD1, DOC_TYPE_SPLIT_FIELD2);
+
     public void testGetDftTemplate() {
         String dftTemplate = DataXMongodbReader.getDftTemplate();
         assertNotNull("dftTemplate can not be null", dftTemplate);
@@ -83,6 +86,28 @@ public class TestDataXMongodbReader extends TestCase {
                 IDataxProcessor.TableMap tabMapper = next.createTableMap(new TableAlias(next.mongoTable.getName()),
                         next.mongoTable);
                 Assert.assertTrue(CollectionUtils.isEqualCollection(assertCols,
+                        tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList())));
+            }
+
+            Assert.assertEquals(1, subTaskCount);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        mongodbReader = createMongodbReader(true);
+
+        try (IGroupChildTaskIterator subTasks = mongodbReader.getSubTasks((tab) -> true)) {
+            int subTaskCount = 0;
+            while (subTasks.hasNext()) {
+                subTaskCount++;
+                MongoDBReaderContext next = (MongoDBReaderContext) subTasks.next();
+                Assert.assertNotNull(next);
+                Assert.assertEquals(assertColsWithoutDocTypeField.stream().map((c) -> "\"`" + c + "`\"").collect(Collectors.joining(",")), next.getColsQuotes());
+
+                // 这个保证下游DataXWriter 的cols 呈现何reader这边一致
+                IDataxProcessor.TableMap tabMapper = next.createTableMap(new TableAlias(next.mongoTable.getName()),
+                        next.mongoTable);
+                Assert.assertTrue(CollectionUtils.isEqualCollection(assertColsWithoutDocTypeField,
                         tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList())));
             }
 
@@ -121,6 +146,14 @@ public class TestDataXMongodbReader extends TestCase {
     }
 
     private static List<SelectedTab> getSelectedTabs() {
+        return getSelectedTabs(false);
+    }
+
+    /**
+     * @param disableDocTypeField 将doctypefile 字段失效，但是两个 拆分子字段仍然要显示
+     * @return
+     */
+    private static List<SelectedTab> getSelectedTabs(boolean disableDocTypeField) {
 
         PluginFormProperties mongoReaderProps =
                 TIS.get().getDescriptor(DataXMongodbReader.class).getSubPluginFormPropertyTypes("selectedTabs");
@@ -139,6 +172,7 @@ public class TestDataXMongodbReader extends TestCase {
         List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, metaCreator, (tab) -> {
 
             MongoCMeta addCol = (MongoCMeta) CMeta.create(metaCreator, DOC_TYPE_FIELD, JDBCTypes.LONGNVARCHAR);
+            addCol.setDisable(disableDocTypeField);
             addCol.setMongoFieldType(BsonType.DOCUMENT);
             List<MongoCMeta.MongoDocSplitCMeta> docFieldSplitMetas = Lists.newArrayList();
             MongoCMeta.MongoDocSplitCMeta splitMeta = null;
@@ -159,14 +193,18 @@ public class TestDataXMongodbReader extends TestCase {
 
             tab.cols.add(addCol);
 
-            MongoSelectedTabExtend sourceExtend = new MongoSelectedTabExtend();
-            sourceExtend.setName(tab.getName());
-            sourceExtend.filter = new ReaderFilteOff();
-            tab.setSourceProps(sourceExtend);
+            setMongoSourceTabExtend(tab);
         });
 
 
         return tabs;
+    }
+
+    public static void setMongoSourceTabExtend(SelectedTab tab) {
+        MongoSelectedTabExtend sourceExtend = new MongoSelectedTabExtend();
+        sourceExtend.setName(tab.getName());
+        sourceExtend.filter = new ReaderFilteOff();
+        tab.setSourceProps(sourceExtend);
     }
 
     public void testPluginExtraPropsLoad() throws Exception {
@@ -180,8 +218,8 @@ public class TestDataXMongodbReader extends TestCase {
 
         JsonUtil.assertJSONEqual(DataXMongodbReader.class, "mongdodb-datax-reader-descriptor.json",
                 descJson.getDescriptorsJSON(), (m, e, a) -> {
-            assertEquals(m, e, a);
-        });
+                    assertEquals(m, e, a);
+                });
 
     }
 
@@ -204,6 +242,10 @@ public class TestDataXMongodbReader extends TestCase {
     }
 
     private static DataXMongodbReader createMongodbReader() {
+        return createMongodbReader(false);
+    }
+
+    private static DataXMongodbReader createMongodbReader(boolean disableDocTypeField) {
         DataXMongodbReader reader = new DataXMongodbReader() {
 
             @Override
@@ -217,7 +259,7 @@ public class TestDataXMongodbReader extends TestCase {
             }
         };
         reader.inspectRowCount = 200;
-        reader.selectedTabs = getSelectedTabs();
+        reader.selectedTabs = getSelectedTabs(disableDocTypeField);
         reader.template = DataXMongodbReader.getDftTemplate();
         return reader;
     }

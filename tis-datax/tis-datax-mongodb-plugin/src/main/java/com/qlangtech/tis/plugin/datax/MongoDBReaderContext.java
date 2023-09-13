@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
@@ -40,9 +41,9 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-06 14:53
  **/
-public class MongoDBReaderContext extends RdbmsReaderContext implements IDataxReaderContext {
+public class MongoDBReaderContext extends RdbmsReaderContext<DataXMongodbReader, MangoDBDataSourceFactory> implements IDataxReaderContext {
 
-     final SelectedTab mongoTable;
+    final SelectedTab mongoTable;
     //  private final MongoSelectedTabExtend tabExtend;
 
     public MongoDBReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper,
@@ -53,9 +54,8 @@ public class MongoDBReaderContext extends RdbmsReaderContext implements IDataxRe
         //
 
         //  this.setCols(cols.stream().map((c) -> c.getKey().getName()).collect(Collectors.toList()));
-
-
     }
+
 
     @Override
     public IDataxProcessor.TableMap createTableMap(TableAlias tableAlias, ISelectedTab selectedTab) {
@@ -78,6 +78,9 @@ public class MongoDBReaderContext extends RdbmsReaderContext implements IDataxRe
         return Objects.requireNonNull(dsFactory.identityValue(), "dataSourceId factory id can not be empty");//
     }
 
+    public String getDbName() {
+        return Objects.requireNonNull(dsFactory, "dbFactory can not be null").dbName;
+    }
 
     @Override
     public String getSourceTableName() {

@@ -3,11 +3,13 @@ package com.qlangtech.tis.plugin.datax.mongo;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.mongodb.MongoClient;
 import com.qlangtech.tis.plugin.ds.*;
 import org.apache.commons.collections.ListUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonType;
 import org.bson.BsonValue;
+import org.bson.Document;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +51,13 @@ public class MongoColumnMetaData extends ColumnMetaData {
         super(index, key, dataType, pk);
         this.mongoFieldType = mongoFieldType;
         this.containValCount = containValCount;
+    }
+
+
+    public static void parseMongoDocTypes(
+            Map<String, MongoColumnMetaData> colsSchema, Document doc) {
+        BsonDocument bdoc = doc.toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
+        parseMongoDocTypes(false, Collections.emptyList(), colsSchema, bdoc);
     }
 
     /**

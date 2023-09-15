@@ -51,7 +51,8 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-06-05 09:54
  **/
-public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
+public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extends DataxReader
+        implements IDataSourceFactoryGetter, KeyedPluginStore.IPluginKeyAware {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsReader.class);
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -64,7 +65,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     public String template;
 
     @SubForm(desClazz = SelectedTab.class //
-            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action" + ".DataxAction.getTablesInDB"
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB"
             + "(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 

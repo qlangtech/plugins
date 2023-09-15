@@ -93,7 +93,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = IDataxProcessor.TabCols.create(tm);
+            context.cols = IDataxProcessor.TabCols.create(dsFactory,tm);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;

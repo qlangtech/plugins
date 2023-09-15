@@ -29,6 +29,7 @@ import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.FileSystemFactory;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
+import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
@@ -208,11 +210,19 @@ public class HiveDFSLinker extends TDFSLinker {
 
 
     @TISExtension
-    public static final class DftDescriptor extends BasicDescriptor {
+    public static final class DftDescriptor extends BasicDescriptor implements IExclusiveTDFSType {
 
         public DftDescriptor() {
             super();
-            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins().stream().filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+            this.registerSelectOptions(ITISFileSystemFactory.KEY_FIELD_NAME_FS_NAME
+                    , () -> TIS.getPluginStore(FileSystemFactory.class)
+                            .getPlugins().stream()
+                            .filter(((f) -> f instanceof HdfsFileSystemFactory)).collect(Collectors.toList()));
+        }
+
+        @Override
+        public IEndTypeGetter.EndType getTDFSType() {
+            return IEndTypeGetter.EndType.HiveMetaStore;
         }
 
         @Override

@@ -226,7 +226,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             // context.setPostSql(helper.replacePlaceholders(this.postSql, resolver));
             context.setPostSql(this.postSql);
         }
-        context.setCols(IDataxProcessor.TabCols.create(tableMap.get()));
+        context.setCols(IDataxProcessor.TabCols.create(ds,tableMap.get()));
         return context;
     }
 

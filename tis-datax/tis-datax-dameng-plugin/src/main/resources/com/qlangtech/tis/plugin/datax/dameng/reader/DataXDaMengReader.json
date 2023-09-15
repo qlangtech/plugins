@@ -1,0 +1,15 @@
+{
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"DaMeng\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "DaMeng"
+        }
+      ]
+    }
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader.getDftTemplate()"
+  }
+}

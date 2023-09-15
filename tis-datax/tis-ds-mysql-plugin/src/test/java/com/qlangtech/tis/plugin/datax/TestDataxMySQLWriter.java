@@ -21,7 +21,11 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.IDataxContext;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -31,7 +35,12 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.RootFormProperties;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.DataXReaderColType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -42,7 +51,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -256,13 +264,5 @@ public class TestDataxMySQLWriter extends BasicTest {
         Assert.assertTrue(extraProps.isPresent());
     }
 
-//    public void testCreateDDLParser() {
-//
-//        SqlParser sqlParser = new SqlParser();
-//        String createSql = IOUtils.loadResourceFromClasspath(TestDataxMySQLWriter.class, "sql/create-instancedetail.sql");
-//        Expression statement = sqlParser.createExpression(createSql, new ParsingOptions());
-//        Objects.requireNonNull(statement, "statement can not be null");
-//        System.out.println(   SqlFormatter.formatSql(statement, Optional.empty()) );
-//    }
 
 }

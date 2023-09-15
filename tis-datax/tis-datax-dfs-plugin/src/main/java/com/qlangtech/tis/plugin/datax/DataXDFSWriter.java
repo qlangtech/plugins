@@ -62,16 +62,9 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
     @FormField(ordinal = 7, validate = {Validator.require})
     public MetaDataWriter writeMetaData;
 
-    //    @FormField(ordinal = 7, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-//    public String fileName;
     @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
     public String writeMode;
-    //    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String fieldDelimiter;
 
-
-    //    @FormField(ordinal = 13, type = FormFieldType.INPUTTEXT, validate = {})
-//    public String dateFormat;
     @FormField(ordinal = 14, validate = {Validator.require})
     public FileFormat fileFormat;
 

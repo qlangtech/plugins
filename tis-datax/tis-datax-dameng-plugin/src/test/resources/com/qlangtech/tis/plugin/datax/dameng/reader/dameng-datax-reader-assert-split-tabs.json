@@ -1,0 +1,23 @@
+{
+  "name":"damengreader",
+  "parameter":{
+    "column":[
+      "\"col1\"",
+      "\"col2\"",
+      "\"col3\""
+    ],
+    "connection":[
+      {
+        "jdbcUrl":[
+          "jdbc:dm://192.168.28.200:5236?schema=test"
+        ],
+        "table":[
+          "\"orderdetail_01\"",
+          "\"orderdetail_02\""
+        ]
+      }
+    ],
+    "password":"SYSDBA001",
+    "username":"SYSDBA"
+  }
+}

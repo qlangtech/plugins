@@ -55,7 +55,7 @@ public class RdbmsWriter {
      * @throws Exception
      */
     public static void initWriterTable(IJobContainerContext containerContext, Configuration cfg) {
-        Objects.requireNonNull(containerContext,"containerContext can not be null");
+        Objects.requireNonNull(containerContext, "containerContext can not be null");
         String dataXName = containerContext.getTISDataXName();
 
         String tableName = cfg.getNecessaryValue(Constant.CONN_MARK + "[0]." + Key.TABLE + "[0]"

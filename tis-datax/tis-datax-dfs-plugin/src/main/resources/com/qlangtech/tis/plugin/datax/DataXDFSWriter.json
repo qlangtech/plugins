@@ -1,4 +1,9 @@
 {
+  "dfsLinker": {
+    "label": "资源",
+    "help": "DFS服务端连接配置",
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.DataXDFSReader.dfsLinkerFilter(desc);"
+  },
   "writeMetaData": {
     "label": "添加元数据",
     "dftVal": "on"

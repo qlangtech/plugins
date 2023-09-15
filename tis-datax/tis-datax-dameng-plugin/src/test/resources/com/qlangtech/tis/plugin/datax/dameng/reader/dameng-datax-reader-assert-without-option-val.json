@@ -1,0 +1,17 @@
+{
+  "name":"damengreader",
+  "parameter":{
+    "connection":[
+      {
+        "jdbcUrl":[
+          "jdbc:dm://192.168.28.200:5236?schema=test"
+        ],
+        "querySql":[
+          "SELECT \"col1\",\"col2\",\"col3\" FROM orderdetail  WHERE delete = 0 "
+        ]
+      }
+    ],
+    "password":"SYSDBA001",
+    "username":"SYSDBA"
+  }
+}

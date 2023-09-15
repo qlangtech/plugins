@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDSFactoryContainer;
 import com.qlangtech.tis.plugin.ds.oracle.OracleDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.oracle.TestOracleDataSourceFactory;
@@ -40,7 +41,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 
@@ -135,34 +135,27 @@ public class TestDataXOracleWriter {
         HdfsColMeta cmeta = null;
         // String colName, Boolean nullable, Boolean pk, DataType dataType
         cmeta = new HdfsColMeta("customerregister_id", false
-                , true, new DataType(Types.VARCHAR, "VARCHAR", 150));
+                , true,  DataType.createVarChar( 150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("waitingorder_id", false, true
-                , new DataType(Types.VARCHAR, "VARCHAR", 150));
+                ,  DataType.createVarChar( 150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("kind"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false,  DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("create_time"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false,  DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("last_ver"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         IDataxProcessor.TableMap tabMap = IDataxProcessor.TableMap.create(targetTableName, colMetas);
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap);
-
-//        CreateStarRocksWriter createDorisWriter = new CreateStarRocksWriter().invoke();
-//        createDorisWriter.dsFactory.password = "";
-//        // createDorisWriter.dsFactory.nodeDesc = "192.168.28.201";
-//        createDorisWriter.dsFactory.nodeDesc = "localhost";
-//
-//        createDorisWriter.writer.autoCreateTable = true;
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
         File createDDLDir = new File(".");

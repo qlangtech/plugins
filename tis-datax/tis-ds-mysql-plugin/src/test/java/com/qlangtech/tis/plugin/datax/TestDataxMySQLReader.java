@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.qlangtech.tis.plugin.test.BasicTest;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;

@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import static com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler.joinField;
 
 /**
  * https://gitee.com/mirrors/DataX/blob/master/mongodbreader/doc/mongodbreader.md
@@ -102,22 +103,8 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
     private static final Logger logger = LoggerFactory.getLogger(DataXMongodbReader.class);
 
-    //    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-    //    public String dbName;
-    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
-    //    public String collectionName;
-    //    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {Validator.require})
-    //    public String column;
-
     @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer inspectRowCount;
-
-
-    //    @FormField(ordinal = 8, type = FormFieldType.INPUTTEXT, validate = {})
-    //    public String query;
-
-    //    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
-    //    public String template;
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) throws TableNotFoundException {
@@ -137,8 +124,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                     "inspectRowCount can not " + "be" + " null"))) {
 
 
-
-                MongoColumnMetaData.parseMongoDocTypes( colsSchema, doc);
+                MongoColumnMetaData.parseMongoDocTypes(colsSchema, doc);
             }
 
         } catch (SQLException e) {
@@ -245,39 +231,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     /**
      * end implements: DBConfigGetter
      */
-    //    public MangoDBDataSourceFactory getDsFactory() {
-    //        return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
-    //        //   return (MangoDBDataSourceFactory) dsStore.getPlugin();
-    //    }
     public static String getDftTemplate() {
         return IOUtils.loadResourceFromClasspath(DataXMongodbReader.class, "DataXMongodbReader-tpl.json");
     }
-
-    //    @Override
-    //    public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
-    //        IDataxReaderContext readerContext = new MongoDBReaderContext(this.collectionName, this);
-    //        //return Collections.singleton(readerContext).iterator();
-    //        return IGroupChildTaskIterator.create(readerContext);
-    //    }
-
-    //    @Override
-    //    public List<ISelectedTab> getSelectedTabs() {
-    //        if (StringUtils.isEmpty(this.collectionName)) {
-    //            throw new IllegalStateException("property collectionName can not be empty");
-    //        }
-    //        MongoDBTable tab = new MongoDBTable(this.collectionName);
-    //
-    //
-    //        List<ColCfg> cols = JSON.parseArray(this.column, ColCfg.class);
-    //        tab.cols = cols.stream().map((c) -> {
-    //            CMeta colMeta = new CMeta();
-    //            colMeta.setName(c.getName());
-    //            colMeta.setType(convertType(c.getType()));
-    //            return colMeta;
-    //        }).collect(Collectors.toList());
-    //
-    //        return Collections.singletonList(tab);
-    //    }
 
     @Override
     protected boolean shallFillSelectedTabMeta() {
@@ -289,67 +245,6 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
         return new MongoDBReaderContext(jobName, tab, dumper, this);
     }
-
-    //    private DataType convertType(String type) {
-    //        if (!acceptTypes.contains(type)) {
-    //            throw new IllegalArgumentException("illegal type:" + type);
-    //        }
-    //        switch (type) {
-    //            case "int":
-    //            case "long":
-    //                return DataXReaderColType.Long.dataType;
-    //            case "double":
-    //                return DataXReaderColType.Double.dataType;
-    //            case "string":
-    //            case "array":
-    //                return DataXReaderColType.STRING.dataType;
-    //            case "date":
-    //                return DataXReaderColType.Date.dataType;
-    //            case "boolean":
-    //                return DataXReaderColType.Boolean.dataType;
-    //            case "bytes":
-    //                return DataXReaderColType.Bytes.dataType;
-    //            default:
-    //                throw new IllegalStateException("illegal type:" + type);
-    //        }
-    //    }
-
-
-    //    public static class ColCfg {
-    //        private String name;
-    //        private String type;
-    //        private String splitter;
-    //
-    //        public String getName() {
-    //            return name;
-    //        }
-    //
-    //        public void setName(String name) {
-    //            this.name = name;
-    //        }
-    //
-    //        public String getType() {
-    //            return type;
-    //        }
-    //
-    //        public void setType(String type) {
-    //            this.type = type;
-    //        }
-    //
-    //        public String getSplitter() {
-    //            return splitter;
-    //        }
-    //
-    //        public void setSplitter(String splitter) {
-    //            this.splitter = splitter;
-    //        }
-    //    }
-
-
-    //    @Override
-    //    public String getTemplate() {
-    //        return this.template;
-    //    }
 
     @TISExtension()
     public static class DefaultDescriptor extends BasicDataXRdbmsReaderDescriptor //
@@ -387,7 +282,6 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                 msgHandler.addFieldError(context, fieldName, "不能大于" + maxInspectRowCount + "的整数");
                 return false;
             }
-            //  return validateColumnContent(msgHandler, context, fieldName, value);
 
             return true;
         }
@@ -486,26 +380,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                 }
                 colIndex++;
             }
-
-
             return true;
-        }
-
-        private String joinField(String fkey, Object... keys) {
-
-            List<String> joins = Lists.newArrayList(fkey);
-            for (Object key : keys) {
-                if (key instanceof String) {
-                    joins.add(".");
-                    joins.add((String) key);
-                } else if (key instanceof List) {
-                    joins.add((String) ((List) key).stream().map((k) -> "[" + k + "]").collect(Collectors.joining()));
-                } else {
-                    throw new IllegalStateException("illegal type:" + key);
-                }
-            }
-
-            return joins.stream().collect(Collectors.joining());
         }
 
         @Override

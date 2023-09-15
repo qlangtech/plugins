@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.split.NoneSplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.NoneSplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.io.FileUtils;

@@ -1,4 +1,7 @@
 {
+  "dfsLinker": {
+    "subDescEnumFilter": "return com.qlangtech.tis.plugin.datax.DataXDFSReader.dfsLinkerFilter(desc);"
+  },
   "fileFormat": {
     "help": "可以根据目标文件不同的格式，对文件进行解析",
     "label": "文件格式"

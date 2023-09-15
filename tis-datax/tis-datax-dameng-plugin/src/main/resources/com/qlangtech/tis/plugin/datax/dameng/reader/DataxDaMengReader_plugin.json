@@ -1,0 +1,6 @@
+{
+    "name": "damengreader",
+    "class": "com.alibaba.datax.plugin.dameng.reader.DaMengReader",
+    "description": "",
+    "developer": "tis"
+}

@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -38,6 +39,7 @@ import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -112,7 +114,8 @@ public class DataXHiveReader extends AbstractDFSReader {
             throw new IllegalArgumentException("param descs can not be null");
         }
         return descs.stream().filter((d) -> {
-            return HiveDFSLinker.NAME_DESC.equals(((Descriptor) d).getDisplayName());
+            return (d instanceof IExclusiveTDFSType)
+                    && (((IExclusiveTDFSType) d).getTDFSType() == IEndTypeGetter.EndType.HiveMetaStore); //HiveDFSLinker.NAME_DESC.equals(((Descriptor) d).getDisplayName());
         }).collect(Collectors.toList());
     }
 

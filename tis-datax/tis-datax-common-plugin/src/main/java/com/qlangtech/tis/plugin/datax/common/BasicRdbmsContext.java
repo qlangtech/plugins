@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +56,7 @@ public abstract class BasicRdbmsContext<PLUGIN, DS extends DataSourceFactory> {
     }
 
     protected String colEscapeChar() {
-        return "`";
+        return dsFactory.getEscapeChar().map((escape)-> StringEscapeUtils.escapeJava(escape)).orElse(StringUtils.EMPTY);
     }
 
     protected String getEntitiesWithQuotation(List<String> cols) {

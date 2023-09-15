@@ -21,19 +21,23 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.impl.DataXBasicProcessMeta;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
+import com.qlangtech.tis.plugin.tdfs.IExclusiveTDFSType;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -44,6 +48,16 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
 
     @FormField(ordinal = 8, validate = {Validator.require})
     public FileFormat fileFormat;
+
+
+    public static List<? extends Descriptor> dfsLinkerFilter(List<? extends Descriptor> descs) {
+        if (CollectionUtils.isEmpty(descs)) {
+            return Collections.emptyList();
+        }
+        return descs.stream().filter((desc) -> {
+           return !(desc instanceof IExclusiveTDFSType);
+        }).collect(Collectors.toList());
+    }
 
 
     @Override

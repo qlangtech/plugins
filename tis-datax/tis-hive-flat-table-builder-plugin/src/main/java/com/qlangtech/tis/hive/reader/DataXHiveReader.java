@@ -18,7 +18,8 @@
 
 package com.qlangtech.tis.hive.reader;
 
-import com.beust.jcommander.internal.Lists;
+
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
 import com.qlangtech.tis.datax.impl.DataxWriter;

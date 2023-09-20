@@ -18,7 +18,8 @@
 
 package com.qlangtech.tis.dump.hive;
 
-import com.beust.jcommander.internal.Lists;
+
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.hive.HdfsFileType;
 import com.qlangtech.tis.hive.HdfsFormat;

@@ -50,18 +50,22 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
     @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {Validator.require})
     public UpdateMode incrMode;
 
-    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
-    public List<String> uniqueKey;
+    /**
+     * SelectedTab 中已经添加了uniqueKey的选项
+     * @param params
+     */
+//    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public List<String> uniqueKey;
 
 //    public UpdateMode getIncrMode() {
 //        return Objects.requireNonNull(incrMode, "incrMode can not be null");
 //    }
 
     public void setParams(Map<String, Object> params) {
-        if (CollectionUtils.isEmpty(uniqueKey)) {
-            throw new IllegalStateException("collection of 'updateKey' can not be null");
-        }
-        params.put(KEY_UNIQUE_KEY, this.uniqueKey);
+//        if (CollectionUtils.isEmpty(uniqueKey)) {
+//            throw new IllegalStateException("collection of 'updateKey' can not be null");
+//        }
+//        params.put(KEY_UNIQUE_KEY, this.uniqueKey);
         this.incrMode.set(params);
     }
 

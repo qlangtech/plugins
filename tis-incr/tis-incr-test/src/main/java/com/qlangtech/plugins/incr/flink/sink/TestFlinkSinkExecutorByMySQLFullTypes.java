@@ -66,8 +66,9 @@ public abstract class TestFlinkSinkExecutorByMySQLFullTypes extends TestFlinkSin
         UpdateMode upsert = createIncrMode();
         // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
         sinkExt.incrMode = upsert;
-        sinkExt.uniqueKey = getUniqueKey();
+      //  sinkExt.uniqueKey =
         this.tabFullType.setIncrSinkProps(sinkExt);
+        this.tabFullType.primaryKeys = getUniqueKey();
 
         List<CMeta> cols = this.tabFullType.getCols();
         Assert.assertTrue(CollectionUtils.isNotEmpty(cols));

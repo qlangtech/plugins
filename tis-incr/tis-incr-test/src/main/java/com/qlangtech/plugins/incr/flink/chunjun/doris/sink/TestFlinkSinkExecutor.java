@@ -396,7 +396,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         UpdateMode updateMode = createIncrMode();
         // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
         sinkExt.incrMode = updateMode;
-        sinkExt.uniqueKey = getUniqueKey();
+       // sinkExt.uniqueKey =
         List<CMeta> metaCols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
@@ -443,6 +443,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         SelectedTab totalpayInfo = createSelectedTab(metaCols);
         totalpayInfo.setIncrSinkProps(sinkExt);
         totalpayInfo.name = tableName;
+        totalpayInfo.primaryKeys = getUniqueKey();
         return totalpayInfo;
     }
 

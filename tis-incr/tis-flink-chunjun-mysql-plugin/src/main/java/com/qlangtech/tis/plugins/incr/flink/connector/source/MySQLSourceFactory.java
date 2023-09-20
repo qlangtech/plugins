@@ -18,22 +18,23 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 
 /**
+ * 先别用了，用cdc的方式比较好
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-14 22:10
  **/
+@Deprecated
 public class MySQLSourceFactory extends ChunjunSourceFactory {
     @Override
     public IMQListener create() {
         return new MySQLSourceFunction(this);
     }
 
-    @TISExtension
+  //  @TISExtension
     public static class DefaultDesc extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {

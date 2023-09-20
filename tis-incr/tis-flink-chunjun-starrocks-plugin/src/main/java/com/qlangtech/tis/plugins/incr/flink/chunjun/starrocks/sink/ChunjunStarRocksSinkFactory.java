@@ -30,7 +30,6 @@ import com.dtstack.chunjun.connector.starrocks.sink.StarRocksSinkFactory;
 import com.dtstack.chunjun.converter.AbstractRowConverter;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Sets;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
@@ -42,7 +41,6 @@ import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.UniqueKeySetter;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
@@ -189,7 +187,8 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
 
         @Override
         public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return TIS.get().getDescriptor(UniqueKeySetter.class);
+            //   return TIS.get().getDescriptor(UniqueKeySetter.class);
+            return null;
         }
 
     }

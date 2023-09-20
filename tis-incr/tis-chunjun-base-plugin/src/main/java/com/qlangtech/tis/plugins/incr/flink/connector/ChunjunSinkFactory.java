@@ -58,6 +58,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -278,10 +279,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         Map<String, Object> params = paramsCreator.get();
         writer.setParameter(params);
 
-
+        setUniqueKeyParams(tab.getPrimaryKeys(), params);
         ISelectedTabExtendFactory desc = (ISelectedTabExtendFactory) this.getDescriptor();
         if (desc.getSelectedTableExtendDescriptor() != null) {
             // 有扩展才进行设置，不然会空指针
+            // tab.primaryKeys
             ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
         }
 
@@ -307,6 +309,14 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
         syncConf.setJob(jobConf);
         return syncConf;
+    }
+
+    private void setUniqueKeyParams(List<String> uniqueKey, Map<String, Object> params) {
+        if (CollectionUtils.isEmpty(uniqueKey)) {
+            throw new IllegalStateException("collection of 'updateKey' can not be null");
+        }
+        params.put(SinkTabPropsExtends.KEY_UNIQUE_KEY, uniqueKey);
+
     }
 
     /**

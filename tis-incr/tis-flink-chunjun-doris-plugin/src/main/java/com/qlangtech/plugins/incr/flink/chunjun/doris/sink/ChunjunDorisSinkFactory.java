@@ -32,14 +32,13 @@ import com.dtstack.chunjun.connector.jdbc.dialect.JdbcDialect;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Sets;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.doris.DorisSelectedTab;
@@ -218,7 +217,8 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
         @Override
         public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
-            return TIS.get().getDescriptor(DorisTabProps.class);
+            // return TIS.get().getDescriptor(DorisTabProps.class);
+            return null;
         }
 
     }

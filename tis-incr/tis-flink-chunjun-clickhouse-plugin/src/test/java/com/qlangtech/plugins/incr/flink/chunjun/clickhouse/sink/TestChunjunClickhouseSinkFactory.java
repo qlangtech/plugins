@@ -165,23 +165,23 @@ public class TestChunjunClickhouseSinkFactory
             List<CMeta> cols = Lists.newArrayList();
             CMeta cm = new CMeta();
             cm.setName(colEntityId);
-            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 6));
+            cm.setType(DataType.createVarChar(6));
             cols.add(cm);
 
             cm = new CMeta();
             cm.setName(colNum);
-            cm.setType(new DataType(Types.INTEGER));
+            cm.setType(DataType.getType(JDBCTypes.INTEGER));
             cols.add(cm);
 
             cm = new CMeta();
             cm.setName(colId);
-            cm.setType(new DataType(Types.VARCHAR, "VARCHAR", 32));
+            cm.setType(DataType.getType(JDBCTypes.VARCHAR));
             cm.setPk(true);
             cols.add(cm);
 
             cm = new CMeta();
             cm.setName(colCreateTime);
-            cm.setType(new DataType(Types.BIGINT));
+            cm.setType(DataType.getType(JDBCTypes.BIGINT));
             cols.add(cm);
 
             EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();

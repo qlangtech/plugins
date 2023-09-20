@@ -29,7 +29,7 @@ import com.qlangtech.tis.hdfs.test.HdfsFileSystemFactoryTestUtils;
 import com.qlangtech.tis.hive.DefaultHiveConnGetter;
 import com.qlangtech.tis.hive.Hiveserver2DataSourceFactory;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.plugin.common.WriterJson;
+import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.test.BasicTest;
@@ -140,7 +140,7 @@ public class TestDataXSparkWriter extends BasicTest {
             return dataxWriter;
         };
 
-        WriterTemplate.realExecuteDump(WriterJson.path("spark-datax-writer-assert-without-option-val.json"), dataxWriter);
+        WriterTemplate.realExecuteDump(DataXCfgJson.path("spark-datax-writer-assert-without-option-val.json"), dataxWriter);
     }
 
 

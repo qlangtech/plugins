@@ -6,37 +6,45 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.common.WriterJson;
+import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
+import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.ds.TestDaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.easymock.EasyMock;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.util.List;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/9/15
  */
 public class TestDataXDaMengWriterReal {
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     @Test
     public void testRealDump() throws Exception {
 
         final String targetTableName = "customer_order_relation";
-        String testDataXName = "mysql_oracle";
+        String testDataXName = "mysql_dameng";
 
-        final DataXDaMengWriter writer = getOracleWriter();
+        final DataXDaMengWriter writer = getDamengWriter();
         writer.dataXName = testDataXName;
-        List<IColMetaGetter> colMetas = Lists.newArrayList();
+        SelectedTab tab = new SelectedTab();
+        tab.name = targetTableName;
+        // List<IColMetaGetter> colMetas = Lists.newArrayList();
 
 //                "customerregister_id",
 //                "waitingorder_id",
@@ -46,31 +54,37 @@ public class TestDataXDaMengWriterReal {
         // DataType
         HdfsColMeta cmeta = null;
         // String colName, Boolean nullable, Boolean pk, DataType dataType
+        tab.primaryKeys = Lists.newArrayList();
         cmeta = new HdfsColMeta("customerregister_id", false
                 , true, DataType.createVarChar(150));
-        colMetas.add(cmeta);
+        tab.cols.add(IDataxProcessor.TableMap.getCMeta(cmeta));
+        tab.primaryKeys.add(cmeta.getName());
 
         cmeta = new HdfsColMeta("waitingorder_id", false, true
                 , DataType.createVarChar(150));
-        colMetas.add(cmeta);
+        tab.cols.add(IDataxProcessor.TableMap.getCMeta(cmeta));
+        tab.primaryKeys.add(cmeta.getName());
 
         cmeta = new HdfsColMeta("kind"
                 , true, false, DataType.getType(JDBCTypes.BIGINT));
-        colMetas.add(cmeta);
+        tab.cols.add(IDataxProcessor.TableMap.getCMeta(cmeta));
 
         cmeta = new HdfsColMeta("create_time"
                 , true, false, DataType.getType(JDBCTypes.BIGINT));
-        colMetas.add(cmeta);
+        tab.cols.add(IDataxProcessor.TableMap.getCMeta(cmeta));
 
         cmeta = new HdfsColMeta("last_ver"
                 , true, false, DataType.getType(JDBCTypes.BIGINT));
-        colMetas.add(cmeta);
+        tab.cols.add(IDataxProcessor.TableMap.getCMeta(cmeta));
 
-        IDataxProcessor.TableMap tabMap = IDataxProcessor.TableMap.create(targetTableName, colMetas);
+        IDataxProcessor.TableMap tabMap = new IDataxProcessor.TableMap(tab); //IDataxProcessor.TableMap.create(targetTableName, colMetas);
+        TestDataXDaMengWriter.setPlaceholderReader();
+
+        DataXCfgJson wjson = DataXCfgJson.content(TestDataXDaMengWriter.generateDataXCfg(writer, Optional.of(tabMap)));
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(tabMap);
 
         DataxProcessor dataXProcessor = EasyMock.mock("dataXProcessor", DataxProcessor.class);
-        File createDDLDir = new File(".");
+        File createDDLDir = folder.newFolder();// new File(".");
         File createDDLFile = null;
         try {
             createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
@@ -86,19 +100,20 @@ public class TestDataXDaMengWriterReal {
             };
             EasyMock.replay(dataXProcessor);
             String[] jdbcUrl = new String[1];
-//            OracleDSFactoryContainer.oracleDS.getDbConfig().vistDbURL(false, (a, b, url) -> {
-//                jdbcUrl[0] = url;
-//            });
+            writer.getDataSourceFactory().getDbConfig().vistDbURL(false, (a, b, url) -> {
+                jdbcUrl[0] = url;
+            });
 
             if (StringUtils.isEmpty(jdbcUrl[0])) {
                 throw new IllegalStateException("jdbcUrl[0] can not be empty");
             }
-            WriterJson wjson = WriterJson.path("oracle_writer_real_dump.json");
+            //WriterJson wjson = WriterJson.path("dameng_writer_real_dump.json");
             wjson.addCfgSetter((cfg) -> {
                 cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
                 return cfg;
             });
-            WriterTemplate.realExecuteDump(wjson, writer);
+            Assert.assertFalse("isGenerateCreateDDLSwitchOff shall be false", writer.isGenerateCreateDDLSwitchOff());
+            WriterTemplate.realExecuteDump(testDataXName, wjson, writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {
@@ -107,7 +122,7 @@ public class TestDataXDaMengWriterReal {
     }
 
 
-    private DataXDaMengWriter getOracleWriter() {
+    private DataXDaMengWriter getDamengWriter() {
         DaMengDataSourceFactory dsFactory = TestDaMengDataSourceFactory.createDaMengDataSourceFactory();
 
         DataXDaMengWriter writer = new DataXDaMengWriter() {

@@ -102,7 +102,7 @@ public class TestDataXOracleReaderDump {
 
         //   String jobName, SelectedTab tab, IDataSourceDumper dumper
 
-        String cfgResult = ReaderTemplate.generateReaderCfg(processor, dataxReader, dataXName);
+        String cfgResult = ReaderTemplate.generateReaderCfg(dataxReader);
 //        cfgResult = dataProcessor.generateDataxConfig(
 //                dataxReader.createDataXReaderContext("jobName", stab, dumper)
 //                , dataxWriter, dataxReader, Optional.of(tab));
@@ -121,7 +121,7 @@ public class TestDataXOracleReaderDump {
         System.out.println(content);
 
         Assert.assertEquals(IOUtils.loadResourceFromClasspath(
-                TestDataXOracleReaderDump.class, "oracle_full_types_read_expect.txt")
+                        TestDataXOracleReaderDump.class, "oracle_full_types_read_expect.txt")
                 , content);
 
         EasyMock.verify(processor, dataxWriter, globalCfg);

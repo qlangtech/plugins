@@ -33,9 +33,11 @@ import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.DefaultDataxProcessor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.TestDataXHiveWriterDump;
+import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DSKey;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactoryPluginStore;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -84,8 +86,8 @@ public class TestDataXHiveReaderRealDump extends TestCase {
 
             Configuration readerConf = IOUtils.loadResourceFromClasspath(dataxReader.getClass() //
                     , "hive-datax-reader-test-cfg.json", true, (writerJsonInput) -> {
-                return Configuration.from(writerJsonInput);
-            });
+                        return Configuration.from(writerJsonInput);
+                    });
             readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
             readerConf.set(DataxExecutor.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
             ReaderTemplate.realExecute(dataXName, readerConf, dataxReaderResult, dataxReader);
@@ -101,7 +103,7 @@ public class TestDataXHiveReaderRealDump extends TestCase {
             tab.name = NAME_TAB;
             List<String> lines = org.apache.commons.io.IOUtils.readLines(writerJsonInput, TisUTF8.get());
             for (String l : lines) {
-                tab.cols.add(StringUtils.substringBefore(l, ","));
+                tab.cols.add(CMeta.create(StringUtils.substringBefore(l, ","), JDBCTypes.VARCHAR));
             }
             return tab;
         });

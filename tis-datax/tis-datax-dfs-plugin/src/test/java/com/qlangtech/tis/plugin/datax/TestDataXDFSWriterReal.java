@@ -27,7 +27,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.SetPluginsResult;
-import com.qlangtech.tis.plugin.common.WriterJson;
+import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.NoneMetaDataWriter;
@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.datax.server.FTPServer;
 import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import org.apache.commons.collections.CollectionUtils;
@@ -43,7 +44,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.sql.Types;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -106,23 +106,23 @@ public class TestDataXDFSWriterReal {
         HdfsColMeta cmeta = null;
         // String colName, Boolean nullable, Boolean pk, DataType dataType
         cmeta = new HdfsColMeta("customerregister_id", false
-                , true, new DataType(Types.VARCHAR, "VARCHAR", 150));
+                , true, DataType.createVarChar(150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("waitingorder_id", false, true
-                , new DataType(Types.VARCHAR, "VARCHAR", 150));
+                , DataType.createVarChar(150));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("kind"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("create_time"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         cmeta = new HdfsColMeta("last_ver"
-                , true, false, new DataType(Types.BIGINT));
+                , true, false, DataType.getType(JDBCTypes.BIGINT));
         colMetas.add(cmeta);
 
         IDataxProcessor.TableMap tabMap = IDataxProcessor.TableMap.create(targetTableName, colMetas);
@@ -130,7 +130,7 @@ public class TestDataXDFSWriterReal {
 
 
         TDFSLinker dfsLinker = null;
-        WriterJson wjson = WriterJson.content(WriterTemplate.cfgGenerate(writer, tabMap));
+        DataXCfgJson wjson = DataXCfgJson.content(WriterTemplate.cfgGenerate(writer, tabMap));
         ftpServer.useFtpHelper((helper) -> {
             helper.mkDirRecursive(FTP_PATH);
             Set<String> allFileExists = helper.getAllFilesInDir(FTP_PATH, "test");
@@ -169,7 +169,7 @@ public class TestDataXDFSWriterReal {
         writer.dfsLinker = ftpLinker;
         // writer.path = FTP_PATH;
         writer.writeMode = "truncate";
-       // writer.compress = Compress.noCompress.token;
+        // writer.compress = Compress.noCompress.token;
         writer.template = DataXDFSWriter.getDftTemplate();
         FileFormat txtFormat = FtpWriterUtils.createTextFormat(Compress.none.token, TisUTF8.getName());
         writer.fileFormat = txtFormat;

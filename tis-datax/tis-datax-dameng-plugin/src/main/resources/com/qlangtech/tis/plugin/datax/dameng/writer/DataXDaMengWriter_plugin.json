@@ -1,0 +1,6 @@
+{
+  "name": "damengwriter",
+  "class": "com.alibaba.datax.plugin.dameng.writer.DaMengWriter",
+  "description": "",
+  "developer": "tis"
+}

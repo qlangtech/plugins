@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -78,11 +77,11 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     public void checkUseable() throws TisException {
         FlinkCluster cluster = this;
         try {
-                try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
-                    // restClient.getClusterId();
-                    CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
-                    Collection<JobStatusMessage> jobStatus = status.get();
-                }
+            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
+                // restClient.getClusterId();
+                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
+                Collection<JobStatusMessage> jobStatus = status.get();
+            }
 
         } catch (Exception e) {
             throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
@@ -150,7 +149,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            FlinkCluster flinkCluster = (FlinkCluster) postFormVals.newInstance(this, msgHandler);
+            FlinkCluster flinkCluster = postFormVals.newInstance();
 
 //            ParseDescribable<Describable> paramsConfigParseDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
 //            FlinkCluster flinkCluster = paramsConfigParseDescribable.getInstance();

@@ -26,13 +26,13 @@ import com.qlangtech.tis.fullbuild.indexbuild.ITabPartition;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.sql.parser.TabPartitions;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 
 import java.io.InputStream;
-import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -92,13 +92,13 @@ public class TestHiveInsertFromSelectParser extends TestCase {
 
     }
 
-    public  static List<ColumnMetaData> createPayInfoCols() {
+    public static List<ColumnMetaData> createPayInfoCols() {
         int index = 0;
         return Lists.newArrayList(
                 createCol(index++, "totalpay_id", DataType.createVarChar(32)),
-                createCol(index++, "kindpay", new DataType(Types.INTEGER)),
-                createCol(index++, "fee", new DataType(Types.DECIMAL,"decimal",20)),
-                createCol(index++, "is_enterprise_card_pay", new DataType(Types.BIT)),
+                createCol(index++, "kindpay", DataType.getType(JDBCTypes.INTEGER)),
+                createCol(index++, "fee", DataType.getType(JDBCTypes.DECIMAL)),
+                createCol(index++, "is_enterprise_card_pay", DataType.getType(JDBCTypes.BIT)),
                 createCol(index++, "pay_customer_ids", DataType.createVarChar(256)));
     }
 }

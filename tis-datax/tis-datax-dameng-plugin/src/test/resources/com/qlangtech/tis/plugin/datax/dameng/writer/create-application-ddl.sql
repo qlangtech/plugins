@@ -1,8 +1,8 @@
 CREATE TABLE "application_alias"
 (
-    "user_id"     INTEGER,
+    "user_id"     BIGINT,
     "user_name"   VARCHAR2(256 CHAR),
-    "id3"         INTEGER,
+    "id3"         BIGINT,
     "col4"        VARCHAR2(256 CHAR),
     "col5"        VARCHAR2(256 CHAR),
     "col6"        VARCHAR2(256 CHAR)

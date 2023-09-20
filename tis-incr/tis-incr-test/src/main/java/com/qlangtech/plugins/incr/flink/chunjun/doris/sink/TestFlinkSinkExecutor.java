@@ -37,7 +37,11 @@ import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -55,14 +59,27 @@ import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -269,7 +286,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
                 createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
-                log.info("create table ddl:\n{}", createDDL);
+               // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
             }
             // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
@@ -445,7 +462,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         cm = new CMeta();
         cm.setName(updateTime);
         // cm.setPk(true);
-        cm.setType(new DataType(Types.TIMESTAMP));
+        cm.setType(DataType.getType(JDBCTypes.TIMESTAMP));
         return cm;
     }
 

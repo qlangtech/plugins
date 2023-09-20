@@ -37,10 +37,9 @@ import static org.junit.Assert.assertTrue;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/9/15
  */
-public class TestDataXDaMengReader {
+public class TestDataXDaMengReader   {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-    public static final String dataXName = "dataXName";
     public static final String userName = "SYSDBA";
     public static final String password = "SYSDBA001";
 
@@ -95,7 +94,7 @@ public class TestDataXDaMengReader {
                 return DataXDaMengReader.class;
             }
         };
-        damengReader.dataXName = dataXName;
+        damengReader.dataXName = BasicRDBMSDataXReaderTest.dataXName;
         damengReader.template = DataXDaMengReader.getDftTemplate();
 
 
@@ -105,15 +104,15 @@ public class TestDataXDaMengReader {
         //校验证列和 where条件都设置的情况
         // valiateReaderCfgGenerate("mysql-datax-reader-assert.json", processor, mySQLReader);
 
-        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert.json", dataXName, damengReader);
+        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert.json", BasicRDBMSDataXReaderTest.dataXName, damengReader);
 
         damengReader.setSelectedTabs(TestSelectedTabs.createSelectedTabs(1));
 
-        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert-without-option-val.json", dataXName, damengReader);
+        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert-without-option-val.json", BasicRDBMSDataXReaderTest.dataXName, damengReader);
 
         // DefaultSplitTableStrategy splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
         datasource.splitTableStrategy = SplitTableStrategyUtils.createSplitTableStrategy();
-        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert-split-tabs.json", dataXName, damengReader);
+        ReaderTemplate.validateDataXReader("dameng-datax-reader-assert-split-tabs.json", BasicRDBMSDataXReaderTest.dataXName, damengReader);
 
         EasyMock.verify(datasource, dataDumper);
     }
@@ -140,7 +139,7 @@ public class TestDataXDaMengReader {
         readerConf.set("parameter.connection[0].jdbcUrl[0]", daMengDataSource.getJdbcUrls().get(0));
         readerConf.set(DataxExecutor.connectKeyParameter
                 + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, daMengDataSource.identityValue());
-        ReaderTemplate.realExecute(TestDataXDaMengReader.dataXName, readerConf, dataxReaderResult, dataxReader);
+        ReaderTemplate.realExecute(BasicRDBMSDataXReaderTest.dataXName, readerConf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
 
     }

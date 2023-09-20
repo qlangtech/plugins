@@ -51,32 +51,32 @@ import java.util.Optional;
 public class ReaderTemplate {
 
     public static void validateDataXReader(String assertFileName, String dataXName, DataxReader dataxReader) throws IOException {
-        IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
+        // IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
 
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
+        //  EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
         IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
-        EasyMock.expect(processor.getWriter(null, true)).andReturn(dataxWriter).anyTimes();
+        //  EasyMock.expect(processor.getWriter(null, true)).andReturn(dataxWriter).anyTimes();
         IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
         EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
 
         //  EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
 
-        EasyMock.replay(processor, dataxGlobalCfg, dataxWriter, dataxContext);
+        EasyMock.replay(dataxGlobalCfg, dataxWriter, dataxContext);
 
 //        try (InputStream reader = this.getClass().getResourceAsStream("oss-datax-reader-assert.json")) {
 //            JSONObject jsonObject = JSON.parseObject(IOUtils.toString(reader, TisUTF8.getName()));
 //            System.out.println("nullFormat:" + jsonObject.getJSONObject("parameter").getString("nullFormat"));
 //        }
 
-        valiateReaderCfgGenerate(assertFileName, processor, dataxReader, dataxWriter, dataXName);
+        valiateReaderCfgGenerate(assertFileName, dataxReader, dataxWriter);
 
 
-        EasyMock.verify(processor, dataxGlobalCfg, dataxWriter, dataxContext);
+        EasyMock.verify(dataxGlobalCfg, dataxWriter, dataxContext);
     }
 
-    private static void valiateReaderCfgGenerate(String assertFileName, IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
-        String readerCfg = generateReaderCfg(processor, dataXReader, dataxWriter, dataXName);
+    private static void valiateReaderCfgGenerate(String assertFileName, DataxReader dataXReader, IDataxWriter dataxWriter) throws IOException {
+        String readerCfg = generateReaderCfg(dataXReader, dataxWriter);
         TestCase.assertNotNull(readerCfg);
         System.out.println(readerCfg);
         com.qlangtech.tis.trigger.util.JsonUtil.assertJSONEqual(dataXReader.getClass(), assertFileName, readerCfg, (msg, expect, actual) -> {
@@ -86,7 +86,7 @@ public class ReaderTemplate {
         Assert.assertEquals(dataXReader.getDataxMeta().getName(), reader.getString("name"));
     }
 
-    public static String generateReaderCfg(IDataxProcessor processor, DataxReader dataXReader, String dataXName) throws IOException {
+    public static String generateReaderCfg(DataxReader dataXReader) throws IOException {
 
         IDataxWriter dataxWriter = new IDataxWriter() {
             @Override
@@ -104,10 +104,10 @@ public class ReaderTemplate {
                 return null;
             }
         };
-        return generateReaderCfg(processor, dataXReader, dataxWriter, dataXName);
+        return generateReaderCfg(dataXReader, dataxWriter);
     }
 
-    private static String generateReaderCfg(IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName) throws IOException {
+    private static String generateReaderCfg(DataxReader dataXReader, IDataxWriter dataxWriter) throws IOException {
 
         IDataxReaderContext dataxReaderContext = null;
         Iterator<IDataxReaderContext> subTasks = Objects.requireNonNull(dataXReader.getSubTasks(), "subTasks can not be null");
@@ -118,12 +118,15 @@ public class ReaderTemplate {
         }
         TestCase.assertEquals(1, dataxReaderContextCount);
         TestCase.assertNotNull(dataxReaderContext);
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, dataXName, processor) {
-            @Override
-            protected final String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
-                return dataXReader.getTemplate();
-            }
-        };
+
+
+        DataXCfgGenerator dataProcessor = BasicTemplate.createMockDataXCfgGenerator(dataXReader.getTemplate());
+//        new DataXCfgGenerator(null, dataXName, processor) {
+//            @Override
+//            protected final String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
+//                return dataXReader.getTemplate();
+//            }
+//        };
 
         return dataProcessor.generateDataxConfig(dataxReaderContext, dataxWriter, dataXReader, Optional.empty());
     }
@@ -149,9 +152,12 @@ public class ReaderTemplate {
                     cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
                     cfg.set("job.content[0].reader" //
                             , readerCfg);
-                    cfg.set("job.content[0].writer", Configuration.from("{\n" + "    \"name\": \"streamwriter\",\n" + "    \"parameter\": {\n" +
+                    cfg.set("job.content[0].writer", Configuration.from("{\n" //
+                            + "    \"name\": \"streamwriter\",\n"//
+                            + "    \"parameter\": {\n" + //
                             //"        \"print\": true\n" +
-                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
+                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" //
+                            + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
 
                     DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
                     return cfg;

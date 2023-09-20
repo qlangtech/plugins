@@ -176,11 +176,11 @@ public class WriterTemplate {
         return dataProcessor.generateDataxConfig(mockReaderContext, dataXWriter, dataXReader, Optional.ofNullable(tableMap));
     }
 
-    public static void realExecuteDump(final WriterJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+    public static void realExecuteDump(final DataXCfgJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         throw new UnsupportedOperationException("please use: realExecuteDump(String dataXName, final WriterJson writerJson, IDataXPluginMeta dataxWriter)");
     }
 
-    public static void realExecuteDump(String dataXName, final WriterJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
+    public static void realExecuteDump(String dataXName, final DataXCfgJson writerJson, IDataXPluginMeta dataxWriter) throws IllegalAccessException {
         final IReaderPluginMeta readerMeta = new IReaderPluginMeta() {
             @Override
             public DataXMeta getDataxMeta() {
@@ -236,17 +236,17 @@ public class WriterTemplate {
 
             @Override
             public Configuration getWriterJsonCfg() {
-                Configuration cfg = null;
-                if (writerJson.isPath()) {
-                    cfg = IOUtils.loadResourceFromClasspath(
-                            dataxWriter.getClass(), writerJson.getVal(), true
-                            , (writerJsonInput) -> {
-                                Configuration c = Configuration.from(writerJsonInput);
-                                return c;
-                            });
-                } else {
-                    cfg = Configuration.from(writerJson.getVal());
-                }
+                Configuration cfg = writerJson.getConfiguration();
+//                if (writerJson.isPath()) {
+//                    cfg = IOUtils.loadResourceFromClasspath(
+//                            dataxWriter.getClass(), writerJson.getVal(), true
+//                            , (writerJsonInput) -> {
+//                                Configuration c = Configuration.from(writerJsonInput);
+//                                return c;
+//                            });
+//                } else {
+//                    cfg = Configuration.from(writerJson.getVal());
+//                }
                 for (Function<Configuration, Configuration> setter : writerJson.cfgSetters) {
                     cfg = setter.apply(cfg);
                 }

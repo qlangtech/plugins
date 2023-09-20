@@ -189,6 +189,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                         return null;
                     }
 
+
                     @Override
                     public DataType varcharType(DataType type) {
                         if (type.getColumnSize() < 1) {

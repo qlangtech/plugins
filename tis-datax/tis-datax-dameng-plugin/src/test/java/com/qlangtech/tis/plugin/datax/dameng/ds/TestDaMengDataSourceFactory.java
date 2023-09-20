@@ -34,6 +34,18 @@ public class TestDaMengDataSourceFactory {
         dsFactory.visitAllConnection((conn) -> {
             try (Statement statement = conn.createStatement()) {
 
+                try (ResultSet countResult = statement.executeQuery("select count(1) from TIS.\"full_types\"")) {
+                    if (countResult.next()) {
+                        System.out.println("countResult:"+countResult.getInt(1));
+                    }
+                }
+             //   statement.execute("drop table TIS.\"instancedetail\"");
+//                try (ResultSet countResult = ) {
+//                    if (countResult.next()) {
+//                        System.out.println("countResult:"+countResult.getInt(1));
+//                    }
+//                }
+
                 // statement.execute("create schema tis authorization SYSDBA");
 
 //                statement.execute("CREATE TABLE \"application_alias\"\n" +
@@ -66,20 +78,20 @@ public class TestDaMengDataSourceFactory {
 //                        System.out.println(rs.getString(1) + "/" + rs.getString(2));
 //                    }
 //                }
-                System.out.println("============================================");
-                try (ResultSet rs = statement.executeQuery("SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1")) {
-                    while (rs.next()) {
-                        System.out.println(rs.getString(1));
-                    }
-                }
-                System.out.println("----------------------------------");
+//                System.out.println("============================================");
+//                try (ResultSet rs = statement.executeQuery("SELECT owner ||'.'|| table_name FROM all_tables WHERE REGEXP_INSTR(table_name,'[\\.$]+') < 1")) {
+//                    while (rs.next()) {
+//                        System.out.println(rs.getString(1));
+//                    }
+//                }
+//                System.out.println("----------------------------------");
 //                try (ResultSet rs = statement.executeQuery("SELECT TABLEDEF('TIS','TEST')")) {
 //                    if (rs.next()) {
 //                        System.out.println(rs.getString(1));
 //                    }
 //                }
 
-                try (ResultSet rs = statement.executeQuery("SELECT TABLEDEF('TIS','application_alias')")) {
+                try (ResultSet rs = statement.executeQuery("SELECT TABLEDEF('TIS','full_types')")) {
                     if (rs.next()) {
                         System.out.println(rs.getString(1));
                     }

@@ -1,11 +1,8 @@
 package com.qlangtech.tis.plugin.datax.dameng.writer;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.tis.datax.DataXJobInfo;
-import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
@@ -16,20 +13,15 @@ import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IDBReservedKeys;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
-import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -73,7 +65,8 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
             context.setPassword(dsFactory.password);
             context.setUsername(dsFactory.userName);
             context.setTabName(table.getTableName());
-            context.cols = IDataxProcessor.TabCols.create(dsFactory,tm);
+            context.cols = IDataxProcessor.TabCols.create(new IDBReservedKeys() {
+            }, tm);
             context.setDbName(this.dbName);
             //    context.writeMode = this.writeMode;
             context.setPreSql(this.preSql);
@@ -99,57 +92,57 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
         //        if (!this.autoCreateTable) {
         //            return null;
         //        }
-        StringBuffer script = new StringBuffer();
-        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
-        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
-        try {
-            if (threadBingDataXReader instanceof DataXDaMengReader
-                    // 没有使用别名
-                    && tableMapper.hasNotUseAlias()) {
-                DataXDaMengReader mySQLReader = (DataXDaMengReader) threadBingDataXReader;
-                DaMengDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
-                dsFactory.visitFirstConnection((c) -> {
-                    Connection conn = c.getConnection();
-                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
-                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
-                    Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
-                    if (physicsTabNames.isPresent()) {
-                        String sourceTabName = physicsTabNames.get()[0];
-                        try (Statement statement = conn.createStatement()) {
-                            // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
-                            //
-                            try (ResultSet resultSet =
-                                         statement.executeQuery("SELECT TABLEDEF('TIS','" + sourceTabName + "')")) {
-                                if (!resultSet.next()) {
-                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
-                                            "exec" + " show create table script");
-                                }
-                                String ddl = resultSet.getString(2);
-                                script.append(ddl);
-                            }
-                        }
-                    } else {
-                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
-                                "physicsTabs" + " in datasource:" + dsFactory.identityValue());
-                    }
-
-                });
-                return new CreateTableSqlBuilder.CreateDDL(script, null) {
-                    @Override
-                    public String getSelectAllScript() {
-                        //return super.getSelectAllScript();
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-        } catch (RuntimeException e) {
-            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
-                throw e;
-            } else {
-                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
-                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
-            }
-        }
+//        StringBuffer script = new StringBuffer();
+//        DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
+//        Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
+//        try {
+//            if (threadBingDataXReader instanceof DataXDaMengReader
+//                    // 没有使用别名
+//                    && tableMapper.hasNotUseAlias()) {
+//                DataXDaMengReader mySQLReader = (DataXDaMengReader) threadBingDataXReader;
+//                DaMengDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
+//                dsFactory.visitFirstConnection((c) -> {
+//                    Connection conn = c.getConnection();
+//                    DataXJobInfo jobInfo = dsFactory.getTablesInDB().createDataXJobInfo(//
+//                            DataXJobSubmit.TableDataXEntity.createTableEntity(null, c.getUrl(), tableMapper.getFrom()));
+//                    Optional<String[]> physicsTabNames = jobInfo.getTargetTableNames();
+//                    if (physicsTabNames.isPresent()) {
+//                        String sourceTabName = physicsTabNames.get()[0];
+//                        try (Statement statement = conn.createStatement()) {
+//                            // FIXME: 如果源端是表是分表，则在Sink端需要用户自行将DDL的表名改一下
+//                            //
+//                            try (ResultSet resultSet =
+//                                         statement.executeQuery("SELECT TABLEDEF('TIS','" + sourceTabName + "')")) {
+//                                if (!resultSet.next()) {
+//                                    throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not " +
+//                                            "exec" + " show create table script");
+//                                }
+//                                String ddl = resultSet.getString(2);
+//                                script.append(ddl);
+//                            }
+//                        }
+//                    } else {
+//                        throw new IllegalStateException("table:" + tableMapper.getFrom() + " can not find " +
+//                                "physicsTabs" + " in datasource:" + dsFactory.identityValue());
+//                    }
+//
+//                });
+//                return new CreateTableSqlBuilder.CreateDDL(script, null) {
+//                    @Override
+//                    public String getSelectAllScript() {
+//                        //return super.getSelectAllScript();
+//                        throw new UnsupportedOperationException();
+//                    }
+//                };
+//            }
+//        } catch (RuntimeException e) {
+//            if (ExceptionUtils.indexOfThrowable(e, TableNotFoundException.class) < 0) {
+//                throw e;
+//            } else {
+//                // 当Reader 的MySQL Source端中采用为分表策略，则会取不到表，直接采用一下基于metadata数据来生成DDL
+//                logger.warn("table:" + tableMapper.getFrom() + " is not exist in Reader Source");
+//            }
+//        }
 
         // ddl中timestamp字段个数不能大于1个要控制，第二个的时候要用datetime
         //final AtomicInteger timestampCount = new AtomicInteger();
@@ -159,7 +152,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
-                if (pks.isEmpty()) {
+                if (CollectionUtils.isEmpty(pks)) {
                     return;
                 }
                 script.append(" , CONSTRAINT ").append(tableMapper.getTo()).append("_pk PRIMARY KEY (")
@@ -216,8 +209,9 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
                     case SMALLINT:
                         return "SMALLINT";
                     case INTEGER:
-                    case BIGINT:
                         return "INTEGER";
+                    case BIGINT:
+                        return "BIGINT";
                     case FLOAT:
                         return "BINARY_FLOAT";
                     case DOUBLE:

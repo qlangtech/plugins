@@ -38,7 +38,7 @@ import com.qlangtech.tis.hive.Hms;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.offline.FileSystemFactory;
-import com.qlangtech.tis.plugin.common.WriterJson;
+import com.qlangtech.tis.plugin.common.DataXCfgJson;
 import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.impl.TextFSFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
@@ -141,7 +141,7 @@ public class TestDataXHiveWriterDump {
         preExec.run();
 
         WriterTemplate.realExecuteDump(TestDataXHiveWriter.mysql2hiveDataXName
-                , WriterJson.path("hive-datax-writer-assert-without-option-val.json"), dataxWriter);
+                , DataXCfgJson.path("hive-datax-writer-assert-without-option-val.json"), dataxWriter);
 
         IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, applicationTab.getSourceTab(), null);
         postExec.run();

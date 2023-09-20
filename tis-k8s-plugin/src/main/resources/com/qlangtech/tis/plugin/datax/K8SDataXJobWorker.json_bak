@@ -5,7 +5,7 @@
   "zkAddress": {
     "placeholder": "127.0.0.1:2181/tis",
     "help": "执行器利用基于Zookeeper的分布式队列来向K8S集群中分发DataX任务",
-    "dftVal": ""
+    "dftVal": "com.qlangtech.tis.plugin.datax.K8SDataXJobWorker.getDefaultZookeeperAddress()"
   },
   "zkQueuePath": {
     "dftVal": "/datax/jobs",

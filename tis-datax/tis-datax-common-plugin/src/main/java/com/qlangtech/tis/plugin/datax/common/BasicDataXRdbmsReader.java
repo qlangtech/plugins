@@ -65,8 +65,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     public String template;
 
     @SubForm(desClazz = SelectedTab.class //
-            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB"
-            + "(filter);", atLeastOne = true)
+            , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
     private transient int preSelectedTabsHash;

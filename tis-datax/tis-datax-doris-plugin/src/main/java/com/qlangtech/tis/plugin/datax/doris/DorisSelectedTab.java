@@ -47,7 +47,7 @@ public class DorisSelectedTab extends SelectedTab {
             }
             DorisSelectedTab tab = (DorisSelectedTab) postFormVals;
             if (tab.seqKey.isOn()) {
-                if (!tab.cols.contains(tab.seqKey.getSeqColName())) {
+                if (!tab.getColKeys().contains(tab.seqKey.getSeqColName())) {
                     msgHandler.addFieldError(context, KEY_FIELD_COLS, "必须要选择`" + tab.seqKey.getSeqColName() + "`");
                     return false;
                 }

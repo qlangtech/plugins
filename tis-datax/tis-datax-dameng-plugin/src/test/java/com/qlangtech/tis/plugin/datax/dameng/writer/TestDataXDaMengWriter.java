@@ -7,13 +7,13 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
-import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.common.BasicTemplate;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.dameng.RdbmsDataxContext;
@@ -62,22 +62,7 @@ public class TestDataXDaMengWriter {
             }
         };
         writer.autoCreateTable = true;
-        DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
-            @Override
-            public <T extends ISelectedTab> List<T> getSelectedTabs() {
-                return null;
-            }
-
-            @Override
-            public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
-                return null;
-            }
-
-            @Override
-            public String getTemplate() {
-                return null;
-            }
-        });
+        setPlaceholderReader();
 
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
             CMeta col = new CMeta();
@@ -112,8 +97,26 @@ public class TestDataXDaMengWriter {
                 , StringUtils.trimToEmpty(ddl.getDDLScript().toString()));
     }
 
-    private IDataxProcessor.TableMap getTabApplication(
-            Consumer<List<CMeta>>... colsProcess) {
+    public static void setPlaceholderReader() {
+        DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
+            @Override
+            public <T extends ISelectedTab> List<T> getSelectedTabs() {
+                return null;
+            }
+
+            @Override
+            public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
+                return null;
+            }
+
+            @Override
+            public String getTemplate() {
+                return null;
+            }
+        });
+    }
+
+    private IDataxProcessor.TableMap getTabApplication(Consumer<List<CMeta>>... colsProcess) {
         String tableName = "application";
         SelectedTab tab = new SelectedTab();
         tab.name = tableName;
@@ -173,30 +176,30 @@ public class TestDataXDaMengWriter {
                 , dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);
 
 
-        DataXDaMengWriter mySQLWriter = new DataXDaMengWriter();
-        mySQLWriter.dataXName = dataXName;
+        DataXDaMengWriter damengWriter = new DataXDaMengWriter();
+        damengWriter.dataXName = dataXName;
         // mySQLWriter.writeMode = "replace";
-        mySQLWriter.dbName = dbWriterName;
-        mySQLWriter.template = DataXDaMengWriter.getDftTemplate();
-        mySQLWriter.batchSize = 1001;
-        mySQLWriter.preSql = "delete from test";
-        mySQLWriter.postSql = "delete from test1";
-        mySQLWriter.session = "set session sql_mode='ANSI'";
-        validateConfigGenerate("dameng-datax-writer-assert.json", mySQLWriter);
+        damengWriter.dbName = dbWriterName;
+        damengWriter.template = DataXDaMengWriter.getDftTemplate();
+        damengWriter.batchSize = 1001;
+        damengWriter.preSql = "delete from test";
+        damengWriter.postSql = "delete from test1";
+        damengWriter.session = "set session sql_mode='ANSI'";
+        validateConfigGenerate("dameng-datax-writer-assert.json", damengWriter);
         //  System.out.println(mySQLWriter.getTemplate());
 
 
         // 将非必须输入的值去掉再测试一遍
-        mySQLWriter.batchSize = null;
-        mySQLWriter.preSql = null;
-        mySQLWriter.postSql = null;
-        mySQLWriter.session = null;
-        validateConfigGenerate("mysql-datax-writer-assert-without-option-val.json", mySQLWriter);
+        damengWriter.batchSize = null;
+        damengWriter.preSql = null;
+        damengWriter.postSql = null;
+        damengWriter.session = null;
+        validateConfigGenerate("dameng-datax-writer-assert-without-option-val.json", damengWriter);
 
-        mySQLWriter.preSql = " ";
-        mySQLWriter.postSql = " ";
-        mySQLWriter.session = " ";
-        validateConfigGenerate("mysql-datax-writer-assert-without-option-val.json", mySQLWriter);
+        damengWriter.preSql = " ";
+        damengWriter.postSql = " ";
+        damengWriter.session = " ";
+        validateConfigGenerate("dameng-datax-writer-assert-without-option-val.json", damengWriter);
 
 
     }
@@ -208,7 +211,7 @@ public class TestDataXDaMengWriter {
         Assert.assertNotNull(subTaskCtx);
 
         RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;
-        Assert.assertEquals("\"\"col1\"\",\"\"col2\"\",\"\"col3\"\"", mySQLDataxContext.getColsQuotes());
+        Assert.assertEquals("\"col1\",\"col2\",\"col3\"", mySQLDataxContext.getColsQuotes());
         Assert.assertEquals("jdbc:dm://192.168.28.201:30236?schema=TIS", mySQLDataxContext.getJdbcUrl());
         Assert.assertEquals("SYSDBA001", mySQLDataxContext.getPassword());
         Assert.assertEquals("orderinfo_new", mySQLDataxContext.getTabName());
@@ -217,28 +220,29 @@ public class TestDataXDaMengWriter {
         IDataxProcessor processor = EasyMock.mock("dataxProcessor", IDataxProcessor.class);
         IDataxGlobalCfg dataxGlobalCfg = EasyMock.mock("dataxGlobalCfg", IDataxGlobalCfg.class);
 
-        EasyMock.expect(dataxGlobalCfg.getTemplate()).andReturn(DataXDaMengWriter.getDftTemplate());
+        EasyMock.expect(dataxGlobalCfg.getTemplate()).andReturn(DataXDaMengWriter.getDftTemplate()).anyTimes();
 
         IDataxReader dataxReader = EasyMock.mock("dataxReader", IDataxReader.class);
         // EasyMock.expect(dataxReader.getTemplate()).andReturn(StringUtils.EMPTY);
-        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
-        EasyMock.expect(processor.getWriter(null)).andReturn(mySQLWriter);
-        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg);
+//        EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
+//        EasyMock.expect(processor.getWriter(null)).andReturn(mySQLWriter);
+        EasyMock.expect(processor.getDataXGlobalCfg()).andReturn(dataxGlobalCfg).anyTimes();
         EasyMock.replay(processor, dataxGlobalCfg, dataxReader);
 
 
-        DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, "testDataXName", processor) {
-            @Override
-            protected String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
-                return dataxGlobalCfg.getTemplate();
-            }
-        };
-
-        String cfgResult = dataProcessor.generateDataxConfig(null, mySQLWriter, dataxReader, tableMap);
+        String cfgResult = generateDataXCfg(mySQLWriter, tableMap);
 
         JsonUtil.assertJSONEqual(this.getClass(), assertFileName, cfgResult, (m, e, a) -> {
             Assert.assertEquals(m, e, a);
         });
         EasyMock.verify(processor, dataxGlobalCfg, dataxReader);
     }
+
+    public static String generateDataXCfg(DataXDaMengWriter mySQLWriter, Optional<IDataxProcessor.TableMap> tableMap) throws IOException {
+        DataXCfgGenerator dataProcessor = BasicTemplate.createMockDataXCfgGenerator(DataXDaMengWriter.getDftTemplate());
+
+        String cfgResult = dataProcessor.generateDataxConfig(null, mySQLWriter, null, tableMap);
+        return cfgResult;
+    }
+
 }

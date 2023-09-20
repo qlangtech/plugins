@@ -147,7 +147,16 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         }
     }
 
-    public static void process(String dataXName, IDataxProcessor processor
+    /**
+     * @param dataXName
+     * @param processor
+     * @param dsGetter
+     * @param dataXWriter
+     * @param jdbcConn
+     * @param tableName
+     * @return tableExist 表是否存在
+     */
+    public static boolean process(String dataXName, IDataxProcessor processor
             , IDataSourceFactoryGetter dsGetter, IDataxWriter dataXWriter, DataSourceMeta.JDBCConnection jdbcConn
             , String tableName) {
         if (StringUtils.isEmpty(dataXName)) {
@@ -193,10 +202,12 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
                     logger.info("table:{},cols:{} already exist ,skip the create table step", tab.getFullName()
                             , cols.stream().map((col) -> col.getName()).collect(Collectors.joining(",")));
                 }
+                return tableExist;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return false;
     }
 
 

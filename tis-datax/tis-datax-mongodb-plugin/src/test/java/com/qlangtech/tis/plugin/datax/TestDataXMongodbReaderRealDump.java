@@ -1,11 +1,9 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.mongodb.AuthenticationMechanism;
+import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
-import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import org.apache.commons.io.FileUtils;
@@ -17,7 +15,6 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Objects;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -66,16 +63,18 @@ public class TestDataXMongodbReaderRealDump {
             }
         };
 
-        File selTabs = folder.newFile("selected-tabs.xml");
-        IOUtils.loadResourceFromClasspath(TestDataXMongodbReaderRealDump.class
-                , "mongo-datax-reader-cfg-selected-tabs.xml", true, (input) -> {
-                    FileUtils.copyInputStreamToFile(input, selTabs);
-                    return null;
-                });
 
-
-        PluginStore<SelectedTab> tabsStore = new PluginStore<>(SelectedTab.class, new XmlFile(selTabs));
-        reader.selectedTabs = Collections.singletonList(Objects.requireNonNull(tabsStore.getPlugin(), "select tab can not be null"));
+//        File selTabs = folder.newFile("selected-tabs.xml");
+//        IOUtils.loadResourceFromClasspath(TestDataXMongodbReaderRealDump.class
+//                , "mongo-datax-reader-cfg-selected-tabs.xml", true, (input) -> {
+//                    FileUtils.copyInputStreamToFile(input, selTabs);
+//                    return null;
+//                });
+//
+//
+//        PluginStore<SelectedTab> tabsStore = new PluginStore<>(SelectedTab.class, new XmlFile(selTabs));
+        reader.selectedTabs = Collections.singletonList(
+                TestSelectedTab.load(folder, TestDataXMongodbReaderRealDump.class, "mongo-datax-reader-cfg-selected-tabs.xml"));
         reader.selectedTabs.forEach((tab) -> {
             TestDataXMongodbReader.setMongoSourceTabExtend(tab);
         });

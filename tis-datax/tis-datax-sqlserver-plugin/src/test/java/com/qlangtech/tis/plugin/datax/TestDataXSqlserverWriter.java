@@ -108,7 +108,9 @@ public class TestDataXSqlserverWriter extends TestCase {
     }
 
     public static SqlServerDatasourceFactory getSqlServerDSFactory() {
-        SqlServerDatasourceFactory dsFactory = new SqlServerDatasourceFactory();
+        SqlServerDatasourceFactory dsFactory = new SqlServerDatasourceFactory(){
+
+        };
         dsFactory.dbName = "tis";
         dsFactory.password = "Hello1234!";
         dsFactory.userName = "sa";

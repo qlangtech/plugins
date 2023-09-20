@@ -18,6 +18,9 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.XmlFile;
+import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -25,8 +28,12 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -35,7 +42,19 @@ import java.util.stream.Collectors;
  * @create: 2022-09-28 16:23
  **/
 public class TestSelectedTab extends SelectedTab {
-   // final List<CMeta> colsMeta;
+    // final List<CMeta> colsMeta;
+
+    public static SelectedTab load(TemporaryFolder folder, Class<?> clazz, String xmlFileName) throws Exception {
+        File selTabs = folder.newFile(xmlFileName);
+        IOUtils.loadResourceFromClasspath(clazz
+                , xmlFileName, true, (input) -> {
+                    FileUtils.copyInputStreamToFile(input, selTabs);
+                    return null;
+                });
+
+        PluginStore<SelectedTab> tabsStore = new PluginStore<>(SelectedTab.class, new XmlFile(selTabs));
+        return Objects.requireNonNull(tabsStore.getPlugin(), "select tab can not be null");
+    }
 
     public static SelectedTab createSelectedTab(EntityName tabName
             , DataSourceFactory dataSourceFactory) throws TableNotFoundException {

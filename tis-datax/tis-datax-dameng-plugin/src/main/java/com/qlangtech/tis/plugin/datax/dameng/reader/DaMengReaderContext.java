@@ -4,8 +4,10 @@ import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -30,6 +32,11 @@ public class DaMengReaderContext extends RdbmsReaderContext<DataXDaMengReader, D
         // this.splitTableStrategy.getAllPhysicsTabs(this.dsFactory, this.getJdbcUrl(), this.sourceTableName);
         // return !(this.splitTableStrategy instanceof NoneSplitTableStrategy);
         return this.splitTableStrategy.isSplittable();
+    }
+
+
+    public String getTableWithEscape() {
+        return EntityName.parse(this.sourceTableName).getFullName(Optional.of(colEscapeChar()));
     }
 
     public String getSplitTabs() {

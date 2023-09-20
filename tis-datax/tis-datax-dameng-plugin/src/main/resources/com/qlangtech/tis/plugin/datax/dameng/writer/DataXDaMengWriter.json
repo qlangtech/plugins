@@ -1,2 +1,21 @@
 {
+  "dbName": {
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"DaMeng\")",
+    "creator": {
+      "plugin": [
+        {
+          "descName": "DaMeng"
+        }
+      ]
+    }
+  },
+  "session": {
+    "disable": true
+  },
+  "autoCreateTable": {
+    "disable": false
+  },
+  "template": {
+    "dftVal": "com.qlangtech.tis.plugin.datax.dameng.writer.DataXDaMengWriter.getDftTemplate()"
+  }
 }

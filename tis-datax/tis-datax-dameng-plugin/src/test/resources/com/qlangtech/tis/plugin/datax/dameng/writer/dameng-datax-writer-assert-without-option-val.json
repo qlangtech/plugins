@@ -1,7 +1,6 @@
 {
   "name":"damengwriter",
   "parameter":{
-    "batchSize":1001,
     "column":[
       "col1",
       "col2",
@@ -16,15 +15,6 @@
       }
     ],
     "password":"SYSDBA001",
-    "postSql":[
-      "delete from test1"
-    ],
-    "preSql":[
-      "delete from test"
-    ],
-    "session":[
-      "set session sql_mode='ANSI'"
-    ],
     "username":"SYSDBA"
   }
 }

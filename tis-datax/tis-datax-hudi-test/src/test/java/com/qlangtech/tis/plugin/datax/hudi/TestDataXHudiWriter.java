@@ -229,8 +229,7 @@ public class TestDataXHudiWriter {
 
         // IDataxProcessor processor, DataxReader dataXReader, IDataxWriter dataxWriter, String dataXName
 
-        final String dataXReaderCfg = ReaderTemplate.generateReaderCfg(
-                processor, dataxReader, HdfsFileSystemFactoryTestUtils.testDataXName.getName());
+        final String dataXReaderCfg = ReaderTemplate.generateReaderCfg(dataxReader);
         IReaderPluginMeta readerPluginMeta = new IReaderPluginMeta() {
             @Override
             public String getReaderJsonCfgContent() {
@@ -267,7 +266,7 @@ public class TestDataXHudiWriter {
         Assert.assertNotNull("preExec can not be null", preExec);
         preExec.run();
 
-        WriterTemplate.realExecuteDump( readerPluginMeta, writerMeta);
+        WriterTemplate.realExecuteDump(readerPluginMeta, writerMeta);
 
         // MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(123));
 
@@ -334,7 +333,7 @@ public class TestDataXHudiWriter {
             preExecuteTask.run();
 
             WriterTemplate.realExecuteDump(
-                    WriterJson.path(HudiTest.hudi_datax_writer_assert_without_optional)
+                    DataXCfgJson.path(HudiTest.hudi_datax_writer_assert_without_optional)
                             .addCfgSetter((cfg) -> {
                                 //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
                                 return cfg;

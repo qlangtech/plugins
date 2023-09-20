@@ -14,8 +14,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/9/15
  */
-public class DaMengWriter
-        extends Writer {
+public class DaMengWriter extends Writer {
     private static final DataBaseType DATABASE_TYPE = DataBaseType.DaMeng;
 
     public static class Job extends Writer.Job {
@@ -31,16 +30,14 @@ public class DaMengWriter
         @Override
         public void init() {
             this.originalConfig = super.getPluginJobConf();
-            this.commonRdbmsWriterJob = new CommonRdbmsWriter.Job(DATABASE_TYPE, this.containerContext);
-            this.commonRdbmsWriterJob.init(this.originalConfig);
-
             // 判断表是否存在，如果不存在则创建表
             try {
                 RdbmsWriter.initWriterTable(this.containerContext, this.originalConfig);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-
+            this.commonRdbmsWriterJob = new CommonRdbmsWriter.Job(DATABASE_TYPE, this.containerContext);
+            this.commonRdbmsWriterJob.init(this.originalConfig);
         }
 
         // 一般来说，是需要推迟到 task 中进行pre 的执行（单表情况例外）

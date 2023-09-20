@@ -61,12 +61,13 @@ public class TestChujunKafkaSinkFactoryIntegration extends TestFlinkSinkExecutor
     @Override
     protected SelectedTab createSelectedTab(List<CMeta> metaCols) {
         //  KafkaSelectedTab kfkTable = (KafkaSelectedTab) selectedTab;
-        return new KafkaSelectedTab() {
-            @Override
-            public List<CMeta> getCols() {
-                return metaCols;
-            }
-        };
+        KafkaSelectedTab kafkaTab = new KafkaSelectedTab();
+        kafkaTab.cols.addAll(metaCols);
+//        @Override
+//        public List<CMeta> getCols() {
+//            return metaCols;
+//        }
+        return kafkaTab;
     }
 
     @Override

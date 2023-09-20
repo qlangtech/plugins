@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -45,7 +46,6 @@ import org.elasticsearch.client.Client;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -87,23 +87,23 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         List<CMeta> cols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
-        cm.setType(new DataType(Types.VARCHAR, "varchar", 6));
+        cm.setType(DataType.createVarChar(6));
         cols.add(cm);
 
         cm = new CMeta();
         cm.setName(colNum);
-        cm.setType(new DataType(Types.INTEGER));
+        cm.setType(DataType.getType(JDBCTypes.INTEGER));
         cols.add(cm);
 
         cm = new CMeta();
         cm.setName(colId);
-        cm.setType(new DataType(Types.VARCHAR, "varchar", 32));
+        cm.setType(DataType.createVarChar(32));
         cm.setPk(true);
         cols.add(cm);
 
         cm = new CMeta();
         cm.setName(colCreateTime);
-        cm.setType(new DataType(Types.BIGINT));
+        cm.setType(DataType.getType(JDBCTypes.BIGINT));
         cols.add(cm);
 
         EasyMock.expect(totalpayinfo.getCols()).andReturn(cols).anyTimes();

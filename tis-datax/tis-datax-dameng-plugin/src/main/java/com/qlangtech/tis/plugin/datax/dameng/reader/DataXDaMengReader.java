@@ -20,6 +20,11 @@ public class DataXDaMengReader extends BasicDataXRdbmsReader<DaMengDataSourceFac
     }
 
     @Override
+    public Integer getRowFetchSize() {
+        return 9999;
+    }
+
+    @Override
     protected RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab, IDataSourceDumper dumper) {
 
         return new DaMengReaderContext(jobName, tab.getName(), dumper, this);

@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.common;
 
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.extension.impl.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.function.Function;
@@ -28,32 +30,54 @@ import java.util.function.Function;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-15 14:52
  **/
-public class WriterJson {
-    private final String val;
+public abstract class DataXCfgJson {
+    //    private final String val;
     private final boolean path;
 
     List<Function<Configuration, Configuration>> cfgSetters = Lists.newArrayList();
 
-    public WriterJson addCfgSetter(Function<Configuration, Configuration> setter) {
+    public DataXCfgJson addCfgSetter(Function<Configuration, Configuration> setter) {
         this.cfgSetters.add(setter);
         return this;
     }
 
-    private WriterJson(String val, boolean path) {
-        this.val = val;
+    private DataXCfgJson(String val, boolean path) {
+//        this.val = val;
         this.path = path;
     }
 
-    public static WriterJson path(String path) {
-        return new WriterJson(path, true);
+    public static DataXCfgJson path(Class ownerClazz, String path) {
+        return new DataXCfgJson(path, true) {
+            @Override
+            public Configuration getConfiguration() {
+                return IOUtils.loadResourceFromClasspath(
+                        ownerClazz, path, true
+                        , (writerJsonInput) -> {
+                            Configuration c = Configuration.from(writerJsonInput);
+                            return c;
+                        });
+            }
+        };
     }
 
-    public static WriterJson content(String content) {
-        return new WriterJson(content, false);
+    public static DataXCfgJson content(String content) {
+        if (StringUtils.isEmpty(content)) {
+            throw new IllegalArgumentException("param content can not be null");
+        }
+        return new DataXCfgJson(content, false) {
+            @Override
+            public Configuration getConfiguration() {
+
+                return Configuration.from(content);
+            }
+        };
     }
 
-    public String getVal() {
-        return val;
+
+    public abstract Configuration getConfiguration();
+
+    public final String getVal() {
+        return getConfiguration().beautify();
     }
 
     public boolean isPath() {

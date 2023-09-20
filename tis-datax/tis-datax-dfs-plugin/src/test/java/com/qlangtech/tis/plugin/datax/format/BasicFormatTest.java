@@ -18,7 +18,12 @@
 
 package com.qlangtech.tis.plugin.datax.format;
 
-import com.alibaba.datax.common.element.*;
+import com.alibaba.datax.common.element.Column;
+import com.alibaba.datax.common.element.DateColumn;
+import com.alibaba.datax.common.element.DoubleColumn;
+import com.alibaba.datax.common.element.LongColumn;
+import com.alibaba.datax.common.element.Record;
+import com.alibaba.datax.common.element.StringColumn;
 import com.alibaba.datax.core.transport.record.DefaultRecord;
 import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.google.common.collect.Lists;
@@ -26,12 +31,12 @@ import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -76,12 +81,12 @@ public class BasicFormatTest {
                     DefaultRecord record = null;
                     String line = null;
                     String[] row = null;
-                    DataType[] types = new DataType[]{new DataType(Types.INTEGER)
+                    DataType[] types = new DataType[]{DataType.getType(JDBCTypes.INTEGER)
                             , DataType.createVarChar(32)
-                            , new DataType(Types.INTEGER)
-                            , new DataType(Types.FLOAT)
-                            , new DataType(Types.INTEGER)
-                            , new DataType(Types.DATE)};
+                            , DataType.getType(JDBCTypes.INTEGER)
+                            , DataType.getType(JDBCTypes.FLOAT)
+                            , DataType.getType(JDBCTypes.INTEGER)
+                            , DataType.getType(JDBCTypes.DATE)};
 
                     while ((line = reader.readLine()) != null) {
                         row = StringUtils.split(line, Delimiter.Tab.val);

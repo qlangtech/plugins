@@ -1,5 +1,5 @@
 {
-  "name": "mysqlwriter",
+  "name": "damengwriter",
   "parameter": {
     "column": [${writer.colsQuotes}],
     "connection":[
@@ -21,8 +21,6 @@
     "password": "$writer.password",
   #if($writer.containSession)  "session": ["$writer.session"],
 #end
-    "username": "$writer.username",
-    "writeMode": "$writer.writeMode",
-    "dataxName": "${writer.dataXName}"
+    "username": "$writer.username"
   }
 }

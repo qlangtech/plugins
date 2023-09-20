@@ -85,7 +85,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         //        if (!this.autoCreateTable) {
         //            return null;
         //        }
-        // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
+        // https://doris.apache.org/docs/dev/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
 
@@ -250,7 +250,11 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         public DorisType varcharType(DataType type) {
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N)
             // 三倍，doris中是按照utf-8字节数计算的
-            return new DorisType(type, "VARCHAR(" + Math.min(type.getColumnSize() * 3, 65000) + ")");
+            int colSize = type.getColumnSize();
+            if (colSize < 1) {
+                colSize = 1000;
+            }
+            return new DorisType(type, "VARCHAR(" + Math.min(colSize * 3, 65000) + ")");
         }
 
         @Override

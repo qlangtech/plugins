@@ -10,7 +10,7 @@
  "table": [${reader.splitTabs}]
 #else
  "querySql": [
-     "SELECT ${reader.cols} FROM ${reader.sourceEntityName} #if($reader.containWhere) WHERE ${reader.where} #end"
+     "SELECT ${reader.cols} FROM ${reader.tableWithEscape} #if($reader.containWhere) WHERE ${reader.where} #end"
    ]
 #end
       }

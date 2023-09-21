@@ -31,6 +31,8 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,6 +86,48 @@ public class DataXDorisWriter extends BasicDorisWriter {
             @Override
             protected String getUniqueKeyToken() {
                 return "UNIQUE KEY";
+            }
+
+            @Override
+            protected DorisType convertType(CMeta col) {
+                DorisType type = super.convertType(col);
+                DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
+                    @Override
+                    public DorisType bigInt(DataType type) {
+                        return null;
+                    }
+
+                    @Override
+                    public DorisType doubleType(DataType type) {
+                        return null;
+                    }
+
+                    @Override
+                    public DorisType dateType(DataType type) {
+                        return new DorisType(type, "DATEV2");
+                    }
+
+                    @Override
+                    public DorisType timestampType(DataType type) {
+                        return new DorisType(type, "DATETIMEV2");
+                    }
+
+                    @Override
+                    public DorisType bitType(DataType type) {
+                        return null;
+                    }
+
+                    @Override
+                    public DorisType blobType(DataType type) {
+                        return null;
+                    }
+
+                    @Override
+                    public DorisType varcharType(DataType type) {
+                        return null;
+                    }
+                });
+                return fixType != null ? fixType : type;
             }
         };
     }

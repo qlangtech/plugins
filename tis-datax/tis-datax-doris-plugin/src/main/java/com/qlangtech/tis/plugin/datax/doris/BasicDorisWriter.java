@@ -97,11 +97,13 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
         private final ISelectedTab dorisTab;
+        private final List<String> primaryKeys;
 
         public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta) {
             super(tableMapper, dsMeta);
             // (DorisSelectedTab)
             this.dorisTab = tableMapper.getSourceTab();
+            this.primaryKeys = this.dorisTab.getPrimaryKeys();
         }
 
         @Override
@@ -115,9 +117,16 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
             // 将主键排在最前面
-            List<ColWrapper> result =
-                    Lists.newArrayList(cols.stream().filter((c) -> c.isPk()).map((c) -> createColWrapper(c)).collect(Collectors.toList()));
-            cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
+            List<ColWrapper> result = Lists.newArrayList();
+            for (String pk : primaryKeys) {
+                for (CMeta c : cols) {
+                    if (pk.equalsIgnoreCase(c.getName())) {
+                        result.add(createColWrapper(c));
+                    }
+                }
+            }
+//                    Lists.newArrayList(cols.stream().filter((c) -> primaryKeys.contains(c.getName())).map((c) -> createColWrapper(c)).collect(Collectors.toList()));
+            cols.stream().filter((c) -> !primaryKeys.contains(c.getName())).forEach((c) -> {
                 result.add(createColWrapper(c));
             });
             return result;
@@ -205,7 +214,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
     }
 
-    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new DataType.TypeVisitor<DorisType>() {
+    protected static class ColumnTokenRecognise implements DataType.TypeVisitor<DorisType> {
         @Override
         public DorisType tinyIntType(DataType dataType) {
             return new DorisType(dataType, "TINYINT");
@@ -274,7 +283,10 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
                     "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ?
                             type.getDecimalDigits() : 0) + ")");
         }
-    };
+    }
+
+
+    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new ColumnTokenRecognise();
 
     //    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
     //        return columnTokenRecognise;

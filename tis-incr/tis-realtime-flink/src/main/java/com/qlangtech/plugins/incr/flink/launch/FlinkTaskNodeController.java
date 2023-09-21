@@ -181,11 +181,11 @@ public class FlinkTaskNodeController implements IRCController {
 
     public static String getRestoreCheckpointPath(
             JobID jobID, IncrStreamFactory.ISavePointSupport spSupport, String checkpointId) {
-        Objects.requireNonNull(jobID,"param jobID can not be null");
-        Objects.requireNonNull(spSupport,"param spSupport can not be null");
-        Objects.requireNonNull(checkpointId,"param checkpointId can not be null");
+        Objects.requireNonNull(jobID, "param jobID can not be null");
+        Objects.requireNonNull(spSupport, "param spSupport can not be null");
+        Objects.requireNonNull(checkpointId, "param checkpointId can not be null");
         // IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
-       // JobID jobID = status.getLaunchJobID();
+        // JobID jobID = status.getLaunchJobID();
         final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
         logger.info("restore flink job with checkpoint path:" + checkpointPath);
         return checkpointPath;
@@ -396,6 +396,10 @@ public class FlinkTaskNodeController implements IRCController {
         ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection).valiate();
         IFlinkIncrJobStatus<JobID> status = validateFlinkJob.getStatus();
         IncrStreamFactory.ISavePointSupport savePoint = validateFlinkJob.getSavePoint();
+        if (savePoint == null) {
+            throw new NullPointerException("savePoint can not be null");
+        }
+
 
         try (RestClusterClient restClient = this.factory.getFlinkCluster()) {
             CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(status.getLaunchJobID());
@@ -513,14 +517,18 @@ public class FlinkTaskNodeController implements IRCController {
             StateBackendFactory stateBackend = factory.stateBackend;
             savePoint = null;
 
-            if (!StateBackendFactory.getSavePointSupport(stateBackend).isPresent()) {
+            Optional<IncrStreamFactory.ISavePointSupport> savePointSupport = null;
+
+            if (!(savePointSupport = StateBackendFactory.getSavePointSupport(stateBackend)).isPresent()) {
                 processCollectionNotSupportSavePoint(stateBackend);
-                if ((stateBackend instanceof IncrStreamFactory.ISavePointSupport)) {
-                    savePoint = (IncrStreamFactory.ISavePointSupport) stateBackend;
-                }
                 return fail();
+            } else {
+                savePoint = savePointSupport.get();
             }
 
+//            if ((stateBackend instanceof IncrStreamFactory.ISavePointSupport)) {
+//
+//            }
 //            if (!(stateBackend instanceof StateBackendFactory.ISavePointSupport)
 //                    || !(savePoint = (StateBackendFactory.ISavePointSupport) stateBackend).supportSavePoint()) {
 //                processCollectionNotSupportSavePoint(stateBackend);

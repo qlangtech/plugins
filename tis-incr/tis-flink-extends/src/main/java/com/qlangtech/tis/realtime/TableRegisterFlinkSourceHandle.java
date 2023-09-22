@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
@@ -51,6 +52,8 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.descriptors.ConnectorDescriptor;
+import org.apache.flink.table.types.AtomicDataType;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
 import org.apache.flink.types.Row;
 
@@ -68,6 +71,16 @@ import java.util.stream.Collectors;
  **/
 public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
 
+
+    public static org.apache.flink.table.types.DataType createFlinkColType(List<String> primaryKeys, FlinkCol col) {
+        org.apache.flink.table.types.DataType type = col.type;
+        if (primaryKeys.contains(col.name)) {
+            if (type.getLogicalType().isNullable()) {
+                type = new AtomicDataType(type.getLogicalType().copy(false));
+            }
+        }
+        return type;
+    }
 
     /**
      * @param env
@@ -140,11 +153,11 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
             sinkTabSchema.field(c.name, c.type);
         }
         tabEnv.connect(new ConnectorDescriptor(this.getSinkTypeName(), 1, false) {
-            @Override
-            protected Map<String, String> toConnectorProperties() {
-                return connProps;
-            }
-        }).withSchema(sinkTabSchema) //
+                    @Override
+                    protected Map<String, String> toConnectorProperties() {
+                        return connProps;
+                    }
+                }).withSchema(sinkTabSchema) //
                 .inUpsertMode().createTemporaryTable(alias.getTo());
     }
 
@@ -180,27 +193,30 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
 
         Schema.Builder scmBuilder = Schema.newBuilder();
-        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(
-                this.getSourceStreamTableMeta().getStreamTableMeta(tabName));
+        IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator = this.getSourceStreamTableMeta();
+
+        ISelectedTab selectedTab = sourceStreamMetaCreator.getSelectedTab(tabName);
+
+        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(sourceStreamMetaCreator.getStreamTableMeta(tabName));
         String[] fieldNames = new String[cols.size()];
         TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
         int i = 0;
-
+        DataType colType = null;
         for (FlinkCol col : cols) {
-            scmBuilder.column(col.name, col.type);
+            colType = createFlinkColType(selectedTab.getPrimaryKeys(), col);
+            scmBuilder.column(col.name, colType);
             // TypeConversions.fromDataTypeToLegacyInfo()
-            types[i] = LegacyTypeInfoDataTypeConverter.toLegacyTypeInfo(col.type);
+            types[i] = LegacyTypeInfoDataTypeConverter.toLegacyTypeInfo(colType);
             fieldNames[i++] = col.name;
 
         }
-        List<String> pks = cols.stream().filter((c) -> c.isPk()).map((c) -> c.name).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(pks)) {
-            scmBuilder.primaryKey(pks);
+        List<String> pks = selectedTab.getPrimaryKeys();
+        if (CollectionUtils.isEmpty(pks)) {
+            throw new IllegalStateException("pks can not be empty");
         }
+        scmBuilder.primaryKey(pks);
         Schema schema = scmBuilder.build();
-
         TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
-
 
         SingleOutputStreamOperator<Row> rowStream = null;
         if (sourceStream.clazz == DTO.class) {

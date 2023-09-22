@@ -189,7 +189,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
 
         return Collections.singletonMap(esSchema
-                , new RowDataSinkFunc(esSchema, sinkBuilder.build()
+                , new RowDataSinkFunc(esSchema, sinkBuilder.build(), tab.getPrimaryKeys()
                         , colsMeta
                         , true, DEFAULT_PARALLELISM));
     }

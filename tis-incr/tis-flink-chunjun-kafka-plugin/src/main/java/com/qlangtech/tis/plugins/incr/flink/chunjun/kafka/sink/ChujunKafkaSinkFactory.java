@@ -83,6 +83,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
             IDataxProcessor dataxProcessor, SelectedTab selectedTab, final String targetTabName, boolean shallInitSinkTable) {
 
         CreateChunjunSinkFunctionResult sinkFuncRef = new CreateChunjunSinkFunctionResult();
+        sinkFuncRef.setPrimaryKeys(selectedTab.getPrimaryKeys());
         KafkaSelectedTab kfkTable = (KafkaSelectedTab) selectedTab;
 
         DataXKafkaWriter dataXWriter = (DataXKafkaWriter) dataxProcessor.getWriter(null);
@@ -125,7 +126,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
                 KafkaColumnConverter valConverter = KafkaColumnConverter.create(this.syncConf, kafkaConf, serializationConverterFactory);
                 List<KafkaSerializationConverter> colConvert = valConverter.getExternalConverters();
-                TableSchema tableSchema = ChunjunTableSinkFactory.ChunjunStreamTableSink.createTableSchema(
+                TableSchema tableSchema = ChunjunTableSinkFactory.ChunjunStreamTableSink.createTableSchema(selectedTab.getPrimaryKeys(),
                         colConvert.stream().map((c) -> c.flinkCol).collect(Collectors.toList()));
 
 

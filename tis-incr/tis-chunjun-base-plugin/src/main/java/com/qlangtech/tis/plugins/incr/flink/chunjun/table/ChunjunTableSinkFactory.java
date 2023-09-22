@@ -29,7 +29,9 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
+import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.realtime.dto.DTOStream;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -140,22 +142,30 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         @Override
         public final TableSchema getTableSchema() {
 
-            return createTableSchema(this.rowDataSinkFunc.getColsMeta());
+            return createTableSchema(this.rowDataSinkFunc.getPrimaryKeys(), this.rowDataSinkFunc.getColsMeta());
         }
 
-        public static TableSchema createTableSchema(List<FlinkCol> flinkCols) {
+        public static TableSchema createTableSchema(List<String> primaryKeys, List<FlinkCol> flinkCols) {
+
+            if (CollectionUtils.isEmpty(primaryKeys)) {
+                throw new IllegalArgumentException("param primaryKeys can not be null");
+            }
             TableSchema.Builder schemaBuilder = TableSchema.builder();
-            List<String> pks = Lists.newArrayList();
+            // List<String> pks = Lists.newArrayList();
             List<FlinkCol> cols = flinkCols; //this.rowDataSinkFunc.getColsMeta(); //AbstractRowDataMapper.getAllTabColsMeta(sinkColsMeta.getCols());
+            // org.apache.flink.table.types.DataType type;
             for (FlinkCol col : cols) {
-                schemaBuilder.field(col.name, col.type);
-                if (col.isPk()) {
-                    pks.add(col.name);
-                }
+
+//                type = col.type;
+//                if (primaryKeys.contains(col.name)) {
+//                    if (type.getLogicalType().isNullable()) {
+//                        type = new AtomicDataType(type.getLogicalType().copy(false));
+//                    }
+//                }
+                schemaBuilder.field(col.name, TableRegisterFlinkSourceHandle.createFlinkColType(primaryKeys, col));
             }
-            if (pks.size() > 0) {
-                schemaBuilder.primaryKey(pks.toArray(new String[pks.size()]));
-            }
+
+            schemaBuilder.primaryKey(primaryKeys.toArray(new String[primaryKeys.size()]));
             return schemaBuilder.build();
         }
 

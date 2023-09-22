@@ -193,7 +193,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
                     SinkFunction<RowData> sf = createSinkFunction(dbName, targetTabName, colsMeta, jdbcUrl, dsFactory, separator);
 
                     RowDataSinkFunc sinkFunc = new RowDataSinkFunc(
-                            tabName, sf, colsMeta.getLeft(), true, DEFAULT_PARALLELISM);
+                            tabName, sf, selectedTab.get().getPrimaryKeys() ,colsMeta.getLeft(), true, DEFAULT_PARALLELISM);
 //            sinkFunc.setSourceFilter("removeUpdateBeforeEvent", new FilterUpdateBeforeEvent());
                     sinkFuncs.put(tabName, sinkFunc);
 

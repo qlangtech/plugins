@@ -27,16 +27,23 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -96,6 +103,34 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         } catch (SQLException e) {
             throw TisException.create(e.getMessage() + ",jdbcUrl:" + jdbcUrl + ",props:" + props.toString(), e);
         }
+    }
+
+    final static TreeMap<String, DataType> dateTypeMapper = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+    static {
+        dateTypeMapper.put("datev2", DataType.getType(JDBCTypes.DATE));
+        dateTypeMapper.put("date", DataType.getType(JDBCTypes.DATE));
+        dateTypeMapper.put("datetime", DataType.getType(JDBCTypes.TIMESTAMP));
+        dateTypeMapper.put("datetimev2", DataType.getType(JDBCTypes.TIMESTAMP));
+    }
+
+    @Override
+    public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
+                                             Set<String> pkCols) throws SQLException {
+
+
+        return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
+            @Override
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+                DataType dateType = null;
+                if ((dateType = dateTypeMapper.get(typeName)) != null) {
+                    return dateType;
+                } else {
+                    return DataType.create(dbColType, typeName, colSize);
+                }
+            }
+
+        });
     }
 
 

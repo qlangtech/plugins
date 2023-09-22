@@ -54,9 +54,9 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
          * @param sinkFunction
          * @param supportUpset 是否支持类似MySQL的replace类型的更新操作？
          */
-        public DTOSinkFunc(TableAlias tab, SinkFunction<DTO> sinkFunction
+        public DTOSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<DTO> sinkFunction
                 , boolean supportUpset, List<FlinkCol> colsMeta, int sinkTaskParallelism) {
-            super(tab, sinkFunction, colsMeta, sinkTaskParallelism);
+            super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent", new FilterUpdateBeforeEvent.DTOFilter());
             }
@@ -81,14 +81,16 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
 
         public RowDataSinkFunc(TableAlias tab
-                , SinkFunction<RowData> sinkFunction, List<FlinkCol> colsMeta
+                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
                 , boolean supportUpset, int sinkTaskParallelism) {
-            super(tab, sinkFunction, colsMeta, sinkTaskParallelism);
+            super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
+
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"
                         , new FilterUpdateBeforeEvent.RowDataFilter());
             }
         }
+
 
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {

@@ -50,6 +50,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.Preconditions;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -69,18 +70,18 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, List<String> primaryKeys , BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
         DataXStarRocksWriter rocksWriter = (DataXStarRocksWriter) dataXWriter;
 
-        final CreateChunjunSinkFunctionResult createSinkResult = createSinkFunctionResult(jdbcUrl, rocksWriter, dsFactory, targetTabName, syncConf, tabMeta, this);
+        final CreateChunjunSinkFunctionResult createSinkResult = createSinkFunctionResult(jdbcUrl, rocksWriter, dsFactory, targetTabName, primaryKeys, syncConf, tabMeta, this);
         return createSinkResult;
     }
 
 
     private static CreateChunjunSinkFunctionResult createSinkFunctionResult(final String jdbcUrl, DataXStarRocksWriter rocksWriter, BasicDataSourceFactory dsFactory
-            , String targetTabName, SyncConf syncConf, IStreamTableMeta tabMeta, ChunjunStarRocksSinkFactory sinkFactory) {
+            , String targetTabName, List<String> primaryKeys, SyncConf syncConf, IStreamTableMeta tabMeta, ChunjunStarRocksSinkFactory sinkFactory) {
         if (syncConf == null) {
             throw new IllegalArgumentException("param syncConf can not be null");
         }
@@ -88,7 +89,7 @@ public class ChunjunStarRocksSinkFactory extends ChunjunSinkFactory {
         StarRocksSourceFactory starRocksDSFactory = (StarRocksSourceFactory) dsFactory;
         final TableCols sinkTabCols = new TableCols(tabMeta.getColsMeta());
         final CreateChunjunSinkFunctionResult createSinkResult = new CreateChunjunSinkFunctionResult();
-
+        createSinkResult.setPrimaryKeys(primaryKeys);
         createSinkResult.setSinkFactory(new StarRocksSinkFactory(syncConf) {
             @Override
             protected AbstractRowConverter createRowConverter() {

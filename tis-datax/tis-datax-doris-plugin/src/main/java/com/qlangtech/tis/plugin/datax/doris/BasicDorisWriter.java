@@ -85,6 +85,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         //        if (!this.autoCreateTable) {
         //            return null;
         //        }
+        // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/DATETIMEV2/
         // https://doris.apache.org/docs/dev/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
         final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
@@ -191,7 +192,11 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
                 @Override
                 protected void appendExtraConstraint(BlockScriptBuffer ddlScript) {
-                    if (this.meta.isPk()) {
+//                    if (this.meta.isPk()) {
+//                        ddlScript.append(" NOT NULL");
+//                    }
+
+                    if (primaryKeys.contains(this.meta.getName())) {
                         ddlScript.append(" NOT NULL");
                     }
                 }

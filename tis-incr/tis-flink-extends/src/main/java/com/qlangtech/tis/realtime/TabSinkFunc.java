@@ -42,6 +42,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     // private transient final Map<TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction;
     // public transient final StreamExecutionEnvironment env;
 
+    private transient List<String> primaryKeys;
     private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final TableAlias tab;
     protected transient final int sinkTaskParallelism;
@@ -57,11 +58,12 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      * @param tab
      * @param sinkFunction
      */
-    public TabSinkFunc(TableAlias tab, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
+    public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
             , final List<FlinkCol> colsMeta, int sinkTaskParallelism) {
         if (CollectionUtils.isEmpty(colsMeta)) {
             throw new IllegalArgumentException("colsMeta can not be empty");
         }
+        this.primaryKeys = primaryKeys;
         this.sinkFunction = sinkFunction;
         this.tab = tab;
         if (sinkTaskParallelism < 1) {
@@ -71,7 +73,9 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
         this.colsMeta = colsMeta;
         //  this.env = env;
     }
-
+    public List<String> getPrimaryKeys() {
+        return primaryKeys;
+    }
     public void setSourceFilter(String name, FilterFunction<SINK_TRANSFER_OBJ> sourceFilter) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("param name can not be empty");

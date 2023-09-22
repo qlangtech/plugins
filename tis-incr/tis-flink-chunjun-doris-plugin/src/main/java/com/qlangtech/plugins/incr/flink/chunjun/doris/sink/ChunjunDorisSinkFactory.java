@@ -131,21 +131,22 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     }
 
     @Override
-    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, BasicDataSourceFactory dsFactory
+    protected CreateChunjunSinkFunctionResult createSinkFactory(String jdbcUrl, String targetTabName, List<String> primaryKeys, BasicDataSourceFactory dsFactory
             , BasicDataXRdbmsWriter dataXWriter, SyncConf syncConf) {
         IStreamTableMeta tabMeta = this.getStreamTableMeta(targetTabName);
-        final CreateChunjunSinkFunctionResult createSinkResult = createDorisSinkFunctionResult(syncConf, tabMeta);
+        final CreateChunjunSinkFunctionResult createSinkResult = createDorisSinkFunctionResult(syncConf, tabMeta, primaryKeys);
         return createSinkResult;
     }
 
 
-    private static CreateChunjunSinkFunctionResult createDorisSinkFunctionResult(SyncConf syncConf, IStreamTableMeta tabMeta) {
+    private static CreateChunjunSinkFunctionResult createDorisSinkFunctionResult( //
+                                                                                  SyncConf syncConf, IStreamTableMeta tabMeta, List<String> primaryKeys) {
         if (syncConf == null) {
             throw new IllegalArgumentException("param syncConf can not be null");
         }
         final TableCols sinkTabCols = new TableCols(tabMeta.getColsMeta());
         final CreateChunjunSinkFunctionResult createSinkResult = new CreateChunjunSinkFunctionResult();
-
+        createSinkResult.setPrimaryKeys(primaryKeys);
         createSinkResult.setSinkFactory(new DorisSinkFactory(syncConf) {
 
             @Override

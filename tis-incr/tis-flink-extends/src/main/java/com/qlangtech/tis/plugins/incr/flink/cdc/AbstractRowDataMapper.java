@@ -280,6 +280,10 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
     }
 
+//    public static FlinkCol mapFlinkCol(IColMetaGetter meta, int colIndex) {
+//        return mapFlinkCol(meta, colIndex);
+//    }
+
     public static FlinkCol mapFlinkCol(IColMetaGetter meta, int colIndex) {
         return meta.getType().accept(new DefaultTypeVisitor(meta, colIndex));
     }

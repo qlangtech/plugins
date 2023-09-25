@@ -70,9 +70,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
+ * please use Hiveserver2DataSourceFactory instead
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-28 10:50
+ * @see Hiveserver2DataSourceFactory
  **/
+@Deprecated()
 @Public
 public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGetter {
     private static Pattern latestPattern = Pattern.compile("((_([a-zA-Z0-9]_?)*)|([a-zA-Z0-9](_?[a-zA-Z0-9])*_?))\\s*([=><]{1,2})\\s*" + HiveTable.KEY_PT_LATEST);

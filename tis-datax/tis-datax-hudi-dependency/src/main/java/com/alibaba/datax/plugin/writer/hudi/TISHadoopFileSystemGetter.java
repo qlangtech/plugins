@@ -18,6 +18,7 @@
 
 package com.alibaba.datax.plugin.writer.hudi;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
@@ -72,18 +73,26 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                         try (FileChannel channel = raf.getChannel()) {
                             // 服务器节点级别的排他
                             try (FileLock fileLock = channel.tryLock()) {
-                                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                                URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
-                                resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
+                                PluginAndCfgsSnapshot remoteSnapshot = null;
+                                PluginAndCfgsSnapshot localSnaphsot = null;
+                                try {
+                                    TIS.permitInitialize = false;
+                                    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                                    URL resource = classLoader.getResource(PluginAndCfgsSnapshot.getTaskEntryName());
+                                    resource = new URL(StringUtils.substringBefore(resource.getFile(), "!"));
 
-                                try (InputStream mainifest = resource.openStream()) {
-                                    PluginAndCfgsSnapshot remoteSnapshot
-                                            = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
-                                    PluginAndCfgsSnapshot localSnaphsot
-                                            = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Collections.emptySet());
-                                    remoteSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(this.cacheSnapshot));
-                                    this.cacheSnapshot = remoteSnapshot;
+                                    try (InputStream mainifest = resource.openStream()) {
+                                        remoteSnapshot
+                                                = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
+                                        localSnaphsot
+                                                = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Collections.emptySet());
+                                    }
+                                } finally {
+                                    TIS.permitInitialize = true;
                                 }
+
+                                remoteSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(this.cacheSnapshot));
+                                this.cacheSnapshot = remoteSnapshot;
                             }
                         }
 

@@ -298,9 +298,6 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
             throw new IllegalArgumentException("param dbName can not be null");
         }
 
-//        if (StringUtils.isEmpty(password)) {
-//            throw new IllegalArgumentException("param password can not be null");
-//        }
         if (p == null) {
             throw new IllegalArgumentException("param IConnProcessor can not be null");
         }
@@ -335,7 +332,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
         @Override
         public String createOrGetNotebook(Describable describable) throws Exception {
 
-            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;//  ;postFormVals.newInstance(this, msgHandler);
+            BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) describable;
             return TISZeppelinClient.createJdbcNotebook(dsFactory);
         }
 

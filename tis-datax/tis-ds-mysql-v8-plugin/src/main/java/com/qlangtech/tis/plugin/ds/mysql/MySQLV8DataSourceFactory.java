@@ -88,5 +88,10 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL_V8;
         }
+
+        @Override
+        protected boolean validateMySQLVer(String mysqlVer) {
+            return StringUtils.startsWith(mysqlVer, "8");
+        }
     }
 }

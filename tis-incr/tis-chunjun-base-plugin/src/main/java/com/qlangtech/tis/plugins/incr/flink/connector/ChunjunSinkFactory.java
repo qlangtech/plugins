@@ -33,6 +33,9 @@ import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.dtstack.chunjun.sink.SinkFactory;
 import com.dtstack.chunjun.sink.WriteMode;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -69,6 +72,8 @@ import org.apache.flink.table.data.RowData;
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -489,6 +494,8 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     protected abstract JdbcOutputFormat createChunjunOutputFormat(DataSourceFactory dsFactory, JdbcConf jdbcConf);
 
 
+    private transient LoadingCache<String, IStreamTableMeta> tabMetaCache;
+
     /**
      * ==========================================================
      * impl: IStreamTableCreator
@@ -497,26 +504,39 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     @Override
     public IStreamTableMeta getStreamTableMeta(String tableName) {
 
-        // DataxProcessor dataXProcessor = DataxProcessor.load(null, this.dataXName);
-        BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) DataxWriter.load(null, this.dataXName);// dataXProcessor.getWriter(null);
+        if (tabMetaCache == null) {
+            tabMetaCache = CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS)
+                    .build(new CacheLoader<String, IStreamTableMeta>() {
+                        @Override
+                        public IStreamTableMeta load(String tableName) throws Exception {
+                            BasicDataXRdbmsWriter writer = (BasicDataXRdbmsWriter) DataxWriter.load(null, ChunjunSinkFactory.this.dataXName);
 
-        final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
+                            final BasicDataSourceFactory ds = (BasicDataSourceFactory) writer.getDataSourceFactory();
+                            // 初始化表RDBMS的表，如果表不存在就创建表
+                            DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
+                            final List<IColMetaGetter> colsMeta = ds.getTableMetadata(true, EntityName.parse(tableName))
+                                    .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
+                                    .collect(Collectors.toList());
+                            return new IStreamTableMeta() {
+                                @Override
+                                public List<IColMetaGetter> getColsMeta() {
+                                    try {
+                                        // 在创建增量流程过程中可能 sink端的表还不存在
+                                        return colsMeta;
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            };
+                        }
+                    });
+        }
 
-
-        return new IStreamTableMeta() {
-            @Override
-            public List<IColMetaGetter> getColsMeta() {
-                try {
-                    // 在创建增量流程过程中可能 sink端的表还不存在
-                    DataxWriter.process(dataXName, tableName, ds.getJdbcUrls());
-                    return ds.getTableMetadata(true, EntityName.parse(tableName))
-                            .stream().map((c) -> new HdfsColMeta(c.getName(), c.isNullable(), c.isPk(), c.getType()))
-                            .collect(Collectors.toList());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        };
+        try {
+            return tabMetaCache.get(tableName);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

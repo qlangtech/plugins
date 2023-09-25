@@ -53,16 +53,10 @@
         <dependencySet>
             <scope>provided</scope>
             <includes>
-                <include>org.apache.hudi:tis-hudi-utilities-bundle_${scala.binary.version}_hive_${hive.version}_spark_${spark.version}</include>
+                <include>org.apache.hudi:tis-hudi-utilities-bundle_${scala.binary.version}_hive_${hive.version}_spark_${spark2.version}</include>
             </includes>
             <outputDirectory>/lib</outputDirectory>
         </dependencySet>
-<!--        <dependencySet>-->
-<!--            <includes>-->
-<!--                <include>org.slf4j:slf4j-api</include>-->
-<!--            </includes>-->
-<!--            <outputDirectory>/lib</outputDirectory>-->
-<!--        </dependencySet>-->
     </dependencySets>
 
 </assembly>

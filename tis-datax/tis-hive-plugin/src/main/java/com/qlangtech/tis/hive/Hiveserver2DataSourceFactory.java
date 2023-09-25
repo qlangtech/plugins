@@ -50,7 +50,7 @@ import java.util.*;
 public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory implements JdbcUrlBuilder, IHiveConnGetter,
         DataSourceFactory.ISchemaSupported {
     private static final Logger logger = LoggerFactory.getLogger(Hiveserver2DataSourceFactory.class);
-    public static final String NAME_HIVESERVER2 = "Hiveserver2";
+    //public static final String NAME_HIVESERVER2 = "Hiveserver2";
     private static final String FIELD_META_STORE_URLS = "metaStoreUrls";
     //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
     //    Validator.identity})
@@ -263,6 +263,8 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
                     }
                     result.getInt(1);
                 }
+            } catch (TisException e) {
+                throw e;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

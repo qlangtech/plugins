@@ -131,7 +131,7 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             if (handle != null) {
                 try {
                     handle.stop();
-                } catch (Throwable e) { }
+                } catch (Throwable e) {}
             }
         } catch (Throwable e) {
             if (this.sparkAppHandle != null) {
@@ -207,14 +207,19 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
         if (IYarnConfig.KEY_DISPLAY_NAME.equalsIgnoreCase(sparkMaster)) {
             // 此时使用yarn方式连接
             // 由于在 @see org.apache.hudi.utilities.UtilHelpers 中将spark.eventLog.enabled开启，所以必须要设置hdfs log dir
-            String fsDefault = this.hudiWriter.getFs().getFSAddress();
-            boolean endWithSlash = StringUtils.endsWith(fsDefault, "/");
-            fsDefault = fsDefault + (endWithSlash ? StringUtils.EMPTY : "/") + "tmp/spark-events";
-            IPath eventDir = fs.getPath(fsDefault);
-            if (!fs.exists(eventDir)) {
-                fs.mkdirs(eventDir);
+            IPath eventDir = null;
+            try {
+                String fsDefault = this.hudiWriter.getFs().getFSAddress();
+                boolean endWithSlash = StringUtils.endsWith(fsDefault, "/");
+                fsDefault = fsDefault + (endWithSlash ? StringUtils.EMPTY : "/") + "tmp/spark-events";
+                eventDir = fs.getPath(fsDefault);
+                if (!fs.exists(eventDir)) {
+                    fs.mkdirs(eventDir);
+                }
+                handle.setConf("spark.eventLog.dir", fsDefault);
+            } catch (IOException e) {
+                throw new RuntimeException("create eventDir faild:" + eventDir, e);
             }
-            handle.setConf("spark.eventLog.dir", fsDefault);
         }
 
         handle.addAppArgs("--table-type", this.hudiWriter.getHudiTableType().getValue()

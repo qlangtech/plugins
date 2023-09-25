@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -69,6 +70,11 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
         @Override
         protected String getDataSourceName() {
             return DS_TYPE_MYSQL_V5;
+        }
+
+        @Override
+        protected boolean validateMySQLVer(String mysqlVer) {
+            return StringUtils.startsWith(mysqlVer, "5");
         }
     }
 }

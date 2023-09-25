@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.ds.mysql;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -146,7 +147,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                     @Override
                     public DataType dateType(DataType type) {
                         if ("year".equalsIgnoreCase(type.typeName)) {
-                            return  DataType.create(Types.INTEGER, type.typeName, type.getColumnSize());
+                            return DataType.create(Types.INTEGER, type.typeName, type.getColumnSize());
                         }
                         return null;
                     }
@@ -484,6 +485,30 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         public List<String> facadeSourceTypes() {
             return Lists.newArrayList(DS_TYPE_MYSQL_V5);
         }
+
+
+        @Override
+        protected void validateConnection(JDBCConnection c) throws TisException {
+            String mysqlVer = null;
+            try (Statement statement = c.createStatement()) {
+                try (ResultSet result = statement.executeQuery("SELECT version()")) {
+                    if (result.next()) {
+                        mysqlVer = result.getString(1);
+                        if (!validateMySQLVer(mysqlVer)) {
+                            throw TisException.create("实际MySQL版本:'" + mysqlVer + "'与插件:'" + getDataSourceName() + "'支持的版本不一致");
+                        }
+                    } else {
+                        throw new SQLException("have not find any MySQL version info ");
+                    }
+                }
+            } catch (TisException e) {
+                throw e;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        protected abstract boolean validateMySQLVer(String mysqlVer);
     }
 
 }

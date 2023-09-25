@@ -49,9 +49,11 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.BasicFSWriter;
 import com.qlangtech.tis.plugin.datax.HdfsWriterDescriptor;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.hudi.spark.SparkSubmitParams;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.utils.DBsGetter;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,18 +121,14 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @Override
     public IHiveConnGetter getHiveConnMeta() {
-        return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.PLUGIN_NAME);
+       // return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.NAME_HIVESERVER2);
+
+        if (StringUtils.isBlank(this.hiveConn)) {
+            throw new IllegalStateException("prop dbName can not be null");
+        }
+
+        return BasicDataXRdbmsWriter.getDs(this.hiveConn);
     }
-
-
-    //    /**
-    //     * @return
-    //     */
-    //    public static List<Option> allPrimaryKeys(Object contextObj) {
-    //        List<Option> pks = Lists.newArrayList();
-    //        pks.add(new Option("base_id"));
-    //        return pks;
-    //    }
 
     @Override
     protected HudiDataXContext getDataXContext(IDataxProcessor.TableMap tableMap) {
@@ -151,12 +149,13 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     }
 
     public Connection getConnection() {
-        try {
-            ParamsConfig connGetter = (ParamsConfig) getHiveConnMeta();
-            return connGetter.createConfigInstance();
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+//        try {
+//            BasicDataSourceFactory connGetter = (BasicDataSourceFactory) getHiveConnMeta();
+////            return connGe
+//        } catch (Throwable e) {
+//            throw new RuntimeException(e);
+//        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -186,8 +185,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
             super();
             this.registerSelectOptions(KEY_FIELD_NAME_SPARK_CONN,
                     () -> ParamsConfig.getItems(ISparkConnGetter.PLUGIN_NAME));
+
             this.registerSelectOptions(KEY_FIELD_NAME_HIVE_CONN,
-                    () -> ParamsConfig.getItems(IHiveConnGetter.PLUGIN_NAME));
+                    () -> DBsGetter.getInstance().getExistDbs(IHiveConnGetter.NAME_HIVESERVER2));
         }
 
         @Override

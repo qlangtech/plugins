@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 
 import java.util.Arrays;
@@ -71,6 +72,15 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
     @Override
     public ExecutePhaseRange getPhaseRange() {
         return new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.FullDump);
+    }
+
+    @Override
+    public void startScanDependency() {
+        try (ITDFSSession itdfsSession = dfsLinker.createTdfsSession()) {
+
+        } catch (Exception e) {
+
+        }
     }
 
     @Override

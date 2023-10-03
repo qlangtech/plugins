@@ -268,6 +268,11 @@ public class TISHoodieDeltaStreamer implements Serializable {
         }
 
         @Override
+        public void startScanDependency() {
+
+        }
+
+        @Override
         public Class<?> getOwnerClass() {
             return BasicFSWriter.class;
         }

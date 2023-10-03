@@ -14,7 +14,7 @@
     "postSql": ["$writer.postSql"],
 #end
     "jdbcUrl": "${writer.jdbcUrl}",
-    "feLoadUrl": ${writer.loadUrl},
+    "feLoadUrl": ${writer.loadUrl}
 #if($writer.containLoadProps)
   ,"loadProps": ${writer.loadProps}
 #end

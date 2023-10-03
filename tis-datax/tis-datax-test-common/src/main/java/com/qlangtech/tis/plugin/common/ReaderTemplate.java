@@ -90,6 +90,10 @@ public class ReaderTemplate {
 
         IDataxWriter dataxWriter = new IDataxWriter() {
             @Override
+            public void startScanDependency() {
+            }
+
+            @Override
             public String getTemplate() {
                 return null;
             }

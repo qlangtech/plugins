@@ -226,6 +226,11 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @Override
+    public void startScanDependency() {
+       this. getHiveConnGetter();
+    }
+
+    @Override
     public Hiveserver2DataSourceFactory getDataSourceFactory() {
         if (StringUtils.isBlank(this.dbName)) {
             throw new IllegalStateException("prop dbName can not be null");

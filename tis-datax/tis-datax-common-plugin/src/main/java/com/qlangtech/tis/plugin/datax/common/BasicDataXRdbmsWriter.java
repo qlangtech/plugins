@@ -79,6 +79,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     public boolean autoCreateTable;
 
     @Override
+    public void startScanDependency() {
+        this.getDataSourceFactory();
+    }
+
+    @Override
     public boolean isGenerateCreateDDLSwitchOff() {
         return !autoCreateTable;
     }

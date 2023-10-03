@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.reader;
 
+import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -51,6 +52,15 @@ public class TisDataXDataflowReader extends DataxReader {
             , idListGetScript = "return com.qlangtech.tis.coredefine.module.action.DataxAction.getTablesInDB(filter);", atLeastOne = true)
     public transient List<SelectedTab> selectedTabs;
 
+    @Override
+    public void startScanDependency() {
+        this.getTablesInDB();
+        DataFlowDataXProcessor processor = this.getProcessor();
+        for (IDataxReader reader : processor.getReaders(null)) {
+          reader.startScanDependency();
+        }
+        processor.getWriter(null).startScanDependency();
+    }
 
     @Override
     public TableInDB getTablesInDB() {

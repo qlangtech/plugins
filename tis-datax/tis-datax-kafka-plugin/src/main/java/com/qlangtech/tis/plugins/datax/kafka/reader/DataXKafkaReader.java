@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.datax.kafka.reader;
 
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -98,6 +97,11 @@ public class DataXKafkaReader extends DataxReader {
     @Override
     public <T extends ISelectedTab> List<T> getSelectedTabs() {
         return null;
+    }
+
+    @Override
+    public void startScanDependency() {
+
     }
 
     @Override

@@ -114,6 +114,10 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @FormField(ordinal = 79, type = FormFieldType.TEXTAREA, advance = false, validate = {Validator.require})
     public String template;
 
+    @Override
+    public void startScanDependency() {
+        getToken();
+    }
 
     public ElasticEndpoint getToken() {
         ElasticEndpoint aliyunToken = ParamsConfig.getItem(endpoint, ElasticEndpoint.KEY_ELASTIC_SEARCH_DISPLAY_NAME);

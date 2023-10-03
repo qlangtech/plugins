@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.ds.*;
 import com.qlangtech.tis.plugin.tdfs.DFSResMatcher;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
+import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
@@ -52,13 +53,19 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
 
     public transient String dataXName;
 
-
     @FormField(ordinal = 1, validate = {Validator.require})
     public TDFSLinker dfsLinker;
 
     @FormField(ordinal = 3, validate = {Validator.require})
     public DFSResMatcher resMatcher;
 
+    @Override
+    public void startScanDependency() {
+        try (ITDFSSession session = this.dfsLinker.createTdfsSession()) {
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * ================================================================================

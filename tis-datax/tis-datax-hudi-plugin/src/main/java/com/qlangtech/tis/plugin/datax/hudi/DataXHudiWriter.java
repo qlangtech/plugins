@@ -42,6 +42,7 @@ import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IRepositoryResourceScannable;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -68,7 +69,7 @@ import java.util.Optional;
  **/
 @Public
 public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.IPluginKeyAware, IHiveConn,
-        IDataXBatchPost, IDataXHudiWriter {
+        IDataXBatchPost, IDataXHudiWriter, IRepositoryResourceScannable {
 
     private static final Logger logger = LoggerFactory.getLogger(DataXHudiWriter.class);
 
@@ -91,6 +92,13 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     //    // 目标源中是否自动创建表，这样会方便不少
     //    public boolean autoCreateTable;
 
+
+    @Override
+    public void startScanDependency() {
+        this.getFileSystem();
+        this.getHiveConnMeta();
+        this.getSparkConnGetter();
+    }
 
     @Override
     public ITISFileSystem getFileSystem() {
@@ -121,8 +129,6 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @Override
     public IHiveConnGetter getHiveConnMeta() {
-       // return ParamsConfig.getItem(this.hiveConn, IHiveConnGetter.NAME_HIVESERVER2);
-
         if (StringUtils.isBlank(this.hiveConn)) {
             throw new IllegalStateException("prop dbName can not be null");
         }

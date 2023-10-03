@@ -25,7 +25,6 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.fs.ITISFileSystemFactory;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
@@ -155,16 +154,15 @@ public class DataXHdfsReader extends DataxReader implements KeyedPluginStore.IPl
         return fileSystem;
     }
 
+    @Override
+    public void startScanDependency() {
+        this.getFs();
+    }
 
     @Override
     public String getTemplate() {
         return template;
     }
-
-//    @Override
-//    public List<String> getTablesInDB() {
-//        throw new UnsupportedOperationException();
-//    }
 
 
    // @TISExtension()

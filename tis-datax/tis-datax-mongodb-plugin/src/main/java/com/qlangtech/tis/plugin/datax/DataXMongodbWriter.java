@@ -83,6 +83,11 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
     }
 
     @Override
+    public void startScanDependency() {
+        this.getDataSourceFactory();
+    }
+
+    @Override
     public DataSourceFactory getDataSourceFactory() {
         return getDsFactory();
     }

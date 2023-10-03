@@ -285,6 +285,11 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     }
 
     @Override
+    public void startScanDependency() {
+        this.getDataSourceFactory();
+    }
+
+    @Override
     public DS getDataSourceFactory() {
         return TIS.getDataBasePlugin(PostedDSProp.parse(this.dbName));
     }

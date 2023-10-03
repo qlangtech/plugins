@@ -132,6 +132,10 @@ public class WriterTemplate {
             }
 
             @Override
+            public void startScanDependency() {
+            }
+
+            @Override
             public IStreamTableMeta getStreamTableMeta(String tableName) {
                 throw new UnsupportedOperationException();
             }

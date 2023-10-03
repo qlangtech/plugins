@@ -134,6 +134,10 @@ public class DataXKafkaWriter extends DataxWriter {
     @FormField(ordinal = 22, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer}, advance = true)
     public Integer receiveBufferBytes;
 
+    @Override
+    public void startScanDependency() {
+
+    }
 
     @Override
     public String getTemplate() {

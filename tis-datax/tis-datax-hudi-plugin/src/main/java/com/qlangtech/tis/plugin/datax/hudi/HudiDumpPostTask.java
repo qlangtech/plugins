@@ -43,7 +43,6 @@ import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 import org.slf4j.Logger;
@@ -300,8 +299,14 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
             Map<String, String> extraEnvProps = Maps.newHashMap();
             extraEnvProps.put(JobCommon.KEY_TASK_ID, String.valueOf(execContext.getTaskId()));
             extraEnvProps.put(JobCommon.KEY_COLLECTION, execContext.getIndexName());
-            Pair<PluginAndCfgsSnapshot, Manifest> manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs2File(manifestJar
-                    , new TargetResName(execContext.getIndexName()), -1, Optional.of((meta) -> {
+//            createManifestCfgAttrs(TargetResName collection,
+//            long timestamp,
+//            Map<String, String> extraEnvProps,
+//            Optional<Predicate<PluginMeta>> pluginMetasFilter, Set<PluginMeta> appendPluginMeta)
+
+
+            Manifest manifest = PluginAndCfgsSnapshot.createDataBatchJobManifestCfgAttrs( //
+                    new TargetResName(execContext.getIndexName()), Optional.of((meta) -> {
                         // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
                         boolean collect = !(meta.getPluginName().indexOf("hudi") > -1);
                         if (collect) {
@@ -310,10 +315,11 @@ public class HudiDumpPostTask implements IRemoteTaskTrigger {
                         }
                         return collect;
                     }), extraEnvProps);
-            if (manifest.getLeft().appLastModifyTimestamp < 1) {
-                throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"
-                        + manifest.getLeft().appLastModifyTimestamp);
-            }
+            PluginAndCfgsSnapshot.writeManifest2Jar(manifestJar, manifest);
+//            if (manifest.getLeft().appLastModifyTimestamp < 1) {
+//                throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"
+//                        + manifest.getLeft().appLastModifyTimestamp);
+//            }
         }
 //        Manifest manifest = PluginAndCfgsSnapshot.createManifestCfgAttrs(new TargetResName(execContext.getIndexName()), -1);
 //        try (JarOutputStream jaroutput = new JarOutputStream(

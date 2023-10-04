@@ -1,0 +1,9 @@
+{
+  "clusterId":"my-first-flink-cluster",
+  "jobManagerAddress":{
+    "URL":"http://192.168.28.201:8081",
+    "host":"192.168.28.201",
+    "port":8081
+  },
+  "name":"flink200"
+}

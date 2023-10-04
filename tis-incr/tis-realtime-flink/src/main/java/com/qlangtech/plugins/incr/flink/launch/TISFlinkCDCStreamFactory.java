@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.rest.RestClusterClient;
@@ -52,6 +53,8 @@ import java.util.stream.Collectors;
 @Public
 public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     public static final String NAME_FLINK_CDC = "Flink";
+    private static final String KEY_FIELD_CHECKPOINT = "checkpoint";
+    private static final String KEY_FIELD_STATEBACKEND = "stateBackend";
 
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
 //    public String name = NAME_FLINK_CDC;
@@ -68,21 +71,33 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer parallelism;
 
+
     @FormField(ordinal = 4, validate = {Validator.require})
     public RestartStrategyFactory restartStrategy;
-
-    @FormField(ordinal = 5, validate = {Validator.require})
+    /**
+     * 支持任务恢复，当Flink节点因为服务器意外宕机导致当前运行的flink job意外终止，需要支持Flink Job恢复执行，需要Flink配置，配置支持
+     * 1.持久化stateBackend
+     * 2.开启checkpoint
+     */
+    @FormField(ordinal = 5, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean enableRestore;
+    @FormField(ordinal = 6, validate = {Validator.require})
     public CheckpointFactory checkpoint;
 
-    @FormField(ordinal = 6, validate = {Validator.require})
+
+    @FormField(ordinal = 7, validate = {Validator.require})
     public StateBackendFactory stateBackend;
 
     @Override
     public Optional<ISavePointSupport> restorable() {
-        if (checkpoint instanceof CKOn) {
+        if (isCheckpointEnable()) {
             return StateBackendFactory.getSavePointSupport(stateBackend);
         }
         return Optional.empty();
+    }
+
+    private boolean isCheckpointEnable() {
+        return checkpoint instanceof CKOn;
     }
 
     @Override
@@ -157,6 +172,28 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         @Override
         public String getDisplayName() {
             return NAME_FLINK_CDC;
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            TISFlinkCDCStreamFactory plugin = postFormVals.newInstance();
+
+            if (plugin.enableRestore) {
+                if (!plugin.restorable().isPresent()) {
+                    if (!plugin.isCheckpointEnable()) {
+                        msgHandler.addFieldError(context, KEY_FIELD_CHECKPOINT, "请确认是否开启");
+                    }
+                    if (!StateBackendFactory.getSavePointSupport(plugin.stateBackend).isPresent()) {
+                        msgHandler.addFieldError(context, KEY_FIELD_STATEBACKEND, "请使用持久化stateBackend");
+                    }
+                    msgHandler.addErrorMessage(context, "尚未满足可恢复任务配置要求");
+                    return false;
+                }
+            }
+
+
+            return super.validateAll(msgHandler, context, postFormVals);
         }
 
         /**

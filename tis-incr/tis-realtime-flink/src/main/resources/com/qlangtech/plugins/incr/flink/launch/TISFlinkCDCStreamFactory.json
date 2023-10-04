@@ -13,6 +13,20 @@
       ]
     }
   },
+  "enableRestore": {
+    "label": "支持意外恢复",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "支持"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  },
   "restartStrategy": {
     "label": "重启策略",
     "dftVal": "off",

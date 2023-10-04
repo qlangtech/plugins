@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.common;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
@@ -58,6 +59,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String name;
 
+    @JSONField(serialize = false)
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
     public String jobManagerAddress;
 
@@ -66,7 +68,14 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     @Override
     public JobManagerAddress getJobManagerAddress() {
+
         return JobManagerAddress.parse(this.jobManagerAddress);
+    }
+
+    @JSONField(serialize = false)
+    @Override
+    public Class<?> getDescribleClass() {
+        return super.getDescribleClass();
     }
 
     /**

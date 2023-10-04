@@ -80,9 +80,18 @@ public class DataXDorisWriter extends BasicDorisWriter {
         };
     }
 
+    //protected abstract DataType.TypeVisitor<DorisType> getColumnTokenRecognise();
+
+    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new ColumnTokenRecognise() {
+        @Override
+        protected String getDecimalToken() {
+            return "DECIMALV3";
+        }
+    };
+
     @Override
     protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), columnTokenRecognise) {
             @Override
             protected String getUniqueKeyToken() {
                 return "UNIQUE KEY";
@@ -92,6 +101,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
             protected DorisType convertType(CMeta col) {
                 DorisType type = super.convertType(col);
                 DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
+
                     @Override
                     public DorisType bigInt(DataType type) {
                         return null;

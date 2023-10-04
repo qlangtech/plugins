@@ -26,12 +26,14 @@ import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -43,7 +45,11 @@ import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpEntity;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.ContainerState;
@@ -244,12 +250,29 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
              */
             TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
             tableRegisterHandle.setSinkFuncFactory(sinkFactory);
-            tableRegisterHandle.setSourceStreamTableMeta((tab) -> {
-                return () -> {
-                    return selectedTab.getCols().stream()
-                            .map((c) -> new HdfsColMeta(
-                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
-                };
+
+//            (tab) -> {
+//                return () -> {
+//                    return selectedTab.getCols().stream()
+//                            .map((c) -> new HdfsColMeta(
+//                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+//                };
+//            }
+
+            tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
+                @Override
+                public ISelectedTab getSelectedTab(String tableName) {
+                   throw new UnsupportedOperationException(tableName);
+                }
+
+                @Override
+                public IStreamTableMeta getStreamTableMeta(String tableName) {
+                    return () -> {
+                        return selectedTab.getCols().stream()
+                                .map((c) -> new HdfsColMeta(
+                                        c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+                    };
+                }
             });
 
             List<ReaderSource> sourceFuncts = Lists.newArrayList();

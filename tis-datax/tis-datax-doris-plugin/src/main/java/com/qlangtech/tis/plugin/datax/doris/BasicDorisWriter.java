@@ -99,12 +99,14 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
         private final ISelectedTab dorisTab;
         private final List<String> primaryKeys;
+        private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
 
-        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta) {
+        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta, DataType.TypeVisitor<DorisType> columnTokenRecognise) {
             super(tableMapper, dsMeta);
             // (DorisSelectedTab)
             this.dorisTab = tableMapper.getSourceTab();
             this.primaryKeys = this.dorisTab.getPrimaryKeys();
+            this.columnTokenRecognise = columnTokenRecognise;
         }
 
         @Override
@@ -209,6 +211,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
     }
 
+
+
     public static class DorisType implements Serializable {
         public final DataType type;
         final String token;
@@ -282,20 +286,19 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        public DorisType decimalType(DataType type) {
+        public final DorisType decimalType(DataType type) {
             // doris or starRocks precision 不能超过超过半27
             return new DorisType(type,
-                    "DECIMAL(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ?
+                    getDecimalToken() + "(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ?
                             type.getDecimalDigits() : 0) + ")");
         }
+
+        protected String getDecimalToken() {
+            return "DECIMAL";
+        }
+
     }
 
-
-    public static final DataType.TypeVisitor<DorisType> columnTokenRecognise = new ColumnTokenRecognise();
-
-    //    public static DataType.TypeVisitor<String> getDorisColumnTokenRecognise() {
-    //        return columnTokenRecognise;
-    //    }
 
     protected static abstract class BaseDescriptor extends RdbmsWriterDescriptor {
         public BaseDescriptor() {

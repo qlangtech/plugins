@@ -191,9 +191,11 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-                return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
+               // return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
+
+                return super.createColDataType(colName, typeName, convert2JdbcType(dbColType), colSize, decimalDigits);
             }
 
             @Override

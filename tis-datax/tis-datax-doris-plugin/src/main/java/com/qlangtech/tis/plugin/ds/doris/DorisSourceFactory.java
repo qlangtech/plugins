@@ -105,13 +105,15 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         }
     }
 
-    final static TreeMap<String, DataType> dateTypeMapper = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    final static TreeMap<String, DataTypeFixer> dateTypeMapper = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     static {
-        dateTypeMapper.put("datev2", DataType.getType(JDBCTypes.DATE));
-        dateTypeMapper.put("date", DataType.getType(JDBCTypes.DATE));
-        dateTypeMapper.put("datetime", DataType.getType(JDBCTypes.TIMESTAMP));
-        dateTypeMapper.put("datetimev2", DataType.getType(JDBCTypes.TIMESTAMP));
+        dateTypeMapper.put("datev2", (colSize, decimalDigits) -> DataType.getType(JDBCTypes.DATE));
+        dateTypeMapper.put("date", (colSize, decimalDigits) -> DataType.getType(JDBCTypes.DATE));
+        dateTypeMapper.put("datetime", (colSize, decimalDigits) -> DataType.getType(JDBCTypes.TIMESTAMP));
+        dateTypeMapper.put("datetimev2", (colSize, decimalDigits) -> DataType.getType(JDBCTypes.TIMESTAMP));
+        dateTypeMapper.put("decimal", (colSize, decimalDigits) -> new DataType(JDBCTypes.DECIMAL, colSize).setDecimalDigits(decimalDigits));
+        dateTypeMapper.put("decimalv3", (colSize, decimalDigits) -> new DataType(JDBCTypes.DECIMAL, colSize).setDecimalDigits(decimalDigits));
     }
 
     @Override
@@ -121,18 +123,22 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
-                DataType dateType = null;
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
+                DataTypeFixer dateType = null;
                 if ((dateType = dateTypeMapper.get(typeName)) != null) {
-                    return dateType;
+                    return dateType.create(colSize,decimalDigits);
                 } else {
-                    return DataType.create(dbColType, typeName, colSize);
+                    //  return DataType.create(dbColType, typeName, colSize);
+                    return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
                 }
             }
-
         });
     }
 
+    @FunctionalInterface
+    private interface DataTypeFixer {
+        DataType create(int colSize, int decimalDigits);
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {

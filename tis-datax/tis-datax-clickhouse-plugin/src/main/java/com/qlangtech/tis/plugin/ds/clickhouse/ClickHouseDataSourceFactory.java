@@ -79,7 +79,7 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    protected HashSet<String> createAddedCols( EntityName table) {
+    protected HashSet<String> createAddedCols(EntityName table) {
         // 这样就可以将'__cc_ck_sign' 字端过滤掉了
         HashSet<String> addedCols = Sets.newHashSet(ClickHouseCommon.KEY_CLICKHOUSE_CK);
         return addedCols;
@@ -89,13 +89,14 @@ public class ClickHouseDataSourceFactory extends BasicDataSourceFactory {
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1, Set<String> pkCols) throws SQLException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 if (Types.VARCHAR == dbColType) {
                     if (colSize < 1) {
                         colSize = Short.MAX_VALUE;
                     }
                 }
-                return  DataType.create(dbColType, typeName, colSize);
+                return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
+                // return  DataType.create(dbColType, typeName, colSize);
             }
         });
     }

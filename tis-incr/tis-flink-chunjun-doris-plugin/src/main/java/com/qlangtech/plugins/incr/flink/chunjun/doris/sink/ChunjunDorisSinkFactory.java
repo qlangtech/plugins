@@ -127,6 +127,7 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
     @Override
     protected Object parseType(CMeta cm) {
         // DorisType
+
         return cm.getType().accept(DataXDorisWriter.columnTokenRecognise);
     }
 

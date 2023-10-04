@@ -15,17 +15,17 @@ public class HiveColumnMetaCreator extends DataSourceFactory.CreateColumnMeta {
         super(pkCols, columns1);
     }
 
-    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
+    protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
         DataTypeMeta dataTypeMeta = DataTypeMeta.getDataTypeMeta(JDBCTypes.parse(dbColType));
         ColSizeRange colsSizeRange = null;
         if (dataTypeMeta == null) {
-            return super.createColDataType(colName, typeName, dbColType, colSize);
+            return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
         }
         if (dataTypeMeta.isContainColSize()) {
             colsSizeRange = dataTypeMeta.getColsSizeRange();
-            return super.createColDataType(colName, typeName, dbColType, colsSizeRange.rectify(colSize));
+            return super.createColDataType(colName, typeName, dbColType, colsSizeRange.rectify(colSize), decimalDigits);
         }
 
-        return super.createColDataType(colName, typeName, dbColType, colSize);
+        return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
     }
 }

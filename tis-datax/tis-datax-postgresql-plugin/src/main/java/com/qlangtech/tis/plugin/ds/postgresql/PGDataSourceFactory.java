@@ -135,8 +135,8 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
                                              Set<String> pkCols) throws SQLException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
-            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize) throws SQLException {
-                DataType type = super.createColDataType(colName, typeName, dbColType, colSize);
+            protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
+                DataType type = super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
                 DataType fix = type.accept(new DataType.DefaultTypeVisitor<DataType>() {
                     @Override
                     public DataType bitType(DataType type) {

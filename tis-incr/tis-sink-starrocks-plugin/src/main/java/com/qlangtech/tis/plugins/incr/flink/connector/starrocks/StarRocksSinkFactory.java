@@ -135,7 +135,7 @@ public class StarRocksSinkFactory extends BasicTISSinkFactory<RowData> {
         TisMetaProps metaProps = Config.getMetaProps();
         return new CompileAndPackage(Lists.newArrayList(
                 new PluginWrapper.Dependency("tis-sink-starrocks-plugin", metaProps.getVersion(), false)
-                , new PluginWrapper.Dependency("tis-datax-doris-starrocks-plugin", metaProps.getVersion(), false)));
+                , new PluginWrapper.Dependency("tis-datax-starrocks-plugin", metaProps.getVersion(), false)));
     }
 
     @Override

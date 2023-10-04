@@ -1,0 +1,1 @@
+已经废弃，请使用 tis-flink-chunjun-starrocks-plugin

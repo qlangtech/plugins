@@ -157,7 +157,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
     public void testRealDump() throws Exception {
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
-        WriterTemplate.realExecuteDump(DataXCfgJson.path("es-datax-writer-real-dump.json"), dataXWriter);
+        WriterTemplate.realExecuteDump(DataXCfgJson.path(DataXElasticsearchWriter.class, "es-datax-writer-real-dump.json"), dataXWriter);
     }
 
     public void testMergeFromStupidModel() {

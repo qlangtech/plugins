@@ -230,4 +230,14 @@ public class FlinkCol implements Serializable {
             return o;
         }
     }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "name='" + name + '\'' +
+                ", type=" + type +
+                ", colType=" + colType +
+                ", pk=" + pk +
+                '}';
+    }
 }

@@ -79,11 +79,16 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      */
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
 
-
         public RowDataSinkFunc(TableAlias tab
                 , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
                 , boolean supportUpset, int sinkTaskParallelism) {
-            super(tab, primaryKeys, sinkFunction, colsMeta, sinkTaskParallelism);
+            this(tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism);
+        }
+
+        public RowDataSinkFunc(TableAlias tab
+                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, final List<FlinkCol> sourceColsMeta, List<FlinkCol> sinkColsMeta
+                , boolean supportUpset, int sinkTaskParallelism) {
+            super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
 
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"
@@ -95,7 +100,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {
             if (sourceStream.clazz == DTO.class) {
-                return sourceStream.getStream().map(new DTO2RowDataMapper(this.colsMeta))
+                return sourceStream.getStream().map(new DTO2RowDataMapper(this.sourceColsMeta))
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {

@@ -35,6 +35,13 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <version>${project.version}</version>
+            <artifactId>datax-common</artifactId>
+        </dependency>
+
+
+        <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-sink-elasticsearch7</artifactId>
             <version>${project.version}</version>

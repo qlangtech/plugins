@@ -43,8 +43,8 @@ public final class DTO2RowDataMapper extends AbstractRowDataMapper {
     }
 
     @Override
-    protected void setRowDataVal(int index, RowData row, Object value) {
-        GenericRowData rowData = (GenericRowData) row;
+    protected void setRowDataVal(int index, GenericRowData row, Object value) {
+        GenericRowData rowData = row;
         //logger.info("index:" + index + ",val:" + value + ",type:" + value.getClass().getSimpleName());
         rowData.setField(index, value);
     }

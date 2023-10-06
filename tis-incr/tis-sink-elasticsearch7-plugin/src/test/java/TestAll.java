@@ -16,23 +16,16 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugins.incr.flink.connector.starrocks.TestStarRocksSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7.TestTISXContentBuilderExtension;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-12 16:05
+ * @create: 2023-03-24 10:38
  **/
-
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestStarRocksSinkFactory.class})
+@Suite.SuiteClasses({
+        TestTISXContentBuilderExtension.class})
 public class TestAll {
-
-
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestStarRocksSinkFactory.class);
-//        return suite;
-//    }
 }

@@ -18,13 +18,19 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import org.apache.flink.table.data.DecimalData;
+import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 
 import javax.annotation.Nullable;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -46,7 +52,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        protected Object getObject(RowData rowData) {
+        protected Object getObject(GenericRowData rowData) {
             return String.valueOf(rowData.getString(colIndex));
         }
     }
@@ -57,7 +63,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        protected Object getObject(RowData rowData) {
+        protected Object getObject(GenericRowData rowData) {
             return rowData.getBinary(colIndex);
         }
     }
@@ -68,8 +74,14 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
-            return rowData.getBoolean(colIndex);
+        public Object getObject(GenericRowData rowData) {
+
+            Object val = rowData.getField(colIndex);
+            if (val instanceof java.lang.Byte) {
+                return ((java.lang.Byte) val).shortValue() > 0;
+            }
+
+            return (Boolean) val; // rowData.getBoolean(colIndex);
         }
     }
 
@@ -80,8 +92,15 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
-            return Date.valueOf(LocalDate.ofEpochDay(rowData.getInt(colIndex)));
+        public Object getObject(GenericRowData rowData) {
+            Object val = rowData.getField(colIndex);
+            LocalDate localDate = null;
+            if (val instanceof org.apache.flink.table.data.TimestampData) {
+                localDate = ((TimestampData) val).toLocalDateTime().toLocalDate();
+            } else {
+                localDate = LocalDate.ofEpochDay(rowData.getInt(colIndex));
+            }
+            return Date.valueOf(localDate);
         }
     }
 
@@ -92,8 +111,18 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
-            return rowData.getTimestamp(colIndex, -1).toTimestamp();
+        public Object getObject(GenericRowData rowData) {
+
+            Object val = rowData.getField(colIndex);
+            if (val instanceof java.lang.Integer) {
+                LocalDate localDate = LocalDate.of(0, 1, 1);
+
+                LocalTime localTime = SqlDateTimeUtils.unixTimeToLocalTime((Integer) val);
+                return Timestamp.valueOf(LocalDateTime.of(localDate, localTime));
+            }
+
+            return ((TimestampData) val).toTimestamp();
+            //  return rowData.getTimestamp(colIndex, -1).toTimestamp();
         }
     }
 
@@ -104,8 +133,15 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
-            return rowData.getDouble(colIndex);
+        public Object getObject(GenericRowData rowData) {
+            // org.apache.flink.table.data.DecimalData or Double
+            Object val = rowData.getField(colIndex);
+            if (val instanceof DecimalData) {
+                return ((DecimalData) val).toBigDecimal().doubleValue();
+            }
+            return ((Number) val).doubleValue();
+//            rowData.getDecimal()
+//            return rowData.getDouble(colIndex);
         }
     }
 
@@ -115,7 +151,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return rowData.getDecimal(colIndex, -1, -1);
         }
     }
@@ -127,8 +163,8 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
-            return rowData.getLong(colIndex);
+        public Object getObject(GenericRowData rowData) {
+            return rowData.getField(colIndex);
         }
     }
 
@@ -139,7 +175,7 @@ public class RowFieldGetterFactory {
 
         @Nullable
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return Time.valueOf(SqlDateTimeUtils.unixTimeToLocalTime((rowData.getInt(colIndex))));
         }
     }
@@ -151,7 +187,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return rowData.getFloat(colIndex);
         }
     }
@@ -163,7 +199,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return rowData.getByte(colIndex);
         }
     }
@@ -174,7 +210,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return rowData.getShort(colIndex);
         }
     }
@@ -186,7 +222,7 @@ public class RowFieldGetterFactory {
         }
 
         @Override
-        public Object getObject(RowData rowData) {
+        public Object getObject(GenericRowData rowData) {
             return rowData.getInt(colIndex);
         }
     }
@@ -207,12 +243,12 @@ public class RowFieldGetterFactory {
 
         private Object getVal(RowData rowData) {
             try {
-                return getObject(rowData);
+                return getObject((GenericRowData) rowData);
             } catch (ClassCastException e) {
                 throw new RuntimeException("colIdx:" + this.colIndex + ",colName:" + this.colName, e);
             }
         }
 
-        protected abstract Object getObject(RowData rowData);
+        protected abstract Object getObject(GenericRowData rowData);
     }
 }

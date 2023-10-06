@@ -46,21 +46,27 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final TableAlias tab;
     protected transient final int sinkTaskParallelism;
-    protected final List<FlinkCol> colsMeta;
+    protected final List<FlinkCol> sinkColsMeta;
+    protected final List<FlinkCol> sourceColsMeta;
 
-    public List<FlinkCol> getColsMeta() {
-        return this.colsMeta;
+    public List<FlinkCol> getSinkColsMeta() {
+        return this.sinkColsMeta;
     }
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
+
+    public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
+            , final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism) {
+        this(tab, primaryKeys, sinkFunction, sinkColsMeta, sinkColsMeta, sinkTaskParallelism);
+    }
 
     /**
      * @param tab
      * @param sinkFunction
      */
     public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
-            , final List<FlinkCol> colsMeta, int sinkTaskParallelism) {
-        if (CollectionUtils.isEmpty(colsMeta)) {
+            , final List<FlinkCol> sourceColsMeta, final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism) {
+        if (CollectionUtils.isEmpty(sinkColsMeta)) {
             throw new IllegalArgumentException("colsMeta can not be empty");
         }
         this.primaryKeys = primaryKeys;
@@ -70,12 +76,15 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
             throw new IllegalArgumentException("param sinkTaskParallelism can not small than 1");
         }
         this.sinkTaskParallelism = sinkTaskParallelism;
-        this.colsMeta = colsMeta;
+        this.sinkColsMeta = sinkColsMeta;
+        this.sourceColsMeta = sourceColsMeta;
         //  this.env = env;
     }
+
     public List<String> getPrimaryKeys() {
         return primaryKeys;
     }
+
     public void setSourceFilter(String name, FilterFunction<SINK_TRANSFER_OBJ> sourceFilter) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("param name can not be empty");

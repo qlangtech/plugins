@@ -142,7 +142,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         @Override
         public final TableSchema getTableSchema() {
 
-            return createTableSchema(this.rowDataSinkFunc.getPrimaryKeys(), this.rowDataSinkFunc.getColsMeta());
+            return createTableSchema(this.rowDataSinkFunc.getPrimaryKeys(), this.rowDataSinkFunc.getSinkColsMeta());
         }
 
         public static TableSchema createTableSchema(List<String> primaryKeys, List<FlinkCol> flinkCols) {

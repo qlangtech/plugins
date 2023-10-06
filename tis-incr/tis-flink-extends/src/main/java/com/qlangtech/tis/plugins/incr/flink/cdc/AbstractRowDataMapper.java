@@ -32,12 +32,20 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.data.DecimalData;
+import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 import org.apache.flink.table.types.AtomicDataType;
-import org.apache.flink.table.types.logical.*;
+import org.apache.flink.table.types.logical.BigIntType;
+import org.apache.flink.table.types.logical.DateType;
+import org.apache.flink.table.types.logical.DecimalType;
+import org.apache.flink.table.types.logical.IntType;
+import org.apache.flink.table.types.logical.SmallIntType;
+import org.apache.flink.table.types.logical.TimestampType;
+import org.apache.flink.table.types.logical.TinyIntType;
+import org.apache.flink.table.types.logical.VarCharType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -295,7 +303,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
     @Override
     public RowData map(DTO dto) throws Exception {
-        RowData row = createRowData(dto);
+        GenericRowData row = createRowData(dto);
 
         Map<String, Object> vals
                 = (dto.getEventType() == DTO.EventType.DELETE || dto.getEventType() == DTO.EventType.UPDATE_BEFORE)
@@ -316,10 +324,10 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         return row;
     }
 
-    protected abstract void setRowDataVal(int index, RowData row, Object value);
+    protected abstract void setRowDataVal(int index, GenericRowData row, Object value);
 
 
-    protected abstract RowData createRowData(DTO dto);
+    protected abstract GenericRowData createRowData(DTO dto);
 
     static class ShortConvert extends BiFunction {
         @Override
@@ -346,7 +354,13 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     static class TinyIntConvertByte extends BiFunction {
         @Override
         public Object apply(Object o) {
-            Short s = (Short) o;
+            Short s;
+            if (o instanceof Boolean) {
+                s = ((Boolean) o) ? (short) 1 : 0;
+            } else {
+                s = (Short) o;
+            }
+
             return new java.lang.Byte(s.byteValue());
             // return s.intValue();
         }

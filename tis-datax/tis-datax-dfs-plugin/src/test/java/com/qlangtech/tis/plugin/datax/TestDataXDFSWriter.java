@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.common.WriterTemplate;
 import com.qlangtech.tis.plugin.datax.format.CSVFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.datax.tdfs.impl.FtpTDFSLinker;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import org.junit.Assert;
 import org.junit.Test;
@@ -70,7 +71,12 @@ public class TestDataXDFSWriter {
         // dataXWriter.timeout = 33333;
 //        dataXWriter.username = "test";
 //        dataXWriter.password = "test";
-        dataXWriter.dfsLinker = null; //ftpServer;
+
+        FtpTDFSLinker ftpLinker = new FtpTDFSLinker();
+        ftpLinker.linker = "ftp201";
+        ftpLinker.path = "/admin/test";
+
+        dataXWriter.dfsLinker = ftpLinker; //ftpServer;
         // dataXWriter.path = "/tmp/data/";
         // dataXWriter.fileName = "yixiao";
         dataXWriter.writeMode = "truncate";

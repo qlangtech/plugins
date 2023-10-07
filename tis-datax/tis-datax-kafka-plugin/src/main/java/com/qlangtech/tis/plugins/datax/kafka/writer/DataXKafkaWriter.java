@@ -294,7 +294,7 @@ public class DataXKafkaWriter extends DataxWriter {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             DataXKafkaWriter dataxWriter
-                    = (DataXKafkaWriter) postFormVals.newInstance();
+                    =  postFormVals.newInstance();
             if (StringUtils.isEmpty(dataxWriter.testTopic)) {
                 msgHandler.addFieldError(context, "testTopic", ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
                 return false;
@@ -322,7 +322,7 @@ public class DataXKafkaWriter extends DataxWriter {
             } catch (final Exception e) {
 
                 if (ExceptionUtils.indexOfThrowable(e, org.apache.kafka.common.errors.TimeoutException.class) > -1) {
-                    throw TisException.create("Kafka服务端连接超时，请检查相关配置是否正确", e);
+                    throw TisException.create("Kafka服务端连接超时，请检查相关配置是否正确,详细：" + e.getMessage(), e);
                 }
 
                 LOGGER.error("Exception attempting to connect to the Kafka brokers: ", e);

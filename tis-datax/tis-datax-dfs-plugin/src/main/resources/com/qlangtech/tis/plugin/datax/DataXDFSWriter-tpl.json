@@ -1,7 +1,8 @@
 {
     "name": "ftpwriter",
     "parameter": {
-        #if($writer.containPort)
+        "path": "${writer.path}"
+#if($writer.containPort)
     ,"port": ${writer.port}
 #end
 #if($writer.containTimeout)
@@ -10,13 +11,11 @@
 #if($writer.containConnectPattern)
 ,"connectPattern": "${writer.connectPattern}"
 #end
-,"path": "${writer.path}"
 ,"fileName": "${writer.fileName}"
 ,"writeMode": "${writer.writeMode}"
 #if($writer.containFieldDelimiter)
 ,"fieldDelimiter": "${writer.fieldDelimiter}"
 #end
-,"compress": "${writer.compress}"
 #if($writer.containEncoding)
 ,"encoding": "${writer.encoding}"
 #end

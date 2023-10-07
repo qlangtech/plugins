@@ -71,69 +71,9 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
     }
 
     public void testConfigGenerate() throws Exception {
-//        String dbName = "tis";
-//        ClickHouseDataSourceFactory dsFactory = new ClickHouseDataSourceFactory();
-//        dsFactory.nodeDesc = "192.168.28.201";
-//        dsFactory.password = "123456";
-//        dsFactory.userName = "default";
-//        dsFactory.dbName = dbName;
-//        dsFactory.port = 8123;
-//        dsFactory.name = dbName;
-//        IDataxProcessor.TableMap tableMap = new IDataxProcessor.TableMap();
-//        tableMap.setFrom("application");
-//        tableMap.setTo("customer_order_relation");
-//
-//        CMeta cm = null;
-//        List<CMeta> cmetas = Lists.newArrayList();
-//        cm = new CMeta();
-//        cm.setName("customerregister_id");
-//        cm.setType(DataXReaderColType.STRING);
-//        cmetas.add(cm);
-//
-//        cm = new CMeta();
-//        cm.setName("waitingorder_id");
-//        cm.setType(DataXReaderColType.STRING);
-//        cmetas.add(cm);
-//
-//        cm = new CMeta();
-//        cm.setName("kind");
-//        cm.setType(DataXReaderColType.INT);
-//        cmetas.add(cm);
-//
-//        cm = new CMeta();
-//        cm.setName("create_time");
-//        cm.setType(DataXReaderColType.Long);
-//        cmetas.add(cm);
-//
-//        cm = new CMeta();
-//        cm.setName("last_ver");
-//        cm.setType(DataXReaderColType.INT);
-//        cmetas.add(cm);
-//
-//        tableMap.setSourceCols(cmetas);
+
         ClickHouseTest forTest = createDataXWriter(); //new DataXClickhouseWriter() {
-//            @Override
-//            public Class<?> getOwnerClass() {
-//                return DataXClickhouseWriter.class;
-//            }
-//
-//            @Override
-//            public ClickHouseDataSourceFactory getDataSourceFactory() {
-//                // return super.getDataSourceFactory();
-//                return dsFactory;
-//            }
-//        };
-//        writer.template = DataXClickhouseWriter.getDftTemplate();
-//        writer.batchByteSize = 3456;
-//        writer.batchSize = 9527;
-//        writer.dbName = dbName;
-//        writer.writeMode = "insert";
-//        // writer.autoCreateTable = true;
-//        writer.postSql = "drop table @table";
-//        writer.preSql = "drop table @table";
-//
-//        writer.dataXName = testDataXName;
-//        writer.dbName = dbName;
+
 
         WriterTemplate.valiateCfgGenerate("clickhouse-datax-writer-assert.json", forTest.writer, forTest.tableMap);
 
@@ -253,7 +193,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
             };
             EasyMock.replay(dataXProcessor);
             DataXClickhouseWriter writer = new DataXClickhouseWriter();
-            WriterTemplate.realExecuteDump(DataXCfgJson.path(clickhouse_datax_writer_assert_without_optional), writer);
+            WriterTemplate.realExecuteDump(DataXCfgJson.path(TestDataXClickhouseWriter.class,clickhouse_datax_writer_assert_without_optional), writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

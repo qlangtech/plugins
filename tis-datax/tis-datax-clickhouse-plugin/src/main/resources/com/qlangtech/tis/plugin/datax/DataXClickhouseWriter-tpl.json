@@ -9,21 +9,21 @@
                 "jdbcUrl": "${writer.jdbcUrl}",
                 "table": ["${writer.table}"]
             }
-        ],
+        ]
 #if($writer.containPreSql)
-        "preSql": ["${writer.preSql}"],
+       , "preSql": ["${writer.preSql}"]
 #end
 #if($writer.containPostSql)
-        "postSql": ["${writer.postSql}"],
+       , "postSql": ["${writer.postSql}"]
 #end
 #if($writer.containBatchSize)
-        "batchSize": ${writer.batchSize},
+       , "batchSize": ${writer.batchSize}
 #end
 #if($writer.containBatchByteSize)
-        "batchByteSize": ${writer.batchByteSize},
+       , "batchByteSize": ${writer.batchByteSize}
 #end
 #if($writer.containWriteMode)
-        "writeMode": "${writer.writeMode}"
+       , "writeMode": "${writer.writeMode}"
 #end
         ,"dataxName" : "${writer.dataXName}"
     }

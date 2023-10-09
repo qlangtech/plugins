@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
 import static com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler.joinField;
 
 /**
@@ -170,7 +171,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
         public DefaultMongoTable(SelectedTab table) {
             this.table = table;
             this.tabExtend = Objects.requireNonNull((MongoSelectedTabExtend) table.getSourceProps(),
-                    "source extend " + "can not be null");
+                    "source table:" + table.getName() + " relevant extend props can not be null");
         }
 
         @Override

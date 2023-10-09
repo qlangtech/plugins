@@ -20,11 +20,18 @@ package com.qlangtech.tis.plugin.ds.sqlserver;
 
 import com.qlangtech.tis.extension.TISExtension;
 
+import java.sql.Driver;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2023-08-01 10:39
  **/
 public class SqlServer2008DatasourceFactory extends SqlServerDatasourceFactory {
+
+    @Override
+    protected Driver createDriver() {
+        return new com.microsoft.sqlserver.jdbc.SQLServerDriver();
+    }
 
     @TISExtension
     public static class DefaultDescriptor extends BasicDescriptor {

@@ -1,0 +1,16 @@
+{
+  "useSSL": {
+    "help": "支持加密传输",
+    "dftVal": false,
+    "enum": [
+      {
+        "val": true,
+        "label": "是"
+      },
+      {
+        "val": false,
+        "label": "否"
+      }
+    ]
+  }
+}

@@ -120,12 +120,19 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         @Override
         protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
             // 将主键排在最前面
-//            List<String> result = Lists.newArrayList(pks);
-//            cols.stream().filter((c) -> !c.isPk()).forEach((c) -> {
-//                result.add(createColWrapper(c));
-//            });
-//            return result;
-            return null;
+
+            List<ColWrapper> result = Lists.newArrayList();
+            for (String pk : pks) {
+                for (CMeta c : cols) {
+                    if (pk.equalsIgnoreCase(c.getName())) {
+                        result.add(createColWrapper(c));
+                    }
+                }
+            }
+            cols.stream().filter((c) -> !pks.contains(c.getName())).forEach((c) -> {
+                result.add(createColWrapper(c));
+            });
+            return result;
         }
 
         @Override

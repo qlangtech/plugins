@@ -6,15 +6,15 @@
     "password": "${writer.password}",
     "database": "${writer.database}",
     "table": "${writer.tableName}",
-    "column": [${writer.colsQuotes}],
+    "column": [${writer.colsQuotes}]
 #if($writer.containPreSql)
-    "preSql": ["$writer.preSql"],
+   , "preSql": ["$writer.preSql"]
 #end
 #if($writer.containPostSql)
-    "postSql": ["$writer.postSql"],
+   , "postSql": ["$writer.postSql"]
 #end
-    "jdbcUrl": "${writer.jdbcUrl}",
-    "loadUrl": ${writer.loadUrl},
+   , "jdbcUrl": "${writer.jdbcUrl}"
+   , "loadUrl": ${writer.loadUrl}
 #if($writer.containLoadProps)
   ,"loadProps": ${writer.loadProps}
 #end

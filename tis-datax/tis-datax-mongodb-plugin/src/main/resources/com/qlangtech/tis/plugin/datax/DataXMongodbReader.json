@@ -1,6 +1,7 @@
 {
   "inspectRowCount": {
     "label": "预读记录数",
+    "dftVal": 100,
     "help": "预先读取MongoDB中一定数量的记录，通过反射的方式分析出各字段类型，可以简化MongoDB Schema定义"
   },
   "fetchSize": {

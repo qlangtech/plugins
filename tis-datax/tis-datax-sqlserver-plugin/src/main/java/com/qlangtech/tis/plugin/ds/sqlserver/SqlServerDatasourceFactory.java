@@ -25,9 +25,9 @@ import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +41,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
 
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
-        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName + ";user=" + this.userName + ";password=" + password;
+        String jdbcUrl = "jdbc:sqlserver://" + ip + ":" + this.port + ";databaseName=" + dbName;// + ";user=" + this.userName + ";password=" + password;
         if (StringUtils.isNotEmpty(this.extraParams)) {
             jdbcUrl = jdbcUrl + ";" + this.extraParams;
         }
@@ -58,16 +58,31 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         return Optional.of("\"");
     }
 
+    private transient java.sql.Driver driver;
+
     @Override
     public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
-        // return DriverManager.getConnection(jdbcUrl, StringUtils.trimToNull(this.userName), StringUtils.trimToNull(password));
-        try {
-            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        } catch (ClassNotFoundException e) {
-            throw new SQLException(e.getMessage(), e);
+        if (driver == null) {
+            driver = createDriver();
         }
-        return new JDBCConnection(DriverManager.getConnection(jdbcUrl), jdbcUrl);
+        java.util.Properties info = createJdbcProps();
+
+        if (this.userName != null) {
+            info.put("user", this.userName);
+        }
+        if (password != null) {
+            info.put("password", password);
+        }
+        //info.put("connectTimeout", "60000");
+        return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
     }
+
+    protected Properties createJdbcProps() {
+        return new Properties();
+    }
+
+    protected abstract java.sql.Driver createDriver();
+
 
     // @TISExtension
     public static abstract class BasicDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {

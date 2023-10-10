@@ -8,5 +8,9 @@
   "format": {
     "label": "传输格式",
     "dftVal": "debezium-json"
+  },
+  "semantic": {
+    "dftVal": "none",
+    "enum": "com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.sink.ChujunKafkaSinkFactory.supportSemantic()"
   }
 }

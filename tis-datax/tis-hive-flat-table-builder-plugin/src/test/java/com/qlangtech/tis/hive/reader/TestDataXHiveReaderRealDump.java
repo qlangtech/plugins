@@ -18,10 +18,10 @@
 
 package com.qlangtech.tis.hive.reader;
 
+import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.util.Configuration;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
-import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -89,7 +89,8 @@ public class TestDataXHiveReaderRealDump extends TestCase {
                         return Configuration.from(writerJsonInput);
                     });
             readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-            readerConf.set(DataxExecutor.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
+            readerConf.set(IDataXCfg.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY,
+                    dsFactory.identityValue());
             ReaderTemplate.realExecute(dataXName, readerConf, dataxReaderResult, dataxReader);
             System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
         } finally {

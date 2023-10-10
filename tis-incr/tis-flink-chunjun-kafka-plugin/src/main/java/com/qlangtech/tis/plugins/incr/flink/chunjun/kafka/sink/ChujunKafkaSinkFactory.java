@@ -30,6 +30,7 @@ import com.dtstack.chunjun.connector.kafka.serialization.RowSerializationSchema;
 import com.dtstack.chunjun.connector.kafka.sink.KafkaProducer;
 import com.dtstack.chunjun.connector.kafka.sink.KafkaSinkFactory;
 import com.dtstack.chunjun.converter.ISerializationConverter;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
@@ -39,6 +40,7 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
@@ -111,7 +113,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
                         kafkaConf.getTopic(),
                         rowSerializationSchema,
                         props,
-                        FlinkKafkaProducer.Semantic.AT_LEAST_ONCE,
+                        getSemantic(),
                         FlinkKafkaProducer.DEFAULT_KAFKA_PRODUCERS_POOL_SIZE);
 
                 sinkFuncRef.setSinkFunction(kafkaProducer);
@@ -154,6 +156,43 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         sinkFuncRef.setParallelism(this.parallelism);
         return sinkFuncRef;
     }
+
+
+    public static List<SemanticOption> supportSemantic() {
+
+//        "enum": [
+//        {
+//            "label": "Exactly-Once",
+//                "val": "exactly-once"
+//        },
+//        {
+//            "label": "At-Least-Once",
+//                "val": "at-least-once"
+//        }
+//      ]
+        return Lists.newArrayList(new SemanticOption("None", "none", FlinkKafkaProducer.Semantic.NONE)
+                , new SemanticOption("Exactly-Once", "exactly-once", FlinkKafkaProducer.Semantic.EXACTLY_ONCE)
+                , new SemanticOption("At-Least-Once", "at-least-once", FlinkKafkaProducer.Semantic.AT_LEAST_ONCE));
+    }
+
+    private static class SemanticOption extends Option {
+        private final FlinkKafkaProducer.Semantic semantic;
+
+        public SemanticOption(String name, Object value, FlinkKafkaProducer.Semantic semantic) {
+            super(name, value);
+            this.semantic = semantic;
+        }
+    }
+
+    private FlinkKafkaProducer.Semantic getSemantic() {
+        for (SemanticOption opt : ChujunKafkaSinkFactory.supportSemantic()) {
+            if (this.semantic.equals(opt.getValue())) {
+                return opt.semantic;
+            }
+        }
+        throw new IllegalStateException("illegal semantic:" + this.semantic);
+    }
+
 
     @Override
     protected Object parseType(CMeta cm) {

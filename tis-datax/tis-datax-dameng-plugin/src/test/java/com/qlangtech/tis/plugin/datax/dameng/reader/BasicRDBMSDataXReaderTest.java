@@ -1,10 +1,10 @@
 package com.qlangtech.tis.plugin.datax.dameng.reader;
 
+import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.util.Configuration;
 import com.google.common.collect.Lists;
 import com.qlangtech.plugins.incr.flink.cdc.TestSelectedTab;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -121,7 +121,7 @@ public abstract class BasicRDBMSDataXReaderTest
         Configuration readerConf = Configuration.from(ReaderTemplate.generateReaderCfg(dataxReader));
 
         readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-        readerConf.set(DataxExecutor.connectKeyParameter
+        readerConf.set(IDataXCfg.connectKeyParameter
                 + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
 
         ReaderTemplate.realExecute(TestDataXDaMengReaderReal.dataXName, readerConf, dataxReaderResult, dataxReader);

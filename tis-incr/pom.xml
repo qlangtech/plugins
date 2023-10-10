@@ -77,6 +77,7 @@
         <module>tis-flink-chunjun-starrocks-plugin</module>
         <module>tis-flink-chunjun-kafka-plugin</module>
         <module>tis-flink-chunjun-rabbitmq-plugin</module>
+        <module>tis-flink-chunjun-dameng-plugin</module>
         <module>tis-flink-msg-format-plugin</module>
 
 

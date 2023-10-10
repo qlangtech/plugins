@@ -43,6 +43,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -102,6 +103,21 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //    必选：否
 //    参数类型：int
 //    默认值：1
+
+    public static List<Option> getSupportSemantic() {
+
+//        "enum": [
+//        {
+//            "label": "Exactly-Once",
+//                "val": "exactly-once"
+//        },
+//        {
+//            "label": "At-Least-Once",
+//                "val": "at-least-once"
+//        }
+//      ]
+        return Lists.newArrayList(new Option("Exactly-Once", "exactly-once"), new Option("At-Least-Once", "at-least-once"));
+    }
 
     @FormField(ordinal = 4, validate = {Validator.require})
     public ChunjunStreamScriptType scriptType;

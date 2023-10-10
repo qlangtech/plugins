@@ -100,6 +100,10 @@ public class TestDataXDaMengWriter {
     public static void setPlaceholderReader() {
         DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
             @Override
+            public void startScanDependency() {
+
+            }
+            @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 return null;
             }

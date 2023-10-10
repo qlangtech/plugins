@@ -62,6 +62,7 @@
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>
         <module>tis-plugin-test/tis-testcontainer-oracle</module>
         <module>tis-plugin-test/tis-testcontainer-starrocks</module>
+        <module>tis-plugin-test/tis-testcontainer-dameng</module>
         <module>tis-e2e</module>
         <module>tis-kerberos-plugin</module>
         <module>tis-split-table-strategy-plugin</module>
@@ -163,6 +164,7 @@
         <scmTag>HEAD</scmTag>
         <!-- Where to put temporary files during test runs. -->
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>
+        <testcontainers.version>1.17.3</testcontainers.version>
     </properties>
 
 
@@ -179,6 +181,13 @@
             <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-testcontainer-oracle</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-testcontainer-dameng</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

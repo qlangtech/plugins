@@ -17,6 +17,7 @@ import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import dm.jdbc.driver.DmdbType;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.Connection;
@@ -110,6 +111,15 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
         return Optional.of("\"");
     }
 
+    /**
+     * @param inSink
+     * @param table
+     * @param columns1
+     * @param pkCols
+     * @return
+     * @throws SQLException
+     * @see DmdbType 内部方法（d2jType）会将达梦内部的类型转成jdbc type
+     */
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
                                              Set<String> pkCols) throws SQLException {

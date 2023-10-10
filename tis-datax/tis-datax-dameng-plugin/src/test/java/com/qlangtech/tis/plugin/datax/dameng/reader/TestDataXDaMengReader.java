@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.datax.dameng.reader;
 
+import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.util.Configuration;
-import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -137,7 +137,7 @@ public class TestDataXDaMengReader   {
                     return Configuration.from(writerJsonInput);
                 });
         readerConf.set("parameter.connection[0].jdbcUrl[0]", daMengDataSource.getJdbcUrls().get(0));
-        readerConf.set(DataxExecutor.connectKeyParameter
+        readerConf.set(IDataXCfg.connectKeyParameter
                 + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, daMengDataSource.identityValue());
         ReaderTemplate.realExecute(BasicRDBMSDataXReaderTest.dataXName, readerConf, dataxReaderResult, dataxReader);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));

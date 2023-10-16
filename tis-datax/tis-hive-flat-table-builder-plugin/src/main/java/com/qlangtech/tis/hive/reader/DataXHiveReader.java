@@ -45,6 +45,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class DataXHiveReader extends AbstractDFSReader {
 
     @Override
     public List<ISelectedTab> getSelectedTabs() {
-        return this.selectedTabs.stream().collect(Collectors.toList());
+        return Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null").stream().collect(Collectors.toList());
     }
 
     @Override

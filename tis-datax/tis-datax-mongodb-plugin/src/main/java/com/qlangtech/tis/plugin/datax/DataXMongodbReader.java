@@ -295,12 +295,6 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
             return true;
         }
 
-        private String splitMetas(int colIndex, int docSplitFieldIndex, String fieldKey) {
-            return joinField(SelectedTab.KEY_FIELD_COLS, Lists.newArrayList(colIndex),
-                    MongoCMetaCreatorFactory.KEY_DOC_FIELD_SPLIT_METAS, Lists.newArrayList(docSplitFieldIndex),
-                    fieldKey);
-        }
-
 
         @Override
         public boolean validateSubForm(IControlMsgHandler msgHandler, Context context, SelectedTab tab) {
@@ -321,7 +315,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                 int docSplitFieldIndex = 0;
                 for (MongoCMeta.MongoDocSplitCMeta splitCMeta : mongoCMeta.getDocFieldSplitMetas()) {
 
-                    final String fieldJsonPathKey = splitMetas(colIndex, docSplitFieldIndex, "jsonPath");
+                    final String fieldJsonPathKey = MongoCMetaCreatorFactory.splitMetasKey(colIndex, docSplitFieldIndex, MongoCMetaCreatorFactory.KEY_JSON_PATH);
 
                     jsonPath = splitCMeta.getJsonPath();
 
@@ -334,7 +328,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
                     }
 
                     name = splitCMeta.getName();
-                    final String fieldNameKey = splitMetas(colIndex, docSplitFieldIndex, nameKey);
+                    final String fieldNameKey = MongoCMetaCreatorFactory.splitMetasKey(colIndex, docSplitFieldIndex, nameKey);
 
                     if (Validator.require.validate(msgHandler, context, fieldNameKey, name) //
                             && Validator.db_col_name.validate(msgHandler, context, fieldNameKey, name)) {
@@ -370,7 +364,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
                         msgHandler.addFieldError(context, joinField(SelectedTab.KEY_FIELD_COLS, fieldIndex, nameKey),
                                 "字段重复");
-                        msgHandler.addFieldError(context, splitMetas(colIndex, docSplitFieldIndex, nameKey), "字段重复");
+                        msgHandler.addFieldError(context, MongoCMetaCreatorFactory.splitMetasKey(colIndex, docSplitFieldIndex, nameKey), "字段重复");
 
                         return false;
                     } else {

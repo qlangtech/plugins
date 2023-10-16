@@ -62,7 +62,8 @@ public class ReaderFilterOn extends ReaderFilter {
 
             ReaderFilterOn filter = postFormVals.newInstance();
             if (StringUtils.isEmpty(filter.lowerBound) && StringUtils.isEmpty(filter.upperBound)) {
-
+                msgHandler.addFieldError(context,"lowerBound","至少填一项");
+                msgHandler.addFieldError(context,"upperBound","至少填一项");
                 msgHandler.addErrorMessage(context, "查询区间不能都为空，上下区间至少填一项");
                 return false;
             }

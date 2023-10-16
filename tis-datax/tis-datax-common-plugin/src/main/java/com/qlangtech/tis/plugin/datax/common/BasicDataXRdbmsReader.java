@@ -71,7 +71,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
     private transient int preSelectedTabsHash;
     public String dataXName;
 
-    // @Override
     public Integer getRowFetchSize() {
         return this.fetchSize;
     }
@@ -115,154 +114,30 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         return true;
     }
 
-
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab,
                                                                    IDataSourceDumper dumper);
-
-
     @Override
     public void setKey(KeyedPluginStore.Key key) {
         this.dataXName = key.keyVal.getVal();
     }
 
-    //    @Override
-    //    public DBConfig getDbConfig() {
-    //        return getBasicDataSource().getDbConfig();
-    //    }
-    //
-    //    @Override
-    //    public BasicDataSourceFactory getBasicDataSource() {
-    //        return (BasicDataSourceFactory) getDataSourceFactory();
-    //    }
 
     @Override
     public final IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
         Objects.requireNonNull(this.selectedTabs, "selectedTabs can not be null");
         List<SelectedTab> tabs = this.selectedTabs.stream().filter(filter).collect(Collectors.toList());
-        // DS dsFactory = this.getDataSourceFactory();
-
 
         return new DataXRdbmsGroupChildTaskIterator(this, this.getUnexistColFilter(), tabs);
-
-        //        AtomicInteger selectedTabIndex = new AtomicInteger(0);
-        //        AtomicInteger taskIndex = new AtomicInteger(0);
-        //
-        //        final int selectedTabsSize = tabs.size();
-        //        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new
-        //        ConcurrentHashMap();
-        //        AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
-        //
-        //        return new IGroupChildTaskIterator() {
-        //            @Override
-        //            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
-        //                return groupedInfo;
-        //            }
-        //
-        //            @Override
-        //            public boolean hasNext() {
-        //
-        //                Iterator<IDataSourceDumper> dumperIt = initDataSourceDumperIterator();
-        //                if (dumperIt.hasNext()) {
-        //                    return true;
-        //                } else {
-        //                    if (selectedTabIndex.get() >= selectedTabsSize) {
-        //                        return false;
-        //                    } else {
-        //                        dumperItRef.set(null);
-        //                        initDataSourceDumperIterator();
-        //                        return true;
-        //                    }
-        //                }
-        //            }
-        //
-        //            private Iterator<IDataSourceDumper> initDataSourceDumperIterator() {
-        //                Iterator<IDataSourceDumper> dumperIt;
-        //                if ((dumperIt = dumperItRef.get()) == null) {
-        //                    SelectedTab tab = tabs.get(selectedTabIndex.getAndIncrement());
-        //                    if (StringUtils.isEmpty(tab.getName())) {
-        //                        throw new IllegalStateException("tableName can not be null");
-        //                    }
-        ////                    List<ColumnMetaData> tableMetadata = null;
-        ////                    IDataSourceDumper dumper = null;
-        //                    DataDumpers dataDumpers = null;
-        //                    TISTable tisTab = new TISTable();
-        //                    tisTab.setTableName(tab.getName());
-        //                    int[] index = {0};
-        //                    tisTab.setReflectCols(tab.getCols().stream().map((c) -> {
-        //                        return createColumnMetaData(index, c.getName());
-        //                    }).collect(Collectors.toList()));
-        //
-        //                    dataDumpers = dsFactory.getDataDumpers(tisTab);
-        //                    dumperIt = dataDumpers.dumpers;
-        //                    dumperItRef.set(dumperIt);
-        //                }
-        //                return dumperIt;
-        //            }
-        //
-        //            @Override
-        //            public IDataxReaderContext next() {
-        //                Iterator<IDataSourceDumper> dumperIterator = dumperItRef.get();
-        //                Objects.requireNonNull(dumperIterator, "dumperIterator can not be null,selectedTabIndex:" +
-        //                selectedTabIndex.get());
-        //                IDataSourceDumper dumper = dumperIterator.next();
-        //                SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
-        //                String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-        //                List<DataXCfgGenerator.DBDataXChildTask> childTasks
-        //                        = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
-        //                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(), childTask));
-        //                RdbmsReaderContext dataxContext = createDataXReaderContext(childTask, tab, dumper);
-        //
-        //                dataxContext.setWhere(tab.getWhere());
-        //
-        //                if (isFilterUnexistCol()) {
-        //                    Map<String, ColumnMetaData> tableMetadata = tabColsMap.get(tab.getName());
-        //
-        //                    dataxContext.setCols(tab.cols.stream()
-        //                            .filter((c) -> tableMetadata.containsKey(c)).collect(Collectors.toList()));
-        //                } else {
-        //                    dataxContext.setCols(tab.cols);
-        //                }
-        //                return dataxContext;
-        //            }
-        //        };
     }
 
-    //    public static ColumnMetaData createColumnMetaData(int[] index, String colName) {
-    //        return new ColumnMetaData(index[0]++, colName, new DataType(-999), false, true);
-    //    }
 
     protected FilterUnexistCol getUnexistColFilter() {
         return FilterUnexistCol.noneFilter();
     }
 
-
     TableColsMeta getTabsMeta() {
-
-
         return new TableColsMeta(getDataSourceFactory(), this.dbName);
-
-
-        //        return new Memoizer<String, Map<String, ColumnMetaData>>() {
-        //            @Override
-        //            public Map<String, ColumnMetaData> compute(String tab) {
-        //
-        //
-        //                Objects.requireNonNull(datasource, "ds:" + dbName + " relevant DataSource can not be find");
-        //
-        //                try {
-        //                    return datasource.getTableMetadata(conn.get(), EntityName.parse(tab))
-        //                            .stream().collect(
-        //                                    Collectors.toMap(
-        //                                            (m) -> m.getKey()
-        //                                            , (m) -> m
-        //                                            , (c1, c2) -> c1));
-        //                } catch (TableNotFoundException e) {
-        //                    throw new RuntimeException(e);
-        //                }
-        //            }
-        //        };
     }
-
 
     @Override
     public final String getTemplate() {
@@ -303,32 +178,6 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         DataSourceFactory plugin = getDataSourceFactory();
         return plugin.getTableMetadata(inSink, table);
     }
-
-    //    /**
-    //     * 取表的主键
-    //     *
-    //     * @param table
-    //     * @return
-    //     */
-    //    public List<ColumnMetaData> getPrimaryKeys(String table) {
-    //        return this.getTableMetadata(table).stream()
-    //                .filter((col) -> col.isPk()).collect(Collectors.toList());
-    //    }
-    //
-    //
-    //    public List<ColumnMetaData> getPartitionKeys(String table) {
-    //        return this.getTableMetadata(table).stream()
-    //                .filter((col) -> {
-    //                    switch (col.getType().getCollapse()) {
-    //                        // case STRING:
-    //                        case INT:
-    //                        case Long:
-    //                        case Date:
-    //                            return true;
-    //                    }
-    //                    return false;
-    //                }).collect(Collectors.toList());
-    //    }
 
 
     @Override

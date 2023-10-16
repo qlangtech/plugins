@@ -34,8 +34,10 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.ElementPluginDesc;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -61,7 +63,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -246,7 +247,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
             Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
             rewriteSubFormProperties =
-                    SuFormProperties.copy(filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor),
+                    SuFormProperties.copy(PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor),
                             newSubDescriptor.clazz)), newSubDescriptor.clazz, newSubDescriptor, subformProps);
             return rewriteSubFormProperties;
         }

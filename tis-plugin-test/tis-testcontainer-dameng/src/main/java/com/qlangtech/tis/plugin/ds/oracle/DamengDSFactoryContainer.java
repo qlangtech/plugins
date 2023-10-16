@@ -43,9 +43,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNotNull;
 
-//import com.qlangtech.tis.plugin.ds.oracle.impl.SIDConnEntity;
-//import com.qlangtech.tis.plugin.ds.oracle.impl.ServiceNameConnEntity;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-10-01 09:36

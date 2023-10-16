@@ -25,7 +25,9 @@ import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.ElementPluginDesc;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -149,42 +151,6 @@ public class DataXKafkaWriter extends DataxWriter {
         return null;
     }
 
-//  @Override
-//  public AirbyteConnectionStatus check(final JsonNode config) {
-//    try {
-//      final String testTopic = config.has("test_topic") ? config.get("test_topic").asText() : "";
-//      if (!testTopic.isBlank()) {
-//        final KafkaDestinationConfig kafkaDestinationConfig = KafkaDestinationConfig.getKafkaDestinationConfig(config);
-//        final KafkaProducer<String, JsonNode> producer = kafkaDestinationConfig.getProducer();
-//        final String key = UUID.randomUUID().toString();
-//        final JsonNode value = Jsons.jsonNode(ImmutableMap.of(
-//            COLUMN_NAME_AB_ID, key,
-//            COLUMN_NAME_STREAM, "test-topic-stream",
-//            COLUMN_NAME_EMITTED_AT, System.currentTimeMillis(),
-//            COLUMN_NAME_DATA, Jsons.jsonNode(ImmutableMap.of("test-key", "test-value"))));
-//
-//        final RecordMetadata metadata = producer.send(new ProducerRecord<>(
-//            namingResolver.getIdentifier(testTopic), key, value)).get();
-//        producer.flush();
-//
-//        LOGGER.info("Successfully connected to Kafka brokers for topic '{}'.", metadata.topic());
-//      }
-//      return new AirbyteConnectionStatus().withStatus(Status.SUCCEEDED);
-//    } catch (final Exception e) {
-//      LOGGER.error("Exception attempting to connect to the Kafka brokers: ", e);
-//      return new AirbyteConnectionStatus()
-//          .withStatus(Status.FAILED)
-//          .withMessage("Could not connect to the Kafka brokers with provided configuration. \n" + e.getMessage());
-//    }
-//  }
-
-
-//    public void getConsumer() {
-//        return new KafkaRecordConsumer(KafkaProducerFactory.getKafkaConfig(this),
-//                catalog,
-//                outputRecordCollector,
-//                null);
-//    }
 
     public Map<String, Object> buildKafkaConfig() {
         return buildKafkaConfig(false);
@@ -223,13 +189,6 @@ public class DataXKafkaWriter extends DataxWriter {
                 .collect(Collectors.toMap((e) -> e.getKey(), (e) -> String.valueOf(e.getValue())));
     }
 
-//  public static void main(final String[] args) throws Exception {
-//    final Destination destination = new KafkaDestination();
-//    LOGGER.info("Starting destination: {}", KafkaDestination.class);
-//    new IntegrationRunner(destination).run(args);
-//    LOGGER.info("Completed destination: {}", KafkaDestination.class);
-//  }
-
 
     @TISExtension
     public static class DefaultDescriptor extends BaseDataxWriterDescriptor implements DataxWriter.IRewriteSuFormProperties {
@@ -249,7 +208,7 @@ public class DataXKafkaWriter extends DataxWriter {
 
             Descriptor<SelectedTab> newSubDescriptor = getRewriterSelectTabDescriptor();
             rewriteSubFormProperties = SuFormProperties.copy(
-                    filterFieldProp(buildPropertyTypes(Optional.of(newSubDescriptor), newSubDescriptor.clazz))
+                    PropertyType.filterFieldProp(PropertyType.buildPropertyTypes(ElementPluginDesc.create(newSubDescriptor), newSubDescriptor.clazz))
                     , newSubDescriptor.clazz
                     , newSubDescriptor
                     , subformProps);
@@ -294,7 +253,7 @@ public class DataXKafkaWriter extends DataxWriter {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             DataXKafkaWriter dataxWriter
-                    =  postFormVals.newInstance();
+                    = postFormVals.newInstance();
             if (StringUtils.isEmpty(dataxWriter.testTopic)) {
                 msgHandler.addFieldError(context, "testTopic", ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
                 return false;

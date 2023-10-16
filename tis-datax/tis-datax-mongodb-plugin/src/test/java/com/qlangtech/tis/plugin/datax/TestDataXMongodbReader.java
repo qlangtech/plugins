@@ -18,18 +18,26 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONArray;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.PluginFormProperties;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
+import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.PropertyType;
+import com.qlangtech.tis.extension.util.MultiItemsViewType;
 import com.qlangtech.tis.extension.util.PluginExtraProps;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.common.ReaderTemplate;
 import com.qlangtech.tis.plugin.datax.mongo.MongoCMeta;
+import com.qlangtech.tis.plugin.datax.mongo.MongoCMetaCreatorFactory;
 import com.qlangtech.tis.plugin.datax.mongo.MongoSelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.mongo.TestMongoCMetaCreatorFactory;
 import com.qlangtech.tis.plugin.datax.mongo.reader.ReaderFilteOff;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
@@ -38,23 +46,27 @@ import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.BsonType;
+import org.easymock.EasyMock;
 import org.junit.Assert;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-08 11:35
  **/
-public class TestDataXMongodbReader extends TestCase {
+public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
     private static final String DOC_TYPE_SPLIT_FIELD1 = "doc_type_split_field1";
     private static final String DOC_TYPE_SPLIT_FIELD2 = "doc_type_split_field2";
@@ -66,6 +78,12 @@ public class TestDataXMongodbReader extends TestCase {
 
     private List<String> assertColsWithoutDocTypeField //
             = Lists.newArrayList("col1", "col2", "col3", DOC_TYPE_SPLIT_FIELD1, DOC_TYPE_SPLIT_FIELD2);
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        this.clearMocks();
+    }
 
     public void testGetDftTemplate() {
         String dftTemplate = DataXMongodbReader.getDftTemplate();
@@ -145,6 +163,65 @@ public class TestDataXMongodbReader extends TestCase {
         Assert.fail("can not reach here");
     }
 
+
+    public void testValidateSubForm() {
+        DataXMongodbReader reader = new DataXMongodbReader();
+        DataXMongodbReader.DefaultDescriptor descriptor = (DataXMongodbReader.DefaultDescriptor) reader.getDescriptor();
+        List<SelectedTab> tabs = this.getSelectedTabs();
+        Assert.assertEquals(1, tabs.size());
+
+        IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
+
+        Context context = mock("context", Context.class);
+        EasyMock.expect(context.hasErrors()).andReturn(false);
+        this.replay();
+        SelectedTab selectedTab = tabs.get(0);
+        Assert.assertTrue(descriptor.validateSubForm(msgHandler, context, selectedTab));
+
+        selectedTab.getCols();
+
+        this.verifyAll();
+    }
+
+
+    public void testParseColsHtmlPost() {
+
+        Optional<CMeta.ElementCreatorFactory> mongoElementCreator = Optional.of(new MongoCMetaCreatorFactory());
+        IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
+        Context context = mock("context", Context.class);
+
+        // 执行validateSubForm 时会用到
+        msgHandler.addFieldError(context, TestMongoCMetaCreatorFactory.createTestJsonPathFieldKey(), ValidatorCommons.MSG_EMPTY_INPUT_ERROR);
+        EasyMock.expect(context.hasErrors()).andReturn(true);
+
+        JSONArray colsJson = JSONArray.parseArray(IOUtils.loadResourceFromClasspath(TestDataXMongodbReader.class
+                , "mongo_reader_mulit_select_cols_with_docfield_split_metas_jsonpath_empty.json"));
+
+        this.replay();
+        CMeta.ParsePostMCols parsePostMCols
+                = PluginExtraProps.parsePostMCols(mongoElementCreator, msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
+        Assert.assertNotNull(parsePostMCols);
+        Assert.assertFalse(parsePostMCols.validateFaild);
+        Assert.assertEquals(5, parsePostMCols.writerCols.size());
+
+        Set<String> cols = Sets.newHashSet("array", "profile", "_id", "name", "age");
+
+        Assert.assertTrue("cols shall be:" + String.join(",", cols), CollectionUtils.isEqualCollection(cols
+                , parsePostMCols.writerCols.stream().map((col) -> col.getName()).collect(Collectors.toSet())));
+
+
+        DataXMongodbReader.DefaultDescriptor mongoReaderDescriptor = new DataXMongodbReader.DefaultDescriptor();
+
+        SelectedTab tab = new SelectedTab();
+        tab.cols = parsePostMCols.writerCols;
+
+        Assert.assertFalse("validate shall be faild"
+                , mongoReaderDescriptor.validateSubForm(msgHandler, context, tab));
+
+        this.verifyAll();
+    }
+
+
     private static List<SelectedTab> getSelectedTabs() {
         return getSelectedTabs(false);
     }
@@ -167,7 +244,7 @@ public class TestDataXMongodbReader extends TestCase {
 
         });
 
-        Optional<CMeta.ElementCreatorFactory> metaCreator = fieldProp.extraProp.getCMetaCreator();
+        Optional<CMeta.ElementCreatorFactory> metaCreator = fieldProp.getCMetaCreator();
         Assert.assertTrue(metaCreator.isPresent());
         List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, metaCreator, (tab) -> {
 

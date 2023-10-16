@@ -19,6 +19,7 @@
 import com.qlangtech.tis.plugin.datax.TestDataXMongodbReader;
 import com.qlangtech.tis.plugin.datax.TestDataXMongodbWriter;
 import com.qlangtech.tis.plugin.datax.mongo.TestMongoCMeta;
+import com.qlangtech.tis.plugin.datax.mongo.TestMongoCMetaCreatorFactory;
 import com.qlangtech.tis.plugin.datax.mongo.TestMongoColumnMetaData;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -31,6 +32,7 @@ import junit.framework.TestSuite;
 public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
+        suite.addTestSuite(TestMongoCMetaCreatorFactory.class);
         suite.addTestSuite(TestDataXMongodbReader.class);
         suite.addTestSuite(TestDataXMongodbWriter.class);
         suite.addTestSuite(TestMongoCMeta.class);

@@ -22,14 +22,10 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-
-import java.util.Optional;
 
 /**
  * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/mongodb-cdc.html
@@ -87,7 +83,10 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
         return this.consumerHandle;
     }
 
-    @TISExtension()
+    /**
+     * 还没有调试好暂时不支持
+     */
+    //@TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {

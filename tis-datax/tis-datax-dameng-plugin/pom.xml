@@ -32,8 +32,16 @@
     <packaging>tpi</packaging>
 
     <properties>
-
+        <dameng.jdbc.driver.version>8.1.1.193</dameng.jdbc.driver.version>
     </properties>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
 
     <dependencies>
 
@@ -61,7 +69,7 @@
         <dependency>
             <groupId>com.dameng</groupId>
             <artifactId>DmJdbcDriver18</artifactId>
-            <version>8.1.1.193</version>
+            <version>${dameng.jdbc.driver.version}</version>
         </dependency>
     </dependencies>
 

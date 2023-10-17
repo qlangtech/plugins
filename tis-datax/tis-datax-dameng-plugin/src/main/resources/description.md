@@ -1,6 +1,6 @@
 * 实现达梦数据源
     
-  支持达梦JDBC数据源定义
+  支持达梦JDBC数据源(version: ${dameng.jdbc.driver.version})定义
   
 * 支持达梦类型的 DataX （Writer/Reader）插件
   

@@ -9,7 +9,8 @@
     "help": "Doris数据库的用户名"
   },
   "password": {
-    "help": "Doris数据库的密码"
+    "help": "Doris数据库的密码",
+    "validators": "require:disable"
   },
   "nodeDesc": {
     "placeholder": "172.28.17.100",

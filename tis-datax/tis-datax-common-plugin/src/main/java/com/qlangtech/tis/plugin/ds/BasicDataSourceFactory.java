@@ -67,7 +67,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.user_name})
     public String userName;
 
-    @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank})
+    @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {Validator.none_blank, Validator.require})
     public String password;
     /**
      * 节点描述
@@ -85,7 +85,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     /**
      * 附加参数
      */
-    @FormField(ordinal = 11, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT)
     public String extraParams;
 
 
@@ -325,7 +325,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
 
     public abstract static class BasicRdbmsDataSourceFactoryDescriptor
             extends BaseDataSourceFactoryDescriptor<BasicDataSourceFactory> implements INotebookable {
-        private static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\&\\w+?\\=\\w+?)*");
+        public static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\&\\w+?\\=\\w+?)*");
         // private static final ZeppelinClient zeppelinClient;
 
 
@@ -383,15 +383,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
                     try (Statement statement = connection.getConnection().createStatement()) {
                         final List<String> statements
                                 = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
-                                .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                                .map(
-                                        x -> {
-                                            final Matcher m =
-                                                    COMMENT_PATTERN.matcher(x);
-                                            return m.matches() ? m.group(1) : x;
-                                        })
-                                .collect(Collectors.joining("\n"))
-                                .split(";"))
+                                        .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                        .map(
+                                                x -> {
+                                                    final Matcher m =
+                                                            COMMENT_PATTERN.matcher(x);
+                                                    return m.matches() ? m.group(1) : x;
+                                                })
+                                        .collect(Collectors.joining("\n"))
+                                        .split(";"))
                                 .collect(Collectors.toList());
                         for (String stmt : statements) {
                             statement.execute(stmt);

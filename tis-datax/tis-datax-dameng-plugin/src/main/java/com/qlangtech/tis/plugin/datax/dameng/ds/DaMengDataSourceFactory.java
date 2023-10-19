@@ -46,7 +46,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     /**
      * 分表策略
      */
-    @FormField(ordinal = 1, validate = {Validator.require})
+    @FormField(ordinal = 12, validate = {Validator.require})
     public SplitTableStrategy splitTableStrategy;
 
     //https://blog.csdn.net/Shadow_Light/article/details/100749537
@@ -161,6 +161,23 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                     }
 
                     @Override
+                    public DataType decimalType(DataType type) {
+                        if ("number".equalsIgnoreCase(type.typeName) && type.getColumnSize() < 1) {
+                            // 用户使用 number 类型没有默认值会导致下游doris 的decimal(0,0) 的问题
+//                            CREATE TABLE TIS.NUMERIC_TEST(
+//                                    cust_id INT NOT NULL,
+//                                    amt_num NUMBER default 0
+//                            );
+
+                            DataType fix = DataType.create(type.getType(), type.typeName, 25);
+                            fix.setDecimalDigits(0);
+                            return fix;
+                        }
+
+                        return null;
+                    }
+
+                    @Override
                     public DataType intType(DataType type) {
                         if (type.isUnsigned()) {
                             return DataType.create(Types.BIGINT, type.typeName, type.getColumnSize());
@@ -231,8 +248,10 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     @Override
     public String buidJdbcUrl(DBConfig db, String ip, String dbName) {
         StringBuffer jdbcUrl = new StringBuffer("jdbc:dm://" + ip + ":" + this.port + "?schema=" + dbName);
+        if (StringUtils.isNotBlank(this.extraParams)) {
+            jdbcUrl.append("&").append(this.extraParams);
+        }
         return jdbcUrl.toString();
-
     }
 
     @Override

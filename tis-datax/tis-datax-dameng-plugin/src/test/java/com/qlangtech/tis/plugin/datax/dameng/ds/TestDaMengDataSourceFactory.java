@@ -24,7 +24,7 @@ public class TestDaMengDataSourceFactory {
 
         TableInDB tablesInDB = dsFactory.getTablesInDB();
 
-        List<ColumnMetaData> cols = dsFactory.getTableMetadata(false, EntityName.parse("TEST"));
+        List<ColumnMetaData> cols = dsFactory.getTableMetadata(false, EntityName.parse("NUMERIC_TEST"));
         for (ColumnMetaData col : cols) {
             System.out.println(col.getName() + ":" + col.getType());
         }

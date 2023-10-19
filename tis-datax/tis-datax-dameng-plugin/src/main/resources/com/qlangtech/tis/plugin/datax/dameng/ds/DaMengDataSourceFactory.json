@@ -1,0 +1,8 @@
+{
+  "encode": {
+    "disable": true
+  },
+  "splitTableStrategy": {
+    "label": "分表识别"
+  }
+}

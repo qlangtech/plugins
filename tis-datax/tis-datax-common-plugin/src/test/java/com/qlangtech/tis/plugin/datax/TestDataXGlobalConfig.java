@@ -51,4 +51,9 @@ public class TestDataXGlobalConfig extends TestCase {
                 , descriptorsJSON.getDescriptorsJSON().toJSONString());
 
     }
+
+//    public void test(){
+//        Matcher matcher = BasicDataSourceFactory.BasicRdbmsDataSourceFactoryDescriptor.urlParamsPattern.matcher("logLevel=all&LogDir=home");
+//        System.out.println(matcher.matches());
+//    }
 }

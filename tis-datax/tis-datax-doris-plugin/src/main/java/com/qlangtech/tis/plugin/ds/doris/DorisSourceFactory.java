@@ -20,9 +20,14 @@ package com.qlangtech.tis.plugin.ds.doris;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.manage.common.ConfigFileContext;
+import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.manage.common.PostFormStreamProcess;
+import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -34,12 +39,20 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -52,8 +65,11 @@ import java.util.TreeMap;
 @Public
 public class DorisSourceFactory extends BasicDataSourceFactory {
 
+    private static final Logger logger = LoggerFactory.getLogger(DorisSourceFactory.class);
+
     public static final String NAME_DORIS = "Doris";
     public static final String FIELD_KEY_NODEDESC = "nodeDesc";
+    private static final String FIELD_KEY_LOAD_URL = "loadUrl";
 
     private static final com.mysql.jdbc.Driver mysql5Driver;
 
@@ -126,7 +142,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 DataTypeFixer dateType = null;
                 if ((dateType = dateTypeMapper.get(typeName)) != null) {
-                    return dateType.create(colSize,decimalDigits);
+                    return dateType.create(colSize, decimalDigits);
                 } else {
                     //  return DataType.create(dbColType, typeName, colSize);
                     return super.createColDataType(colName, typeName, dbColType, colSize, decimalDigits);
@@ -186,10 +202,60 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
         }
 
         @Override
-        protected boolean validateDSFactory(IControlMsgHandler msgHandler, Context context, BasicDataSourceFactory dsFactory) {
+        protected boolean validateDSFactory(final IControlMsgHandler msgHandler, final Context context, BasicDataSourceFactory dsFactory) {
             boolean valid = super.validateDSFactory(msgHandler, context, dsFactory);
             try {
                 if (valid) {
+
+                    final DorisSourceFactory dorisDS = (DorisSourceFactory) dsFactory;
+
+                    for (String feLoadHost : dorisDS.getLoadUrls()) {
+                        //利用doris的clusterAction： https://doris.apache.org/zh-CN/docs/1.2/admin-manual/http-actions/fe/cluster-action
+                        // 对:{"msg":"success","code":0,"data":{"http":["192.168.28.200:8030"],"mysql":["192.168.28.200:9030"]},"count":0}
+                        StringBuffer clusterInfoApiUrl = new StringBuffer("http://");
+                        clusterInfoApiUrl.append(feLoadHost).append("/rest/v2/manager/cluster/cluster_info/conn_info");
+                        try {
+                            Boolean success = HttpUtils.get(new URL(clusterInfoApiUrl.toString()), new PostFormStreamProcess<Boolean>() {
+                                @Override
+                                public ContentType getContentType() {
+                                    return ContentType.JSON;
+                                }
+
+                                @Override
+                                public void preSet(HttpURLConnection conn) throws IOException {
+                                    super.preSet(conn);
+                                    ConfigFileContext.StreamProcess.setAuthorization(conn, dorisDS.getUserName(), dorisDS.getPassword());
+                                }
+
+                                @Override
+                                public Boolean p(int status, InputStream stream, Map<String, List<String>> headerFields) {
+                                    try {
+                                        JSONObject result = JSONObject.parseObject(IOUtils.toString(stream, TisUTF8.get()));
+                                        final String msg = result.getString("msg");
+                                        if (!"success".equals(msg)) {
+                                            msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, msg);
+                                            return false;
+                                        }
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    return true;
+                                }
+
+                                @Override
+                                public void error(int status, InputStream errstream, IOException e) throws Exception {
+                                    logger.warn(e.getMessage(), e);
+                                    msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, IOUtils.toString(errstream, TisUTF8.get()));
+                                }
+                            });
+                            if (success == null || !success) {
+                                break;
+                            }
+                        } catch (TisException e) {
+                            logger.warn(e.getMessage(), e);
+                            msgHandler.addFieldError(context, FIELD_KEY_LOAD_URL, "host:" + feLoadHost + "有误");
+                        }
+                    }
                     int[] hostCount = new int[1];
                     DBConfig dbConfig = dsFactory.getDbConfig();
                     dbConfig.vistDbName((config, jdbcUrl, ip, dbName) -> {
@@ -204,8 +270,9 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return valid;
+            return valid && !context.hasErrors();
         }
+
 
     }
 

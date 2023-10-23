@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -134,7 +135,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException {
+                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
 
 
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {

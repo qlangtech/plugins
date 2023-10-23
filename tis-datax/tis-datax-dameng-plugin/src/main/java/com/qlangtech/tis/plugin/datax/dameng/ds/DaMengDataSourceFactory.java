@@ -16,6 +16,7 @@ import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import dm.jdbc.driver.DmdbType;
 import org.apache.commons.lang.StringUtils;
@@ -122,7 +123,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
      */
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException {
+                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
 
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override

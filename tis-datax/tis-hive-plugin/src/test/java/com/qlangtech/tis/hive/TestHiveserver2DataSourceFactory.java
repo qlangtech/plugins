@@ -71,8 +71,8 @@ public class TestHiveserver2DataSourceFactory {
 
         Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
         HiveMeta meta = new HiveMeta();
-        meta.metaStoreUrls = "thrift://192.168.28.200:9083";
-        meta.userToken = createKerberToken();
+        meta.metaStoreUrls = "thrift://47.96.7.122:9083";
+        meta.userToken =  createKerberToken(); //new OffUserToken();
         //  hiveDS.metadata = createKerberToken();
         hiveDS.metadata = meta;
         //  hiveDS.userToken = createKerberToken();

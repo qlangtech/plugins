@@ -412,7 +412,7 @@ public abstract class HiveTask extends AdapterTask {
                         return columnMetas;
                     }
                 }
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
         };
@@ -451,7 +451,8 @@ public abstract class HiveTask extends AdapterTask {
      * @param dumpTable
      * @throws Exception
      */
-    public static void initializeTable(DataSourceMeta ds, DataSourceMeta.JDBCConnection conn, EntityName dumpTable, IHistoryTableProcessor historyTableProcessor, Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
+    public static void initializeTable(DataSourceMeta ds, DataSourceMeta.JDBCConnection conn
+            , EntityName dumpTable, IHistoryTableProcessor historyTableProcessor, Supplier<Boolean> tableSameJudgement, Runnable tableCreator) throws Exception {
 //        if (partitionRetainNum == null || partitionRetainNum < 1) {
 //            throw new IllegalArgumentException("illegal param partitionRetainNum ");
 //        }

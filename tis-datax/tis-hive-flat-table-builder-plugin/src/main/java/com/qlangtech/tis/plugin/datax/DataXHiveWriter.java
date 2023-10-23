@@ -178,7 +178,8 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
                 HdfsFormat fsFormat = parseFSFormat();
 
-                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo() + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
+                script.appendLine("COMMENT 'tis_tmp_" + tableMapper.getTo()
+                        + "' PARTITIONED BY(" + IDumpTable.PARTITION_PT + " string," + IDumpTable.PARTITION_PMOD + " string)   ");
                 script.appendLine(fsFormat.getRowFormat());
                 script.appendLine("STORED AS " + fsFormat.getFileType().getType());
 

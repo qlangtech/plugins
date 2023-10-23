@@ -132,7 +132,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException {
+                                             Set<String> pkCols) throws SQLException,TableNotFoundException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {

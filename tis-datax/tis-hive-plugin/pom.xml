@@ -39,6 +39,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
+<!--            <version>3.1.3</version>-->
         </dependency>
         <dependency>
             <groupId>commons-dbcp</groupId>
@@ -52,6 +53,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
+<!--            <version>3.1.3</version>-->
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>

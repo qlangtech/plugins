@@ -18,14 +18,17 @@
 
 package com.qlangtech.tis.hdfs.impl;
 
+import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.aliyun.IHttpToken;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.AliyunEndpoint;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
@@ -78,6 +81,12 @@ public class AliayunJindoFSFactory extends HdfsFileSystemFactory {
 
         protected boolean isFSDefaultNameKeyInValid(String hdfsAddress) {
             return false;
+        }
+
+        @Override
+        protected void processError(IControlMsgHandler msgHandler, Context context, Exception e) {
+            TisException errMsg = TisException.create(e.getMessage(), e);
+            throw errMsg;
         }
 
         @Override

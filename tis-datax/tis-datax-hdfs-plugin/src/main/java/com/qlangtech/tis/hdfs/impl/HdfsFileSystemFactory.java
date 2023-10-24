@@ -440,12 +440,17 @@ public class HdfsFileSystemFactory extends FileSystemFactory implements ITISFile
                 return true;
             } catch (Exception e) {
                 Logger.warn(e.getMessage(), e);
-                TisException.ErrMsg errMsg = TisException.getErrMsg(e);
+
 //                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,"
 //                        + CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY + "=" + hdfsAddress + ",错误:" + errMsg.getMessage());
-                msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,错误:" + errMsg.getMessage());
+                processError(msgHandler, context, e);
                 return false;
             }
+        }
+
+        protected void processError(IControlMsgHandler msgHandler, Context context, Exception e) {
+            TisException.ErrMsg errMsg = TisException.getErrMsg(e);
+            msgHandler.addFieldError(context, KEY_FIELD_HDFS_SITE_CONTENT, "请检查连接地址，服务端是否能正常,错误:" + errMsg.getMessage());
         }
 
 //        public boolean validate() {

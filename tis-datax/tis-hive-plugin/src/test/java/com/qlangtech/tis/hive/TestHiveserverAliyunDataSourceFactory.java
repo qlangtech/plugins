@@ -2,8 +2,6 @@ package com.qlangtech.tis.hive;
 
 import com.qlangtech.tis.config.authtoken.impl.OffUserToken;
 import com.qlangtech.tis.config.hive.meta.HiveTable;
-import com.qlangtech.tis.plugin.ds.ColumnMetaData;
-import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -71,7 +69,7 @@ public class TestHiveserverAliyunDataSourceFactory {
         Hiveserver2DataSourceFactory hiveDS = new Hiveserver2DataSourceFactory();
         hiveDS.dbName = "default";
         HiveMeta meta = new HiveMeta();
-        meta.metaStoreUrls = "thrift://47.98.42.34:9083";
+        meta.metaStoreUrls = "thrift://47.98.207.116:9083";
         meta.userToken = new OffUserToken();
         //  hiveDS.metadata = createKerberToken();
         hiveDS.metadata = meta;
@@ -113,20 +111,20 @@ public class TestHiveserverAliyunDataSourceFactory {
 
 
         Hms hms = new Hms();
-        hms.hiveAddress = "47.98.42.34:10000";
+        hms.hiveAddress = "47.98.207.116:10000";
         hms.userToken = new OffUserToken();
         hiveDS.hms = hms;
 
-        List<ColumnMetaData> metas = hiveDS.getTableMetadata(false, EntityName.parse("payinfo"));
-        for (ColumnMetaData m : metas) {
-            System.out.println(m.toString());
-        }
+//        List<ColumnMetaData> metas = hiveDS.getTableMetadata(false, EntityName.parse("payinfo"));
+//        for (ColumnMetaData m : metas) {
+//            System.out.println(m.toString());
+//        }
 
-//        hiveDS.visitFirstConnection((conn) -> {
-//
-//
-//            try {
-//
+        hiveDS.visitFirstConnection((conn) -> {
+
+
+            try {
+
 //                conn.execute("CREATE EXTERNAL TABLE IF NOT EXISTS default.`orderdefail`\n" +
 //                        "(\n" +
 //                        "    `pay_id`             VARCHAR(32)\n" +
@@ -136,15 +134,20 @@ public class TestHiveserverAliyunDataSourceFactory {
 //                        "','field.delim'='\u0001')\n" +
 //                        "STORED AS TEXTFILE\n" +
 //                        "LOCATION 'oss://tis-hdfs/user/admin/default/orderdefail'");
-//
+
 //                conn.query("show tables", (result) -> {
 //                    System.out.println("table:" + result.getString(1));
 //                    return true;
 //                });
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-//        });
+
+                conn.query("select count(1) from instancedetail where pt='20231024124042'", (result) -> {
+                    System.out.println("table instancedetail:" + result.getInt(1));
+                    return true;
+                });
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
     }
 }

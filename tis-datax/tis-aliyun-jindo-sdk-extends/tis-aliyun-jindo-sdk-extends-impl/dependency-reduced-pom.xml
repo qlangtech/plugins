@@ -32,6 +32,7 @@
                   <artifact>*:*</artifact>
                   <excludes>
                     <exclude>org/apache/hadoop/fs/BlockStoragePolicySpi.class</exclude>
+                    <exclude>org/slf4j/**/*</exclude>
                   </excludes>
                 </filter>
               </filters>

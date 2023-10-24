@@ -41,6 +41,7 @@
 
     </properties>
     <modules>
+        <module>tis-aliyun-jindo-sdk-extends</module>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-common-rdbms-plugin</module>
         <module>tis-datax-test-common</module>
@@ -76,7 +77,7 @@
         <module>tis-datax-local-embedded-executor</module>
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
-        <module>tis-datax-hdfs-aliyun-emr-plugin</module>
+
         <module>tis-datax-dameng-plugin</module>
 
 

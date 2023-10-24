@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>tis-datax</artifactId>
+        <groupId>com.qlangtech.tis.plugins</groupId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>tis-aliyun-jindo-sdk-extends</artifactId>
+    <packaging>pom</packaging>
+
+    <repositories>
+        <!-- Add JindoData Maven Repository -->
+        <repository>
+            <id>jindodata</id>
+            <url>https://jindodata-binary.oss-cn-shanghai.aliyuncs.com/mvn-repo/</url>
+        </repository>
+    </repositories>
+
+    <properties>
+
+        <jindodata.version>6.1.0</jindodata.version>
+    </properties>
+
+    <modules>
+        <module>tis-aliyun-jindo-sdk-extends-api</module>
+        <module>tis-aliyun-jindo-sdk-extends-impl</module>
+        <module>tis-datax-hdfs-aliyun-emr-plugin</module>
+        <module>tis-aliyun-jindo-sdk-extends-hadoop2x</module>
+        <module>tis-aliyun-jindo-sdk-extends-hadoop3x</module>
+    </modules>
+
+    <dependencyManagement>
+
+        <dependencies>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-aliyun-jindo-sdk-extends-impl</artifactId>
+                <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.qlangtech.tis.plugins</groupId>
+                <artifactId>tis-aliyun-jindo-sdk-extends-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

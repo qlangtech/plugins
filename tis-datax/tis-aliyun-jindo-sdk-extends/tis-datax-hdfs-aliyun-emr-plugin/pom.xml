@@ -21,8 +21,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>tis-datax</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
+        <artifactId>tis-aliyun-jindo-sdk-extends</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -33,7 +33,6 @@
     <packaging>tpi</packaging>
     <properties>
         <classifier>hadoop_${hadoop-version}</classifier>
-        <jindodata.version>6.1.0</jindodata.version>
     </properties>
 
     <repositories>
@@ -48,6 +47,13 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-hdfs-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-aliyun-jindo-sdk-extends-hadoop-${hadoop-version}</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -66,11 +72,14 @@
         </dependency>
 
         <!-- add jindo-core-extended-jar if you need support other platform -->
-        <dependency>
-            <groupId>com.aliyun.jindodata</groupId>
-            <artifactId>jindo-sdk</artifactId>
-            <version>${jindodata.version}</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>com.aliyun.jindodata</groupId>-->
+        <!--            <artifactId>jindo-sdk</artifactId>-->
+        <!--            <version>${jindodata.version}</version>-->
+        <!--        </dependency>-->
+
+
+
 
         <!--        <dependency>-->
         <!--            <groupId>com.aliyun.jindodata</groupId>-->
@@ -151,6 +160,8 @@
                 </dependency>
             </dependencies>
         </profile>
+
+
 
     </profiles>
 

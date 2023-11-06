@@ -18,12 +18,21 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataxExecutor;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
@@ -31,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,6 +61,20 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     @Override
     public InstanceType getType() {
         return InstanceType.LOCAL;
+    }
+
+    @Override
+    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName) {
+        if (StringUtils.isEmpty(appName)) {
+            throw new IllegalArgumentException("param appName can not be empty");
+        }
+        try {
+            List<HttpUtils.PostParam> params = Lists.newArrayList();
+            params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
+            return TriggerBuildResult.triggerBuild(module, context, params);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

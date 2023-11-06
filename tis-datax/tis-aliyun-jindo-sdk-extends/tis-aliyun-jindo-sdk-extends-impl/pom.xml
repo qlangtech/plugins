@@ -19,7 +19,6 @@
         <dependency>
             <groupId>com.aliyun.jindodata</groupId>
             <artifactId>jindo-sdk</artifactId>
-            <version>${jindodata.version}</version>
         </dependency>
     </dependencies>
 

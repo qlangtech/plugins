@@ -41,6 +41,7 @@
 
     </properties>
     <modules>
+        <module>tis-datax-local-powerjob-executor</module>
         <module>tis-aliyun-jindo-sdk-extends</module>
         <module>tis-datax-common-plugin</module>
         <module>tis-datax-common-rdbms-plugin</module>

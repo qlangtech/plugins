@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: powerjob-server
+spec:
+  replicas: 1
+  selector: 
+    app: powerjob-server
+  template:
+    metadata:
+      labels:
+        app: powerjob-server
+    spec:
+      containers:
+      - name: powerjob-server
+        image: powerjob/powerjob-server:latest
+        ports:
+        - containerPort: 7700
+        - containerPort: 10086
+        - containerPort: 10010
+        args: ["--lower_case_table_names=1"]
+        env:
+        - name: JVMOPTIONS
+          value: "-Xmx512m"
+        - name: PARAMS
+          value: "--oms.mongodb.enable=false --spring.datasource.core.username=root --spring.datasource.core.password=No1Bug2Please3!  --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"

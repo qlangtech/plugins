@@ -51,6 +51,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         // https://stackoverflow.com/questions/50379839/connection-java-mysql-public-key-retrieval-is-not-allowed
         props.put(PropertyKey.allowPublicKeyRetrieval.getKeyName(), String.valueOf(true));
         props.put(PropertyKey.useSSL.getKeyName(), String.valueOf(false));
+        props.put(PropertyKey.autoReconnect.getKeyName(),String.valueOf(true));
 
         //
         /**

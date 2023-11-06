@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.plugin.common.PluginDesc;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import junit.framework.TestCase;
 
 import java.util.regex.Matcher;
@@ -38,37 +39,37 @@ public class TestK8SDataXJobWorker extends TestCase {
     public void testZKhostPattern() {
         //  K8SDataXJobWorker dataXJobWorker = new K8SDataXJobWorker();
 
-        Matcher matcher = K8SDataXJobWorker.zkhost_pattern.matcher("192.168.28.200:2181/tis/cloude");
+        Matcher matcher = K8SDataXPowerJobServer.zkhost_pattern.matcher("192.168.28.200:2181/tis/cloude");
         assertTrue(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zkhost_pattern.matcher("192.168.28.200:2181");
+        matcher = K8SDataXPowerJobServer.zkhost_pattern.matcher("192.168.28.200:2181");
         assertTrue(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zkhost_pattern.matcher("192.168.28.200:2181/tis/cloude-1_bb");
+        matcher = K8SDataXPowerJobServer.zkhost_pattern.matcher("192.168.28.200:2181/tis/cloude-1_bb");
         assertTrue(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zkhost_pattern.matcher("192.168.28.200");
+        matcher = K8SDataXPowerJobServer.zkhost_pattern.matcher("192.168.28.200");
         assertFalse(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/tis/cloude");
+        matcher = K8SDataXPowerJobServer.zk_path_pattern.matcher("/tis/cloude");
         assertTrue(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/0tis");
+        matcher = K8SDataXPowerJobServer.zk_path_pattern.matcher("/0tis");
         assertTrue(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("0tis");
+        matcher = K8SDataXPowerJobServer.zk_path_pattern.matcher("0tis");
         assertFalse(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/tis*_");
+        matcher = K8SDataXPowerJobServer.zk_path_pattern.matcher("/tis*_");
         assertFalse(matcher.matches());
 
-        matcher = K8SDataXJobWorker.zk_path_pattern.matcher("/tis/");
+        matcher = K8SDataXPowerJobServer.zk_path_pattern.matcher("/tis/");
         assertFalse(matcher.matches());
     }
 
     public void testDescGenerate() {
 
-        PluginDesc.testDescGenerate(K8SDataXJobWorker.class, "k8s-datax-job-worker-descriptor.json");
+        PluginDesc.testDescGenerate(K8SDataXPowerJobServer.class, "k8s-datax-job-worker-descriptor.json");
     }
 
 //    public void testGetRCDeployment() {

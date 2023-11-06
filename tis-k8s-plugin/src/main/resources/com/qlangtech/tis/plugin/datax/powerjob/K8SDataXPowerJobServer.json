@@ -1,0 +1,17 @@
+{
+  "k8sImage": {
+    "dftVal": "datax-worker"
+  },
+  "serverPort": {
+    "help": "SpringBoot配置，HTTP端口号，默认7700，不建议更改",
+    "dftVal": "7700"
+  },
+  "omsProfile": {
+    "help": "OMS相关配置",
+    "dftVal": "OMSProfile"
+  },
+  "omsStorage": {
+    "help": "PowerJob 当前支持多套存储（MongoDB、AliyunOSS、MySQL等数据库），接入放可自由选择合适的存储介质。",
+    "dftVal": "None"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "instraceRetry": {
+    "label": "Instance重试数",
+    "help": "实例级别，失败了整个任务实例重试，会更换 TaskTracker（本次任务实例的Master节点），代价较大，大型Map/MapReduce慎用"
+  },
+  "maxInstance": {
+    "lable": "最大实例数",
+    "help": "最大实例数：该任务允许同时执行的数量，0代表不限（默认为 0）",
+    "dftVal": "3"
+  },
+  "threadParallel": {
+    "lable": "单机线程并发数",
+    "help": "单机线程并发数：该实例执行过程中每个 Worker 使用的线程数量（MapReduce 任务生效，其余无论填什么，都只会使用必要的线程数...）",
+    "dftVal": "2"
+  },
+  "timeLimit": {
+    "lable": "任务超时时间",
+    "help": "运行时间限制：限定任务的最大运行时间，超时则视为失败，单位毫秒，0 代表不限制超时时间（不建议不限制超时时间）",
+    "dftVal": "0"
+  },
+  "taskRetry": {
+    "label": "Task重试数",
+    "help": "Task 级别，每个子 Task 失败后单独重试，会更换 ProcessorTracker（本次任务实际执行的 Worker 节点），代价较小，推荐使用。"
+  },
+  "maxWorkerParallel": {
+    "label": "最大使用机器数",
+    "help": "最大执行机器数量：限定调动执行的机器数量"
+  },
+  "k8sImage": {
+    "disable": true
+  }
+}

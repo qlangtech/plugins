@@ -30,6 +30,7 @@ import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.tis.hadoop.rpc.RpcServiceReference;
+import tech.powerjob.client.PowerJobClient;
 
 /**
  * 利用PowerJob触发任务
@@ -39,13 +40,14 @@ import com.tis.hadoop.rpc.RpcServiceReference;
  **/
 @TISExtension()
 @Public
-public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
+public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
 
-//    private CuratorFramework curatorClient = null;
+    //    private CuratorFramework curatorClient = null;
 //    private DistributedQueue<CuratorDataXTaskMessage> curatorDistributedQueue = null;
+    PowerJobClient powerJobClient;
 
-    public DistributedOverseerDataXJobSubmit() {
-
+    public DistributedPowerJobDataXJobSubmit() {
+        PowerJobClient powerJobClient = new PowerJobClient("127.0.0.1:7700", "powerjob-worker-samples", "powerjob123");
     }
 
     @Override

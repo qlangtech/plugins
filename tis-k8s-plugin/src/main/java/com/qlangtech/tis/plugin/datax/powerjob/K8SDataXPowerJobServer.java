@@ -1,22 +1,22 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.datax;
+package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
@@ -26,13 +26,12 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
@@ -46,7 +45,15 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
 import io.kubernetes.client.openapi.apis.AutoscalingV2beta1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscaler;
+import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerSpec;
+import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerStatus;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V2beta1CrossVersionObjectReference;
+import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscaler;
+import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscalerSpec;
+import io.kubernetes.client.openapi.models.V2beta1MetricSpec;
+import io.kubernetes.client.openapi.models.V2beta1ResourceMetricSource;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,30 +67,34 @@ import java.util.regex.Pattern;
 
 
 /**
+ * 配置Powerjob-server启动相关需要的参数
+ * https://www.yuque.com/powerjob/guidence/deploy_server
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-04-23 18:16
  **/
 @Public
-public class K8SDataXJobWorker extends DataXJobWorker {
+public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
 
-    private static final Logger logger = LoggerFactory.getLogger(K8SDataXJobWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
 
-//    @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public String name;
+    @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer serverPort;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String zkAddress;
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public PowerjobCoreDataSource coreDS;
 
-    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
-    public String zkQueuePath;
+    @FormField(ordinal = 2, validate = {Validator.require})
+    public PowerJobOMS omsProfile;
 
-    @Override
-    public String getZkQueuePath() {
-        return this.zkQueuePath;
-    }
+    @FormField(ordinal = 3, validate = {Validator.require})
+    public PowerJobOMSStorage omsStorage;
 
-
-
+//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String zkAddress;
+//
+//    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+//    public String zkQueuePath;
     // private transient CuratorFramework client;
     // private transient CoreV1Api k8sV1Api;
     private transient ApiClient apiClient;
@@ -265,7 +276,8 @@ public class K8SDataXJobWorker extends DataXJobWorker {
                 @Override
                 public String getAppOptions() {
                     // return "-D" + DataxUtils.DATAX_QUEUE_ZK_PATH + "=" + getZkQueuePath() + " -D" + DataxUtils.DATAX_ZK_ADDRESS + "=" + getZookeeperAddress();
-                    return getZookeeperAddress() + " " + getZkQueuePath();
+                    //  return getZookeeperAddress() + " " + getZkQueuePath();
+                    return " ";
                 }
 
                 @Override
@@ -358,11 +370,6 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         return K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
     }
 
-    @Override
-    public String getZookeeperAddress() {
-        return this.zkAddress;
-    }
-
 
     public static final Pattern zkhost_pattern = Pattern.compile("[\\da-z]{1}[\\da-z.]+:\\d+(/[\\da-z_\\-]{1,})*");
     public static final Pattern zk_path_pattern = Pattern.compile("(/[\\da-z]{1,})+");
@@ -394,7 +401,7 @@ public class K8SDataXJobWorker extends DataXJobWorker {
 
         @Override
         protected TargetResName getWorkerType() {
-            return DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
+            return K8S_DATAX_INSTANCE_NAME;
         }
 
         @Override
@@ -404,8 +411,13 @@ public class K8SDataXJobWorker extends DataXJobWorker {
         }
 
         @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return super.validateAll(msgHandler, context, postFormVals);
+        }
+
+        @Override
         public String getDisplayName() {
-            return "DataX-Worker";
+            return "powerjob-server";
         }
     }
 

@@ -97,6 +97,14 @@
             <artifactId>tis-aliyun-oss-common</artifactId>
         </dependency>
 
+
+        <!--防止在ide中编译不出错，不然ide中会显示无法识别的错误，怪别扭的-->
+        <dependency>
+            <groupId>com.aliyun.jindodata</groupId>
+            <artifactId>jindo-sdk</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
     <profiles>

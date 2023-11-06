@@ -56,6 +56,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.aliyun.jindodata</groupId>
+                <artifactId>jindo-sdk</artifactId>
+                <version>${jindodata.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.qlangtech.tis.plugins</groupId>
                 <artifactId>tis-aliyun-jindo-sdk-extends-api</artifactId>
                 <version>${project.version}</version>

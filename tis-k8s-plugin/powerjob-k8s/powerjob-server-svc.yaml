@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerjob-server
+spec:
+  ports:
+  - port: 7700
+    name: powerjob-server-7700
+    protocol: TCP
+    targetPort: 7700
+    nodePort: 30000
+  - port: 10086
+    name: powerjob-server-10086
+    protocol: TCP
+    targetPort: 10086
+    nodePort: 30001
+  - port: 10010
+    protocol: TCP
+    name: powerjob-server-10010
+    targetPort: 10010
+    nodePort: 30002
+  selector:
+    app: powerjob-server
+  type: NodePort

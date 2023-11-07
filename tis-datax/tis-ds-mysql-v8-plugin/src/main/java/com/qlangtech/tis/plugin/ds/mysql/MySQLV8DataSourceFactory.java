@@ -23,10 +23,14 @@ import com.mysql.cj.conf.PropertyKey;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -51,12 +55,17 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         // https://stackoverflow.com/questions/50379839/connection-java-mysql-public-key-retrieval-is-not-allowed
         props.put(PropertyKey.allowPublicKeyRetrieval.getKeyName(), String.valueOf(true));
         props.put(PropertyKey.useSSL.getKeyName(), String.valueOf(false));
-        props.put(PropertyKey.autoReconnect.getKeyName(),String.valueOf(true));
+        props.put(PropertyKey.autoReconnect.getKeyName(), String.valueOf(true));
 
         //
         /**
          * https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-connection.html
-         * MySQL uses the term "schema" as a synonym of the term "database," while Connector/J historically takes the JDBC term "catalog" as synonymous to "database". This property sets for Connector/J which of the JDBC terms "catalog" and "schema" is used in an application to refer to a database. The property takes one of the two values "CATALOG" or "SCHEMA" and uses it to determine (1) which Connection methods can be used to set/get the current database (e.g. 'setCatalog()' or 'setSchema()'?), (2) which arguments can be used within the various 'DatabaseMetaData' methods to filter results (e.g. the catalog or 'schemaPattern' argument of 'getColumns()'?), and (3) which fields in the result sets returned by 'DatabaseMetaData' methods contain the database identification information (i.e., the 'TABLE_CAT' or 'TABLE_SCHEM' field in the result set returned by 'getTables()'?).
+         * MySQL uses the term "schema" as a synonym of the term "database," while Connector/J historically takes the JDBC term "catalog" as synonymous to "database".
+         * This property sets for Connector/J which of the JDBC terms "catalog" and "schema" is used in an application to refer to a database.
+         * The property takes one of the two values "CATALOG" or "SCHEMA" and uses it to determine
+         * (1) which Connection methods can be used to set/get the current database (e.g. 'setCatalog()' or 'setSchema()'?),
+         * (2) which arguments can be used within the various 'DatabaseMetaData' methods to filter results (e.g. the catalog or 'schemaPattern' argument of 'getColumns()'?), and
+         * (3) which fields in the result sets returned by 'DatabaseMetaData' methods contain the database identification information (i.e., the 'TABLE_CAT' or 'TABLE_SCHEM' field in the result set returned by 'getTables()'?).
          * add for : fix multi table with same name located in mulit DataBase ,will get mulit names invoking DatabaseMetaData.getTables()
          */
         props.put(PropertyKey.databaseTerm.getKeyName(), String.valueOf(PropertyDefinitions.DatabaseTerm.SCHEMA));
@@ -72,6 +81,11 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         statement.enableStreamingResults();
     }
 
+    @Override
+    protected ResultSet getColumnsMeta(EntityName table, DatabaseMetaData metaData1) throws SQLException {
+        return metaData1.getColumns(null, this.getDBSchema(), this.removeEscapeChar(table.getTableName()), null);
+    }
+
     /**
      * mysql 中schema 和 database 是相同概念
      *
@@ -79,6 +93,20 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
      */
     @Override
     public String getDBSchema() {
+
+        if (this.splitTableStrategy.isSplittable()) {
+            // 如果使用了分表策略就不能返回默认的dbName了，不然会出错
+            try {
+                String[] dbNames = new String[1];
+                this.getDbConfig().vistDbName((config, jdbcUrl, ip, dbName) -> {
+                    dbNames[0] = dbName;
+                    return true;
+                });
+                return Objects.requireNonNull(dbNames[0], "dbName can not be null");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         // return null;
         return this.dbName;
     }

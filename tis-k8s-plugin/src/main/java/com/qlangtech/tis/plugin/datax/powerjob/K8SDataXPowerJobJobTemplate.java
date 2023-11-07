@@ -81,7 +81,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
     }
 
     @Override
-    public void launchService() {
+    public void launchService(Runnable launchProcess) {
 
     }
 
@@ -93,8 +93,8 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
         }
 
         @Override
-        public String getDisplayName() {
-            return "powerjob-job-tpl";
+        protected K8SWorkerCptType getWorkerCptType() {
+            return K8SWorkerCptType.JobTpl;
         }
 
         @Override

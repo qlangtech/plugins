@@ -166,11 +166,19 @@
         <!-- Where to put temporary files during test runs. -->
         <surefireTempDir>${project.build.directory}/tmp</surefireTempDir>
         <testcontainers.version>1.17.3</testcontainers.version>
+        <powerjob.version>4.3.6</powerjob.version>
     </properties>
 
 
     <dependencyManagement>
         <dependencies>
+
+
+            <dependency>
+                <artifactId>powerjob-client</artifactId>
+                <groupId>tech.powerjob</groupId>
+                <version>${powerjob.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.qlangtech.tis</groupId>

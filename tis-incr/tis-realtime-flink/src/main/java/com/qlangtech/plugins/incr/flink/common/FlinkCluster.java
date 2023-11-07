@@ -113,11 +113,6 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
      */
     public RestClusterClient createFlinkRestClusterClient(Optional<Long> connTimeout) {
 
-
-//        String[] address = StringUtils.split(factory.jobManagerAddress, ":");
-//        if (address.length != 2) {
-//            throw new IllegalArgumentException("illegal jobManagerAddress:" + factory.jobManagerAddress);
-//        }
         try {
             JobManagerAddress managerAddress = this.getJobManagerAddress();
             Configuration configuration = new Configuration();

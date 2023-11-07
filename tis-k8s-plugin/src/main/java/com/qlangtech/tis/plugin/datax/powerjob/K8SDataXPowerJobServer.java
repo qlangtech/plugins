@@ -26,6 +26,7 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -57,6 +58,7 @@ import io.kubernetes.client.openapi.models.V2beta1ResourceMetricSource;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tech.powerjob.client.PowerJobClient;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +76,7 @@ import java.util.regex.Pattern;
  * @create: 2021-04-23 18:16
  **/
 @Public
-public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
+public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISPowerJob {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
 
@@ -90,7 +92,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
     @FormField(ordinal = 3, validate = {Validator.require})
     public PowerJobOMSStorage omsStorage;
 
-//    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    //    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
 //    public String zkAddress;
 //
 //    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
@@ -100,7 +102,12 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
     private transient ApiClient apiClient;
     private transient K8SController k8SController;
 
-//    public static String getDefaultZookeeperAddress() {
+    @Override
+    public PowerJobClient getPowerJobClient() {
+        throw new UnsupportedOperationException();
+    }
+
+    //    public static String getDefaultZookeeperAddress() {
 //        return processDefaultHost(Config.getZKHost());
 //    }
 
@@ -254,7 +261,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
     }
 
     @Override
-    public void launchService() {
+    public void launchService(Runnable launchProcess) {
         if (inService()) {
             throw new IllegalStateException("k8s instance of:" + KEY_FIELD_NAME + " is running can not relaunch");
         }
@@ -299,7 +306,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
                 HorizontalpodAutoscaler hap = this.getHpa();
                 createHorizontalpodAutoscaler(k8sImage, hap);
             }
-
+            launchProcess.run();
             writeLaunchToken();
 
         } catch (ApiException e) {
@@ -416,8 +423,8 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker {
         }
 
         @Override
-        public String getDisplayName() {
-            return "powerjob-server";
+        protected K8SWorkerCptType getWorkerCptType() {
+            return K8SWorkerCptType.Server;
         }
     }
 

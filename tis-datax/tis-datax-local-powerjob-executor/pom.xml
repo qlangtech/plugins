@@ -31,14 +31,13 @@
     <artifactId>tis-datax-local-powerjob-executor</artifactId>
     <packaging>tpi</packaging>
     <properties>
-        <powerjob.version>4.3.6</powerjob.version>
+
     </properties>
     <dependencies>
 
         <dependency>
             <artifactId>powerjob-client</artifactId>
             <groupId>tech.powerjob</groupId>
-            <version>${powerjob.version}</version>
         </dependency>
 
 

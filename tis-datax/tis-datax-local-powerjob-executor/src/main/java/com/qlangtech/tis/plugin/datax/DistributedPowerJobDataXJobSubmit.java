@@ -19,18 +19,25 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import tech.powerjob.client.PowerJobClient;
+import tech.powerjob.common.response.ResultDTO;
+
+import static com.qlangtech.tis.datax.job.DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
 
 /**
  * 利用PowerJob触发任务
@@ -47,7 +54,8 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
     PowerJobClient powerJobClient;
 
     public DistributedPowerJobDataXJobSubmit() {
-        PowerJobClient powerJobClient = new PowerJobClient("127.0.0.1:7700", "powerjob-worker-samples", "powerjob123");
+//        PowerJobClient powerJobClient = new PowerJobClient("127.0.0.1:7700", "powerjob-worker-samples", "powerjob123");
+//        powerJobClient.
     }
 
     @Override
@@ -72,6 +80,24 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName) {
+
+        DataXJobWorker jobWorker = DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME);
+        if (!(jobWorker instanceof ITISPowerJob)) {
+            throw new IllegalStateException("jobWorker must be type of :" + ITISPowerJob.class);
+        }
+
+        ITISPowerJob powerJob = (ITISPowerJob) jobWorker;
+
+        PowerJobClient powerJobClient = powerJob.getPowerJobClient();
+        Long jobId = 0l;
+
+        JSONObject instanceParams = new JSONObject();
+
+        ResultDTO<Long> triggerResult = powerJobClient.runJob(jobId, JsonUtil.toString(instanceParams), 0);
+
+        // 取得powerjob instanceId
+        Long instanceId = triggerResult.getData();
+
         return null;
     }
 

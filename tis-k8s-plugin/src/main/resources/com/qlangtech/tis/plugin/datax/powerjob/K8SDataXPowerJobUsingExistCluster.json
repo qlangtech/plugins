@@ -1,0 +1,19 @@
+{
+  "serverAddress": {
+    "label": "调度中心地址",
+    "help": "调度中心（powerjob-server）地址列表",
+    "placeholder": "192.168.28.200:7700"
+  },
+  "appName": {
+    "label": "宿主应用名",
+    "help": "宿主应用名称，需要提前在控制台完成注册",
+    "placeholder": "tis-powerjob"
+  },
+  "password": {
+    "label": "密码",
+    "help": "宿主应用对应的密码"
+  },
+  "k8sImage": {
+    "disable": true
+  }
+}

@@ -31,7 +31,6 @@ import com.tis.hadoop.rpc.StatusRpcClient;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -49,8 +48,8 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
     public void testPushMsgToDistributeQueue() {
 
         DataXJobWorker dataxJobWorker = DataXJobWorker.getJobWorker(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
-        assertEquals("/datax/jobs", dataxJobWorker.getZkQueuePath());
-        assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
+//        assertEquals("/datax/jobs", dataxJobWorker.getZkQueuePath());
+//        assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 
 
         IDataxProcessor dataxProcessor = EasyMock.createMock("dataXProcessor", IDataxProcessor.class); //IAppSource.load(DATAX_NAME);

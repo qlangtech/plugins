@@ -88,9 +88,10 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
 
 
     @Override
-    public void launchService() {
+    public void launchService(Runnable launchProcess) {
         processFlinkCluster((cli) -> {
             cli.run(new String[]{});
+            launchProcess.run();
             this.writeLaunchToken();
         });
     }
@@ -259,8 +260,8 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
         }
 
         @Override
-        public final String getDisplayName() {
-            return "Flink-Cluster";
+        protected K8SWorkerCptType getWorkerCptType() {
+            return K8SWorkerCptType.FlinkCluster;
         }
     }
 }

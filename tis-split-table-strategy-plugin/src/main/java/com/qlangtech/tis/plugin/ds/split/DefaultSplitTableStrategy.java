@@ -76,19 +76,21 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
             }
             tablesInDB = dsFactory.getTablesInDB();
             if (!(tablesInDB instanceof SplitableTableInDB)) {
-                throw new IllegalStateException("dbId:" + dsFactory.identityValue() + " relevant TableInDB must be " + SplitableTableInDB.class.getName() + ",but now is " + tablesInDB.getClass().getName());
+                throw new IllegalStateException("dbId:" + dsFactory.identityValue()
+                        + " relevant TableInDB must be " + SplitableTableInDB.class.getName() + ",but now is " + tablesInDB.getClass().getName());
             }
         }
         SplitableTableInDB tabsMapper = (SplitableTableInDB) tablesInDB;
 
         SplitableDB physics = tabsMapper.tabs.get(sourceTableName);
         if (physics != null) {
-//            for (String ptab : ) {
-//                return new DBPhysicsTable(jdbcUrl, EntityName.parse(ptab));
-//            }
+
             List<String> ptabs = physics.getTabsInDB(jdbcUrl);
             if (CollectionUtils.isEmpty(ptabs)) {
-                throw new IllegalStateException("jdbcUrl:" + jdbcUrl + "\n,logicTable:" + sourceTableName + "\n,dsFactory:" + dsFactory.identityValue() + "\n relevant physicsTab can not be empty" + "\n exist keys:" + String.join(",", physics.physicsTabInSplitableDB.keySet()));
+                throw new IllegalStateException("jdbcUrl:" + jdbcUrl + "\n,logicTable:"
+                        + sourceTableName + "\n,dsFactory:" + dsFactory.identityValue()
+                        + "\n relevant physicsTab can not be empty"
+                        + "\n exist keys:" + String.join(",", physics.physicsTabInSplitableDB.keySet()));
             }
             return ptabs;
         }
@@ -105,18 +107,6 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
      */
     @Override
     public DBPhysicsTable getMatchedPhysicsTable(DataSourceFactory dsFactory, String jdbcUrl, EntityName tabName) {
-        //try {
-//        TableInDB tablesInDB = dsFactory.getTablesInDB();// tabsInDBCache.get(dsFactory.identityValue());
-//        if (!(tablesInDB instanceof SplitableTableInDB)) {
-//            dsFactory.refresh();
-//            tablesInDB = dsFactory.getTablesInDB();
-//            if (!(tablesInDB instanceof SplitableTableInDB)) {
-//                throw new IllegalStateException("dbId:" + dsFactory.identityValue()
-//                        + " relevant TableInDB must be " + SplitableTableInDB.class.getName()
-//                        + ",but now is " + tablesInDB.getClass().getName());
-//            }
-//        }
-//        SplitableTableInDB tabsMapper = (SplitableTableInDB) tablesInDB;
         List<String> allPhysicsTabs = getAllPhysicsTabs(dsFactory, jdbcUrl, tabName.getTableName());
         for (String ptab : allPhysicsTabs) {
             return new DBPhysicsTable(jdbcUrl, EntityName.parse(ptab));
@@ -124,144 +114,7 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         throw new IllegalStateException(tabName + " relevant physics tabs can not be null");
     }
 
-//    public static class SplitableDB {
-//        // key:jdbcUrl ,val:physicsTab
-//        private Map<String, List<String>> physicsTabInSplitableDB = Maps.newHashMap();
-//
-//        public SplitableDB add(String jdbcUrl, String tab) {
-//            List<String> tabs = physicsTabInSplitableDB.get(jdbcUrl);
-//            if (tabs == null) {
-//                tabs = Lists.newArrayList();
-//                physicsTabInSplitableDB.put(jdbcUrl, tabs);
-//            }
-//            tabs.add(tab);
-//            return this;
-//        }
-//
-//        public List<String> getTabsInDB(String jdbcUrl) {
-//            return this.physicsTabInSplitableDB.get(jdbcUrl);
-//        }
-//    }
 
-//    public static class SplitTablePhysics2LogicNameConverter implements Function<String, String>, Serializable {
-//        private final Map<String, String> physics2LogicTabNameConverter;
-//
-//        public SplitTablePhysics2LogicNameConverter(SplitableTableInDB splitTabInDB) {
-//            this.physics2LogicTabNameConverter = Maps.newHashMap();
-//            for (Map.Entry<String, SplitableDB> dbEntry : splitTabInDB.tabs.entrySet()) {
-//                for (Map.Entry<String, List<String>> logicEntry : dbEntry.getValue().physicsTabInSplitableDB.entrySet()) {
-//                    for (String physicsTabName : logicEntry.getValue()) {
-//                        this.physics2LogicTabNameConverter.put(physicsTabName, dbEntry.getKey());
-//                    }
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public String apply(String physicsName) {
-//            String logicalTabName = this.physics2LogicTabNameConverter.get(physicsName);
-//            if (logicalTabName == null) {
-//                throw new IllegalStateException("physics tabName:" + physicsName
-//                        + " can not find relevant logicalTabName,repo size:" + this.physics2LogicTabNameConverter.size());
-//            }
-//            return logicalTabName;
-//        }
-//    }
-
-//    public static class SplitableTableInDB extends TableInDB {
-//        //<key:逻辑表名,List<String> 物理表列表>
-//        public Map<String, SplitableDB> tabs = new HashMap<>();
-//
-//        private final Pattern splitTabPattern;
-//
-//        public SplitableTableInDB(DBIdentity id, Pattern splitTabPattern) {
-//            super(id);
-//            this.splitTabPattern = splitTabPattern;
-//        }
-//
-//        @Override
-//        public Function<String, String> getPhysicsTabName2LogicNameConvertor() {
-//            return new SplitTablePhysics2LogicNameConverter(this);
-//        }
-//
-//        //        @Override
-////        public List<String> getMatchedTabs(Optional<String> jdbcUrl, String tab) {
-////
-////            SplitableDB splitableDB = tabs.get(tab);
-////            Objects.requireNonNull(splitableDB, "tab:" + tab + " relevant splitableDB can not be null");
-////
-////            if (jdbcUrl.isPresent()) {
-////                return splitableDB.getTabsInDB(jdbcUrl.get());
-////            } else {
-////                Set<String> mergeAllTabs = new HashSet<>();
-////                for (Map.Entry<String, List<String>> entry : splitableDB.physicsTabInSplitableDB.entrySet()) {
-////                    mergeAllTabs.addAll(entry.getValue());
-////                }
-////                return Lists.newArrayList(mergeAllTabs);
-////            }
-////        }
-//
-//        /**
-//         * @param jdbcUrl 可以标示是哪个分库的
-//         * @param tab
-//         */
-//        @Override
-//        public void add(String jdbcUrl, String tab) {
-//            Matcher matcher = PATTERN_PHYSICS_TABLE.matcher(tab);
-//
-//            if (matcher.matches()) {
-//                String logicTabName = matcher.group(1);
-//                addPhysicsTab(jdbcUrl, logicTabName, tab);
-//            } else {
-//                addPhysicsTab(jdbcUrl, tab, tab);
-//                //  tabs.put(tab, (new SplitableDB()).add(jdbcUrl, tab));
-//            }
-//        }
-//
-//        /**
-//         * @param jdbcUrl
-//         * @param logicTabName
-//         * @param tab          物理表名
-//         */
-//        private void addPhysicsTab(String jdbcUrl, String logicTabName, String tab) {
-//            SplitableDB physicsTabs = tabs.get(logicTabName);
-//            if (physicsTabs == null) {
-//                physicsTabs = new SplitableDB();
-//                tabs.put(logicTabName, physicsTabs);
-//            }
-//            physicsTabs.add(jdbcUrl, tab);
-//        }
-//
-//        @Override
-//        public DataXJobInfo createDataXJobInfo(DataXJobSubmit.TableDataXEntity tabEntity) {
-//
-//            SplitableDB splitableDB = tabs.get(tabEntity.getSourceTableName());
-//            Objects.requireNonNull(splitableDB, "SourceTableName:" + tabEntity.getSourceTableName() + " relevant splitableDB can not be null");
-//
-//            List<String> matchedTabs = splitableDB.getTabsInDB(tabEntity.getDbIdenetity());
-//            if (CollectionUtils.isEmpty(matchedTabs)) {
-//                throw new IllegalStateException("jdbcUrl:" + tabEntity.getDbIdenetity() + " relevant matchedTabs can not be empty");
-//            }
-//            // 目前将所有匹配的表都在一个datax 单独进程中去执行，后期可以根据用户的配置单一个单独的dataX进程中执行部分split表以提高导入速度
-//            return DataXJobInfo.create(tabEntity.getFileName(), tabEntity, matchedTabs);
-//        }
-//
-//        @Override
-//        public List<String> getTabs() {
-//            return Lists.newArrayList(tabs.keySet());
-//        }
-//
-//        @Override
-//        public boolean contains(String tableName) {
-//            return this.tabs.containsKey(tableName);
-//        }
-//
-//
-//        @Override
-//        public boolean isEmpty() {
-//            return this.tabs.isEmpty();
-//        }
-//    }
 
     @TISExtension
     public static class DefatDesc extends Descriptor<SplitTableStrategy> {

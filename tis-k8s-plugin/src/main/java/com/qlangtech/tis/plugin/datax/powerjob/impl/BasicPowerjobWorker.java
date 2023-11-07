@@ -10,7 +10,7 @@ import com.qlangtech.tis.trigger.jst.ILogListener;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/3
  */
-public class BasicPowerjobWorker extends DataXJobWorker {
+public class BasicPowerjobWorker extends DataXJobWorker  {
 
     @Override
     public void relaunch() {
@@ -43,7 +43,7 @@ public class BasicPowerjobWorker extends DataXJobWorker {
     }
 
     @Override
-    public void launchService() {
+    public void launchService(Runnable launchProcess) {
         throw new UnsupportedOperationException();
     }
 }

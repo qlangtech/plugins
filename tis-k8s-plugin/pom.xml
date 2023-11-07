@@ -52,6 +52,11 @@
     <dependencies>
 
 
+        <dependency>
+            <artifactId>powerjob-client</artifactId>
+            <groupId>tech.powerjob</groupId>
+        </dependency>
+
 
 
         <dependency>

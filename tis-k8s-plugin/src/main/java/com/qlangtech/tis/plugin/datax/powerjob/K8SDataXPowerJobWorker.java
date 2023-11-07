@@ -111,7 +111,7 @@ public class K8SDataXPowerJobWorker extends BasicPowerjobWorker {
     }
 
     @Override
-    public void launchService() {
+    public void launchService(Runnable launchProcess) {
 
     }
 
@@ -123,8 +123,8 @@ public class K8SDataXPowerJobWorker extends BasicPowerjobWorker {
         }
 
         @Override
-        public String getDisplayName() {
-            return "powerjob-worker";
+        protected K8SWorkerCptType getWorkerCptType() {
+            return K8SWorkerCptType.Worker;
         }
 
         @Override

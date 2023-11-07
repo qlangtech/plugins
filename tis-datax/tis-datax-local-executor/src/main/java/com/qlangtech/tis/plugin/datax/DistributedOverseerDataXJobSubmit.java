@@ -70,6 +70,7 @@ public class DistributedOverseerDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName) {
+
         return null;
     }
 

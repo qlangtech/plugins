@@ -27,6 +27,7 @@ import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.Config;
@@ -58,11 +59,26 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     private final static Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
 
+
+
+    @Override
+    public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+
+    }
+
     @Override
     public InstanceType getType() {
         return InstanceType.LOCAL;
     }
 
+    /**
+     * 由Console节点调用
+     *
+     * @param module
+     * @param context
+     * @param appName
+     * @return
+     */
     @Override
     public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName) {
         if (StringUtils.isEmpty(appName)) {
@@ -78,7 +94,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    protected IRemoteTaskTrigger createDataXJob(
+    public IRemoteTaskTrigger createDataXJob(
             IDataXJobContext taskContext, RpcServiceReference statusRpc
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO) {
         if (StringUtils.isEmpty(this.classpath)) {

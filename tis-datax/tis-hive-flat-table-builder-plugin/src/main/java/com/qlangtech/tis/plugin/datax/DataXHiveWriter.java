@@ -34,10 +34,15 @@ import com.qlangtech.tis.exec.ExecuteResult;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.fs.*;
+import com.qlangtech.tis.fs.FSHistoryFileUtils;
+import com.qlangtech.tis.fs.IPath;
+import com.qlangtech.tis.fs.ITISFileSystem;
+import com.qlangtech.tis.fs.ITableBuildTask;
+import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
@@ -289,9 +294,9 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @Override
-    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
         Objects.requireNonNull(partitionRetainNum, "partitionRetainNum can not be null");
-        return new IRemoteTaskTrigger() {
+        return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
                 return IDataXBatchPost.getPreExecuteTaskName(tab);
@@ -334,10 +339,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @Override
-    public IRemoteTaskTrigger createPostTask(
+    public IRemoteTaskPostTrigger createPostTask(
             IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
 
-        return new IRemoteTaskTrigger() {
+        return new IRemoteTaskPostTrigger() {
 
             @Override
             public String getTaskName() {

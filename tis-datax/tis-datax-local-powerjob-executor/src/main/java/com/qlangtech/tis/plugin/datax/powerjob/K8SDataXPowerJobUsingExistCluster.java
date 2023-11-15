@@ -69,12 +69,14 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 
     public PowerJobClient createPowerJobClient() {
         PowerJobClient powerJobClient = new PowerJobClient(this.serverAddress, this.appName, this.password);
+
+
         return powerJobClient;
     }
 
     @Override
     public RcDeployment getRCDeployment() {
-       // throw new UnsupportedOperationException();
+        // throw new UnsupportedOperationException();
         return new RcDeployment();
     }
 

@@ -43,15 +43,7 @@ import java.util.List;
  **/
 public class FtpTDFSLinker extends TDFSLinker {
     private static final String FTP_DISPLAY_NAME = "FTP";
-    //    public static final String KEY_FTP_SERVER_LINK = "linker";
-//    protected static final String KEY_FIELD_PATH = "path";
     private static final Logger logger = LoggerFactory.getLogger(FtpTDFSLinker.class);
-
-//    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-//    public String linker;
-//
-//    @FormField(ordinal = 6, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
-//    public String path;
 
     @Override
     public <T> T useTdfsSession(TDFSSessionVisitor<T> tdfsSession) {

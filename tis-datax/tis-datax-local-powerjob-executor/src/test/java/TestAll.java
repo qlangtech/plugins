@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestLocalDataXJobSubmit;
+import com.qlangtech.tis.plugin.datax.TestDistributedPowerJobDataXJobSubmit;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -28,7 +28,7 @@ import junit.framework.TestSuite;
 public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestLocalDataXJobSubmit.class);
+        suite.addTestSuite(TestDistributedPowerJobDataXJobSubmit.class);
         return suite;
     }
 }

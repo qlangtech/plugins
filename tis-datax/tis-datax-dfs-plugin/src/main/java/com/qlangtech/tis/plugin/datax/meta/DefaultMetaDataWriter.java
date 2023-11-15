@@ -26,7 +26,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fs.IPath;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
@@ -77,11 +77,11 @@ public class DefaultMetaDataWriter extends MetaDataWriter {
      * @return
      */
     @Override
-    public IRemoteTaskTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createMetaDataWriteTask(TDFSLinker dfsLinker, IExecChainContext execContext, ISelectedTab tab) {
         if (dfsLinker == null) {
             throw new IllegalArgumentException("param dfsLinker can not be null");
         }
-        return new IRemoteTaskTrigger() {
+        return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
                 return tab.getName() + "_metadata_write";

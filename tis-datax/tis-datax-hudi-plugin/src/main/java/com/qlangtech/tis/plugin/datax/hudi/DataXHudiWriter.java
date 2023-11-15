@@ -41,7 +41,8 @@ import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IRepositoryResourceScannable;
@@ -311,8 +312,8 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     //private transient AtomicReference<DataXCfgGenerator.GenerateCfgs> generateCfgs;
 
     @Override
-    public IRemoteTaskTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab,
-                                             DataXCfgGenerator.GenerateCfgs genCfg) {
+    public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab,
+                                                         DataXCfgGenerator.GenerateCfgs genCfg) {
 
         //        if (generateCfgs == null) {
         //            generateCfgs = new AtomicReference<>();
@@ -327,9 +328,9 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
     }
 
     @Override
-    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
 
-        return new IRemoteTaskTrigger() {
+        return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
                 return IDataXBatchPost.getPreExecuteTaskName(tab);

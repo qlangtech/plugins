@@ -19,7 +19,8 @@ import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
 import com.qlangtech.tis.fullbuild.taskflow.DataflowTask;
 import com.qlangtech.tis.fullbuild.taskflow.IFlatTableBuilder;
@@ -31,7 +32,11 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.TabPartitions;
@@ -76,8 +81,8 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     @Override
-    public IRemoteTaskTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
-        return new IRemoteTaskTrigger() {
+    public IRemoteTaskPreviousTrigger createPreExecuteTask(IExecChainContext execContext, ISelectedTab tab) {
+        return new IRemoteTaskPreviousTrigger() {
             @Override
             public String getTaskName() {
                 return IDataXBatchPost.getPreExecuteTaskName(tab);
@@ -136,10 +141,10 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     @Override
-    public IRemoteTaskTrigger createPostTask(
+    public IRemoteTaskPostTrigger createPostTask(
             IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
 
-        return new IRemoteTaskTrigger() {
+        return new IRemoteTaskPostTrigger() {
             @Override
             public String getTaskName() {
                 return "odps_" + tab.getName() + "_bind";

@@ -43,12 +43,9 @@
     </scm>
 
     <modules>
-        <!--        <module>tis-spark-hive-server-extends</module>-->
-        <!--        <module>tis-hdfs-plugin</module>-->
         <module>tis-scala-compiler-dependencies</module>
         <module>tis-datax</module>
         <module>tis-incr</module>
-
         <module>tis-asyncmsg-rocketmq-plugin</module>
 
         <module>tis-k8s-plugin</module>
@@ -56,7 +53,7 @@
         <module>tis-plugin-test/customer-plugin-test</module>
 
 
-        <!--        <module>tis-kafka-plugin</module>-->
+
 
         <module>tis-plugin-test/tis-testcontainer-mysql</module>
         <module>tis-plugin-test/tis-testcontainer-postgresql</module>
@@ -172,7 +169,12 @@
 
     <dependencyManagement>
         <dependencies>
-
+            <dependency>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tis-common-dao</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <artifactId>powerjob-client</artifactId>

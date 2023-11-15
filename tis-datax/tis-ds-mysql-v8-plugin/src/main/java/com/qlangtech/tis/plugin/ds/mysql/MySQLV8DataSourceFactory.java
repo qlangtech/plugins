@@ -94,21 +94,21 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
     @Override
     public String getDBSchema() {
 
-        if (this.splitTableStrategy.isSplittable()) {
-            // 如果使用了分表策略就不能返回默认的dbName了，不然会出错
-            try {
-                String[] dbNames = new String[1];
-                this.getDbConfig().vistDbName((config, jdbcUrl, ip, dbName) -> {
-                    dbNames[0] = dbName;
-                    return true;
-                });
-                return Objects.requireNonNull(dbNames[0], "dbName can not be null");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        // if (this.splitTableStrategy.isSplittable()) {
+        // 如果使用了分表策略就不能返回默认的dbName了，不然会出错
+        try {
+            String[] dbNames = new String[1];
+            this.getDbConfig().vistDbName((config, jdbcUrl, ip, dbName) -> {
+                dbNames[0] = dbName;
+                return true;
+            });
+            return Objects.requireNonNull(dbNames[0], "dbName can not be null");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        // return null;
-        return this.dbName;
+//        }
+//        // return null;
+//        return this.dbName;
     }
 
     @TISExtension

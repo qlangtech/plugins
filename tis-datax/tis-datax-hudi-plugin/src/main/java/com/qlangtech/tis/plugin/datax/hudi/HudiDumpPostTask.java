@@ -35,7 +35,7 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
-import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
@@ -64,7 +64,7 @@ import java.util.jar.Manifest;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-09 12:22
  **/
-public class HudiDumpPostTask implements IRemoteTaskTrigger {
+public class HudiDumpPostTask implements IRemoteTaskPostTrigger {
 
 
     private static Logger logger = LoggerFactory.getLogger(HudiDumpPostTask.class);

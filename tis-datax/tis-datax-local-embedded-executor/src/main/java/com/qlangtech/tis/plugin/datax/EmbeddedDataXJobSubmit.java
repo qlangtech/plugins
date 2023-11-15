@@ -25,6 +25,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.HttpUtils;
@@ -74,7 +75,12 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     }
 
     @Override
-    protected IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
+    public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+
+    }
+
+    @Override
+    public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO) {
 
 

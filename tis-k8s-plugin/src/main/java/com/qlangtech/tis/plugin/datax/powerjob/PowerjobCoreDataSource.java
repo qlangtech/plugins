@@ -8,6 +8,6 @@ import com.qlangtech.tis.extension.Describable;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/10/31
  */
-public class PowerjobCoreDataSource implements Describable<PowerjobCoreDataSource> {
+public abstract class PowerjobCoreDataSource implements Describable<PowerjobCoreDataSource> {
 
 }

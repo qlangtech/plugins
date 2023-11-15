@@ -26,13 +26,13 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
@@ -76,7 +76,7 @@ import java.util.regex.Pattern;
  * @create: 2021-04-23 18:16
  **/
 @Public
-public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISPowerJob {
+public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJob {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
 
@@ -195,7 +195,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
     public void remove() {
         K8SController k8SController = getK8SController();
         //  ApiClient k8SApi = getK8SApi();
-        k8SController.removeInstance(K8S_DATAX_INSTANCE_NAME);
+        k8SController.removeInstance(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
         try {
             if (supportHPA()) {
                 K8sImage k8SImage = this.getK8SImage();
@@ -237,7 +237,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
 
     @Override
     public void relaunch() {
-        getK8SController().relaunch(K8S_DATAX_INSTANCE_NAME);
+        getK8SController().relaunch(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
     }
 
     @Override
@@ -245,25 +245,25 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
         if (StringUtils.isEmpty(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
         }
-        getK8SController().relaunch(K8S_DATAX_INSTANCE_NAME, podName);
+        getK8SController().relaunch(DataXJobWorker.K8S_DATAX_INSTANCE_NAME, podName);
     }
 
     @Override
     public RcDeployment getRCDeployment() {
         // ApiClient api = getK8SApi();//, K8sImage config, String tisInstanceName
         // return K8sIncrSync.getK8SDeploymentMeta(new CoreV1Api(getK8SApi()), this.getK8SImage(), K8S_INSTANCE_NAME);
-        return getK8SController().getRCDeployment(K8S_DATAX_INSTANCE_NAME);
+        return getK8SController().getRCDeployment(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
     }
 
     @Override
     public WatchPodLog listPodAndWatchLog(String podName, ILogListener listener) {
-        return getK8SController().listPodAndWatchLog(K8S_DATAX_INSTANCE_NAME, podName, listener);
+        return getK8SController().listPodAndWatchLog(DataXJobWorker.K8S_DATAX_INSTANCE_NAME, podName, listener);
     }
 
     @Override
     public void launchService(Runnable launchProcess) {
         if (inService()) {
-            throw new IllegalStateException("k8s instance of:" + KEY_FIELD_NAME + " is running can not relaunch");
+            throw new IllegalStateException("k8s instance of:" + DataXJobWorker.KEY_FIELD_NAME + " is running can not relaunch");
         }
         try {
             // 启动服务
@@ -300,7 +300,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
             //  K8sImage config, CoreV1Api api, String name, ReplicasSpec incrSpec, List< V1EnvVar > envs
             // CoreV1Api k8sV1Api = new CoreV1Api(k8sClient);
             //  K8sImage k8sImage = this.getK8SImage();
-            this.getK8SController().createReplicationController(K8S_DATAX_INSTANCE_NAME, replicasSpec, varsBuilder.build());
+            this.getK8SController().createReplicationController(DataXJobWorker.K8S_DATAX_INSTANCE_NAME, replicasSpec, varsBuilder.build());
 
             if (supportHPA()) {
                 HorizontalpodAutoscaler hap = this.getHpa();
@@ -340,7 +340,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
         objectReference = new V2beta1CrossVersionObjectReference();
         objectReference.setApiVersion(K8SController.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
-        objectReference.setName(K8S_DATAX_INSTANCE_NAME.getK8SResName());
+        objectReference.setName(DataXJobWorker.K8S_DATAX_INSTANCE_NAME.getK8SResName());
         spec.setScaleTargetRef(objectReference);
 
         V2beta1MetricSpec monitorResource = new V2beta1MetricSpec();
@@ -374,7 +374,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
     }
 
     private String getHpaName() {
-        return K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
+        return DataXJobWorker.K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
     }
 
 
@@ -382,7 +382,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
     public static final Pattern zk_path_pattern = Pattern.compile("(/[\\da-z]{1,})+");
 
     @TISExtension()
-    public static class DescriptorImpl extends BasicDescriptor {
+    public static class DescriptorImpl extends DataXJobWorker.BasicDescriptor {
 
         public DescriptorImpl() {
             super();
@@ -408,7 +408,7 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
 
         @Override
         protected TargetResName getWorkerType() {
-            return K8S_DATAX_INSTANCE_NAME;
+            return DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
         }
 
         @Override
@@ -423,8 +423,8 @@ public class K8SDataXPowerJobServer extends BasicPowerjobWorker implements ITISP
         }
 
         @Override
-        protected K8SWorkerCptType getWorkerCptType() {
-            return K8SWorkerCptType.Server;
+        protected DataXJobWorker.K8SWorkerCptType getWorkerCptType() {
+            return DataXJobWorker.K8SWorkerCptType.Server;
         }
     }
 

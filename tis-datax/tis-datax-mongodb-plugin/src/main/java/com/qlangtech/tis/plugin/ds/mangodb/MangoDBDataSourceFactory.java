@@ -63,7 +63,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     public String address;
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String dbName;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
     public String username;
 
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})

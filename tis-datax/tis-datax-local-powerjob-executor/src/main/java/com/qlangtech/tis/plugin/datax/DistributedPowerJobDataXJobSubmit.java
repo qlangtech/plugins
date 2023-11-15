@@ -40,6 +40,10 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.fullbuild.phasestatus.PhaseStatusCollection;
+import com.qlangtech.tis.fullbuild.phasestatus.impl.AbstractChildProcessStatus;
+import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
+import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -211,19 +215,22 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
             throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getWorkflowId()
                     + " relevant nodes triggerCfgs can not be null empty");
         }
-        for (SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg : triggerCfgs) {
 
-            if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
-                feedback.reportDumpJobStatus();
-            }
+//
+//            if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
+//                feedback.reportDumpJobStatus();
+//            }
+//
+//            if (StringUtils.isNotEmpty(triggerCfg.getPostTrigger())) {
+//                feedback.re
+//            }
+//
+//
+//            triggerCfg.getSplitTabsCfg();
+//        }
 
-            if (StringUtils.isNotEmpty(triggerCfg.getPostTrigger())) {
-                feedback.re
-            }
-
-
-            triggerCfg.getSplitTabsCfg();
-        }
+        PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, tisTaskId);
+        feedback.initSynJob(statusCollection);
 
         JSONObject instanceParams = new JSONObject();
         instanceParams.put(JobParams.KEY_TASK_ID, tisTaskId);
@@ -241,6 +248,38 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
         TriggerBuildResult buildResult = new TriggerBuildResult(true);
         buildResult.taskid = tisTaskId;
         return buildResult;
+    }
+
+    private PhaseStatusCollection createPhaseStatus(ApplicationPayload.PowerJobWorkflow powerJobWorkflowId
+            , List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs, Integer tisTaskId) {
+        PhaseStatusCollection statusCollection = new PhaseStatusCollection(tisTaskId, powerJobWorkflowId.getExecutePhaseRange());
+        DumpPhaseStatus dumpPhase = new DumpPhaseStatus(tisTaskId);
+        JoinPhaseStatus joinPhase = new JoinPhaseStatus(tisTaskId);
+        statusCollection.setDumpPhase(dumpPhase);
+        statusCollection.setJoinPhase(joinPhase);
+
+        for (SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg : triggerCfgs) {
+
+            if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
+                setInitStatus(dumpPhase.getTable(triggerCfg.getPreTrigger()));
+            }
+
+            if (StringUtils.isNotEmpty(triggerCfg.getPostTrigger())) {
+                setInitStatus(joinPhase.getTaskStatus(triggerCfg.getPostTrigger()));
+            }
+
+            for (CuratorDataXTaskMessage taskMsg : triggerCfg.getSplitTabsCfg()) {
+                setInitStatus(dumpPhase.getTable(DataXJobInfo.parse(taskMsg.getJobName()).jobFileName));
+            }
+
+        }
+        return statusCollection;
+    }
+
+    private void setInitStatus(AbstractChildProcessStatus status) {
+        status.setFaild(false);
+        status.setWaiting(true);
+        status.setComplete(false);
     }
 
     private static ICommonDAOContext getCommonDAOContext(IControlMsgHandler module) {

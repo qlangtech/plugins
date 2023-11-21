@@ -27,7 +27,7 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import com.tis.hadoop.rpc.StatusRpcClient;
+import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
@@ -67,7 +67,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
         EasyMock.expect(taskContext.getPipelineController()).andReturn(pipelineController);
 
         AtomicReference<ITISRpcService> ref = new AtomicReference<>();
-        ref.set(StatusRpcClient.AssembleSvcCompsite.MOCK_PRC);
+        ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
         RpcServiceReference svcRef = new RpcServiceReference(ref, () -> {
         });
 

@@ -9,6 +9,8 @@ import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
 import com.qlangtech.tis.trigger.util.JsonUtil;
+import tech.powerjob.client.PowerJobClient;
+import tech.powerjob.common.response.WorkflowInfoDTO;
 
 import java.util.Objects;
 
@@ -23,7 +25,7 @@ public class ApplicationPayload {
     private final IApplicationDAO applicationDAO;
 
     public ApplicationPayload(String appName, IApplicationDAO applicationDAO) {
-        this.applicationDAO = applicationDAO;
+        this.applicationDAO = Objects.requireNonNull(applicationDAO, "applicationDAO can not be null");
         this.application = Objects.requireNonNull(applicationDAO.selectByName(appName), "appName:" + appName + " relevant app can not be null");
     }
 
@@ -64,6 +66,15 @@ public class ApplicationPayload {
             return workflowId;
         }
 
+        public boolean isDisbaled(PowerJobClient powerClient) {
+            try {
+                WorkflowInfoDTO wfDTO = DistributedPowerJobDataXJobSubmit.result(powerClient.fetchWorkflow(workflowId));
+                return wfDTO == null || !wfDTO.getEnable();
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         public ExecutePhaseRange getExecutePhaseRange() {
             return executePhaseRange;
         }
@@ -75,14 +86,17 @@ public class ApplicationPayload {
         return payload == null ? new JSONObject() : payload;
     }
 
+
     public void setPowerJobWorkflowId(Long workflowId, ExecutePhaseRange executePhaseRange) {
 
         JSONObject appPayload = getAppPayload();
         appPayload.put(IFullBuildContext.KEY_WORKFLOW_ID, workflowId);
         appPayload.put(EXEC_RANGE, new String[]{Objects.requireNonNull(executePhaseRange, "param executePhaseRange can not be null").getStart().getName()
                 , executePhaseRange.getEnd().getName()});
+
         Application app = new Application();
         app.setFullBuildCronTime(JsonUtil.toString(appPayload));
+        this.application.setFullBuildCronTime(app.getFullBuildCronTime());
         ApplicationCriteria appCriteria = new ApplicationCriteria();
         appCriteria.createCriteria().andAppIdEqualTo(application.getAppId());
         if (applicationDAO.updateByExampleSelective(app, appCriteria) < 1) {

@@ -24,7 +24,12 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataxExecutor;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.TISJarLoader;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -83,23 +88,12 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
     public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage jobDTO) {
 
-
-        // IDataxReader reader = dataxProcessor.getReader(null);
-        //TableInDB tabsInDB = reader.getTablesInDB();
-
-//        DataXJobInfo jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
-
-//        List<String> matchedTabs = tabsInDB.getMatchedTabs(tabDataXEntity.getDbIdenetity(), tabDataXEntity.getSourceTableName());
-//        DataXJobInfo.create(tabDataXEntity.getFileName(), matchedTabs);
-
-        //  CuratorDataXTaskMessage jobDTO = getDataXJobDTO(taskContext.getTaskContext(), jobName);
-        Integer jobId = jobDTO.getJobId();
+        Integer jobId = jobDTO.getTaskId();
 
         String dataXName = jobDTO.getDataXName();
-
-
+        DataxExecutor.statusRpc = statusRpc;
         final DataxExecutor dataxExecutor
-                = new DataxExecutor(statusRpc, InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
+                = new DataxExecutor(InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
 
         if (uberClassLoader == null) {
             uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());
@@ -142,42 +136,8 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         };
     }
 
-//    private DataXJobInfo getDataXJobInfo(
-//            TableDataXEntity tabDataXEntity, IDataXJobContext taskContext, IDataxProcessor dataxProcessor) {
-//
-//        List<IDataxReader> readers = taskContext.getTaskContext().getAttribute(KEY_DATAX_READERS
-//                , () -> dataxProcessor.getReaders(null));
-//
-//        DataXJobInfo jobName = null;
-//        for (IDataxReader reader : readers) {
-//            TableInDB tabsInDB = reader.getTablesInDB();
-//            if (tabsInDB.isMatch(tabDataXEntity)) {
-//                jobName = tabsInDB.createDataXJobInfo(tabDataXEntity);
-//                break;
-//            }
-//        }
-//
-//        Objects.requireNonNull(jobName, tabDataXEntity.toString());
-//        return jobName;
-//    }
-
     @Override
     public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
-        return new DataXJobSubmit.IDataXJobContext() {
-//            @Override
-//            public ExecutorService getContextInstance() {
-//                return executorService;
-//            }
-
-            @Override
-            public IJoinTaskContext getTaskContext() {
-                return parentContext;
-            }
-
-            @Override
-            public void destroy() {
-                // executorService.shutdownNow();
-            }
-        };
+        return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 }

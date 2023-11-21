@@ -56,7 +56,7 @@ import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.tis.hadoop.rpc.RpcServiceReference;
-import com.tis.hadoop.rpc.StatusRpcClient;
+import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -102,6 +102,34 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
 //        powerJobClient.
     }
 
+//    @Override
+//    public IRemoteTaskTrigger createDataXJob(IDataXJobContext taskContext, RpcServiceReference statusRpc
+//            , IDataxProcessor processor, Pair<String, IDataXBatchPost.LifeCycleHook> lifeCycleHookInfo, String tableName) {
+//        if (StringUtils.isEmpty(tableName)) {
+//            throw new IllegalArgumentException("param tableName can not be null");
+//        }
+//        DataxPrePostConsumer prePostConsumer = new DataxPrePostConsumer();
+//        DataXLifecycleHookMsg lifecycleHookMsg = new DataXLifecycleHookMsg();
+//        lifecycleHookMsg.setLifeCycleHook(Objects.requireNonNull(lifeCycleHookInfo.getValue(), "lifecycle hook type can not be null"));
+//        lifecycleHookMsg.setResType(processor.getResType());
+//        lifecycleHookMsg.setTableName(tableName);
+//        return new IRemoteTaskTrigger() {
+//            @Override
+//            public String getTaskName() {
+//                return Objects.requireNonNull(lifeCycleHookInfo.getKey(), "task name can not be null");
+//            }
+//
+//            @Override
+//            public void run() {
+//                try {
+//                    prePostConsumer.consumeMessage(lifecycleHookMsg);
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        };
+//    }
+
     @Override
     public ExecResult processExecHistoryRecord(ICommonDAOContext commonDAO, WorkFlowBuildHistory buildHistory) {
 
@@ -141,17 +169,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public IDataXJobContext createJobContext(IJoinTaskContext parentContext) {
-        return new IDataXJobContext() {
-            @Override
-            public IJoinTaskContext getTaskContext() {
-                return parentContext;
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-        };
+        return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 
     transient RpcServiceReference statusRpc;
@@ -161,7 +179,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
             return this.statusRpc;
         }
         try {
-            this.statusRpc = StatusRpcClient.getService(ITISCoordinator.create());
+            this.statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -175,7 +193,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
         }
         PowerJobClient powerJobClient = getTISPowerJob();
         RpcServiceReference statusRpc = getStatusRpc();
-        StatusRpcClient.AssembleSvcCompsite feedback = statusRpc.get();
+        StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
 //        PowerJobClient powerJobClient = powerJob.getPowerJobClient();
 
         //  JobInfoQuery jobQuery = new JobInfoQuery();
@@ -187,10 +205,9 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
 
         ApplicationPayload appPayload = new ApplicationPayload(appName, daoContext.getApplicationDAO());
         ApplicationPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.getPowerJobWorkflowId(false);
-        if (powerJobWorkflowId == null) {
+        if (powerJobWorkflowId == null || powerJobWorkflowId.isDisbaled(getTISPowerJob())) {
             // 如果之前还没有打开分布式调度，现在打开了，powerjob workflow还没有创建，现在创建
-            createJob(module, context, (DataxProcessor) DataxProcessor.load(null, appName));
-            appPayload = new ApplicationPayload(appName, daoContext.getApplicationDAO());
+            appPayload = this.innerCreateJob(module, (DataxProcessor) DataxProcessor.load(null, appName));
             powerJobWorkflowId = appPayload.getPowerJobWorkflowId(true);
         }
 
@@ -215,19 +232,6 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
             throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getWorkflowId()
                     + " relevant nodes triggerCfgs can not be null empty");
         }
-
-//
-//            if (StringUtils.isNotEmpty(triggerCfg.getPreTrigger())) {
-//                feedback.reportDumpJobStatus();
-//            }
-//
-//            if (StringUtils.isNotEmpty(triggerCfg.getPostTrigger())) {
-//                feedback.re
-//            }
-//
-//
-//            triggerCfg.getSplitTabsCfg();
-//        }
 
         PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, tisTaskId);
         feedback.initSynJob(statusCollection);
@@ -301,7 +305,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
         return powerJobClient;
     }
 
-    private static <T> T result(ResultDTO<T> result) {
+    public  static <T> T result(ResultDTO<T> result) {
         if (!result.isSuccess()) {
             throw new IllegalStateException("execute falid:" + result.getMessage());
         }
@@ -318,6 +322,10 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
      */
     @Override
     public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+        this.innerCreateJob(module, dataxProcessor);
+    }
+
+    private ApplicationPayload innerCreateJob(IControlMsgHandler module, DataxProcessor dataxProcessor) {
         PowerJobClient powerJobClient = getTISPowerJob();
 
 
@@ -394,9 +402,11 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
                 = result(powerJobClient.saveWorkflowNode(wfNodes));
 
         jobIdMaintainer.addWorkflow(savedWfNodes);
-
+        ICommonDAOContext daoContext = getCommonDAOContext(module);
+        ApplicationPayload appPayload = new ApplicationPayload(dataxProcessor.identityValue(), daoContext.getApplicationDAO());
+        ApplicationPayload.PowerJobWorkflow powerWf = appPayload.getPowerJobWorkflowId(false);
         SaveWorkflowRequest req = new SaveWorkflowRequest();
-
+        req.setId(powerWf != null ? powerWf.getWorkflowId() : null);
         req.setWfName(dataxProcessor.identityValue());
         req.setWfDescription(dataxProcessor.identityValue());
         req.setEnable(true);
@@ -406,10 +416,13 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit {
         PEWorkflowDAG peWorkflowDAG = jobIdMaintainer.createWorkflowDAG();
         req.setDag(peWorkflowDAG);
         Long saveWorkflowId = result(powerJobClient.saveWorkflow(req));
-        ICommonDAOContext daoContext = getCommonDAOContext(module);
-        ApplicationPayload appPayload = new ApplicationPayload(dataxProcessor.identityValue(), daoContext.getApplicationDAO());
-        appPayload.setPowerJobWorkflowId(saveWorkflowId
-                , new ExecutePhaseRange(FullbuildPhase.FullDump, containPostTrigger ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));
+
+        if(powerWf == null){
+            appPayload.setPowerJobWorkflowId(saveWorkflowId
+                    , new ExecutePhaseRange(FullbuildPhase.FullDump, containPostTrigger ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));
+        }
+
+        return appPayload;
     }
 
     @Override

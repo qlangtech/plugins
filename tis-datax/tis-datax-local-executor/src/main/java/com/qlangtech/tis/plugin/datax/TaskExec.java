@@ -18,13 +18,16 @@
 
 package com.qlangtech.tis.plugin.datax;
 
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
+import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataxSplitTabSyncConsumer;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobCommon;
-import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.solrj.util.ZkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +49,7 @@ public class TaskExec {
         AtomicBoolean complete = new AtomicBoolean(false);
         //  AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteTaskTrigger() {
-            DataXJobSingleProcessorExecutor jobConsumer;
+            DataXJobSingleProcessorExecutor<CuratorDataXTaskMessage> jobConsumer;
             boolean hasCanceled;
 
 
@@ -58,33 +61,33 @@ public class TaskExec {
 
                     JobCommon.setMDC(taskContext);
 
-                    jobConsumer = new DataXJobSingleProcessorExecutor() {
-                        @Override
-                        protected DataXJobSubmit.InstanceType getExecMode() {
-                            return DataXJobSubmit.InstanceType.LOCAL;
-                        }
+                    jobConsumer = new DataxSplitTabSyncConsumer((IExecChainContext) taskContext) {
+//                        @Override
+//                        protected DataXJobSubmit.InstanceType getExecMode() {
+//                            return DataXJobSubmit.InstanceType.LOCAL;
+//                        }
 
                         @Override
                         protected String getClasspath() {
                             return localDataXJobSubmit.getClasspath();
                         }
 
-                        @Override
-                        protected boolean useRuntimePropEnvProps() {
-                            return false;
-                        }
+//                        @Override
+//                        protected boolean useRuntimePropEnvProps() {
+//                            return false;
+//                        }
 
-                        @Override
-                        protected String[] getExtraJavaSystemPrams() {
-                            return new String[]{
-                                    "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
-                        }
+//                        @Override
+//                        protected String[] getExtraJavaSystemPrams() {
+//                            return new String[]{
+//                                    "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
+//                        }
 
-                        @Override
-                        protected String getIncrStateCollectAddress() {
-                            return ZkUtils.getFirstChildValue(
-                                    ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
-                        }
+//                        @Override
+//                        protected String getIncrStateCollectAddress() {
+//                            return ZkUtils.getFirstChildValue(
+//                                    ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
+//                        }
 
                         @Override
                         protected String getMainClassName() {

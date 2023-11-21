@@ -333,7 +333,7 @@ public class TestDataXHudiWriter {
             preExecuteTask.run();
 
             WriterTemplate.realExecuteDump(
-                    DataXCfgJson.path(HudiTest.hudi_datax_writer_assert_without_optional)
+                    DataXCfgJson.path(HudiTest.class, HudiTest.hudi_datax_writer_assert_without_optional)
                             .addCfgSetter((cfg) -> {
                                 //  cfg.set(cfgPathParameter + "." + DataxUtils.EXEC_TIMESTAMP, timestamp);
                                 return cfg;

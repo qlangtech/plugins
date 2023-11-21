@@ -229,7 +229,8 @@ public class HiveRemoveHistoryDataTask {
     /**
      * 删除hive中的历史表
      */
-    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(EntityName dumpTable, DataSourceMeta.JDBCConnection conn, PartitionFilter filter, Integer maxPartitionSave) {
+    public List<FSHistoryFileUtils.PathInfo> dropHistoryHiveTable(
+            EntityName dumpTable, DataSourceMeta.JDBCConnection conn, PartitionFilter filter, Integer maxPartitionSave) {
         if (maxPartitionSave < 1) {
             throw new IllegalArgumentException("param maxPartitionSave can not small than 1");
         }
@@ -258,7 +259,7 @@ public class HiveRemoveHistoryDataTask {
                     deletePts.add(pathInfo);
                     String alterSql = "alter table " + getFullTabName(table) + " drop partition (  " + pt + " = '" + existTimestamp + "' )";
                     try {
-                        HiveDBUtils.execute(conn, alterSql);
+                        HiveDBUtils.executeNoLog(conn, alterSql);
                     } catch (Throwable e) {
                         logger.error("alterSql:" + alterSql, e);
                     }

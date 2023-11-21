@@ -287,7 +287,15 @@ public class HiveDBUtils {
 
     private static Runnable createLogRunnable(Statement statement, IJoinTaskStatus joinTaskStatus) {
         final String collection = MDC.get("app");
-        final String taskId = MDC.get(JobCommon.KEY_TASK_ID);
+        if (StringUtils.isNotEmpty(collection)) {
+            throw new IllegalArgumentException("collection has not been set in MDC context");
+        }
+        final Integer taskId;
+        try {
+            taskId = Integer.parseInt(MDC.get(JobCommon.KEY_TASK_ID));
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("have not set " + JobCommon.KEY_TASK_ID + " in MDC context", e);
+        }
         HiveStatement hStatement = null;
         if (statement instanceof HiveStatement) {
             hStatement = (HiveStatement) statement;
@@ -308,7 +316,7 @@ public class HiveDBUtils {
             @Override
             public void run() {
 
-                JobCommon.setMDC(Integer.parseInt(taskId), collection);
+                JobCommon.setMDC((taskId), collection);
                 // getStatementId(hiveStatement);
                 while (hiveStatement.hasMoreLogs()) {
                     try {

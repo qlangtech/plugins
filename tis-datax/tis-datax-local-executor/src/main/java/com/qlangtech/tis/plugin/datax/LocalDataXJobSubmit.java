@@ -60,7 +60,6 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     private final static Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
 
 
-
     @Override
     public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
 
@@ -132,16 +131,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
 
     @Override
     public DataXJobSubmit.IDataXJobContext createJobContext(final IJoinTaskContext parentContext) {
-        return new DataXJobSubmit.IDataXJobContext() {
-            @Override
-            public IJoinTaskContext getTaskContext() {
-                return parentContext;
-            }
-
-            @Override
-            public void destroy() {
-            }
-        };
+        return DataXJobSubmit.IDataXJobContext.create(parentContext);
     }
 
     public void setMainClassName(String mainClassName) {

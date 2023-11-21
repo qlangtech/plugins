@@ -5,8 +5,10 @@ import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
+import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.test.TISEasyMock;
+import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
@@ -31,11 +33,8 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
         IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
 
-        Application app = new Application();
-        app.setAppId(999);
-        app.setProjectName(testDataXName);
-        EasyMock.expect(applicationDAO.selectByName(testDataXName)).andReturn(app);
-        EasyMock.expect(applicationDAO.updateByExampleSelective(EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1);
+        expectApplicationSelect(applicationDAO);
+
 
         EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
         Context context = mock("context", Context.class);
@@ -46,13 +45,41 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         verifyAll();
     }
 
+    private static void expectApplicationSelect(IApplicationDAO applicationDAO) {
+        Application app = new Application();
+        app.setAppId(999);
+        app.setProjectName(testDataXName);
+        EasyMock.expect(applicationDAO.selectByName(testDataXName)).andReturn(app).anyTimes();
+
+        EasyMock.expect(applicationDAO.updateByExampleSelective(
+                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1).anyTimes();
+    }
+
     public void testTriggerJob() {
         IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+
+        expectApplicationSelect(applicationDAO);
         PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
+
+
+        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
+
+        EasyMock.expect(workFlowBuildHistoryDAO.updateByExampleSelective(
+                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1);
+
+        EasyMock.expect(module.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
+        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO).anyTimes();
         Context context = mock("context", Context.class);
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
+
+        this.replay();
+
+        HttpUtils.addMockApply(0, "do_create_new_task"
+                , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
+
         powerJobDataXJobSubmit.triggerJob(module, context, testDataXName);
+
+        this.verifyAll();
     }
 
 

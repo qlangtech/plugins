@@ -35,7 +35,7 @@
 //import com.qlangtech.tis.solrj.util.ZkUtils;
 //import com.tis.hadoop.rpc.ITISRpcService;
 //import com.tis.hadoop.rpc.RpcServiceReference;
-//import com.tis.hadoop.rpc.StatusRpcClient;
+//import com.tis.hadoop.rpc.StatusRpcClientFactory;
 //import junit.framework.Assert;
 //import junit.framework.TestCase;
 //import org.easymock.EasyMock;
@@ -76,7 +76,7 @@
 //        jobSubmit.setClasspath("target/classes:target/test-classes");
 //
 //        AtomicReference<ITISRpcService> ref = new AtomicReference<>();
-//        ref.set(StatusRpcClient.AssembleSvcCompsite.MOCK_PRC);
+//        ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
 //        RpcServiceReference statusRpc = new RpcServiceReference(ref, () -> {
 //        });
 //

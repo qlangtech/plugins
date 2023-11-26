@@ -24,6 +24,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -51,11 +53,12 @@ import java.util.Objects;
  **/
 @TISExtension()
 @Public
-public class LocalDataXJobSubmit extends DataXJobSubmit {
+public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEnvironmentParamsSetter {
 
     private String mainClassName = DataxExecutor.class.getName();
     private File workingDirectory = new File(".");
     private String classpath;
+    private ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler = new ExtraJavaSystemPramsSuppiler();
 
     private final static Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
 
@@ -63,6 +66,11 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     @Override
     public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
 
+    }
+
+    @Override
+    public void saveJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
+        throw new UnsupportedOperationException(this.getClass().getName());
     }
 
     @Override
@@ -79,9 +87,12 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
      * @return
      */
     @Override
-    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName) {
+    public TriggerBuildResult triggerJob(IControlMsgHandler module, Context context, String appName, Optional<Long> powerjobWorkflowInstanceIdOpt) {
         if (StringUtils.isEmpty(appName)) {
             throw new IllegalArgumentException("param appName can not be empty");
+        }
+        if (powerjobWorkflowInstanceIdOpt.isPresent()) {
+            throw new UnsupportedOperationException("must processed by pwoerJob");
         }
         try {
             List<HttpUtils.PostParam> params = Lists.newArrayList();
@@ -139,6 +150,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
     }
 
 
+    @Override
     public void setWorkingDirectory(File workingDirectory) {
         this.workingDirectory = workingDirectory;
     }
@@ -158,12 +170,26 @@ public class LocalDataXJobSubmit extends DataXJobSubmit {
         return classpath;
     }
 
+    @Override
+    public void setExtraJavaSystemPramsSuppiler(ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler) {
+        this.extraJavaSystemPramsSuppiler = extraJavaSystemPramsSuppiler;
+    }
+
+    @Override
     public void setClasspath(String classpath) {
         this.classpath = classpath;
+    }
+
+    public String[] getExtraJavaSystemPrams() {
+        List<String> params = Objects.requireNonNull(extraJavaSystemPramsSuppiler.get(), "extraJavaSystemPramsSuppiler can not be null");
+        return params.toArray(new String[params.size()]);
+        // return new String[]{"-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
     }
 
 //    @Override
 //    public CuratorDataXTaskMessage getDataXJobDTO(IJoinTaskContext taskContext, DataXJobInfo dataXJobInfo) {
 //        return super.getDataXJobDTO(taskContext, dataXJobInfo);
 //    }
+
+
 }

@@ -1,0 +1,6 @@
+{
+  "crontab": {
+    "label": "表达式",
+    "placeholder": "0 0 12 * * ?"
+  }
+}

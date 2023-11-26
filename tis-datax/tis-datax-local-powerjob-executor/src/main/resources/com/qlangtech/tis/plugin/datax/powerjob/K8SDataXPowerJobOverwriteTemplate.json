@@ -1,0 +1,7 @@
+{
+  "triggerStrategy": {
+    "label": "定时执行",
+    "dftVal": "off",
+    "help": "数据同步任务可定时执行"
+  }
+}

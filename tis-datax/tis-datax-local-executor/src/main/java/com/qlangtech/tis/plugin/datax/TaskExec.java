@@ -90,6 +90,11 @@ public class TaskExec {
 //                        }
 
                         @Override
+                        protected String[] getExtraJavaSystemPrams() {
+                            return localDataXJobSubmit.getExtraJavaSystemPrams();
+                        }
+
+                        @Override
                         protected String getMainClassName() {
                             return localDataXJobSubmit.getMainClassName();
                         }

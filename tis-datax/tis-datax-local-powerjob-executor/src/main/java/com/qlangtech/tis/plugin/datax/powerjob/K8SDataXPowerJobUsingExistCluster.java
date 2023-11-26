@@ -81,6 +81,14 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     }
 
     @Override
+    public void remove() {
+        if (!this.inService()) {
+            throw new IllegalStateException("job worker is not in service, relevant clusterId:" + this.serverAddress);
+        }
+        this.deleteLaunchToken();
+    }
+
+    @Override
     public void launchService(Runnable launchProcess) {
         testPowerJobClient((result) -> {
         });

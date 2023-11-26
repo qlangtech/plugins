@@ -39,7 +39,7 @@ public class BasicPowerjobWorker extends DataXJobWorker  {
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(this.getClass().getName());
     }
 
     @Override

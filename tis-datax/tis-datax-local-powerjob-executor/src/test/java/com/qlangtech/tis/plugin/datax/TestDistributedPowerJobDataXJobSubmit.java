@@ -12,6 +12,8 @@ import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
+import java.util.Optional;
+
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/10
@@ -77,7 +79,7 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         HttpUtils.addMockApply(0, "do_create_new_task"
                 , "create_new_task_single_table_index_build_response.json", TestDistributedPowerJobDataXJobSubmit.class);
 
-        powerJobDataXJobSubmit.triggerJob(module, context, testDataXName);
+        powerJobDataXJobSubmit.triggerJob(module, context, testDataXName, Optional.empty());
 
         this.verifyAll();
     }

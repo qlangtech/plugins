@@ -31,5 +31,20 @@
   },
   "k8sImage": {
     "disable": true
+  },
+  "skipWhenFailed": {
+    "label": "忽略失败",
+    "help": "workflow 节点执行过程中，如果失败是否跳过继续执行下游节点？",
+    "dftVal": false,
+    "enum": [
+      {
+        "label": "是",
+        "val": true
+      },
+      {
+        "label": "否",
+        "val": false
+      }
+    ]
   }
 }

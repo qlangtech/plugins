@@ -9,6 +9,7 @@ import tech.powerjob.common.response.WorkflowNodeInfoDTO;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -18,6 +19,11 @@ import java.util.stream.Collectors;
 public class JobMap2WorkflowMaintainer {
     private final Map<String, Long> jobName2JobId = Maps.newHashMap();
     private final Map<Long, WorkflowNodeInfoDTO> jobIdMap2Workflow = Maps.newHashMap();
+
+    /**
+     * 初始启动节点id，用于在定时任务执行时，取得TaskId
+     */
+    private WorkflowNodeInfoDTO startInitNode;
 
     public void addJob(ISelectedTab selectedTab, Long jobId) {
         Objects.requireNonNull(jobId, "jobId can not be null");
@@ -31,13 +37,25 @@ public class JobMap2WorkflowMaintainer {
         }
     }
 
+    public void setStartInitJob(Optional<WorkflowNodeInfoDTO> startInitNode) {
+        this.startInitNode = startInitNode.orElseThrow(() -> new IllegalStateException("startInitNode can not be null"));
+    }
+
     public PEWorkflowDAG createWorkflowDAG() {
 // DAG 图
         List<PEWorkflowDAG.Node> nodes = Lists.newLinkedList();
         List<PEWorkflowDAG.Edge> edges = Lists.newLinkedList();
+
+        Long startInitNodeId = Objects.requireNonNull(this.startInitNode, "startInitNode can not be null").getId();
+
         for (WorkflowNodeInfoDTO wf : jobIdMap2Workflow.values()) {
             nodes.add(new PEWorkflowDAG.Node(wf.getId()));
+            // 开始节点到每天数据同步节点都有一条边
+            if (!startInitNodeId.equals(wf.getId())) {
+                edges.add(new PEWorkflowDAG.Edge(startInitNodeId, wf.getId()));
+            }
         }
+
 
 //        dagSession.buildSpec((dpt) -> {
 //            edges.add(new PEWorkflowDAG.Edge(getWfIdByJobName(dpt.getLeft())
@@ -62,4 +80,6 @@ public class JobMap2WorkflowMaintainer {
         }
         return wfInfo.getId();
     }
+
+
 }

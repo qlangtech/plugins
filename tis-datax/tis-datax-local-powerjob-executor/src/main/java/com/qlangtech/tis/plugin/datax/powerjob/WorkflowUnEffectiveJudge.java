@@ -17,7 +17,8 @@ public class WorkflowUnEffectiveJudge {
     private boolean unEffective;
 
     private final List<PEWorkflowDAG.Node> deletedWfNodes = Lists.newArrayList();
-    private final Map<String /**tableName*/, PEWorkflowDAG.Node> changedWfNodes = Maps.newHashMap();
+    private final Map<String /**tableName*/, PEWorkflowDAG.Node> existWfNodes = Maps.newHashMap();
+    private PEWorkflowDAG.Node startInitNode;
 
     public WorkflowUnEffectiveJudge() {
         this(false);
@@ -32,14 +33,21 @@ public class WorkflowUnEffectiveJudge {
         return deletedWfNodes;
     }
 
-    public void addChangedWfNode(SelectedTabTriggers tabTriggers, PEWorkflowDAG.Node node) {
+    /**
+     * 添加已经存在的workflow节点
+     *
+     * @param tabTriggers
+     * @param node
+     */
+    public void addExistWfNode(SelectedTabTriggers tabTriggers, PEWorkflowDAG.Node node) {
         String tableName = tabTriggers.getTabName();
-        changedWfNodes.put(tableName, node);
-        this.setUnEffective();
+        existWfNodes.put(tableName, node);
+        //   this.setUnEffective();
     }
 
-    public Optional<PEWorkflowDAG.Node> getChangedWfNode(String tableName) {
-        return Optional.ofNullable(changedWfNodes.get(tableName));
+    public Optional<PEWorkflowDAG.Node> getExistWfNode(String tableName) {
+        return Optional.ofNullable(existWfNodes.get(tableName));
+        //return existWfNodes.entrySet();
     }
 
     public WorkflowUnEffectiveJudge setUnEffective() {
@@ -53,5 +61,13 @@ public class WorkflowUnEffectiveJudge {
 
     public boolean isUnEffective() {
         return this.unEffective;
+    }
+
+    public void setStatInitNode(PEWorkflowDAG.Node node) {
+        this.startInitNode = node;
+    }
+
+    public Optional<PEWorkflowDAG.Node> getStartInitNode() {
+        return Optional.ofNullable(startInitNode);
     }
 }

@@ -63,12 +63,12 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     public String password;
 
     @Override
-    public PowerJobClient getPowerJobClient() {
+    public TISPowerJobClient getPowerJobClient() {
         return this.createPowerJobClient();
     }
 
-    public PowerJobClient createPowerJobClient() {
-        PowerJobClient powerJobClient = new PowerJobClient(this.serverAddress, this.appName, this.password);
+    public TISPowerJobClient createPowerJobClient() {
+        TISPowerJobClient powerJobClient = new TISPowerJobClient(this.serverAddress, this.appName, this.password);
 
 
         return powerJobClient;

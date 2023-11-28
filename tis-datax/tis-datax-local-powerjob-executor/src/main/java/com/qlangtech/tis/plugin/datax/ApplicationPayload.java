@@ -8,6 +8,7 @@ import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
+import com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
@@ -22,6 +23,8 @@ import tech.powerjob.common.response.WorkflowInfoDTO;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit.vistWorkflowNodes;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -58,17 +61,19 @@ public class ApplicationPayload {
             throw new IllegalStateException("execRange.size() must be 2 ,but now is " + JsonUtil.toString(execRange));
         }
 
-        return new PowerJobWorkflow(workflowId
+        return new PowerJobWorkflow(application, workflowId
                 , new ExecutePhaseRange(FullbuildPhase.parse(execRange.getString(0)), FullbuildPhase.parse(execRange.getString(1))));
     }
 
     public static class PowerJobWorkflow {
         private final Long workflowId;
         private final ExecutePhaseRange executePhaseRange;
+        private final Application application;
 
-        public PowerJobWorkflow(Long workflowId, ExecutePhaseRange executePhaseRange) {
+        public PowerJobWorkflow(Application application, Long workflowId, ExecutePhaseRange executePhaseRange) {
             this.workflowId = workflowId;
             this.executePhaseRange = executePhaseRange;
+            this.application = application;
         }
 
         public Long getWorkflowId() {
@@ -85,44 +90,67 @@ public class ApplicationPayload {
         public WorkflowUnEffectiveJudge isUnEffective(PowerJobClient powerClient, Map<ISelectedTab, SelectedTabTriggers> selectedTabTriggers) {
             WorkflowUnEffectiveJudge unEffectiveJudge = new WorkflowUnEffectiveJudge();
             try {
-                WorkflowInfoDTO wfDTO = DistributedPowerJobDataXJobSubmit.result(powerClient.fetchWorkflow(workflowId));
+                WorkflowInfoDTO wfDTO = TISPowerJobClient.result(powerClient.fetchWorkflow(workflowId));
                 if (wfDTO == null || !wfDTO.getEnable()) {
                     return new WorkflowUnEffectiveJudge(true);
                 }
-                PEWorkflowDAG dag = wfDTO.getPEWorkflowDAG();
+                //PEWorkflowDAG dag = wfDTO.getPEWorkflowDAG();
 //                if (dag.getNodes().size() != selectedTabTriggers.size()) {
 //                    return new WorkflowUnEffectiveJudge(true);
 //                }
-
-                Map<String, SelectedTabTriggers> tabTriggers
+                Map<String /**tableName*/, SelectedTabTriggers> tabTriggers
                         = selectedTabTriggers.entrySet().stream().collect(Collectors.toMap((e) -> e.getKey().getName(), (e) -> e.getValue()));
-                SelectedTabTriggers tabTrigger = null;
-
-                for (PEWorkflowDAG.Node wfNode : dag.getNodes()) {
-                    tabTrigger = tabTriggers.get(wfNode.getNodeName());
-                    if (tabTrigger == null) {
-                        // 该表同步已经被删除
-                        unEffectiveJudge.addDeletedWfNode(wfNode);
-                    } else {
-                        if (!wfNode.getEnable() || !StringUtils.equals(wfNode.getNodeParams(), JsonUtil.toString(tabTrigger.createMRParams()))) {
-                            // 触发条件更改了
-                            unEffectiveJudge.addChangedWfNode(tabTrigger, wfNode);
-                        }
+                vistWorkflowNodes(this.application.getProjectName(), wfDTO, new DistributedPowerJobDataXJobSubmit.WorkflowVisit() {
+                    @Override
+                    public void vistStartInitNode(PEWorkflowDAG.Node node) {
+                        unEffectiveJudge.setStatInitNode(node);
                     }
 
-                    return unEffectiveJudge;
+                    @Override
+                    public void vistWorkerNode(PEWorkflowDAG.Node wfNode) {
+                        SelectedTabTriggers tabTrigger = tabTriggers.get(wfNode.getNodeName());
+                        if (tabTrigger == null) {
+                            // 该表同步已经被删除
+                            unEffectiveJudge.addDeletedWfNode(wfNode);
+                        } else {
+                            unEffectiveJudge.addExistWfNode(tabTrigger, wfNode);
+                            if (!wfNode.getEnable() || !StringUtils.equals(wfNode.getNodeParams(), JsonUtil.toString(tabTrigger.createMRParams()))) {
+                                // 触发条件更改了
+                                unEffectiveJudge.setUnEffective();
+                            }
+                        }
+                    }
+                });
 
-//                    Objects.requireNonNull()
-//                            , "table name:" + wfNode.getNodeName() + " can not get relevant tabTrigger ");
 
-                }
+//                 tabTrigger = null;
+//
+//                for (PEWorkflowDAG.Node wfNode : dag.getNodes()) {
+//                    tabTrigger = tabTriggers.get(wfNode.getNodeName());
+//                    if (tabTrigger == null) {
+//                        // 该表同步已经被删除
+//                        unEffectiveJudge.addDeletedWfNode(wfNode);
+//                    } else {
+//                        unEffectiveJudge.addExistWfNode(tabTrigger, wfNode);
+//                        if (!wfNode.getEnable() || !StringUtils.equals(wfNode.getNodeParams(), JsonUtil.toString(tabTrigger.createMRParams()))) {
+//                            // 触发条件更改了
+//                            unEffectiveJudge.setUnEffective();
+//                        }
+//                    }
+//
+//                    // return unEffectiveJudge;
+//
+////                    Objects.requireNonNull()
+////                            , "table name:" + wfNode.getNodeName() + " can not get relevant tabTrigger ");
+//
+//                }
 
             } catch (Exception e) {
                 logger.warn(e.getMessage(), e);
                 return unEffectiveJudge.setUnEffective();
             }
 
-            return new WorkflowUnEffectiveJudge(false);
+            return unEffectiveJudge;
         }
 
         public ExecutePhaseRange getExecutePhaseRange() {

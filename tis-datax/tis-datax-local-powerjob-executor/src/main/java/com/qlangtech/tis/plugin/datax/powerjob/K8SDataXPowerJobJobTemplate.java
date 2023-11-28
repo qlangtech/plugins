@@ -27,19 +27,19 @@ import java.util.Objects;
  */
 public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
 
-    @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer instraceRetry;
 
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer maxInstance;
 
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer taskRetry;
 
-    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 7, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer threadParallel;
 
-    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 9, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer timeLimit;
 
 
@@ -57,8 +57,15 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
     @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean skipWhenFailed;
 
+    public SaveJobInfoRequest createSynJobRequest() {
+        return createDefaultJobInfoRequest(ExecuteType.MAP_REDUCE, "com.qlangtech.tis.datax.powerjob.TISTableDumpProcessor");
+    }
 
-    public SaveJobInfoRequest createDefaultJobInfoRequest(ExecuteType executeType) {
+    public SaveJobInfoRequest createInitializeJobRequest() {
+        return createDefaultJobInfoRequest(ExecuteType.STANDALONE, "com.qlangtech.tis.datax.powerjob.TISInitializeProcessor");
+    }
+
+    public SaveJobInfoRequest createDefaultJobInfoRequest(ExecuteType executeType, String targetClass) {
         SaveJobInfoRequest saveJobInfoReq = new SaveJobInfoRequest();
         saveJobInfoReq.setEnable(true);
         saveJobInfoReq.setInstanceRetryNum(this.instraceRetry);
@@ -73,7 +80,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
         saveJobInfoReq.setTimeExpressionType(TimeExpressionType.WORKFLOW);
 
         saveJobInfoReq.setProcessorType(ProcessorType.BUILT_IN);
-        saveJobInfoReq.setProcessorInfo("com.qlangtech.tis.datax.powerjob.TISTableDumpProcessor");
+        saveJobInfoReq.setProcessorInfo(targetClass);
         return saveJobInfoReq;
     }
 

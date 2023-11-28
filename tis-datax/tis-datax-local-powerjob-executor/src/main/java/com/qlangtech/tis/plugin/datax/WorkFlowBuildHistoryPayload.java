@@ -16,7 +16,7 @@ import tech.powerjob.common.response.WorkflowInstanceInfoDTO;
 import java.util.Date;
 import java.util.Objects;
 
-import static com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit.result;
+import static com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient.result;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)

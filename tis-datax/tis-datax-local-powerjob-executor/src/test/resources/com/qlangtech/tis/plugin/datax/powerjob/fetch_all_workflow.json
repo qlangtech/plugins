@@ -1,0 +1,173 @@
+{
+  "success": true,
+  "data": {
+    "index": 0,
+    "pageSize": 10,
+    "totalPages": 1,
+    "totalItems": 1,
+    "data": [
+      {
+        "id": 16,
+        "wfName": "mysql_hive3",
+        "wfDescription": "mysql_hive3",
+        "appId": 1,
+        "timeExpressionType": "CRON",
+        "timeExpression": "0 55 13 ? * *",
+        "maxWfInstanceNum": 1,
+        "enable": true,
+        "notifyUserIds": null,
+        "lifeCycle": null,
+        "gmtCreate": "2023-11-14T04:53:41.000+00:00",
+        "gmtModified": "2023-11-27T06:36:28.000+00:00",
+        "peworkflowDAG": {
+          "nodes": [
+            {
+              "nodeId": 292,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 297,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 298,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 299,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 300,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 301,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            },
+            {
+              "nodeId": 302,
+              "nodeType": 1,
+              "jobId": null,
+              "nodeName": null,
+              "instanceId": null,
+              "nodeParams": null,
+              "status": null,
+              "result": null,
+              "enable": null,
+              "disableByControlNode": null,
+              "skipWhenFailed": null,
+              "startTime": null,
+              "finishedTime": null
+            }
+          ],
+          "edges": [
+            {
+              "from": 302,
+              "to": 292,
+              "property": null,
+              "enable": null
+            },
+            {
+              "from": 302,
+              "to": 297,
+              "property": null,
+              "enable": null
+            },
+            {
+              "from": 302,
+              "to": 298,
+              "property": null,
+              "enable": null
+            },
+            {
+              "from": 302,
+              "to": 299,
+              "property": null,
+              "enable": null
+            },
+            {
+              "from": 302,
+              "to": 300,
+              "property": null,
+              "enable": null
+            },
+            {
+              "from": 302,
+              "to": 301,
+              "property": null,
+              "enable": null
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "message": null
+}

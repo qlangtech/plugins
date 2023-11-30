@@ -117,7 +117,8 @@ public class WorkFlowBuildHistoryPayload {
         WorkFlowBuildHistoryCriteria criteria = new WorkFlowBuildHistoryCriteria();
         criteria.createCriteria().andIdEqualTo(tisTaskId);
         if (daoContext.getTaskBuildHistoryDAO().updateByExampleSelective(record, criteria) < 1) {
-            throw new IllegalStateException("tisTaskId:" + tisTaskId + " update to new exec state:" + execResult + " falid");
+            throw new IllegalStateException("tisTaskId:"
+                    + tisTaskId + " update to new exec state:" + execResult + " falid");
         }
     }
 

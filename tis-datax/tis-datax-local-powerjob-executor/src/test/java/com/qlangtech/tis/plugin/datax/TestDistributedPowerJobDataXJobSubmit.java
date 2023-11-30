@@ -6,6 +6,7 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
@@ -27,6 +28,30 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         super.setUp();
         this.clearMocks();
     }
+
+    public void testCreateWorkflowJob() {
+        DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
+
+        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
+        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        IDataFlowTopology topology = mock("topology", IDataFlowTopology.class);
+
+
+
+        expectApplicationSelect(applicationDAO);
+
+
+        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
+        Context context = mock("context", Context.class);
+        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, testDataXName);
+
+        replay();
+
+
+        powerJobDataXJobSubmit.createWorkflowJob(module, context, topology);
+        verifyAll();
+    }
+
 
     public void testCreateJob() {
 

@@ -221,7 +221,8 @@ public abstract class HiveTask extends AdapterTask {
         // 校验最新的Partition 是否已经生成
         if (!allpts.contains(this.rewriteSql.primaryTable.getPt())) {
             StringBuffer errInfo = new StringBuffer();
-            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":" + this.rewriteSql.primaryTable + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
+            errInfo.append("\ntable:" + newCreateTab + "," + IDumpTable.PARTITION_PT + ":"
+                    + this.rewriteSql.primaryTable + " is not exist in exist partition set [" + Joiner.on(",").join(allpts) + "]");
             child = this.rewriteSql.primaryTable.getChild();
             if (child != null && !child.isSubQueryTable()) {
                 try {
@@ -229,7 +230,9 @@ public abstract class HiveTask extends AdapterTask {
                 } catch (Exception e) {
                     throw new RuntimeException(child.getTable().getFullName(), e);
                 }
-                errInfo.append("\n\t child table:").append(child.getTable()).append(",").append(IDumpTable.PARTITION_PT).append(":").append(this.rewriteSql.primaryTable).append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
+                errInfo.append("\n\t child table:").append(child.getTable()).append(",")
+                        .append(IDumpTable.PARTITION_PT).append(":").append(this.rewriteSql.primaryTable)
+                        .append(" is not exist in exist partition set [").append(Joiner.on(",").join(allpts)).append("]");
             }
             throw new IllegalStateException(errInfo.toString());
         }

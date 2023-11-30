@@ -61,7 +61,7 @@
         <module>tis-datax-oracle-plugin</module>
         <module>tis-datax-doris-plugin</module>
         <module>tis-datax-starrocks-plugin</module>
-<!--        <module>tis-ds-tidb-plugin</module>-->
+        <!--        <module>tis-ds-tidb-plugin</module>-->
         <module>tis-hive-plugin</module>
         <module>tis-hive-flat-table-builder-plugin</module>
         <module>tis-ds-mysql-plugin</module>
@@ -75,7 +75,8 @@
         <module>tis-datax-hdfs-plugin</module>
         <module>tis-datax-hdfs-reader-writer-plugin</module>
         <module>tis-datax-hudi-common</module>
-        <module>tis-datax-local-embedded-executor</module>
+        <!--tis-datax-local-embedded-executor 和 tis-datax-local-executor 合并了没有必要分两个工程-->
+        <!--        <module>tis-datax-local-embedded-executor</module>-->
         <module>tis-datax-odps-plugin</module>
         <module>tis-datax-kafka-plugin</module>
 
@@ -128,7 +129,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
 
 
             <dependency>

@@ -57,6 +57,10 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
     @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean skipWhenFailed;
 
+    public SaveJobInfoRequest createSqlProcessJobRequest() {
+        return createDefaultJobInfoRequest(ExecuteType.STANDALONE, "com.qlangtech.tis.datax.powerjob.TISTableJoinProcessor");
+    }
+
     public SaveJobInfoRequest createSynJobRequest() {
         return createDefaultJobInfoRequest(ExecuteType.MAP_REDUCE, "com.qlangtech.tis.datax.powerjob.TISTableDumpProcessor");
     }

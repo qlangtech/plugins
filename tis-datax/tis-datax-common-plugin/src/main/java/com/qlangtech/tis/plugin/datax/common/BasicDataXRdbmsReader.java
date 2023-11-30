@@ -22,7 +22,6 @@ import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
@@ -31,11 +30,18 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.SubForm;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
-import com.qlangtech.tis.util.IPluginContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,9 +223,9 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
 
             try {
-                ParseDescribable<Describable> readerDescribable = this.newInstance((IPluginContext) msgHandler,
-                        postFormVals.rawFormData, Optional.empty());
-                BasicDataXRdbmsReader rdbmsReader = readerDescribable.getInstance();
+//                ParseDescribable<Describable> readerDescribable = this.newInstance((IPluginContext) msgHandler,
+//                        postFormVals.rawFormData, Optional.empty());
+                BasicDataXRdbmsReader rdbmsReader = postFormVals.newInstance();// readerDescribable.getInstance();
                 rdbmsReader.getTablesInDB();
             } catch (Throwable e) {
                 logger.warn(e.getMessage(), e);

@@ -2,7 +2,10 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.sql.parser.ISqlTask;
+import org.apache.commons.lang.StringUtils;
 import tech.powerjob.common.model.PEWorkflowDAG;
 import tech.powerjob.common.response.WorkflowNodeInfoDTO;
 
@@ -30,6 +33,17 @@ public class JobMap2WorkflowMaintainer {
         this.jobName2JobId.put(selectedTab.getName(), jobId);
     }
 
+    /**
+     * 添加分析节点
+     *
+     * @param processTask
+     * @param jobId
+     */
+    public void addJob(ISqlTask processTask, Long jobId) {
+        Objects.requireNonNull(jobId, "jobId can not be null");
+        this.jobName2JobId.put(processTask.getExportName(), jobId);
+    }
+
     public void addWorkflow(List<WorkflowNodeInfoDTO> savedWfNodes) {
         Objects.requireNonNull(savedWfNodes, "savedWfNodes can not be null");
         for (WorkflowNodeInfoDTO wf : savedWfNodes) {
@@ -41,7 +55,7 @@ public class JobMap2WorkflowMaintainer {
         this.startInitNode = startInitNode.orElseThrow(() -> new IllegalStateException("startInitNode can not be null"));
     }
 
-    public PEWorkflowDAG createWorkflowDAG() {
+    public final PEWorkflowDAG createWorkflowDAG() {
 // DAG 图
         List<PEWorkflowDAG.Node> nodes = Lists.newLinkedList();
         List<PEWorkflowDAG.Edge> edges = Lists.newLinkedList();
@@ -57,16 +71,27 @@ public class JobMap2WorkflowMaintainer {
         }
 
 
-//        dagSession.buildSpec((dpt) -> {
+        return createWorkflowDAG(nodes, edges);
+    }
+
+    protected PEWorkflowDAG createWorkflowDAG(List<PEWorkflowDAG.Node> nodes, List<PEWorkflowDAG.Edge> edges) {
+        //  dagSession.buildSpec((dpt) -> {
 //            edges.add(new PEWorkflowDAG.Edge(getWfIdByJobName(dpt.getLeft())
 //                    , getWfIdByJobName(dpt.getRight())));
 //        });
-
         return new PEWorkflowDAG(nodes, edges);
     }
 
-    private Long getWfIdByJobName(String jobName) {
-
+    /**
+     * powerjob workflowId
+     *
+     * @param jobName
+     * @return
+     */
+    protected final Long getWfIdByJobName(String jobName) {
+        if (StringUtils.isEmpty(jobName)) {
+            throw new IllegalArgumentException("param jobName can not be null");
+        }
         Long jobId = jobName2JobId.get(jobName);
         if (jobId == null) {
             throw new IllegalStateException("jobName:" + jobName + " relevant jobId can not be null,exist:"
@@ -82,4 +107,7 @@ public class JobMap2WorkflowMaintainer {
     }
 
 
+    public void beforeCreateWorkflowDAG(K8SDataXPowerJobJobTemplate jobTpl) {
+
+    }
 }

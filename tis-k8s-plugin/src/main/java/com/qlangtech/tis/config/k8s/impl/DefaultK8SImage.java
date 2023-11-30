@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
-import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -33,7 +32,6 @@ import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.qlangtech.tis.util.IPluginContext;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -47,7 +45,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -78,7 +75,7 @@ public class DefaultK8SImage extends K8sImage {
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
 
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, validate = {})
+    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, advance = true, validate = {})
     public String hostAliases;
 
     @Override
@@ -177,9 +174,9 @@ public class DefaultK8SImage extends K8sImage {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
-            ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-            K8sImage k8sCfg = k8s.getInstance();
+            ;
+          //  ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+            K8sImage k8sCfg = postFormVals.newInstance();// k8s.getInstance();
             try {
                 ApiClient client = k8sCfg.createApiClient();
                 CoreV1Api api = new CoreV1Api(client);

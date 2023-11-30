@@ -121,11 +121,6 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
                     public IGroupChildTaskIterator getSubTasks() {
                         return super.getSubTasks((tab) -> entry.getValue().contains(tab.getName()));
                     }
-                    //                    @Override
-//                    public <T extends ISelectedTab> List<T> getSelectedTabs() {
-//                        List<T> tabs = super.getSelectedTabs();
-//                        return tabs.stream().filter((tab) -> entry.getValue().contains(tab.getName())).collect(Collectors.toList());
-//                    }
                 });
             });
 

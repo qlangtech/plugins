@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
@@ -13,7 +14,6 @@ import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.powerjob.client.PowerJobClient;
@@ -114,7 +114,10 @@ public class ApplicationPayload {
                             unEffectiveJudge.addDeletedWfNode(wfNode);
                         } else {
                             unEffectiveJudge.addExistWfNode(tabTrigger, wfNode);
-                            if (!wfNode.getEnable() || !StringUtils.equals(wfNode.getNodeParams(), JsonUtil.toString(tabTrigger.createMRParams()))) {
+                            
+                            if (!wfNode.getEnable() || !JsonUtil.objEquals(JSONObject.parseObject(wfNode.getNodeParams())
+                                    , tabTrigger.createMRParams()
+                                    , Sets.newHashSet("/exec/taskSerializeNum", "/exec/jobInfo[]/taskSerializeNum"))) {
                                 // 触发条件更改了
                                 unEffectiveJudge.setUnEffective();
                             }

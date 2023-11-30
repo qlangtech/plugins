@@ -21,6 +21,8 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.assemble.ExecResult;
+import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -28,14 +30,19 @@ import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
+import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
+import com.qlangtech.tis.manage.common.ConfigFileContext;
 import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.web.start.TisSubModule;
+import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -43,9 +50,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
+import static com.qlangtech.tis.plugin.datax.EmbeddedDataXJobSubmit.getTriggerWorkflowBuildResult;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -62,20 +72,15 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
     private final static Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
 
-
-    @Override
-    public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
-
-    }
-
-    @Override
-    public void saveJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
-        throw new UnsupportedOperationException(this.getClass().getName());
-    }
-
     @Override
     public InstanceType getType() {
         return InstanceType.LOCAL;
+    }
+
+    @Override
+    public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module
+            , Context context, IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
+        return getTriggerWorkflowBuildResult(module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt);
     }
 
     /**
@@ -98,6 +103,27 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
             List<HttpUtils.PostParam> params = Lists.newArrayList();
             params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
             return TriggerBuildResult.triggerBuild(module, context, params);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
+        return terminateWorkingTask(module, context, buildHistory);
+    }
+
+    static boolean terminateWorkingTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
+        ExecResult processState = ExecResult.parse(buildHistory.getState());
+        List<ConfigFileContext.Header> headers = Lists.newArrayList();
+        headers.add(new ConfigFileContext.Header(JobCommon.KEY_TASK_ID, String.valueOf(buildHistory.getTaskId())));
+        headers.add(new ConfigFileContext.Header(IParamContext.KEY_ASYN_JOB_NAME, String.valueOf(processState == ExecResult.ASYN_DOING)));
+        headers.add(new ConfigFileContext.Header(IFullBuildContext.KEY_APP_NAME, IAppSourcePipelineController.DATAX_FULL_PIPELINE + buildHistory.getAppName()));
+
+        TriggerBuildResult triggerResult = null;
+        try {
+            triggerResult = TriggerBuildResult.triggerBuild(module, context, ConfigFileContext.HTTPMethod.DELETE, Collections.emptyList(), headers);
+            return triggerResult.success;
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }

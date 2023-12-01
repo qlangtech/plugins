@@ -120,7 +120,8 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
             });
 
             if (CollectionUtils.isEmpty(matchRes)) {
-                msgHandler.addFieldError(context, KEY_RES_MATCHER, "路径:" + dataxReader.dfsLinker.getRootPath() + "下，使用匹配:'" + dataxReader.resMatcher + "'不能找到对应的资源文件");
+                msgHandler.addFieldError(context, KEY_RES_MATCHER, "路径:"
+                        + dataxReader.dfsLinker.getRootPath() + "下，使用匹配:'" + dataxReader.resMatcher + "'不能找到对应的资源文件");
                 return false;
             } else {
                 if (showRecognizedResMsg) {

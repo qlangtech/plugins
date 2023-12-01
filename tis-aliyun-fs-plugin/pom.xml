@@ -55,7 +55,6 @@
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
-            <version>${revision}</version>
         </dependency>
         <!--
         aliyun oss random write example

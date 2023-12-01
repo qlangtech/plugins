@@ -85,7 +85,6 @@
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
-            <version>${revision}</version>
             <scope>test</scope>
         </dependency>
 

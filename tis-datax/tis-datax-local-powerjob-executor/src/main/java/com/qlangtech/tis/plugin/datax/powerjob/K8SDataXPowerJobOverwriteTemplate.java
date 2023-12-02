@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -19,7 +19,7 @@ public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTempla
     public TriggerStrategy triggerStrategy;
 
     @Override
-    public SaveWorkflowRequest createWorkflowRequest(DataxProcessor dataxProcessor) {
+    public SaveWorkflowRequest createWorkflowRequest(IDataxProcessor dataxProcessor) {
         SaveWorkflowRequest req = super.createWorkflowRequest(dataxProcessor);
 //        req.setWfName(dataxProcessor.identityValue());
 //        req.setWfDescription(dataxProcessor.identityValue());

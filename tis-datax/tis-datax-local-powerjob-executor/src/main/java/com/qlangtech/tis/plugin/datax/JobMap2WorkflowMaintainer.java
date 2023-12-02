@@ -2,17 +2,21 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import org.apache.commons.lang.StringUtils;
 import tech.powerjob.common.model.PEWorkflowDAG;
+import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.response.WorkflowNodeInfoDTO;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -20,7 +24,16 @@ import java.util.stream.Collectors;
  * @date 2023/11/10
  */
 public class JobMap2WorkflowMaintainer {
-    private final Map<String, Long> jobName2JobId = Maps.newHashMap();
+    private final Map<String, Long> jobName2JobId = new HashMap<String, Long>() {
+        @Override
+        public Long put(String key, Long value) {
+            Long preId = super.put(key, value);
+            if (preId != null) {
+                throw new IllegalStateException("can not put with key duplicate,key:" + key + " newVal:" + value + ",preVal:" + preId);
+            }
+            return null;
+        }
+    };
     private final Map<Long, WorkflowNodeInfoDTO> jobIdMap2Workflow = Maps.newHashMap();
 
     /**
@@ -28,9 +41,18 @@ public class JobMap2WorkflowMaintainer {
      */
     private WorkflowNodeInfoDTO startInitNode;
 
+    private final Set<Long> dumpNodeJobIds = Sets.newHashSet();
+
     public void addJob(ISelectedTab selectedTab, Long jobId) {
         Objects.requireNonNull(jobId, "jobId can not be null");
-        this.jobName2JobId.put(selectedTab.getName(), jobId);
+        this.addDumpNode2JobIdMap(selectedTab.getName(), jobId);
+//        this.jobName2JobId.put(selectedTab.getName(), jobId);
+//        dumpNodeJobIds.add(jobId);
+    }
+
+    protected final void addDumpNode2JobIdMap(String selectedTabIdentity, Long jobId) {
+        this.jobName2JobId.put(selectedTabIdentity, jobId);
+        dumpNodeJobIds.add(jobId);
     }
 
     /**
@@ -41,7 +63,7 @@ public class JobMap2WorkflowMaintainer {
      */
     public void addJob(ISqlTask processTask, Long jobId) {
         Objects.requireNonNull(jobId, "jobId can not be null");
-        this.jobName2JobId.put(processTask.getExportName(), jobId);
+        this.jobName2JobId.put(processTask.getId(), jobId);
     }
 
     public void addWorkflow(List<WorkflowNodeInfoDTO> savedWfNodes) {
@@ -64,8 +86,8 @@ public class JobMap2WorkflowMaintainer {
 
         for (WorkflowNodeInfoDTO wf : jobIdMap2Workflow.values()) {
             nodes.add(new PEWorkflowDAG.Node(wf.getId()));
-            // 开始节点到每天数据同步节点都有一条边
-            if (!startInitNodeId.equals(wf.getId())) {
+            // 开始节点到每个体数据同步节点都有一条边
+            if (!startInitNodeId.equals(wf.getId()) && this.dumpNodeJobIds.contains(wf.getJobId())) {
                 edges.add(new PEWorkflowDAG.Edge(startInitNodeId, wf.getId()));
             }
         }
@@ -100,14 +122,14 @@ public class JobMap2WorkflowMaintainer {
 
         WorkflowNodeInfoDTO wfInfo = jobIdMap2Workflow.get(jobId);
         if (wfInfo == null) {
-            throw new IllegalStateException("jobId:" + jobId + " relevant workflowInfo  can not be null,exist:"
-                    + jobIdMap2Workflow.entrySet().stream().map((entry) -> entry.getKey() + "->" + entry.getValue()).collect(Collectors.joining(",")));
+            throw new IllegalStateException("jobId:" + jobId + ",jobName: " + jobName + " relevant workflowInfo  can not be null,exist:"
+                    + jobIdMap2Workflow.entrySet().stream().map((entry) -> entry.getKey() + "->" + entry.getValue().getId()).collect(Collectors.joining(",")));
         }
         return wfInfo.getId();
     }
 
 
-    public void beforeCreateWorkflowDAG(K8SDataXPowerJobJobTemplate jobTpl) {
-
+    public List<SaveWorkflowNodeRequest> beforeCreateWorkflowDAG(K8SDataXPowerJobJobTemplate jobTpl) {
+        return Lists.newArrayList();
     }
 }

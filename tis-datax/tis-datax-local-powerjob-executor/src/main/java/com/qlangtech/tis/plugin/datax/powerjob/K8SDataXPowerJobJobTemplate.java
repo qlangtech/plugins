@@ -1,7 +1,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -89,9 +89,10 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
     }
 
 
-    public SaveWorkflowRequest createWorkflowRequest(DataxProcessor dataxProcessor) {
+    public SaveWorkflowRequest createWorkflowRequest(IDataxProcessor dataxProcessor) {
         SaveWorkflowRequest req = new SaveWorkflowRequest();
         req.setWfName(dataxProcessor.identityValue());
+        req.setTimeExpressionType(TimeExpressionType.API);
         req.setMaxWfInstanceNum(this.maxInstance);
         req.setWfDescription(dataxProcessor.identityValue());
         req.setEnable(true);

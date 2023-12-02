@@ -21,9 +21,14 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.AdapterDataxReader;
+import com.qlangtech.tis.datax.IDataxGlobalCfg;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IDataxWriter;
+import com.qlangtech.tis.datax.IGroupChildTaskIterator;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -37,8 +42,10 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.AdapterSelectedTab;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
@@ -52,7 +59,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -103,15 +110,16 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
             List<DependencyNode> dumpNodes = topology.getDumpNodes();
 
 
-            Map<String, Set<String>> dbIds = Maps.newHashMap();
-            Set<String> tabs = null;
+            Map<String/*dbName*/, SelectedTabs> dbIds = Maps.newHashMap();
+            SelectedTabs tabs = null;
             for (DependencyNode dump : dumpNodes) {
                 tabs = dbIds.get(dump.getDbName());
                 if (tabs == null) {
-                    tabs = Sets.newHashSet();
+                    tabs = new SelectedTabs();
                     dbIds.put(dump.getDbName(), tabs);
                 }
-                tabs.add(dump.getName());
+
+                tabs.addDumpNode(dump);
                 // dbIds.add(dump.getDbName());
             }
 
@@ -119,7 +127,14 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
                 readers.add(new AdapterDataxReader(DataxReader.load(null, true, entry.getKey())) {
                     @Override
                     public IGroupChildTaskIterator getSubTasks() {
-                        return super.getSubTasks((tab) -> entry.getValue().contains(tab.getName()));
+                        return super.getSubTasks((tab) -> entry.getValue().contains(tab));
+                    }
+
+                    @Override
+                    public List<TopologySelectedTab> getSelectedTabs() {
+                        return super.getSelectedTabs().stream()//
+                                .map((tab) -> new TopologySelectedTab(tab, entry.getValue().getTopologyId(tab))) //
+                                .collect(Collectors.toList());
                     }
                 });
             });
@@ -127,6 +142,36 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
             return readers;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static class TopologySelectedTab extends AdapterSelectedTab {
+        private final String topologyId;
+
+        public TopologySelectedTab(ISelectedTab target, String topologyId) {
+            super(target);
+            this.topologyId = topologyId;
+        }
+
+        public String getTopologyId() {
+            return this.topologyId;
+        }
+    }
+
+    private static class SelectedTabs {
+        private final Map<String /*tabName*/, String/*toplogId*/> tab2ToplogId = Maps.newHashMap();
+
+        public void addDumpNode(DependencyNode dumpNode) {
+            tab2ToplogId.put(dumpNode.getName(), dumpNode.getId());
+        }
+
+        public boolean contains(ISelectedTab tab) {
+            return tab2ToplogId.containsKey(tab.getName());
+        }
+
+        public String getTopologyId(ISelectedTab tab) {
+            return Objects.requireNonNull(tab2ToplogId.get(tab.getName()) //
+                    , "tabName:" + tab.getName() + " relevant topologyName can not be null");
         }
     }
 

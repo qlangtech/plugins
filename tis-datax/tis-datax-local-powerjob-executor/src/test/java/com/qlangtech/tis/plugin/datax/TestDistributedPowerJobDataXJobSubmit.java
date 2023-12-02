@@ -1,18 +1,25 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
+import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
+import com.qlangtech.tis.workflow.dao.IWorkFlowDAO;
+import com.qlangtech.tis.workflow.pojo.WorkFlow;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,29 +34,47 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
     public void setUp() throws Exception {
         super.setUp();
         this.clearMocks();
+        CenterResource.setNotFetchFromCenterRepository();
     }
 
+    private String topplogName = "asdf";
+    private Integer workflowId = 1;
+
     public void testCreateWorkflowJob() {
+        String topplogName = "asdf";
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
 
         PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
-        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
-        IDataFlowTopology topology = mock("topology", IDataFlowTopology.class);
+        IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
 
+//
+//        expectApplicationSelect(applicationDAO);
+        expectWorkflowSelect(workflowDAO);
 
-
-        expectApplicationSelect(applicationDAO);
-
-
-        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
+        EasyMock.expect(module.getWorkFlowDAO()).andReturn(workflowDAO);
         Context context = mock("context", Context.class);
-        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, testDataXName);
-
+        DataFlowDataXProcessor dataxProcessor =
+                (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topplogName);
+        IDataFlowTopology topology = dataxProcessor.getTopology();
         replay();
 
 
         powerJobDataXJobSubmit.createWorkflowJob(module, context, topology);
         verifyAll();
+    }
+
+    private void expectWorkflowSelect(IWorkFlowDAO workflowDAO) {
+        WorkFlow wf = new WorkFlow();
+        wf.setId(workflowId);
+        wf.setName(topplogName);
+        wf.setOpTime(new Date());
+        wf.setCreateTime(new Date());
+        List<WorkFlow> workFlows = Lists.newArrayList(wf);
+
+        EasyMock.expect(workflowDAO.selectByExample(EasyMock.anyObject())).andReturn(workFlows);
+
+        EasyMock.expect(workflowDAO.updateByExampleSelective(
+                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1).anyTimes();
     }
 
 

@@ -64,6 +64,11 @@
             <artifactId>tis-plugin</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-manage-pojo</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis</groupId>-->
         <!--            <artifactId>tis-solrj-client</artifactId>-->
@@ -74,6 +79,7 @@
             <artifactId>tis-hadoop-rpc</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
 </project>

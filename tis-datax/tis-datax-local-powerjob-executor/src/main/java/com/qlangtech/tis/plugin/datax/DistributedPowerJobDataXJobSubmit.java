@@ -239,10 +239,21 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         List<ISqlTask> parseNodes = topology.getParseNodes();
 
 
-        DataxProcessor dataxProcessor
-                = (DataxProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topology.getName());
+        DataFlowDataXProcessor dataxProcessor
+                = (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topology.getName());
 
         JobMap2WorkflowMaintainer jobIdMaintainer = new JobMap2WorkflowMaintainer() {
+
+            public void addJob(ISelectedTab selectedTab, Long jobId) {
+                Objects.requireNonNull(jobId, "jobId can not be null");
+                if (!(selectedTab instanceof DataFlowDataXProcessor.TopologySelectedTab)) {
+                    throw new IllegalStateException("selectedTab:" + selectedTab.getClass().getName() + " must be type :"
+                            + DataFlowDataXProcessor.TopologySelectedTab.class.getName());
+                }
+                this.addDumpNode2JobIdMap(((DataFlowDataXProcessor.TopologySelectedTab) selectedTab).getTopologyId(), jobId);
+                //  this.jobName2JobId.put(, jobId);
+            }
+
             @Override
             protected PEWorkflowDAG createWorkflowDAG(List<PEWorkflowDAG.Node> nodes, List<PEWorkflowDAG.Edge> edges) {
 
@@ -251,14 +262,16 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
                 dagSpec.buildSpec((dpt) -> {
                     edges.add(new PEWorkflowDAG.Edge(getWfIdByJobName(dpt.getLeft())
                             , getWfIdByJobName(dpt.getRight())));
+//                    System.out.println(dpt.getLeft() + "->" + dpt.getRight());
                 });
 
                 return super.createWorkflowDAG(nodes, edges);
             }
 
             @Override
-            public void beforeCreateWorkflowDAG(K8SDataXPowerJobJobTemplate jobTpl) {
+            public List<SaveWorkflowNodeRequest> beforeCreateWorkflowDAG(K8SDataXPowerJobJobTemplate jobTpl) {
                 // TODO: 更新时需要找到之前的node
+                List<SaveWorkflowNodeRequest> joinNodeReqs = Lists.newArrayList();
                 Optional<PEWorkflowDAG.Node> existWfNode = Optional.empty();
                 for (ISqlTask sqlTask : parseNodes) {
 
@@ -269,18 +282,22 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
                         SaveWorkflowNodeRequest wfNodeReq = createWorkflowNode(dataxProcessor.identityValue() + "_" + sqlTask.getExportName()
                                 , String.valueOf(writer.getBuffer()), existWfNode, sqlJoinRequest, jobTpl);
                         this.addJob(sqlTask, wfNodeReq.getJobId());
+                        joinNodeReqs.add(wfNodeReq);
 
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-
                 }
+                return joinNodeReqs;
             }
         };
 
-
-        this.innerCreateJob(module, dataxProcessor, jobIdMaintainer
-                , Optional.empty(), Optional.empty(), this, StatusRpcClientFactory.getMockStub());
+        this.innerCreateJob(PowerWorkflowPayload.createTISWorkflowPayload(topology.getName() //
+                        , getCommonDAOContext(module)) //
+                , module, dataxProcessor, jobIdMaintainer //
+                , Optional.empty() //
+                , Optional.empty() //
+                , this, StatusRpcClientFactory.getMockStub());
     }
 
 
@@ -291,7 +308,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
 
         TriggerBuildResult buildResult = new TriggerBuildResult(true);
-       // buildResult.taskid = tisTaskId;
+        // buildResult.taskid = tisTaskId;
         return buildResult;
     }
 
@@ -319,8 +336,8 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
         ICommonDAOContext daoContext = getCommonDAOContext(module);
 
-        ApplicationPayload appPayload = new ApplicationPayload(appName, daoContext.getApplicationDAO());
-        ApplicationPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.getPowerJobWorkflowId(false);
+        PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(appName, daoContext);
+        PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.getPowerJobWorkflowId(false);
         DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
         ;
 
@@ -335,7 +352,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
             powerJobWorkflowId = appPayload.getPowerJobWorkflowId(true);
         }
 
-        WorkflowInfoDTO wfInfo = result(powerJobClient.fetchWorkflow(powerJobWorkflowId.getWorkflowId()));
+        WorkflowInfoDTO wfInfo = result(powerJobClient.fetchWorkflow(powerJobWorkflowId.getPowerjobWorkflowId()));
 
         List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
         vistWorkflowNodes(appName, wfInfo, new WorkflowVisit() {
@@ -365,7 +382,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
         PowerJobExecContext chainContext = new PowerJobExecContext();
         chainContext.setAppname(appName);
-        chainContext.setWorkflowId(powerJobWorkflowId.getWorkflowId().intValue());
+        chainContext.setWorkflowId(powerJobWorkflowId.getPowerjobWorkflowId().intValue());
         chainContext.setExecutePhaseRange(powerJobWorkflowId.getExecutePhaseRange());
         //
         /**===================================================================
@@ -375,7 +392,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
                 chainContext, workflowInstanceIdOpt.isPresent() ? TriggerType.CRONTAB : TriggerType.MANUAL);
 
         if (CollectionUtils.isEmpty(triggerCfgs)) {
-            throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getWorkflowId()
+            throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getPowerjobWorkflowId()
                     + " relevant nodes triggerCfgs can not be null empty");
         }
 
@@ -504,7 +521,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 //        return null;
 //    }
 
-    private PhaseStatusCollection createPhaseStatus(ApplicationPayload.PowerJobWorkflow powerJobWorkflowId
+    private PhaseStatusCollection createPhaseStatus(PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId
             , List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs, Integer tisTaskId) {
         PhaseStatusCollection statusCollection = new PhaseStatusCollection(tisTaskId, powerJobWorkflowId.getExecutePhaseRange());
         DumpPhaseStatus dumpPhase = new DumpPhaseStatus(tisTaskId);
@@ -559,11 +576,9 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
     @Override
     public TISWorkflowInfoDTO saveJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
 
-
-        ICommonDAOContext daoContext = getCommonDAOContext(module);
-
-        ApplicationPayload appPayload = new ApplicationPayload(dataxProcessor.identityValue(), daoContext.getApplicationDAO());
-        ApplicationPayload.PowerJobWorkflow powerJobWorkflowId
+        PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(
+                dataxProcessor.identityValue(), getCommonDAOContext(module));
+        PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId
                 = Objects.requireNonNull(appPayload.getPowerJobWorkflowId(false), "powerJobWorkflowId can not be null");
 
         Map<ISelectedTab, SelectedTabTriggers> selectedTabTriggers = null;
@@ -573,13 +588,14 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         selectedTabTriggers = createWfNodes(dataxProcessor, this, rpcStub);
         unEffectiveJudge = powerJobWorkflowId.isUnEffective(getTISPowerJob(), selectedTabTriggers);
 
-        this.innerSaveJob(module, dataxProcessor, Optional.of(selectedTabTriggers)
+        this.innerSaveJob(appPayload
+                , module, dataxProcessor, Optional.of(selectedTabTriggers)
                 , Optional.of(unEffectiveJudge), (K8SDataXPowerJobOverwriteTemplate) worker, this, rpcStub);
 
-        return (TISWorkflowInfoDTO) result(getTISPowerJob().fetchWorkflow(powerJobWorkflowId.getWorkflowId()));
+        return (TISWorkflowInfoDTO) result(getTISPowerJob().fetchWorkflow(powerJobWorkflowId.getPowerjobWorkflowId()));
     }
 
-    private static K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(DataxProcessor dataxProcessor) {
+    private static K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(IDataxProcessor dataxProcessor) {
         for (DataXJobWorker worker : HeteroEnum.appJobWorkerTplReWriter.getPlugins(IPluginContext.namedContext(dataxProcessor.identityValue()), null)) {
             return (K8SDataXPowerJobJobTemplate) worker;
         }
@@ -587,15 +603,18 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
     }
 
 
-    private ApplicationPayload innerCreateJob(IControlMsgHandler module
+    private PowerWorkflowPayload innerCreateJob(IControlMsgHandler module
             , DataxProcessor dataxProcessor
             , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers //
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-        return this.innerCreateJob(module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, submit, statusRpc);
+
+
+        return this.innerCreateJob(PowerWorkflowPayload.createApplicationPayload(dataxProcessor.identityValue(), getCommonDAOContext(module))
+                , module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, submit, statusRpc);
     }
 
-    private ApplicationPayload innerCreateJob(IControlMsgHandler module
-            , DataxProcessor dataxProcessor
+    private PowerWorkflowPayload innerCreateJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
+            , IDataxProcessor dataxProcessor
             , JobMap2WorkflowMaintainer jobIdMaintainer
             , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers //
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt, DataXJobSubmit submit, RpcServiceReference statusRpc) {
@@ -604,17 +623,17 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         // dataxApp 相关的模版
         Optional<K8SDataXPowerJobJobTemplate> jobTpl = Optional.ofNullable(getAppRelevantDataXJobWorkerTemplate(dataxProcessor));
 
-        return innerSaveJob(module, dataxProcessor, jobIdMaintainer, selectedTabTriggers, unEffectiveOpt, jobTpl.orElseGet(() -> {
+        return innerSaveJob(appPayload, module, dataxProcessor, jobIdMaintainer, selectedTabTriggers, unEffectiveOpt, jobTpl.orElseGet(() -> {
             // 为空调用全局模版
             return (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
         }), submit, statusRpc);
     }
 
-    private static ApplicationPayload innerSaveJob(IControlMsgHandler module
+    private static PowerWorkflowPayload innerSaveJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
             , DataxProcessor dataxProcessor
             , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt
             , K8SDataXPowerJobJobTemplate jobTpl, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-        return innerSaveJob(module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, jobTpl, submit, statusRpc);
+        return innerSaveJob(appPayload, module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, jobTpl, submit, statusRpc);
     }
 
     /**
@@ -629,8 +648,8 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
      * @param statusRpc
      * @return
      */
-    private static ApplicationPayload innerSaveJob(IControlMsgHandler module
-            , DataxProcessor dataxProcessor
+    private static PowerWorkflowPayload innerSaveJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
+            , IDataxProcessor dataxProcessor
             , JobMap2WorkflowMaintainer jobIdMaintainer
             , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt
             , K8SDataXPowerJobJobTemplate jobTpl, DataXJobSubmit submit, RpcServiceReference statusRpc) {
@@ -663,26 +682,6 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
             SaveJobInfoRequest jobRequest = jobTpl.createSynJobRequest();
             changedWfNode = unEffectiveJudge.getExistWfNode(selectedTab.getName());
 
-//            changedWfNode.ifPresent((node) -> {
-//                jobRequest.setId(node.getJobId());
-//            });
-//
-//            jobRequest.setJobName(dataxProcessor.identityValue() + "_" + selectedTab.getName());
-//            jobRequest.setJobParams(JsonUtil.toString(mrParams));
-//
-//            jobId = result(powerJobClient.saveJob(jobRequest));
-//            jobIdMaintainer.addJob(selectedTab, jobId);
-//
-//            SaveWorkflowNodeRequest wfNode = jobTpl.createWorkflowNode();// new SaveWorkflowNodeRequest();
-//            changedWfNode.ifPresent((node) -> {
-//                wfNode.setId(node.getNodeId());
-//            });
-//            wfNode.setJobId(jobId);
-//            wfNode.setNodeName(selectedTab.getName());
-//            wfNode.setNodeParams(jobRequest.getJobParams());
-
-//            String name, String jobParams
-//                    , Optional<PEWorkflowDAG.Node> existWfNode, SaveJobInfoRequest jobRequest, K8SDataXPowerJobJobTemplate jobTpl
             SaveWorkflowNodeRequest wfNode = createWorkflowNode(dataxProcessor.identityValue() + "_" + selectedTab.getName()
                     , JsonUtil.toString(mrParams), changedWfNode, jobRequest, jobTpl);
             wfNodes.add(wfNode);
@@ -710,7 +709,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
         wfNodes.add(startWfNode);
         //===============================================================
-
+        wfNodes.addAll(jobIdMaintainer.beforeCreateWorkflowDAG(jobTpl));
         List<WorkflowNodeInfoDTO> savedWfNodes
                 = result(powerJobClient.saveWorkflowNode(wfNodes));
 
@@ -721,14 +720,13 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
         jobIdMaintainer.setStartInitJob(savedWfNodes.stream().filter((n) -> startWfNode.getJobId() == (long) n.getJobId()).findFirst());
         jobIdMaintainer.addWorkflow(savedWfNodes);
-        ICommonDAOContext daoContext = getCommonDAOContext(module);
-        ApplicationPayload appPayload = new ApplicationPayload(dataxProcessor.identityValue(), daoContext.getApplicationDAO());
-        ApplicationPayload.PowerJobWorkflow powerWf = appPayload.getPowerJobWorkflowId(false);
+
+        PowerWorkflowPayload.PowerJobWorkflow powerWf = appPayload.getPowerJobWorkflowId(false);
 
         SaveWorkflowRequest req = jobTpl.createWorkflowRequest(dataxProcessor);
 
-        req.setId(powerWf != null ? powerWf.getWorkflowId() : null);
-        jobIdMaintainer.beforeCreateWorkflowDAG(jobTpl);
+        req.setId(powerWf != null ? powerWf.getPowerjobWorkflowId() : null);
+
         PEWorkflowDAG peWorkflowDAG = jobIdMaintainer.createWorkflowDAG();
         req.setDag(peWorkflowDAG);
         Long saveWorkflowId = result(powerJobClient.saveWorkflow(req));
@@ -767,7 +765,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
     }
 
     private static Map<ISelectedTab, SelectedTabTriggers>
-    createWfNodes(DataxProcessor dataxProcessor, DataXJobSubmit submit, RpcServiceReference statusRpc) {
+    createWfNodes(IDataxProcessor dataxProcessor, DataXJobSubmit submit, RpcServiceReference statusRpc) {
         // JobMap2WorkflowMaintainer jobIdMaintainer = new JobMap2WorkflowMaintainer();
 //        K8SDataXPowerJobJobTemplate jobTpl
 //                = (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));

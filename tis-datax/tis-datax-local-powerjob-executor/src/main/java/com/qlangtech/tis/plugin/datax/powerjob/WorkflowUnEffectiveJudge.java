@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
+import com.qlangtech.tis.sql.parser.ISqlTask;
 import tech.powerjob.common.model.PEWorkflowDAG;
 
 import java.util.List;
@@ -43,6 +44,10 @@ public class WorkflowUnEffectiveJudge {
         String tableName = tabTriggers.getTabName();
         existWfNodes.put(tableName, node);
         //   this.setUnEffective();
+    }
+
+    public void addExistWfNode(ISqlTask.SqlTaskCfg sqlTsk, PEWorkflowDAG.Node node) {
+        existWfNodes.put(sqlTsk.getExportName(), node);
     }
 
     public Optional<PEWorkflowDAG.Node> getExistWfNode(String tableName) {

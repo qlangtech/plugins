@@ -41,6 +41,7 @@ import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -81,7 +82,7 @@ import java.util.function.Supplier;
  * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
 @Public
-public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost {
+public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost , IPartionableWarehouse {
     private static final String DATAX_NAME = "Hive";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -116,6 +117,10 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         return new HiveDataXContext("tishivewriter", tableMap, this.dataXName);
     }
 
+    @Override
+    public TimeFormat getPsFormat() {
+        return TimeFormat.parse(this.partitionFormat);
+    }
 
     /**
      * ========================================================
@@ -368,7 +373,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         Objects.requireNonNull(dumpTable, "dumpTable can not be null");
         // return dumpTable.getNameWithPath() + "/" + DataxUtils.getDumpTimeStamp();
         return dumpTable.getNameWithPath() + "/"
-                + TimeFormat.parse(this.partitionFormat).format(execContext.getPartitionTimestampWithMillis());
+                + this.getPsFormat().format(execContext.getPartitionTimestampWithMillis());
     }
 
     private Path getTabDumpParentPath(IExecChainContext execContext, ISelectedTab tab) {

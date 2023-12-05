@@ -45,6 +45,7 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -57,7 +58,7 @@ import java.util.stream.Collectors;
  * @author: baisui 百岁
  * @create: 2021-04-07 15:30
  **/
-public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost {
+public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost, IPartionableWarehouse {
     private static final String DATAX_NAME = "Aliyun-ODPS";
     private static final Logger logger = LoggerFactory.getLogger(DataXOdpsWriter.class);
 
@@ -158,9 +159,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     private void bindHiveTables(IExecChainContext execContext, ISelectedTab tab) {
-        String dumpTimeStamp = TimeFormat.parse(this.partitionFormat)
-                .format(execContext.getPartitionTimestampWithMillis());
-
+        String dumpTimeStamp = this.getPsFormat().format(execContext.getPartitionTimestampWithMillis());
         recordPt(execContext, getDumpTab(tab.getName()), dumpTimeStamp);
     }
 
@@ -350,6 +349,11 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     @Override
     public Class<?> getOwnerClass() {
         return DataXOdpsWriter.class;
+    }
+
+    @Override
+    public TimeFormat getPsFormat() {
+        return TimeFormat.parse(this.partitionFormat);
     }
 
 

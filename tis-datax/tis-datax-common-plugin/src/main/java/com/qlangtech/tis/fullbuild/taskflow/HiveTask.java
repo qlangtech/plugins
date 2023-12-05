@@ -459,6 +459,8 @@ public abstract class HiveTask extends AdapterTask {
 //        if (partitionRetainNum == null || partitionRetainNum < 1) {
 //            throw new IllegalArgumentException("illegal param partitionRetainNum ");
 //        }
+
+        final String fullTabName = dumpTable.getFullName(ds.getEscapeChar());
         if (isTableExists(ds, conn, dumpTable)) {
             if (tableSameJudgement.get()) {
                 logger.info("Start clean up history file '{}'", dumpTable);
@@ -468,14 +470,14 @@ public abstract class HiveTask extends AdapterTask {
 
                 //  RemoveJoinHistoryDataTask.deleteHistoryJoinTable(dumpTable, fileSystem, partitionRetainNum);
             } else {
-                conn.execute("drop table " + dumpTable);
+                conn.execute("drop table " + fullTabName);
                 tableCreator.run();
                 // createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
             }
         } else {
             // 说明原表并不存在 直接创建
-            logger.info("table " + dumpTable + " doesn't exist");
-            logger.info("create table " + dumpTable);
+            logger.info("table " + fullTabName + " doesn't exist");
+            logger.info("create table " + fullTabName);
             tableCreator.run();
             //createHiveTable(fileSystem, fsFormat, dumpTable, colsExcludePartitionCols, conn);
         }

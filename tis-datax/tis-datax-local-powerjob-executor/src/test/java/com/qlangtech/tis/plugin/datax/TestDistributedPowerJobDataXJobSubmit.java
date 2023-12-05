@@ -1,9 +1,12 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -12,8 +15,10 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.test.TISEasyMock;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.workflow.dao.IWorkFlowBuildHistoryDAO;
 import com.qlangtech.tis.workflow.dao.IWorkFlowDAO;
+import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.qlangtech.tis.workflow.pojo.WorkFlow;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
@@ -40,8 +45,9 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
     private String topplogName = "asdf";
     private Integer workflowId = 1;
 
+
     public void testCreateWorkflowJob() {
-        String topplogName = "asdf";
+        //  String topplogName = "asdf";
         DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
 
         PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
@@ -63,12 +69,51 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
         verifyAll();
     }
 
+    public void testTriggerWorkflowJob() {
+        DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
+        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
+        IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
+        Context context = mock("context", Context.class);
+        IWorkflow workflow = mock("workflow", IWorkflow.class);
+        expectWorkflowSelect(workflowDAO);
+        EasyMock.expect(module.getWorkFlowDAO()).andReturn(workflowDAO);
+
+        EasyMock.expect(workflow.getName()).andReturn(topplogName);
+
+        IWorkFlowBuildHistoryDAO workFlowBuildHistoryDAO = mock("workFlowBuildHistoryDAO", IWorkFlowBuildHistoryDAO.class);
+
+        EasyMock.expect(workFlowBuildHistoryDAO.updateByExampleSelective(
+                EasyMock.anyObject(), EasyMock.anyObject())).andReturn(1);
+
+        EasyMock.expect(module.getTaskBuildHistoryDAO()).andReturn(workFlowBuildHistoryDAO);
+
+
+//        DataFlowDataXProcessor dataxProcessor =
+//                (DataFlowDataXProcessor) DataxProcessor.load(null, StoreResourceType.DataFlow, topplogName);
+        // IDataFlowTopology topology = dataxProcessor.getTopology();
+        replay();
+
+        Optional<Long> powerJobWorkflowInstanceIdOpt = Optional.empty();
+//        IControlMsgHandler module, Context context,
+//                IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt
+
+        powerJobDataXJobSubmit.triggerWorkflowJob(module, context, workflow, false, powerJobWorkflowInstanceIdOpt);
+        verifyAll();
+    }
+
     private void expectWorkflowSelect(IWorkFlowDAO workflowDAO) {
         WorkFlow wf = new WorkFlow();
         wf.setId(workflowId);
         wf.setName(topplogName);
         wf.setOpTime(new Date());
         wf.setCreateTime(new Date());
+        Long powerjobWorkflowId = 41l;
+
+        ExecutePhaseRange executePhaseRange = new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN);
+
+        wf.setGitPath(JsonUtil.toString(
+                PowerWorkflowPayload.createPayload(powerjobWorkflowId, executePhaseRange, new JSONObject())));
+
         List<WorkFlow> workFlows = Lists.newArrayList(wf);
 
         EasyMock.expect(workflowDAO.selectByExample(EasyMock.anyObject())).andReturn(workFlows);

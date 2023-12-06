@@ -61,7 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 将源DataStream 转成Table
@@ -73,6 +72,9 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
 
     public static org.apache.flink.table.types.DataType createFlinkColType(List<String> primaryKeys, FlinkCol col) {
+        if (CollectionUtils.isEmpty(primaryKeys)) {
+            throw new IllegalArgumentException("primaryKeys can not be empty");
+        }
         org.apache.flink.table.types.DataType type = col.type;
         if (primaryKeys.contains(col.name)) {
             if (type.getLogicalType().isNullable()) {

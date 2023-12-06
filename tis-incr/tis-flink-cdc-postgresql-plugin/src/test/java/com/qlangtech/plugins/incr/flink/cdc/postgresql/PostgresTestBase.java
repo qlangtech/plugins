@@ -22,6 +22,7 @@ import org.apache.flink.test.util.AbstractTestBase;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -51,13 +52,20 @@ import static org.junit.Assert.assertNotNull;
 public abstract class PostgresTestBase extends AbstractTestBase {
     private static final Logger LOG = LoggerFactory.getLogger(PostgresTestBase.class);
     private static final Pattern COMMENT_PATTERN = Pattern.compile("^(.*)--.*$");
-
+    public static final String DEFAULT_DB = "postgres";
     private static final DockerImageName PG_IMAGE =
-            DockerImageName.parse("debezium/postgres:9.6").asCompatibleSubstituteFor("postgres");
-
+            //  DockerImageName.parse("debezium/postgres:9.6")
+            DockerImageName.parse("postgres:latest")
+                    .asCompatibleSubstituteFor("postgres");
+    // config_file=/etc/postgresql/postgresql.conf
+    //document: https://hub.docker.com/_/postgres
     protected static final PostgreSQLContainer<?> POSTGERS_CONTAINER =
             new PostgreSQLContainer<>(PG_IMAGE)
-                    .withDatabaseName("postgres")
+                    .withClasspathResourceMapping( //
+                            "postgresql/postgresql.conf" //
+                            , "/etc/postgresql/postgresql.conf" //
+                            , BindMode.READ_WRITE)
+                    .withDatabaseName(DEFAULT_DB)
                     .withUsername("postgres")
                     .withPassword("postgres")
                     .withLogConsumer(new Slf4jLogConsumer(LOG) {
@@ -68,7 +76,16 @@ public abstract class PostgresTestBase extends AbstractTestBase {
                             System.out.println(utf8String);
                             super.accept(outputFrame);
                         }
-                    });
+                    }).withCommand(
+                            "postgres",
+                            "-c",
+                            // default
+                            "fsync=off",
+                            "-c",
+                            "max_replication_slots=20",
+                            "-c",
+                            "config_file=/etc/postgresql/postgresql.conf");
+
 
     @BeforeClass
     public static void startContainers() {
@@ -96,20 +113,21 @@ public abstract class PostgresTestBase extends AbstractTestBase {
              Statement statement = connection.createStatement()) {
             final List<String> statements =
                     Arrays.stream(
-                            Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
-                                    .map(String::trim)
-                                    .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                                    .map(
-                                            x -> {
-                                                final Matcher m =
-                                                        COMMENT_PATTERN.matcher(x);
-                                                return m.matches() ? m.group(1) : x;
-                                            })
-                                    .collect(Collectors.joining("\n"))
-                                    .split(";"))
+                                    Files.readAllLines(Paths.get(ddlTestFile.toURI())).stream()
+                                            .map(String::trim)
+                                            .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                            .map(
+                                                    x -> {
+                                                        final Matcher m =
+                                                                COMMENT_PATTERN.matcher(x);
+                                                        return m.matches() ? m.group(1) : x;
+                                                    })
+                                            .collect(Collectors.joining("\n"))
+                                            .split(";"))
                             .collect(Collectors.toList());
+            boolean success;
             for (String stmt : statements) {
-                statement.execute(stmt);
+                success = statement.execute(stmt);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

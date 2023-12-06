@@ -76,7 +76,8 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
             }
 
 
-            List<ReaderSource> readerSources = SourceChannel.getSourceFunction(dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
+            List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
+                    dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
                 DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
 
                 return dbs.getDbStream().map((dbname) -> {
@@ -87,7 +88,9 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
                             .database(dbname) // monitor postgres database
                             .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
                             .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                            // .tableList("tis.base")
                             .username(dsFactory.userName)
+                            .decodingPluginName(sourceFactory.decodingPluginName)
                             .password(dsFactory.password)
                             .debeziumProperties(debeziumProperties)
                             .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String

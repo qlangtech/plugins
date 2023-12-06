@@ -30,16 +30,16 @@
 
 
     <artifactId>tis-flink-cdc-postgresql-plugin</artifactId>
-<!-- 先不开放使用
-<packaging>tpi</packaging>-->
+
+    <packaging>tpi</packaging>
 
     <dependencies>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-dag</artifactId>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
@@ -51,7 +51,6 @@
             <artifactId>tis-realtime-flink</artifactId>
             <version>${project.version}</version>
         </dependency>
-
 
 
         <dependency>
@@ -67,7 +66,7 @@
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-common-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

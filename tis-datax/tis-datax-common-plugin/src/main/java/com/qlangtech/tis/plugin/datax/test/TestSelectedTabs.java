@@ -49,7 +49,7 @@ public class TestSelectedTabs {
             new DataType(JDBCTypes.VARCHAR), false, true));
 
     public static List<SelectedTab> createSelectedTabs() {
-        return createSelectedTabs(Integer.MAX_VALUE);
+         return createSelectedTabs(Integer.MAX_VALUE);
     }
 
     public static List<SelectedTab> createSelectedTabs(int count) {

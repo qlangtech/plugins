@@ -20,12 +20,17 @@ package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
 import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
+import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -63,20 +68,25 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
 
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
             @Override
-            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName,boolean useSplitTabStrategy) {
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createPGDataSourceFactory(dataxName);
             }
 
             @Override
-            protected int executePreparedStatement(Connection connection, PreparedStatement statement) throws SQLException {
+            protected void prepare() {
+            }
+
+            @Override
+            protected int executePreparedStatement(
+                    Connection connection, PreparedStatement statement) throws SQLException {
                 int updateCount = super.executePreparedStatement(connection, statement);
                 connection.commit();
                 return updateCount;
             }
 
             @Override
-            protected String createTableName(String tabName) {
-                return schemaName + "." + tabName;
+            protected EntityName createTableName(String tabName) {
+                return EntityName.parse(schemaName + "." + tabName, true);
             }
 
             @Override
@@ -91,6 +101,15 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
                 super.startProcessConn(conn);
                 conn.getConnection().setAutoCommit(false);
             }
+
+            @Override
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
+                return sourceHandle;
+            }
+
         };
 
         cdcTestSuit.startTest(pgCDCFactory);

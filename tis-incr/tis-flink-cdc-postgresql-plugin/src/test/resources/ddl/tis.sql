@@ -15,13 +15,23 @@
 -- https://www.postgresql.org/docs/current/sql-createtable.html
 -- Create the schema that we'll use to populate data and watch the effect in the binlog
 ALTER DATABASE postgres SET timezone TO 'Asia/Shanghai';
+ALTER SYSTEM SET shared_preload_libraries = 'pgoutput';
+-- 修改一些参数配置，修改后需重启数据库，生产环境根据实际情况再进行对应调整
+-- 修改wal级别为logical
+ALTER SYSTEM SET wal_level = logical;
+-- 修改能支持的复制槽的最大数量（默认值：10）
+ALTER SYSTEM SET max_replication_slots = 200;
+-- 指定来自后备服务器或流式基础备份客户端的并发连接的最大数量（即同时运行 WAL 发送进程的最大数）（默认值：10）
+ALTER SYSTEM SET max_wal_senders = 50;
+-- 修改最大连接数（默认值：100）
+ALTER SYSTEM SET max_connections = 1000;
 DROP SCHEMA IF EXISTS tis CASCADE;
 CREATE SCHEMA tis;
 SET search_path TO tis;
 
 -- Create and populate our products using a single insert with many rows
 -- https://www.postgresql.org/docs/current/datatype.html
-CREATE TABLE base (
+CREATE TABLE tis.base (
    base_id integer NOT NULL PRIMARY KEY,
    start_time timestamp DEFAULT NULL,
    update_date date DEFAULT NULL,

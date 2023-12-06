@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.XmlFile;
 import com.qlangtech.tis.plugin.PluginStore;
@@ -69,7 +70,11 @@ public class TestSelectedTab extends SelectedTab {
         if (CollectionUtils.isEmpty(tableMetadata)) {
             throw new IllegalStateException("tabName:" + tabName + " relevant can not be empty");
         }
+        List<String> pks = Lists.newArrayList();
         List<CMeta> colsMeta = tableMetadata.stream().map((col) -> {
+            if (col.isPk()) {
+                pks.add(col.getName());
+            }
             CMeta c = new CMeta();
             c.setPk(col.isPk());
             c.setName(col.getName());
@@ -78,7 +83,11 @@ public class TestSelectedTab extends SelectedTab {
             c.setComment(col.getComment());
             return c;
         }).collect(Collectors.toList());
-        SelectedTab baseTab = new TestSelectedTab(tabName.getTableName(), colsMeta);
+        if (CollectionUtils.isEmpty(pks)) {
+            throw new IllegalStateException("pks can not be empty");
+        }
+        TestSelectedTab baseTab = new TestSelectedTab(tabName.getTableName(), colsMeta);
+        baseTab.primaryKeys = pks;
         baseTab.setCols(tableMetadata.stream().map((m) -> m.getName()).collect(Collectors.toList()));
         baseTabSetter.accept(baseTab);
 
@@ -90,6 +99,10 @@ public class TestSelectedTab extends SelectedTab {
         this.cols.addAll(colsMeta);
     }
 
+    @Override
+    public void setCols(List<String> cols) {
+        //  super.setCols(cols);
+    }
 //    @Override
 //    public List<CMeta> getCols() {
 //        return colsMeta;

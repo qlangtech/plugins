@@ -35,7 +35,13 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,6 +72,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
     public static List<ReaderSource> getSourceFunction(
             DataSourceFactory dsFactory, List<ISelectedTab> tabs, ReaderSourceCreator sourceFunctionCreator) {
+
+        final Optional<DataSourceFactory.ISchemaSupported> schemaSupport = DataSourceFactory.ISchemaSupported.schemaSupported(dsFactory);
+
         return getSourceFunction(dsFactory, (tab) -> {
             TableInDB tabsInDB = dsFactory.getTablesInDB();
             DataXJobInfo jobInfo = tabsInDB.createDataXJobInfo(DataXJobSubmit.TableDataXEntity.createTableEntity(null, tab.jdbcUrl, tab.getTabName()));
@@ -76,7 +85,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
             } else {
                 physicsTabNames = Collections.singletonList(tab.getTabName());
             }
-            return physicsTabNames.stream().map((t) -> tab.dbNanme + "." + t);
+            return physicsTabNames.stream().map((t) -> {
+                return schemaSupport.map((schema) -> schema.getDBSchema()).orElse(tab.dbNanme) + "." + t;
+            });
         }, tabs, sourceFunctionCreator);
     }
 

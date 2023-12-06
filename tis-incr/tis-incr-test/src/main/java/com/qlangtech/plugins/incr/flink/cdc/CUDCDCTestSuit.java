@@ -133,11 +133,16 @@ public abstract class CUDCDCTestSuit {
     };
 
 
+    protected void prepare() {
+
+    }
+
     public void startTest(MQListenerFactory cdcFactory) throws Exception {
 
 
         BasicDataXRdbmsReader dataxReader = createDataxReader(dataxName, tabName);
-
+        this.dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
+        this.prepare();
         //  replay();
         List<SelectedTab> selectedTabs = dataxReader.getSelectedTabs();
         Optional<SelectedTab> firstSelectedTab
@@ -212,7 +217,7 @@ public abstract class CUDCDCTestSuit {
 
         CloseableIterator<Row> snapshot = consumerHandle.getRowSnapshot(tabName);
         //insertCount
-        this.dataSourceFactory = (BasicDataSourceFactory) dataxReader.getDataSourceFactory();
+
         Assert.assertNotNull("dataSourceFactory can not be null", dataSourceFactory);
 //        dataSourceFactory.visitFirstConnection((conn) -> {
 //                    startProcessConn(conn);
@@ -252,7 +257,8 @@ public abstract class CUDCDCTestSuit {
                 visitConn((c) -> {
                     Connection conn = c.getConnection();
                     try {
-                        String updateSql = String.format("UPDATE " + getColEscape() + createTableName(tabName) + getColEscape() + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
+                        String updateSql = String.format("UPDATE " + createTableName(tabName).getFullName(this.dataSourceFactory.getEscapeChar())
+                                        + " set %s WHERE " + getPrimaryKeyName(tab) + "=%s"
                                 , cols.stream().map((e) -> getColEscape() + e.getKey() + getColEscape() + " = ?").collect(Collectors.joining(","))
                                 , Objects.requireNonNull(exceptRow.getIdVal(), "idVal can not be null"));
                         try (PreparedStatement updateStatement = conn.prepareStatement(updateSql)) {
@@ -302,7 +308,8 @@ public abstract class CUDCDCTestSuit {
                         continue;
                     }
 
-                    String deleteSql = String.format("DELETE FROM " + getColEscape() + createTableName(tabName) + getColEscape() + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
+                    String deleteSql = String.format("DELETE FROM " + createTableName(tabName).getFullName(this.dataSourceFactory.getEscapeChar())
+                            + " WHERE " + getPrimaryKeyName(tab) + "=%s", r.getIdVal());
 
                     try (Statement statement1 = conn.createStatement()) {
                         Assert.assertTrue(deleteSql, executeStatement(conn, statement1, (deleteSql)) > 0);
@@ -378,7 +385,7 @@ public abstract class CUDCDCTestSuit {
 
     private String createInsertScript(String tabName, TestRow r) {
 
-        return "insert into " + getColEscape() + createTableName(tabName) + getColEscape() + "("
+        return "insert into " + createTableName(tabName).getFullName(this.dataSourceFactory.getEscapeChar()) + "("
                 + cols.stream().map((col) -> getColEscape() + col.getName() + getColEscape()).collect(Collectors.joining(" , ")) + ") " +
                 "values(" +
                 cols.stream().map((col) -> {
@@ -498,8 +505,8 @@ public abstract class CUDCDCTestSuit {
         return this.calendar.getTime();
     }
 
-    protected String createTableName(String tabName) {
-        return tabName + (this.splitTabSuffix.isPresent() ? this.splitTabSuffix.get() : StringUtils.EMPTY);
+    protected EntityName createTableName(String tabName) {
+        return EntityName.parse(tabName + (this.splitTabSuffix.isPresent() ? this.splitTabSuffix.get() : StringUtils.EMPTY), true);
     }
 
     protected final String getColEscape() {

@@ -84,7 +84,8 @@
 
 
         <!--        <module>tis-datax-rabbitmq-plugin</module>-->
-
+        <module>executor/powerjob-worker-samples</module>
+        <module>executor/tis-datax-executor</module>
 
     </modules>
 

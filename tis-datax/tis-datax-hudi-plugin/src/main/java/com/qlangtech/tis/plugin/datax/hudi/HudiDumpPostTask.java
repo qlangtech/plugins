@@ -40,6 +40,7 @@ import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -315,7 +316,7 @@ public class HudiDumpPostTask implements IRemoteTaskPostTrigger {
                         }
                         return collect;
                     }), extraEnvProps);
-            PluginAndCfgsSnapshot.writeManifest2Jar(manifestJar, manifest);
+            PluginAndCfgsSnapshotUtils.writeManifest2Jar(manifestJar, manifest);
 //            if (manifest.getLeft().appLastModifyTimestamp < 1) {
 //                throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"
 //                        + manifest.getLeft().appLastModifyTimestamp);

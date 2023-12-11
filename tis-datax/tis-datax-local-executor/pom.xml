@@ -42,11 +42,7 @@
             <artifactId>tis-web-start-api</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.datax</groupId>-->
-<!--            <artifactId>datax-common</artifactId>-->
-<!--            <scope>compile</scope>-->
-<!--        </dependency>-->
+
 
         <dependency>
             <groupId>com.alibaba.datax</groupId>
@@ -82,11 +78,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-            <scope>compile</scope>
-        </dependency>
+
 
     </dependencies>
 

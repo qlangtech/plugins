@@ -1,0 +1,20 @@
+import com.qlangtech.tis.offline.DataxUtils;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import tech.powerjob.samples.SampleApplication;
+
+/**
+ * @author 百岁 (baisui@qlangtech.com)
+ * @date 2023/11/13
+ */
+@EnableScheduling
+@SpringBootApplication
+public class TestLauncher {
+    public static void main(String[] args) {
+
+       // TisAppLaunch.setTest(true);
+        System.out.println("currentTimeStamp:" + DataxUtils.currentTimeStamp());
+        SpringApplication.run(SampleApplication.class, args);
+    }
+}

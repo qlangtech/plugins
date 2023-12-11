@@ -25,12 +25,15 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.DataXStarRocksWriter;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DefaultTab;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.starrocks.sink.ChunjunStarRocksSinkFactory;
@@ -94,12 +97,27 @@ public class TestChunjunStarRocksSinkFactory extends TestFlinkSinkExecutor {
              */
             TestTableRegisterFlinkSourceHandle tableRegisterHandle = new TotalpayRegisterFlinkSourceHandle(selectedTab);
             tableRegisterHandle.setSinkFuncFactory(sinkFactory);
-            tableRegisterHandle.setSourceStreamTableMeta((tab) -> {
-                return () -> {
-                    return selectedTab.getCols().stream()
+
+//            (tab) -> {
+//                return () -> {
+//                    return selectedTab.getCols().stream()
+//                            .map((c) -> new HdfsColMeta(
+//                                    c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
+//                };
+//            }
+
+            tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
+                @Override
+                public ISelectedTab getSelectedTab(String tableName) {
+                    return new DefaultTab(tableName);
+                }
+
+                @Override
+                public IStreamTableMeta getStreamTableMeta(String tableName) {
+                    return () -> selectedTab.getCols().stream()
                             .map((c) -> new HdfsColMeta(
                                     c.getName(), c.isNullable(), c.isPk(), c.getType())).collect(Collectors.toList());
-                };
+                }
             });
 
             List<ReaderSource> sourceFuncts = Lists.newArrayList();

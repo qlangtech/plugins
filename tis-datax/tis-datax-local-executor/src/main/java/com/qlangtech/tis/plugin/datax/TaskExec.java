@@ -62,32 +62,12 @@ public class TaskExec {
                     JobCommon.setMDC(taskContext);
 
                     jobConsumer = new DataxSplitTabSyncConsumer((IExecChainContext) taskContext) {
-//                        @Override
-//                        protected DataXJobSubmit.InstanceType getExecMode() {
-//                            return DataXJobSubmit.InstanceType.LOCAL;
-//                        }
+
 
                         @Override
                         protected String getClasspath() {
                             return localDataXJobSubmit.getClasspath();
                         }
-
-//                        @Override
-//                        protected boolean useRuntimePropEnvProps() {
-//                            return false;
-//                        }
-
-//                        @Override
-//                        protected String[] getExtraJavaSystemPrams() {
-//                            return new String[]{
-//                                    "-D" + CenterResource.KEY_notFetchFromCenterRepository + "=true"};
-//                        }
-
-//                        @Override
-//                        protected String getIncrStateCollectAddress() {
-//                            return ZkUtils.getFirstChildValue(
-//                                    ((IExecChainContext) taskContext).getZkClient(), ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH);
-//                        }
 
                         @Override
                         protected String[] getExtraJavaSystemPrams() {

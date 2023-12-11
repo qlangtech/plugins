@@ -65,20 +65,11 @@ public class WorkFlowBuildHistoryPayload {
         this.powerJobWorkflowInstanceId = workflowInstanceId;
     }
 
-//    /**
-//     * 从日志中恢复
-//     *
-//     * @param workflowInstanceId
-//     */
-//    public void restorePowerJobWorkflowInstanceId(Long workflowInstanceId) {
-//        this.powerJobWorkflowInstanceId = workflowInstanceId;
-//    }
-
     public ExecResult processExecHistoryRecord(PowerJobClient powerJobClient) {
 
         Long powerJobWorkflowInstanceId = this.getPowerJobWorkflowInstanceId();
-
-        WorkflowInstanceInfoDTO workflowInstanceInfo = result(powerJobClient.fetchWorkflowInstanceInfo(powerJobWorkflowInstanceId));
+        WorkflowInstanceInfoDTO workflowInstanceInfo
+                = result(powerJobClient.fetchWorkflowInstanceInfo(powerJobWorkflowInstanceId));
 
         WorkflowInstanceStatus wfStatus = WorkflowInstanceStatus.of(workflowInstanceInfo.getStatus());
         if (WorkflowInstanceStatus.FINISHED_STATUS.contains(wfStatus.getV())) {
@@ -88,11 +79,6 @@ public class WorkFlowBuildHistoryPayload {
                     execResult = (ExecResult.SUCCESS);
                     break;
                 case FAILED: {
-//                    for (PEWorkflowDAG.Node wfNode : this.wfInfo.getPEWorkflowDAG().getNodes()) {
-//
-//
-//                        powerJobClient.fetchInstanceInfo(wfNode.getInstanceId());
-//                    }
                     execResult = (ExecResult.FAILD);
                     break;
                 }

@@ -77,7 +77,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
-                script.append("   ,`" + ClickHouseCommon.KEY_CLICKHOUSE_CK + "` Int8 DEFAULT 1").append("\n");
+                script.append("   ," + wrapWithEscape(ClickHouseCommon.KEY_CLICKHOUSE_CK) + " Int8 DEFAULT 1").append("\n");
             }
 
             @Override
@@ -94,7 +94,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             protected void appendTabMeta(List<String> pk) {
                 script.append(" ENGINE = CollapsingMergeTree(" + ClickHouseCommon.KEY_CLICKHOUSE_CK + ")").append("\n");
                 if (CollectionUtils.isNotEmpty(pk)) {
-                    script.append(" ORDER BY ").append(pk.stream().map((p) -> "`" + p + "`").collect(Collectors.joining(","))).append("\n");
+                    script.append(" ORDER BY (").append(pk.stream().map((p) -> this.wrapWithEscape(p)).collect(Collectors.joining(","))).append(")\n");
                 }
                 script.append(" SETTINGS index_granularity = 8192");
             }
@@ -226,7 +226,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             // context.setPostSql(helper.replacePlaceholders(this.postSql, resolver));
             context.setPostSql(this.postSql);
         }
-        context.setCols(IDataxProcessor.TabCols.create(ds,tableMap.get()));
+        context.setCols(IDataxProcessor.TabCols.create(ds, tableMap.get()));
         return context;
     }
 

@@ -1,6 +1,6 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
-import com.alibaba.datax.common.element.DateColumn;
+
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.DataConvertUtils;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESColumn;
 import com.google.common.collect.Maps;

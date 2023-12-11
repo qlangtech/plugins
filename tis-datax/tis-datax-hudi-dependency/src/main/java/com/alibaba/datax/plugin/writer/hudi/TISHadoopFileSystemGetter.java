@@ -22,6 +22,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -85,7 +86,8 @@ public class TISHadoopFileSystemGetter implements IExtraHadoopFileSystemGetter {
                                         remoteSnapshot
                                                 = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(resource.toString(), mainifest);
                                         localSnaphsot
-                                                = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(remoteSnapshot.getAppName(), Collections.emptySet());
+                                                = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(StoreResourceType.DataApp
+                                                , remoteSnapshot.getAppName(), Collections.emptySet());
                                     }
                                 } finally {
                                     TIS.permitInitialize = true;

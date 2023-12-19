@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
+import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -29,7 +30,6 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobOverwriteTemplate;
-import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -72,7 +72,6 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -329,12 +328,13 @@ public abstract class PowerWorkflowPayload {
         PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
         feedback.initSynJob(statusCollection);
 
-        AtomicReference<JSONObject> instanceParamsRef = new AtomicReference<>();
+       // AtomicReference<JSONObject> instanceParamsRef = new AtomicReference<>();
+        JSONObject instanceParams = createInstanceParams(tisTaskId);
         // 取得powerjob instanceId
         Long workflowInstanceId = workflowInstanceIdOpt.orElseGet(() -> {
             // 手动触发的情况
-            JSONObject instanceParams = createInstanceParams(tisTaskId);
-            instanceParamsRef.set(instanceParams);
+
+         //   instanceParamsRef.set(instanceParams);
             Long createWorkflowInstanceId = result(this.submit.getTISPowerJob().runWorkflow(wfInfo.getId(), JsonUtil.toString(instanceParams), 0));
             logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
             return createWorkflowInstanceId;
@@ -345,7 +345,7 @@ public abstract class PowerWorkflowPayload {
 
         buildHistoryPayload.setPowerJobWorkflowInstanceId(workflowInstanceId);
 
-        PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParamsRef);
+        PowerjobTriggerBuildResult buildResult = new PowerjobTriggerBuildResult(true, instanceParams);
         buildResult.taskid = tisTaskId;
 
         initializeService(commonDAOContext);
@@ -666,10 +666,11 @@ public abstract class PowerWorkflowPayload {
     protected abstract String getTargetEntityName();
 
     public class PowerJobWorkflow {
+
         private final Long powerjobWorkflowId;
         private final ExecutePhaseRange executePhaseRange;
         private final String appName;
-        private final WorkflowInfoDTO wfDTO;
+        private WorkflowInfoDTO wfDTO;
 
         public PowerJobWorkflow(String appName, Long powerjobWorkflowId, ExecutePhaseRange executePhaseRange) {
             if (StringUtils.isEmpty(appName)) {
@@ -678,7 +679,12 @@ public abstract class PowerWorkflowPayload {
             this.powerjobWorkflowId = powerjobWorkflowId;
             this.executePhaseRange = executePhaseRange;
             this.appName = appName;
-            this.wfDTO = TISPowerJobClient.result(getTISPowerJob().fetchWorkflow(powerjobWorkflowId));
+            try {
+                this.wfDTO = TISPowerJobClient.result(getTISPowerJob().fetchWorkflow(powerjobWorkflowId));
+            } catch (Throwable e) {
+                logger.warn("powerjobWorkflowId:" + powerjobWorkflowId + ",error:" + e.getMessage());
+                //throw new RuntimeException(e);
+            }
         }
 
         public Long getPowerjobWorkflowId() {

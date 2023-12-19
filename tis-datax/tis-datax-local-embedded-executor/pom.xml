@@ -36,9 +36,9 @@
 
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-executor</artifactId>
-            <version>${project.version}</version>
+            <version>4.0.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>

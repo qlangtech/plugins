@@ -11,7 +11,8 @@ ENV APP_NAME=powerjob-worker-samples
 ENV PARAMS=""
 ENV JVMOPTIONS=""
 # 将应用 jar 包拷入 docker
-COPY target/powerjob-worker-samples-*.jar /powerjob-worker-samples.jar
+COPY target/powerjob-worker-samples.jar /powerjob-worker-samples.jar
+COPY ./wait-for-it.sh /wait-for-it.sh
 # 暴露端口（HTTP + AKKA）
 EXPOSE 8081 27777
 # 启动应用

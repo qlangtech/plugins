@@ -7,7 +7,6 @@ import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
-
 import com.qlangtech.tis.exec.DefaultExecContext;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.ExecuteResult;
@@ -42,7 +41,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
 
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXECUTE_TYPE;
 import static com.qlangtech.tis.sql.parser.ISqlTask.KEY_EXPORT_NAME;
@@ -120,26 +118,32 @@ public class DataXJoinProcessExecutor {
 
         RpcServiceReference statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
         DataxExecutor.statusRpc = (statusRpc);
-        DefaultExecContext execContext = createDftExecContent(line);
-        JobCommon.setMDC(execContext.getTaskId(), null);
 
-        //        cmdLine.addArgument(sqlTskJson.getString(KEY_ID));
-        //        cmdLine.addArgument(sqlTskJson.getString(KEY_SQL_SCRIPT));
-        //        cmdLine.addArgument(sqlTskJson.getString(KEY_EXECUTE_TYPE));
-        //        cmdLine.addArgument(sqlTskJson.getString(KEY_EXPORT_NAME));
+        try {
+            DefaultExecContext execContext = createDftExecContent(line);
+            JobCommon.setMDC(execContext.getTaskId(), null);
 
-        JSONObject sqlTaskCfg = new JSONObject();
-        sqlTaskCfg.put(KEY_ID, line.getOptionValue(KEY_ID));
-        sqlTaskCfg.put(KEY_SQL_SCRIPT, line.getOptionValue(KEY_SQL_SCRIPT));
-        sqlTaskCfg.put(KEY_EXECUTE_TYPE, line.getOptionValue(KEY_EXECUTE_TYPE));
-        sqlTaskCfg.put(KEY_EXPORT_NAME, line.getOptionValue(KEY_EXPORT_NAME));
-        ISqlTask.SqlTaskCfg sqlCfg = ISqlTask.toCfg(sqlTaskCfg);
-        logger.info("start join process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
-        SqlTaskNodeMeta sqlTask = SqlTaskNodeMeta.deserializeTaskNode(sqlCfg);
+            //        cmdLine.addArgument(sqlTskJson.getString(KEY_ID));
+            //        cmdLine.addArgument(sqlTskJson.getString(KEY_SQL_SCRIPT));
+            //        cmdLine.addArgument(sqlTskJson.getString(KEY_EXECUTE_TYPE));
+            //        cmdLine.addArgument(sqlTskJson.getString(KEY_EXPORT_NAME));
 
-        executeJoin(statusRpc.get(), execContext, sqlTask);
-        logger.info("exit the process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
-        System.exit(0);
+            JSONObject sqlTaskCfg = new JSONObject();
+            sqlTaskCfg.put(KEY_ID, line.getOptionValue(KEY_ID));
+            sqlTaskCfg.put(KEY_SQL_SCRIPT, line.getOptionValue(KEY_SQL_SCRIPT));
+            sqlTaskCfg.put(KEY_EXECUTE_TYPE, line.getOptionValue(KEY_EXECUTE_TYPE));
+            sqlTaskCfg.put(KEY_EXPORT_NAME, line.getOptionValue(KEY_EXPORT_NAME));
+            ISqlTask.SqlTaskCfg sqlCfg = ISqlTask.toCfg(sqlTaskCfg);
+            logger.info("start join process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
+            SqlTaskNodeMeta sqlTask = SqlTaskNodeMeta.deserializeTaskNode(sqlCfg);
+
+            executeJoin(statusRpc.get(), execContext, sqlTask);
+            logger.info("exit the process:{},sqlScript:{}", sqlCfg.getExportName(), sqlCfg.getSqlScript());
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static JSONObject deserializeInstanceParams(CommandLine line) {

@@ -52,10 +52,10 @@
     <dependencies>
 
 
-        <dependency>
-            <artifactId>powerjob-client</artifactId>
-            <groupId>tech.powerjob</groupId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <artifactId>powerjob-client</artifactId>-->
+<!--            <groupId>tech.powerjob</groupId>-->
+<!--        </dependency>-->
 
 
 
@@ -86,6 +86,10 @@
             <artifactId>tis-datax-test-common</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-plugin</artifactId>
         </dependency>
 
     </dependencies>

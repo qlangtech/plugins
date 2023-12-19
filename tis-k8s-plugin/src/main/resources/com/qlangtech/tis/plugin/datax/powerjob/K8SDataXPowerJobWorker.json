@@ -3,16 +3,7 @@
     "label": "本地存储策略",
     "enum": "com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker.getStoreStrategy()"
   },
-  "appName": {
-    "label": "宿主应用名称",
-    "help": "宿主应用名称，需要提前在控制台完成注册, 必填项，否则启动报错",
-    "placeholder": "tis_pipeline"
-  },
-  "serverAddress": {
-    "label": "WorkerPort",
-    "help": "调度中心（powerjob-server）地址列表",
-    "placeholder": "192.168.28.200:7700"
-  },
+
   "port": {
     "label": "WorkerPort",
     "help": "Worker 工作端口",
@@ -21,9 +12,6 @@
   "maxResultLength": {
     "dftVal": "8096",
     "help": "每个Task返回结果的默认长度，超长将被截断，过长可能导致网络拥塞"
-  },
-  "userContext": {
-    "help": "用户自定义上下文对象，该值会被透传到 TaskContext#userContext 属性（可选参数）"
   },
   "maxLightweightTaskNum": {
     "label": "轻量任务上限",

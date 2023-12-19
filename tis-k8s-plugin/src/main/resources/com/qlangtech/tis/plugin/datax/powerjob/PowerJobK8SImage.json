@@ -1,0 +1,17 @@
+{
+  "powerJobWorkerImagePath": {
+    "label": "workerImage",
+    "dftVal": "tis/powerjob-worker:4.0.0",
+    "help": "Powerjob Worker Image Path 由TIS定制"
+  },
+  "embeddedMetaDataImagePath": {
+    "label": "metaImage",
+    "dftVal": "powerjob/powerjob-mysql:latest",
+    "help": "Powerjob Server MetaStore 持久化存储 PowerJob机群配置化信息"
+  },
+  "imagePath": {
+    "label": "serverImage",
+    "dftVal": "powerjob/powerjob-server:latest",
+    "help": "Powerjob Server 镜像地址"
+  }
+}

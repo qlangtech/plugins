@@ -13,6 +13,10 @@
       ]
     }
   },
+  "namespace": {
+    "label": "命名空间",
+    "dftVal": "default"
+  },
   "hostAliases": {
     "style": "codemirror",
     "mode": "text/yaml",

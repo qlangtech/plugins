@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerjob-server-loadbalancer
+spec:
+  ports:
+  - port: 7700
+    name: powerjob-server-7700
+    protocol: TCP
+    targetPort: pj-server-port
+  selector:
+    app: datax-worker-powerjob-server
+  type: LoadBalancer

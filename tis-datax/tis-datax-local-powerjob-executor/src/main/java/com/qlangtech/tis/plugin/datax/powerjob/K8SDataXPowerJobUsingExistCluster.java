@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.powerjob.client.PowerJobClient;
@@ -65,6 +66,20 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     @Override
     public TISPowerJobClient getPowerJobClient() {
         return this.createPowerJobClient();
+    }
+
+    @Override
+    public void registerPowerJobApp(String powerjobDomain, String appName, String password) {
+        if (StringUtils.isEmpty(powerjobDomain)) {
+            throw new IllegalArgumentException("param powerjobDomain can not be empty");
+        }
+        if (StringUtils.isEmpty(appName)) {
+            throw new IllegalArgumentException("param appName can not be empty");
+        }
+        if (StringUtils.isEmpty(password)) {
+            throw new IllegalArgumentException("param password can not be empty");
+        }
+        TISPowerJobClient.registerApp(powerjobDomain, appName, password);
     }
 
     public TISPowerJobClient createPowerJobClient() {

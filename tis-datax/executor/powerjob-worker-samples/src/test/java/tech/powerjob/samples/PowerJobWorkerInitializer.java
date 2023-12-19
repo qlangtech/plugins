@@ -3,6 +3,7 @@ package tech.powerjob.samples;
 import com.google.common.collect.Lists;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tech.powerjob.common.RemoteConstant;
 import tech.powerjob.common.enums.Protocol;
 import tech.powerjob.worker.PowerJobSpringWorker;
 import tech.powerjob.worker.common.PowerJobWorkerConfig;
@@ -31,7 +32,7 @@ public class PowerJobWorkerInitializer {
         config.setProtocol(Protocol.HTTP);
 
         // 传输层端口号
-        config.setPort(28888);
+        config.setPort(RemoteConstant.DEFAULT_WORKER_PORT);
         // worker 的归组，建议使用项目名称
         config.setAppName("tis");
         // server 的服务发现地址，支持多IP 或 HTTP 域名

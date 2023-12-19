@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.util.PluginMeta;
@@ -176,7 +177,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                                         = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
                                         , Config.getMetaProps().getVersion(), Optional.empty());
                                 // 服务端不需要配置文件，只需要能够加载到类就行了
-                                localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
+                                localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot( //
+                                        StoreResourceType.DataApp, cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
                             } finally {
                                 TIS.permitInitialize = true;
                             }

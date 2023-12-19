@@ -18,8 +18,6 @@
 
 package com.qlangtech.tis.plugin.k8s;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
@@ -33,14 +31,26 @@ import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1ContainerPort;
+import io.kubernetes.client.openapi.models.V1ContainerStatus;
+import io.kubernetes.client.openapi.models.V1DeleteOptions;
+import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1PodStatus;
+import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1ReplicationController;
+import io.kubernetes.client.openapi.models.V1ReplicationControllerStatus;
+import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import okhttp3.Call;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,8 +62,6 @@ import java.util.Set;
  **/
 public class K8SController implements IRCController {
     private static final Logger logger = LoggerFactory.getLogger(K8SController.class);
-
-    public static final String resultPrettyShow = "true";
 
 
     protected final K8sImage config;
@@ -123,7 +131,7 @@ public class K8SController implements IRCController {
         try {
             // this.api.deleteNamespacedReplicationControllerCall()
             Call call = this.api.deleteNamespacedReplicationControllerCall(
-                    indexName.getK8SResName(), this.config.getNamespace(), resultPrettyShow, null, null, true, null, null, null);
+                    indexName.getK8SResName(), this.config.getNamespace(), K8SUtils.resultPrettyShow, null, null, true, null, null, null);
             client.execute(call, null);
 
             this.relaunch(indexName);
@@ -170,13 +178,10 @@ public class K8SController implements IRCController {
         throw new UnsupportedOperationException();
     }
 
-    public static final String REPLICATION_CONTROLLER_VERSION = "v1";
-
     @Override
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
     }
-
 
     /**
      * 在k8s容器容器中创建一个RC
@@ -188,75 +193,14 @@ public class K8SController implements IRCController {
      * @throws ApiException
      */
     public void createReplicationController(TargetResName name, ReplicasSpec replicasSpec, List<V1EnvVar> envs) throws ApiException {
-        V1ReplicationController rc = new V1ReplicationController();
-        V1ReplicationControllerSpec spec = new V1ReplicationControllerSpec();
-        spec.setReplicas(replicasSpec.getReplicaCount());
-        V1PodTemplateSpec templateSpec = new V1PodTemplateSpec();
-        V1ObjectMeta meta = new V1ObjectMeta();
-        meta.setName(name.getK8SResName());
-        Map<String, String> labes = Maps.newHashMap();
-        labes.put("app", name.getK8SResName());
-        meta.setLabels(labes);
-        templateSpec.setMetadata(meta);
-        V1PodSpec podSpec = new V1PodSpec();
-        List<V1Container> containers = Lists.newArrayList();
-        V1Container c = new V1Container();
-        c.setName(name.getK8SResName());
-
-        Objects.requireNonNull(config, "K8sImage can not be null");
-
-        c.setImage(config.getImagePath());
-        List<V1ContainerPort> ports = Lists.newArrayList();
         V1ContainerPort port = new V1ContainerPort();
         port.setContainerPort(8080);
         port.setName("http");
         port.setProtocol("TCP");
-        ports.add(port);
-        c.setPorts(ports);
 
-        //V1Container c  c.setEnv(envVars);
-        c.setEnv(envs);
-
-        V1ResourceRequirements rRequirements = new V1ResourceRequirements();
-        Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
-        limitQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuLimit().literalVal()));
-        limitQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryLimit().literalVal()));
-        rRequirements.setLimits(limitQuantityMap);
-        Map<String, Quantity> requestQuantityMap = Maps.newHashMap();
-        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
-        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
-        rRequirements.setRequests(requestQuantityMap);
-        c.setResources(rRequirements);
-        containers.add(c);
-        if (containers.size() < 1) {
-            throw new IllegalStateException("containers size can not small than 1");
-        }
-
-        List<HostAlias> hostAliases = config.getHostAliases();
-        if (CollectionUtils.isNotEmpty(hostAliases)) {
-            List<V1HostAlias> setHostAliases = Lists.newArrayList();
-            V1HostAlias v1host = null;
-            for (HostAlias ha : hostAliases) {
-                v1host = new V1HostAlias();
-                v1host.setIp(ha.getIp());
-                v1host.setHostnames(ha.getHostnames());
-                setHostAliases.add(v1host);
-            }
-            podSpec.setHostAliases(setHostAliases);
-        }
-
-
-        podSpec.setContainers(containers);
-        templateSpec.setSpec(podSpec);
-        spec.setTemplate(templateSpec);
-        rc.setSpec(spec);
-        rc.setApiVersion(REPLICATION_CONTROLLER_VERSION);
-        meta = new V1ObjectMeta();
-        meta.setName(name.getK8SResName());
-        rc.setMetadata(meta);
-
-        api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
+        K8SUtils.createReplicationController(this.api, this.config, name, replicasSpec, Collections.singletonList(port), envs);
     }
+
 
 //    private List<V1EnvVar> addEnvVars(String indexName, long timestamp) {
 //        List<V1EnvVar> envVars = Lists.newArrayList();
@@ -323,7 +267,7 @@ public class K8SController implements IRCController {
         try {
 
             V1ReplicationController rc = api.readNamespacedReplicationController(
-                    tisInstanceName.getK8SResName(), config.getNamespace(), resultPrettyShow, null, null);
+                    tisInstanceName.getK8SResName(), config.getNamespace(), K8SUtils.resultPrettyShow, null, null);
             if (rc == null) {
                 return null;
             }

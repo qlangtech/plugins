@@ -7,7 +7,6 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.offline.DataxUtils;
-import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;

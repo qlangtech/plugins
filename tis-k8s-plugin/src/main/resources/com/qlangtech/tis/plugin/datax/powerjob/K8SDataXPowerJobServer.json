@@ -1,10 +1,24 @@
 {
-  "k8sImage": {
-    "dftVal": "datax-worker"
+  "serverPortExport": {
+    "label": "端口暴露",
+    "help": "Powerjob 启动之后将默认7700端口对外部暴露，可选择K8S相应暴露服务端口方式，如：NodePort，Ingress，LoadBalance"
   },
-  "serverPort": {
-    "help": "SpringBoot配置，HTTP端口号，默认7700，不建议更改",
-    "dftVal": "7700"
+  "appName": {
+    "label": "宿主应用名称",
+    "help": "宿主应用名称，需要提前在控制台完成注册, 必填项，否则启动报错",
+    "placeholder": "tis_pipeline"
+  },
+  "k8sImage": {
+    "dftVal": "datax-worker",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "k8s-images",
+          "descName": "powerjob-image"
+        }
+      ]
+    }
   },
   "omsProfile": {
     "help": "OMS相关配置",

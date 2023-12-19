@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory implements IFacadeDataSource {
 
     protected static final String DS_TYPE_MYSQL_V5 = DS_TYPE_MYSQL + "-V5";
-    protected static final String DS_TYPE_MYSQL_V8 = DS_TYPE_MYSQL + "-V8";
+
     /**
      * 分表策略
      */

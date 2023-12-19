@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
-import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -75,7 +74,7 @@ public class DefaultK8SImage extends K8sImage {
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
 
-    @FormField(ordinal = 4, type = FormFieldType.TEXTAREA, advance = true, validate = {})
+    @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = true, validate = {})
     public String hostAliases;
 
     @Override
@@ -136,7 +135,7 @@ public class DefaultK8SImage extends K8sImage {
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends Descriptor<K8sImage> {
+    public static class DescriptorImpl extends BasicDesc {
         private static final Logger logger = LoggerFactory.getLogger(DescriptorImpl.class);
 
         public DescriptorImpl() {
@@ -175,7 +174,7 @@ public class DefaultK8SImage extends K8sImage {
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             ;
-          //  ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
+            //  ParseDescribable<Describable> k8s = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
             K8sImage k8sCfg = postFormVals.newInstance();// k8s.getInstance();
             try {
                 ApiClient client = k8sCfg.createApiClient();
@@ -206,9 +205,14 @@ public class DefaultK8SImage extends K8sImage {
             return true;
         }
 
+//        @Override
+//        public String getDisplayName() {
+//            return K8sImage.DEFAULT_DESC_NAME;
+//        }
+
         @Override
-        public String getDisplayName() {
-            return "image";
+        protected ImageCategory getImageCategory() {
+            return ImageCategory.DEFAULT_DESC_NAME;
         }
     }
 }

@@ -61,6 +61,8 @@
             <includes>
                 <include>com.qlangtech.tis:tis-plugin</include>
                 <include>com.alibaba.datax:datax-common</include>
+                <include>ch.qos.logback:logback-classic</include>
+                <include>com.qlangtech.tis:tis-sql-parser</include>
             </includes>
             <outputDirectory>/lib</outputDirectory>
             <useTransitiveDependencies>true</useTransitiveDependencies>

@@ -121,12 +121,10 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-dag</artifactId>
             <version>${tis.version}</version>
-            <exclusions>
-                <!--                <exclusion>-->
-                <!--                    <groupId>com.qlangtech.tis</groupId>-->
-                <!--                    <artifactId>tis-sql-parser</artifactId>-->
-                <!--                </exclusion>-->
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-sql-parser</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -153,29 +151,38 @@
                     <tarLongFileMode>posix</tarLongFileMode>
                     <appnamePattern>datax</appnamePattern>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>tisasm</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <mainClass>com.qlangtech.tis.datax.DataxPrePostConsumer</mainClass>-->
-<!--                            <addClasspath>true</addClasspath>-->
-<!--                            <classpathPrefix>lib/</classpathPrefix>-->
-<!--                            <useUniqueVersions>true</useUniqueVersions>-->
-<!--                        </manifest>-->
-<!--                        <manifestEntries>-->
-<!--                            <class-path>conf/</class-path>-->
-<!--                        </manifestEntries>-->
-<!--                    </archive>-->
-<!--                    <excludes combine.self="override"/>-->
-<!--                    &lt;!&ndash;                    <includes>&ndash;&gt;-->
-<!--                    &lt;!&ndash;                        <include>logback-datax.xml</include>&ndash;&gt;-->
-<!--                    &lt;!&ndash;                    </includes>&ndash;&gt;-->
-<!--                </configuration>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!--                            <mainClass>com.qlangtech.tis.datax.DataxPrePostConsumer</mainClass>-->
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <useUniqueVersions>true</useUniqueVersions>
+                        </manifest>
+                        <manifestEntries>
+                            <class-path>conf/</class-path>
+                        </manifestEntries>
+                    </archive>
+                    <excludes combine.self="override"/>
+                    <!--                    <includes>-->
+                    <!--                        <include>logback-datax.xml</include>-->
+                    <!--                    </includes>-->
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

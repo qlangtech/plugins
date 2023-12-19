@@ -45,7 +45,7 @@
 
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-executor</artifactId>
             <version>${project.version}</version>
             <exclusions>

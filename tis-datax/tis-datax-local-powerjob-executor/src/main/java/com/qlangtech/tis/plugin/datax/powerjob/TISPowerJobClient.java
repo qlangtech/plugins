@@ -29,6 +29,9 @@ public class TISPowerJobClient extends PowerJobClient {
     public static final TypeReference<ResultDTO<TISWorkflowInfoDTO>> WF_TIS_RESULT_TYPE = new TypeReference<ResultDTO<TISWorkflowInfoDTO>>() {
     };
 
+    public static final TypeReference<ResultDTO<Object>> REGISTER_APP_RESULT_TYPE = new TypeReference<ResultDTO<Object>>() {
+    };
+
     static final Field appIdField;
     static final Method postHAMethod;
 
@@ -91,6 +94,27 @@ public class TISPowerJobClient extends PowerJobClient {
     }
 
     /**
+     * 注册新app
+     *
+     * @param domain
+     * @param appName
+     * @param password
+     */
+    public static void registerApp(String domain, String appName, String password) {
+        MediaType jsonType = MediaType.parse(OmsConstant.JSON_MEDIA_TYPE);
+        String json = " {\"appName\": \"" + appName + "\", \"password\": \"" + password + "\"}";
+
+
+//        RequestBody body = new FormBody.Builder().
+////                .add("wfInstanceId", wfInstanceId.toString())
+////                .add("appId", appId.toString())
+//                .build();
+        String post = overWritePostHA(domain, "/appInfo/save", RequestBody.create(jsonType, json));
+        ResultDTO<Object> wfResult = JSON.parseObject(post, REGISTER_APP_RESULT_TYPE);
+        result(wfResult);
+    }
+
+    /**
      * @param pageIndex 第一页为0
      * @param pageSize
      * @return
@@ -105,7 +129,7 @@ public class TISPowerJobClient extends PowerJobClient {
 ////                .add("wfInstanceId", wfInstanceId.toString())
 ////                .add("appId", appId.toString())
 //                .build();
-        String post = overWritePostHA("/workflow/list", RequestBody.create(jsonType, json));
+        String post = overWritePostHA(this.domain, "/workflow/list", RequestBody.create(jsonType, json));
         ResultDTO<WorkflowListResult> wfResult = JSON.parseObject(post, WF_LIST_RESULT_TYPE);
         WorkflowListResult wfList = result(wfResult);
         return wfList;
@@ -117,10 +141,10 @@ public class TISPowerJobClient extends PowerJobClient {
         return String.format(URL_PATTERN, address, path);
     }
 
-    private String overWritePostHA(String path, RequestBody requestBody) {
+    private static String overWritePostHA(String domain, String path, RequestBody requestBody) {
 
         // 先尝试默认地址
-        String url = getUrl(path, this.domain);
+        String url = getUrl(path, domain);
 
         try {
             String res = HttpUtils.post(url, requestBody);

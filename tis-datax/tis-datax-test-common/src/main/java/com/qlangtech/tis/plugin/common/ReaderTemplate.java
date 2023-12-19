@@ -92,7 +92,6 @@ public class ReaderTemplate {
             @Override
             public void startScanDependency() {
             }
-
             @Override
             public String getTemplate() {
                 return null;

@@ -43,7 +43,7 @@ public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTempla
         }
 
         @Override
-        protected K8SWorkerCptType getWorkerCptType() {
+        public  K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.JobTplAppOverwrite;
         }
 

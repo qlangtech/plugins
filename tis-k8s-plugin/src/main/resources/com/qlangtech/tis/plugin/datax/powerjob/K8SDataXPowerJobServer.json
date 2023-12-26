@@ -1,4 +1,7 @@
 {
+  "coreDS": {
+    "dftVal": "Embedded"
+  },
   "serverPortExport": {
     "label": "端口暴露",
     "help": "Powerjob 启动之后将默认7700端口对外部暴露，可选择K8S相应暴露服务端口方式，如：NodePort，Ingress，LoadBalance"
@@ -7,6 +10,10 @@
     "label": "宿主应用名称",
     "help": "宿主应用名称，需要提前在控制台完成注册, 必填项，否则启动报错",
     "placeholder": "tis_pipeline"
+  },
+  "password": {
+    "label": "宿主应用密码",
+    "help": "宿主应用密码，需要提前在控制台完成注册, 必填项，否则启动报错"
   },
   "k8sImage": {
     "dftVal": "datax-worker",

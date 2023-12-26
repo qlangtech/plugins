@@ -54,6 +54,8 @@ import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -92,7 +94,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
         processFlinkCluster((cli) -> {
             cli.run(new String[]{});
             launchProcess.run();
-            this.writeLaunchToken();
+           // this.writeLaunchToken();
         });
     }
 
@@ -149,8 +151,8 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
     }
 
     @Override
-    public RcDeployment getRCDeployment() {
-        RcDeployment deployment = new RcDeployment();
+    public List<RcDeployment> getRCDeployments() {
+        RcDeployment deployment = new RcDeployment("Flink");
         K8sImage k8sImage = this.getK8SImage();
         ApiClient apiClient = k8sImage.createApiClient();
 
@@ -177,7 +179,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
             throw K8sExceptionUtils.convert(this.clusterId, e);
         }
 
-        return deployment;
+        return Collections.singletonList( deployment);
     }
 
     @Override
@@ -260,7 +262,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
         }
 
         @Override
-        protected K8SWorkerCptType getWorkerCptType() {
+        public  K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.FlinkCluster;
         }
     }

@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.datax.powerjob.impl.coresource;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -12,6 +13,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.kubernetes.client.openapi.ApiException;
 
@@ -45,6 +47,11 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
         }
 
         return Objects.requireNonNull(jdbcUrlRef.get(), "jdbcUrl can not be null");
+    }
+
+    @Override
+    public RcDeployment getRCDeployment(K8SController k8SController) {
+        return null;
     }
 
     @Override

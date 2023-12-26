@@ -53,7 +53,7 @@ public class TestDefaultIncrK8sConfig extends BaiscPluginTest {
         assertFalse(s4totalpay + " shall have not deploy incr instance in k8s"
                 , incr.getRCDeployment(new TargetResName(s4totalpay)) != null);
 
-        RcDeployment incrSpec = new RcDeployment();
+        RcDeployment incrSpec = new RcDeployment("test");
         incrSpec.setCpuLimit(Specification.parse("1"));
         incrSpec.setCpuRequest(Specification.parse("500m"));
         incrSpec.setMemoryLimit(Specification.parse("1G"));

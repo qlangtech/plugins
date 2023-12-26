@@ -24,10 +24,12 @@ import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.openapi.ApiCallback;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -45,6 +47,7 @@ import io.kubernetes.client.openapi.models.V1ReplicationController;
 import io.kubernetes.client.openapi.models.V1ReplicationControllerStatus;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import okhttp3.Call;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -54,6 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -80,8 +84,25 @@ public class K8SController implements IRCController {
 
     }
 
+    public void deleteSerivce(K8SUtils.ServiceResName svc) {
+
+        // , String namespace, String pretty, String dryRun,
+        //     Boolean orphanDependents, String propagationPolicy,
+        try {
+            Integer gracePeriodSeconds = 20;
+            V1DeleteOptions options = new V1DeleteOptions();
+
+            Call call = api.deleteNamespacedServiceCall(svc.getK8SResName(), config.getNamespace(), K8SUtils.resultPrettyShow
+                    , null, gracePeriodSeconds, true, null, options, (ApiCallback) null);
+            this.client.execute(call, null);
+            logger.info("delete svc:" + svc.getK8SResName());
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert(svc.getK8SResName(), e);
+        }
+    }
+
     @Override
-    public final void relaunch(TargetResName collection, String... targetPod) {
+    public final void relaunch(TargetResName resName, String... targetPod) {
 
         //String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
         try {
@@ -90,20 +111,29 @@ public class K8SController implements IRCController {
             Call call = null;
             Set<String> targetPods = Sets.newHashSet(targetPod);
             String podName = null;
-            for (V1Pod pod : getRCPods(this.api, this.config, collection)) {
+            boolean hasDelete = false;
+            List<V1Pod> existPods = null;
+            for (V1Pod pod : existPods = getRCPods(this.api, this.config, resName)) {
                 //String name, String namespace, String pretty, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy, V1DeleteOptions body
                 podName = pod.getMetadata().getName();
                 if (targetPods.isEmpty() || targetPods.contains(podName)) {
+
                     call = api.deleteNamespacedPodCall(podName, this.config.getNamespace()
-                            , "true", null, 20, true, null, options, null);
+                            , K8SUtils.resultPrettyShow, null, 20, true, null, options, null);
                     this.client.execute(call, null);
+                    hasDelete = true;
                     logger.info(" delete pod {}", pod.getMetadata().getName());
                 }
-
             }
+            if (!hasDelete || CollectionUtils.isEmpty(existPods)) {
+                throw TisException.create("resName:" + resName.getName()
+                        + " can not delete pods by names:" + String.join(",", targetPod));
+            }
+//        } catch (TisException e) {
+//            throw e;
         } catch (ApiException e) {
             // throw new RuntimeException(collection, e);
-            throw K8sExceptionUtils.convert(collection.getK8SResName(), e);
+            throw K8sExceptionUtils.convert(resName.getK8SResName(), e);
         }
 
     }
@@ -134,8 +164,9 @@ public class K8SController implements IRCController {
                     indexName.getK8SResName(), this.config.getNamespace(), K8SUtils.resultPrettyShow, null, null, true, null, null, null);
             client.execute(call, null);
 
+            // 再把pod删除
             this.relaunch(indexName);
-
+            logger.info("delete replication controller:" + indexName.getK8SResName() + " and relevant pods");
         } catch (ApiException e) {
 //            if (ExceptionUtils.indexOfThrowable(e, JsonSyntaxException.class) > -1) {
 //                //TODO: 不知道为啥api的代码里面一直没有解决这个问题
@@ -271,7 +302,7 @@ public class K8SController implements IRCController {
             if (rc == null) {
                 return null;
             }
-            rcDeployment = new RcDeployment();
+            rcDeployment = new RcDeployment(tisInstanceName.getName());
             fillSpecInfo(rcDeployment, rc.getSpec().getReplicas(), rc.getSpec().getTemplate());
 
             V1ReplicationControllerStatus status = rc.getStatus();
@@ -306,19 +337,27 @@ public class K8SController implements IRCController {
         V1PodStatus podStatus = null;
         RcDeployment.PodStatus pods;
         V1ObjectMeta metadata = null;
-
+        List<V1ContainerStatus> containerStatuses;
+        DateTime stTime = null;
         for (V1Pod item : rcPods) {
             metadata = item.getMetadata();
+            podStatus = item.getStatus();
             pods = new RcDeployment.PodStatus();
             pods.setName(metadata.getName());
-            podStatus = item.getStatus();
+
             int restartCount = 0;
-            for (V1ContainerStatus cstat : podStatus.getContainerStatuses()) {
-                restartCount += cstat.getRestartCount();
+            containerStatuses = podStatus.getContainerStatuses();
+            if (CollectionUtils.isNotEmpty(containerStatuses)) {
+                for (V1ContainerStatus cstat : containerStatuses) {
+                    restartCount += cstat.getRestartCount();
+                }
             }
             pods.setRestartCount(restartCount);
             pods.setPhase(podStatus.getPhase());
-            pods.setStartTime(podStatus.getStartTime().getMillis());
+
+            if ((stTime = podStatus.getStartTime()) != null) {
+                pods.setStartTime(stTime.getMillis());
+            }
             rcDeployment.addPod(pods);
         }
     }
@@ -376,7 +415,7 @@ public class K8SController implements IRCController {
      * 列表pod，并且显示日志
      */
     public final WatchPodLog listPodAndWatchLog(TargetResName indexName, String podName, ILogListener listener) {
-        return listPodAndWatchLog(client, config, indexName.getK8SResName(), indexName, podName, listener);
+        return listPodAndWatchLog(client, config, null, indexName, podName, listener);
 //        DefaultWatchPodLog podlog = new DefaultWatchPodLog(indexName, podName, client, api, config);
 //        podlog.addListener(listener);
 //        podlog.startProcess();
@@ -386,7 +425,7 @@ public class K8SController implements IRCController {
 
     public static WatchPodLog listPodAndWatchLog(ApiClient client, final K8sImage config
             , String containerId, TargetResName indexName, String podName, ILogListener listener) {
-        DefaultWatchPodLog podlog = new DefaultWatchPodLog(containerId, indexName, podName, client, config);
+        DefaultWatchPodLog podlog = new DefaultWatchPodLog(Optional.ofNullable(containerId), indexName, podName, client, config);
         podlog.addListener(listener);
         podlog.startProcess();
         return podlog;

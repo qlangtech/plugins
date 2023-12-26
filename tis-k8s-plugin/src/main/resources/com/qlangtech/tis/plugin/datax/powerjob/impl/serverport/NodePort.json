@@ -1,5 +1,9 @@
 {
   "nodePort": {
-    "placeholder": 31000
+    "dftVal": 31000
+  },
+  "host": {
+    "placeholder": "192.168.28.103",
+    "help": "主机地址（host/ip）"
   }
 }

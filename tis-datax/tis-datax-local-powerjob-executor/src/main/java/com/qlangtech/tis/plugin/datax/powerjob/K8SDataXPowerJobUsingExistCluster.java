@@ -19,10 +19,12 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -30,14 +32,12 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tech.powerjob.client.PowerJobClient;
 import tech.powerjob.common.response.JobInfoDTO;
 import tech.powerjob.common.response.ResultDTO;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -68,31 +68,21 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
         return this.createPowerJobClient();
     }
 
-    @Override
-    public void registerPowerJobApp(String powerjobDomain, String appName, String password) {
-        if (StringUtils.isEmpty(powerjobDomain)) {
-            throw new IllegalArgumentException("param powerjobDomain can not be empty");
-        }
-        if (StringUtils.isEmpty(appName)) {
-            throw new IllegalArgumentException("param appName can not be empty");
-        }
-        if (StringUtils.isEmpty(password)) {
-            throw new IllegalArgumentException("param password can not be empty");
-        }
-        TISPowerJobClient.registerApp(powerjobDomain, appName, password);
-    }
+//    @Override
+//    public void registerPowerJobApp(String powerjobDomain, String appName, String password) {
+//
+//        TISPowerJobClient.registerApp().registerApp(powerjobDomain, appName, password);
+//    }
 
     public TISPowerJobClient createPowerJobClient() {
         TISPowerJobClient powerJobClient = new TISPowerJobClient(this.serverAddress, this.appName, this.password);
-
-
         return powerJobClient;
     }
 
     @Override
-    public RcDeployment getRCDeployment() {
+    public List<RcDeployment> getRCDeployments() {
         // throw new UnsupportedOperationException();
-        return new RcDeployment();
+        return Lists.newArrayList( new RcDeployment("none"));
     }
 
     @Override
@@ -104,17 +94,12 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     }
 
     @Override
-    public void launchService(Runnable launchProcess) {
+    public void launchService(SSERunnable launchProcess) {
         testPowerJobClient((result) -> {
         });
 
         launchProcess.run();
 
-        try {
-            this.writeLaunchToken();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private boolean testPowerJobClient(Consumer<ResultDTO<List<JobInfoDTO>>> result) {
@@ -174,7 +159,7 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
         }
 
         @Override
-        protected K8SWorkerCptType getWorkerCptType() {
+        public K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.UsingExistCluster;
         }
     }

@@ -1,9 +1,12 @@
 {
   "storeStrategy": {
     "label": "本地存储策略",
-    "enum": "com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker.getStoreStrategy()"
+    "enum": "com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker.getStoreStrategy()",
+    "dftVal": "MEMORY"
   },
-
+  "k8sImage": {
+    "disable": true
+  },
   "port": {
     "label": "WorkerPort",
     "help": "Worker 工作端口",

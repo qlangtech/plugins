@@ -7,11 +7,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
-import tech.powerjob.common.enums.DispatchStrategy;
-import tech.powerjob.common.enums.ExecuteType;
-import tech.powerjob.common.enums.ProcessorType;
-import tech.powerjob.common.enums.TimeExpressionType;
-import tech.powerjob.common.enums.WorkflowNodeType;
+import tech.powerjob.common.enums.*;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.request.http.SaveWorkflowRequest;
@@ -120,7 +116,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
         }
 
         @Override
-        protected K8SWorkerCptType getWorkerCptType() {
+        public K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.JobTpl;
         }
 

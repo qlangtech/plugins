@@ -57,7 +57,11 @@
 <!--            <groupId>tech.powerjob</groupId>-->
 <!--        </dependency>-->
 
-
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-powerjob-common-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.kubernetes</groupId>

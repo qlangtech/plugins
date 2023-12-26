@@ -63,6 +63,7 @@
         <module>tis-e2e</module>
         <module>tis-kerberos-plugin</module>
         <module>tis-split-table-strategy-plugin</module>
+        <module>tis-powerjob-common-plugin</module>
 
         <!--        <module>tis-solr-plugin</module>
                 <module>tis-local-dump-build</module>-->

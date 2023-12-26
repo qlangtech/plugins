@@ -27,11 +27,7 @@ import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
-import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.DataXJobInfo;
-import com.qlangtech.tis.datax.DataXJobSubmit;
-import com.qlangtech.tis.datax.IDataXPowerJobSubmit;
-import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.*;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
@@ -466,9 +462,14 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
     }
 
     public TISPowerJobClient getTISPowerJob() {
+
+
+//        DataXJobWorker usingExisting
+//                = DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME, Optional.of(K8SWorkerCptType.UsingExistCluster);
+
         DataXJobWorker jobWorker = DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME);
         if (!(jobWorker instanceof ITISPowerJob)) {
-            throw new IllegalStateException("jobWorker must be type of :" + ITISPowerJob.class);
+            throw new IllegalStateException("jobWorker:" + jobWorker.getClass().getName() + " must be type of :" + ITISPowerJob.class);
         }
 
         ITISPowerJob powerJob = (ITISPowerJob) jobWorker;

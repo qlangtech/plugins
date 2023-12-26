@@ -7,7 +7,8 @@ import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
-import com.qlangtech.tis.datax.job.ITISPowerJob;
+import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -17,7 +18,6 @@ import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
@@ -27,10 +27,9 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource.K8S_DATAX_POWERJOB_SERVER_SERVICE;
+import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER_SERVICE;
 import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_WORKER;
 
 /**
@@ -108,28 +107,27 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
      *
      * @throws ApiException
      */
-    public void launchPowerjobWorker(K8SDataXPowerJobServer pjServer) throws ApiException {
+    public void launchPowerjobWorker(K8SDataXPowerJobServer pjServer) throws ApiException, PowerjobOrchestrateException {
         //K8SDataXPowerJobWorker jobWorker = Objects.requireNonNull(getPowerJobWorker(), "powerjob woker can not be null");
         if (StringUtils.isEmpty(pjServer.appName)) {
             throw new IllegalArgumentException("prop appName can not be null");
         }
 
         // 确保powerjob app 已经创建
-        ITISPowerJob tisPowerJob = (ITISPowerJob) DataXJobWorker.getJobWorker( //
-                DataXJobWorker.K8S_DATAX_INSTANCE_NAME, Optional.of(K8SWorkerCptType.UsingExistCluster));
+//        ITISPowerJob tisPowerJob = (ITISPowerJob) DataXJobWorker.getJobWorker( //
+//                DataXJobWorker.K8S_DATAX_INSTANCE_NAME, Optional.of(K8SWorkerCptType.UsingExistCluster));
 
         // tisPowerJob.registerPowerJobApp();
-
+        PowerJobK8SImage powerJobImage = pjServer.getImage();
         DefaultK8SImage powerjobServerImage = new DefaultK8SImage();
-        powerjobServerImage.imagePath = "registry.cn-hangzhou.aliyuncs.com/tis/powerjob-worker:4.0.0";
-        powerjobServerImage.namespace = this.getK8SImage().getNamespace();
+        powerjobServerImage.imagePath = powerJobImage.powerJobWorkerImagePath;// "registry.cn-hangzhou.aliyuncs.com/tis/powerjob-worker:4.0.0";
+        powerjobServerImage.namespace = powerJobImage.getNamespace();// this.getK8SImage().getNamespace();
         ReplicasSpec replicasSpec = Objects.requireNonNull(this.getReplicasSpec(), "ReplicasSpec can not be null");
 
 
-        CoreV1Api api = new CoreV1Api(this.getK8SApi());
+        CoreV1Api api = new CoreV1Api(pjServer.getK8SApi());
 
         // api.
-
         List<V1ContainerPort> exportPorts = Lists.newArrayList();
         V1ContainerPort port = new V1ContainerPort();
         port.setContainerPort(8081);
@@ -162,7 +160,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         envs.add(envVar);
 
 
-        K8SUtils.createReplicationController(
+        final String reVersion = K8SUtils.getResourceVersion(K8SUtils.createReplicationController(
                 api, powerjobServerImage, K8S_DATAX_POWERJOB_WORKER, () -> {
                     V1Container container = new V1Container();
                     container.setCommand(Lists.newArrayList("sh", "-c"
@@ -170,19 +168,22 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
                                     + " --strict -- java " + replicasSpec.toJavaMemorySpec()
                                     + " -jar /powerjob-worker-samples.jar $PARAMS"));
                     return container;
-                }, replicasSpec, exportPorts, envs);
+                }, replicasSpec, exportPorts, envs));
+
+        K8SUtils.waitReplicaControllerLaunch( //
+                powerjobServerImage, K8S_DATAX_POWERJOB_WORKER, replicasSpec, pjServer.getK8SApi(), reVersion);
     }
 
-    private transient ApiClient apiClient;
+    //private transient ApiClient apiClient;
 
-    public ApiClient getK8SApi() {
-        if (this.apiClient == null) {
-            K8sImage k8SImage = this.getK8SImage();
-            this.apiClient = k8SImage.createApiClient();
-        }
-
-        return this.apiClient;
-    }
+//    public ApiClient getK8SApi() {
+//        if (this.apiClient == null) {
+//            K8sImage k8SImage = this.getK8SImage();
+//            this.apiClient = k8SImage.createApiClient();
+//        }
+//
+//        return this.apiClient;
+//    }
 
     @Override
     public void relaunch() {
@@ -195,7 +196,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
     }
 
     @Override
-    public RcDeployment getRCDeployment() {
+    public List<RcDeployment> getRCDeployments() {
         return null;
     }
 
@@ -216,7 +217,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
     }
 
     @Override
-    public void launchService(Runnable launchProcess) {
+    public void launchService(SSERunnable launchProcess) {
 
     }
 
@@ -229,7 +230,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         }
 
         @Override
-        protected DataXJobWorker.K8SWorkerCptType getWorkerCptType() {
+        public DataXJobWorker.K8SWorkerCptType getWorkerCptType() {
             return DataXJobWorker.K8SWorkerCptType.Worker;
         }
 

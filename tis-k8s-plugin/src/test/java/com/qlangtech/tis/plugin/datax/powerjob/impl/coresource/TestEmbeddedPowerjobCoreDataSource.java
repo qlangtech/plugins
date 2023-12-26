@@ -1,6 +1,8 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.coresource;
 
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
+import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXPowerJobServer;
+import io.kubernetes.client.openapi.ApiException;
 import junit.framework.TestCase;
 
 /**
@@ -11,15 +13,19 @@ public class TestEmbeddedPowerjobCoreDataSource extends TestCase {
     public static final String K8S_IMAGE = "test";
     //public static final String K8S_IMAGE = "test160";
 
-     // public static final String K8S_IMAGE = "aliyun-k8s";
+    // public static final String K8S_IMAGE = "aliyun-k8s";
     public void testLaunchMetaStoreService() throws Exception {
 
         EmbeddedPowerjobCoreDataSource coreDataSource = new EmbeddedPowerjobCoreDataSource();
 
-        K8SDataXPowerJobServer powerJobServer = new K8SDataXPowerJobServer();
-        powerJobServer.k8sImage = K8S_IMAGE;
+        K8SDataXPowerJobServer powerJobServer = TestK8SDataXPowerJobServer.createPowerJobServer(null);// new K8SDataXPowerJobServer();
+        // powerJobServer.k8sImage = K8S_IMAGE;
 
-        coreDataSource.launchMetaStoreService(powerJobServer);
+        try {
+            coreDataSource.launchMetaStoreService(powerJobServer);
+        } catch (ApiException e) {
+            throw new RuntimeException(e.getResponseBody(), e);
+        }
 
     }
 }

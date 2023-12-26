@@ -1,10 +1,15 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.job.IRegisterApp;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.ExtensionList;
+import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -12,10 +17,13 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberRange;
 import org.apache.commons.lang3.tuple.Pair;
 
-import static com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
+import java.util.Objects;
+
+import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
 
 /**
@@ -24,25 +32,69 @@ import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
  */
 public class NodePort extends ServerPortExport {
 
+
     /**
      * 默认范围：30000-32767
      */
     @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer nodePort;
 
+    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
+    public String host;
+
+    @Override
+    public String getPowerjobHost() {
+        if (StringUtils.isEmpty(this.host)) {
+            throw new IllegalStateException("prop host can not be empty");
+        }
+        return host + ":" + Objects.requireNonNull(nodePort, "node port can not be null");
+    }
 
     @Override
     public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
         K8SUtils.createService(api, nameSpace
                 , K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, K8S_DATAX_POWERJOB_SERVER, this.serverPort, targetPortName, () -> {
                     V1ServiceSpec svcSpec = new V1ServiceSpec();
-                    svcSpec.setType("LoadBalancer");
+                    svcSpec.setType("NodePort");
+                    //svcSpec.setType("LoadBalancer");
                     V1ServicePort servicePort = new V1ServicePort();
-                   // servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
+                    servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
                     return Pair.of(svcSpec, servicePort);
                 });
     }
 
+    @Override
+    public void initialPowerjobAccount(K8SDataXPowerJobServer powerjobServer) {
+        IRegisterApp tisPowerJob = getTISPowerjobClient();
+
+        // String powerjobDomain, String appName, String password
+        final String linkHost = getPowerjobHost();
+        try {
+            // 检查账户是否存在
+
+            // 存在则直接跳过
+
+            // 不存在？则创建
+            (tisPowerJob) //
+                    .registerApp(linkHost, powerjobServer.appName, powerjobServer.password);
+        } catch (Exception e) {
+            throw new IllegalStateException("server:" + linkHost + ",appname:" + powerjobServer.appName, e);
+        }
+    }
+
+    private IRegisterApp getTISPowerjobClient() {
+
+        ExtensionList<IRegisterApp> extensionList = TIS.get().getExtensionList(IRegisterApp.class);
+        for (IRegisterApp resisterApp : extensionList) {
+            return resisterApp;
+        }
+
+        throw new IllegalStateException("can not find instanceof " + IRegisterApp.class.getSimpleName());
+//        return (ITISPowerJob) DataXJobWorker.getJobWorker( //
+//                DataXJobWorker.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.UsingExistCluster));
+    }
+
+    @TISExtension
     public static class DftDesc extends Descriptor<ServerPortExport> {
         public DftDesc() {
             super();

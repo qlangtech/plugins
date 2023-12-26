@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package com.qlangtech.tis.plugin.incr;
 
@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,26 +67,26 @@ public class DefaultWatchPodLog extends WatchPodLog {
     // private final CoreV1Api api;
 
     private final TargetResName indexName;
-    private final String containerId;
+    private final Optional<String> containerId;
     private final String podName;
 
     //  private final DefaultIncrK8sConfig config;
     private final K8sImage config;
 
     public DefaultWatchPodLog(TargetResName indexName, String podName, ApiClient client, final K8sImage config) {
-        this(indexName.getK8SResName(), indexName, podName, client, config);
+        this(Optional.of(indexName.getK8SResName()), indexName, podName, client, config);
     }
 
 
-    public DefaultWatchPodLog(String containerId, TargetResName indexName, String podName, ApiClient client, final K8sImage config) {
+    public DefaultWatchPodLog(Optional<String> containerId, TargetResName indexName, String podName, ApiClient client, final K8sImage config) {
         this.indexName = indexName;
         this.containerId = containerId;
         if (StringUtils.isBlank(podName)) {
             throw new IllegalArgumentException("param podName can not be null");
         }
-        if (StringUtils.isBlank(containerId)) {
-            throw new IllegalArgumentException("param containerId can not be null");
-        }
+//        if (StringUtils.isBlank(containerId)) {
+//            throw new IllegalArgumentException("param containerId can not be null");
+//        }
         this.podName = podName;
         this.client = client;
         this.config = config;
@@ -140,7 +141,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
 //                        podWatch.close();
 //                    }
                     //if (metadata != null) {
-                    monitorPodLog(indexName, this.config.getNamespace(), this.podName);
+                    monitorPodLog();
                     //}
                 } catch (Throwable e) {
                     logger.error("monitor " + this.indexName.getK8SResName() + " incr_log", e);
@@ -166,18 +167,15 @@ public class DefaultWatchPodLog extends WatchPodLog {
     private InputStream monitorLogStream;
 
     /**
-     * @param indexName
-     * @param namespace
-     * @param podName
      * @return 是否是正常退出
      */
-    private boolean monitorPodLog(TargetResName indexName, String namespace, String podName) {
+    private boolean monitorPodLog() {
         try {
             PodLogs logs = new PodLogs(this.client);
             // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
             // 显示200行
             //
-            monitorLogStream = logs.streamNamespacedPodLog(namespace, podName, this.containerId, null, 200, false);
+            monitorLogStream = logs.streamNamespacedPodLog(this.config.getNamespace(), podName, this.containerId.orElse(null), null, 200, false);
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             ExecuteState event = null;
             boolean allConnectionDie = false;
@@ -187,7 +185,8 @@ public class DefaultWatchPodLog extends WatchPodLog {
                 allConnectionDie = sendMsg(indexName, event);
             }
         } catch (ApiException e) {
-            throw K8sExceptionUtils.convert("indexName:" + indexName + ",namespace:" + namespace + ",podName:" + podName, e);
+            throw K8sExceptionUtils.convert("indexName:" + indexName
+                    + ",namespace:" + this.config.getNamespace() + ",podName:" + podName, e);
         } catch (Throwable e) {
             if (ExceptionUtils.indexOfThrowable(e, SocketTimeoutException.class) > -1) {
                 // 连接超时需要向客户端发一个信号告诉它连接失效了，以便再次重连
@@ -198,7 +197,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
                 }
                 return false;
             }
-            throw new RuntimeException("indexName:" + indexName + ",namespace:" + namespace + ",podName:" + podName, e);
+            throw new RuntimeException("indexName:" + indexName + ",namespace:" + this.config.getNamespace() + ",podName:" + podName, e);
         } finally {
             this.clearStatConnection();
         }
@@ -244,7 +243,9 @@ public class DefaultWatchPodLog extends WatchPodLog {
      */
     private void clearStatConnection() {
         try {
-            IOUtils.closeQuietly(monitorLogStream);
+            IOUtils.closeQuietly(monitorLogStream, (ex) -> {
+                logger.warn(ex.getMessage());
+            });
         } catch (Throwable e) {
         }
         loopQueue.cleanBuffer();

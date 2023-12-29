@@ -18,10 +18,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 
     public abstract void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException;
 
-    /**
-     * 初始化powerjob 账户
-     */
-    public abstract void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer);
+
 
     /**
      * TIS 可用的 host:port 访问地址

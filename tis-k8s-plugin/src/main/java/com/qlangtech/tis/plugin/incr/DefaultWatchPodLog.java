@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -141,6 +142,24 @@ public class DefaultWatchPodLog extends WatchPodLog {
 //                        podWatch.close();
 //                    }
                     //if (metadata != null) {
+                    final int maxTryCount = 3;
+                    int tryCount = 0;
+                    while (true) {
+                        try {
+                            this.monitorLogStream = createMonitorLogStream();
+                            break;
+                        } catch (ApiException e) {
+                            String errMsg = "indexName:" + indexName
+                                    + ",namespace:" + this.config.getNamespace() + ",podName:" + podName;
+                            if (tryCount++ < maxTryCount) {
+                                logger.warn(errMsg + ",err:" + e.getMessage());
+                                Thread.sleep(1500);
+                            } else {
+                                throw K8sExceptionUtils.convert(errMsg, e);
+                            }
+                        }
+                    }
+                    Objects.requireNonNull(this.monitorLogStream, "monitorLogStream can not be null");
                     monitorPodLog();
                     //}
                 } catch (Throwable e) {
@@ -171,11 +190,7 @@ public class DefaultWatchPodLog extends WatchPodLog {
      */
     private boolean monitorPodLog() {
         try {
-            PodLogs logs = new PodLogs(this.client);
-            // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
-            // 显示200行
-            //
-            monitorLogStream = logs.streamNamespacedPodLog(this.config.getNamespace(), podName, this.containerId.orElse(null), null, 200, false);
+
             LineIterator lineIt = IOUtils.lineIterator(monitorLogStream, TisUTF8.get());
             ExecuteState event = null;
             boolean allConnectionDie = false;
@@ -184,9 +199,9 @@ public class DefaultWatchPodLog extends WatchPodLog {
                 // 如果所有的监听者都死了，这里也就不用继续监听日志了
                 allConnectionDie = sendMsg(indexName, event);
             }
-        } catch (ApiException e) {
-            throw K8sExceptionUtils.convert("indexName:" + indexName
-                    + ",namespace:" + this.config.getNamespace() + ",podName:" + podName, e);
+//        } catch (ApiException e) {
+//            throw K8sExceptionUtils.convert("indexName:" + indexName
+//                    + ",namespace:" + this.config.getNamespace() + ",podName:" + podName + ",errBody:" + e.getResponseBody(), e);
         } catch (Throwable e) {
             if (ExceptionUtils.indexOfThrowable(e, SocketTimeoutException.class) > -1) {
                 // 连接超时需要向客户端发一个信号告诉它连接失效了，以便再次重连
@@ -202,6 +217,14 @@ public class DefaultWatchPodLog extends WatchPodLog {
             this.clearStatConnection();
         }
         return true;
+    }
+
+    private InputStream createMonitorLogStream() throws ApiException, IOException {
+        PodLogs logs = new PodLogs(this.client);
+        // String namespace, String name, String container, Integer sinceSeconds, Integer tailLines, boolean timestamps
+        // 显示200行
+        //
+        return logs.streamNamespacedPodLog(this.config.getNamespace(), podName, this.containerId.orElse(null), null, 200, false);
     }
 
     /**

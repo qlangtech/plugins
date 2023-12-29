@@ -27,6 +27,7 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.PowerJobRCResName;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiCallback;
@@ -46,6 +47,8 @@ import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ReplicationController;
 import io.kubernetes.client.openapi.models.V1ReplicationControllerStatus;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
+import io.kubernetes.client.openapi.models.V1Scale;
+import io.kubernetes.client.openapi.models.V1ScaleSpec;
 import okhttp3.Call;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -91,6 +94,7 @@ public class K8SController implements IRCController {
         try {
             Integer gracePeriodSeconds = 20;
             V1DeleteOptions options = new V1DeleteOptions();
+
 
             Call call = api.deleteNamespacedServiceCall(svc.getK8SResName(), config.getNamespace(), K8SUtils.resultPrettyShow
                     , null, gracePeriodSeconds, true, null, options, (ApiCallback) null);
@@ -143,6 +147,52 @@ public class K8SController implements IRCController {
         V1PodList v1PodList = api.listNamespacedPod(config.getNamespace(), null, null
                 , null, null, "app=" + collection.getK8SResName(), 100, null, 600, false);
         return v1PodList.getItems();
+    }
+
+    public UpdatePodNumber updatePodNumber(PowerJobRCResName rcResName, Integer podNum) {
+        //  String name, String namespace, V1Patch body, String pretty, String dryRun, String fieldManager, Boolean force
+        try {
+            V1Scale body = new V1Scale();
+            body.setMetadata(new V1ObjectMeta()
+                    .name(rcResName.getK8SResName())
+                    .namespace(this.config.getNamespace()));
+            V1ScaleSpec spec = (new V1ScaleSpec()).replicas(podNum);
+            body.setSpec(spec);
+            V1Scale call = this.api.replaceNamespacedReplicationControllerScale(rcResName.getK8SResName()
+                    , this.config.getNamespace(), body, K8SUtils.resultPrettyShow, null, null);
+            return new UpdatePodNumber(call.getStatus().getReplicas(), podNum, call.getMetadata().getResourceVersion());
+            // client.execute(call, null);
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert(rcResName.getK8SResName(), e);
+        }
+    }
+
+    public static class UpdatePodNumber {
+        private final int fromPodCount;
+        private final int toPodCount;
+        private final String resourceVersion;
+
+        public UpdatePodNumber(int fromPodCount, int toPodCount, String resourceVersion) {
+            this.fromPodCount = fromPodCount;
+            this.toPodCount = toPodCount;
+            this.resourceVersion = resourceVersion;
+        }
+
+        public int getFromPodCount() {
+            return fromPodCount;
+        }
+
+        public int getToPodCount() {
+            return toPodCount;
+        }
+
+        public String getResourceVersion() {
+            return resourceVersion;
+        }
+
+        public int getReplicaChangeCount() {
+            return Math.abs(this.toPodCount - this.fromPodCount);
+        }
     }
 
 

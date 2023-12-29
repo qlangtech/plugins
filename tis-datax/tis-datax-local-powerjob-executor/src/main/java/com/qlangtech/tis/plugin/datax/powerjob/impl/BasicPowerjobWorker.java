@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.datax.powerjob.impl;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 
@@ -12,7 +13,7 @@ import java.util.List;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/11/3
  */
-public class BasicPowerjobWorker extends DataXJobWorker  {
+public class BasicPowerjobWorker extends DataXJobWorker {
 
     @Override
     public void relaunch() {
@@ -44,8 +45,9 @@ public class BasicPowerjobWorker extends DataXJobWorker  {
         throw new UnsupportedOperationException(this.getClass().getName());
     }
 
+
     @Override
-    public void launchService(Runnable launchProcess) {
+    public void launchService(SSERunnable launchProcess) {
         throw new UnsupportedOperationException();
     }
 }

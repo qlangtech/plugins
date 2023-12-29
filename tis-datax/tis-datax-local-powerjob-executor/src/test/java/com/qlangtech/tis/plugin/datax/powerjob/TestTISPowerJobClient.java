@@ -12,7 +12,7 @@ import org.junit.Assert;
 public class TestTISPowerJobClient extends TestCase {
 
     public void testFetchAllWorkflow() {
-        TISPowerJobClient powerJobClient = new TISPowerJobClient("192.168.28.200:7700", "tis", "hello1234");
+        TISPowerJobClient powerJobClient =  TISPowerJobClient.create("192.168.28.200:7700", "tis", "hello1234");
 
         Assert.assertNotNull(powerJobClient.fetchAllWorkflow(0, 10));
     }

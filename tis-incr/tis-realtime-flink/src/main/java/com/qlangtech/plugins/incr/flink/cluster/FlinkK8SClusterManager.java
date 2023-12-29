@@ -26,6 +26,8 @@ import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IPluginStore;
@@ -46,7 +48,11 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.flink.configuration.*;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.MemorySize;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
@@ -69,7 +75,7 @@ import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NA
  * @create: 2021-11-04 14:30
  **/
 @Public
-public class FlinkK8SClusterManager extends DataXJobWorker {
+public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunchingOrchestrate {
 
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
@@ -88,13 +94,17 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
 //        return name;
 //    }
 
+    @Override
+    public List<ExecuteStep> getExecuteSteps() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
-    public void launchService(Runnable launchProcess) {
+    public void launchService(SSERunnable launchProcess) {
         processFlinkCluster((cli) -> {
             cli.run(new String[]{});
             launchProcess.run();
-           // this.writeLaunchToken();
+            // this.writeLaunchToken();
         });
     }
 
@@ -179,7 +189,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
             throw K8sExceptionUtils.convert(this.clusterId, e);
         }
 
-        return Collections.singletonList( deployment);
+        return Collections.singletonList(deployment);
     }
 
     @Override
@@ -262,7 +272,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker {
         }
 
         @Override
-        public  K8SWorkerCptType getWorkerCptType() {
+        public K8SWorkerCptType getWorkerCptType() {
             return K8SWorkerCptType.FlinkCluster;
         }
     }

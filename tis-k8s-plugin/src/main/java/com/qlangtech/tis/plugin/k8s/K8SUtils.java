@@ -12,6 +12,8 @@ import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
+import com.qlangtech.tis.datax.job.SubJobResName;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
@@ -61,27 +63,10 @@ public class K8SUtils {
     public static final String resultPrettyShow = "true";
     public static final String LABEL_APP = "app";
 
-    public static final ServiceResName K8S_DATAX_POWERJOB_MYSQL_SERVICE = new ServiceResName("powerjob-mysql");
-    public static final ServiceResName K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE = new ServiceResName("powerjob-server-nodeport");
-    public static final ServiceResName K8S_DATAX_POWERJOB_SERVER_SERVICE = new ServiceResName("powerjob-server");
-
-
-    public static final PowerJobRCResName K8S_DATAX_POWERJOB_MYSQL
-            = new PowerJobRCResName("datax-worker-powerjob-mysql", K8S_DATAX_POWERJOB_MYSQL_SERVICE);
-
-    public static final PowerJobRCResName K8S_DATAX_POWERJOB_SERVER = new PowerJobRCResName("datax-worker-powerjob-server"
-            , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE);
-
-    public static final TargetResName K8S_DATAX_POWERJOB_REGISTER_ACCOUNT = new TargetResName("datax-worker-powerjob-register-account");
-
-    public static final PowerJobRCResName K8S_DATAX_POWERJOB_WORKER = new PowerJobRCResName("datax-worker-powerjob-worker");
-
-    public static final TargetResName[] powerJobRes //
-            = new TargetResName[]{K8S_DATAX_POWERJOB_MYSQL, K8S_DATAX_POWERJOB_SERVER, K8S_DATAX_POWERJOB_REGISTER_ACCOUNT, K8S_DATAX_POWERJOB_WORKER};
 
     public static final List<PowerJobRCResName> getPowerJobRCRes() {
         List<PowerJobRCResName> result = Lists.newArrayList();
-        for (TargetResName res : powerJobRes) {
+        for (TargetResName res : K8SDataXPowerJobServer.powerJobRes) {
             if (res instanceof PowerJobRCResName) {
                 result.add((PowerJobRCResName) res);
             }
@@ -108,18 +93,18 @@ public class K8SUtils {
         throw new IllegalStateException("podName is illegal:" + resName.getName());
     }
 
-    public static class PowerJobRCResName extends TargetResName {
+    public static class PowerJobRCResName<T> extends SubJobResName<T> {
         final Pattern patternTargetResource;
         final K8SUtils.ServiceResName[] relevantSvc;
 
 
-        public PowerJobRCResName(String name) {
-            this(name, new K8SUtils.ServiceResName[0]);
+        public PowerJobRCResName(String name, SubJobExec<T> subJobExec) {
+            this(name, subJobExec, new K8SUtils.ServiceResName[0]);
         }
 
 
-        public PowerJobRCResName(String name, K8SUtils.ServiceResName... relevantSvc) {
-            super(name);
+        public PowerJobRCResName(String name, SubJobExec<T> subJobExec, K8SUtils.ServiceResName... relevantSvc) {
+            super(name, subJobExec);
             this.relevantSvc = relevantSvc;
             this.patternTargetResource = Pattern.compile("(" + this.getK8SResName() + ")-.+?");
         }
@@ -132,7 +117,16 @@ public class K8SUtils {
         public K8SUtils.ServiceResName[] getRelevantSvc() {
             return relevantSvc;
         }
+
+        @Override
+        protected String getResourceType() {
+            return StringUtils.EMPTY;
+        }
     }
+
+//    public interface SubJobExec<T> {
+//        public void accept(T t) throws Exception;
+//    }
 
     public static String createReplicationController(final CoreV1Api api
             , final K8sImage config, TargetResName name //
@@ -155,10 +149,10 @@ public class K8SUtils {
     public static void createService(final CoreV1Api api, String namespace //
             , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName
             , Supplier<Pair<V1ServiceSpec, V1ServicePort>> specCreator) throws ApiException {
-        SSERunnable sse = SSERunnable.getLocal();
-        boolean success = false;
+        // SSERunnable sse = SSERunnable.getLocal();
+        // boolean success = false;
         try {
-            sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "start to publish service'" + svcRes.getName() + "'");
+
             V1Service svcBody = new V1Service();
             svcBody.apiVersion(K8SUtils.REPLICATION_CONTROLLER_VERSION);
             V1ObjectMeta meta = new V1ObjectMeta();
@@ -179,20 +173,31 @@ public class K8SUtils {
             svcBody.setSpec(svcSpec);
 
             V1Service svc = api.createNamespacedService(namespace, svcBody, K8SUtils.resultPrettyShow, null, null);
-            System.out.println(svc);
-            sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "success to publish service'" + svcRes.getName() + "'");
-            success = true;
+            //  System.out.println(svc);
+            // sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "success to publish service'" + svcRes.getName() + "'");
+            //   success = true;
         } finally {
-            if (!success) {
-                sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "faild to publish service'" + svcRes.getName() + "'");
-            }
-            sse.writeComplete(svcRes, success);
+
         }
     }
 
     public static String getResourceVersion(V1ReplicationController newRC) {
         return Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion();
     }
+
+    public static V1ResourceRequirements createResourceRequirements(ReplicasSpec replicasSpec) {
+        V1ResourceRequirements rRequirements = new V1ResourceRequirements();
+        Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
+        limitQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuLimit().literalVal()));
+        limitQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryLimit().literalVal()));
+        rRequirements.setLimits(limitQuantityMap);
+        Map<String, Quantity> requestQuantityMap = Maps.newHashMap();
+        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
+        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
+        rRequirements.setRequests(requestQuantityMap);
+        return rRequirements;
+    }
+
 
     /**
      * 在k8s容器容器中创建一个RC
@@ -242,16 +247,18 @@ public class K8SUtils {
         //V1Container c  c.setEnv(envVars);
         container.setEnv(envs);
 
-        V1ResourceRequirements rRequirements = new V1ResourceRequirements();
-        Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
-        limitQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuLimit().literalVal()));
-        limitQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryLimit().literalVal()));
-        rRequirements.setLimits(limitQuantityMap);
-        Map<String, Quantity> requestQuantityMap = Maps.newHashMap();
-        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
-        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
-        rRequirements.setRequests(requestQuantityMap);
-        container.setResources(rRequirements);
+//        V1ResourceRequirements rRequirements = new V1ResourceRequirements();
+//        Map<String, Quantity> limitQuantityMap = Maps.newHashMap();
+//        limitQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuLimit().literalVal()));
+//        limitQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryLimit().literalVal()));
+//        rRequirements.setLimits(limitQuantityMap);
+//        Map<String, Quantity> requestQuantityMap = Maps.newHashMap();
+//        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
+//        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
+//        rRequirements.setRequests(requestQuantityMap);
+//
+//        ;
+        container.setResources(createResourceRequirements(replicasSpec));
 
 
         containers.add(container);
@@ -305,18 +312,44 @@ public class K8SUtils {
         return mysqlRcSpec;
     }
 
+    public static Set<String> waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
+            , TargetResName targetResName, ReplicasSpec powerjobServerSpec, ApiClient apiClient, String resourceVer)  //
+            throws ApiException, PowerjobOrchestrateException {
+        return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resourceVer, (r, name) -> {
+        });
+    }
+
+    public enum PodChangeReason {
+        FAILD("failed"), KILL("killing"), LAUNCHED("started");
+        private final String token;
+
+        PodChangeReason(String token) {
+            this.token = token;
+        }
+
+        public static PodChangeReason parse(String reason) {
+
+            for (PodChangeReason r : PodChangeReason.values()) {
+                if (StringUtils.equalsIgnoreCase(r.token, reason)) {
+                    return r;
+                }
+            }
+            return null;
+        }
+    }
+
     /**
      * 等待RC资源启动
      *
      * @param powerjobServerImage
-     * @param powerjobServerSpec
+     * @param replicaChangeCount
      * @param apiClient
      * @param resourceVer
      * @throws ApiException
      * @throws PowerjobOrchestrateException
      */
     public static Set<String> waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, ReplicasSpec powerjobServerSpec, ApiClient apiClient, String resourceVer)  //
+            , TargetResName targetResName, final int replicaChangeCount, ApiClient apiClient, String resourceVer, PodChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
         CoreV1Api api = new CoreV1Api(apiClient);
@@ -325,7 +358,7 @@ public class K8SUtils {
         final PowerJobRCResName powerJobRCResName = targetResName(targetResName);
 
         // Pattern patternTargetResource = Pattern.compile("(" + targetResName.getK8SResName() + ")-.+?");
-        final int replicaCount = powerjobServerSpec.getReplicaCount();
+        // final int replicaChangeCount = powerjobServerSpec.getReplicaCount();
         int tryProcessWatcherLogsCount = 0;
         processWatcherLogs:
         while (true) { // 处理 watcher SocketTimeoutException 超时的错误
@@ -339,9 +372,10 @@ public class K8SUtils {
             int podCompleteCount = 0;
             int faildCount = 0;
             String formatMessage = null;
+            PodChangeReason changeReason = null;
             try {
                 for (Watch.Response<V1Event> event : rcWatch) {
-                    System.out.println("-----------------------------------------");
+                    //System.out.println("-----------------------------------------");
                     evt = event.object;
                     //  System.out.println();
                     // V1ObjectMeta metadata = evt.getMetadata();
@@ -358,19 +392,25 @@ public class K8SUtils {
 
                     if ("pod".equalsIgnoreCase(objRef.getKind()) && powerJobRCResName.isPodMatch(objRef.getName())) {
                         relevantPodNames.add(objRef.getName());
-                        formatMessage = "reason:" + evt.getReason() + ",name:" + evt.getInvolvedObject().getName() + ",kind:" + evt.getInvolvedObject().getKind() + ",message:" + msg;
-                        System.out.println();
-                        sse.error(targetResName.getName(), TimeFormat.getCurrentTimeStamp(), formatMessage);
-                        switch (StringUtils.lowerCase(evt.getReason())) {
-                            case "failed":
-                                faildCount++;
-                            case "started":
-                                podCompleteCount++;
-                                break;
-                            default:
+                        formatMessage = "reason:" + evt.getReason() + ",name:" + objRef.getName() + ",kind:" + evt.getInvolvedObject().getKind() + ",message:" + msg;
+                        //  System.out.println();
+                        sse.info(targetResName.getName(), TimeFormat.getCurrentTimeStamp(), formatMessage);
+
+                        changeReason = PodChangeReason.parse(evt.getReason());
+                        if (changeReason == null) {
+                            switch (changeReason) {
+                                case FAILD:
+                                    faildCount++;
+                                case KILL:
+                                case LAUNCHED:
+                                    podCompleteCount++;
+                                default:
+                                    changeCallback.apply(changeReason, objRef.getName());
+                            }
                         }
+
                     }
-                    if (podCompleteCount >= replicaCount) {
+                    if (podCompleteCount >= replicaChangeCount) {
                         break processWatcherLogs;
                     }
                     // if ("running".equalsIgnoreCase(status.getPhase())) {
@@ -428,12 +468,12 @@ public class K8SUtils {
                         , Optional.of(DataXJobWorker.K8SWorkerCptType.Worker));
     }
 
-    public static class ServiceResName extends TargetResName {
+    public static class ServiceResName<T> extends SubJobResName<T> {
         private static final String HOST_SUFFIX = "_SERVICE_HOST";
         private static final String PORT_SUFFIX = "_SERVICE_PORT";
 
-        public ServiceResName(String name) {
-            super(name);
+        public ServiceResName(String name, SubJobExec<T> subJobExec) {
+            super(name, subJobExec);
         }
 
         public String getHostEvnName() {
@@ -454,6 +494,11 @@ public class K8SUtils {
 
         private String replaceAndUpperCase(String val) {
             return StringUtils.upperCase(StringUtils.replace(val, "-", "_"));
+        }
+
+        @Override
+        protected String getResourceType() {
+            return "service";
         }
     }
 }

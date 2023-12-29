@@ -30,23 +30,31 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
+import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.PodChangeReason;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.PowerJobRCResName;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.plugin.k8s.PodChangeCallback;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
+import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
@@ -69,7 +77,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -78,8 +85,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
 
 
 /**
@@ -93,8 +98,74 @@ import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
  * @create: 2021-04-23 18:16
  **/
 @Public
-public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJob {
+public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJob, ILaunchingOrchestrate {
 
+
+    static final String powerJobServerPort = "pj-server-port";
+    private final static DataXJobWorker.K8SWorkerCptType workerCptType = DataXJobWorker.K8SWorkerCptType.Server;
+
+    public static final PowerJobRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_WORKER
+            = new PowerJobRCResName<>("datax-worker-powerjob-worker"
+            , (powerJobServer) -> {
+        powerJobServer.launchPowerjobWorker();
+    });
+
+    public static final SubJobResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
+            = new SubJobResName<K8SDataXPowerJobServer>("datax-worker-powerjob-register-account", (powerJobServer) -> {
+        powerJobServer.powerJobRegisterAccount();
+    }) {
+        @Override
+        protected String getResourceType() {
+            return "PowerJob Account";
+        }
+    };
+
+
+    public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
+            = new ServiceResName<>("powerjob-server-nodeport", (powerJobServer) -> {
+        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace(), new CoreV1Api(powerJobServer.getK8SApi()), powerJobServerPort);
+    });
+    public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL_SERVICE
+            = new ServiceResName<>("powerjob-mysql", (powerJobServer) -> {
+        powerJobServer.coreDS.launchMetaStoreService(powerJobServer);
+    });
+
+    public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_SERVICE
+            = new ServiceResName<K8SDataXPowerJobServer>("powerjob-server", (powerJobServer) -> {
+        K8SUtils.createService(new CoreV1Api(powerJobServer.getK8SApi()), powerJobServer.getImage().getNamespace()
+                , getPowerJobServerService(), getPowerJobServerRes(), powerJobServer.serverPortExport.serverPort, powerJobServerPort);
+
+
+    });
+
+    public static final PowerJobRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER
+            = new PowerJobRCResName<>("datax-worker-powerjob-server",
+            (powerJobServer) -> {
+                powerJobServer.launchPowerjobServer();
+            }
+            , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE);
+
+    private static PowerJobRCResName<K8SDataXPowerJobServer> getPowerJobServerRes() {
+        return K8S_DATAX_POWERJOB_SERVER;
+    }
+
+    private static ServiceResName<K8SDataXPowerJobServer> getPowerJobServerService() {
+        return K8S_DATAX_POWERJOB_SERVER_SERVICE;
+    }
+
+    public static final PowerJobRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL
+            = new PowerJobRCResName<K8SDataXPowerJobServer>("datax-worker-powerjob-mysql", (powerJobServer) -> {
+//        powerJobServer.createMetaStoreService();
+        powerJobServer.coreDS.launchMetaStore(powerJobServer);
+
+    }, K8S_DATAX_POWERJOB_MYSQL_SERVICE);
+
+    public static final SubJobResName[] powerJobRes //
+            = new SubJobResName[]{
+            K8S_DATAX_POWERJOB_MYSQL
+            , K8S_DATAX_POWERJOB_SERVER
+            , K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
+            , K8S_DATAX_POWERJOB_WORKER};
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
 
@@ -127,7 +198,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     @Override
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
-            powerJobClient = new TISPowerJobClient(this.serverPortExport.getPowerjobHost(), this.appName, this.password);
+            powerJobClient = TISPowerJobClient.create(this.serverPortExport.getPowerjobHost(), this.appName, this.password);
         }
         return powerJobClient;
     }
@@ -150,7 +221,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         List<ExecuteStep> launchSteps = Lists.newArrayList();
 
 
-        for (TargetResName rcRes : K8SUtils.powerJobRes) {
+        for (SubJobResName rcRes : powerJobRes) {
 
             launchSteps.add(new ExecuteStep(rcRes, null));
             if (rcRes instanceof PowerJobRCResName) {
@@ -161,6 +232,52 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
 
         return launchSteps;
+    }
+
+    /**
+     * 对运行中的RC进行扩缩容
+     *
+     * @param podNum
+     */
+    @Override
+    public void updatePodNumber(Integer podNum) {
+        // super.updatePodNumber(podNum);
+        if (podNum < 1) {
+            throw new IllegalArgumentException("illegal param podNum can not small than podNum");
+        }
+        SSERunnable sse = SSERunnable.getLocal();
+        try {
+            UpdatePodNumber updatePodNumber = this.getK8SController().updatePodNumber(K8S_DATAX_POWERJOB_SERVER, podNum);
+
+            int replicaChangeCount = updatePodNumber.getReplicaChangeCount();
+            if (replicaChangeCount < 1) {
+                // TODO
+            }
+
+            K8SUtils.waitReplicaControllerLaunch(this.getImage()
+                    , K8S_DATAX_POWERJOB_SERVER, replicaChangeCount, this.getK8SApi(), updatePodNumber.getResourceVersion(), new PodChangeCallback() {
+                        @Override
+                        public void apply(PodChangeReason changeReason, String podName) {
+                            // System.out.println(changeReason);
+
+                            boolean kill = true;
+                            switch (changeReason) {
+                                case FAILD:
+                                    sse.writeComplete(new TargetResName(podName), false);
+                                    break;
+                                case LAUNCHED:
+                                    kill = false;
+                                case KILL:
+                                    sse.writeComplete(new TargetResName(podName + (kill ? '-' : '+')), true);
+
+                            }
+                        }
+                    });
+
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -327,7 +444,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         K8SController k8SController = getK8SController();
         RcDeployment powerjobServer = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_SERVER);
 
-        RcDeployment powerjobWorker = k8SController.getRCDeployment(K8SUtils.K8S_DATAX_POWERJOB_WORKER);
+        RcDeployment powerjobWorker = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_WORKER);
         ArrayList<RcDeployment> rcs = Lists.newArrayList(powerjobServer, powerjobWorker);
         RcDeployment mysqlRC = this.coreDS.getRCDeployment(k8SController);
         if (mysqlRC != null) {
@@ -356,6 +473,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
 
             K8sImage k8sImage = this.getK8SImage();
+
+            for (ExecuteStep execStep : getExecuteSteps()) {
+                execStep.getSubJob().execSubJob(this);
+            }
+
             // this.k8sClient = k8SImage.createApiClient();
 
             //  ReplicasSpec replicasSpec = this.getReplicasSpec();
@@ -387,7 +509,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             // https://github.com/PowerJob/PowerJob/blob/master/docker-compose.yml
             boolean success = false;
             //try {
-            this.createMetaStoreService();
+            // this.createMetaStoreService();
 //                success = true;
 //            } finally {
 //                launchProcess.writeComplete(K8SUtils.K8S_DATAX_POWERJOB_MYSQL, success);
@@ -405,7 +527,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 success = true;
                 // this.getK8SController().createReplicationController(DataXJobWorker.K8S_DATAX_INSTANCE_NAME, replicasSpec, varsBuilder.build());
             } finally {
-                launchProcess.writeComplete(K8SUtils.K8S_DATAX_POWERJOB_WORKER, success);
+                launchProcess.writeComplete(K8S_DATAX_POWERJOB_WORKER, success);
             }
             if (supportHPA()) {
                 HorizontalpodAutoscaler hap = this.getHpa();
@@ -428,9 +550,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         return this.getK8SImage();
     }
 
-    private void createMetaStoreService() throws ApiException, PowerjobOrchestrateException {
+    // private void createMetaStoreService() throws ApiException, PowerjobOrchestrateException {
 
-        coreDS.launchMetaStoreService(this);
 
 //        if (coreDS instanceof EmbeddedPowerjobCoreDataSource) {
 //
@@ -439,7 +560,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //            // 需要验证外置的mysql是否可用，至少 内部该有的表是否都存在
 //            // 并且，需要考虑到如何将外置的mysql配置传给powerjob master组件
 //        }
-    }
+    // }
 
     /**
      * 启动powerjob 执行容器
@@ -460,6 +581,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         return K8SUtils.getK8SDataXPowerJobWorker();
     }
 
+
     public void launchPowerjobServer() throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
 
@@ -468,11 +590,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         DefaultK8SImage powerjobServerImage = new DefaultK8SImage();
         powerjobServerImage.imagePath = powerImage.getImagePath();
         powerjobServerImage.namespace = powerImage.getNamespace();
-        final String powerJobServerPort = "pj-server-port";
-        boolean success = false;
+
+        // boolean success = false;
         Set<String> relevantPodNames = null;
         try {
-            sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), " start publish '" + K8S_DATAX_POWERJOB_SERVER.getK8SResName() + "'");
+
             // 2. 启动powerjob server
             ReplicasSpec powerjobServerSpec = Objects.requireNonNull(this.getReplicasSpec(), "getReplicasSpec can not be empty");
 
@@ -504,11 +626,12 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             envVar = new V1EnvVar();
             envVar.setName("PARAMS");
             // envVar.setValue("--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
-            String coreJbdcUrl = this.coreDS.createCoreJdbcUrl();
-            if (StringUtils.isEmpty(coreJbdcUrl)) {
+            String coreJbdcParams = this.coreDS.createCoreJdbcParams();
+            if (StringUtils.isEmpty(coreJbdcParams)) {
                 throw new IllegalStateException("coreJbdcUrl can not be empty");
             }
-            envVar.setValue("--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=" + coreJbdcUrl);
+            // --spring.datasource.core.jdbc-url=
+            envVar.setValue("--oms.mongodb.enable=false " + coreJbdcParams);
             envs.add(envVar);
 
 
@@ -521,43 +644,34 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             //K8SUtils.LABEL_APP + "=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
             relevantPodNames = K8SUtils.waitReplicaControllerLaunch(powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, this.getK8SApi(), resourceVer);
 
-            sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), " successful publish '" + K8S_DATAX_POWERJOB_SERVER.getK8SResName() + "'");
-            success = true;
+            // sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), " successful publish '" + K8S_DATAX_POWERJOB_SERVER.getK8SResName() + "'");
+            //  success = true;
         } catch (Exception e) {
-            sse.error(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), e.getMessage());
+            // sse.error(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), e.getMessage());
             throw e;
         } finally {
-            sse.writeComplete(K8S_DATAX_POWERJOB_SERVER, success);
+            //  sse.writeComplete(K8S_DATAX_POWERJOB_SERVER, success);
         }
 
         if (CollectionUtils.isEmpty(relevantPodNames)) {
             throw new IllegalStateException("resource name:" + K8S_DATAX_POWERJOB_SERVER.getName() + " relevant pods can not be null");
         }
-        WatchPodLog watchPodLog = null;
-        for (String onePodOf : relevantPodNames) {
-            watchPodLog = this.getK8SController().listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, new ILogListener() {
-                @Override
-                public void sendMsg2Client(Object biz) throws IOException {
-                    sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), String.valueOf(biz));
-                }
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
 
-                @Override
-                public void read(Object event) {
-
-                }
-
-                @Override
-                public boolean isClosed() {
-                    return false;
-                }
-            });
-            break;
         }
-
+        WatchPodLog watchPodLog = watchOneOfPowerJobPodLog(relevantPodNames, new PowerJobPodLogListener() {
+            @Override
+            protected void consumePodLogMsg(ExecuteState<String> log) {
+                sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), log.getMsg());
+            }
+        });
+        sse.setContextAttr(WatchPodLog.class, watchPodLog);
         //   this.k8SController.listPodAndWatchLog();
 
-        K8SUtils.createService(api, powerjobServerImage.getNamespace()
-                , K8SUtils.K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER, this.serverPortExport.serverPort, powerJobServerPort);
+//        K8SUtils.createService(api, powerjobServerImage.getNamespace()
+//                , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER, this.serverPortExport.serverPort, powerJobServerPort);
 
 
 //        Call rcCall = api.listNamespacedPodCall(
@@ -584,49 +698,69 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
         // 等待Server 启动完毕
         // 1. 创建对外暴露端口
-        this.serverPortExport.exportPort(powerjobServerImage.getNamespace(), api, powerJobServerPort);
+        //  this.serverPortExport.exportPort(powerjobServerImage.getNamespace(), api, powerJobServerPort);
 //      // 2. 初始化 app
 
-        success = false;
+        //  powerJobRegisterAccount();
+    }
+
+    private void powerJobRegisterAccount() {
+        SSERunnable sse = SSERunnable.getLocal();
+
+        WatchPodLog watchPodLog = sse.getContextAttr(WatchPodLog.class);
+//        boolean success;
+//        success = false;
         try {
-            int tryCount = 0;
-            final int tryLimit = 100;
-            while (true) {
-                try {
-                    this.serverPortExport.initialPowerjobAccount(this);
-                    // 需要打印日志
-                    logger.info("success initialPowerjobAccount");
-                    sse.info(K8SUtils.K8S_DATAX_POWERJOB_REGISTER_ACCOUNT.getName(), TimeFormat.getCurrentTimeStamp(), "success initialPowerjobAccount with appName:" + this.appName);
-                    break;
-                } catch (Exception e) {
-                    int idxOfError = -1;
-                    if (tryCount++ < tryLimit && ( //
-                            (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class)) > -1 ||
-                                    (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class)) > -1)
-                    ) {
 
-                        // 说明是超时等待片刻即可
-                        logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
-                                + " tryCount:" + tryCount + " " + e.getMessage());
-
-                        try {
-                            Thread.sleep(4500);
-                        } catch (InterruptedException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    } else {
-                        // 其他日志直接中断了
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            success = true;
+            this.coreDS.initialPowerjobAccount(this);
+//            int tryCount = 0;
+//            final int tryLimit = 100;
+//            while (true) {
+//                try {
+//                    //this.serverPortExport.initialPowerjobAccount(this);
+//
+//                    // 需要打印日志
+//                    logger.info("success initialPowerjobAccount");
+//                    sse.info(K8S_DATAX_POWERJOB_REGISTER_ACCOUNT.getName(), TimeFormat.getCurrentTimeStamp(), "success initialPowerjobAccount with appName:" + this.appName);
+//                    break;
+//                } catch (Exception e) {
+//                    int idxOfError = -1;
+//                    if (tryCount++ < tryLimit && ( //
+//                            (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class)) > -1 ||
+//                                    (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class)) > -1)
+//                    ) {
+//
+//                        // 说明是超时等待片刻即可
+//                        logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
+//                                + " tryCount:" + tryCount + " " + e.getMessage());
+//
+//                        try {
+//                            Thread.sleep(4500);
+//                        } catch (InterruptedException ex) {
+//                            throw new RuntimeException(ex);
+//                        }
+//                    } else {
+//                        // 其他日志直接中断了
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//            }
+            //  success = true;
         } finally {
             if (watchPodLog != null) {
                 watchPodLog.close();
             }
-            sse.writeComplete(K8SUtils.K8S_DATAX_POWERJOB_REGISTER_ACCOUNT, success);
+            //  sse.writeComplete(K8S_DATAX_POWERJOB_REGISTER_ACCOUNT, success);
         }
+    }
+
+    WatchPodLog watchOneOfPowerJobPodLog(Set<String> relevantPodNames, PowerJobPodLogListener logListener) {
+        WatchPodLog watchPodLog = null;
+        for (String onePodOf : relevantPodNames) {
+            watchPodLog = this.getK8SController().listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, logListener);
+            return watchPodLog;
+        }
+        throw new IllegalStateException("must return a watchPodLog instance");
     }
 
 
@@ -741,7 +875,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
         @Override
         public K8SWorkerCptType getWorkerCptType() {
-            return DataXJobWorker.K8SWorkerCptType.Server;
+            return workerCptType;
         }
     }
 

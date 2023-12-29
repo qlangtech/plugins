@@ -6,6 +6,7 @@ import com.alibaba.fastjson.parser.Feature;
 import com.qlangtech.tis.datax.job.IRegisterApp;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.TISWorkflowInfoDTO;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.WorkflowListResult;
 import okhttp3.FormBody;
@@ -73,8 +74,17 @@ public class TISPowerJobClient extends PowerJobClient {
     private final String domain;
     private final Object appId;
 
-    public TISPowerJobClient(String domain, String appName, String password) {
+    public static TISPowerJobClient create(String domain, String appName, String password) {
+        try {
+            return new TISPowerJobClient(domain, appName, password);
+        } catch (Exception e) {
+            throw TisException.create("can not create powerjobClient with domain:" + domain + ",appName:" + appName, e);
+        }
+    }
+
+    private TISPowerJobClient(String domain, String appName, String password) {
         super(domain, appName, password);
+
         this.domain = domain;
 
         try {
@@ -231,7 +241,7 @@ public class TISPowerJobClient extends PowerJobClient {
             return res;
         } catch (IOException e) {
             //  throw new RuntimeException(e);
-            throw new PowerJobException("no server available when send post request", e);
+            throw new PowerJobException("no server available with url:" + url, e);
         }
 
 

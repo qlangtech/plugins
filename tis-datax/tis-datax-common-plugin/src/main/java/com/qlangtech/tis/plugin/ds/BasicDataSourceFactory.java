@@ -45,7 +45,11 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +60,7 @@ import java.util.stream.Collectors;
  * @create: 2021-06-06 19:48
  **/
 public abstract class BasicDataSourceFactory extends DataSourceFactory
-        implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable {
+        implements JdbcUrlBuilder, IPluginStore.AfterPluginSaved, Describable.IRefreshable, IDBAuthorizeTokenGetter {
 
     private static final Logger logger = LoggerFactory.getLogger(BasicDataSourceFactory.class);
 
@@ -383,15 +387,15 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
                     try (Statement statement = connection.getConnection().createStatement()) {
                         final List<String> statements
                                 = Arrays.stream(IOUtils.readLines(reader, TisUTF8.get()).stream().map(String::trim)
-                                        .filter(x -> !x.startsWith("--") && !x.isEmpty())
-                                        .map(
-                                                x -> {
-                                                    final Matcher m =
-                                                            COMMENT_PATTERN.matcher(x);
-                                                    return m.matches() ? m.group(1) : x;
-                                                })
-                                        .collect(Collectors.joining("\n"))
-                                        .split(";"))
+                                .filter(x -> !x.startsWith("--") && !x.isEmpty())
+                                .map(
+                                        x -> {
+                                            final Matcher m =
+                                                    COMMENT_PATTERN.matcher(x);
+                                            return m.matches() ? m.group(1) : x;
+                                        })
+                                .collect(Collectors.joining("\n"))
+                                .split(";"))
                                 .collect(Collectors.toList());
                         for (String stmt : statements) {
                             statement.execute(stmt);

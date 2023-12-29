@@ -12,6 +12,8 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.realtime.utils.NetUtils;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -23,8 +25,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
 
-import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
-import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -32,6 +34,7 @@ import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER;
  */
 public class NodePort extends ServerPortExport {
 
+    private static final String KEY_HOST = "host";
 
     /**
      * 默认范围：30000-32767
@@ -63,36 +66,9 @@ public class NodePort extends ServerPortExport {
                 });
     }
 
-    @Override
-    public void initialPowerjobAccount(K8SDataXPowerJobServer powerjobServer) {
-        IRegisterApp tisPowerJob = getTISPowerjobClient();
 
-        // String powerjobDomain, String appName, String password
-        final String linkHost = getPowerjobHost();
-        try {
-            // 检查账户是否存在
 
-            // 存在则直接跳过
 
-            // 不存在？则创建
-            (tisPowerJob) //
-                    .registerApp(linkHost, powerjobServer.appName, powerjobServer.password);
-        } catch (Exception e) {
-            throw new IllegalStateException("server:" + linkHost + ",appname:" + powerjobServer.appName, e);
-        }
-    }
-
-    private IRegisterApp getTISPowerjobClient() {
-
-        ExtensionList<IRegisterApp> extensionList = TIS.get().getExtensionList(IRegisterApp.class);
-        for (IRegisterApp resisterApp : extensionList) {
-            return resisterApp;
-        }
-
-        throw new IllegalStateException("can not find instanceof " + IRegisterApp.class.getSimpleName());
-//        return (ITISPowerJob) DataXJobWorker.getJobWorker( //
-//                DataXJobWorker.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.UsingExistCluster));
-    }
 
     @TISExtension
     public static class DftDesc extends Descriptor<ServerPortExport> {
@@ -100,6 +76,21 @@ public class NodePort extends ServerPortExport {
             super();
         }
 
+        @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return this.validateAll(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            final NodePort portExport = postFormVals.newInstance();
+            if (!NetUtils.isReachable(portExport.host)) {
+                msgHandler.addFieldError(context, KEY_HOST, "不能连通");
+                return false;
+            }
+            return true;
+        }
 
         public boolean validateNodePort(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             NumberRange range = new NumberRange(30000, 32767);

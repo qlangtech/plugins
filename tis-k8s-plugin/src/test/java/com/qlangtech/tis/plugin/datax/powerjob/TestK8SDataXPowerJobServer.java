@@ -1,15 +1,19 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.EmbeddedPowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.TestEmbeddedPowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
+import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import junit.framework.TestCase;
 import org.junit.Assert;
@@ -27,19 +31,42 @@ public class TestK8SDataXPowerJobServer extends TestCase {
             @Override
             public void writeComplete(TargetResName subJob, boolean success) {
             }
+
             @Override
             public void info(String serviceName, long timestamp, String msg) {
             }
+
             @Override
             public void error(String serviceName, long timestamp, String msg) {
             }
+
             @Override
             public void fatal(String serviceName, long timestamp, String msg) {
             }
+
             @Override
             public void run() {
             }
         });
+    }
+
+    public void testScalePodNumber() throws Exception {
+        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+        powerJobServer.updatePodNumber(2);
+    }
+
+    public void testWatchOneOfPowerJobPodLog() throws Exception {
+        K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
+
+        WatchPodLog podLog = powerJobServer.watchOneOfPowerJobPodLog(Sets.newHashSet("datax-worker-powerjob-server-pqlml"), new PowerJobPodLogListener() {
+            @Override
+            protected void consumePodLogMsg(ExecuteState<String> log) {
+                System.out.println(log.getMsg());
+            }
+        });
+
+        Thread.sleep(99000);
+        podLog.close();
     }
 
     public void testDeleteAllResources() {

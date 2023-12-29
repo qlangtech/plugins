@@ -15,37 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qlangtech.tis.config.k8s.impl;
 
-import com.qlangtech.tis.plugin.common.PluginDesc;
-import junit.framework.TestCase;
+package com.qlangtech.tis.plugin.datax.powerjob.impl;
 
-/*
- * @create: 2020-02-10 14:19
- *
- * @author 百岁（baisui@qlangtech.com）
- * @date 2020/04/13
- */
-public class TestDefaultK8sContext extends TestCase {
+import com.qlangtech.tis.trigger.jst.ILogListener;
+import com.qlangtech.tis.trigger.socket.ExecuteState;
 
-//    public void testValidate() {
-//    }
+import java.io.IOException;
 
-
-    public void testPluginDescGenerate() {
-        PluginDesc.testDescGenerate(DefaultK8sContext.class, "DefaultK8sContext-desc.json");
+/**
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2023-12-27 08:59
+ **/
+public abstract class PowerJobPodLogListener implements ILogListener {
+    @Override
+    public final void sendMsg2Client(Object biz) throws IOException {
+        ExecuteState<String> log = (ExecuteState<String>) biz;
+        this.consumePodLogMsg(log);
     }
 
-    public void test() {
-        int num = 2;
-        switch (num) {
-            case 1:
-                System.out.println(1);
-            case 2:
-                System.out.println(2);
-            case 3:
-                System.out.println(3);
-            default:
-        }
+    protected abstract void consumePodLogMsg(ExecuteState<String> log);
+
+    @Override
+    public final void read(Object event) {
+
+    }
+
+    @Override
+    public final boolean isClosed() {
+        return false;
     }
 }

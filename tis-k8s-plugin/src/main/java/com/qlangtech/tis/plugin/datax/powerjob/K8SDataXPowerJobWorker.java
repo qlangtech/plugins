@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_SERVER_SERVICE;
-import static com.qlangtech.tis.plugin.k8s.K8SUtils.K8S_DATAX_POWERJOB_WORKER;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_SERVICE;
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER;
 
 /**
  * 配置PowerJob Worker执行器

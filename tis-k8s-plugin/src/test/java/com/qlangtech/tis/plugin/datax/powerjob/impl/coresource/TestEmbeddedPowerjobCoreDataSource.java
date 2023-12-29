@@ -22,7 +22,7 @@ public class TestEmbeddedPowerjobCoreDataSource extends TestCase {
         // powerJobServer.k8sImage = K8S_IMAGE;
 
         try {
-            coreDataSource.launchMetaStoreService(powerJobServer);
+            coreDataSource.launchMetaStore(powerJobServer);
         } catch (ApiException e) {
             throw new RuntimeException(e.getResponseBody(), e);
         }

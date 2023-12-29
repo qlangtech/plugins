@@ -75,7 +75,7 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 //    }
 
     public TISPowerJobClient createPowerJobClient() {
-        TISPowerJobClient powerJobClient = new TISPowerJobClient(this.serverAddress, this.appName, this.password);
+        TISPowerJobClient powerJobClient =  TISPowerJobClient.create(this.serverAddress, this.appName, this.password);
         return powerJobClient;
     }
 

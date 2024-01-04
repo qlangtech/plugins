@@ -1,16 +1,12 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.coresource;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
-import com.qlangtech.tis.datax.TimeFormat;
-import com.qlangtech.tis.datax.job.IRegisterApp;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
-import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage;
@@ -22,7 +18,6 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EnvVar;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,84 +40,19 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
     //    @Override
 //    public String createCoreJdbcParams() {
 //    }
-    private IRegisterApp getTISPowerjobClient() {
 
-        ExtensionList<IRegisterApp> extensionList = TIS.get().getExtensionList(IRegisterApp.class);
-        for (IRegisterApp resisterApp : extensionList) {
-            return resisterApp;
-        }
-
-        throw new IllegalStateException("can not find instanceof " + IRegisterApp.class.getSimpleName());
-//        return (ITISPowerJob) DataXJobWorker.getJobWorker( //
-//                DataXJobWorker.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.UsingExistCluster));
-    }
-
-    @Override
-    public void initialPowerjobAccount(K8SDataXPowerJobServer powerjobServer) {
-        IRegisterApp tisPowerJob = getTISPowerjobClient();
-        SSERunnable sse = SSERunnable.getLocal();
-        // String powerjobDomain, String appName, String password
-        final String linkHost = powerjobServer.serverPortExport.getPowerjobHost();
-//        try {
-//            // 检查账户是否存在
-//
-//            // 存在则直接跳过
-//
-//            // 不存在？则创建
-//            (tisPowerJob) //
-//                    .registerApp(linkHost, powerjobServer.appName, powerjobServer.password);
-//        } catch (Exception e) {
-//            throw new IllegalStateException("server:" + linkHost + ",appname:" + powerjobServer.appName, e);
-//        }
-
-        int tryCount = 0;
-        final int tryLimit = 100;
-        while (true) {
-            try {
-                //this.serverPortExport.initialPowerjobAccount(this);
-                // this.coreDS.initialPowerjobAccount(this);
-
-                (tisPowerJob) //
-                        .registerApp(linkHost, powerjobServer.appName, powerjobServer.password);
-
-                // 需要打印日志
-                logger.info("success initialPowerjobAccount");
-                sse.info(K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_REGISTER_ACCOUNT.getName(), TimeFormat.getCurrentTimeStamp()
-                        , "success initialPowerjobAccount with appName:" + powerjobServer.appName);
-                break;
-            } catch (Exception e) {
-                int idxOfError = -1;
-                if (tryCount++ < tryLimit && ( //
-                        (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class)) > -1 ||
-                                (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class)) > -1)
-                ) {
-
-                    // 说明是超时等待片刻即可
-                    logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
-                            + " tryCount:" + tryCount + " " + e.getMessage());
-
-                    try {
-                        Thread.sleep(4500);
-                    } catch (InterruptedException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                } else {
-                    // 其他日志直接中断了
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-    }
 
     @Override
     protected String getJdbcUrl() {
-        return "jdbc:mysql://" + K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE.getHostPortReplacement() + "/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
+        return "jdbc:mysql://" + K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE.getHostPortReplacement()
+                + "/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
     }
 
     @Override
     public RcDeployment getRCDeployment(K8SController k8SController) {
-        return k8SController.getRCDeployment(K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL);
+        RcDeployment rc = k8SController.getRCDeployment(K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL);
+        rc.setReplicaScalable(false);
+        return rc;
     }
 
     @Override

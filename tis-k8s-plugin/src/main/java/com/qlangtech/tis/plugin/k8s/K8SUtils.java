@@ -10,6 +10,7 @@ import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.DataXJobWorker.K8SWorkerCptType;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.SubJobResName;
@@ -42,6 +43,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,17 +61,17 @@ import java.util.regex.Pattern;
  * @date 2023/12/13
  */
 public class K8SUtils {
-
+    private static final Logger logger = LoggerFactory.getLogger(K8SUtils.class);
     public static final String REPLICATION_CONTROLLER_VERSION = "v1";
     public static final String resultPrettyShow = "true";
     public static final String LABEL_APP = "app";
 
 
-    public static final List<PowerJobRCResName> getPowerJobRCRes() {
-        List<PowerJobRCResName> result = Lists.newArrayList();
+    public static final List<K8SRCResName> getPowerJobRCRes() {
+        List<K8SRCResName> result = Lists.newArrayList();
         for (TargetResName res : K8SDataXPowerJobServer.powerJobRes) {
-            if (res instanceof PowerJobRCResName) {
-                result.add((PowerJobRCResName) res);
+            if (res instanceof K8SRCResName) {
+                result.add((K8SRCResName) res);
             }
         }
         return result;
@@ -76,7 +79,7 @@ public class K8SUtils {
 
     public static TargetResName getPowerJobReplicationControllerName(String podName) {
 
-        for (PowerJobRCResName res : getPowerJobRCRes()) {
+        for (K8SRCResName res : getPowerJobRCRes()) {
             if (res.isPodMatch(podName)) {
                 return res;
             }
@@ -84,8 +87,8 @@ public class K8SUtils {
         throw new IllegalStateException("podName is illegal:" + podName);
     }
 
-    private static PowerJobRCResName targetResName(TargetResName resName) {
-        for (PowerJobRCResName res : getPowerJobRCRes()) {
+    public static K8SRCResName targetResName(TargetResName resName) {
+        for (K8SRCResName res : getPowerJobRCRes()) {
             if (StringUtils.equals(res.getName(), resName.getName())) {
                 return res;
             }
@@ -93,20 +96,26 @@ public class K8SUtils {
         throw new IllegalStateException("podName is illegal:" + resName.getName());
     }
 
-    public static class PowerJobRCResName<T> extends SubJobResName<T> {
+    public static class K8SRCResName<T> extends SubJobResName<T> {
         final Pattern patternTargetResource;
         final K8SUtils.ServiceResName[] relevantSvc;
 
+        public K8SRCResName(K8SWorkerCptType cptType, SubJobExec<T> subJobExec) {
+            this(cptType.token, subJobExec);
+        }
 
-        public PowerJobRCResName(String name, SubJobExec<T> subJobExec) {
+        public K8SRCResName(String name, SubJobExec<T> subJobExec) {
             this(name, subJobExec, new K8SUtils.ServiceResName[0]);
         }
 
+        public K8SRCResName(K8SWorkerCptType cptType, SubJobExec<T> subJobExec, K8SUtils.ServiceResName... relevantSvc) {
+            this(cptType.token, subJobExec, relevantSvc);
+        }
 
-        public PowerJobRCResName(String name, SubJobExec<T> subJobExec, K8SUtils.ServiceResName... relevantSvc) {
+        public K8SRCResName(String name, SubJobExec<T> subJobExec, K8SUtils.ServiceResName... relevantSvc) {
             super(name, subJobExec);
             this.relevantSvc = relevantSvc;
-            this.patternTargetResource = Pattern.compile("(" + this.getK8SResName() + ")-.+?");
+            this.patternTargetResource = Pattern.compile("(" + this.getK8SResName() + ")\\-[a-z0-9]{1,}");
         }
 
         public boolean isPodMatch(String podName) {
@@ -121,6 +130,14 @@ public class K8SUtils {
         @Override
         protected String getResourceType() {
             return StringUtils.EMPTY;
+        }
+
+        public Optional<String> findPodResName(String msg) {
+            Matcher matcher = this.patternTargetResource.matcher(msg);
+            if (matcher.find()) {
+                return Optional.of(matcher.group(0));
+            }
+            return Optional.empty();
         }
     }
 
@@ -319,21 +336,27 @@ public class K8SUtils {
         });
     }
 
-    public enum PodChangeReason {
-        FAILD("failed"), KILL("killing"), LAUNCHED("started");
+    public enum K8SResChangeReason {
+        FAILD("failed"), KILL("killing"), FailedScheduling("FailedScheduling"), LAUNCHED("started"),
+        // RC 成功删除 Pod
+        // reason:SuccessfulDelete,name:powerjob-worker,kind:ReplicationController,message:Deleted pod: powerjob-worker-r6hxn
+        // reason:SuccessfulCreate,name:powerjob-worker,kind:ReplicationController,message:Created pod: powerjob-worker-wknhr
+        SuccessfulDelete("SuccessfulDelete"), SuccessfulCreate("SuccessfulCreate");
+
         private final String token;
 
-        PodChangeReason(String token) {
+        K8SResChangeReason(String token) {
             this.token = token;
         }
 
-        public static PodChangeReason parse(String reason) {
+        public static K8SResChangeReason parse(String reason) {
 
-            for (PodChangeReason r : PodChangeReason.values()) {
+            for (K8SResChangeReason r : K8SResChangeReason.values()) {
                 if (StringUtils.equalsIgnoreCase(r.token, reason)) {
                     return r;
                 }
             }
+            logger.warn("unresolve pod change reason:" + reason);
             return null;
         }
     }
@@ -342,20 +365,20 @@ public class K8SUtils {
      * 等待RC资源启动
      *
      * @param powerjobServerImage
-     * @param replicaChangeCount
+     * @param expectResChangeCount
      * @param apiClient
      * @param resourceVer
      * @throws ApiException
      * @throws PowerjobOrchestrateException
      */
     public static Set<String> waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, final int replicaChangeCount, ApiClient apiClient, String resourceVer, PodChangeCallback changeCallback)  //
+            , TargetResName targetResName, final int expectResChangeCount, ApiClient apiClient, String resourceVer, ResChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
         CoreV1Api api = new CoreV1Api(apiClient);
 
         final Set<String> relevantPodNames = Sets.newHashSet();
-        final PowerJobRCResName powerJobRCResName = targetResName(targetResName);
+        final K8SRCResName powerJobRCResName = targetResName(targetResName);
 
         // Pattern patternTargetResource = Pattern.compile("(" + targetResName.getK8SResName() + ")-.+?");
         // final int replicaChangeCount = powerjobServerSpec.getReplicaCount();
@@ -370,9 +393,10 @@ public class K8SUtils {
             V1Event evt = null;
             V1ObjectReference objRef = null;
             int podCompleteCount = 0;
-            int faildCount = 0;
+            int rcCompleteCount = 0;
+            int podFaildCount = 0;
             String formatMessage = null;
-            PodChangeReason changeReason = null;
+            K8SResChangeReason changeReason = null;
             try {
                 for (Watch.Response<V1Event> event : rcWatch) {
                     //System.out.println("-----------------------------------------");
@@ -389,18 +413,19 @@ public class K8SUtils {
                     // Matcher matcher = patternTargetResource.matcher(objRef.getName());
 
                     //;
-
+                    formatMessage = "reason:" + evt.getReason() + ",name:" + objRef.getName() + ",kind:" + evt.getInvolvedObject().getKind() + ",message:" + msg;
+                    logger.info(formatMessage);
+                    changeReason = K8SResChangeReason.parse(evt.getReason());
                     if ("pod".equalsIgnoreCase(objRef.getKind()) && powerJobRCResName.isPodMatch(objRef.getName())) {
                         relevantPodNames.add(objRef.getName());
-                        formatMessage = "reason:" + evt.getReason() + ",name:" + objRef.getName() + ",kind:" + evt.getInvolvedObject().getKind() + ",message:" + msg;
+
                         //  System.out.println();
                         sse.info(targetResName.getName(), TimeFormat.getCurrentTimeStamp(), formatMessage);
-
-                        changeReason = PodChangeReason.parse(evt.getReason());
-                        if (changeReason == null) {
+                        if (changeReason != null) {
                             switch (changeReason) {
                                 case FAILD:
-                                    faildCount++;
+                                case FailedScheduling:
+                                    podFaildCount++;
                                 case KILL:
                                 case LAUNCHED:
                                     podCompleteCount++;
@@ -408,11 +433,27 @@ public class K8SUtils {
                                     changeCallback.apply(changeReason, objRef.getName());
                             }
                         }
-
                     }
-                    if (podCompleteCount >= replicaChangeCount) {
+                    // reason:SuccessfulDelete,name:powerjob-worker,kind:ReplicationController,message:Deleted pod: powerjob-worker-r6hxn
+                    // reason:SuccessfulCreate,name:powerjob-worker,kind:ReplicationController,message:Created pod: powerjob-worker-wknhr
+                    Optional<String> podResName = null;
+                    if ("ReplicationController".equalsIgnoreCase(objRef.getKind())
+                            && (podResName = powerJobRCResName.findPodResName(msg)).isPresent()) {
+                        if (changeReason != null) {
+                            switch (changeReason) {
+                                case SuccessfulDelete:
+                                case SuccessfulCreate:
+                                    rcCompleteCount++;
+                                default:
+                                    changeCallback.apply(changeReason, podResName.get());
+                            }
+                        }
+                    }
+                    //if (podCompleteCount >= expectResChangeCount) {
+                    if (changeCallback.isBreakEventWatch(podFaildCount, podCompleteCount, rcCompleteCount, expectResChangeCount)) {
                         break processWatcherLogs;
                     }
+
                     // if ("running".equalsIgnoreCase(status.getPhase())) {
 
                     //}
@@ -432,9 +473,9 @@ public class K8SUtils {
                 }
             }
 
-            if (faildCount > 0) {
+            if (podFaildCount > 0) {
                 throw new PowerjobOrchestrateException(
-                        targetResName.getK8SResName() + " launch faild,faild count:" + faildCount);
+                        targetResName.getK8SResName() + " launch faild,faild count:" + podFaildCount);
             }
 
         }

@@ -123,7 +123,7 @@ public class DefaultDataxProcessor extends DataxProcessor {
     @TISExtension()
     public static class DescriptorImpl extends Descriptor<IAppSource> {
 
-        private static final Pattern PATTERN_START_WITH_NUMBER = Pattern.compile("^\\d.+");
+        private static final Pattern PATTERN_START_WITH_NUMBER = Pattern.compile("^\\d.{0,}");
 
         public DescriptorImpl() {
             super();

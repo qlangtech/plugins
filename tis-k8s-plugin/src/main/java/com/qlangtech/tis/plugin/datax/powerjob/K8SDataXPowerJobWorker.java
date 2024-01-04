@@ -102,6 +102,10 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         throw new UnsupportedOperationException("shall be invoke from " + K8SDataXPowerJobServer.class);
     }
 
+
+
+
+
     /**
      * 启动powerjob 执行容器
      *

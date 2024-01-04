@@ -27,7 +27,6 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.PowerJobRCResName;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiCallback;
@@ -149,7 +148,7 @@ public class K8SController implements IRCController {
         return v1PodList.getItems();
     }
 
-    public UpdatePodNumber updatePodNumber(PowerJobRCResName rcResName, Integer podNum) {
+    public UpdatePodNumber updatePodNumber(TargetResName rcResName, Integer podNum) {
         //  String name, String namespace, V1Patch body, String pretty, String dryRun, String fieldManager, Boolean force
         try {
             V1Scale body = new V1Scale();
@@ -375,7 +374,7 @@ public class K8SController implements IRCController {
                 logger.warn("can not get collection rc deployment:" + tisInstanceName.getK8SResName());
                 return null;
             } else {
-                throw K8sExceptionUtils.convert("code:" + e.getCode(), e); //new RuntimeException("code:" + e.getCode() + "\n" + e.getResponseBody(), e);
+                throw K8sExceptionUtils.convert("code:" + e.getCode(), e);
             }
         }
         return rcDeployment;

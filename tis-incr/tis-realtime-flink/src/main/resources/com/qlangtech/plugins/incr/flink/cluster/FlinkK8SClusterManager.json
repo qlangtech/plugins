@@ -1,7 +1,4 @@
 {
-  "k8sImage": {
-    "dftVal": "flink-cluster"
-  },
   "clusterId": {
     "dftVal": "tis-flink-cluster"
   },
@@ -10,5 +7,17 @@
   },
   "tmMemory": {
     "dftVal": "1728"
+  },
+  "k8sImage": {
+    "dftVal": "flink-cluster",
+    "creator": {
+      "label": "配置",
+      "plugin": [
+        {
+          "hetero": "k8s-images",
+          "descName": "flink-image"
+        }
+      ]
+    }
   }
 }

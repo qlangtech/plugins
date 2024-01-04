@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cluster;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.IK8sContext;
@@ -36,8 +37,10 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
@@ -80,6 +83,10 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
 
+    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster, (flinkManager) -> {
+
+    });
+
     @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
 
@@ -96,7 +103,10 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 
     @Override
     public List<ExecuteStep> getExecuteSteps() {
-        throw new UnsupportedOperationException();
+
+        ExecuteStep step = new ExecuteStep(launchFlinkCluster, "launch Flink Clister");
+
+        return Lists.newArrayList(step);
     }
 
     @Override
@@ -158,6 +168,15 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     @Override
     public void relaunch(String podName) {
 
+    }
+
+    @Override
+    protected ImageCategory getK8SImageCategory() {
+        return k8sImage();
+    }
+
+    public static K8sImage.ImageCategory k8sImage() {
+        return K8sImage.ImageCategory.DEFAULT_FLINK_DESC_NAME;
     }
 
     @Override
@@ -255,6 +274,11 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
                 return false;
             }
             return true;
+        }
+
+        @Override
+        protected ImageCategory getK8SImageCategory() {
+            return k8sImage();
         }
 
         public boolean validateTmMemory(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

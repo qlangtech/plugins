@@ -16,14 +16,23 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.k8s;
+package com.qlangtech.plugins.incr.flink.common;
 
-import com.qlangtech.tis.plugin.k8s.K8SUtils.PodChangeReason;
+import com.qlangtech.plugins.incr.flink.cluster.FlinkK8SClusterManager;
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
+import com.qlangtech.tis.extension.TISExtension;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-12-28 17:58
+ * @create: 2024-01-04 08:49
  **/
-public interface PodChangeCallback {
-    public void apply(PodChangeReason changeReason, String podName);
+public class FlinkK8SImage extends DefaultK8SImage {
+
+    @TISExtension()
+    public static class FlinkDescriptorImpl extends DescriptorImpl {
+        @Override
+        protected ImageCategory getImageCategory() {
+            return FlinkK8SClusterManager.k8sImage();
+        }
+    }
 }

@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -26,6 +27,7 @@ import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -51,7 +53,7 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
     public String dbName;
 
     @Override
-    public void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer) {
+    protected void startWaitServerLaunchedAndInitialPowerjobAccount(K8SDataXPowerJobServer powerJobServer) {
         SSERunnable sse = SSERunnable.getLocal();
         DataSourceFactory ds = this.getDataSourceFactory();
 
@@ -72,7 +74,8 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
                     statement.setString(3, powerJobServer.password);
 
                     if (statement.executeUpdate() < 1) {
-                        throw new IllegalStateException("replace statement is falid:" + SQL_REPLACE_APP_INFO + ",with appName:" + powerJobServer.appName);
+                        throw new IllegalStateException("replace statement is falid:"
+                                + SQL_REPLACE_APP_INFO + ",with appName:" + powerJobServer.appName);
                     }
                 }
             } else {
@@ -81,6 +84,8 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
             }
         });
     }
+
+
 
     private AppNameHasRegister appNameHasRegister(K8SDataXPowerJobServer powerJobServer, JDBCConnection conn) throws SQLException {
         try (PreparedStatement statement = conn.getConnection().prepareStatement(SQL_SELECT_APP_INFO)) {

@@ -52,7 +52,9 @@ public class TestK8SDataXPowerJobServer extends TestCase {
 
     public void testScalePodNumber() throws Exception {
         K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
-        powerJobServer.updatePodNumber(2);
+        SSERunnable sse = SSERunnable.getLocal();
+        TargetResName cptType = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER;
+        powerJobServer.updatePodNumber(sse, cptType, 2);
     }
 
     public void testWatchOneOfPowerJobPodLog() throws Exception {
@@ -112,12 +114,12 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         }
     }
 
-    public void testRegisterApp() {
+    public void testRegisterApp() throws Exception {
         NodePort portExport = createNodePort();
 
         K8SDataXPowerJobServer powerJobServer = createPowerJobServer(portExport);
-
-        portExport.initialPowerjobAccount(powerJobServer);
+        powerJobServer.coreDS.initialPowerjobAccount(powerJobServer);
+        //  portExport.initialPowerjobAccount(powerJobServer);
     }
 
     private NodePort createNodePort() {

@@ -1,11 +1,19 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.datax.job.IRegisterApp;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 
@@ -17,15 +25,101 @@ import java.text.MessageFormat;
  */
 public abstract class PowerjobCoreDataSource implements Describable<PowerjobCoreDataSource> {
 
-    protected static final MessageFormat KEY_USERNAME_AND_PASSWORD = new MessageFormat("--spring.datasource.core.username={0} --spring.datasource.core.password={1}");//=root
+    protected static final MessageFormat KEY_USERNAME_AND_PASSWORD //
+            = new MessageFormat("--spring.datasource.core.username={0} --spring.datasource.core.password={1}");//=root
+    private static final Logger logger = LoggerFactory.getLogger(PowerjobCoreDataSource.class);
 
+    private transient IRegisterApp registerApp;
+
+    private IRegisterApp getTISPowerjobClient() {
+
+        if (this.registerApp == null) {
+            ExtensionList<IRegisterApp> extensionList = TIS.get().getExtensionList(IRegisterApp.class);
+            for (IRegisterApp resisterApp : extensionList) {
+                return this.registerApp = resisterApp;
+            }
+
+            throw new IllegalStateException("can not find instanceof " + IRegisterApp.class.getSimpleName());
+        }
+
+        return this.registerApp;
+    }
+
+
+    public final void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer) throws PowerjobOrchestrateException {
+        SSERunnable sse = SSERunnable.getLocal();
+        // String powerjobDomain, String appName, String password
+        final String linkHost = powerJobServer.serverPortExport.getPowerjobHost();
+        IRegisterApp tisPowerJob = getTISPowerjobClient();
+        (tisPowerJob) //
+                .registerApp(linkHost, powerJobServer.appName, powerJobServer.password);
+
+        // 需要打印日志
+        logger.info("success initialPowerjobAccount");
+        sse.info(K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_REGISTER_ACCOUNT.getName(), TimeFormat.getCurrentTimeStamp()
+                , "success initialPowerjobAccount with appName:" + powerJobServer.appName);
+    }
 
     /**
      * 初始化注册Powerjob的账户
      *
-     * @param powerJobServer
+     * @param
      */
-    public abstract void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer);
+    // @Override
+    public final void waitServerLaunchedAndInitialPowerjobAccount(K8SDataXPowerJobServer powerjobServer) {
+        //
+
+//        try {
+//            // 检查账户是否存在
+//
+//            // 存在则直接跳过
+//
+//            // 不存在？则创建
+//            (tisPowerJob) //
+//                    .registerApp(linkHost, powerjobServer.appName, powerjobServer.password);
+//        } catch (Exception e) {
+//            throw new IllegalStateException("server:" + linkHost + ",appname:" + powerjobServer.appName, e);
+//        }
+        this.startWaitServerLaunchedAndInitialPowerjobAccount(powerjobServer);
+        int tryCount = 0;
+        final int tryLimit = 100;
+        while (true) {
+            try {
+                //this.serverPortExport.initialPowerjobAccount(this);
+                // this.coreDS.initialPowerjobAccount(this);
+                initialPowerjobAccount(powerjobServer);
+
+                break;
+            } catch (Exception e) {
+                int idxOfError = -1;
+                if (tryCount++ < tryLimit && ( //
+                        (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class)) > -1 ||
+                                (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class)) > -1)
+                ) {
+
+                    // 说明是超时等待片刻即可
+                    logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
+                            + " tryCount:" + tryCount + " " + e.getMessage());
+
+                    try {
+                        Thread.sleep(4500);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                } else {
+                    // 其他日志直接中断了
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+    }
+
+    protected void startWaitServerLaunchedAndInitialPowerjobAccount(K8SDataXPowerJobServer powerjobServer) {
+    }
+
+
+    // public abstract void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer) throws PowerjobOrchestrateException;
 
     /**
      * 发布对应的RC

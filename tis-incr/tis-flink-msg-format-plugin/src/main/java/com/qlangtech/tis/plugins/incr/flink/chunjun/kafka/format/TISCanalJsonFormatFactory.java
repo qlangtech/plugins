@@ -18,7 +18,9 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -73,19 +75,19 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
 
 
     @TISExtension
-    public static final class DftDescriptor extends FlinkDescriptor<FormatFactory> {
-        public Options options;
+    public static final class DftDescriptor extends Descriptor<FormatFactory> {
+        public FlinkPropAssist.Options options;
 
         public DftDescriptor() {
             //  super();
-            this.options = createFlinkOptions();
-            options.add("ignoreParseErrors", CanalJsonOptions.IGNORE_PARSE_ERRORS);
-            options.add("timestampFormat", CanalJsonOptions.TIMESTAMP_FORMAT);
-            options.add("dbInclude", CanalJsonOptions.DATABASE_INCLUDE);
-            options.add("tableInclude", CanalJsonOptions.TABLE_INCLUDE);
-            options.add("nullKeyMode", CanalJsonOptions.JSON_MAP_NULL_KEY_MODE);
-            options.add("nullKeyLiteral", CanalJsonOptions.JSON_MAP_NULL_KEY_LITERAL);
-            options.add("encodeDecimal", JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER);
+            this.options = FlinkPropAssist.createOpts(this);
+            options.add("ignoreParseErrors", TISFlinkProp.create(CanalJsonOptions.IGNORE_PARSE_ERRORS));
+            options.add("timestampFormat", TISFlinkProp.create(CanalJsonOptions.TIMESTAMP_FORMAT));
+            options.add("dbInclude", TISFlinkProp.create(CanalJsonOptions.DATABASE_INCLUDE));
+            options.add("tableInclude", TISFlinkProp.create(CanalJsonOptions.TABLE_INCLUDE));
+            options.add("nullKeyMode", TISFlinkProp.create(CanalJsonOptions.JSON_MAP_NULL_KEY_MODE));
+            options.add("nullKeyLiteral", TISFlinkProp.create(CanalJsonOptions.JSON_MAP_NULL_KEY_LITERAL));
+            options.add("encodeDecimal", TISFlinkProp.create(JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
 

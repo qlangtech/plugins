@@ -19,8 +19,10 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.hudi.compaction;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -83,17 +85,18 @@ public class CompactionConfig implements Describable<CompactionConfig> {
     private static final String KEY_archiveMaxCommits = "archiveMaxCommits";
 
     @TISExtension
-    public static class DefaultDescriptor extends FlinkDescriptor<CompactionConfig> {
+    public static class DefaultDescriptor extends Descriptor<CompactionConfig> {
         public DefaultDescriptor() {
-            addFieldDescriptor("payloadClass", FlinkOptions.PAYLOAD_CLASS_NAME);
-            addFieldDescriptor("targetIOPerInMB", FlinkOptions.COMPACTION_TARGET_IO);
-            addFieldDescriptor("triggerStrategy", FlinkOptions.COMPACTION_TRIGGER_STRATEGY);
-            addFieldDescriptor("maxNumDeltaCommitsBefore", FlinkOptions.COMPACTION_DELTA_COMMITS);
-            addFieldDescriptor("maxDeltaSecondsBefore", FlinkOptions.COMPACTION_DELTA_SECONDS);
-            addFieldDescriptor("asyncClean", FlinkOptions.CLEAN_ASYNC_ENABLED);
-            addFieldDescriptor("retainCommits", FlinkOptions.CLEAN_RETAIN_COMMITS);
-            addFieldDescriptor(KEY_archiveMinCommits, FlinkOptions.ARCHIVE_MIN_COMMITS);
-            addFieldDescriptor(KEY_archiveMaxCommits, FlinkOptions.ARCHIVE_MAX_COMMITS);
+            Options<CompactionConfig> opts = FlinkPropAssist.createOpts(this);
+            opts.addFieldDescriptor("payloadClass", FlinkOptions.PAYLOAD_CLASS_NAME);
+            opts.addFieldDescriptor("targetIOPerInMB", FlinkOptions.COMPACTION_TARGET_IO);
+            opts.addFieldDescriptor("triggerStrategy", FlinkOptions.COMPACTION_TRIGGER_STRATEGY);
+            opts.addFieldDescriptor("maxNumDeltaCommitsBefore", FlinkOptions.COMPACTION_DELTA_COMMITS);
+            opts.addFieldDescriptor("maxDeltaSecondsBefore", FlinkOptions.COMPACTION_DELTA_SECONDS);
+            opts.addFieldDescriptor("asyncClean", FlinkOptions.CLEAN_ASYNC_ENABLED);
+            opts.addFieldDescriptor("retainCommits", FlinkOptions.CLEAN_RETAIN_COMMITS);
+            opts.addFieldDescriptor(KEY_archiveMinCommits, FlinkOptions.ARCHIVE_MIN_COMMITS);
+            opts.addFieldDescriptor(KEY_archiveMaxCommits, FlinkOptions.ARCHIVE_MAX_COMMITS);
         }
 
         @Override

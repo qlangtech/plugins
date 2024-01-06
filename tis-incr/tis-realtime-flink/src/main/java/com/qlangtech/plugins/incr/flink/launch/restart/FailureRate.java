@@ -18,10 +18,12 @@
 
 package com.qlangtech.plugins.incr.flink.launch.restart;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkJobRestartStrategy;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.RestartStrategyFactory;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -61,12 +63,14 @@ public class FailureRate extends RestartStrategyFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends FlinkDescriptor<RestartStrategyFactory> {
+    public static class DefaultDescriptor extends Descriptor<RestartStrategyFactory> {
         public DefaultDescriptor() {
             super();
-            this.addFieldDescriptor("maxFailures", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_MAX_FAILURES_PER_INTERVAL);
-            this.addFieldDescriptor("failureRateInterval", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_FAILURE_RATE_INTERVAL);
-            this.addFieldDescriptor("failureRateDelay", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_DELAY);
+            Options<RestartStrategyFactory> opts = FlinkPropAssist.createOpts(this);
+
+            opts.addFieldDescriptor("maxFailures", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_MAX_FAILURES_PER_INTERVAL);
+            opts.addFieldDescriptor("failureRateInterval", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_FAILURE_RATE_INTERVAL);
+            opts.addFieldDescriptor("failureRateDelay", RestartStrategyOptions.RESTART_STRATEGY_FAILURE_RATE_DELAY);
         }
 
         @Override

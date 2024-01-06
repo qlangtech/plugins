@@ -18,11 +18,12 @@
 
 package com.qlangtech.plugins.incr.flink.launch.statbackend;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -44,7 +45,7 @@ public class OFF extends StateBackendFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends FlinkDescriptor<StateBackendFactory> {
+    public static class DefaultDescriptor extends Descriptor<StateBackendFactory> {
         @Override
         public String getDisplayName() {
             return SWITCH_OFF;

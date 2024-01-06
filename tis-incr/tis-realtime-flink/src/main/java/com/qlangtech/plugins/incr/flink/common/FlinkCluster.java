@@ -92,7 +92,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
                 Collection<JobStatusMessage> jobStatus = status.get();
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
         }
     }

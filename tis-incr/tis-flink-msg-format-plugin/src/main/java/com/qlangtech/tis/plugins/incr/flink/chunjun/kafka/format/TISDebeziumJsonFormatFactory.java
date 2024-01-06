@@ -18,7 +18,9 @@
 
 package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.format;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -64,19 +66,21 @@ public class TISDebeziumJsonFormatFactory extends FormatFactory {
     }
 
     @TISExtension
-    public static final class DftDescriptor extends FlinkDescriptor<FormatFactory> {
-        Options options;
+    public static final class DftDescriptor extends Descriptor<FormatFactory> {
+        FlinkPropAssist.Options options;
 
         public DftDescriptor() {
             super();
-            this.options = this.createFlinkOptions();
+
+            this.options = FlinkPropAssist.createOpts(this);
+
 //            // schemaInclude 不支持
 //            options.add("schemaInclude", DebeziumJsonOptions.SCHEMA_INCLUDE);
-            options.add("ignoreParseErrors", DebeziumJsonOptions.IGNORE_PARSE_ERRORS);
-            options.add("timestampFormat", DebeziumJsonOptions.TIMESTAMP_FORMAT);
-            options.add("nullKeyMode", DebeziumJsonOptions.JSON_MAP_NULL_KEY_MODE);
-            options.add("nullKeyLiteral", DebeziumJsonOptions.JSON_MAP_NULL_KEY_LITERAL);
-            options.add("encodeDecimal", JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER);
+            options.add("ignoreParseErrors", TISFlinkProp.create(DebeziumJsonOptions.IGNORE_PARSE_ERRORS));
+            options.add("timestampFormat", TISFlinkProp.create(DebeziumJsonOptions.TIMESTAMP_FORMAT));
+            options.add("nullKeyMode", TISFlinkProp.create(DebeziumJsonOptions.JSON_MAP_NULL_KEY_MODE));
+            options.add("nullKeyLiteral", TISFlinkProp.create(DebeziumJsonOptions.JSON_MAP_NULL_KEY_LITERAL));
+            options.add("encodeDecimal", TISFlinkProp.create(JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
         @Override

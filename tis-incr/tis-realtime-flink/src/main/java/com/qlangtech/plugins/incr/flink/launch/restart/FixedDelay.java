@@ -18,10 +18,12 @@
 
 package com.qlangtech.plugins.incr.flink.launch.restart;
 
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
 import com.qlangtech.plugins.incr.flink.launch.FlinkJobRestartStrategy;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.RestartStrategyFactory;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -53,11 +55,12 @@ public class FixedDelay extends RestartStrategyFactory {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends FlinkDescriptor<RestartStrategyFactory> {
+    public static class DefaultDescriptor extends Descriptor<RestartStrategyFactory> {
         public DefaultDescriptor() {
             super();
-            this.addFieldDescriptor("attempts", RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_ATTEMPTS);
-            this.addFieldDescriptor("delay", RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_DELAY);
+            Options<RestartStrategyFactory> opts = FlinkPropAssist.createOpts(this);
+            opts.addFieldDescriptor("attempts", RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_ATTEMPTS);
+            opts.addFieldDescriptor("delay", RestartStrategyOptions.RESTART_STRATEGY_FIXED_DELAY_DELAY);
         }
 
         @Override

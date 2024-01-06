@@ -19,8 +19,9 @@
 package com.qlangtech.plugins.incr.flink.launch.statbackend;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.plugins.incr.flink.launch.FlinkDescriptor;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkIncrJobStatus;
+import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.FlinkTaskNodeController;
 import com.qlangtech.plugins.incr.flink.launch.StateBackendFactory;
 import com.qlangtech.tis.annotation.Public;
@@ -28,6 +29,7 @@ import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -104,16 +106,17 @@ public class FileSystemState extends StateBackendFactory implements IncrStreamFa
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends FlinkDescriptor<StateBackendFactory> {
+    public static class DefaultDescriptor extends Descriptor<StateBackendFactory> {
 
         public DefaultDescriptor() {
             super();
-            this.addFieldDescriptor("checkpointDir", CheckpointingOptions.CHECKPOINTS_DIRECTORY
+            Options<StateBackendFactory> opts = FlinkPropAssist.createOpts(this);
+            opts.addFieldDescriptor("checkpointDir", CheckpointingOptions.CHECKPOINTS_DIRECTORY
                     , (new OverwriteProps())
                             .setAppendHelper("The scheme (hdfs://, file://, etc) is null. Please specify the file system scheme explicitly in the URI.")
                             .setDftVal("file:///opt/data/savepoint"));
-            this.addFieldDescriptor("smallFileThreshold", CheckpointingOptions.FS_SMALL_FILE_THRESHOLD);
-            this.addFieldDescriptor("writeBufferSize", CheckpointingOptions.FS_WRITE_BUFFER_SIZE);
+            opts.addFieldDescriptor("smallFileThreshold", CheckpointingOptions.FS_SMALL_FILE_THRESHOLD);
+            opts.addFieldDescriptor("writeBufferSize", CheckpointingOptions.FS_WRITE_BUFFER_SIZE);
         }
 
         public boolean validateCheckpointDir(IFieldErrorHandler msgHandler, Context context, String fieldName, final String val) {

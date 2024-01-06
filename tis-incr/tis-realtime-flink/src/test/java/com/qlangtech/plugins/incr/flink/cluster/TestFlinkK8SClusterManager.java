@@ -37,8 +37,13 @@ public class TestFlinkK8SClusterManager {
         FlinkK8SClusterManager clusterManager = new FlinkK8SClusterManager();
         clusterManager.clusterId = "tis-flink-cluster";
         clusterManager.k8sImage = "tis_flink_image";
-        clusterManager.jmMemory = 1600;
-        clusterManager.tmMemory = 1728;
+        clusterManager.jmMemory = 812000;
+        clusterManager.tmMemory = 1012000;
+        clusterManager.tmCPUCores = 700;
+        clusterManager.taskSlot = 1;
+        clusterManager.svcAccount = "default";
+        clusterManager.svcExposedType = "NodePort";
+
 
         try (PrintWriter clientWriter = new PrintWriter(new StringWriter())) {
             // DataXJobWorker dataxJobWorker

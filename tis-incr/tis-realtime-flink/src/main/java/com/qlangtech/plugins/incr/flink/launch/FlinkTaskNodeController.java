@@ -120,7 +120,7 @@ public class FlinkTaskNodeController implements IRCController {
                         || !((FlinkJobDeploymentDetails) getRCDeployment(collection)).isRunning())
                         && savepointValidator.apply(Pair.of(savepointPath, status)) //(status.containSavepoint(savepointPath)).isPresent()
                 ) {
-                    File streamUberJar = UberJarUtil.getStreamUberJarFile(collection);
+                    File streamUberJar = UberJarUtil.getStreamUberJarFile(collection).getFile();
                     if (!streamUberJar.exists()) {
                         throw new IllegalStateException("streamUberJar is not exist:" + streamUberJar.getAbsolutePath());
                     }

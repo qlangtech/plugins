@@ -52,8 +52,8 @@ import java.util.List;
  * @create: 2024-01-08 15:47
  * // @see KubernetesApplicationClusterEntrypoint
  **/
-public class TISKubernetesApplicationClusterEntrypoint extends ApplicationClusterEntryPoint {
-    private TISKubernetesApplicationClusterEntrypoint(Configuration configuration, PackagedProgram program) {
+public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClusterEntryPoint {
+    private KubernetesApplicationClusterEntrypointOfTIS(Configuration configuration, PackagedProgram program) {
         super(configuration, program, KubernetesResourceManagerFactory.getInstance());
     }
 
@@ -62,7 +62,7 @@ public class TISKubernetesApplicationClusterEntrypoint extends ApplicationCluste
         // startup checks and logging
 
         EnvironmentInformation.logEnvironmentInfo(
-                LOG, TISKubernetesApplicationClusterEntrypoint.class.getSimpleName(), args);
+                LOG, KubernetesApplicationClusterEntrypointOfTIS.class.getSimpleName(), args);
         final String collectionName = args[0];
         SignalHandler.register(LOG);
         JvmShutdownSafeguard.installAsShutdownHook(LOG);
@@ -71,7 +71,7 @@ public class TISKubernetesApplicationClusterEntrypoint extends ApplicationCluste
                 ClusterEntrypointUtils.parseParametersOrExit(
                         args,
                         new DynamicParametersConfigurationParserFactory(),
-                        TISKubernetesApplicationClusterEntrypoint.class);
+                        KubernetesApplicationClusterEntrypointOfTIS.class);
         final Configuration configuration =
                 KubernetesEntrypointUtils.loadConfiguration(dynamicParameters);
 
@@ -98,8 +98,8 @@ public class TISKubernetesApplicationClusterEntrypoint extends ApplicationCluste
             System.exit(1);
         }
 
-        final TISKubernetesApplicationClusterEntrypoint kubernetesApplicationClusterEntrypoint =
-                new TISKubernetesApplicationClusterEntrypoint(configuration, program);
+        final KubernetesApplicationClusterEntrypointOfTIS kubernetesApplicationClusterEntrypoint =
+                new KubernetesApplicationClusterEntrypointOfTIS(configuration, program);
 
         ClusterEntrypoint.runClusterEntrypoint(kubernetesApplicationClusterEntrypoint);
     }

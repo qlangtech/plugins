@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 当客户端选择使用 kerbernetes-application 部署方式的时候，在flink-jobManager 端服务组装构建jobGraph实例，需要从TIS-console端拉区 同步任务对应的jar包到本地
@@ -63,7 +64,7 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
 
         EnvironmentInformation.logEnvironmentInfo(
                 LOG, KubernetesApplicationClusterEntrypointOfTIS.class.getSimpleName(), args);
-        final String collectionName = args[0];
+        // final String collectionName = args[0];
         SignalHandler.register(LOG);
         JvmShutdownSafeguard.installAsShutdownHook(LOG);
 
@@ -75,12 +76,18 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
         final Configuration configuration =
                 KubernetesEntrypointUtils.loadConfiguration(dynamicParameters);
 
-
+        List<String> appArgs = configuration.get(ApplicationConfiguration.APPLICATION_ARGS);
+        TargetResName targetResName = null;
+        for (String collectionName : appArgs) {
+            targetResName = new TargetResName(collectionName);
+            break;
+        }
+        Objects.requireNonNull(targetResName, "targetResName can not be null");
         PackagedProgram program = null;
         try {
             // baisui modify 2024/1/8
             // 下载最新的jar包
-            TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(new TargetResName(collectionName));
+            TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(targetResName);
             unberJarFile.sync2Local(true);
             String unberJarURL = "local" + String.valueOf(unberJarFile.getFile().toURI().toURL()).substring("file".length());
             LOG.info("TIS unberJarURL:{}", unberJarURL);

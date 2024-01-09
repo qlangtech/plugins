@@ -18,15 +18,92 @@
 
 package com.qlangtech.tis.plugins.flink.client;
 
+import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.plugins.flink.client.util.JarArgUtil;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.flink.client.program.PackagedProgram;
+import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class JarSubmitFlinkRequest {
     private String jobName;
     private List<URL> userClassPaths;
+    /**
+     * 是否需要cache 下载好的jar包
+     */
+    // private boolean cache;
+    private String dependency;
+    private Integer parallelism;
+    private String programArgs;
+    private String entryClass;
+    private String savepointPath;
+
+    /**
+     * Flag indicating whether non restored state is allowed if the savepoint contains state for an
+     * operator that is not part of the job.
+     *
+     * @see SavepointRestoreSettings
+     */
+    private Boolean allowNonRestoredState;
+
+    public static JarSubmitFlinkRequest createFlinkJobRequest(
+            TISFlinkCDCStreamFactory factory, TargetResName collection
+            , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter) {
+        JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
+        request.setJobName(collection.getName());
+        request.setParallelism(factory.parallelism);
+        request.setEntryClass(TISFlinkCDCStart.class.getName());
+
+
+        request.setProgramArgs(collection.getName());
+        request.setDependency(streamUberJar.getAbsolutePath());
+        requestSetter.accept(request);
+        return request;
+    }
+
+    public PackagedProgram createFlinkJobProgram() throws ProgramInvocationException {
+        // try {
+        File jarFile = new File(this.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
+        if (!jarFile.exists()) {
+            throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
+        }
+        List<String> programArgs = JarArgUtil.tokenizeArguments(this.getProgramArgs());
+
+        PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
+        programBuilder.setEntryPointClassName(this.getEntryClass());
+        programBuilder.setJarFile(jarFile);
+
+
+        if (CollectionUtils.isNotEmpty(this.getUserClassPaths())) {
+            programBuilder.setUserClassPaths(this.getUserClassPaths());
+        }
+
+        if (programArgs.size() > 0) {
+            programBuilder.setArguments(programArgs.toArray(new String[programArgs.size()]));
+        }
+
+        final SavepointRestoreSettings savepointSettings;
+        String savepointPath = this.getSavepointPath();
+        if (StringUtils.isNotEmpty(savepointPath)) {
+            Boolean allowNonRestoredOpt = this.getAllowNonRestoredState();
+            boolean allowNonRestoredState = allowNonRestoredOpt != null && allowNonRestoredOpt.booleanValue();
+            savepointSettings = SavepointRestoreSettings.forPath(savepointPath, allowNonRestoredState);
+        } else {
+            savepointSettings = SavepointRestoreSettings.none();
+        }
+
+        programBuilder.setSavepointRestoreSettings(savepointSettings);
+        return (programBuilder.build());
+    }
 
     // private Resource resource;
     public List<URL> getUserClassPaths() {
@@ -45,28 +122,6 @@ public class JarSubmitFlinkRequest {
         this.jobName = jobName;
     }
 
-
-    /**
-     * 是否需要cache 下载好的jar包
-     */
-    // private boolean cache;
-
-    private String dependency;
-
-    private Integer parallelism;
-
-    private String programArgs;
-
-    private String entryClass;
-
-    private String savepointPath;
-
-    /**
-     * Flag indicating whether non restored state is allowed if the savepoint contains state for an
-     * operator that is not part of the job.
-     * @see SavepointRestoreSettings
-     */
-    private Boolean allowNonRestoredState;
 
 //    public boolean isCache() {
 //        return cache;

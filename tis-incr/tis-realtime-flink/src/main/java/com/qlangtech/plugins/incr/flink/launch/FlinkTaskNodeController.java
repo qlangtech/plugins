@@ -18,10 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.launch;
 
-import com.qlangtech.plugins.incr.flink.TISFlinkCDCStart;
-import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
+import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.plugins.incr.flink.utils.UberJarUtil;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
@@ -31,7 +29,6 @@ import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
-import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.util.HeteroEnum;
@@ -80,7 +77,7 @@ public class FlinkTaskNodeController implements IRCController {
 
     @Override
     public void checkUseable() {
-        FlinkCluster cluster = factory.getClusterCfg();
+        ClusterType cluster = factory.getClusterCfg();
         cluster.checkUseable();
 //        try {
 //            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
@@ -208,32 +205,34 @@ public class FlinkTaskNodeController implements IRCController {
 
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
-        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
-        try (RestClusterClient restClient = factory.getFlinkCluster()) {
 
-
-            FlinkClient flinkClient = new FlinkClient();
-
-
-            JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
-            request.setJobName(collection.getName());
-            request.setParallelism(factory.parallelism);
-            request.setEntryClass(TISFlinkCDCStart.class.getName());
-
-
-            request.setProgramArgs(collection.getName());
-            request.setDependency(streamUberJar.getAbsolutePath());
-            requestSetter.accept(request);
-
-
-            JobID jobID = flinkClient.submitJar(restClient, request);
-
-            afterSuccess.accept(jobID);
-
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-        }
+        factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
+//        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+//        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
+//        try (RestClusterClient restClient = factory.getFlinkCluster()) {
+//
+//
+//            FlinkClient flinkClient = new FlinkClient();
+//
+//
+//            JarSubmitFlinkRequest request = new JarSubmitFlinkRequest();
+//            request.setJobName(collection.getName());
+//            request.setParallelism(factory.parallelism);
+//            request.setEntryClass(TISFlinkCDCStart.class.getName());
+//
+//
+//            request.setProgramArgs(collection.getName());
+//            request.setDependency(streamUberJar.getAbsolutePath());
+//            requestSetter.accept(request);
+//
+//
+//            JobID jobID = flinkClient.submitJar(restClient, request);
+//
+//            afterSuccess.accept(jobID);
+//
+//        } finally {
+//            Thread.currentThread().setContextClassLoader(currentClassLoader);
+//        }
     }
 
 //    private Manifest createManifestCfgAttrs(TargetResName collection, long timestamp) throws Exception {
@@ -288,16 +287,16 @@ public class FlinkTaskNodeController implements IRCController {
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
         IFlinkIncrJobStatus<JobID> incrJobStatus = getIncrJobStatus(collection);
-        final FlinkJobDeploymentDetails noneStateDetail
-                = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus) {
-            @Override
-            public boolean isRunning() {
-                return false;
-            }
-        };
+//        final FlinkJobDeploymentDetails noneStateDetail
+//                = new FlinkJobDeploymentDetails(factory.getClusterCfg(), incrJobStatus) {
+//            @Override
+//            public boolean isRunning() {
+//                return false;
+//            }
+//        };
         if (incrJobStatus.getState() == IFlinkIncrJobStatus.State.NONE) {
             // stop 或者压根没有创建
-            return noneStateDetail;
+            return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
         }
         JobID launchJobID = incrJobStatus.getLaunchJobID();
         try {
@@ -306,7 +305,7 @@ public class FlinkTaskNodeController implements IRCController {
                 JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
                 if (status == null || status.isTerminalState()) {
                     incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
-                    return noneStateDetail;
+                    return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
                 }
 
                 CompletableFuture<JobDetailsInfo> jobDetails = restClient.getJobDetails(launchJobID);
@@ -315,15 +314,15 @@ public class FlinkTaskNodeController implements IRCController {
                 return rcDeployment;
             }
         } catch (TimeoutException e) {
-            FlinkCluster clusterCfg = this.factory.getClusterCfg();
-            throw TisException.create("flinkClusterId:" + clusterCfg.getClusterId()
-                    + ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
+            ClusterType clusterCfg = this.factory.getClusterCfg();
+            throw TisException.create(//"flinkClusterId:" + clusterCfg.getClusterId()
+                    ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (isNotFoundException(cause)) {
                 //return null;
                 incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
-                return noneStateDetail;
+                return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
             }
             throw new RuntimeException(e);
         } catch (Exception e) {

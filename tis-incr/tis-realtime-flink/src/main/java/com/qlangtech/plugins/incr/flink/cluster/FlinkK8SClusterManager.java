@@ -116,10 +116,39 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
     public String svcExposedType;
 
-//    @Override
-//    public String identityValue() {
-//        return name;
-//    }
+
+    @Override
+    public Map<String, Object> getPayloadInfo() {
+        // try {
+        Map<String, Object> payloads = Maps.newHashMap();
+
+//
+//            ServiceExposedType serviceExposedType = ServiceExposedType.valueOf(svcExposedType);
+//            switch (serviceExposedType) {
+//                case NodePort:
+//                    return payloads;
+//                case ClusterIP:
+//                    CoreV1Api coreApi = new CoreV1Api(getK8SApi());
+//                    V1Service svc = coreApi.readNamespacedService(this.clusterId + "-rest" //
+//                            , this.getK8SImage().getNamespace(), K8SUtils.resultPrettyShow, null, null);
+//                    V1ServiceSpec spec = svc.getSpec();
+//                    for (V1ServicePort port : spec.getPorts()) {
+//                        payloads.put(CLUSTER_ENTRYPOINT_HOST, ) ;
+//                        return payloads;
+//                    }
+//                case LoadBalancer:
+//
+//                default:
+//                    throw new IllegalStateException("illegal serviceExposedType:" + serviceExposedType);
+//            }
+//
+//            // http://192.168.64.3:31000/#/welcome
+//            payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobHost() + "/#/welcome");
+        return payloads;
+//        } catch (ApiException e) {
+//            throw K8sExceptionUtils.convert(this.clusterId, e);
+//        }
+    }
 
     @Override
     public List<ExecuteStep> getExecuteSteps() {
@@ -143,9 +172,9 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
         final ClassLoader currentClassLoader = trd.getContextClassLoader();
         try {
             trd.setContextClassLoader(FlinkK8SClusterManager.class.getClassLoader());
-            K8sImage k8SImageCfg = this.getK8SImage();
 
-            final Configuration configuration = ((DescriptorImpl) this.getDescriptor()).opts.createFlinkCfg(this);//. GlobalConfiguration.loadConfiguration();
+
+            final Configuration configuration = createFlinkConfig();// ((DescriptorImpl) this.getDescriptor()).opts.createFlinkCfg(this);//. GlobalConfiguration.loadConfiguration();
             //1600
             // configuration.set(JobManagerOptions.TOTAL_PROCESS_MEMORY, MemorySize.ofMebiBytes(jmMemory));
 
@@ -172,8 +201,6 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 
             //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
 
-            IK8sContext kubeConfig = k8SImageCfg.getK8SCfg();
-            FlinkKubeClientFactory.kubeConfig = io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
 
             final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
 
@@ -186,9 +213,29 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
         }
     }
 
+    public Configuration createFlinkConfig() throws Exception {
+        K8sImage k8SImageCfg = this.getK8SImage();
+        IK8sContext kubeConfig = k8SImageCfg.getK8SCfg();
+        FlinkKubeClientFactory.kubeConfig
+                = io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
+        final Configuration configuration = ((DescriptorImpl) this.getDescriptor()).opts.createFlinkCfg(this);
+        return configuration;
+    }
+
 
     interface KubernetesSessionCliProcess {
         void apply(KubernetesSessionCli cli) throws Exception;
+    }
+
+    private transient ApiClient apiClient;
+
+    public ApiClient getK8SApi() {
+        if (this.apiClient == null) {
+            K8sImage k8SImage = this.getK8SImage();
+            this.apiClient = k8SImage.createApiClient();
+        }
+
+        return this.apiClient;
     }
 
     @Override
@@ -215,7 +262,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 
     @Override
     public List<RcDeployment> getRCDeployments() {
-        RcDeployment deployment = new RcDeployment("Flink");
+        RcDeployment deployment = new RcDeployment(DataXJobWorker.K8S_FLINK_CLUSTER_NAME.getK8SResName());
         K8sImage k8sImage = this.getK8SImage();
         ApiClient apiClient = k8sImage.createApiClient();
 
@@ -274,14 +321,14 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     }
 
 
-    private Map<String, String> getCreateAccompanyConfigMapResource() throws IOException {
+    public static Map<String, String> getCreateAccompanyConfigMapResource() throws IOException {
         Map<String, String> configMap = Maps.newHashMap();
         addResFromCP(configMap, CONFIG_FILE_LOGBACK_NAME);
         addResFromCP(configMap, CONFIG_FILE_LOG4J_NAME);
-        return configMap;
+        return FlinkConfMountDecorator.configMapData = configMap;
     }
 
-    private void addResFromCP(Map<String, String> configMap, String configFileLogbackName) throws IOException {
+    private static void addResFromCP(Map<String, String> configMap, String configFileLogbackName) throws IOException {
         try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(configFileLogbackName)) {
             configMap.put(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
         }

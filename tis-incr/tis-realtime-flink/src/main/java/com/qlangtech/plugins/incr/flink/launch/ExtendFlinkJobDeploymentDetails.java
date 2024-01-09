@@ -178,7 +178,7 @@ public class ExtendFlinkJobDeploymentDetails extends FlinkJobDeploymentDetails {
             return StringUtils.left(jobVertexDetailsInfo.getName(), 60);
         }
 
-        public String getFullName(){
+        public String getFullName() {
             return jobVertexDetailsInfo.getName();
         }
 

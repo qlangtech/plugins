@@ -20,8 +20,8 @@ package com.qlangtech.plugins.incr.flink.launch;
 
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
 import com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn;
+import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
@@ -59,8 +59,8 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
 //    public String name = NAME_FLINK_CDC;
 
-    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
-    public String flinkCluster;
+    @FormField(ordinal = 1, validate = {Validator.require})
+    public ClusterType cluster;
 
 //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
 //    public String jobManagerAddress;
@@ -112,8 +112,8 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     }
 
     public RestClusterClient getFlinkCluster() {
-        FlinkCluster item = getClusterCfg();
-        return item.createConfigInstance();
+        ClusterType item = getClusterCfg();
+        return item.createRestClusterClient();
     }
 
 //    public RestClusterClient getFlinkCluster(long timeout) {
@@ -136,8 +136,9 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         return env;
     }
 
-    public FlinkCluster getClusterCfg() {
-        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
+    public ClusterType getClusterCfg() {
+//        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
+        return this.cluster;
     }
 
     @Override
@@ -166,7 +167,6 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 //        }
         public DefaultDescriptor() {
             super();
-            this.registerSelectOptions("flinkCluster", () -> ParamsConfig.getItems(IFlinkCluster.KEY_DISPLAY_NAME));
         }
 
         @Override

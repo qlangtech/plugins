@@ -15,7 +15,7 @@ public class TestFlinkCluster {
         FlinkCluster flinkCluster = new FlinkCluster();
 
         flinkCluster.jobManagerAddress = "192.168.28.201:8081";
-        flinkCluster.clusterId = "my-first-flink-cluster";
+       // flinkCluster.clusterId = "my-first-flink-cluster";
         flinkCluster.name = "flink200";
 
         JsonUtil.assertJSONEqual(TestFlinkCluster.class, "flink-cluster-serialize.json"

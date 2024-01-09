@@ -52,6 +52,8 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
     private static final Logger logger = LoggerFactory.getLogger(FlinkCluster.class);
 
+    private static final String FLINK_DEFAULT_CLUSTER_ID = "default_cluster_id";
+
     public static void main(String[] args) {
         System.out.println(IFlinkCluster.class.isAssignableFrom(FlinkCluster.class));
     }
@@ -63,8 +65,6 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
     public String jobManagerAddress;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
-    public String clusterId;
 
     @Override
     public JobManagerAddress getJobManagerAddress() {
@@ -86,7 +86,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     public void checkUseable() throws TisException {
         FlinkCluster cluster = this;
         try {
-            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
+            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.empty(), Optional.of(1000l))) {
                 // restClient.getClusterId();
                 CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
                 Collection<JobStatusMessage> jobStatus = status.get();
@@ -97,21 +97,17 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         }
     }
 
-    @Override
-    public String getClusterId() {
-        return clusterId;
-    }
 
     @Override
     public RestClusterClient createConfigInstance() {
-        return createFlinkRestClusterClient(Optional.empty());
+        return createFlinkRestClusterClient(Optional.empty(), Optional.empty());
     }
 
     /**
      * @param connTimeout The maximum time in ms for the client to establish a TCP connection.
      * @return
      */
-    public RestClusterClient createFlinkRestClusterClient(Optional<Long> connTimeout) {
+    public RestClusterClient createFlinkRestClusterClient(Optional<String> clusterId, Optional<Long> connTimeout) {
 
         try {
             JobManagerAddress managerAddress = this.getJobManagerAddress();
@@ -125,7 +121,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
                 configuration.setInteger(RestOptions.RETRY_MAX_ATTEMPTS, 0);
                 configuration.setLong(RestOptions.RETRY_DELAY, 0l);
             }
-            return new RestClusterClient<>(configuration, this.clusterId);
+            return new RestClusterClient<>(configuration, clusterId.orElse(this.FLINK_DEFAULT_CLUSTER_ID));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

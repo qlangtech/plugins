@@ -18,9 +18,6 @@
 
 package com.qlangtech.tis.plugins.flink.client;
 
-import com.qlangtech.tis.plugins.flink.client.util.JarArgUtil;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.ClusterClient;
@@ -29,14 +26,12 @@ import org.apache.flink.client.program.PackagedProgramUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.runtime.jobgraph.JobGraph;
-import org.apache.flink.runtime.jobgraph.SavepointRestoreSettings;
 import org.apache.flink.runtime.jobmaster.JobResult;
 import org.apache.flink.util.function.FunctionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -52,37 +47,37 @@ public class FlinkClient {
 
         logger.info("start submit jar request,entryClass:{}", request.getEntryClass());
         // try {
-        File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
-        if (!jarFile.exists()) {
-            throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
-        }
-        List<String> programArgs = JarArgUtil.tokenizeArguments(request.getProgramArgs());
-
-        PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
-        programBuilder.setEntryPointClassName(request.getEntryClass());
-        programBuilder.setJarFile(jarFile);
-
-
-        if (CollectionUtils.isNotEmpty(request.getUserClassPaths())) {
-            programBuilder.setUserClassPaths(request.getUserClassPaths());
-        }
-
-        if (programArgs.size() > 0) {
-            programBuilder.setArguments(programArgs.toArray(new String[programArgs.size()]));
-        }
-
-        final SavepointRestoreSettings savepointSettings;
-        String savepointPath = request.getSavepointPath();
-        if (StringUtils.isNotEmpty(savepointPath)) {
-            Boolean allowNonRestoredOpt = request.getAllowNonRestoredState();
-            boolean allowNonRestoredState = allowNonRestoredOpt != null && allowNonRestoredOpt.booleanValue();
-            savepointSettings = SavepointRestoreSettings.forPath(savepointPath, allowNonRestoredState);
-        } else {
-            savepointSettings = SavepointRestoreSettings.none();
-        }
-
-        programBuilder.setSavepointRestoreSettings(savepointSettings);
-        PackagedProgram program = programBuilder.build();
+//        File jarFile = new File(request.getDependency()); //jarLoader.downLoad(request.getDependency(), request.isCache());
+//        if (!jarFile.exists()) {
+//            throw new IllegalArgumentException("file is not exist:" + jarFile.getAbsolutePath());
+//        }
+//        List<String> programArgs = JarArgUtil.tokenizeArguments(request.getProgramArgs());
+//
+//        PackagedProgram.Builder programBuilder = PackagedProgram.newBuilder();
+//        programBuilder.setEntryPointClassName(request.getEntryClass());
+//        programBuilder.setJarFile(jarFile);
+//
+//
+//        if (CollectionUtils.isNotEmpty(request.getUserClassPaths())) {
+//            programBuilder.setUserClassPaths(request.getUserClassPaths());
+//        }
+//
+//        if (programArgs.size() > 0) {
+//            programBuilder.setArguments(programArgs.toArray(new String[programArgs.size()]));
+//        }
+//
+//        final SavepointRestoreSettings savepointSettings;
+//        String savepointPath = request.getSavepointPath();
+//        if (StringUtils.isNotEmpty(savepointPath)) {
+//            Boolean allowNonRestoredOpt = request.getAllowNonRestoredState();
+//            boolean allowNonRestoredState = allowNonRestoredOpt != null && allowNonRestoredOpt.booleanValue();
+//            savepointSettings = SavepointRestoreSettings.forPath(savepointPath, allowNonRestoredState);
+//        } else {
+//            savepointSettings = SavepointRestoreSettings.none();
+//        }
+//
+//        programBuilder.setSavepointRestoreSettings(savepointSettings);
+        PackagedProgram program = Objects.requireNonNull(request).createFlinkJobProgram();// programBuilder.build();
         logger.info("currThread:" + Thread.currentThread().getName()
                 + ",0. PackagedProgram create,Consume:" + (System.currentTimeMillis() - start) + " ms");
         Configuration conf = new Configuration();

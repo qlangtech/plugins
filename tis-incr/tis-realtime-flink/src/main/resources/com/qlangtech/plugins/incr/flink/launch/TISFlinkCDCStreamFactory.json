@@ -2,17 +2,6 @@
   "parallelism": {
     "dftVal": "1"
   },
-  "flinkCluster": {
-    "creator": {
-      "label": "配置",
-      "plugin": [
-        {
-          "hetero": "params-cfg",
-          "descName": "Flink-Cluster"
-        }
-      ]
-    }
-  },
   "enableRestore": {
     "label": "支持意外恢复",
     "dftVal": false,

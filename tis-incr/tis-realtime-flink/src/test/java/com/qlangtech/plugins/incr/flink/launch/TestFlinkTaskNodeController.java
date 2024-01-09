@@ -57,7 +57,7 @@ public class TestFlinkTaskNodeController {
     public void testDeploy() throws Exception {
 
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
-        streamFactory.flinkCluster = "my-first-flink-cluster";
+       // streamFactory.flinkCluster = "my-first-flink-cluster";
         streamFactory.parallelism = 1;
         FlinkTaskNodeController taskNodeController = new FlinkTaskNodeController(streamFactory);
 

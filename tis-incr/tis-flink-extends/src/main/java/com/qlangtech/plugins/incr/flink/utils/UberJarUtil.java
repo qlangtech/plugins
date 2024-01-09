@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.utils;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
+import com.qlangtech.tis.manage.common.incr.StreamContextConstant.TISRes;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -38,7 +39,7 @@ public class UberJarUtil {
     private static final Logger logger = LoggerFactory.getLogger(UberJarUtil.class);
 
     public static File createStreamUberJar(TargetResName collection, long timestamp) throws Exception {
-        File streamUberJar = getStreamUberJarFile(collection);
+        File streamUberJar = getStreamUberJarFile(collection).getFile();
         Manifest manifest = PluginAndCfgsSnapshot.createFlinkIncrJobManifestCfgAttrs(collection, timestamp);
 
         try (JarOutputStream jaroutput = new JarOutputStream(
@@ -49,9 +50,13 @@ public class UberJarUtil {
         }
     }
 
-    public  static File getStreamUberJarFile(TargetResName collection) {
+    public static TISRes getStreamUberJarFile(TargetResName collection) {
+        TISRes streamScriptRootDir = StreamContextConstant.getStreamScriptRootDir(collection.getName(), false);
+        final long timestamp = 0;
+        String uberJarPath = streamScriptRootDir.getRelevantPath()
+                + "/" + timestamp + "/" + StreamContextConstant.getIncrStreamJarName(collection.getName());
         File streamUberJar = StreamContextConstant.getIncrStreamJarFile(collection.getName(), 0);
         logger.info("streamUberJar path:{}", streamUberJar.getAbsolutePath());
-        return streamUberJar;
+        return new TISRes(streamUberJar, uberJarPath);
     }
 }

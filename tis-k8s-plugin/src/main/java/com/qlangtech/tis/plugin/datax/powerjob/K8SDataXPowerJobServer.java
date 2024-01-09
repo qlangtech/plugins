@@ -104,7 +104,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
 
     static final String powerJobServerPort = "pj-server-port";
-    static final String powerJobHost = "server_port_host";
+
 
     private final static DataXJobWorker.K8SWorkerCptType workerCptType = DataXJobWorker.K8SWorkerCptType.Server;
 
@@ -192,6 +192,14 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //    public PowerJobOMSStorage omsStorage;
 
     private transient ApiClient apiClient;
+    public ApiClient getK8SApi() {
+        if (this.apiClient == null) {
+            K8sImage k8SImage = this.getK8SImage();
+            this.apiClient = k8SImage.createApiClient();
+        }
+
+        return this.apiClient;
+    }
     private transient K8SController k8SController;
 
     //    public static String getDefaultZookeeperAddress() {
@@ -211,7 +219,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public Map<String, Object> getPayloadInfo() {
         Map<String, Object> payloads = Maps.newHashMap();
         // http://192.168.64.3:31000/#/welcome
-        payloads.put(powerJobHost, "http://" + this.serverPortExport.getPowerjobHost() + "/#/welcome");
+        payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobHost() + "/#/welcome");
         return payloads;
     }
 
@@ -449,14 +457,6 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         return k8SController;
     }
 
-    public ApiClient getK8SApi() {
-        if (this.apiClient == null) {
-            K8sImage k8SImage = this.getK8SImage();
-            this.apiClient = k8SImage.createApiClient();
-        }
-
-        return this.apiClient;
-    }
 
     @Override
     public void relaunch() {

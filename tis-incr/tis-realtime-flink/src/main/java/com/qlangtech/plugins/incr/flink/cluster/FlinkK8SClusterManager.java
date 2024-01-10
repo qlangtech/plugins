@@ -325,11 +325,17 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
         Map<String, String> configMap = Maps.newHashMap();
         addResFromCP(configMap, CONFIG_FILE_LOGBACK_NAME);
         addResFromCP(configMap, CONFIG_FILE_LOG4J_NAME);
+        String tisCfgName = "tis-web-config/config.properties";
+        addResFromCP(configMap, tisCfgName, "/" + tisCfgName);
         return FlinkConfMountDecorator.configMapData = configMap;
     }
 
     private static void addResFromCP(Map<String, String> configMap, String configFileLogbackName) throws IOException {
-        try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(configFileLogbackName)) {
+        addResFromCP(configMap, configFileLogbackName, configFileLogbackName);
+    }
+
+    private static void addResFromCP(Map<String, String> configMap, String configFileLogbackName, String localClasspath) throws IOException {
+        try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(localClasspath)) {
             configMap.put(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
         }
     }

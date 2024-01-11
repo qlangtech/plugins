@@ -19,9 +19,11 @@
 package org.apache.flink.kubernetes.entrypoint;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.TISFlinkClassLoaderFactory;
 import com.qlangtech.plugins.incr.flink.utils.UberJarUtil;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant.TISRes;
+import com.qlangtech.tis.util.PluginMeta;
 import org.apache.flink.client.deployment.application.ApplicationClusterEntryPoint;
 import org.apache.flink.client.deployment.application.ApplicationConfiguration;
 import org.apache.flink.client.deployment.application.ClassPathPackagedProgramRetriever;
@@ -87,6 +89,8 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
         try {
             // baisui modify 2024/1/8
             // 下载最新的jar包
+            PluginMeta flinkPluginMeta = TISFlinkClassLoaderFactory.getFlinkPluginMeta(targetResName);
+            flinkPluginMeta.copyFromRemote();
             TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(targetResName);
             unberJarFile.sync2Local(true);
             String unberJarURL = "local" + String.valueOf(unberJarFile.getFile().toURI().toURL()).substring("file".length());

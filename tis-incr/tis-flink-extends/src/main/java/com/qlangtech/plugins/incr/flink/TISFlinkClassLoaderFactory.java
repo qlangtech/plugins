@@ -87,15 +87,14 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     cfg = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(cp.toString(), cp.openStream(), false);
                     tisAppName = cfg.getAppName();
 
-                    flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()
-                            , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
+                    flinkPluginMeta = getFlinkPluginMeta(tisAppName);
                     break;
                 }
                 Objects.requireNonNull(cfg, "cfg can not be null");
                 if (tisAppName == null) {
                     throw new IllegalStateException("param tisAppName can not be empty");
                 }
-                if (flinkPluginMeta == null || !flinkPluginMeta.getPluginPackageFile().exists()) {
+                if (!flinkPluginMeta.getPluginPackageFile().exists()) {
                     throw new IllegalStateException("appPluginDir can not be empty,path:"
                             + flinkPluginMeta.getPluginPackageFile().getAbsolutePath());
                 }
@@ -116,6 +115,13 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 throw new RuntimeException(e);
             }
         };
+    }
+
+    public static PluginMeta getFlinkPluginMeta(TargetResName tisAppName) {
+        PluginMeta flinkPluginMeta;
+        flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()
+                , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
+        return flinkPluginMeta;
     }
 
     private void makeDataDirUseable() {

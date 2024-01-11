@@ -45,6 +45,7 @@ import org.apache.flink.util.Preconditions;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -90,7 +91,7 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
             // baisui modify 2024/1/8
             // 下载最新的jar包
             PluginMeta flinkPluginMeta = TISFlinkClassLoaderFactory.getFlinkPluginMeta(targetResName);
-            flinkPluginMeta.copyFromRemote();
+            flinkPluginMeta.copyFromRemote(Collections.emptyList(), true, true);
             TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(targetResName);
             unberJarFile.sync2Local(true);
             String unberJarURL = "local" + String.valueOf(unberJarFile.getFile().toURI().toURL()).substring("file".length());

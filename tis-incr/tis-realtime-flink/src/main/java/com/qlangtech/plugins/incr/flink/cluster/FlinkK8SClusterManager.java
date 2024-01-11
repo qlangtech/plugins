@@ -35,6 +35,7 @@ import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.util.OverwriteProps;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -65,6 +66,7 @@ import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator;
+import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator.ConfigMapData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -197,7 +199,8 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 //            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
 //            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
 //            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
-            FlinkConfMountDecorator.configMapData = getCreateAccompanyConfigMapResource();
+           // FlinkConfMountDecorator.flinkConfigMapData =
+                    getCreateAccompanyConfigMapResource();
 
             //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
 
@@ -321,23 +324,40 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     }
 
 
-    public static Map<String, String> getCreateAccompanyConfigMapResource() throws IOException {
-        Map<String, String> configMap = Maps.newHashMap();
+    public static void getCreateAccompanyConfigMapResource() throws IOException {
+        Map<String, ConfigMapData> configMap = Maps.newHashMap();
         addResFromCP(configMap, CONFIG_FILE_LOGBACK_NAME);
         addResFromCP(configMap, CONFIG_FILE_LOG4J_NAME);
-        String tisCfgName = "tis-web-config/config.properties";
-        addResFromCP(configMap, tisCfgName, "/" + tisCfgName);
-        return FlinkConfMountDecorator.configMapData = configMap;
+        FlinkConfMountDecorator.flinkConfigMapData = configMap;
+
+        //Map<String, ConfigMapData> tisConfMap = Maps.newHashMap();
+        Config.getInstance().consumeOriginSource((cfgSource) -> {
+            try {
+                addResFromCP(configMap
+                        , StringUtils.replace(Config.bundlePathClasspath, "/", "_"), cfgSource)
+                        .setPodPath(Config.bundlePathClasspath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+       // FlinkConfMountDecorator.tisConfigMapData = tisConfMap;
+
+
     }
 
-    private static void addResFromCP(Map<String, String> configMap, String configFileLogbackName) throws IOException {
-        addResFromCP(configMap, configFileLogbackName, configFileLogbackName);
-    }
-
-    private static void addResFromCP(Map<String, String> configMap, String configFileLogbackName, String localClasspath) throws IOException {
-        try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(localClasspath)) {
-            configMap.put(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
+    private static void addResFromCP(Map<String, ConfigMapData> configMap, String configFileLogbackName) throws IOException {
+        try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(configFileLogbackName)) {
+            addResFromCP(configMap, configFileLogbackName, input);
         }
+    }
+
+    private static ConfigMapData addResFromCP(Map<String, ConfigMapData> configMap
+            , String configFileLogbackName, InputStream input) throws IOException {
+        //try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(localClasspath)) {
+        ConfigMapData cfgMapper = new ConfigMapData(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
+        configMap.put(configFileLogbackName, cfgMapper);
+        return cfgMapper;
+        //}
     }
 
     @TISExtension()

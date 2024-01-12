@@ -66,12 +66,6 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
     public static void main(final String[] args) {
         // startup checks and logging
 
-        EnvironmentInformation.logEnvironmentInfo(
-                LOG, KubernetesApplicationClusterEntrypointOfTIS.class.getSimpleName(), args);
-        // final String collectionName = args[0];
-        SignalHandler.register(LOG);
-        JvmShutdownSafeguard.installAsShutdownHook(LOG);
-
         final Configuration dynamicParameters =
                 ClusterEntrypointUtils.parseParametersOrExit(
                         args,

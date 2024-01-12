@@ -50,6 +50,7 @@
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-extends</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>com.qlangtech.tis</groupId>

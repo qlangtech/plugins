@@ -54,82 +54,19 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
     }
 
     @Override
-    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource, List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
-
+    public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
+            , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-
             DataXMongodbReader mongoReader = (DataXMongodbReader) dataSource;
 
-            MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();//.getDsFactory();
+            MangoDBDataSourceFactory dsFactory = mongoReader.getDataSourceFactory();
 
-            List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs);// Lists.newArrayList();
-
-//            MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
-//                    .hosts(dsFactory.address)
-//                    .database(dsFactory.dbName)
-//                    .collection(mongoReader.collectionName)
-//                    .connectionOptions(sourceFactory.connectionOptions)
-//                    .errorsTolerance(sourceFactory.errorsTolerance)
-//                    .username(dsFactory.getUserName())
-//                    .password(dsFactory.getPassword())
-//                    .deserializer(new TISDeserializationSchema());
-//
-//            //  builder.
-//
-//            if (sourceFactory.errorsLogEnable != null) {
-//                builder.errorsLogEnable(sourceFactory.errorsLogEnable);
-//            }
-//            if (sourceFactory.copyExisting != null) {
-//                builder.copyExisting(sourceFactory.copyExisting);
-//            }
-//            if (sourceFactory.copyExistingMaxThreads != null) {
-//                builder.copyExistingMaxThreads(sourceFactory.copyExistingMaxThreads);
-//            }
-//            if (sourceFactory.copyExistingQueueSize != null) {
-//                builder.copyExistingMaxThreads(sourceFactory.copyExistingQueueSize);
-//            }
-//            if (sourceFactory.pollMaxBatchSize != null) {
-//                builder.copyExistingMaxThreads(sourceFactory.pollMaxBatchSize);
-//            }
-//            if (sourceFactory.pollAwaitTimeMillis != null) {
-//                builder.copyExistingMaxThreads(sourceFactory.pollAwaitTimeMillis);
-//            }
-//            if (sourceFactory.heartbeatIntervalMillis != null) {
-//                builder.copyExistingMaxThreads(sourceFactory.heartbeatIntervalMillis);
-//            }
-//
-//            SourceFunction<DTO> source = builder.build();
-
-//                    MongoDBSource.<DTO>builder()
-//                    .hosts(dsFactory.address)
-//                    .database(dsFactory.dbName)
-//                    .collection(mongoReader.collectionName)
-//                    .connectionOptions(sourceFactory.connectionOptions)
-//                    .errorsTolerance(sourceFactory.errorsTolerance)
-//                    .errorsLogEnable(sourceFactory.errorsLogEnable)
-//                    .copyExisting(sourceFactory.copyExisting)
-//                    .copyExistingPipeline(sourceFactory.copyExistingPipeline)
-//                    .copyExistingMaxThreads(sourceFactory.copyExistingMaxThreads)
-//                    .copyExistingQueueSize(sourceFactory.copyExistingQueueSize)
-//                    .pollMaxBatchSize(sourceFactory.pollMaxBatchSize)
-//                    .pollAwaitTimeMillis(sourceFactory.pollAwaitTimeMillis)
-//                    .heartbeatIntervalMillis(sourceFactory.heartbeatIntervalMillis)
-//                    //.port(dsFactory.port)
-//                    // .databaseList(dbs.toArray(new String[dbs.size()])) // monitor all tables under inventory database
-////                              .tableList(tbs.toArray(new String[tbs.size()]))
-//                    .username(dsFactory.getUserName())
-//                    .password(dsFactory.getPassword())
-////                              .startupOptions(sourceFactory.getStartupOptions())
-//                    //.debeziumProperties(debeziumProperties)
-//                    .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-//                    .build();
-
-            //  sourceFunctions.add(ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName + "_" + mongoReader.collectionName, source));
+            List<ReaderSource> sourceFunctions = createSourceFunctions(dsFactory, tabs);
 
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
-            //  for (ISelectedTab tab : tabs) {
+
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-            //}
+
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

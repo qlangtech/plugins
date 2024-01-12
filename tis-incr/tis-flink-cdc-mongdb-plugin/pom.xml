@@ -32,7 +32,10 @@
     <artifactId>tis-flink-cdc-mongdb-plugin</artifactId>
     <packaging>tpi</packaging>
     <dependencies>
-
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-extends</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -81,7 +84,7 @@
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-common-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
 

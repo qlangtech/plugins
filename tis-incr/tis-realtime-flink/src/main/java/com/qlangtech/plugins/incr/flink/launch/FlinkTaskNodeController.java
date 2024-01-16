@@ -19,7 +19,6 @@
 package com.qlangtech.plugins.incr.flink.launch;
 
 import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
-import com.qlangtech.plugins.incr.flink.utils.UberJarUtil;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
@@ -27,6 +26,7 @@ import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;

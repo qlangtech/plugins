@@ -1,0 +1,18 @@
+{
+  "clusterId": {
+    "placeholder": "tis-flink-cluster"
+  },
+  "clusterCfg": {
+    "label": "集群配置",
+    "help": "管理已创建的集群配置引用，如还未创建则不选，在下一步流程中创建集群配置",
+    "creator": {
+      "plugin": [
+        {
+          "hetero": "flink-kubernetes-application-cfg",
+          "descName": "flink-kubernetes-application-cfg"
+        }
+      ],
+      "label": "配置"
+    }
+  }
+}

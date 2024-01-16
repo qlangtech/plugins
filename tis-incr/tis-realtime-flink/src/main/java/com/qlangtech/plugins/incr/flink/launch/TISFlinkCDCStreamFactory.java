@@ -22,8 +22,6 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
-import com.qlangtech.tis.config.ParamsConfig;
-import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -38,6 +36,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.util.Arrays;
@@ -62,7 +61,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 1, validate = {Validator.require})
     public ClusterType cluster;
 
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
+    //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
 //    public String jobManagerAddress;
 //
 //    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})

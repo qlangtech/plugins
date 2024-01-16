@@ -87,11 +87,11 @@
         </dependency>
 
 
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-extends</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-flink-extends</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.scala-lang</groupId>

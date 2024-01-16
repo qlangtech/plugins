@@ -38,6 +38,7 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
 
     public abstract void checkUseable() throws TisException;
 
+
     public abstract RestClusterClient createRestClusterClient();
 
     /**

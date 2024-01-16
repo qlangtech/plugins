@@ -164,6 +164,10 @@ public class FlinkPropAssist<T extends Describable> {
             return this.setOverwriteProp(OverwriteProps.dft(dftVal));
         }
 
+        public TISFlinkProp overwritePlaceholder(Object placeholder) {
+            return this.setOverwriteProp(OverwriteProps.placeholder(placeholder));
+        }
+
         public TISFlinkProp setOverwriteProp(OverwriteProps overwriteProp) {
             if (hasSetOverWrite) {
                 throw new IllegalStateException("overwriteProp has been setted ,can not be writen twice");

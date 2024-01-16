@@ -1,0 +1,7 @@
+{
+  "configName": {
+    "label": "配置编号",
+    "placeholder": "my-first-kubernetes-application",
+    "help": "可将此配置作为'kubernetes-application'部署配置模版，作为配置标识后续可供其他kubernetes-application部署类型的Flink Job引用"
+  }
+}

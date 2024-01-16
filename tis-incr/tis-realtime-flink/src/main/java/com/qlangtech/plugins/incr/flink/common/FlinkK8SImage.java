@@ -18,7 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.common;
 
-import com.qlangtech.plugins.incr.flink.cluster.FlinkK8SClusterManager;
+import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.extension.TISExtension;
 
@@ -32,7 +32,7 @@ public class FlinkK8SImage extends DefaultK8SImage {
     public static class FlinkDescriptorImpl extends DescriptorImpl {
         @Override
         protected ImageCategory getImageCategory() {
-            return FlinkK8SClusterManager.k8sImage();
+            return BasicFlinkK8SClusterCfg.k8sImage();
         }
     }
 }

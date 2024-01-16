@@ -19,14 +19,21 @@
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 
+import java.io.File;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -45,8 +52,20 @@ public class KubernetesSession extends Standalone {
         return this.getClusterCfg().createFlinkRestClusterClient(Optional.of(clusterId), Optional.empty());
     }
 
+    @Override
+    public void deploy(TISFlinkCDCStreamFactory factory, TargetResName collection
+            , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
+        super.deploy(factory, collection, streamUberJar, requestSetter, afterSuccess);
+    }
+
     @TISExtension
     public static class DftDescriptor extends Standalone.DftDescriptor {
+
+        @Override
+        public String getDisplayName() {
+            return KubernetesDeploymentTarget.SESSION.getName();
+        }
+
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             super.verify(msgHandler, context, postFormVals);

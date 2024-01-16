@@ -18,26 +18,20 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
-import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
-import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
-import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.TISFlinkProp;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.config.k8s.IK8sContext;
-import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.SSERunnable;
+import com.qlangtech.tis.datax.job.ServerLaunchToken;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
-import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -47,7 +41,6 @@ import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
-import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -58,13 +51,7 @@ import io.kubernetes.client.openapi.models.V1DeploymentStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.JobManagerOptions;
-import org.apache.flink.configuration.MemorySize;
-import org.apache.flink.configuration.MemorySize.MemoryUnit;
-import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
-import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
-import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator.ConfigMapData;
 
@@ -73,7 +60,6 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOG4J_NAME;
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NAME;
@@ -86,38 +72,22 @@ import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NA
  * @create: 2021-11-04 14:30
  **/
 @Public
-public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunchingOrchestrate {
+public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements ILaunchingOrchestrate {
 
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
 
     private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster, (flinkManager) -> {
-
     });
 
     @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
 
 
-    @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer jmMemory;
-
-    @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer tmMemory;
-
-    @FormField(ordinal = 6, type = FormFieldType.INT_NUMBER, validate = {})
-    public Integer tmCPUCores;
-
-
-    @FormField(ordinal = 8, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer taskSlot;
-
-    @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String svcAccount;
-
-    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-    public String svcExposedType;
-
+    @Override
+    public ServerLaunchToken getProcessTokenFile() {
+        return ServerLaunchToken.createFlinkClusterToken().token(FlinkClusterType.K8SSession, new TargetResName(this.clusterId));
+    }
 
     @Override
     public Map<String, Object> getPayloadInfo() {
@@ -165,7 +135,6 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
         processFlinkCluster((cli) -> {
             cli.run(new String[]{});
             launchProcess.run();
-            // this.writeLaunchToken();
         });
     }
 
@@ -199,8 +168,8 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
 //            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
 //            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
 //            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
-           // FlinkConfMountDecorator.flinkConfigMapData =
-                    getCreateAccompanyConfigMapResource();
+            // FlinkConfMountDecorator.flinkConfigMapData =
+            getCreateAccompanyConfigMapResource();
 
             //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
 
@@ -214,15 +183,6 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
         } finally {
             trd.setContextClassLoader(currentClassLoader);
         }
-    }
-
-    public Configuration createFlinkConfig() throws Exception {
-        K8sImage k8SImageCfg = this.getK8SImage();
-        IK8sContext kubeConfig = k8SImageCfg.getK8SCfg();
-        FlinkKubeClientFactory.kubeConfig
-                = io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
-        final Configuration configuration = ((DescriptorImpl) this.getDescriptor()).opts.createFlinkCfg(this);
-        return configuration;
     }
 
 
@@ -257,10 +217,6 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     @Override
     protected ImageCategory getK8SImageCategory() {
         return k8sImage();
-    }
-
-    public static K8sImage.ImageCategory k8sImage() {
-        return K8sImage.ImageCategory.DEFAULT_FLINK_DESC_NAME;
     }
 
     @Override
@@ -340,7 +296,7 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
                 throw new RuntimeException(e);
             }
         });
-       // FlinkConfMountDecorator.tisConfigMapData = tisConfMap;
+        // FlinkConfMountDecorator.tisConfigMapData = tisConfMap;
 
 
     }
@@ -361,102 +317,11 @@ public class FlinkK8SClusterManager extends DataXJobWorker implements ILaunching
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends BasicDescriptor {
-
-        private static final MemorySize MEMORY_8G = MemorySize.ofMebiBytes(8 * 1024);
-        Options<FlinkK8SClusterManager> opts;
+    public static class DescriptorImpl extends BasicFlinkCfgDescriptor {
 
         public DescriptorImpl() {
             super();
-            //FlinkK8SClusterManager
-            this.opts = FlinkPropAssist.createOpts(this);
-            opts.add("tmMemory", TISFlinkProp.create(TaskManagerOptions.TOTAL_PROCESS_MEMORY)
-                            .setOverwriteProp(OverwriteProps.dft(MemorySize.ofMebiBytes(1728)))
-                    , (fm) -> {
-                        return MemorySize.parse(String.valueOf(fm.tmMemory), MemoryUnit.KILO_BYTES);
-                    }
-            );
-
-            opts.add("tmCPUCores", TISFlinkProp.create(TaskManagerOptions.CPU_CORES)
-                            .setOverwriteProp(OverwriteProps.dft(1000).setAppendHelper("*1000个单位代表一个1 CPU Core"))
-                    , (fm) -> {
-                        if (fm.tmCPUCores == null) {
-                            return null;
-                        }
-                        return ((double) fm.tmCPUCores) / 1000;
-                        //  return MemorySize.parse(String.valueOf(), MemoryUnit.KILO_BYTES);
-                    }
-            );
-
-
-            opts.add("jmMemory", TISFlinkProp.create(JobManagerOptions.TOTAL_PROCESS_MEMORY)
-                            .setOverwriteProp(OverwriteProps.dft(MemorySize.ofMebiBytes(1600)))
-                    , (fm) -> MemorySize.parse(String.valueOf(fm.jmMemory), MemoryUnit.KILO_BYTES)
-            );
-            opts.add(KubernetesConfigOptions.CONTAINER_IMAGE, (fm) -> {
-                return fm.getK8SImage().getImagePath();
-            });
-            //  configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
-            opts.add("clusterId", TISFlinkProp.create(KubernetesConfigOptions.CLUSTER_ID).overwriteDft("tis-flink-cluster"));
-            opts.add(KubernetesConfigOptions.NAMESPACE, (fm) -> fm.getK8SImage().getNamespace());
-
-
-            opts.add("taskSlot", TISFlinkProp.create(TaskManagerOptions.NUM_TASK_SLOTS));
-            opts.add("svcAccount", TISFlinkProp.create(KubernetesConfigOptions.KUBERNETES_SERVICE_ACCOUNT));
-            opts.add("svcExposedType", TISFlinkProp.create(KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE));
-
-        }
-
-        /**
-         * 校验task Manager CPU
-         *
-         * @param msgHandler
-         * @param context
-         * @param fieldName
-         * @param value
-         * @return
-         */
-        public boolean validateTmCPUCores(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-
-            if (Integer.parseInt(value) > (ReplicasSpec.maxCpuCoresLimit * 1024)) {
-                msgHandler.addFieldError(context, fieldName, "不能大于" + ReplicasSpec.maxCpuCoresLimit + "个CPU Core");
-                return false;
-            }
-            return true;
-        }
-
-        public boolean validateTmMemory(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            return validateJmMemory(msgHandler, context, fieldName, value);
-        }
-
-        public boolean validateJmMemory(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            MemorySize zero = MemorySize.ofMebiBytes(0);
-            MemorySize memory = new MemorySize(Long.parseLong(value));
-            if (MEMORY_8G.compareTo((memory)) < 0) {
-                msgHandler.addFieldError(context, fieldName, "内存不能大于:" + MEMORY_8G.toHumanReadableString());
-                return false;
-            }
-            if (zero.compareTo(memory) >= 0) {
-                msgHandler.addFieldError(context, fieldName, "内存不能小于:" + zero.toHumanReadableString());
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected ImageCategory getK8SImageCategory() {
-            return k8sImage();
-        }
-
-
-        @Override
-        public IPluginStore<DataXJobWorker> getJobWorkerStore() {
-            return DataXJobWorker.getJobWorkerStore(getWorkerType(), Optional.empty());
-        }
-
-        @Override
-        protected TargetResName getWorkerType() {
-            return DataXJobWorker.K8S_FLINK_CLUSTER_NAME;
+            addClusterIdOption(opts).overwriteDft("tis-flink-cluster");
         }
 
         @Override

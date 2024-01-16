@@ -32,10 +32,10 @@
 <!--    <packaging>tpi</packaging>-->
 
     <dependencies>
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-extends</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-flink-extends</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-msg-format-plugin</artifactId>

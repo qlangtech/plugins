@@ -18,6 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
+import com.qlangtech.plugins.incr.flink.cluster.KubernetesApplicationClusterConfig;
+import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import org.junit.Test;
@@ -32,8 +34,27 @@ public class TestKubernetesApplication {
 
     @Test
     public void testDeploy() throws Exception {
-        KubernetesApplication k8sApp = new KubernetesApplication();
 
+       // FlinkK8SImage k8SImage = new FlinkK8SImage();
+        //   k8SImage.namespace =
+
+        KubernetesApplication k8sApp = new KubernetesApplication() {
+            @Override
+            protected KubernetesApplicationClusterConfig getK8SClusterCfg() {
+                KubernetesApplicationClusterConfig clusterCfg = new KubernetesApplicationClusterConfig();
+                clusterCfg.k8sImage = "tis_flink_image";
+                // k8SClusterManager.clusterId = "tis-flink-cluster";
+                clusterCfg.jmMemory = 1238400;
+                clusterCfg.tmMemory = 1169472;
+                clusterCfg.tmCPUCores = 150;
+                clusterCfg.taskSlot = 1;
+                clusterCfg.svcExposedType = "NodePort";
+                clusterCfg.svcAccount = "default";
+                return clusterCfg;
+            }
+        };
+        k8sApp.clusterId = "tis-flink-cluster";
+        // k8sApp.clusterCfg = "";
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
         TargetResName coll = new TargetResName("mysql_mysql4");
         File streamUberJar = new File(".");

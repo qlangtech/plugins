@@ -19,47 +19,80 @@
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.alibaba.citrus.turbine.Context;
-import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.plugins.incr.flink.cluster.FlinkK8SClusterManager;
+import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.datax.job.ServerLaunchToken;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.flink.api.common.JobID;
-import org.apache.flink.client.program.rest.RestClusterClient;
+import com.qlangtech.tis.util.HeteroEnum;
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-07 10:40
  **/
-public class KubernetesSession extends Standalone {
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
-    public String clusterId;
+public class KubernetesSession extends AbstractClusterType {
+    private static final Logger logger = LoggerFactory.getLogger(KubernetesSession.class);
+//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
+//    public String clusterId;
 
-    public String getClusterId() {
-        return clusterId;
+    //    public String getClusterId() {
+//        return clusterId;
+//    }
+    @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
+    public String flinkCluster;
+
+    @Override
+    public void checkUseable() throws TisException {
+
     }
 
     @Override
-    public RestClusterClient createRestClusterClient() {
-        return this.getClusterCfg().createFlinkRestClusterClient(Optional.of(clusterId), Optional.empty());
+    public ClusterClient createRestClusterClient() {
+
+        //   flinkCluster
+        FlinkK8SClusterManager cluster = HeteroEnum.getFlinkK8SSessionCluster(flinkCluster);
+        // HeteroEnum.K8S_SESSION_WORKER.getPluginStore(null,) ;
+        //FlinkCluster flinkCluster = new FlinkCluster();
+        return cluster.createClusterClient();
+        // return this.getClusterCfg().createFlinkRestClusterClient(Optional.of(clusterId), Optional.empty());
     }
 
     @Override
-    public void deploy(TISFlinkCDCStreamFactory factory, TargetResName collection
-            , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
-        super.deploy(factory, collection, streamUberJar, requestSetter, afterSuccess);
+    public JobManagerAddress getJobManagerAddress() {
+        return null;
     }
+
 
     @TISExtension
-    public static class DftDescriptor extends Standalone.DftDescriptor {
+    public static class DftDescriptor extends Descriptor<ClusterType> {
+
+        public DftDescriptor() {
+            super();
+            this.registerSelectOptions(KEY_FIELD_FLINK_CLUSTER, () -> {
+                return ServerLaunchToken.createFlinkClusterToken().getAllClusters().stream()
+                        .filter((cluster) -> cluster.clusterType == FlinkClusterType.K8SSession)
+                        .map((cluster) -> new IdentityName() {
+                            @Override
+                            public String identityValue() {
+                                return cluster.getClusterId();
+                            }
+                        }).collect(Collectors.toList());
+
+            });
+        }
 
         @Override
         public String getDisplayName() {
@@ -67,8 +100,23 @@ public class KubernetesSession extends Standalone {
         }
 
         @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return this.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            super.verify(msgHandler, context, postFormVals);
+
+            KubernetesSession session = postFormVals.newInstance();
+
+            try {
+                session.createRestClusterClient();
+            } catch (Exception e) {
+                logger.warn(e.getMessage(), e);
+                msgHandler.addFieldError(context, KEY_FIELD_FLINK_CLUSTER, "请确认连接是否正常可用");
+                return false;
+            }
+
             return true;
         }
     }

@@ -18,20 +18,28 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
+import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.launch.clustertype.KubernetesApplication;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.FlinkClusterPojo;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
+import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -40,7 +48,7 @@ import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
-import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -50,16 +58,27 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.client.deployment.ClusterClientFactory;
+import org.apache.flink.client.deployment.ClusterDescriptor;
+import org.apache.flink.client.deployment.ClusterRetrieveException;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.kubernetes.KubernetesClusterClientFactory;
 import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator.ConfigMapData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOG4J_NAME;
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NAME;
@@ -72,17 +91,32 @@ import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NA
  * @create: 2021-11-04 14:30
  **/
 @Public
-public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements ILaunchingOrchestrate {
-
+public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements ILaunchingOrchestrate, IdentityName {
+    private static final Logger logger = LoggerFactory.getLogger(FlinkK8SClusterManager.class);
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
 
-    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster, (flinkManager) -> {
+    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster
+            , (flinkManager) -> {
+        JSONObject[] clusterMeta = new JSONObject[1];
+        flinkManager.processFlinkCluster((cli) -> {
+            cli.run(new String[]{}, (clusterClient) -> {
+                clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
+            });
+            SSERunnable.getLocal().run();
+        });
+        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
     });
 
-    @FormField(ordinal = 0, identity = false, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
+
+    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
 
+    @Override
+    public String identityValue() {
+        return this.clusterId;
+    }
 
     @Override
     public ServerLaunchToken getProcessTokenFile() {
@@ -91,8 +125,14 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     @Override
     public Map<String, Object> getPayloadInfo() {
-        // try {
+        FlinkClusterTokenManager clusterToken = ServerLaunchToken.createFlinkClusterToken();
+        FlinkClusterPojo cluster = clusterToken.find(FlinkClusterType.K8SSession, this.clusterId);
         Map<String, Object> payloads = Maps.newHashMap();
+        if (cluster != null) {
+            payloads = Collections.singletonMap(CLUSTER_ENTRYPOINT_HOST, cluster.getWebInterfaceURL());
+        }
+        // try {
+        // Map<String, Object> payloads = Maps.newHashMap();
 
 //
 //            ServiceExposedType serviceExposedType = ServiceExposedType.valueOf(svcExposedType);
@@ -131,58 +171,122 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     }
 
     @Override
-    public void launchService(SSERunnable launchProcess) {
-        processFlinkCluster((cli) -> {
-            cli.run(new String[]{});
-            launchProcess.run();
-        });
+    public Optional<JSONObject> launchService(SSERunnable launchProcess) {
+
+        try {
+            for (ExecuteStep execStep : getExecuteSteps()) {
+
+                SubJobResName subJob = execStep.getSubJob();
+
+                subJob.execSubJob(this);
+            }
+        } catch (ApiException e) {
+            launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getResponseBody());
+            logger.error(e.getResponseBody(), e);
+            throw K8sExceptionUtils.convert(e);
+        } catch (Exception e) {
+            launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        JSONObject[] clusterMeta = Objects.requireNonNull(
+                launchProcess.getContextAttr(JSONObject[].class), "clusterMeta can not be null");
+//        // new JSONObject[1];
+//        processFlinkCluster((cli) -> {
+//            cli.run(new String[]{}, (clusterClient) -> {
+//                clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, getK8SImage());
+//            });
+//            launchProcess.run();
+//        });
+        ServerLaunchToken.createFlinkClusterToken().cleanCache();
+        return Optional.of(clusterMeta[0]);
     }
 
     private void processFlinkCluster(KubernetesSessionCliProcess process) {
+
+        classLoaderSetter((configuration) -> {
+            // "registry.cn-hangzhou.aliyuncs.com/tis/flink-3.1.0:latest"
+//            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
+//            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
+//            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
+            // FlinkConfMountDecorator.flinkConfigMapData =
+            try {
+                getCreateAccompanyConfigMapResource();
+                //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
+                final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
+
+                process.apply(cli);
+
+                return null;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+//        final Thread trd = Thread.currentThread();
+//        final ClassLoader currentClassLoader = trd.getContextClassLoader();
+//        try {
+//            trd.setContextClassLoader(FlinkK8SClusterManager.class.getClassLoader());
+//
+//
+//            final Configuration configuration = createFlinkConfig();
+//
+//            // "registry.cn-hangzhou.aliyuncs.com/tis/flink-3.1.0:latest"
+////            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
+////            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
+////            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
+//            // FlinkConfMountDecorator.flinkConfigMapData =
+//            getCreateAccompanyConfigMapResource();
+//
+//            //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
+//
+//
+//            final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
+//
+//            process.apply(cli);
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            trd.setContextClassLoader(currentClassLoader);
+//        }
+    }
+
+
+    private <T> T classLoaderSetter(Function<Configuration, T> consumer) {
         final Thread trd = Thread.currentThread();
         final ClassLoader currentClassLoader = trd.getContextClassLoader();
         try {
             trd.setContextClassLoader(FlinkK8SClusterManager.class.getClassLoader());
 
 
-            final Configuration configuration = createFlinkConfig();// ((DescriptorImpl) this.getDescriptor()).opts.createFlinkCfg(this);//. GlobalConfiguration.loadConfiguration();
-            //1600
-            // configuration.set(JobManagerOptions.TOTAL_PROCESS_MEMORY, MemorySize.ofMebiBytes(jmMemory));
+            final Configuration configuration = createFlinkConfig();
 
-
-            // configuration.set(  TaskManagerOptions.TOTAL_PROCESS_MEMORY, );
-
-            //  configuration.set(  TaskManagerOptions.NUM_TASK_SLOTS );
-
-            // configuration.set(KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE,) ;
-
-            //  configuration.set(KubernetesConfigOptions.KUBERNETES_SERVICE_ACCOUNT,) ;
-
-            //1728
-            // configuration.set(TaskManagerOptions.TOTAL_FLINK_MEMORY, MemorySize.ofMebiBytes(tmMemory));
-
-            // configuration.set(TaskManagerOptions.TOTAL_PROCESS_MEMORY, MemorySize.ofMebiBytes(tmMemory));
-
-
-            // "registry.cn-hangzhou.aliyuncs.com/tis/flink-3.1.0:latest"
-//            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
-//            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
-//            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
-            // FlinkConfMountDecorator.flinkConfigMapData =
-            getCreateAccompanyConfigMapResource();
-
-            //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
-
-
-            final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
-
-            process.apply(cli);
+            return consumer.apply(configuration);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             trd.setContextClassLoader(currentClassLoader);
         }
+    }
+
+    public ClusterClient<String> createClusterClient() {
+        return classLoaderSetter((configuration) -> {
+            //  DefaultClusterClientServiceLoader clusterClientServiceLoader = new DefaultClusterClientServiceLoader();
+            try {
+                final ClusterClientFactory<String> kubernetesClusterClientFactory = new KubernetesClusterClientFactory();
+                // clusterClientServiceLoader.getClusterClientFactory(configuration);
+
+                try (final ClusterDescriptor<String> kubernetesClusterDescriptor =
+                             kubernetesClusterClientFactory.createClusterDescriptor(configuration)) {
+                    ClusterClientProvider<String> clientProvider = kubernetesClusterDescriptor.retrieve(this.clusterId);
+                    return clientProvider.getClusterClient();
+                }
+            } catch (ClusterRetrieveException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 
@@ -214,14 +318,10 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     }
 
-    @Override
-    protected ImageCategory getK8SImageCategory() {
-        return k8sImage();
-    }
 
     @Override
     public List<RcDeployment> getRCDeployments() {
-        RcDeployment deployment = new RcDeployment(DataXJobWorker.K8S_FLINK_CLUSTER_NAME.getK8SResName());
+        RcDeployment deployment = new RcDeployment(DataXJobWorker.K8S_FLINK_CLUSTER_NAME.group().getK8SResName());
         K8sImage k8sImage = this.getK8SImage();
         ApiClient apiClient = k8sImage.createApiClient();
 
@@ -309,15 +409,31 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     private static ConfigMapData addResFromCP(Map<String, ConfigMapData> configMap
             , String configFileLogbackName, InputStream input) throws IOException {
-        //try (InputStream input = FlinkK8SClusterManager.class.getResourceAsStream(localClasspath)) {
         ConfigMapData cfgMapper = new ConfigMapData(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
         configMap.put(configFileLogbackName, cfgMapper);
         return cfgMapper;
-        //}
     }
 
     @TISExtension()
     public static class DescriptorImpl extends BasicFlinkCfgDescriptor {
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return this.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            FlinkK8SClusterManager clusterManager = postFormVals.newInstance();
+            FlinkClusterPojo cluster = ServerLaunchToken.createFlinkClusterToken()
+                    .find(FlinkClusterType.K8SSession, clusterManager.clusterId);
+            if (cluster != null) {
+                msgHandler.addFieldError(context, KEY_FIELD_CLUSTER_ID, IdentityName.MSG_ERROR_NAME_DUPLICATE);
+                return false;
+            }
+
+            return true;
+        }
 
         public DescriptorImpl() {
             super();

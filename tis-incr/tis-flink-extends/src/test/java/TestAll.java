@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
+import com.qlangtech.plugins.incr.flink.TestTISFlinkClassLoaderFactory;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-05 14:46
+ * @create: 2024-01-16 11:30
  **/
-
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestFlinkCol.class})
+@Suite.SuiteClasses({TestTISFlinkClassLoaderFactory.class})
 public class TestAll {
 }

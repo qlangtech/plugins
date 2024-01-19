@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.annotation.Public;
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -110,7 +111,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
                 .collect(Collectors.toList());
     }
 
-    public RestClusterClient getFlinkCluster() {
+    public ClusterClient getFlinkCluster() {
         ClusterType item = getClusterCfg();
         return item.createRestClusterClient();
     }

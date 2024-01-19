@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.SSERunnable;
@@ -30,6 +31,7 @@ import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 作为kubernetes-application 的配置模版存储
@@ -80,7 +82,7 @@ public class KubernetesApplicationClusterConfig extends BasicFlinkK8SClusterCfg 
     }
 
     @Override
-    protected void launchService(SSERunnable launchProcess) {
+    protected Optional<JSONObject> launchService(SSERunnable launchProcess) {
         throw new UnsupportedOperationException();
     }
 

@@ -28,7 +28,6 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
-import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.util.OverwriteProps;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -76,6 +75,11 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         return ImageCategory.DEFAULT_FLINK_DESC_NAME;
     }
 
+    @Override
+    protected final ImageCategory getK8SImageCategory() {
+        return BasicFlinkK8SClusterCfg.k8sImage();
+    }
+
     public static TISFlinkProp addClusterIdOption(Options<?> opts) {
         String clusterId = "clusterId";
         TISFlinkProp tisFlinkProp = TISFlinkProp.create(KubernetesConfigOptions.CLUSTER_ID);
@@ -86,7 +90,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
     @Override
     public ServerLaunchToken getProcessTokenFile() {
 
-       throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     public final FlinkK8SImage getFlinkK8SImage() {
@@ -198,7 +202,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
 
         @Override
         protected TargetResName getWorkerType() {
-            return DataXJobWorker.K8S_FLINK_CLUSTER_NAME;
+            return DataXJobWorker.K8S_FLINK_CLUSTER_NAME.group();
         }
 
 //        @Override

@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
@@ -8,6 +9,7 @@ import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -47,7 +49,7 @@ public class BasicPowerjobWorker extends DataXJobWorker {
 
 
     @Override
-    public void launchService(SSERunnable launchProcess) {
+    public Optional<JSONObject> launchService(SSERunnable launchProcess) {
         throw new UnsupportedOperationException();
     }
 }

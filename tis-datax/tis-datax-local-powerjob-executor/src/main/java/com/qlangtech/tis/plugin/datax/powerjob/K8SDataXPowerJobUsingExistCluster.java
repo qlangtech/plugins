@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -39,6 +40,7 @@ import tech.powerjob.common.response.JobInfoDTO;
 import tech.powerjob.common.response.ResultDTO;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 
@@ -75,14 +77,14 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 //    }
 
     public TISPowerJobClient createPowerJobClient() {
-        TISPowerJobClient powerJobClient =  TISPowerJobClient.create(this.serverAddress, this.appName, this.password);
+        TISPowerJobClient powerJobClient = TISPowerJobClient.create(this.serverAddress, this.appName, this.password);
         return powerJobClient;
     }
 
     @Override
     public List<RcDeployment> getRCDeployments() {
         // throw new UnsupportedOperationException();
-        return Lists.newArrayList( new RcDeployment("none"));
+        return Lists.newArrayList(new RcDeployment("none"));
     }
 
     @Override
@@ -94,12 +96,12 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     }
 
     @Override
-    public void launchService(SSERunnable launchProcess) {
+    public Optional<JSONObject> launchService(SSERunnable launchProcess) {
         testPowerJobClient((result) -> {
         });
 
         launchProcess.run();
-
+        return Optional.empty();
     }
 
     private boolean testPowerJobClient(Consumer<ResultDTO<List<JobInfoDTO>>> result) {

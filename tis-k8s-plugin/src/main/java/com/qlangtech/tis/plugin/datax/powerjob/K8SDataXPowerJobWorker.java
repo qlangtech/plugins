@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
@@ -27,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_SERVICE;
@@ -101,9 +103,6 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
     protected K8sImage.ImageCategory getK8SImageCategory() {
         throw new UnsupportedOperationException("shall be invoke from " + K8SDataXPowerJobServer.class);
     }
-
-
-
 
 
     /**
@@ -221,8 +220,8 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
     }
 
     @Override
-    public void launchService(SSERunnable launchProcess) {
-
+    public Optional<JSONObject> launchService(SSERunnable launchProcess) {
+        return Optional.empty();
     }
 
 

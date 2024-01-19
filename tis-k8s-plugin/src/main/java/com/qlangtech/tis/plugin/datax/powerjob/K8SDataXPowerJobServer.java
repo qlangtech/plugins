@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
@@ -47,8 +48,8 @@ import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
@@ -84,6 +85,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -192,6 +194,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //    public PowerJobOMSStorage omsStorage;
 
     private transient ApiClient apiClient;
+
     public ApiClient getK8SApi() {
         if (this.apiClient == null) {
             K8sImage k8SImage = this.getK8SImage();
@@ -200,6 +203,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
         return this.apiClient;
     }
+
     private transient K8SController k8SController;
 
     //    public static String getDefaultZookeeperAddress() {
@@ -502,7 +506,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
     @Override
-    public void launchService(SSERunnable launchProcess) {
+    public Optional<JSONObject> launchService(SSERunnable launchProcess) {
         if (inService()) {
             throw new IllegalStateException("k8s instance of:" + DataXJobWorker.KEY_FIELD_NAME + " is running can not relaunch");
         }
@@ -577,7 +581,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             }
             launchProcess.run();
             // writeLaunchToken();
-
+            return Optional.empty();
         } catch (ApiException e) {
             launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getResponseBody());
             logger.error(e.getResponseBody(), e);

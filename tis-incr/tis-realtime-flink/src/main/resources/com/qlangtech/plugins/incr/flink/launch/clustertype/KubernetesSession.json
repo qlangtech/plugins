@@ -1,0 +1,8 @@
+{
+  "flinkCluster": {
+    "creator": {
+      "routerLink": "/base/flink-cluster-list",
+      "label": "配置"
+    }
+  }
+}

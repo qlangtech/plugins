@@ -47,14 +47,17 @@ import org.apache.flink.client.deployment.ClusterClientFactory;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader;
 import org.apache.flink.client.deployment.application.ApplicationConfiguration;
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.DeploymentOptions;
 import org.apache.flink.kubernetes.KubernetesClusterDescriptor;
+import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClient;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
+import org.apache.flink.runtime.client.JobStatusMessage;
 
 import java.io.File;
 import java.util.List;
@@ -98,7 +101,7 @@ public class KubernetesApplication extends ClusterType {
     @Override
     public void deploy(TISFlinkCDCStreamFactory factory
             , TargetResName collection, File streamUberJar
-            , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
+            , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSucce) throws Exception {
         //File launchTokenParentDir, TargetResName workerType, boolean launchTokenUseCptType, K8SWorkerCptType workerCptType
 
         FlinkClusterTokenManager flinkClusterToken = ServerLaunchToken.createFlinkClusterToken();
@@ -108,13 +111,15 @@ public class KubernetesApplication extends ClusterType {
         launchToken.writeLaunchToken(() -> {
 
 
-            IPluginStore<DataXJobWorker> k8sApplicationCfs = DataXJobWorker.getFlinkKubernetesApplicationCfgStore();
-
             // File launchTokenParentDir = new File(k8sApplicationCfs.getTargetFile().getFile().getParentFile().getParentFile(), "");
+            final ClassLoader originClassLoader = Thread.currentThread().getContextClassLoader();
 
-            KubernetesApplicationClusterConfig k8SClusterManager = (KubernetesApplicationClusterConfig) k8sApplicationCfs.find(this.clusterCfg);
+            try {
+                Thread.currentThread().setContextClassLoader(KubernetesApplication.class.getClassLoader());
 
-            FlinkK8SImage flinkK8SImage = k8SClusterManager.getFlinkK8SImage();
+                KubernetesApplicationClusterConfig k8SClusterManager = getK8SClusterCfg();
+
+                FlinkK8SImage flinkK8SImage = k8SClusterManager.getFlinkK8SImage();
 
 //        =new KubernetesApplicationClusterConfig();
 //        k8SClusterManager.k8sImage = "tis_flink_image";
@@ -127,44 +132,92 @@ public class KubernetesApplication extends ClusterType {
 //        k8SClusterManager.svcAccount = "default";
 
 
-            Configuration flinkConfig = Objects.requireNonNull(k8SClusterManager, "k8SClusterManager can not be null").createFlinkConfig();
-            flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, TISFlinkCDCStart.class.getName());
-            flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, Lists.newArrayList(collection.getName()));
-            flinkConfig.set(DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
+                Configuration flinkConfig = Objects.requireNonNull(k8SClusterManager, "k8SClusterManager can not be null").createFlinkConfig();
+                flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, TISFlinkCDCStart.class.getName());
 
-            ClusterClientFactory<String> kubernetesClusterClientFactory
-                    = clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
+                flinkConfig.set(KubernetesConfigOptions.CLUSTER_ID, this.clusterId);
+                flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, Lists.newArrayList(collection.getName()));
+                flinkConfig.set(DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
 
-            ClusterSpecification clusterSpecification = kubernetesClusterClientFactory.getClusterSpecification(
-                    flinkConfig);
+                ClusterClientFactory<String> kubernetesClusterClientFactory
+                        = clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
 
-            FlinkKubeClient client
-                    = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
-            KubernetesClusterDescriptor kubernetesClusterDescriptor
-                    = new KubernetesClusterDescriptor(flinkConfig, client);
+                ClusterSpecification clusterSpecification = kubernetesClusterClientFactory.getClusterSpecification(
+                        flinkConfig);
 
-            FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
+                FlinkKubeClient client
+                        = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
+                KubernetesClusterDescriptor kubernetesClusterDescriptor
+                        = new KubernetesClusterDescriptor(flinkConfig, client);
 
-            ClusterClientProvider<String> clusterProvider
-                    = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
-                    , ApplicationConfiguration.fromConfiguration(flinkConfig));
-            final String entryUrl = clusterProvider.getClusterClient().getWebInterfaceURL();
-            System.out.println(clusterProvider.getClusterClient().getWebInterfaceURL());
+                FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
 
-            JSONObject token = new JSONObject();
-            token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
-            token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_ID, clusterId);
-            token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
-            token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_TYPE, FlinkClusterType.K8SApplication);
+                ClusterClientProvider<String> clusterProvider
+                        = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
+                        , ApplicationConfiguration.fromConfiguration(flinkConfig));
+                JSONObject token = null;//new JSONObject();
+                try (ClusterClient<String> clusterClient = clusterProvider.getClusterClient()) {
+//                    final String entryUrl = clusterClient.getWebInterfaceURL();
+//                    System.out.println(clusterClient.getWebInterfaceURL());
+//                    token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
 
-            token.put(FlinkClusterTokenManager.JSON_KEY_K8S_NAMESPACE, flinkK8SImage.getNamespace());
-            token.put(FlinkClusterTokenManager.JSON_KEY_K8S_BASE_PATH, flinkK8SImage.getK8SCfg().getKubeBasePath());
-            token.put(FlinkClusterTokenManager.JSON_KEY_K8S_ID, flinkK8SImage.identityValue());
+                    token = createClusterMeta(FlinkClusterType.K8SApplication, clusterClient, flinkK8SImage);
 
-            return Optional.of(token);
+                    int tryCount = 0;
+                    boolean hasGetJobInfo = false;
+
+                    tryGetJob:
+                    while (tryCount++ < 5) {
+                        for (JobStatusMessage jobStat : clusterClient.listJobs().get()) {
+                            afterSucce.accept(jobStat.getJobId());
+                            hasGetJobInfo = true;
+                            break tryGetJob;
+                        }
+                        Thread.sleep(3000);
+                    }
+
+                    if (!hasGetJobInfo) {
+                        throw TisException.create("has not get jobId");
+                    }
+
+                }
+
+
+//                token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_ID, clusterId);
+
+//                token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_TYPE, FlinkClusterType.K8SApplication.getToken());
+//
+//                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_NAMESPACE, flinkK8SImage.getNamespace());
+//                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_BASE_PATH, flinkK8SImage.getK8SCfg().getKubeBasePath());
+//                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_ID, flinkK8SImage.identityValue());
+                token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
+                return Optional.of(token);
+            } finally {
+                Thread.currentThread().setContextClassLoader(originClassLoader);
+            }
         });
         // launchToken.writeLaunchToken(Optional.of(token));
 
+    }
+
+    public static JSONObject createClusterMeta(FlinkClusterType clusterType, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
+        JSONObject token = new JSONObject();
+        final String entryUrl = clusterClient.getWebInterfaceURL();
+        System.out.println(clusterClient.getWebInterfaceURL());
+        token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
+        token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_ID, clusterClient.getClusterId());
+        // token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
+        token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_TYPE, clusterType.getToken());
+
+        token.put(FlinkClusterTokenManager.JSON_KEY_K8S_NAMESPACE, flinkK8SImage.getNamespace());
+        token.put(FlinkClusterTokenManager.JSON_KEY_K8S_BASE_PATH, flinkK8SImage.getK8SCfg().getKubeBasePath());
+        token.put(FlinkClusterTokenManager.JSON_KEY_K8S_ID, flinkK8SImage.identityValue());
+        return token;
+    }
+
+    protected KubernetesApplicationClusterConfig getK8SClusterCfg() {
+        IPluginStore<DataXJobWorker> k8sApplicationCfs = DataXJobWorker.getFlinkKubernetesApplicationCfgStore();
+        return (KubernetesApplicationClusterConfig) k8sApplicationCfs.find(this.clusterCfg);
     }
 
 

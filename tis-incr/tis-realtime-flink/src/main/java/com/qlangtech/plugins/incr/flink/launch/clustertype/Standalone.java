@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.flink.api.common.JobID;
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 
 import java.io.File;
@@ -45,9 +46,9 @@ import java.util.function.Consumer;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-07 10:39
  **/
-public class Standalone extends ClusterType {
+public class Standalone extends AbstractClusterType {
 
-    private static final String KEY_FIELD_FLINK_CLUSTER = "flinkCluster";
+
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String flinkCluster;
 
@@ -60,31 +61,10 @@ public class Standalone extends ClusterType {
         return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
     }
 
-    public void deploy(TISFlinkCDCStreamFactory factory, TargetResName collection, File streamUberJar
-            , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
-        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
-        try (RestClusterClient restClient = getClusterCfg().createConfigInstance()) {
 
-
-            FlinkClient flinkClient = new FlinkClient();
-
-
-            JarSubmitFlinkRequest request
-                    = JarSubmitFlinkRequest.createFlinkJobRequest(factory, collection, streamUberJar, requestSetter);
-
-
-            JobID jobID = flinkClient.submitJar(restClient, request);
-
-            afterSuccess.accept(jobID);
-
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-        }
-    }
 
     @Override
-    public RestClusterClient createRestClusterClient() {
+    public ClusterClient createRestClusterClient() {
         return this.getClusterCfg().createConfigInstance();
     }
 

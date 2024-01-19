@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
@@ -86,7 +87,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
     public void checkUseable() throws TisException {
         FlinkCluster cluster = this;
         try {
-            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.empty(), Optional.of(1000l))) {
+            try (ClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.empty(), Optional.of(1000l))) {
                 // restClient.getClusterId();
                 CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
                 Collection<JobStatusMessage> jobStatus = status.get();
@@ -99,7 +100,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
 
     @Override
-    public RestClusterClient createConfigInstance() {
+    public ClusterClient createConfigInstance() {
         return createFlinkRestClusterClient(Optional.empty(), Optional.empty());
     }
 
@@ -107,7 +108,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
      * @param connTimeout The maximum time in ms for the client to establish a TCP connection.
      * @return
      */
-    public RestClusterClient createFlinkRestClusterClient(Optional<String> clusterId, Optional<Long> connTimeout) {
+    public ClusterClient createFlinkRestClusterClient(Optional<String> clusterId, Optional<Long> connTimeout) {
 
         try {
             JobManagerAddress managerAddress = this.getJobManagerAddress();

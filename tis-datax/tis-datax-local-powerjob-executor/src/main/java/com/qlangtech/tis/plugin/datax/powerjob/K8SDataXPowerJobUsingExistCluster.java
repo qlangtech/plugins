@@ -21,11 +21,15 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
 import com.qlangtech.tis.datax.job.SSERunnable;
+import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -40,6 +44,7 @@ import tech.powerjob.common.response.JobInfoDTO;
 import tech.powerjob.common.response.ResultDTO;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -53,9 +58,28 @@ import java.util.function.Consumer;
  * // @see PowerJobClient
  **/
 @Public
-public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker implements ITISPowerJob {
+public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker implements ITISPowerJob, ILaunchingOrchestrate {
 
     private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobUsingExistCluster.class);
+
+    private static final String existPowerJobCluster = "exist_powerjob_cluster";
+
+    public static final SubJobResName<K8SDataXPowerJobUsingExistCluster> LAUNCH_EXIST_CLUSTER
+            = new SubJobResName<K8SDataXPowerJobUsingExistCluster>(existPowerJobCluster, (powerJobServer) -> {
+        powerJobServer.testPowerJobClient((result) -> {
+        });
+    }) {
+        @Override
+        protected String getResourceType() {
+            return existPowerJobCluster;
+        }
+    };
+
+    public static final SubJobResName[] powerJobRes //
+            = new SubJobResName[]{
+            LAUNCH_EXIST_CLUSTER
+    };
+
 
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
     public String serverAddress;
@@ -75,6 +99,22 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 //
 //        TISPowerJobClient.registerApp().registerApp(powerjobDomain, appName, password);
 //    }
+
+    @Override
+    public Map<String, Object> getPayloadInfo() {
+        Map<String, Object> payloads = Maps.newHashMap();
+        // http://192.168.64.3:31000/#/welcome
+        payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + serverAddress + "/#/oms/home");
+        return payloads;
+    }
+    @Override
+    public List<ExecuteStep> getExecuteSteps() {
+        List<ExecuteStep> launchSteps = Lists.newArrayList();
+        for (SubJobResName rcRes : powerJobRes) {
+            launchSteps.add(new ExecuteStep(rcRes, null));
+        }
+        return launchSteps;
+    }
 
     public TISPowerJobClient createPowerJobClient() {
         TISPowerJobClient powerJobClient = TISPowerJobClient.create(this.serverAddress, this.appName, this.password);
@@ -97,8 +137,16 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 
     @Override
     public Optional<JSONObject> launchService(SSERunnable launchProcess) {
-        testPowerJobClient((result) -> {
-        });
+
+        try {
+            for (SubJobResName<K8SDataXPowerJobUsingExistCluster> subjob : powerJobRes) {
+                subjob.execSubJob(this);
+            }
+        } catch (Exception e) {
+            launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getMessage());
+            throw new RuntimeException(e);
+        }
+
 
         launchProcess.run();
         return Optional.empty();

@@ -7,6 +7,7 @@ import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
@@ -169,6 +170,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
                     container.setCommand(Lists.newArrayList("sh", "-c"
                             , "chmod +x wait-for-it.sh && ./wait-for-it.sh " + powerJobServerHostReplacement
                                     + " --strict -- java " + replicasSpec.toJavaMemorySpec()
+                                    + " " + DataXJobRunEnvironmentParamsSetter.createSysPramsSuppiler().serialize()
                                     + " -jar /powerjob-worker-samples.jar $PARAMS"));
                     return container;
                 }, replicasSpec, exportPorts, envs));

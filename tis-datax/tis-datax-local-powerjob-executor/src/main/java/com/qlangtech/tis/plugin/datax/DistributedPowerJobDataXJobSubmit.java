@@ -27,7 +27,11 @@ import com.qlangtech.tis.build.task.IBuildHistory;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.dao.ICommonDAOContext;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
+import com.qlangtech.tis.datax.DataXJobInfo;
+import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.IDataXPowerJobSubmit;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
@@ -61,6 +65,7 @@ import tech.powerjob.common.response.WorkflowInfoDTO;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -106,6 +111,14 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         result(tisPowerJob.stopWorkflowInstance(buildHistoryPayload.getPowerJobWorkflowInstanceId()));
         buildHistoryPayload.updateFinalStatus(ExecResult.CANCEL);
         return true;
+    }
+
+    @Override
+    public void deleteWorkflow(IControlMsgHandler module, Context context, Long wfId) {
+        Objects.requireNonNull(wfId, "wfId can not be null");
+        TISPowerJobClient tisPowerJob = getTISPowerJob();
+
+        result(tisPowerJob.deleteWorkflow(wfId));
     }
 
     /**
@@ -245,13 +258,14 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
             IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
 
         try {
+            ICommonDAOContext daoContext = getCommonDAOContext(module);
             SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(workflow.getName());
 
             PowerWorkflowPayload payload = PowerWorkflowPayload.createTISWorkflowPayload(this, module, topology);
             //   PowerJobClient powerJobClient = getTISPowerJob();
             RpcServiceReference statusRpc = getStatusRpc();
             StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
-            return payload.triggerPowerjobWorkflow(powerJobWorkflowInstanceIdOpt, statusRpc, feedback);
+            return payload.triggerPowerjobWorkflow(daoContext, powerJobWorkflowInstanceIdOpt, statusRpc, feedback);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -281,7 +295,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(this, module, appName);
-        return appPayload.triggerPowerjobWorkflow(workflowInstanceIdOpt, statusRpc, feedback);
+        return appPayload.triggerPowerjobWorkflow(getCommonDAOContext(module), workflowInstanceIdOpt, statusRpc, feedback);
     }
 
 //    public TriggerBuildResult triggerPowerjobWorkflow(IControlMsgHandler module, String appName, Optional<Long> workflowInstanceIdOpt, PowerJobClient powerJobClient, RpcServiceReference statusRpc, StatusRpcClientFactory.AssembleSvcCompsite feedback, ICommonDAOContext daoContext, PowerWorkflowPayload appPayload) {

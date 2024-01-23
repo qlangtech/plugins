@@ -1,5 +1,6 @@
 {
   "imagePath": {
-    "dftVal": "registry.cn-hangzhou.aliyuncs.com/tis/tis-incr:latest"
+    "dftVal": "com.qlangtech.plugins.incr.flink.common.FlinkK8SImage.dftImagePath()",
+    "help": "Flink Image Path 由TIS定制"
   }
 }

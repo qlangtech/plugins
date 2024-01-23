@@ -45,6 +45,32 @@ public class TestDistributedPowerJobDataXJobSubmit extends TestCase implements T
     private String topplogName = "asdf";
     private Integer workflowId = 1;
 
+    public void testSaveJob() {
+        DistributedPowerJobDataXJobSubmit powerJobDataXJobSubmit = new DistributedPowerJobDataXJobSubmit();
+
+        PowerJobExecContext module = mock("moudle", PowerJobExecContext.class);
+        // IWorkFlowDAO workflowDAO = mock("workflowDAO", IWorkFlowDAO.class);
+        IApplicationDAO applicationDAO = mock("applicationDAO", IApplicationDAO.class);
+        expectApplicationSelect(applicationDAO);
+        // ICommonDAOContext m = mock("tisModule", ICommonDAOContext.class);
+//
+//        expectApplicationSelect(applicationDAO);
+        // expectWorkflowSelect(workflowDAO);
+
+        EasyMock.expect(module.getApplicationDAO()).andReturn(applicationDAO);
+        Context context = mock("context", Context.class);
+        DataxProcessor dataxProcessor =
+                mock("dataXProcessor", DataxProcessor.class);
+
+        DataxProcessor.processorGetter = (dataXName) -> dataxProcessor;
+
+        EasyMock.expect(dataxProcessor.identityValue()).andReturn(testDataXName).anyTimes();
+
+        replay();
+        powerJobDataXJobSubmit.saveJob(module, context, dataxProcessor);
+        verifyAll();
+    }
+
 
     public void testCreateWorkflowJob() {
         //  String topplogName = "asdf";

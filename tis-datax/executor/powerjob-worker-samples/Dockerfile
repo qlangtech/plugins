@@ -5,11 +5,20 @@ MAINTAINER dudiao(idudiao@163.com)
 # 设置时区
 ENV TZ=Asia/Shanghai
 
+
+
 # 设置其他环境变量
 ENV APP_NAME=powerjob-worker-samples
 # 传递 SpringBoot 启动参数 和 JVM参数
 ENV PARAMS=""
+
 ENV JVMOPTIONS=""
+ADD ./tis-data.tar.gz /opt/data/
+
+RUN mv /opt/data/data /opt/data/tis  && \
+	mkdir -p /opt/logs && \
+    mkdir -p /opt/tis
+
 # 将应用 jar 包拷入 docker
 COPY target/powerjob-worker-samples.jar /powerjob-worker-samples.jar
 COPY ./wait-for-it.sh /wait-for-it.sh

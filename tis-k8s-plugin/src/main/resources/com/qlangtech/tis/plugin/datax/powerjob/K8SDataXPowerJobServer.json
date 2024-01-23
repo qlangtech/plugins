@@ -21,7 +21,7 @@
       "label": "配置",
       "plugin": [
         {
-          "hetero": "k8s-images",
+          "hetero": "powerjob-image",
           "descName": "powerjob-image"
         }
       ]

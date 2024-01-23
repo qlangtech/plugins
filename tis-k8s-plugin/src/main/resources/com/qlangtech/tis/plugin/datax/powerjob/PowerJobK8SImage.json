@@ -1,7 +1,7 @@
 {
   "powerJobWorkerImagePath": {
     "label": "workerImage",
-    "dftVal": "tis/powerjob-worker:4.0.0",
+    "dftVal": "com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage.dftPowerJobWorkerImagePath()",
     "help": "Powerjob Worker Image Path 由TIS定制"
   },
   "embeddedMetaDataImagePath": {

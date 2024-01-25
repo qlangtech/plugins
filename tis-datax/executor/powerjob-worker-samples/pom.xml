@@ -118,6 +118,28 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>tisasm-maven-plugin</artifactId>
+                <configuration>
+                    <descriptor>./assembly.xml</descriptor>
+                    <!--为了避免docker build conbtext 过大，所以保存在当前目录-->
+                    <outputDirectory>../</outputDirectory>
+                    <finalName>${project.build.finalName}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <tarLongFileMode>posix</tarLongFileMode>
+                    <appnamePattern>powerjob</appnamePattern>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>tisasm</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <configuration>

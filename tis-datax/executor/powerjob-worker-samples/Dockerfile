@@ -14,6 +14,7 @@ ENV PARAMS=""
 
 ENV JVMOPTIONS=""
 ADD ./tis-data.tar.gz /opt/data/
+ADD ./tis-datax-executor.tar.gz /opt/tis/
 
 RUN mv /opt/data/data /opt/data/tis  && \
 	mkdir -p /opt/logs && \

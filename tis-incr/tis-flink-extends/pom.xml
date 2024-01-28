@@ -71,7 +71,6 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-flink-dependency</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -126,6 +125,7 @@
                                     <!-- Bundled separately so that users can easily switch between ZK 3.4/3.5-->
                                     <exclude>org.slf4j:slf4j-api</exclude>
                                     <exclude>org.codehaus.groovy:groovy-all</exclude>
+                                    <exclude>com.qlangtech.tis.plugins:tis-flink-dependency</exclude>
                                 </excludes>
                             </artifactSet>
                             <!--                        <transformers>-->

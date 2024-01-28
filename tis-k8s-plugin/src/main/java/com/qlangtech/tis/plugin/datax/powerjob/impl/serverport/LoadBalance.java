@@ -1,3 +1,21 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
@@ -7,8 +25,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
-import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -21,67 +38,34 @@ import org.apache.commons.lang.math.NumberRange;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
-import java.util.function.Supplier;
-
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 
 /**
- * @author 百岁 (baisui@qlangtech.com)
- * @date 2023/12/18
- */
-public class NodePort extends ServerPortExport {
-
-    public static final String KEY_HOST = "host";
-
-    /**
-     * 默认范围：30000-32767
-     */
-    @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
-    public Integer nodePort;
-
+ * @author: 百岁（baisui@qlangtech.com）
+ * @create: 2024-01-25 11:37
+ **/
+public class LoadBalance extends ServerPortExport {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String host;
+    @Override
+    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
+        //  NodePort.createService(nameSpace, api, targetPortName, this, ServiceType.LoadBalancer);
+        NodePort.createService(nameSpace, api, targetPortName, this, () -> {
+            V1ServiceSpec svcSpec = new V1ServiceSpec();
+            svcSpec.setType(ServiceType.LoadBalancer.token);
+            //svcSpec.setType("LoadBalancer");
+            V1ServicePort servicePort = new V1ServicePort();
+            // servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
+            return Pair.of(svcSpec, servicePort);
+        });
+    }
 
     @Override
     public String getPowerjobHost() {
         if (StringUtils.isEmpty(this.host)) {
             throw new IllegalStateException("prop host can not be empty");
         }
-        return host + ":" + Objects.requireNonNull(nodePort, "node port can not be null");
+        return host + ":" + Objects.requireNonNull(123, "node port can not be null");
     }
-
-    @Override
-    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-        createService(nameSpace, api, targetPortName, this, () -> {
-            V1ServiceSpec svcSpec = new V1ServiceSpec();
-            svcSpec.setType(ServiceType.NodePort.token);
-            V1ServicePort servicePort = new V1ServicePort();
-            servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
-            return Pair.of(svcSpec, servicePort);
-        });
-
-    }
-
-    public static ServiceResName createService(String nameSpace, CoreV1Api api //
-            , String targetPortName, ServerPortExport portExport
-            , Supplier<Pair<V1ServiceSpec, V1ServicePort>> specCreator) throws ApiException {
-        return K8SUtils.createService(api, nameSpace
-                , K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
-                , K8S_DATAX_POWERJOB_SERVER, portExport.serverPort, targetPortName, specCreator);
-    }
-
-    public enum ServiceType {
-        NodePort("NodePort"),
-        LoadBalancer("LoadBalancer"),
-        ClusterIP("ClusterIP");
-        public String token;
-
-        private ServiceType(String token) {
-            this.token = token;
-        }
-    }
-
 
     @TISExtension
     public static class DftDesc extends Descriptor<ServerPortExport> {
@@ -96,10 +80,9 @@ public class NodePort extends ServerPortExport {
 
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-
             final NodePort portExport = postFormVals.newInstance();
             if (!NetUtils.isReachable(portExport.host)) {
-                msgHandler.addFieldError(context, KEY_HOST, "不能连通");
+                msgHandler.addFieldError(context, NodePort.KEY_HOST, "不能连通");
                 return false;
             }
             return true;
@@ -119,7 +102,7 @@ public class NodePort extends ServerPortExport {
 
         @Override
         public String getDisplayName() {
-            return NodePort.class.getSimpleName();
+            return LoadBalance.class.getSimpleName();
         }
     }
 }

@@ -30,7 +30,7 @@ import com.qlangtech.tis.solr.common.DOMUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
-import org.apache.flink.runtime.execution.librarycache.FlinkUserCodeClassLoaders;
+import org.apache.flink.util.FlinkUserCodeClassLoaders.ResolveOrder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -114,7 +114,7 @@ public class TestHudiTISFlinkClassLoaderFactory {
         });
 
         // IPluginContext pluginContext, StoreResourceType resourceType, String appname, Class<TT> clazz
-        KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, StoreResourceType.DataApp, "hudi", (KeyedPluginStore.PluginClassCategory)null);
+        KeyedPluginStore.AppKey appKey = new KeyedPluginStore.AppKey(null, StoreResourceType.DataApp, "hudi", (KeyedPluginStore.PluginClassCategory) null);
         String appPath = IPath.pathConcat(Config.SUB_DIR_CFG_REPO, Config.KEY_TIS_PLUGIN_CONFIG, appKey.getSubDirPath());// Config.SUB_DIR_CFG_REPO + File.separator + Config.KEY_TIS_PLUGIN_CONFIG + File.separator + ;
         HttpUtils.addMockApply(-1, new HttpUtils.MockMatchKey(URLEncoder.encode(appPath, TisUTF8.getName()), false, true), new HttpUtils.IClasspathRes() {
             @Override
@@ -138,7 +138,7 @@ public class TestHudiTISFlinkClassLoaderFactory {
         };
         BlobLibraryCacheManager.ClassLoaderFactory classLoaderFactory
                 = loaderFactory.buildServerLoaderFactory(
-                FlinkUserCodeClassLoaders.ResolveOrder.CHILD_FIRST, alwaysParentFirstPatterns, exceptionHander, false);
+                ResolveOrder.CHILD_FIRST, alwaysParentFirstPatterns, exceptionHander, false);
 
         Assert.assertNotNull(streamUberJar);
 

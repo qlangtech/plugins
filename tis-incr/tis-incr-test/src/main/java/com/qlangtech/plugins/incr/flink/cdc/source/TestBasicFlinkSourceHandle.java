@@ -84,7 +84,7 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
             tabEnv = StreamTableEnvironment.create(
                     env,
                     EnvironmentSettings.newInstance()
-                            .useBlinkPlanner()
+                            //.useBlinkPlanner()
                             .inStreamingMode()
                             .build());
 

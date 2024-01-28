@@ -35,7 +35,7 @@ import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
 import org.apache.flink.runtime.execution.librarycache.ClassLoaderFactoryBuilder;
-import org.apache.flink.runtime.execution.librarycache.FlinkUserCodeClassLoaders;
+import org.apache.flink.util.FlinkUserCodeClassLoaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

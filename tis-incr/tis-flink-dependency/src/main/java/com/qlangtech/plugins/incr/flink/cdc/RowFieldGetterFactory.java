@@ -22,7 +22,7 @@ import org.apache.flink.table.data.DecimalData;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.TimestampData;
-import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
+import org.apache.flink.table.utils.DateTimeUtils;
 
 import javax.annotation.Nullable;
 import java.sql.Date;
@@ -117,7 +117,7 @@ public class RowFieldGetterFactory {
             if (val instanceof java.lang.Integer) {
                 LocalDate localDate = LocalDate.of(0, 1, 1);
 
-                LocalTime localTime = SqlDateTimeUtils.unixTimeToLocalTime((Integer) val);
+                LocalTime localTime = DateTimeUtils.toLocalTime((Integer) val);
                 return Timestamp.valueOf(LocalDateTime.of(localDate, localTime));
             }
 
@@ -176,7 +176,7 @@ public class RowFieldGetterFactory {
         @Nullable
         @Override
         public Object getObject(GenericRowData rowData) {
-            return Time.valueOf(SqlDateTimeUtils.unixTimeToLocalTime((rowData.getInt(colIndex))));
+            return Time.valueOf(DateTimeUtils.toLocalTime((rowData.getInt(colIndex))));
         }
     }
 

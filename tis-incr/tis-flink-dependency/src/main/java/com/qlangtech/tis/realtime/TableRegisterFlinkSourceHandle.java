@@ -18,7 +18,6 @@
 
 package com.qlangtech.tis.realtime;
 
-import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
@@ -48,10 +47,10 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.descriptors.ConnectorDescriptor;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
@@ -95,7 +94,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
         StreamTableEnvironment tabEnv = StreamTableEnvironment.create(
                 env, EnvironmentSettings.newInstance()
-                        .useBlinkPlanner()
+                        // .useBlinkPlanner()
                         .inStreamingMode()
                         .build());
 
@@ -142,25 +141,21 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     }
 
     private void registerSinkTable(StreamTableEnvironment tabEnv, TableAlias alias) {
-        final Map<String, String> connProps = Maps.newHashMap();
-        connProps.put(DataxUtils.DATAX_NAME, this.getDataXName());
-        //ChunjunSinkFactory.KEY_SOURCE_TABLE_NAME
-        connProps.put(TableAlias.KEY_FROM_TABLE_NAME, alias.getFrom());
-        org.apache.flink.table.descriptors.Schema sinkTabSchema
-                = new org.apache.flink.table.descriptors.Schema();
+
+        org.apache.flink.table.api.Schema.Builder sinkTabSchema
+                = org.apache.flink.table.api.Schema.newBuilder();
         // 其实无作用骗骗校验器的
         initWriterTable(alias);
         List<FlinkCol> cols = this.getTabColMetas(new TargetResName(this.getDataXName()), alias.getTo());
         for (FlinkCol c : cols) {
-            sinkTabSchema.field(c.name, c.type);
+            sinkTabSchema.column(c.name, c.type);
         }
-        tabEnv.connect(new ConnectorDescriptor(this.getSinkTypeName(), 1, false) {
-                    @Override
-                    protected Map<String, String> toConnectorProperties() {
-                        return connProps;
-                    }
-                }).withSchema(sinkTabSchema) //
-                .inUpsertMode().createTemporaryTable(alias.getTo());
+
+        tabEnv.createTemporaryTable(alias.getTo()
+                , TableDescriptor.forConnector(this.getSinkTypeName())
+                        .option(DataxUtils.DATAX_NAME, this.getDataXName())
+                        .option(TableAlias.KEY_FROM_TABLE_NAME, alias.getFrom())
+                        .schema(sinkTabSchema.build()).build());
     }
 
     protected void initWriterTable(TableAlias alias) {

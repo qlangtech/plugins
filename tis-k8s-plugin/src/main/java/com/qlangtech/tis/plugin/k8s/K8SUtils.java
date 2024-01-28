@@ -163,7 +163,7 @@ public class K8SUtils {
         });
     }
 
-    public static void createService(final CoreV1Api api, String namespace //
+    public static ServiceResName createService(final CoreV1Api api, String namespace //
             , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName
             , Supplier<Pair<V1ServiceSpec, V1ServicePort>> specCreator) throws ApiException {
         // SSERunnable sse = SSERunnable.getLocal();
@@ -190,6 +190,7 @@ public class K8SUtils {
             svcBody.setSpec(svcSpec);
 
             V1Service svc = api.createNamespacedService(namespace, svcBody, K8SUtils.resultPrettyShow, null, null);
+            return svcRes;
             //  System.out.println(svc);
             // sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "success to publish service'" + svcRes.getName() + "'");
             //   success = true;

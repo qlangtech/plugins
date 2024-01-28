@@ -39,6 +39,7 @@ import org.apache.flink.api.common.JobID;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.client.program.rest.RestClusterClient;
+import org.apache.flink.core.execution.SavepointFormatType;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.runtime.rest.messages.job.JobDetailsInfo;
 import org.slf4j.Logger;
@@ -303,7 +304,7 @@ public class FlinkTaskNodeController implements IRCController {
         processFlinkJob(collection, (restClient, savePoint, status) -> {
             String savepointDirectory = savePoint.createSavePointPath();
             CompletableFuture<String> result
-                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory);
+                    = restClient.triggerSavepoint(status.getLaunchJobID(), savepointDirectory, SavepointFormatType.DEFAULT);
             status.addSavePoint(result.get(25, TimeUnit.SECONDS), IFlinkIncrJobStatus.State.RUNNING);
         });
     }
@@ -368,7 +369,7 @@ public class FlinkTaskNodeController implements IRCController {
             String savepointDirectory = savePoint.createSavePointPath();
             // advanceToEndOfTime - flag indicating if the source should inject a MAX_WATERMARK in the pipeline
             CompletableFuture<String> result
-                    = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory);
+                    = restClient.stopWithSavepoint(status.getLaunchJobID(), true, savepointDirectory, SavepointFormatType.DEFAULT);
             status.stop(result.get(3, TimeUnit.MINUTES));
             // status.stop(result.get());
         });
@@ -385,7 +386,7 @@ public class FlinkTaskNodeController implements IRCController {
             }
 
             JobID jobID = status.getLaunchJobID();
-            try (ClusterClient restClient =  this.factory.getFlinkCluster()) {
+            try (ClusterClient restClient = this.factory.getFlinkCluster()) {
                 // 先删除掉，可能cluster中
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(jobID);
                 JobStatus s = jobStatus.get(5, TimeUnit.SECONDS);

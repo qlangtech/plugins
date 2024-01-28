@@ -22,7 +22,7 @@ public class PowerJobK8SImage extends DefaultK8SImage {
             embeddedMetaDataImagePath;
 
     public static final String dftPowerJobWorkerImagePath() {
-        return "registry.cn-hangzhou.aliyuncs.com/tis/powerjob-worker:"
+        return "registry.cn-hangzhou.aliyuncs.com/tis/tis-datax-executor:"
                 + TisMetaProps.getInstance().getVersion();
     }
 

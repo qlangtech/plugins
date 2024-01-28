@@ -19,7 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc.mysql;
 
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample;
-import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
+import org.apache.flink.table.utils.DateTimeUtils;
 import org.junit.Test;
 
 import java.sql.Time;
@@ -38,9 +38,9 @@ public class TestTime {
         //  System.out.println(  time.getNano());
         System.out.println(t.getTime());
 
-        System.out.println(SqlDateTimeUtils.localTimeToUnixDate(LocalTime.parse("18:00:22")));
+        System.out.println(DateTimeUtils.toInternal(LocalTime.parse("18:00:22")));
 
-        System.out.println(SqlDateTimeUtils.unixTimeToLocalTime(SqlDateTimeUtils.localTimeToUnixDate(LocalTime.parse("18:00:22"))));
+        System.out.println(DateTimeUtils.toLocalTime(DateTimeUtils.toInternal(LocalTime.parse("18:00:22"))));
 
         System.out.println(Time.valueOf(LocalTime.ofNanoOfDay(t.getTime() * 1_000_000L)));
     }

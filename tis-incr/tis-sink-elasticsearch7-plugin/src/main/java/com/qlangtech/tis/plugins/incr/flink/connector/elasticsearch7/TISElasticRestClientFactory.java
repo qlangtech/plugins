@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 import com.qlangtech.org.apache.http.auth.AuthScope;
 import com.qlangtech.org.apache.http.auth.UsernamePasswordCredentials;
-import com.qlangtech.org.apache.http.client.CredentialsProvider;
 import com.qlangtech.org.apache.http.impl.client.BasicCredentialsProvider;
 import com.qlangtech.org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.flink.streaming.connectors.elasticsearch7.RestClientFactory;
@@ -43,7 +42,7 @@ public class TISElasticRestClientFactory implements RestClientFactory {
     @Override
     public void configureRestClientBuilder(RestClientBuilder restClientBuilder) {
 
-        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        final BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY,
                 new UsernamePasswordCredentials(this.userName, this.password));
         restClientBuilder.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {

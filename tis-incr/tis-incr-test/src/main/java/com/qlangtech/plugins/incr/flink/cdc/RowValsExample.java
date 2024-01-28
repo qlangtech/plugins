@@ -22,14 +22,18 @@ import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
+import org.apache.flink.table.utils.DateTimeUtils;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -91,7 +95,7 @@ public class RowValsExample extends RowVals<RowValsExample.RowVal> {
                 public String getExpect() {
                     if (unixTimeToLocalTime) {
                         return (AbstractRowDataMapper.LocalTimeConvert.TIME_FORMATTER
-                                .format(SqlDateTimeUtils.unixTimeToLocalTime((int) t.getTime())));
+                                .format(DateTimeUtils.toLocalTime((int) t.getTime())));
                     }
 
                     return s;

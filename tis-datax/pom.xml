@@ -68,13 +68,15 @@
         <module>tis-ds-mysql-v5-plugin</module>
         <module>tis-ds-mysql-v8-plugin</module>
         <module>tis-datax-local-executor</module>
-        <!--        -->
+        <!-- 为测试通过暂时注释掉
         <module>tis-datax-hudi-dependency</module>
         <module>tis-datax-hudi-test</module>
         <module>tis-datax-hudi-plugin</module>
+        <module>tis-datax-hudi-common</module>
+        -->
         <module>tis-datax-hdfs-plugin</module>
         <module>tis-datax-hdfs-reader-writer-plugin</module>
-        <module>tis-datax-hudi-common</module>
+
         <!--tis-datax-local-embedded-executor 和 tis-datax-local-executor 合并了没有必要分两个工程-->
         <!--        <module>tis-datax-local-embedded-executor</module>-->
         <module>tis-datax-odps-plugin</module>

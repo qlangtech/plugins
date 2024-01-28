@@ -145,10 +145,10 @@ public class KubernetesApplication extends ClusterType {
                 ClusterSpecification clusterSpecification = kubernetesClusterClientFactory.getClusterSpecification(
                         flinkConfig);
 
-                FlinkKubeClient client
-                        = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
+//                FlinkKubeClient client
+//                        = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
                 KubernetesClusterDescriptor kubernetesClusterDescriptor
-                        = new KubernetesClusterDescriptor(flinkConfig, client);
+                        = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
 
                 FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
 

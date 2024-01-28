@@ -30,7 +30,8 @@ import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
-import org.apache.flink.runtime.execution.librarycache.FlinkUserCodeClassLoaders;
+
+import org.apache.flink.util.FlinkUserCodeClassLoaders.ResolveOrder;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -79,7 +80,7 @@ public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
         String[] alwaysParentFirstPatterns = new String[]{};
 
 
-        loaderFactory = flinkClassLoaderFactory.buildServerLoaderFactory(FlinkUserCodeClassLoaders.ResolveOrder.CHILD_FIRST, alwaysParentFirstPatterns, (ex) -> {
+        loaderFactory = flinkClassLoaderFactory.buildServerLoaderFactory(ResolveOrder.CHILD_FIRST, alwaysParentFirstPatterns, (ex) -> {
             Assert.fail(ex.getMessage());
         }, true);
         this.replay();

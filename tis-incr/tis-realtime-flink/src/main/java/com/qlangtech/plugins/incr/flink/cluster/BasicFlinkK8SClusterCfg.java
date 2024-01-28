@@ -101,7 +101,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         K8sImage k8SImageCfg = this.getFlinkK8SImage();
         IK8sContext kubeConfig = k8SImageCfg.getK8SCfg();
         FlinkKubeClientFactory.kubeConfig
-                = io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
+                = org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
         final Configuration configuration = ((BasicFlinkCfgDescriptor) this.getDescriptor()).opts.createFlinkCfg(this);
         return configuration;
     }

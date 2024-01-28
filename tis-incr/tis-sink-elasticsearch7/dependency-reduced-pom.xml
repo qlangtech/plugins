@@ -110,4 +110,7 @@
       </exclusions>
     </dependency>
   </dependencies>
+  <properties>
+    <flink.connector-elasticsearch.version>3.0.1-1.17</flink.connector-elasticsearch.version>
+  </properties>
 </project>

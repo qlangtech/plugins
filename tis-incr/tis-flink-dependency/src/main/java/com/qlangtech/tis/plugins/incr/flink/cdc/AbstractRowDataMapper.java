@@ -36,7 +36,8 @@ import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
-import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
+//import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
+import org.apache.flink.table.utils.DateTimeUtils;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.BigIntType;
 import org.apache.flink.table.types.logical.DateType;
@@ -492,7 +493,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         @Override
         public Object apply(Object o) {
             LocalTime time = (LocalTime) super.apply(o);
-            return SqlDateTimeUtils.localTimeToUnixDate(time);
+            return DateTimeUtils.toInternal(time);
         }
     }
 

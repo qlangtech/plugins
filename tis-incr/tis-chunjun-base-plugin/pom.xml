@@ -80,7 +80,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.flink</groupId>
-                    <artifactId>flink-clients_${scala.binary.version}</artifactId>
+                    <artifactId>flink-clients</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.flink</groupId>

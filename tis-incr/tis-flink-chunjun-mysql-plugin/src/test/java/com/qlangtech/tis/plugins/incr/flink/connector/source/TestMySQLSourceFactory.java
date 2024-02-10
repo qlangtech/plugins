@@ -18,7 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.source;
 
-import com.qlangtech.plugins.incr.flink.cdc.mysql.BasicMySQLCDCTest;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.BasicMySQLCDCTest;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;

@@ -39,8 +39,8 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.INPUTTEXT)
     public String connectionOptions;
 
-    @FormField(ordinal = 1, type = FormFieldType.ENUM)
-    public String errorsTolerance;
+//    @FormField(ordinal = 1, type = FormFieldType.ENUM)
+//    public String errorsTolerance;
 
     @FormField(ordinal = 2, type = FormFieldType.TEXTAREA)
     public String copyExistingPipeline;
@@ -48,8 +48,8 @@ public class FlinkCDCMongoDBSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 3, type = FormFieldType.ENUM)
     public Boolean copyExisting;
 
-    @FormField(ordinal = 4, type = FormFieldType.ENUM)
-    public Boolean errorsLogEnable;
+//    @FormField(ordinal = 4, type = FormFieldType.ENUM)
+//    public Boolean errorsLogEnable;
 
     @FormField(ordinal = 5, type = FormFieldType.INT_NUMBER, validate = {Validator.integer})
     public Integer copyExistingMaxThreads;

@@ -20,6 +20,7 @@ package scala.tools;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.java.IOutputEntry;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.manage.common.Config;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -31,7 +32,13 @@ import scala.tools.scala_maven_executions.MainHelper;
 import scala.tools.util.FileUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Abstract parent of all Scala Mojo who run compilation
@@ -228,6 +235,8 @@ public class ScalaCompilerSupport {
         }
         // 将会被编译的代码
         List<File> files = getFilesToCompile(sourceRootDirs, _lastCompileAt);
+        getLog().info(" ready to be compile file count:" + files.size()
+                + ",fileNames:" + files.stream().map((file) -> file.getName()).collect(Collectors.joining(",")));
         if (files == null) {
             return -1;
         }
@@ -417,12 +426,16 @@ public class ScalaCompilerSupport {
             ArrayList<File> modifiedScalaFiles = new ArrayList<>(sourceFiles.size());
             ArrayList<File> modifiedJavaFiles = new ArrayList<>(sourceFiles.size());
             for (File f : sourceFiles) {
+
                 if (f.lastModified() >= lastSuccessfulCompileTime) {
                     if (f.getName().endsWith(".java")) {
                         modifiedJavaFiles.add(f);
                     } else if (f.getName().endsWith(".scala")) {
                         modifiedScalaFiles.add(f);
                     }
+                } else {
+                    getLog().warn("skip compile,file:{} ,reason lastSuccessfulCompileTime:{} > fileModfiyTime:{}"
+                            , f.getName(), TimeFormat.yyyyMMddHHmmss.format(lastSuccessfulCompileTime), TimeFormat.yyyyMMddHHmmss.format(f.lastModified()));
                 }
             }
             if ((modifiedScalaFiles.size() != 0) || (modifiedJavaFiles.size() != 0)) {

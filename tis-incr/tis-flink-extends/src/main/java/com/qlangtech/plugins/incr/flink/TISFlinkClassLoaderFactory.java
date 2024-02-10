@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.ITPIArtifact;
 import com.qlangtech.tis.extension.PluginManager;
@@ -59,7 +60,12 @@ import static org.apache.flink.util.FlinkUserCodeClassLoader.NOOP_EXCEPTION_HAND
 
 public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
-    public static final String SKIP_CLASSLOADER_FACTORY_CREATION = "skip_classloader_factory_creation";
+    /**
+     * 默认服务端不需要依赖到的插件名称，需要过滤掉，以免在执行过程中产生类重复加载的问题，导致cast异常
+     */
+    private static final String SKIP_DEPENDENCY_FLINK_DEPENDENCY = "tis-flink-dependency";
+
+    public static final String SKIP_CLASSLOADER_FACTORY_CREATION = IFlinkCluster.SKIP_CLASSLOADER_FACTORY_CREATION;
 
     private static final Logger logger = LoggerFactory.getLogger(TISFlinkClassLoaderFactory.class);
 
@@ -118,8 +124,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     }
 
     public static PluginMeta getFlinkPluginMeta(TargetResName tisAppName) {
-        PluginMeta flinkPluginMeta;
-        flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()
+
+        PluginMeta flinkPluginMeta = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName()
                 , Config.getMetaProps().getVersion(), Optional.of(PluginClassifier.MATCH_ALL_CLASSIFIER));
         return flinkPluginMeta;
     }
@@ -161,46 +167,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
 
                     localCache = synAppRelevantCfgsAndTpis(Optional.ofNullable(localCache), libraryURLs);
 
-//                    PluginAndCfgsSnapshot cfgSnapshot = null;//= getTisAppName();
-//                    File nodeExcludeLock = new File(Config.getDataDir(), "initial.lock");
-//                    FileUtils.touch(nodeExcludeLock);
-//                    RandomAccessFile raf = new RandomAccessFile(nodeExcludeLock, "rw");
-//                    try (FileChannel channel = raf.getChannel()) {
-//                        // 服务器节点级别通过文件来排他
-//                        try (FileLock fileLock = channel.tryLock()) {
-//                            PluginAndCfgsSnapshot localSnaphsot = null;
-//                            try {
-//                                TIS.permitInitialize = false;
-//                                for (URL url : libraryURLs) {
-//                                    cfgSnapshot = PluginAndCfgsSnapshot.getRepositoryCfgsSnapshot(url.toString(), url.openStream());
-//                                    break;
-//                                }
-//                                Objects.requireNonNull(cfgSnapshot, "cfgSnapshot can not be null,libraryURLs size:" + libraryURLs.length);
-//                                //  boolean tisInitialized = TIS.initialized;
-//                                // PluginAndCfgsSnapshot cfgSnapshot = getTisAppName();
-//                                logger.info("start createClassLoader of app:" + cfgSnapshot.getAppName().getName());
-//
-//                                // TIS.clean();
-//                                // 这里只需要类不需要配置文件了
-//                                PluginMeta flinkPluginMeta
-//                                        = new PluginMeta(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + cfgSnapshot.getAppName().getName()
-//                                        , Config.getMetaProps().getVersion(), Optional.empty());
-//                                // 服务端不需要配置文件，只需要能够加载到类就行了
-//                                localSnaphsot = PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot( //
-//                                        StoreResourceType.DataApp, cfgSnapshot.getAppName(), Sets.newHashSet(flinkPluginMeta));
-//                            } finally {
-//                                TIS.permitInitialize = true;
-//                            }
-//                            cfgSnapshot.synchronizTpisAndConfs(localSnaphsot, Optional.ofNullable(localCache));
-//
-//
-//                            localCache = cfgSnapshot;
-//
-//                        }
-//                    }
-
-
-                    final Set<String> relativePluginNames = localCache.getPluginNames();
+                    final Set<String> relativePluginNames = Sets.newHashSet(localCache.getPluginNames())
+                            .stream().filter((pluginName) -> !SKIP_DEPENDENCY_FLINK_DEPENDENCY.equals(pluginName)).collect(Collectors.toSet());
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
                     return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)
                             , libraryURLs, this.getParentClassLoader()

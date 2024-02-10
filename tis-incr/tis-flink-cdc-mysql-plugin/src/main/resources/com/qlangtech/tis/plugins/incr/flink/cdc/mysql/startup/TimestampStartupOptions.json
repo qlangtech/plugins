@@ -1,0 +1,7 @@
+{
+  "startupTimestampMillis": {
+    "label": "开始时间",
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.TimestampStartupOptions.getCurrentTimeMillis()",
+    "help": "timestamp for the startup offsets, as milliseconds from epoch."
+  }
+}

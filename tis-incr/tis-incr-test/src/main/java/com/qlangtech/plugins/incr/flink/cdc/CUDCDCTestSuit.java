@@ -21,7 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;

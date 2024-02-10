@@ -21,6 +21,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -57,6 +58,11 @@ public class DefaultIncrK8sConfig extends IncrStreamFactory {
         }
         this.incrSync = new K8sIncrSync(TIS.getPluginStore(K8sImage.class).find(k8sImage));
         return this.incrSync;
+    }
+
+    @Override
+    public FlinkClusterType getClusterType() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

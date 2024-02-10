@@ -25,6 +25,7 @@ import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
@@ -36,8 +37,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.flink.annotation.Public;
 import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.client.program.rest.RestClusterClient;
-import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.util.Arrays;
@@ -62,7 +61,11 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 1, validate = {Validator.require})
     public ClusterType cluster;
 
-    //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
+    @Override
+    public FlinkClusterType getClusterType() {
+        return cluster.getClusterType();
+    }
+//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
 //    public String jobManagerAddress;
 //
 //    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
@@ -137,34 +140,19 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     }
 
     public ClusterType getClusterCfg() {
-//        return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
         return this.cluster;
     }
 
     @Override
     public IRCController getIncrSync() {
         FlinkTaskNodeController flinkTaskNodeController = new FlinkTaskNodeController(this);
-        //flinkTaskNodeController.setTableStreamHandle(createTableStreamHandle());
-
         return flinkTaskNodeController;
     }
 
 
-    // private BasicFlinkSourceHandle createTableStreamHandle() {
-    //   return new TISFlinkSourceHandle();
-    //}
-//
-//    @Override
-//    public String identityValue() {
-//        return this.name;
-//    }
-
     @TISExtension()
     public static class DefaultDescriptor extends Descriptor<IncrStreamFactory> {
-        //        @Override
-//        public String getId() {
-//            return IncrStreamFactory.FLINK_STREM;
-//        }
+
         public DefaultDescriptor() {
             super();
         }

@@ -57,7 +57,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.reflect.MethodUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.easymock.EasyMock;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 
@@ -85,6 +89,8 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
     public static void beforeClass() {
         CenterResource.setNotFetchFromCenterRepository();
     }
+
+
 
     /**
      * 测试 动态更新uber tpi包，动态生效
@@ -162,7 +168,7 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
 
         //String table1 = "totalpayinfo";
         // String table1  ="instancedetail";
-       // String table1 = "base";
+        // String table1 = "base";
         String table1 = "stu";
         //  String shortName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName();
         //   File pluginDir = new File(Config.getPluginLibDir(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + dataxName.getName()), "../..");

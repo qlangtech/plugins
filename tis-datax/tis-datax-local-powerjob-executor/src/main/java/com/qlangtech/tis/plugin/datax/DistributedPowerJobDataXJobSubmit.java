@@ -48,8 +48,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.meta.NodeType;
-import com.qlangtech.tis.util.HeteroEnum;
-import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
@@ -217,14 +215,10 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
      */
     @Override
     public void createJob(IControlMsgHandler module, Context context, DataxProcessor dataxProcessor) {
-        // SqlTaskNodeMeta.SqlDataFlowTopology
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(this, module, dataxProcessor.identityValue());
 
-        // appPayload.innerCreatePowerjobWorkflow();
-
-        appPayload.innerCreatePowerjobWorkflow(
-                Optional.empty(), Optional.empty());
+        appPayload.innerCreatePowerjobWorkflow(Optional.empty(), Optional.empty());
     }
 
     /**
@@ -283,188 +277,13 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         if (StringUtils.isEmpty(appName)) {
             throw new IllegalArgumentException("appName " + appName + " can not be empty");
         }
-        // PowerJobClient powerJobClient = getTISPowerJob();
+
         RpcServiceReference statusRpc = getStatusRpc();
         StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
-//        PowerJobClient powerJobClient = powerJob.getPowerJobClient();
-
-        //  JobInfoQuery jobQuery = new JobInfoQuery();
-        // jobQuery.setJobNameEq(appName);
-
-        //  Long workflowId = 0l;
-
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(this, module, appName);
         return appPayload.triggerPowerjobWorkflow(getCommonDAOContext(module), workflowInstanceIdOpt, statusRpc, feedback);
     }
-
-//    public TriggerBuildResult triggerPowerjobWorkflow(IControlMsgHandler module, String appName, Optional<Long> workflowInstanceIdOpt, PowerJobClient powerJobClient, RpcServiceReference statusRpc, StatusRpcClientFactory.AssembleSvcCompsite feedback, ICommonDAOContext daoContext, PowerWorkflowPayload appPayload) {
-//        PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.getPowerJobWorkflowId(false);
-//        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
-//
-//
-//        Map<ISelectedTab, SelectedTabTriggers> selectedTabTriggers = null;
-//        WorkflowUnEffectiveJudge unEffectiveJudge = null;
-//        if (powerJobWorkflowId == null
-////                || /**是否已经失效*/(unEffectiveJudge = powerJobWorkflowId.isUnEffective(
-////                getTISPowerJob(), selectedTabTriggers = createWfNodes(dataxProcessor, this, statusRpc))).isUnEffective()
-//        ) {
-//            // 如果之前还没有打开分布式调度，现在打开了，powerjob workflow还没有创建，现在创建
-//            appPayload = this.innerCreateJob(module, dataxProcessor, Optional.ofNullable(selectedTabTriggers), Optional.ofNullable(unEffectiveJudge), this, statusRpc);
-//            powerJobWorkflowId = appPayload.getPowerJobWorkflowId(true);
-//        }
-//
-//        WorkflowInfoDTO wfInfo = result(powerJobClient.fetchWorkflow(powerJobWorkflowId.getPowerjobWorkflowId()));
-//
-//        List<SelectedTabTriggers.SelectedTabTriggersConfig> triggerCfgs = Lists.newArrayList();
-//        vistWorkflowNodes(appName, wfInfo, new WorkflowVisit() {
-//            @Override
-//            public void vistStartInitNode(PEWorkflowDAG.Node node) {
-//                return;
-//            }
-//
-//            @Override
-//            public void vistWorkerNode(PEWorkflowDAG.Node node) {
-//                triggerCfgs.add(SelectedTabTriggers.deserialize(JSONObject.parseObject(node.getNodeParams())));
-//            }
-//        });
-//
-////        PEWorkflowDAG wfDAG = wfInfo.getPEWorkflowDAG();
-////
-////
-////        for (PEWorkflowDAG.Node node : wfDAG.getNodes()) {
-////            if ((appName + KEY_START_INITIALIZE_SUFFIX).equals(node.getNodeName())) {
-////                // 说明是 初始节点跳过
-////                continue;
-////            }
-////
-////            triggerCfgs.add(SelectedTabTriggers.deserialize(JSONObject.parseObject(node.getNodeParams())));
-////        }
-//
-//
-//        PowerJobExecContext chainContext = new PowerJobExecContext();
-//        chainContext.setAppname(appName);
-//        chainContext.setWorkflowId(powerJobWorkflowId.getPowerjobWorkflowId().intValue());
-//        chainContext.setExecutePhaseRange(powerJobWorkflowId.getExecutePhaseRange());
-//        //
-//        /**===================================================================
-//         * 创建 TIS的taskId
-//         ===================================================================*/
-//        final Integer tisTaskId = IExecChainContext.createNewTask(
-//                chainContext, workflowInstanceIdOpt.isPresent() ? TriggerType.CRONTAB : TriggerType.MANUAL);
-//
-//        if (CollectionUtils.isEmpty(triggerCfgs)) {
-//            throw new IllegalStateException("powerjob workflowId:" + powerJobWorkflowId.getPowerjobWorkflowId()
-//                    + " relevant nodes triggerCfgs can not be null empty");
-//        }
-//
-//        PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, tisTaskId);
-//        feedback.initSynJob(statusCollection);
-//
-//        // 取得powerjob instanceId
-//        Long workflowInstanceId = workflowInstanceIdOpt.orElseGet(() -> {
-//            // 手动触发的情况
-//            JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, appName, false);// new JSONObject();
-//            Long createWorkflowInstanceId = result(powerJobClient.runWorkflow(wfInfo.getId(), JsonUtil.toString(instanceParams), 0));
-//            logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
-//            return createWorkflowInstanceId;
-//        });
-//
-//
-//        WorkFlowBuildHistoryPayload buildHistoryPayload = new WorkFlowBuildHistoryPayload(tisTaskId, daoContext);
-//
-//        buildHistoryPayload.setPowerJobWorkflowInstanceId(workflowInstanceId);
-//
-//        TriggerBuildResult buildResult = new TriggerBuildResult(true);
-//        buildResult.taskid = tisTaskId;
-//
-//        initializeService(daoContext);
-//        triggrWorkflowJobs.offer(buildHistoryPayload);
-//        if (checkWorkflowJobsLock.tryLock()) {
-//
-//            scheduledExecutorService.schedule(() -> {
-//                checkWorkflowJobsLock.lock();
-//                try {
-//                    int count = 0;
-//                    WorkFlowBuildHistoryPayload pl = null;
-//                    List<WorkFlowBuildHistoryPayload> checkWf = Lists.newArrayList();
-//                    ExecResult execResult = null;
-//                    while (true) {
-//                        while ((pl = triggrWorkflowJobs.poll()) != null) {
-//                            checkWf.add(pl);
-//                            count++;
-//                        }
-//
-//                        if (CollectionUtils.isEmpty(checkWf)) {
-//                            logger.info("the turn all of the powerjob workflow job has been terminated,jobs count:{}", count);
-//                            return;
-//                        }
-//
-//                        // WorkflowInstanceInfoDTO wfStatus = null;
-//                        Iterator<WorkFlowBuildHistoryPayload> it = checkWf.iterator();
-//                        WorkFlowBuildHistoryPayload p;
-//                        int allWfJobsCount = checkWf.size();
-//                        int removed = 0;
-//                        while (it.hasNext()) {
-//                            p = it.next();
-//                            if ((execResult = p.processExecHistoryRecord(powerJobClient)) != null) {
-//                                // 说明结束了
-//                                it.remove();
-//                                removed++;
-//                                // 正常结束？ 还是失败导致？
-//                                if (execResult != ExecResult.SUCCESS) {
-//
-//                                }
-//                                triggrWorkflowJobs.taskFinal(p, execResult);
-//                            }
-//                        }
-//                        logger.info("start to wait next time to check job status,to terminate status count:{},allWfJobsCount:{}", removed, allWfJobsCount);
-//                        try {
-//                            Thread.sleep(4000);
-//                        } catch (InterruptedException e) {
-//                            throw new RuntimeException(e);
-//                        }
-//                    }
-//                } finally {
-//                    checkWorkflowJobsLock.unlock();
-//                }
-//            }, 5, TimeUnit.SECONDS);
-//            checkWorkflowJobsLock.unlock();
-//        }
-//
-//
-//        return buildResult;
-//    }
-
-
-//    public  ExecResult processExecHistoryRecord(PowerJobClient powerJobClient, WorkFlowBuildHistoryPayload buildHistoryPayload) {
-//
-//        Long powerJobWorkflowInstanceId = buildHistoryPayload.getPowerJobWorkflowInstanceId();
-//
-//        WorkflowInstanceInfoDTO workflowInstanceInfo = result(powerJobClient.fetchWorkflowInstanceInfo(powerJobWorkflowInstanceId));
-//
-//        WorkflowInstanceStatus wfStatus = WorkflowInstanceStatus.of(workflowInstanceInfo.getStatus());
-//        if (WorkflowInstanceStatus.FINISHED_STATUS.contains(wfStatus.getV())) {
-//            ExecResult execResult = null;
-//            switch (wfStatus) {
-//                case SUCCEED:
-//                    execResult = (ExecResult.SUCCESS);
-//                    break;
-//                case FAILED:
-//                    execResult = (ExecResult.FAILD);
-//                    break;
-//                case STOPPED:
-//                    execResult = (ExecResult.CANCEL);
-//                    break;
-//                default:
-//                    throw new IllegalStateException("illegal status :" + wfStatus);
-//            }
-//            buildHistoryPayload.updateFinalStatus(execResult);
-//            return execResult;
-//        }
-//
-//        return null;
-//    }
 
 
     public static ICommonDAOContext getCommonDAOContext(IControlMsgHandler module) {
@@ -497,159 +316,12 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(this, module, dataxProcessor.identityValue());
 
-//        appPayload.innerSaveJob();
 
         PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = appPayload.saveJob();
 
         return (TISWorkflowInfoDTO) result(getTISPowerJob().fetchWorkflow(powerJobWorkflowId.getPowerjobWorkflowId()));
     }
 
-
-    private static K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(IDataxProcessor dataxProcessor) {
-        for (DataXJobWorker worker : HeteroEnum.appJobWorkerTplReWriter.getPlugins(IPluginContext.namedContext(dataxProcessor.identityValue()), null)) {
-            return (K8SDataXPowerJobJobTemplate) worker;
-        }
-        return null;
-    }
-
-
-//    private PowerWorkflowPayload innerCreateJob(IControlMsgHandler module
-//            , DataxProcessor dataxProcessor
-//            , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers //
-//            , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-//
-//
-//        return this.innerCreateJob(PowerWorkflowPayload.createApplicationPayload(module, dataxProcessor.identityValue(), getCommonDAOContext(module))
-//                , module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, submit, statusRpc);
-//    }
-
-//    private PowerWorkflowPayload innerCreateJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
-//            , IDataxProcessor dataxProcessor
-//            , JobMap2WorkflowMaintainer jobIdMaintainer
-//            , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers //
-//            , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-////        K8SDataXPowerJobJobTemplate jobTpl
-////                = (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
-//        // dataxApp 相关的模版
-//        Optional<K8SDataXPowerJobJobTemplate> jobTpl = Optional.ofNullable(getAppRelevantDataXJobWorkerTemplate(dataxProcessor));
-//
-//        return innerSaveJob(appPayload, module, dataxProcessor, jobIdMaintainer, selectedTabTriggers, unEffectiveOpt, jobTpl.orElseGet(() -> {
-//            // 为空调用全局模版
-//            return (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
-//        }), submit, statusRpc);
-//    }
-
-//    private static PowerWorkflowPayload innerSaveJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
-//            , DataxProcessor dataxProcessor
-//            , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt
-//            , K8SDataXPowerJobJobTemplate jobTpl, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-//        return innerSaveJob(appPayload, module, dataxProcessor, new JobMap2WorkflowMaintainer(), selectedTabTriggers, unEffectiveOpt, jobTpl, submit, statusRpc);
-//    }
-
-//    /**
-//     * 执行Powerjob工作流保存流程
-//     *
-//     * @param module
-//     * @param dataxProcessor
-//     * @param selectedTabTriggers
-//     * @param unEffectiveOpt
-//     * @param jobTpl
-//     * @param submit
-//     * @param statusRpc
-//     * @return
-//     */
-//    private static PowerWorkflowPayload innerSaveJob(PowerWorkflowPayload appPayload, IControlMsgHandler module
-//            , IDataxProcessor dataxProcessor
-//            , JobMap2WorkflowMaintainer jobIdMaintainer
-//            , Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt
-//            , K8SDataXPowerJobJobTemplate jobTpl, DataXJobSubmit submit, RpcServiceReference statusRpc) {
-//        PowerJobClient powerJobClient = getTISPowerJob();
-//
-//
-//        Map<ISelectedTab, SelectedTabTriggers> createWfNodesResult = selectedTabTriggers.orElseGet(() -> createWfNodes(dataxProcessor, submit, statusRpc));
-//
-//        WorkflowUnEffectiveJudge unEffectiveJudge = unEffectiveOpt.orElseGet(() -> new WorkflowUnEffectiveJudge());
-//
-//        JSONObject mrParams = null;
-//
-//        SelectedTabTriggers tabTriggers = null;
-//        ISelectedTab selectedTab = null;
-//
-//        boolean containPostTrigger = false;
-//
-//        // Long jobId = null;
-//        List<SaveWorkflowNodeRequest> wfNodes = Lists.newArrayList();
-//        Optional<PEWorkflowDAG.Node> changedWfNode = null;
-//        for (Map.Entry<ISelectedTab, SelectedTabTriggers> entry : createWfNodesResult.entrySet()) {
-//            tabTriggers = entry.getValue();
-//            selectedTab = entry.getKey();
-//            mrParams = tabTriggers.createMRParams();
-//
-//            if (tabTriggers.getPostTrigger() != null) {
-//                containPostTrigger = true;
-//            }
-//
-//            SaveJobInfoRequest jobRequest = jobTpl.createSynJobRequest();
-//            changedWfNode = unEffectiveJudge.getExistWfNode(selectedTab.getName());
-//
-//            SaveWorkflowNodeRequest wfNode = createWorkflowNode(dataxProcessor.identityValue() + "_" + selectedTab.getName()
-//                    , JsonUtil.toString(mrParams), changedWfNode, jobRequest, jobTpl);
-//            wfNodes.add(wfNode);
-//            jobIdMaintainer.addJob(selectedTab, wfNode.getJobId());
-//        }
-//
-//
-//        //===============================================================
-//        // process startNode
-//        final String startNodeName = dataxProcessor.identityValue() + KEY_START_INITIALIZE_SUFFIX;
-//
-//        final SaveJobInfoRequest initJobRequest = jobTpl.createInitializeJobRequest();
-//        unEffectiveJudge.getStartInitNode().ifPresent((existStarNode) -> {
-//            initJobRequest.setId(existStarNode.getJobId());
-//        });
-//        initJobRequest.setJobName(startNodeName);
-//        JSONObject initNode = new JSONObject();
-//        initNode.put(DataxUtils.DATAX_NAME, dataxProcessor.identityValue());
-//        // 是否是dataflow的处理类型
-//        initNode.put(DataxUtils.TIS_WORK_FLOW_CHANNEL, dataxProcessor.getResType() == StoreResourceType.DataFlow);
-//        initJobRequest.setJobParams(JsonUtil.toString(initNode));
-//
-//        SaveWorkflowNodeRequest startWfNode = jobTpl.createWorkflowNode();
-//        startWfNode.setJobId(result(powerJobClient.saveJob(initJobRequest)));
-//        startWfNode.setNodeName(startNodeName);
-//        startWfNode.setNodeParams(initJobRequest.getJobParams());
-//
-//        wfNodes.add(startWfNode);
-//        //===============================================================
-//        wfNodes.addAll(jobIdMaintainer.beforeCreateWorkflowDAG(jobTpl));
-//        List<WorkflowNodeInfoDTO> savedWfNodes
-//                = result(powerJobClient.saveWorkflowNode(wfNodes));
-//
-//
-//        for (PEWorkflowDAG.Node deleteNode : unEffectiveJudge.getDeletedWfNodes()) {
-//            result(powerJobClient.deleteJob(deleteNode.getJobId()));
-//        }
-//
-//        jobIdMaintainer.setStartInitJob(savedWfNodes.stream().filter((n) -> startWfNode.getJobId() == (long) n.getJobId()).findFirst());
-//        jobIdMaintainer.addWorkflow(savedWfNodes);
-//
-//        PowerWorkflowPayload.PowerJobWorkflow powerWf = appPayload.getPowerJobWorkflowId(false);
-//
-//        SaveWorkflowRequest req = jobTpl.createWorkflowRequest(dataxProcessor);
-//
-//        req.setId(powerWf != null ? powerWf.getPowerjobWorkflowId() : null);
-//
-//        PEWorkflowDAG peWorkflowDAG = jobIdMaintainer.createWorkflowDAG();
-//        req.setDag(peWorkflowDAG);
-//        Long saveWorkflowId = result(powerJobClient.saveWorkflow(req));
-//
-//        if (powerWf == null) {
-//            appPayload.setPowerJobWorkflowId(saveWorkflowId
-//                    , new ExecutePhaseRange(FullbuildPhase.FullDump, containPostTrigger ? FullbuildPhase.JOIN : FullbuildPhase.FullDump));
-//        }
-//
-//        return appPayload;
-//    }
 
     public static SaveWorkflowNodeRequest createWorkflowNode(PowerJobClient powerJobClient, String name, String jobParams
             , Optional<PEWorkflowDAG.Node> existWfNode, SaveJobInfoRequest jobRequest, K8SDataXPowerJobJobTemplate jobTpl) {

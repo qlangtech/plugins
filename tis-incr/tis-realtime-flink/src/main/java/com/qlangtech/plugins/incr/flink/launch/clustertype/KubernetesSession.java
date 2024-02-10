@@ -55,6 +55,11 @@ public class KubernetesSession extends AbstractClusterType {
     public String flinkCluster;
 
     @Override
+    public FlinkClusterType getClusterType() {
+        return FlinkClusterType.K8SSession;
+    }
+
+    @Override
     public void checkUseable() throws TisException {
 
     }

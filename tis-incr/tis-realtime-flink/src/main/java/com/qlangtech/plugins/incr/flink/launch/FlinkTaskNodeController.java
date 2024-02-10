@@ -68,6 +68,16 @@ public class FlinkTaskNodeController implements IRCController {
     private final TISFlinkCDCStreamFactory factory;
     public static final String CHECKPOINT_DIR_PREFIX = "chk-";
 
+//    public static final K8SRCResName<FlinkJobDeployDTO> K8S_DATAX_POWERJOB_MYSQL
+//            = new K8SRCResName<>("datax-worker-powerjob-mysql", (dto) -> {
+//        dto.taskController.factory.cluster.deploy(dto.taskController.factory, dto.collection, dto.streamUberJar, dto.requestSetter, dto.afterSuccess);
+//    });
+
+//    public static final SubJobResName[] flinkDeployRes //
+//            = new SubJobResName[]{
+//            K8S_DATAX_POWERJOB_MYSQL
+//    };
+
     public FlinkTaskNodeController(TISFlinkCDCStreamFactory factory) {
         this.factory = factory;
     }
@@ -76,20 +86,19 @@ public class FlinkTaskNodeController implements IRCController {
 
     }
 
+//    @Override
+//    public List<ExecuteStep<FlinkTaskNodeController>> getExecuteSteps() {
+//        List<ExecuteStep<FlinkTaskNodeController>> launchSteps = Lists.newArrayList();
+//        for (SubJobResName rcRes : flinkDeployRes) {
+//            launchSteps.add(new ExecuteStep(rcRes, null));
+//        }
+//        return launchSteps;
+//    }
 
     @Override
     public void checkUseable() {
         ClusterType cluster = factory.getClusterCfg();
         cluster.checkUseable();
-//        try {
-//            try (RestClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.of(1000l))) {
-//                // restClient.getClusterId();
-//                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
-//                Collection<JobStatusMessage> jobStatus = status.get();
-//            }
-//        } catch (Exception e) {
-//            throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
-//        }
     }
 
     /**
@@ -207,8 +216,32 @@ public class FlinkTaskNodeController implements IRCController {
 
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
+
+//        FlinkJobDeployDTO dto = new FlinkJobDeployDTO(this, collection, streamUberJar, requestSetter, afterSuccess);
+//
+//        for (ExecuteStep execStep : getExecuteSteps()) {
+//            execStep.getSubJob().execSubJob(dto);
+//        }
+
         factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
     }
+
+//    private static class FlinkJobDeployDTO {
+//        private final FlinkTaskNodeController taskController;
+//        private final TargetResName collection;
+//        private final File streamUberJar;
+//        private final Consumer<JarSubmitFlinkRequest> requestSetter;
+//        private final Consumer<JobID> afterSuccess;
+//
+//        public FlinkJobDeployDTO(FlinkTaskNodeController taskController, TargetResName collection //
+//                , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) {
+//            this.taskController = taskController;
+//            this.collection = collection;
+//            this.streamUberJar = streamUberJar;
+//            this.requestSetter = requestSetter;
+//            this.afterSuccess = afterSuccess;
+//        }
+//    }
 
 
     private static IFlinkIncrJobStatus<JobID> getIncrJobStatus(TargetResName collection) {

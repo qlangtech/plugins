@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch.clustertype;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.flink.IFlinkClusterConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
@@ -52,4 +53,6 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
      */
     public abstract void deploy(TISFlinkCDCStreamFactory factory, TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception;
+
+    public abstract FlinkClusterType getClusterType();
 }

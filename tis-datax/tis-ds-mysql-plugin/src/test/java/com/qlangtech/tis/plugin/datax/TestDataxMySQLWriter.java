@@ -85,6 +85,11 @@ public class TestDataxMySQLWriter extends BasicTest {
         writer.autoCreateTable = true;
         DataxReader.dataxReaderThreadLocal.set(new DataxReader() {
             @Override
+            public void startScanDependency() {
+
+            }
+
+            @Override
             public <T extends ISelectedTab> List<T> getSelectedTabs() {
                 return null;
             }

@@ -69,6 +69,15 @@ public class FlinkCol implements Serializable {
         this(meta, colType, type, rowDataProcess, rowDataProcess, rowDataValGetter);
     }
 
+    /**
+     *
+     * @param meta
+     * @param colType
+     * @param type
+     * @param rowDataProcess
+     * @param rowProcess
+     * @param rowDataValGetter
+     */
     public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess
             , BiFunction rowProcess, RowData.FieldGetter rowDataValGetter) {
         if (StringUtils.isEmpty(meta.getName())) {

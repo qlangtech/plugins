@@ -16,7 +16,8 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.cdc.mysql.TestFlinkCDCMySQLSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.TestFlinkCDCMySQLSourceFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.TestTimestampStartupOptions;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -25,7 +26,7 @@ import org.junit.runners.Suite;
  * @create: 2022-01-02 17:38
  **/
 @RunWith(Suite.class)
-@Suite.SuiteClasses({TestFlinkCDCMySQLSourceFactory.class})
+@Suite.SuiteClasses({TestFlinkCDCMySQLSourceFactory.class, TestTimestampStartupOptions.class})
 public class TestAll {
 
 }

@@ -55,7 +55,6 @@ import org.apache.flink.configuration.DeploymentOptions;
 import org.apache.flink.kubernetes.KubernetesClusterDescriptor;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
-import org.apache.flink.kubernetes.kubeclient.FlinkKubeClient;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 import org.apache.flink.runtime.client.JobStatusMessage;
 
@@ -82,6 +81,10 @@ public class KubernetesApplication extends ClusterType {
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.identity, Validator.require})
     public String clusterCfg;
 
+    @Override
+    public FlinkClusterType getClusterType() {
+        return FlinkClusterType.K8SApplication;
+    }
 
     @Override
     public void checkUseable() throws TisException {

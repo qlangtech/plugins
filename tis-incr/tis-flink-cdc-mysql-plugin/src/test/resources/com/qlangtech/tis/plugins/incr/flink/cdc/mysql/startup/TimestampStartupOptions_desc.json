@@ -1,0 +1,31 @@
+{
+  "com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.TimestampStartupOptions":{
+    "attrs":[
+      {
+        "describable":false,
+        "eprops":{
+          "dftVal":"1706503617788",
+          "help":"timestamp for the startup offsets, as milliseconds from epoch.",
+          "label":"开始时间"
+        },
+        "key":"startupTimestampMillis",
+        "ord":0,
+        "pk":false,
+        "required":true,
+        "type":4
+      }
+    ],
+    "containAdvance":false,
+    "displayName":"TIMESTAMP",
+    "extendPoint":"com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions",
+    "extractProps":{
+      "notebook":{
+        "ability":false,
+        "activate":false
+      }
+    },
+    "impl":"com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.TimestampStartupOptions",
+    "implUrl":"http://tis.pub/docs/plugin/plugins/#comqlangtechtispluginsincrflinkcdcmysqlstartuptimestampstartupoptions",
+    "veriflable":false
+  }
+}

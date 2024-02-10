@@ -35,6 +35,16 @@ import java.util.function.Consumer;
  **/
 public abstract class AbstractClusterType extends ClusterType {
     protected static final String KEY_FIELD_FLINK_CLUSTER = "flinkCluster";
+
+    /**
+     *
+     * @param factory
+     * @param collection
+     * @param streamUberJar
+     * @param requestSetter
+     * @param afterSuccess
+     * @throws Exception
+     */
     public final void deploy(TISFlinkCDCStreamFactory factory, TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
         final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();

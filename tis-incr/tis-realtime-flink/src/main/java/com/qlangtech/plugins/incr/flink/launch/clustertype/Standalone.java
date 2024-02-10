@@ -20,27 +20,18 @@ package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
-import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugins.flink.client.FlinkClient;
-import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.client.program.rest.RestClusterClient;
-
-import java.io.File;
-import java.util.function.Consumer;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,11 +48,14 @@ public class Standalone extends AbstractClusterType {
         this.getClusterCfg().checkUseable();
     }
 
+    @Override
+    public FlinkClusterType getClusterType() {
+        return FlinkClusterType.Standalone;
+    }
+
     public FlinkCluster getClusterCfg() {
         return ParamsConfig.getItem(this.flinkCluster, FlinkCluster.KEY_DISPLAY_NAME);
     }
-
-
 
     @Override
     public ClusterClient createRestClusterClient() {

@@ -22,13 +22,11 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import com.qlangtech.tis.datax.IDataXPluginMeta;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.ververica.cdc.connectors.oracle.table.StartupOptions;
+import com.ververica.cdc.connectors.base.options.StartupOptions;
 
 import java.util.Objects;
 
@@ -72,7 +70,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
         this.consumerHandle = consumerHandle;
     }
 
-   // @TISExtension()
+    // @TISExtension()
     public static class DefaultDescriptor extends BaseDescriptor {
         @Override
         public String getDisplayName() {
@@ -83,6 +81,7 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
         public PluginVender getVender() {
             return PluginVender.FLINK_CDC;
         }
+
         @Override
         public IEndTypeGetter.EndType getEndType() {
             return IEndTypeGetter.EndType.Oracle;

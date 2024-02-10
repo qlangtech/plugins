@@ -23,9 +23,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
-import com.qlangtech.tis.compiler.java.*;
+import com.qlangtech.tis.compiler.java.FileObjectsContext;
+import com.qlangtech.tis.compiler.java.MyJavaFileObject;
+import com.qlangtech.tis.compiler.java.NestClassFileObject;
+import com.qlangtech.tis.compiler.java.ResourcesFile;
+import com.qlangtech.tis.compiler.java.SourceGetterStrategy;
+import com.qlangtech.tis.compiler.java.ZipPath;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.extension.*;
+import com.qlangtech.tis.extension.PluginManager;
+import com.qlangtech.tis.extension.PluginStrategy;
+import com.qlangtech.tis.extension.PluginWrapper;
+import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.extension.impl.PluginManifest;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.incr.StreamContextConstant;
@@ -38,13 +47,24 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.tools.ScalaCompilerSupport;
 import scala.tools.scala_maven_executions.LogProcessorUtils;
 
 import javax.tools.JavaFileObject;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -56,7 +76,7 @@ import java.util.zip.ZipEntry;
  * @create: 2021-10-20 16:35
  **/
 public class CompileAndPackage implements ICompileAndPackage {
-
+    private static final Logger logger = LoggerFactory.getLogger(CompileAndPackage.class);
     private final List<PluginWrapper.Dependency> extraPluginDependencies;
     private final Set<PluginManifest.ExplodePluginManifest> classInExtraPlugin;
 
@@ -216,7 +236,7 @@ public class CompileAndPackage implements ICompileAndPackage {
 
             }
         }
-
+        logger.info("pkgJar:{},tpi:{}", pkgJar.getAbsolutePath(), tpi.getAbsolutePath());
         return tpi;
 
 //        FileObjectsContext.packageJar(

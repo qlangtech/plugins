@@ -19,7 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 
 import com.dtstack.chunjun.conf.SyncConf;
-import com.qlangtech.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestFlinkSinkExecutor;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.impl.DataxReader;

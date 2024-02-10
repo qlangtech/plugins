@@ -78,18 +78,18 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
         for (ISelectedTab tab : tabs) {
             MongoDBSource.Builder<DTO> builder = MongoDBSource.<DTO>builder()
                     .hosts(dsFactory.address)
-                    .database(dsFactory.dbName)
-                    .collection(tab.getName())
+                    .databaseList(dsFactory.dbName)
+                    .collectionList(tab.getName())
                     .connectionOptions(sourceFactory.connectionOptions)
-                    .errorsTolerance(sourceFactory.errorsTolerance)
+                    //.errorsTolerance(sourceFactory.errorsTolerance)
                     .username(dsFactory.getUserName())
                     .password(dsFactory.getPassword())
                     .deserializer(new TISDeserializationSchema());
 
             //  builder.
-            if (sourceFactory.errorsLogEnable != null) {
-                builder.errorsLogEnable(sourceFactory.errorsLogEnable);
-            }
+//            if (sourceFactory.errorsLogEnable != null) {
+//                builder.errorsLogEnable(sourceFactory.errorsLogEnable);
+//            }
             if (sourceFactory.copyExisting != null) {
                 builder.copyExisting(sourceFactory.copyExisting);
             }

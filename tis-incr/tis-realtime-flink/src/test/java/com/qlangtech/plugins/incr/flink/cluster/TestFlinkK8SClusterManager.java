@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.cluster;
 
 import com.qlangtech.tis.datax.job.DefaultSSERunnable;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteStep;
+import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteSteps;
 import org.junit.Test;
 
 import java.io.PrintWriter;
@@ -50,7 +51,7 @@ public class TestFlinkK8SClusterManager {
             List<ExecuteStep> executeSteps = clusterManager.getExecuteSteps();
             Runnable runnable = () -> {
             };
-            DefaultSSERunnable sseRunnable = new DefaultSSERunnable(clientWriter, clusterManager, executeSteps, runnable);
+            DefaultSSERunnable sseRunnable = new DefaultSSERunnable(clientWriter, new ExecuteSteps(clusterManager, executeSteps), runnable);
             clusterManager.launchService(sseRunnable);
         }
     }

@@ -94,7 +94,9 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
             }
             return ptabs;
         }
-        throw new IllegalStateException(sourceTableName + " relevant physics tabs can not be null");
+        throw new IllegalStateException(sourceTableName
+                + " relevant physics tabs can not be null,exist keys:"
+                + String.join(",", tabsMapper.getTabs()));
     }
 
 
@@ -113,7 +115,6 @@ public class DefaultSplitTableStrategy extends SplitTableStrategy {
         }
         throw new IllegalStateException(tabName + " relevant physics tabs can not be null");
     }
-
 
 
     @TISExtension

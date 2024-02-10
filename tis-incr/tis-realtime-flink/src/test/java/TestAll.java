@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-package com.qlangtech;
-
+import com.qlangtech.plugins.incr.flink.cdc.TestFlinkCol;
 import com.qlangtech.plugins.incr.flink.common.TestFlinkCluster;
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkIncrJobStatus;
 import com.qlangtech.plugins.incr.flink.launch.TestFlinkTaskNodeController;
@@ -29,17 +28,15 @@ import org.junit.runners.Suite;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-04-15 19:05
+ * @create: 2022-09-05 14:46
  **/
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses(
-        {TestFlinkCluster.class,
-                TestTISFlinkCDCStreamFactory.class,
-                TestFlinkIncrJobStatus.class
-                , TestFlinkTaskNodeController.class
-                , TestFlinkClient.class
-                , TestCheckpointFactory.class})
+@Suite.SuiteClasses({TestFlinkCol.class, TestFlinkCluster.class,
+        TestTISFlinkCDCStreamFactory.class,
+        TestFlinkIncrJobStatus.class
+        , TestFlinkTaskNodeController.class
+        , TestFlinkClient.class
+        , TestCheckpointFactory.class})
 public class TestAll {
-
 }

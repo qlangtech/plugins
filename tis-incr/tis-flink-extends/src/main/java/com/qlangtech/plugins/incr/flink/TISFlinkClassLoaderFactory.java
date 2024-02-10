@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink;
 
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.extension.ITPIArtifact;
@@ -31,7 +32,6 @@ import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
-import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
 import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.flink.runtime.execution.librarycache.BlobLibraryCacheManager;
@@ -105,7 +105,8 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                             + flinkPluginMeta.getPluginPackageFile().getAbsolutePath());
                 }
                 final String shotName = TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH + tisAppName.getName();
-                ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
+                // ClassicPluginStrategy.removeByClassNameInFinders(BasicFlinkSourceHandle.class);
+                ClassicPluginStrategy.removeByClassNameInFinders(IConsumerHandle.class);
 
                 pluginManager.dynamicLoad(ITPIArtifact.create(shotName, flinkPluginMeta.classifier)
                         , flinkPluginMeta.getPluginPackageFile(), true, null);

@@ -39,32 +39,18 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-extends-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-test-common</artifactId>
         </dependency>
 
-        <!--只需要包里面的:com.qlangtech.plugins.incr.flink.TISFlinkCDCStart-->
-        <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-flink-extends</artifactId>
-            <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-plugin</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-builder-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-sql-parser</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+
 
 <!--        <dependency>-->
 <!--            <groupId>com.qlangtech.tis.plugins</groupId>-->

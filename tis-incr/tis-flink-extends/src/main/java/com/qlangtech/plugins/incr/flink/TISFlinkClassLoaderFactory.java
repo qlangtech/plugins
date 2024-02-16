@@ -63,7 +63,10 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     /**
      * 默认服务端不需要依赖到的插件名称，需要过滤掉，以免在执行过程中产生类重复加载的问题，导致cast异常
      */
-    private static final String SKIP_DEPENDENCY_FLINK_DEPENDENCY = "tis-flink-dependency";
+    private static final String PLUGIN_DEPENDENCY_FLINK_DEPENDENCY = "tis-flink-dependency";
+    private static final String PLUGIN_SKIP_FLINK_EXTENDS = "tis-flink-extends-plugin";
+
+    private static final Set<String> SKIP_PLUGIN_NAMES = Sets.newHashSet(PLUGIN_DEPENDENCY_FLINK_DEPENDENCY, PLUGIN_SKIP_FLINK_EXTENDS);
 
     public static final String SKIP_CLASSLOADER_FACTORY_CREATION = IFlinkCluster.SKIP_CLASSLOADER_FACTORY_CREATION;
 
@@ -169,7 +172,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                     localCache = synAppRelevantCfgsAndTpis(Optional.ofNullable(localCache), libraryURLs);
 
                     final Set<String> relativePluginNames = Sets.newHashSet(localCache.getPluginNames())
-                            .stream().filter((pluginName) -> !SKIP_DEPENDENCY_FLINK_DEPENDENCY.equals(pluginName)).collect(Collectors.toSet());
+                            .stream().filter((pluginName) -> !SKIP_PLUGIN_NAMES.contains(pluginName)).collect(Collectors.toSet());
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
                     return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)
                             , libraryURLs, this.getParentClassLoader()

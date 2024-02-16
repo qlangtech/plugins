@@ -58,6 +58,7 @@
         <module>tis-realtime-flink-launch</module>
         <module>tis-flink-dependency</module>
         <module>tis-flink-extends</module>
+        <module>tis-flink-extends-plugin</module>
         <module>tis-flink-cdc-common</module>
         <module>tis-flink-cdc-mysql-plugin</module>
         <module>tis-flink-cdc-postgresql-plugin</module>
@@ -81,6 +82,7 @@
         <module>tis-flink-chunjun-rabbitmq-plugin</module>
         <module>tis-flink-chunjun-dameng-plugin</module>
         <module>tis-flink-msg-format-plugin</module>
+
 
 
     </modules>

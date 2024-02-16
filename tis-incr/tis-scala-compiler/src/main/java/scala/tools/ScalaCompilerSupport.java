@@ -20,6 +20,7 @@ package scala.tools;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.java.IOutputEntry;
+import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.manage.common.Config;
 import org.apache.commons.lang.StringUtils;
@@ -354,8 +355,9 @@ public class ScalaCompilerSupport {
      * @return
      */
     public static Set<String> getStreamScriptCompilerClasspath() {
-        File tisFlinkDependency = Config.getPluginLibDir("tis-flink-dependency");
+        File tisFlinkDependency = Config.getPluginLibDir(IFlinkCluster.PLUGIN_DEPENDENCY_FLINK_DEPENDENCY);
         final String pluginRealtimeFlink = "tis-realtime-flink";
+
         File tisRealtimeFlinkRootDir = new File(Config.getDataDir(), Config.LIB_PLUGINS_PATH + "/" + pluginRealtimeFlink);
         if (!tisRealtimeFlinkRootDir.exists()) {
             throw new IllegalStateException("tisRealtimeFlinkRootDir can not be emty:" + tisRealtimeFlinkRootDir.getAbsolutePath());
@@ -364,12 +366,17 @@ public class ScalaCompilerSupport {
         if (!tisRealtimeFlink.exists() || tisRealtimeFlink.isFile()) {
             throw new IllegalStateException("dir tisRealtimeFlink is illegal:" + tisRealtimeFlink.getAbsolutePath());
         }
+        File tisFlinkExtendPlugin = Config.getPluginLibDir(IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS);
+        if (!tisFlinkExtendPlugin.exists() || tisFlinkExtendPlugin.isFile()) {
+            throw new IllegalStateException("dir " + IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS + " is illegal:" + tisFlinkExtendPlugin.getAbsolutePath());
+        }
         File scalaCompilerDependencies = new File(tisRealtimeFlinkRootDir, "tis-scala-compiler-dependencies");
         if (!scalaCompilerDependencies.exists() || scalaCompilerDependencies.list().length < 1) {
             throw new IllegalStateException("dependencies list can not be null,path:" + scalaCompilerDependencies.getAbsolutePath());
         }
         return Sets.newHashSet(
-                tisRealtimeFlink.getAbsolutePath() + "/*"
+                tisFlinkExtendPlugin.getAbsolutePath() + "/*"
+                , tisRealtimeFlink.getAbsolutePath() + "/*"
                 , tisFlinkDependency.getAbsolutePath() + "/*"
                 , scalaCompilerDependencies.getAbsolutePath() + "/*");
     }

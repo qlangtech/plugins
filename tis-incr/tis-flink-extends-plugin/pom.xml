@@ -52,6 +52,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-dependency</artifactId>
+        </dependency>
     </dependencies>
 
 

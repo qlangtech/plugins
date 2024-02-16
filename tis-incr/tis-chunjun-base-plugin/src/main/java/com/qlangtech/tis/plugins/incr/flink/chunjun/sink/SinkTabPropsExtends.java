@@ -29,15 +29,19 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.UpdateMode;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -52,6 +56,7 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
 
     /**
      * SelectedTab 中已经添加了uniqueKey的选项
+     *
      * @param params
      */
 //    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -60,7 +65,6 @@ public class SinkTabPropsExtends extends SelectedTabExtend {
 //    public UpdateMode getIncrMode() {
 //        return Objects.requireNonNull(incrMode, "incrMode can not be null");
 //    }
-
     public void setParams(Map<String, Object> params) {
 //        if (CollectionUtils.isEmpty(uniqueKey)) {
 //            throw new IllegalStateException("collection of 'updateKey' can not be null");

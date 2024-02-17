@@ -1,25 +1,29 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 
 import com.google.common.collect.Maps;
-import com.qlangtech.plugins.incr.flink.cdc.*;
+import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
@@ -29,16 +33,23 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.ververica.cdc.connectors.mysql.MySqlSource;
+import com.ververica.cdc.connectors.mysql.source.MySqlSource;
+import com.ververica.cdc.connectors.mysql.source.assigners.state.PendingSplitsState;
+import com.ververica.cdc.connectors.mysql.source.split.MySqlSplit;
 import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import org.apache.flink.api.common.JobExecutionResult;
+import org.apache.flink.api.connector.source.Source;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
@@ -150,7 +161,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
     public JobExecutionResult start(TargetResName dataxName, IDataxReader dataSource
             , List<ISelectedTab> tabs, IDataxProcessor dataXProcessor) throws MQConsumeException {
         try {
-            Objects.requireNonNull(dataXProcessor,"param dataXProcessor can not be null");
+            Objects.requireNonNull(dataXProcessor, "param dataXProcessor can not be null");
             BasicDataXRdbmsReader rdbmsReader = (BasicDataXRdbmsReader) dataSource;
             BasicDataSourceFactory dsFactory = (BasicDataSourceFactory) rdbmsReader.getDataSourceFactory();
             Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
@@ -184,20 +195,23 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
 
                                 String[] databases = dbs.getDataBases();
 
+                                Source<DTO, MySqlSplit, PendingSplitsState> sourceFunc = MySqlSource.<DTO>builder()
+                                        .hostname(dbHost)
+                                        .port(dsFactory.port)
+                                        .databaseList(databases) // monitor all tables under inventory database
+                                        .tableList(tbs.toArray(new String[tbs.size()]))
+                                        .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
+                                        .username(dsFactory.getUserName())
+                                        .password(dsFactory.getPassword())
+                                        .startupOptions(sourceFactory.getStartupOptions())
+                                        .debeziumProperties(debeziumProperties)
+                                        .deserializer(deserializationSchema) // converts SourceRecord to JSON String
+                                        .build();
+
                                 return Collections.singletonList(ReaderSource.createDTOSource(
-                                        dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_"),
-                                        MySqlSource.<DTO>builder()
-                                                .hostname(dbHost)
-                                                .port(dsFactory.port)
-                                                .databaseList(databases) // monitor all tables under inventory database
-                                                .tableList(tbs.toArray(new String[tbs.size()]))
-                                                .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
-                                                .username(dsFactory.getUserName())
-                                                .password(dsFactory.getPassword())
-                                                .startupOptions(sourceFactory.getStartupOptions())
-                                                .debeziumProperties(debeziumProperties)
-                                                .deserializer(deserializationSchema) // converts SourceRecord to JSON String
-                                                .build())
+                                        dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
+                                        , sourceFunc
+                                        )
                                 );
                             }));
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)

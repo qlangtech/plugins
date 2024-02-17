@@ -24,6 +24,8 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -97,6 +99,15 @@ public abstract class ReaderSource<T> {
         };
     }
 
+    public static ReaderSource<DTO> createDTOSource(String tokenName, Source<DTO, ?, ?> sourceFunc) {
+        return new DTOSideOutputReaderSource(tokenName) {
+            @Override
+            protected DataStreamSource<DTO> addAsSource(StreamExecutionEnvironment env) {
+                return env.fromSource(sourceFunc, WatermarkStrategy.noWatermarks(), tokenName);
+            }
+        };
+    }
+
     public static ReaderSource<DTO> createDTOSource(String tokenName, final DataStreamSource<DTO> source) {
         return new DTOSideOutputReaderSource(tokenName) {
             @Override
@@ -121,7 +132,7 @@ public abstract class ReaderSource<T> {
             for (Map.Entry<TableAlias, DTOStream> e : tab2OutputStream.entrySet()) {
                 e.getValue().addStream(mainStream);
             }
-           // return mainStream;
+            // return mainStream;
         }
     }
 
@@ -157,7 +168,7 @@ public abstract class ReaderSource<T> {
                 Tab2OutputTag<DTOStream> tab2OutputStream, SingleOutputStreamOperator<RowData> operator) {
             DTOStream dtoStream = tab2OutputStream.get(tab);
             dtoStream.addStream(operator);
-           // return operator;
+            // return operator;
         }
     }
 }

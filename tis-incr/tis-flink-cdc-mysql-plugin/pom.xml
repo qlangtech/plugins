@@ -32,9 +32,8 @@
     <artifactId>tis-flink-cdc-mysql-plugin</artifactId>
     <packaging>tpi</packaging>
     <properties>
-<!--        <scala.version>2.11.0</scala.version>-->
+        <!--        <scala.version>2.11.0</scala.version>-->
     </properties>
-
 
 
     <dependencies>
@@ -61,6 +60,25 @@
             <groupId>com.ververica</groupId>
             <artifactId>flink-connector-mysql-cdc</artifactId>
             <version>${flink.cdc.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.debezium</groupId>
+                    <artifactId>debezium-connector-mysql</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-flink-cdc-shade-4-debezium-connector-mysql</artifactId>
+            <version>${project.version}</version>
+            <classifier>shaded</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>*</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 
@@ -73,7 +91,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.25</version>
+            <version>8.0.31</version>
         </dependency>
 
 
@@ -90,7 +108,7 @@
         </dependency>
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-                <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-common-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -111,17 +129,16 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-incr-test</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-dag</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-dag</artifactId>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
 
     </dependencies>
 

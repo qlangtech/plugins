@@ -16,18 +16,17 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.chunjun.kafka.table;
+package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2023-03-20 18:12
+ * @create: 2024-02-21 14:49
  **/
-public class KafkaTableSinkFactory extends ChunjunDynamicTableFactory {
-    public KafkaTableSinkFactory() {
-        super(IEndTypeGetter.EndType.Kafka);
+public class ClickHouseDynamicTableFactory extends ChunjunDynamicTableFactory {
+    public ClickHouseDynamicTableFactory() {
+        super(IEndTypeGetter.EndType.Clickhouse);
     }
 }

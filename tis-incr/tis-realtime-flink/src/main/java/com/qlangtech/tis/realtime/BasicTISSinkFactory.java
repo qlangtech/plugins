@@ -27,6 +27,7 @@ import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 import org.apache.flink.table.data.RowData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,10 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             }
         }
 
+
+        public SinkFunctionProvider getSinkRuntimeProvider() {
+            return SinkFunctionProvider.of(this.sinkFunction, this.sinkTaskParallelism);
+        }
 
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {

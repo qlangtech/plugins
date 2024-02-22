@@ -22,9 +22,11 @@ import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
+import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus.State;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
+import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
@@ -275,7 +277,7 @@ public class FlinkTaskNodeController implements IRCController {
                 CompletableFuture<JobStatus> jobStatus = restClient.getJobStatus(launchJobID);
                 JobStatus status = jobStatus.get(5, TimeUnit.SECONDS);
                 if (status == null || status.isTerminalState()) {
-                    incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
+                    incrJobStatus.setState(convertTerminalFlinkJobStatus(status));
                     return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
                 }
 
@@ -291,13 +293,23 @@ public class FlinkTaskNodeController implements IRCController {
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (isNotFoundException(cause)) {
-                //return null;
-                incrJobStatus.setState(IFlinkIncrJobStatus.State.DISAPPEAR);
+                logger.warn(e.getMessage(), e);
+                incrJobStatus.setState(State.FAILED);
                 return FlinkJobDeploymentDetails.noneState(factory.getClusterCfg(), incrJobStatus);
             }
             throw new RuntimeException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private State convertTerminalFlinkJobStatus(JobStatus status) {
+        switch (status) {
+            case FAILED:
+            case FAILING:
+                return State.FAILED;
+            default:
+                return State.DISAPPEAR;
         }
     }
 
@@ -417,6 +429,10 @@ public class FlinkTaskNodeController implements IRCController {
             if (status.getLaunchJobID() == null) {
                 throw new IllegalStateException("have not found any launhed job,app:" + collection.getName());
             }
+
+            // 将启动日志文件删除
+            ServerLaunchToken launchToken = this.factory.getLaunchToken(collection);
+            launchToken.deleteLaunchToken();
 
             JobID jobID = status.getLaunchJobID();
             try (ClusterClient restClient = this.factory.getFlinkCluster()) {

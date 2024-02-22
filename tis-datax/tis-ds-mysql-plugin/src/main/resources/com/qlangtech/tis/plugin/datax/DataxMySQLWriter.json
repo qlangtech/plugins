@@ -1,20 +1,7 @@
 {
   "writeMode": {
-    "dftVal": "insert",
-    "enum": [
-      {
-        "val": "insert",
-        "label": "Insert"
-      },
-      {
-        "val": "replace",
-        "label": "Replace"
-      },
-      {
-        "val": "update",
-        "label": "Update"
-      }
-    ]
+    "dftVal": "replace",
+    "enum": "com.qlangtech.tis.plugin.datax.IWriteModeSupport.supportModes()"
   },
   "autoCreateTable": {
     "disable": false

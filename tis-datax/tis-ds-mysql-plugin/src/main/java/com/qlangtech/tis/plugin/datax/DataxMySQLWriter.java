@@ -32,7 +32,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataDumpers;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
@@ -57,7 +62,7 @@ import java.util.stream.Collectors;
  * @see com.alibaba.datax.plugin.writer.mysqlwriter.TISMysqlWriter
  **/
 @Public
-public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
+public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteModeSupport {
     private static final String DATAX_NAME = "MySQL";
     private static final Logger logger = LoggerFactory.getLogger(DataxMySQLWriter.class);
 
@@ -68,6 +73,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
         return IOUtils.loadResourceFromClasspath(DataxMySQLReader.class, "mysql-writer-tpl.json");
     }
 
+    @Override
+    public WriteMode getWriteMode() {
+        return WriteMode.parse(this.writeMode);
+    }
 
     @Override
     public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
@@ -93,7 +102,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter {
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = IDataxProcessor.TabCols.create(dsFactory,tm);
+            context.cols = IDataxProcessor.TabCols.create(dsFactory, tm);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;

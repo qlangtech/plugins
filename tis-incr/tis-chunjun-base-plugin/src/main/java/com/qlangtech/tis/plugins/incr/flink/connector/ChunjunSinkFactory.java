@@ -20,7 +20,11 @@ package com.qlangtech.tis.plugins.incr.flink.connector;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
-import com.dtstack.chunjun.conf.*;
+import com.dtstack.chunjun.conf.ChunJunCommonConf;
+import com.dtstack.chunjun.conf.ContentConf;
+import com.dtstack.chunjun.conf.JobConf;
+import com.dtstack.chunjun.conf.OperatorConf;
+import com.dtstack.chunjun.conf.SyncConf;
 import com.dtstack.chunjun.connector.jdbc.TableCols;
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
@@ -40,17 +44,28 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
-import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
+import com.qlangtech.tis.plugin.datax.IWriteModeSupport;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
@@ -72,7 +87,12 @@ import org.apache.flink.table.data.RowData;
 
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -237,7 +257,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     protected abstract boolean supportUpsetDML();
 
-    protected final SyncConf createSyncConf(SelectedTab tab, Supplier<Map<String, Object>> paramsCreator) {
+    protected final SyncConf createSyncConf(SelectedTab tab, Supplier<Map<String, Object>> paramsCreator, DataxWriter dataxWriter) {
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
@@ -253,7 +273,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             // 有扩展才进行设置，不然会空指针
             // tab.primaryKeys
             ((SinkTabPropsExtends) tab.getIncrSinkProps()).setParams(params);
+        } else if (dataxWriter instanceof IWriteModeSupport) {
+            params.put(UpdateMode.KEY_CHUNJUN_WRITE_MODE
+                    , getWriterMode((IWriteModeSupport) dataxWriter).getMode());
         }
+
 
         List<Map<String, Object>> cols = Lists.newArrayList();
         Map<String, Object> col = null;
@@ -277,6 +301,20 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         jobConf.setContent(Lists.newLinkedList(Collections.singleton(content)));
         syncConf.setJob(jobConf);
         return syncConf;
+    }
+
+    private WriteMode getWriterMode(IWriteModeSupport dataxWriter) {
+        IWriteModeSupport.WriteMode writeMode = dataxWriter.getWriteMode();
+        switch (writeMode) {
+            case Insert:
+                return WriteMode.INSERT;
+            case Update:
+                return WriteMode.UPDATE;
+            case Replace:
+                return WriteMode.REPLACE;
+            default:
+                throw new IllegalStateException("illegal mode:" + writeMode);
+        }
     }
 
     private void setUniqueKeyParams(List<String> uniqueKey, Map<String, Object> params) {
@@ -316,7 +354,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             setParameter(dsFactory, dataXWriter, tab, params, targetTabName);
 
             return params;
-        });
+        }, dataXWriter);
 
         CreateChunjunSinkFunctionResult sinkFunc
                 = createChunjunSinkFunction(jdbcUrl, targetTabName, tab.getPrimaryKeys(), dsFactory, dataXWriter, syncConf);

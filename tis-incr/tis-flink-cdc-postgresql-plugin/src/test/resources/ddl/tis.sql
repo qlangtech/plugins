@@ -33,6 +33,7 @@ SET search_path TO tis;
 -- https://www.postgresql.org/docs/current/datatype.html
 CREATE TABLE tis.base (
    base_id integer NOT NULL PRIMARY KEY,
+   testid numeric DEFAULT NULL,
    start_time timestamp DEFAULT NULL,
    update_date date DEFAULT NULL,
    update_time timestamp NOT NULL ,

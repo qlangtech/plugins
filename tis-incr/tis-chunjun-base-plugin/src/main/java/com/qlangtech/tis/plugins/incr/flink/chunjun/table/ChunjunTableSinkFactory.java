@@ -63,7 +63,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
 
     private final IEndTypeGetter.EndType endType;
 
-    public ChunjunTableSinkFactory(IEndTypeGetter.EndType endType) {
+    private ChunjunTableSinkFactory(IEndTypeGetter.EndType endType) {
         this.endType = endType;
     }
 
@@ -96,6 +96,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         public ChunjunStreamTableSink(boolean isAppendOnly, IEndTypeGetter.EndType endType
                 , BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc) {
             this.rowDataSinkFunc = rowDataSinkFunc;
+
             this.endType = endType;
             this.isAppendOnly = isAppendOnly;
         }

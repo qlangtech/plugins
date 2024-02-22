@@ -43,8 +43,8 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -62,7 +62,11 @@ import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.util.Preconditions;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -103,7 +107,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
         SyncConf syncConf = createSyncConf(selectedTab, () -> {
             Map<String, Object> params = Maps.newHashMap();
             return params;
-        });
+        }, dataXWriter);
 
         KafkaSinkFactory sinkFactory = new KafkaSinkFactory(syncConf, kafkaConf) {
             @Override

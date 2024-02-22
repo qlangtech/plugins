@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 import com.qlangtech.plugins.incr.flink.cdc.CDCTestSuitParams;
 import com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
+import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
@@ -41,6 +42,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -61,12 +63,23 @@ public class TestFlinkCDCPostgreSQLSourceFunction extends PostgresTestBase {
     @Test
     public void testBinlogConsume() throws Exception {
         FlinkCDCPostreSQLSourceFactory pgCDCFactory = new FlinkCDCPostreSQLSourceFactory();
-
+        pgCDCFactory.decodingPluginName = "decoderbufs";
+        pgCDCFactory.startupOptions = FlinkCDCPostreSQLSourceFactory.KEY_STARTUP_LATEST;
         final String tabName = "base";
 
         CDCTestSuitParams suitParam = CDCTestSuitParams.createBuilder().setTabName(tabName).build();
-
+//        suitParam.overwriteSelectedTab = (cdcTestSuit, tableName, dataSourceFactory, tab) -> {
+//
+//        };
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParam) {
+
+            @Override
+            protected Map<String, RowVal> createInsertRowValMap() {
+                Map<String, RowVal> vals = super.createInsertRowValMap();
+                vals.put("testid", RowVal.decimal(611555862087072406l, 0));
+                return vals;
+            }
+
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return createPGDataSourceFactory(dataxName);

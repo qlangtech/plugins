@@ -46,8 +46,8 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
 
         Row row = new Row(getKind(dto), cols.size());
         int index = 0;
-        Map<String, Object> vals
-                = (dto.getEventType() == DTO.EventType.DELETE ? dto.getBefore() : dto.getAfter());
+        Map<String, Object> vals = getVals(dto);
+
         Object val = null;
         for (FlinkCol col : cols) {
             val = vals.get(col.name);
@@ -55,6 +55,19 @@ public final class DTO2RowMapper implements MapFunction<DTO, Row> {
             row.setField(index++, (val == null) ? null : col.rowProcess.apply(val));
         }
         return row;
+    }
+
+    private Map<String, Object> getVals(DTO dto) {
+        switch (dto.getEventType()) {
+            case DELETE:
+            case UPDATE_BEFORE:
+                return dto.getBefore();
+            case UPDATE_AFTER:
+            case ADD:
+                return dto.getAfter();
+            default:
+                throw new IllegalStateException("EventType:" + dto.getEventType() + " is illegal");
+        }
     }
 
     public static RowKind getKind(DTO dto) {

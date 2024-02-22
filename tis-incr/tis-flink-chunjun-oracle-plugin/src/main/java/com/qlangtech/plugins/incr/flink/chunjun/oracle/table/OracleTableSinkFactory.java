@@ -19,13 +19,14 @@
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-11-21 13:04
  **/
-public class OracleTableSinkFactory extends ChunjunTableSinkFactory {
+public class OracleTableSinkFactory extends ChunjunDynamicTableFactory {
     public OracleTableSinkFactory() {
         super(IEndTypeGetter.EndType.Oracle);
     }

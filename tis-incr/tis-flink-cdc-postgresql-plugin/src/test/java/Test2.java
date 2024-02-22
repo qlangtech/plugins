@@ -16,18 +16,24 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.chunjun.starrocks.table;
+import org.junit.Test;
 
-import com.qlangtech.tis.plugin.IEndTypeGetter;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
+import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-12-12 12:06
+ * @create: 2024-02-20 14:09
  **/
-public class StarRocksTableSinkFactory extends ChunjunDynamicTableFactory {
-    public StarRocksTableSinkFactory() {
-        super(IEndTypeGetter.EndType.StarRocks);
+public class Test2 {
+    @Test
+    public void t() throws Exception{
+       //
+
+        Enumeration<URL> resources
+                = Thread.currentThread().getContextClassLoader().getResources("org/postgresql/jdbc/PgConnection.class");
+        while(resources.hasMoreElements()){
+            System.out.println(  resources.nextElement() );
+        }
     }
 }

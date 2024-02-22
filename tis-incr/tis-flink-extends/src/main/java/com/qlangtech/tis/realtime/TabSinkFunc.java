@@ -28,6 +28,8 @@ import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.table.connector.sink.DynamicTableSink.Context;
+import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 
 import java.util.List;
 
@@ -43,7 +45,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     // public transient final StreamExecutionEnvironment env;
 
     private transient List<String> primaryKeys;
-    private transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
+    protected transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;
     protected transient final TableAlias tab;
     protected transient final int sinkTaskParallelism;
     protected final List<FlinkCol> sinkColsMeta;
@@ -52,6 +54,8 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     public List<FlinkCol> getSinkColsMeta() {
         return this.sinkColsMeta;
     }
+
+
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
 

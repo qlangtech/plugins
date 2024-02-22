@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
+import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
@@ -31,15 +32,18 @@ import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.ververica.cdc.connectors.postgres.PostgreSQLSource;
+import com.ververica.cdc.connectors.base.source.jdbc.JdbcIncrementalSource;
+import com.ververica.cdc.connectors.postgres.source.PostgresSourceBuilder.PostgresIncrementalSource;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -76,29 +80,54 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
             }
 
 
+
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {
-                DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
+                        /**
+                         * for resolve error:
+                         * https://stackoverflow.com/questions/59978213/debezium-could-not-access-file-decoderbufs-using-postgres-11-with-default-plug
+                         */
+                        debeziumProperties.put("plugin.name", "pgoutput");
+                        DateTimeConverter.setDatetimeConverters(PGDateTimeConverter.class.getName(), debeziumProperties);
 
-                return dbs.getDbStream().map((dbname) -> {
-                    SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
-                            //.debeziumProperties()
-                            .hostname(dbHost)
-                            .port(dsFactory.port)
-                            .database(dbname) // monitor postgres database
-                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
-                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
-                            // .tableList("tis.base")
-                            .username(dsFactory.userName)
-                            .decodingPluginName(sourceFactory.decodingPluginName)
-                            .password(dsFactory.password)
-                            .debeziumProperties(debeziumProperties)
-                            .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-                            .build();
-                    return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, sourceFunction);
-                }).collect(Collectors.toList());
+                        return dbs.getDbStream().map((dbname) -> {
 
-            });
+                            JdbcIncrementalSource<DTO> incrSource =
+                                    PostgresIncrementalSource.<DTO>builder()
+                                            .hostname(dbHost)
+                                            .port(dsFactory.port)
+                                            .database(dbname) // monitor postgres database
+                                            .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
+                                            .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+                                            // .tableList("tis.base")
+                                            .username(dsFactory.userName)
+                                            .decodingPluginName(sourceFactory.decodingPluginName)
+                                            .password(dsFactory.password)
+                                            .debeziumProperties(debeziumProperties)
+                                            .startupOptions(sourceFactory.getStartupOptions())
+                                            .deserializer(new PostgreSQLDeserializationSchema(tabs)) // converts SourceRecord to JSON String
+                                            .build();
+
+
+//                            SourceFunction<DTO> sourceFunction = PostgreSQLSource.<DTO>builder()
+//                                    //.debeziumProperties()
+//                                    .hostname(dbHost)
+//                                    .port(dsFactory.port)
+//                                    .database(dbname) // monitor postgres database
+//                                    .schemaList(schemaSupported.getDBSchema())  // monitor inventory schema
+//                                    .tableList(tbs.toArray(new String[tbs.size()])) // monitor products table
+//                                    // .tableList("tis.base")
+//                                    .username(dsFactory.userName)
+//                                    .decodingPluginName(sourceFactory.decodingPluginName)
+//                                    .password(dsFactory.password)
+//                                    .debeziumProperties(debeziumProperties)
+//
+//                                    .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
+//                                    .build();
+                            return ReaderSource.createDTOSource(dbHost + ":" + dsFactory.port + "_" + dbname, incrSource);
+                        }).collect(Collectors.toList());
+
+                    });
 
 
             SourceChannel sourceChannel = new SourceChannel(

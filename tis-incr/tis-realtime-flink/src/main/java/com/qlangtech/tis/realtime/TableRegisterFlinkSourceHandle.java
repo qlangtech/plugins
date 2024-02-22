@@ -51,7 +51,6 @@ import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
 import org.apache.flink.types.Row;
@@ -77,7 +76,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         org.apache.flink.table.types.DataType type = col.type;
         if (primaryKeys.contains(col.name)) {
             if (type.getLogicalType().isNullable()) {
-                type = new AtomicDataType(type.getLogicalType().copy(false));
+                type = type.notNull();// new AtomicDataType(type.getLogicalType().copy(false));
             }
         }
         return type;
@@ -203,6 +202,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
             colType = createFlinkColType(selectedTab.getPrimaryKeys(), col);
             scmBuilder.column(col.name, colType);
             // TypeConversions.fromDataTypeToLegacyInfo()
+
             types[i] = LegacyTypeInfoDataTypeConverter.toLegacyTypeInfo(colType);
             fieldNames[i++] = col.name;
 
@@ -213,6 +213,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         }
         scmBuilder.primaryKey(pks);
         Schema schema = scmBuilder.build();
+
         TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
 
         SingleOutputStreamOperator<Row> rowStream = null;

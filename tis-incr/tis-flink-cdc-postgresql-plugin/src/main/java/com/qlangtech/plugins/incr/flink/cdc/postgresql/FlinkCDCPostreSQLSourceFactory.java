@@ -27,16 +27,22 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.ververica.cdc.connectors.base.config.JdbcSourceConfigFactory;
+import com.ververica.cdc.connectors.base.options.StartupOptions;
 
 import java.util.Objects;
 
 /**
  * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-27 15:15
  **/
 @Public
 public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
+
+    public static final String KEY_STARTUP_LATEST = "latest";
+
     private transient IConsumerHandle consumerHandle;
 
 
@@ -50,21 +56,30 @@ public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String decodingPluginName;
 
-//    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
-//    public String startupOptions;
+    /**
+     * https://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html#incremental-snapshot-optionshttps://ververica.github.io/flink-cdc-connectors/master/content/connectors/postgres-cdc.html#incremental-snapshot-options
+     */
+    @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String startupOptions;
 
-//    StartupOptions getStartupOptions() {
-//        switch (startupOptions) {
-//            case "latest":
-//                return StartupOptions.latest();
+    /**
+     * 只支持两种option 'latest' 和 'initial'
+     *
+     * @return
+     * @see JdbcSourceConfigFactory #startupOptions()
+     */
+    StartupOptions getStartupOptions() {
+        switch (startupOptions) {
+            case KEY_STARTUP_LATEST:
+                return StartupOptions.latest();
 //            case "earliest":
 //                return StartupOptions.earliest();
-//            case "initial":
-//                return StartupOptions.initial();
-//            default:
-//                throw new IllegalStateException("illegal startupOptions:" + startupOptions);
-//        }
-//    }
+            case "initial":
+                return StartupOptions.initial();
+            default:
+                throw new IllegalStateException("illegal startupOptions:" + startupOptions);
+        }
+    }
 
 
     @Override

@@ -131,12 +131,16 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
 
     private void extractBeforeRow(DTO dto, Struct value, Schema valueSchema) {
         Schema beforeSchema = valueSchema.field("before").schema();
-        Struct before = value.getStruct("before");
+        Struct before = getBeforeVal(value);
         Map<String, Object> beforeVals = new HashMap<>();
         for (Field f : beforeSchema.fields()) {
             beforeVals.put(f.name(), rawValConvert.convert(dto, f, before.get(f.name())));
         }
         dto.setBefore(beforeVals);
+    }
+
+    protected Struct getBeforeVal(Struct value) {
+        return value.getStruct("before");
     }
 
     @Override

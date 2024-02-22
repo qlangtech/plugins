@@ -36,8 +36,6 @@ import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
-//import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
-import org.apache.flink.table.utils.DateTimeUtils;
 import org.apache.flink.table.types.AtomicDataType;
 import org.apache.flink.table.types.logical.BigIntType;
 import org.apache.flink.table.types.logical.DateType;
@@ -47,6 +45,7 @@ import org.apache.flink.table.types.logical.SmallIntType;
 import org.apache.flink.table.types.logical.TimestampType;
 import org.apache.flink.table.types.logical.TinyIntType;
 import org.apache.flink.table.types.logical.VarCharType;
+import org.apache.flink.table.utils.DateTimeUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -58,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+//import org.apache.flink.table.runtime.functions.SqlDateTimeUtils;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -451,7 +452,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         }
     }
 
-    static class DecimalConvert extends BiFunction {
+    public static class DecimalConvert extends BiFunction {
         //  private final DataType type;
 
         final int precision;// = type.columnSize;

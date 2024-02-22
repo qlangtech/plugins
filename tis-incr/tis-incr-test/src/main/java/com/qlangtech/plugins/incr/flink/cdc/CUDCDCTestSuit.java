@@ -21,7 +21,7 @@ package com.qlangtech.plugins.incr.flink.cdc;
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
+import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
@@ -38,8 +38,16 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.datax.common.RdbmsReaderContext;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
@@ -54,15 +62,28 @@ import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
 import org.junit.Assert;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * CDC增量监听测试套件
@@ -416,7 +437,7 @@ public abstract class CUDCDCTestSuit {
             //  if (i > 1) {
             now = this.getTime();
             // }
-            vals = Maps.newHashMap();
+            vals = createInsertRowValMap();
             vals.put(keyBaseId, RowValsExample.RowVal.$(i));
             vals.put(keyStart_time, parseTimestamp(timeFormat.get().format(now)));
             vals.put("update_date", parseDate(dateFormat.get().format(now)));
@@ -498,6 +519,12 @@ public abstract class CUDCDCTestSuit {
             row.willbeDelete = true;
         }
         return exampleRows;
+    }
+
+
+    protected Map<String, RowVal> createInsertRowValMap() {
+        Map<String, RowVal> vals = Maps.newHashMap();
+        return vals;
     }
 
     private Date getTime() {

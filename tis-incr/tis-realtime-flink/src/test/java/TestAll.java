@@ -37,6 +37,6 @@ import org.junit.runners.Suite;
         TestFlinkIncrJobStatus.class
         , TestFlinkTaskNodeController.class
         , TestFlinkClient.class
-        , TestCheckpointFactory.class})
+        , TestCheckpointFactory.class,TestFlinkCol.class})
 public class TestAll {
 }

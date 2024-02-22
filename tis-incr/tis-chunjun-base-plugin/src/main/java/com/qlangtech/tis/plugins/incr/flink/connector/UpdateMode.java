@@ -36,9 +36,10 @@ import java.util.Optional;
  **/
 public abstract class UpdateMode implements Describable<UpdateMode> {
 
+    public static String KEY_CHUNJUN_WRITE_MODE = "writeMode";
 
     public void set(Map<String, Object> params) {
-        params.put("writeMode", getMode());
+        params.put(KEY_CHUNJUN_WRITE_MODE, getMode());
     }
 
     protected final String getMode() {

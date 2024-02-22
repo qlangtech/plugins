@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.chunjun.starrocks.table;
+package com.qlangtech.tis.plugins.incr.flink.connector.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
@@ -24,10 +24,11 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactor
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-12-12 12:06
+ * @create: 2022-11-21 13:07
  **/
-public class StarRocksTableSinkFactory extends ChunjunDynamicTableFactory {
-    public StarRocksTableSinkFactory() {
-        super(IEndTypeGetter.EndType.StarRocks);
+
+public class MySQLDynamicTableFactory extends ChunjunDynamicTableFactory {
+    public MySQLDynamicTableFactory() {
+        super(IEndTypeGetter.EndType.MySQL);
     }
 }

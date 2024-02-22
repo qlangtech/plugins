@@ -29,5 +29,19 @@
         "label": "pgoutput"
       }
     ]
+  },
+  "startupOptions": {
+    "label": "起始位点",
+    "dftVal": "latest",
+    "enum": [
+      {
+        "val": "latest",
+        "label": "Latest"
+      },
+      {
+        "val": "initial",
+        "label": "Initial"
+      }
+    ]
   }
 }

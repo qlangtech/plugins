@@ -19,13 +19,14 @@
 package com.qlangtech.plugins.incr.flink.chunjun.doris.table;
 
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-11-21 12:39
  **/
-public class DorisTableSinkFactory extends ChunjunTableSinkFactory {
+public class DorisTableSinkFactory extends ChunjunDynamicTableFactory {
     public DorisTableSinkFactory() {
         super(IEndTypeGetter.EndType.Doris);
     }

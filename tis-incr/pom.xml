@@ -64,14 +64,16 @@
         <module>tis-flink-cdc-postgresql-plugin</module>
         <module>tis-flink-cdc-oracle-plugin</module>
         <module>tis-flink-cdc-mongdb-plugin</module>
-        <module>tis-sink-clickhouse-plugin</module>
+<!--        <module>tis-sink-clickhouse-plugin</module>-->
 
 <!--    为了编译通过暂时先注释掉    <module>tis-sink-hudi-plugin</module>-->
 
         <!--        <module>tis-chunjun-dependency</module>-->
         <module>tis-flink-chunjun-mysql-plugin</module>
         <module>tis-flink-chunjun-doris-plugin</module>
-        <module>tis-flink-chunjun-postgresql-plugin</module>
+
+<!--        <module>tis-flink-chunjun-postgresql-plugin</module>-->
+
         <module>tis-flink-chunjun-oracle-plugin</module>
         <module>tis-chunjun-base-plugin</module>
         <module>tis-flink-chunjun-greenplum-plugin</module>
@@ -83,6 +85,7 @@
         <module>tis-flink-chunjun-dameng-plugin</module>
         <module>tis-flink-msg-format-plugin</module>
         <module>tis-flink-cdc-mysql-shade-4-debezium-connector-mysql</module>
+        <module>tis-flink-cdc-postgresql-shade-4-debezium-connector-postgresql</module>
 
 
     </modules>

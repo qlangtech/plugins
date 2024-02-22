@@ -25,8 +25,10 @@ import com.dtstack.chunjun.connector.jdbc.util.JdbcUtil;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
@@ -85,6 +87,12 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return super.validateAll(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        public Descriptor<SelectedTabExtend> getSelectedTableExtendDescriptor() {
+            // MySQL 在 DataXWriter中中已经设置了 WriteMode 不需要在增量设置流程中设置
+            return null;
         }
 
         @Override

@@ -26,15 +26,28 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXPostgresqlReader;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.PGProperty;
 import org.postgresql.jdbc.PgConnection;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -132,7 +145,7 @@ public class PGDataSourceFactory extends BasicDataSourceFactory implements Basic
 
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException,TableNotFoundException {
+                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {

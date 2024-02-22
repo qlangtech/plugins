@@ -220,7 +220,8 @@ public class TestDataXDorisWriter extends TestCase {
         try {
             createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile
-                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXDorisWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
+                    , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(
+                            DataXDorisWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());
 
             EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);
             DataxWriter.dataxWriterGetter = (dataXName) -> {
@@ -232,7 +233,9 @@ public class TestDataXDorisWriter extends TestCase {
             };
             EasyMock.replay(dataXProcessor);
             //DataXDorisWriter writer = new DataXDorisWriter();
-            WriterTemplate.realExecuteDump(testDataXName, DataXCfgJson.path("doris_writer_real_dump.json"), createDorisWriter.writer);
+            WriterTemplate.realExecuteDump(testDataXName
+                    , DataXCfgJson.path(TestDataXDorisWriter.class, "doris_writer_real_dump.json")
+                    , createDorisWriter.writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {

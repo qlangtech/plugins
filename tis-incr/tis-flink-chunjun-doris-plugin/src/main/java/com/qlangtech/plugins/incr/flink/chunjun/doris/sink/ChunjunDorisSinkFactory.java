@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.dtstack.chunjun.conf.OperatorConf;
 import com.dtstack.chunjun.conf.SyncConf;
@@ -37,6 +38,9 @@ import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
@@ -48,6 +52,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.flink.api.common.io.OutputFormat;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -60,11 +65,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+//import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT;
+//import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_READ_TIMEOUT_MS_DEFAULT;
+//import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_RETRIES_DEFAULT;
+
 /**
+ * https://dtstack.github.io/chunjun/documents/zh/ChunJun%E8%BF%9E%E6%8E%A5%E5%99%A8@doris@dorisbatch-sink?lang=zh
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-15 14:32
  **/
 public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
+
+
+    @FormField(ordinal = 13, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer connectTimeout;// = loadConf.getRequestConnectTimeoutMs() == null ? DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT : loadConf.getRequestConnectTimeoutMs();
+    @FormField(ordinal = 14, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer socketTimeout;// = loadConf.getRequestReadTimeoutMs() == null ? DORIS_REQUEST_READ_TIMEOUT_MS_DEFAULT : loadConf.getRequestReadTimeoutMs();
+    @FormField(ordinal = 15, advance = true, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    public Integer retries;// = loadConf.getRequestRetries() == null ? DORIS_REQUEST_RETRIES_DEFAULT : loadConf.getRequestRetries();
+
+    //
+
 
     @Override
     protected Class<? extends JdbcDialect> getJdbcDialectClass() {
@@ -109,6 +131,14 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
 
         params.put(DorisKeys.DATABASE_KEY, dsFactory.dbName);
         params.put(DorisKeys.TABLE_KEY, targetTabName);
+        // params.put()
+
+//        int connectTimeout = loadConf.getRequestConnectTimeoutMs() == null ? DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT : loadConf.getRequestConnectTimeoutMs();
+//        int socketTimeout = loadConf.getRequestReadTimeoutMs() == null ? DORIS_REQUEST_READ_TIMEOUT_MS_DEFAULT : loadConf.getRequestReadTimeoutMs();
+//        int retries = loadConf.getRequestRetries() == null ? DORIS_REQUEST_RETRIES_DEFAULT : loadConf.getRequestRetries();
+        params.put(DorisKeys.REQUEST_CONNECT_TIMEOUT_MS_KEY, this.connectTimeout);
+        params.put(DorisKeys.REQUEST_READ_TIMEOUT_MS_KEY, this.socketTimeout);
+        params.put(DorisKeys.REQUEST_RETRIES_KEY, this.retries);
 
         DorisSelectedTab dorisTab = (DorisSelectedTab) tab;
         if (dorisTab.seqKey.isOn()) {
@@ -215,6 +245,32 @@ public class ChunjunDorisSinkFactory extends ChunjunSinkFactory {
         @Override
         protected IEndTypeGetter.EndType getTargetType() {
             return IEndTypeGetter.EndType.Doris;
+        }
+
+        public boolean validateConnectTimeout(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            if (Integer.parseInt(value) < 1000) {
+                msgHandler.addFieldError(context, fieldName, "不能小于1秒");
+                return false;
+            }
+
+            return true;
+        }
+
+        public boolean validateSocketTimeout(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            if (Integer.parseInt(value) < 1000) {
+                msgHandler.addFieldError(context, fieldName, "不能小于1秒");
+                return false;
+            }
+            return true;
+        }
+
+        public boolean validateRetries(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            if (Integer.parseInt(value) < 1) {
+                msgHandler.addFieldError(context, fieldName, "不能小于1次");
+                return false;
+            }
+            return true;
         }
 
         @Override

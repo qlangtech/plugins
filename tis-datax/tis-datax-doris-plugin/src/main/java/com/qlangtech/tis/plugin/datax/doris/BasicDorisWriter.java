@@ -31,6 +31,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -212,7 +213,6 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
     }
 
 
-
     public static class DorisType implements Serializable {
         public final DataType type;
         final String token;
@@ -269,8 +269,9 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             // 原因：varchar(n) 再mysql中的n是字符数量，doris中的字节数量，所以如果在mysql中是varchar（n）在doris中varchar(3*N)
             // 三倍，doris中是按照utf-8字节数计算的
             int colSize = type.getColumnSize();
-            if (colSize < 1) {
-                colSize = 1000;
+            if (colSize < 1 || colSize > 1500) {
+                // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/STRING/
+                return new DorisType(type, "STRING");
             }
             return new DorisType(type, "VARCHAR(" + Math.min(colSize * 3, 65000) + ")");
         }
@@ -288,8 +289,13 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         @Override
         public final DorisType decimalType(DataType type) {
             // doris or starRocks precision 不能超过超过半27
+            int precision = type.getColumnSize();
+            if (precision < 1 || precision > DataTypeMeta.DEFAULT_DECIMAL_PRECISION) {
+                precision = DataTypeMeta.DEFAULT_DECIMAL_PRECISION;
+            }
+
             return new DorisType(type,
-                    getDecimalToken() + "(" + Math.min(type.getColumnSize(), 27) + "," + (type.getDecimalDigits() != null ?
+                    getDecimalToken() + "(" + precision + "," + (type.getDecimalDigits() != null ?
                             type.getDecimalDigits() : 0) + ")");
         }
 

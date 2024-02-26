@@ -28,6 +28,7 @@ import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceH
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter;
@@ -200,6 +201,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //    public void afterRun() throws Exception {
 //        httpStub.stop();
 //    }
+
 
 
     /**

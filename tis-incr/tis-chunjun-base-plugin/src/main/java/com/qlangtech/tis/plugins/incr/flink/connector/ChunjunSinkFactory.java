@@ -100,6 +100,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
+ *
  * WRITER extends BasicDataXRdbmsWriter, DS extends BasicDataSourceFactory
  *
  * @author: 百岁（baisui@qlangtech.com）

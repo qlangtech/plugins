@@ -16,16 +16,24 @@
  * limitations under the License.
  */
 
-import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunDorisSinkFactory;
-import com.qlangtech.plugins.incr.flink.chunjun.doris.sink.TestChunjunDorisSinkFactoryWithoutDocker;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+package com.qlangtech.tis.plugins.incr.flink.chunjun.doris.sink;
+
+import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT;
+import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_READ_TIMEOUT_MS_DEFAULT;
+import static com.dtstack.chunjun.connector.doris.options.DorisKeys.DORIS_REQUEST_RETRIES_DEFAULT;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2022-09-02 10:31
+ * @create: 2024-02-26 08:52
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses({TestChunjunDorisSinkFactory.class, TestChunjunDorisSinkFactoryWithoutDocker.class})
-public class TestAll {
+public class ChunjunDorisCommon {
+    public static Integer dftConnectTimeout() {
+        return DORIS_REQUEST_CONNECT_TIMEOUT_MS_DEFAULT;
+    }
+    public static Integer dftSocketTimeout() {
+        return DORIS_REQUEST_READ_TIMEOUT_MS_DEFAULT;
+    }
+    public static Integer dftRetries() {
+        return DORIS_REQUEST_RETRIES_DEFAULT;
+    }
 }

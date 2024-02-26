@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -243,7 +244,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                         if (type.getColumnSize() > 0) {
                             return "DECIMAL(" + type.getColumnSize() + "," + type.getDecimalDigits() + ")";
                         } else {
-                            return "DECIMAL";
+                            return "DECIMAL(" + DataTypeMeta.DEFAULT_DECIMAL_PRECISION + ",0)";
                         }
                     }
                     case DATE:

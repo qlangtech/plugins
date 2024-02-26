@@ -24,6 +24,7 @@ import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.DataTypeMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.FlinkColMapper;
 import com.qlangtech.tis.realtime.BasicFlinkSourceHandle;
@@ -203,10 +204,11 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
 
         public FlinkCol decimalType(DataType type) {
+
             int precision = type.getColumnSize();
             Integer scale = type.getDecimalDigits();
-            if (precision < 1 || precision > 38) {
-                precision = 38;
+            if (precision < 1 || precision > DataTypeMeta.DEFAULT_DECIMAL_PRECISION) {
+                precision = DataTypeMeta.DEFAULT_DECIMAL_PRECISION;
             }
             try {
                 return new FlinkCol(meta, type, //DataTypes.DECIMAL(precision, scale)

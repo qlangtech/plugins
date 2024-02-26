@@ -1,0 +1,14 @@
+{
+  "connectTimeout": {
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.chunjun.doris.sink.ChunjunDorisCommon.dftConnectTimeout()",
+    "help": "和服务端建立连接的超时时间，单位：ms"
+  },
+  "socketTimeout": {
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.chunjun.doris.sink.ChunjunDorisCommon.dftSocketTimeout()",
+    "help": "从服务端读取数据的超时时间，单位：ms"
+  },
+  "retries": {
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.chunjun.doris.sink.ChunjunDorisCommon.dftRetries()",
+    "help": "从服务端读取数据失败最大重试次数"
+  }
+}

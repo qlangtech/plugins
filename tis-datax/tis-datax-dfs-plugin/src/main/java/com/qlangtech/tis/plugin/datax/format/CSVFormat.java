@@ -25,7 +25,10 @@ import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredWriter;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.csvreader.CsvReader;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.ValidatorCommons;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
@@ -46,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -142,6 +146,14 @@ public class CSVFormat extends BasicPainFormat {
                     Objects.requireNonNull(csvReader, "csvFormat.reader can not be null");
                     if (csvReader.readHeaders()) {
                         this.fileHeader = csvReader.getHeaders();// new FileHeader(csvReader.getHeaderCount(), Lists.newArrayList());
+                        List<String> headers = Lists.newArrayList(this.fileHeader);
+                        Matcher matcher = null;
+                        for (String colName : headers) {
+                            matcher = ValidatorCommons.PATTERN_DB_COL_NAME.matcher(colName);
+                            if (!matcher.matches()) {
+                                throw TisException.create("invalid file header:" + String.join(",", headers));
+                            }
+                        }
                     } else {
                         throw new IllegalStateException("must contain head");
                     }

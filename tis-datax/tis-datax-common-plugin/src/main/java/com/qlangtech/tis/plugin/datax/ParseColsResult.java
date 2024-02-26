@@ -66,15 +66,15 @@ public class ParseColsResult {
         List<String> headerCols = null;
         if (containHeader) {
             headerCols = fileHeader.getHeaderCols();
+            if (fileHeader.getTypes().size() != headerCols.size()) {
+                throw new IllegalStateException("fileHeader.getTypes().size():"
+                        + fileHeader.getTypes().size()
+                        + " is not equal with fileHeader.getHeaderCols().size():"
+                        + headerCols.size()
+                        + " colCount:" + fileHeader.colCount);
+            }
         }
         DataXColMeta colMeta = null;
-        if (fileHeader.getTypes().size() != fileHeader.getHeaderCols().size()) {
-            throw new IllegalStateException("fileHeader.getTypes().size():"
-                    + fileHeader.getTypes().size()
-                    + " is not equal with fileHeader.getHeaderCols().size():"
-                    + fileHeader.getHeaderCols().size()
-                    + " colCount:" + fileHeader.colCount);
-        }
         List<DataType> types = fileHeader.getTypes();
         for (int index = 0; index < fileHeader.colCount; index++) {
             colMeta = new DataXColMeta(types.get(index));

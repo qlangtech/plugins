@@ -55,7 +55,7 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
             return Collections.emptyList();
         }
         return descs.stream().filter((desc) -> {
-           return !(desc instanceof IExclusiveTDFSType);
+            return !(desc instanceof IExclusiveTDFSType);
         }).collect(Collectors.toList());
     }
 
@@ -113,7 +113,18 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         }
 
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals, boolean showRecognizedResMsg) {
-            AbstractDFSReader dataxReader = (AbstractDFSReader) postFormVals.newInstance();
+            AbstractDFSReader dataxReader = postFormVals.newInstance();
+
+            //try {
+                //
+                /**
+                 * 当reader header读取，但是在head 无法正确读取到colName 则在此处会抛异常
+                 * @see CSVFormat#setCsvReaderConfig 会抛出TisException
+                 */
+//                dataxReader.getSelectedTabs();
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
 
             Set<ITDFSSession.Res> matchRes = dataxReader.dfsLinker.useTdfsSession((session) -> {
                 return dataxReader.resMatcher.findAllRes(session);

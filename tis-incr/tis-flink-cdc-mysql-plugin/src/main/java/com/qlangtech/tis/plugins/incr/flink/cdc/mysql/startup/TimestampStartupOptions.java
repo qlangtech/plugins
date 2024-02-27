@@ -34,7 +34,7 @@ import com.ververica.cdc.connectors.mysql.table.StartupMode;
  **/
 public class TimestampStartupOptions extends StartupOptions {
 
-    @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
+    @FormField(ordinal = 0, type = FormFieldType.DateTime, validate = {Validator.require})
     public Long startupTimestampMillis;
 
     @Override
@@ -42,12 +42,6 @@ public class TimestampStartupOptions extends StartupOptions {
         return com.ververica.cdc.connectors.mysql.table.StartupOptions.timestamp(startupTimestampMillis);
     }
 
-
-
-
-    public static String getCurrentTimeMillis() {
-        return String.valueOf(TimeFormat.getCurrentTimeStamp());
-    }
 
     @TISExtension
     public static class DefaultDescriptor extends Descriptor<StartupOptions> {
@@ -58,11 +52,11 @@ public class TimestampStartupOptions extends StartupOptions {
 
         public boolean validateStartupTimestampMillis(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
 
-            long timestamp = Long.parseLong(value);
-            if (Math.abs(TimeFormat.getCurrentTimeStamp() - timestamp) > 50000000) {
-                msgHandler.addFieldError(context, fieldName, "时间戳设置有误");
-                return false;
-            }
+//            long timestamp = Long.parseLong(value);
+//            if (Math.abs(TimeFormat.getCurrentTimeStamp() - timestamp) > 50000000) {
+//                msgHandler.addFieldError(context, fieldName, "时间戳设置有误");
+//                return false;
+//            }
 
             return true;
         }

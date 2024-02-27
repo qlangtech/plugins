@@ -1,4 +1,7 @@
 {
+  "cluster": {
+    "dftVal": "Standalone"
+  },
   "parallelism": {
     "dftVal": "1"
   },

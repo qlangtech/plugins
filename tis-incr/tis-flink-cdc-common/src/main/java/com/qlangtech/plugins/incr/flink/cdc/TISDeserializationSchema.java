@@ -122,8 +122,17 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
         Struct after = value.getStruct("after");
 
         Map<String, Object> afterVals = new HashMap<>();
+        Object afterVal = null;
         for (Field f : afterSchema.fields()) {
-            afterVals.put(f.name(), rawValConvert.convert(dto, f, after.get(f.name())));
+            afterVal = after.get(f.name());
+            if (afterVal == null) {
+                continue;
+            }
+            try {
+                afterVals.put(f.name(), rawValConvert.convert(dto, f, afterVal));
+            } catch (Exception e) {
+                throw new RuntimeException("field:" + f.name() + ",afterVal:" + afterVal, e);
+            }
         }
         dto.setAfter(afterVals);
     }
@@ -133,8 +142,13 @@ public class TISDeserializationSchema implements DebeziumDeserializationSchema<D
         Schema beforeSchema = valueSchema.field("before").schema();
         Struct before = getBeforeVal(value);
         Map<String, Object> beforeVals = new HashMap<>();
+        Object beforeVal = null;
         for (Field f : beforeSchema.fields()) {
-            beforeVals.put(f.name(), rawValConvert.convert(dto, f, before.get(f.name())));
+            beforeVal = before.get(f.name());
+            if (beforeVal == null) {
+                continue;
+            }
+            beforeVals.put(f.name(), rawValConvert.convert(dto, f, beforeVal));
         }
         dto.setBefore(beforeVals);
     }

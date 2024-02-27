@@ -1,3 +1,23 @@
+## cluster
+对应Flink的执行任务集群，TIS组装好Flink Job之后，提交任务时会向 Flink Cluster中提交任务。
+
+TIS平台中，提交任务前，请先创建Flink Cluster，其支持三种部署模式：
+
+1. Kubernetes Session: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/native_kubernetes/#session-mode)
+   
+   特点是多个Flink Job任务会由同一个Job Manager分配资源调度
+
+2. Kubernetes Application: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/native_kubernetes/#application-mode)
+   [Application Mode Detail](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/overview/#application-mode)
+   
+   每个Flink Job任务独占一个JobManager ，对于运行在集群中的Job不会有资源抢占问题，
+   >因此对于比较重要且优先级的任务，建议采用这种部署方式
+      
+
+3. Standalone: [详细请查看](https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/resource-providers/standalone/overview/)
+    
+   这种部署方式最简单，用户下载TIS 定制过的Flink安装包，解压，修改配置后即可启动运行，因为是单机版的，由于单机slot资源限制只可以部署有限Flink Job任务 [安装说明](https://tis.pub/docs/install/flink-cluster/standalone)  
+
 ## parallelism
 
 任务执行并行度

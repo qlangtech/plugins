@@ -16,44 +16,33 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugin.ds.starrocks;
+package com.qlangtech.tis.plugin.datax.doris.datamodel;
 
-import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-
-import java.sql.SQLException;
-import java.util.Optional;
+import com.qlangtech.tis.plugin.datax.doris.CreateTable;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-29 10:01
+ * @create: 2024-02-28 10:32
  **/
-@Public
-public class StarRocksSourceFactory extends BasicSourceFactory {
-
-    public static final String DISPLAY_NAME = "StarRocks";
+public class DuplicateCreateTable extends CreateTable {
 
     @Override
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
-        return super.getConnection(jdbcUrl, verify);
+    public String getKeyToken() {
+        return "DUPLICATE KEY";
     }
 
     @Override
-    public Optional<String> getEscapeChar() {
-        return Optional.of("`");
+    public boolean isOff() {
+        return false;
     }
 
     @TISExtension
-    public static class DefaultDescriptor extends BasicSourceFactory.DefaultDescriptor {
+    public static class DftDesc extends Descriptor<CreateTable> {
         @Override
-        public EndType getEndType() {
-            return EndType.StarRocks;
-        }
-
-        @Override
-        protected String getDataSourceName() {
-            return DISPLAY_NAME;
+        public String getDisplayName() {
+            return "Duplicate";
         }
     }
 }

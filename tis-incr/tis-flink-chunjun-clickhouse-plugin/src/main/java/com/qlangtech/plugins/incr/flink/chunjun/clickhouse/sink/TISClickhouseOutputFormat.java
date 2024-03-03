@@ -54,7 +54,7 @@ public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        DataSourceMeta.JDBCConnection connection = dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+        DataSourceMeta.JDBCConnection connection = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false);
         return connection.getConnection();
     }
 

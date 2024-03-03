@@ -23,6 +23,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -135,13 +136,20 @@ public class DefaultK8SImage extends K8sImage {
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends BasicDesc {
+    public static class DescriptorImpl extends BasicDesc implements IEndTypeGetter {
         private static final Logger logger = LoggerFactory.getLogger(DescriptorImpl.class);
 
         public DescriptorImpl() {
             super();
             this.registerSelectOptions(KEY_FIELD_NAME, () -> ParamsConfig.getItems(IK8sContext.KEY_DISPLAY_NAME));
         }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Docker;
+        }
+
+
 
         public boolean validateHostAliases(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             try {

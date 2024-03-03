@@ -42,19 +42,23 @@ public class MySQLV5DataSourceFactory extends MySQLDataSourceFactory {
     private transient com.mysql.jdbc.Driver driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new com.mysql.jdbc.Driver();
         }
         java.util.Properties info = new java.util.Properties();
-
         if (this.userName != null) {
             info.put("user", this.userName);
         }
-        if (password != null) {
-            info.put("password", password);
+        if (this.password != null) {
+            info.put("password", this.password);
         }
-        //info.put("connectTimeout", "60000");
+        if (verify) {
+            info.put("connectTimeout", "3000");
+            info.put("socketTimeout", "3000");
+            info.put("autoReconnect", "false");
+        }
+
         return new JDBCConnection(driver.connect(jdbcUrl, info), jdbcUrl);
     }
 

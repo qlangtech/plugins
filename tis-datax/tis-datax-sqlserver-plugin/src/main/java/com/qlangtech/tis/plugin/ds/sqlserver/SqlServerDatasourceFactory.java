@@ -61,7 +61,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     private transient java.sql.Driver driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         if (driver == null) {
             driver = createDriver();
         }

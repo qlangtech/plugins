@@ -14,5 +14,12 @@
   },
   "loadProps": {
     "dftVal": "com.qlangtech.tis.plugin.datax.doris.DataXDorisWriter.getDftLoadProps()"
+  },
+  "autoCreateTable": {
+    "disable": true
+  },
+  "createTableModel": {
+    "label": "建表模型",
+    "dftVal": "Unique"
   }
 }

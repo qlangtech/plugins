@@ -89,7 +89,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     /**
      * 附加参数
      */
-    @FormField(ordinal = 15, type = FormFieldType.INPUTTEXT)
+    @FormField(ordinal = 15, advance = true, type = FormFieldType.INPUTTEXT)
     public String extraParams;
 
 
@@ -245,8 +245,8 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
-        return super.getConnection(jdbcUrl);
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+        return super.getConnection(jdbcUrl, verify);
     }
 
 

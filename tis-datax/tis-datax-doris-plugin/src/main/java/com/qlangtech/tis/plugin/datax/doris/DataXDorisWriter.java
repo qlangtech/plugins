@@ -32,6 +32,9 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.extension.impl.PropertyType;
 import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.annotation.FormField;
+import com.qlangtech.tis.plugin.annotation.FormFieldType;
+import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -50,12 +53,20 @@ import java.util.Optional;
 @Public
 public class DataXDorisWriter extends BasicDorisWriter {
 
+    @FormField(ordinal = 10, validate = {Validator.require})
+    public CreateTable createTableModel;
+
 
     public static String getDftLoadProps() {
         return "{\n" +
                 "    \"" + Keys.LOAD_PROPS_COLUMN_SEPARATOR + "\": \"" + Separator.COL_SEPARATOR_DEFAULT + "\",\n" +
                 "    \"" + Keys.LOAD_PROPS_LINE_DELIMITER + "\": \"" + Separator.ROW_DELIMITER_DEFAULT + "\"\n" +
                 "}";
+    }
+
+    @Override
+    public boolean isGenerateCreateDDLSwitchOff() {
+        return this.createTableModel.isOff();
     }
 
     @Override
@@ -96,7 +107,7 @@ public class DataXDorisWriter extends BasicDorisWriter {
         return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), columnTokenRecognise) {
             @Override
             protected String getUniqueKeyToken() {
-                return "UNIQUE KEY";
+                return createTableModel.getKeyToken();
             }
 
             @Override

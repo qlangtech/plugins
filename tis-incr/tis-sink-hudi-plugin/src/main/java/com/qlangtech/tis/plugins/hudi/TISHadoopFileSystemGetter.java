@@ -18,11 +18,12 @@
 
 package com.qlangtech.tis.plugins.hudi;
 
-import com.qlangtech.plugins.org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
+//import com.qlangtech.plugins.org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hudi.common.fs.IExtraHadoopFileSystemGetter;
 
 import java.io.IOException;
 

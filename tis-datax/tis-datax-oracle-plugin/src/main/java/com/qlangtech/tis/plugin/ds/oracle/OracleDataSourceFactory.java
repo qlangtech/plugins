@@ -23,18 +23,46 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
 
-import java.sql.*;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-import static oracle.jdbc.OracleTypes.*;
+import static oracle.jdbc.OracleTypes.BIGINT;
+import static oracle.jdbc.OracleTypes.BINARY_DOUBLE;
+import static oracle.jdbc.OracleTypes.BINARY_FLOAT;
+import static oracle.jdbc.OracleTypes.BIT;
+import static oracle.jdbc.OracleTypes.CHAR;
+import static oracle.jdbc.OracleTypes.DATE;
+import static oracle.jdbc.OracleTypes.DECIMAL;
+import static oracle.jdbc.OracleTypes.DOUBLE;
+import static oracle.jdbc.OracleTypes.FLOAT;
+import static oracle.jdbc.OracleTypes.INTEGER;
+import static oracle.jdbc.OracleTypes.LONGVARCHAR;
+import static oracle.jdbc.OracleTypes.NUMERIC;
+import static oracle.jdbc.OracleTypes.PLSQL_BOOLEAN;
+import static oracle.jdbc.OracleTypes.REAL;
+import static oracle.jdbc.OracleTypes.SMALLINT;
+import static oracle.jdbc.OracleTypes.TIME;
+import static oracle.jdbc.OracleTypes.TIMESTAMP;
+import static oracle.jdbc.OracleTypes.TINYINT;
+import static oracle.jdbc.OracleTypes.VARCHAR;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -187,13 +215,13 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
     @Override
     public List<ColumnMetaData> wrapColsMeta(boolean inSink, EntityName table, ResultSet columns1,
-                                             Set<String> pkCols) throws SQLException,TableNotFoundException {
+                                             Set<String> pkCols) throws SQLException, TableNotFoundException {
         return this.wrapColsMeta(inSink, table, columns1, new CreateColumnMeta(pkCols, columns1) {
 
             @Override
             protected DataType createColDataType(String colName, String typeName, int dbColType, int colSize, int decimalDigits) throws SQLException {
                 // 类似oracle驱动内部有一套独立的类型 oracle.jdbc.OracleTypes,有需要可以在具体的实现类里面去实现
-               // return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
+                // return DataType.create(convert2JdbcType(dbColType), typeName, colSize);
 
                 return super.createColDataType(colName, typeName, convert2JdbcType(dbColType), colSize, decimalDigits);
             }
@@ -233,7 +261,7 @@ public class OracleDataSourceFactory extends BasicDataSourceFactory implements D
 
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         try {
             Class.forName("oracle.jdbc.OracleDriver");
         } catch (ClassNotFoundException e) {

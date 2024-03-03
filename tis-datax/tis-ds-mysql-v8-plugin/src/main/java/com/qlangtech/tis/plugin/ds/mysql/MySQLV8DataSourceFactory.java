@@ -43,7 +43,7 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
     private transient com.mysql.cj.jdbc.Driver mysql8Driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
 
         if (mysql8Driver == null) {
             mysql8Driver = new com.mysql.cj.jdbc.Driver();
@@ -56,6 +56,11 @@ public class MySQLV8DataSourceFactory extends MySQLDataSourceFactory implements 
         props.put(PropertyKey.allowPublicKeyRetrieval.getKeyName(), String.valueOf(true));
         props.put(PropertyKey.useSSL.getKeyName(), String.valueOf(false));
         props.put(PropertyKey.autoReconnect.getKeyName(), String.valueOf(true));
+        if (verify) {
+            props.put(PropertyKey.autoReconnect.getKeyName(), String.valueOf(false));
+            props.put(PropertyKey.connectTimeout.getKeyName(), String.valueOf(3000));
+            props.put(PropertyKey.socketTimeout.getKeyName(), String.valueOf(3000));
+        }
 
         //
         /**

@@ -1,6 +1,6 @@
 {
   "imagePath": {
-    "dftVal": "com.qlangtech.plugins.incr.flink.common.FlinkK8SImage.dftImagePath()",
-    "help": "Flink Image Path 由TIS定制"
+    "dftVal": "com.qlangtech.tis.plugins.incr.flink.FlinkCommon.dftImagePath()",
+    "help": "Flink Docker Image Path 由TIS定制"
   }
 }

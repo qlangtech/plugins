@@ -23,7 +23,12 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.writer.odpswriter.Constant;
 import com.alibaba.datax.plugin.writer.odpswriter.Key;
 import com.alibaba.datax.plugin.writer.odpswriter.util.OdpsUtil;
-import com.aliyun.odps.*;
+import com.aliyun.odps.Column;
+import com.aliyun.odps.Odps;
+import com.aliyun.odps.OdpsException;
+import com.aliyun.odps.Table;
+import com.aliyun.odps.TableSchema;
+import com.aliyun.odps.Tables;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -32,7 +37,11 @@ import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.slf4j.Logger;
@@ -158,7 +167,7 @@ public class OdpsDataSourceFactory extends BasicDataSourceFactory {
     }
 
     @Override
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         try {
             Class.forName(DRIVER_NAME);
         } catch (ClassNotFoundException e) {

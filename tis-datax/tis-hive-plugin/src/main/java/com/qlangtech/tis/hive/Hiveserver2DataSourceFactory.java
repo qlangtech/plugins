@@ -28,7 +28,13 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.JdbcUrlBuilder;
+import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +46,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -119,12 +129,12 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
-        return getConnection(jdbcUrl, false);
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
+        return getConnection(jdbcUrl, false, verify);
     }
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl, boolean usingPool) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean usingPool, boolean verify) throws SQLException {
         return this.hms.getConnection(jdbcUrl, this.dbName, usingPool);
     }
 
@@ -147,7 +157,7 @@ public class Hiveserver2DataSourceFactory extends BasicDataSourceFactory impleme
     @Override
     public void visitFirstConnection(IConnProcessor connProcessor) {
         final String hiveJdbcUrl = createHiveJdbcUrl();
-        try (JDBCConnection conn = this.getConnection(hiveJdbcUrl)) {
+        try (JDBCConnection conn = this.getConnection(hiveJdbcUrl, false)) {
             connProcessor.vist(conn);
         } catch (Exception e) {
             throw new RuntimeException(e);

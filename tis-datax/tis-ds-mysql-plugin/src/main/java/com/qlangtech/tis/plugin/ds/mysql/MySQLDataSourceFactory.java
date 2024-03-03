@@ -26,15 +26,39 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataxMySQLReader;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataDumpers;
+import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.FacadeDataSource;
+import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
+import com.qlangtech.tis.plugin.ds.IFacadeDataSource;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.ds.SplitTableStrategy;
+import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.TableInDB;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.sql.*;
-import java.util.*;
+import java.sql.Driver;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -57,7 +81,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
     /**
      * 传输时数据压缩
      */
-    @FormField(ordinal = 8, type = FormFieldType.ENUM, validate = {Validator.require})
+    @FormField(ordinal = 14, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean useCompression;
 
 
@@ -356,7 +380,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
                 throw new IllegalStateException("executeSql can not be null");
             }
             try {
-                this.connection = getConnection(jdbcUrl);
+                this.connection = getConnection(jdbcUrl, false);
                 this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);

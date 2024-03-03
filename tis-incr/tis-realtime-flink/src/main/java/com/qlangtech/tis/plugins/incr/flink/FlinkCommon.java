@@ -16,26 +16,17 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.common;
+package com.qlangtech.tis.plugins.incr.flink;
 
-import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
-import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
-import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.utils.TisMetaProps;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-01-04 08:49
+ * @create: 2024-03-01 15:49
  **/
-public class FlinkK8SImage extends DefaultK8SImage {
-
-
-
-    @TISExtension()
-    public static class FlinkDescriptorImpl extends DescriptorImpl {
-        @Override
-        protected ImageCategory getImageCategory() {
-            return BasicFlinkK8SClusterCfg.k8sImage();
-        }
+public class FlinkCommon {
+    public static final String dftImagePath() {
+        return "registry.cn-hangzhou.aliyuncs.com/tis/flink:"
+                + TisMetaProps.getInstance().getVersion();
     }
 }

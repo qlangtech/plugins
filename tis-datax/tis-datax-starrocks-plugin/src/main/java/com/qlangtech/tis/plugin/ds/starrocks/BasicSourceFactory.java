@@ -84,7 +84,7 @@ public class BasicSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public DataSourceMeta.JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         Properties props = new Properties();
         props.put("user", StringUtils.trimToEmpty(this.userName));
         if (StringUtils.isNotEmpty(this.password)) {

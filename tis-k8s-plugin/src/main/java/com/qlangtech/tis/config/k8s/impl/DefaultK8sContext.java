@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -41,6 +42,7 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -103,12 +105,21 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
-
+    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
         public DefaultDescriptor() {
             super();
             this.load();
         }
+
+        @Override
+        public final EndType getEndType() {
+            return EndType.K8S;
+        }
+
+//        @Override
+//        public Map<String, Object> getExtractProps() {
+//            return this.getEndType().appendProps(super.getExtractProps());
+//        }
 
         @Override
         public String getDisplayName() {

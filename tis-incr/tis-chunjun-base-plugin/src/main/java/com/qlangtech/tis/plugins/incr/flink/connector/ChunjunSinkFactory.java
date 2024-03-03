@@ -100,7 +100,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- *
  * WRITER extends BasicDataXRdbmsWriter, DS extends BasicDataSourceFactory
  *
  * @author: 百岁（baisui@qlangtech.com）
@@ -481,7 +480,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     DataStream<RowData> dataSet, OutputFormat<RowData> outputFormat) {
                 JdbcOutputFormat routputFormat = (JdbcOutputFormat) outputFormat;
 
-                try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl)) {
+                try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
                     routputFormat.dbConn = conn.getConnection();
                     routputFormat.initColumnList();
                 } catch (SQLException e) {

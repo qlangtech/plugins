@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.hudi.keygenerator.impl;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
+import com.qlangtech.plugins.org.apache.hudi.common.config.TimestampKeyGeneratorConfig;
 import com.qlangtech.plugins.org.apache.hudi.keygen.TimestampBasedAvroKeyGenerator;
 import com.qlangtech.plugins.org.apache.hudi.keygen.constant.KeyGeneratorType;
 import com.qlangtech.tis.extension.Descriptor;
@@ -37,7 +38,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 /**
@@ -108,10 +113,15 @@ public class TimeStampKeyGenerator extends HudiKeyGenerator {
 
     @Override
     protected void setKeyGenProps(IPropertiesBuilder props, IDataXHudiWriter hudiWriter) {
-        props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TYPE_FIELD_PROP, this.timestampType);
-        props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_INPUT_DATE_FORMAT_PROP, this.inputDateformat);
-        props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_OUTPUT_DATE_FORMAT_PROP, this.outputDateformat);
-        props.setProperty(TimestampBasedAvroKeyGenerator.Config.TIMESTAMP_TIMEZONE_FORMAT_PROP, this.timezone);
+//        props.setProperty(KeyGeneratorOptions.Config.TIMESTAMP_TYPE_FIELD_PROP, this.timestampType);
+//        props.setProperty(KeyGeneratorOptions.Config.TIMESTAMP_INPUT_DATE_FORMAT_PROP, this.inputDateformat);
+//        props.setProperty(KeyGeneratorOptions.Config.TIMESTAMP_OUTPUT_DATE_FORMAT_PROP, this.outputDateformat);
+//        props.setProperty(KeyGeneratorOptions.Config.TIMESTAMP_TIMEZONE_FORMAT_PROP, this.timezone);
+
+        props.setProperty(TimestampKeyGeneratorConfig.TIMESTAMP_TYPE_FIELD.key(), this.timestampType);
+        props.setProperty(TimestampKeyGeneratorConfig.TIMESTAMP_INPUT_DATE_FORMAT.key(), this.inputDateformat);
+        props.setProperty(TimestampKeyGeneratorConfig.TIMESTAMP_OUTPUT_DATE_FORMAT.key(), this.outputDateformat);
+        props.setProperty(TimestampKeyGeneratorConfig.TIMESTAMP_TIMEZONE_FORMAT.key(), this.timezone);
     }
 
     //    @Override

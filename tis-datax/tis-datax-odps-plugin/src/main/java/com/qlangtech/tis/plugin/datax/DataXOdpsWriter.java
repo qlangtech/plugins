@@ -19,6 +19,7 @@ import com.qlangtech.tis.fs.ITableBuildTask;
 import com.qlangtech.tis.fs.ITaskContext;
 import com.qlangtech.tis.fullbuild.indexbuild.DftTabPartition;
 import com.qlangtech.tis.fullbuild.indexbuild.IDumpTable;
+import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPostTrigger;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskPreviousTrigger;
 import com.qlangtech.tis.fullbuild.phasestatus.IJoinTaskStatus;
@@ -45,7 +46,6 @@ import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.qlangtech.tis.fullbuild.indexbuild.IPartionableWarehouse;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -331,7 +331,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         OdpsDataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            return dsFactory.getConnection(jdbcUrl);
+            return dsFactory.getConnection(jdbcUrl, false);
         } catch (SQLException e) {
             throw new RuntimeException(jdbcUrl, e);
         }

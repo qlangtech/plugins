@@ -108,7 +108,7 @@ public class DorisSourceFactory extends BasicDataSourceFactory {
 
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         Properties props = new Properties();
         props.put("useSSL", "false");
         props.put("user", StringUtils.trimToEmpty(this.userName));

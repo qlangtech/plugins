@@ -50,7 +50,7 @@ public class TISDamengInputFormat extends DamengInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
+                .getConnection(jdbcConf.getJdbcUrl(), false).getConnection();
     }
 
 

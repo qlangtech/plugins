@@ -82,7 +82,7 @@ import java.util.function.Supplier;
  * @see com.qlangtech.tis.plugin.datax.TisDataXHiveWriter
  **/
 @Public
-public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost , IPartionableWarehouse {
+public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder, IDataSourceFactoryGetter, IDataXBatchPost, IPartionableWarehouse {
     private static final String DATAX_NAME = "Hive";
 
     @FormField(identity = false, ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
@@ -230,7 +230,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
         Hiveserver2DataSourceFactory dsFactory = getDataSourceFactory();
         String jdbcUrl = dsFactory.getJdbcUrl();
         try {
-            return dsFactory.getConnection(jdbcUrl);
+            return dsFactory.getConnection(jdbcUrl, false);
         } catch (SQLException e) {
             throw new RuntimeException(jdbcUrl, e);
         }
@@ -238,7 +238,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public void startScanDependency() {
-       this. getHiveConnGetter();
+        this.getHiveConnGetter();
     }
 
     @Override

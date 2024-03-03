@@ -22,7 +22,7 @@
 
     <properties>
         <springboot.version>2.7.14</springboot.version>
-        <powerjob.worker.starter.version>4.3.6</powerjob.worker.starter.version>
+        <powerjob.worker.starter.version>${powerjob.version}</powerjob.worker.starter.version>
         <!--        <fastjson.version>1.2.83</fastjson.version>-->
         <fastjson.version>2.0.17</fastjson.version>
         <spring-version>5.3.29</spring-version>

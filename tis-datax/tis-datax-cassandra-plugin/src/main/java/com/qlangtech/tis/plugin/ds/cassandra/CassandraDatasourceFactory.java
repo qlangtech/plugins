@@ -217,7 +217,7 @@ public class CassandraDatasourceFactory extends DataSourceFactory {
 
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl,boolean verify) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

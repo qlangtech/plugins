@@ -20,7 +20,6 @@ package com.qlangtech.tis.plugins.incr.flink.connector.starrocks;
 
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -29,7 +28,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
@@ -84,7 +82,7 @@ public class BaseStarRocksTestCase extends AbstractTestBase {
         StarRocksSourceFactory ds = createSourceFactory();
 
         try (DataSourceMeta.JDBCConnection conn = ds.getConnection(
-                ds.buidJdbcUrl(null, "localhost", null))) {
+                ds.buidJdbcUrl(null, "localhost", null), false)) {
             try (Statement statement = conn.createStatement()) {
 
                 // statement.execute("ALTER SYSTEM ADD BACKEND \"" + StringUtils.substring(starRocksContainer.getContainerId(), 0, 12) + ":9050\"");

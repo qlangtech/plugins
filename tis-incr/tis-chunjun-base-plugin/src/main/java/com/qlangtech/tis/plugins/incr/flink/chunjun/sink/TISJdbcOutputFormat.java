@@ -54,7 +54,7 @@ public class TISJdbcOutputFormat extends JdbcOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(this.jdbcConf.getJdbcUrl());
+        DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false);
         return conn.getConnection();
     }
 }

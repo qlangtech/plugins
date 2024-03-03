@@ -88,7 +88,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
     private transient dm.jdbc.driver.DmDriver driver;
 
     @Override
-    public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+    public JDBCConnection getConnection(String jdbcUrl, boolean verify) throws SQLException {
         if (driver == null) {
             driver = new dm.jdbc.driver.DmDriver();
         }
@@ -391,7 +391,7 @@ public class DaMengDataSourceFactory extends BasicDataSourceFactory implements D
                 throw new IllegalStateException("executeSql can not be null");
             }
             try {
-                this.connection = getConnection(jdbcUrl);
+                this.connection = getConnection(jdbcUrl, false);
                 this.statement = connection.getConnection().createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
                         ResultSet.CONCUR_READ_ONLY);
                 this.resultSet = statement.executeQuery(executeSql);

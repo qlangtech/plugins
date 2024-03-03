@@ -29,6 +29,7 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.extension.util.OverwriteProps;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -44,6 +45,7 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -106,10 +108,17 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         return configuration;
     }
 
-    public abstract static class BasicFlinkCfgDescriptor extends BasicDescriptor {
+    public abstract static class BasicFlinkCfgDescriptor extends BasicDescriptor implements IEndTypeGetter {
 
         private static final MemorySize MEMORY_8G = MemorySize.ofMebiBytes(8 * 1024);
         protected final Options<BasicFlinkK8SClusterCfg> opts;
+
+        @Override
+        public final EndType getEndType() {
+            return EndType.Flink;
+        }
+
+
 
         public BasicFlinkCfgDescriptor() {
             super();

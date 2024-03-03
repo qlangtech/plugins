@@ -6,10 +6,11 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
-import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.lang.TisException.ErrMsg;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -26,8 +27,9 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @date 2023/10/31
  */
 public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultPowerjobCoreDataSource.class);
     private static final String FIELD_DB_NAME = "dbName";
 
     private static final String SQL_REPLACE_APP_INFO = "replace into app_info (id,app_name,gmt_create,gmt_modified,`password`) values (?,?,now(),now(),?)";
@@ -84,7 +87,6 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
             }
         });
     }
-
 
 
     private AppNameHasRegister appNameHasRegister(K8SDataXPowerJobServer powerJobServer, JDBCConnection conn) throws SQLException {
@@ -180,7 +182,7 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
-            return super.validateAll(msgHandler, context, postFormVals);
+            return this.validateAll(msgHandler, context, postFormVals);
         }
 
         @Override
@@ -194,8 +196,16 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
                 return false;
             }
 
-            TableInDB tabs = dseFactory.getTablesInDB();
-            List<String> existTabs = tabs.getTabs();
+            List<String> existTabs = null;
+            try {
+                TableInDB tabs = dseFactory.getTablesInDB();
+                existTabs = tabs.getTabs();
+            } catch (Exception e) {
+                ErrMsg errMsg = TisException.getErrMsg(e);
+                logger.warn(errMsg.getMessage(), errMsg.getEx());
+                msgHandler.addFieldError(context, FIELD_DB_NAME, errMsg.getMessage());
+                return false;
+            }
 
             Set<String> lackTabs = Sets.newHashSet();
             for (String tab : shallContainTabs) {

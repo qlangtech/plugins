@@ -31,7 +31,14 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
+import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
+import com.qlangtech.tis.plugin.ds.PostedDSProp;
+import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -146,7 +153,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
         IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, dataXName);
         DataSourceFactory dsFactory = dataXWriter.getDataSourceFactory();
         for (String jdbcUrl : jdbcUrls) {
-            try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl)) {
+            try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(jdbcUrl, false)) {
                 process(dataXName, processor, dataXWriter, dataXWriter, conn, tableName);
             }
         }

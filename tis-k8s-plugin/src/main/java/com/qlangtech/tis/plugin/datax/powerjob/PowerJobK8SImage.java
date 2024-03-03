@@ -5,7 +5,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-
 import com.qlangtech.tis.utils.TisMetaProps;
 
 /**
@@ -25,6 +24,16 @@ public class PowerJobK8SImage extends DefaultK8SImage {
         return "registry.cn-hangzhou.aliyuncs.com/tis/tis-datax-executor:"
                 + TisMetaProps.getInstance().getVersion();
     }
+
+
+    public static final String powerjobMetaStoreImagePath() {
+        return "powerjob/powerjob-mysql:" + PowerJobCommonParams.getPowerJobVersion();
+    }
+
+    public static final String powerjobServerImagePath() {
+        return "powerjob/powerjob-server:" + PowerJobCommonParams.getPowerJobVersion();
+    }
+
 
     @TISExtension()
     public static class DescriptorImpl extends DefaultK8SImage.DescriptorImpl {

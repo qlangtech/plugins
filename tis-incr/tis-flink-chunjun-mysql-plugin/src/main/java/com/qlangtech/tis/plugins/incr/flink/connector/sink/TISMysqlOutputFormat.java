@@ -47,7 +47,7 @@ public final class TISMysqlOutputFormat extends MysqlOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl()).getConnection();
+        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false).getConnection();
     }
 
     @Override

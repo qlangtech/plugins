@@ -16,26 +16,17 @@
  * limitations under the License.
  */
 
-package com.qlangtech.plugins.incr.flink.common;
+package com.qlangtech.tis.plugin.datax.doris;
 
-import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
-import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.utils.TisMetaProps;
+import com.qlangtech.tis.extension.Describable;
 
 /**
+ * https://doris.apache.org/zh-CN/docs/data-table/data-model/#duplicate-%E6%A8%A1%E5%9E%8B
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-01-04 08:49
+ * @create: 2024-02-28 10:28
  **/
-public class FlinkK8SImage extends DefaultK8SImage {
+public abstract class CreateTable implements Describable<CreateTable> {
+    public abstract boolean isOff();
 
-
-
-    @TISExtension()
-    public static class FlinkDescriptorImpl extends DescriptorImpl {
-        @Override
-        protected ImageCategory getImageCategory() {
-            return BasicFlinkK8SClusterCfg.k8sImage();
-        }
-    }
+    public abstract String getKeyToken();
 }

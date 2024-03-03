@@ -3,11 +3,16 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
-import tech.powerjob.common.enums.*;
+import tech.powerjob.common.enums.DispatchStrategy;
+import tech.powerjob.common.enums.ExecuteType;
+import tech.powerjob.common.enums.ProcessorType;
+import tech.powerjob.common.enums.TimeExpressionType;
+import tech.powerjob.common.enums.WorkflowNodeType;
 import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.request.http.SaveWorkflowRequest;
@@ -109,10 +114,15 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends BasicDescriptor {
+    public static class DescriptorImpl extends BasicDescriptor implements IEndTypeGetter {
 
         public DescriptorImpl() {
             super();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.PowerJob;
         }
 
         @Override

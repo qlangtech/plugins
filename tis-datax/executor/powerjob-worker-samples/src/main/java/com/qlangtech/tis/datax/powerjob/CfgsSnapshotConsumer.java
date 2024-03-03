@@ -30,16 +30,23 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
 
     public void synchronizTpisAndConfs(DefaultExecContext execContext) {
         try {
-
+            boolean successSync = false;
             if (processTaskIds.add(execContext.getTaskId())) {
-                logger.info("taskId:{},resName:{} execute plugin and config synchronize to local"
-                        , execContext.getTaskId(), execContext.getIndexName());
-                PluginAndCfgsSnapshot localSnapshot =
-                        PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(execContext.getResType(),
-                                new TargetResName(execContext.getIndexName()), Collections.emptySet());
+                try {
+                    logger.info("taskId:{},resName:{} execute plugin and config synchronize to local"
+                            , execContext.getTaskId(), execContext.getIndexName());
+                    PluginAndCfgsSnapshot localSnapshot =
+                            PluginAndCfgsSnapshot.getWorkerPluginAndCfgsSnapshot(execContext.getResType(),
+                                    new TargetResName(execContext.getIndexName()), Collections.emptySet());
 
-                Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be " + "null") //
-                        .synchronizTpisAndConfs(localSnapshot, Optional.empty());
+                    Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be " + "null") //
+                            .synchronizTpisAndConfs(localSnapshot, Optional.empty());
+                    successSync = true;
+                } finally {
+                    if (!successSync) {
+                        processTaskIds.remove(execContext.getTaskId());
+                    }
+                }
             } else {
                 logger.info("taskId:{},resName:{} SKIP plugin and config synchronize to local"
                         , execContext.getTaskId(), execContext.getIndexName());

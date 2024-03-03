@@ -68,7 +68,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     private String mainClassName = DataxExecutor.class.getName();
     private File workingDirectory = new File(".");
     private String classpath;
-    private ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler = new ExtraJavaSystemPramsSuppiler();
+    private ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler = new ExtraJavaSystemPramsSuppiler(true);
 
     private final static Logger logger = LoggerFactory.getLogger(LocalDataXJobSubmit.class);
 

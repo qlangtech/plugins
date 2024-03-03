@@ -39,7 +39,7 @@ public class DataxPrePostConsumer extends DataXJobSingleProcessorExecutor<DataXL
     private final DataXJobRunEnvironmentParamsSetter.ExtraJavaSystemPramsSuppiler extraJavaSystemPramsSuppiler;
 
     public DataxPrePostConsumer() {
-        this(new DataXJobRunEnvironmentParamsSetter.ExtraJavaSystemPramsSuppiler() {
+        this(new DataXJobRunEnvironmentParamsSetter.ExtraJavaSystemPramsSuppiler(false) {
             @Override
             public List<String> get() {
                 List<String> params = Lists.newArrayList(super.get());

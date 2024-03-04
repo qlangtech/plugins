@@ -2,6 +2,7 @@ package com.qlangtech.tis.datax.powerjob;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
@@ -50,6 +51,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
     // public static final String KEY_instanceParams = "instanceParams";
     public transient static final PluginAndCfgSnapshotLocalCache cacheSnaphsot = new PluginAndCfgSnapshotLocalCache();
+
 
     @Override
     public ProcessResult reduce(TaskContext context, List<TaskResult> taskResults) {

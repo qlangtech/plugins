@@ -40,6 +40,7 @@ import com.qlangtech.tis.datax.job.ServerLaunchLog;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -483,6 +484,9 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         // return K8sIncrSync.getK8SDeploymentMeta(new CoreV1Api(getK8SApi()), this.getK8SImage(), K8S_INSTANCE_NAME);
         K8SController k8SController = getK8SController();
         RcDeployment powerjobServer = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_SERVER);
+        if (powerjobServer == null) {
+            throw TisException.create("the powerJob has been loss of communication");
+        }
         powerjobServer.setReplicaScalable(false);
 
         RcDeployment powerjobWorker = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_WORKER);

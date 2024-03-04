@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * 当客户端选择使用 kerbernetes-application 部署方式的时候，在flink-jobManager 端服务组装构建jobGraph实例，需要从TIS-console端拉区 同步任务对应的jar包到本地
@@ -54,6 +53,9 @@ import java.util.Optional;
  * // @see KubernetesApplicationClusterEntrypoint
  **/
 public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClusterEntryPoint {
+
+    //  private static final PluginAndCfgSnapshotLocalCache snapshotLocalCache = new PluginAndCfgSnapshotLocalCache();
+
     private KubernetesApplicationClusterEntrypointOfTIS(Configuration configuration, PackagedProgram program) {
         super(configuration, program, KubernetesResourceManagerFactory.getInstance());
     }
@@ -81,13 +83,13 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
         try {
             // baisui modify 2024/1/8
             // 下载最新的jar包
-          //  PluginMeta flinkPluginMeta = TISFlinkClassLoaderFactory.getFlinkPluginMeta(targetResName);
+            //  PluginMeta flinkPluginMeta = TISFlinkClassLoaderFactory.getFlinkPluginMeta(targetResName);
 //            flinkPluginMeta.copyFromRemote();
             TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(targetResName);
             unberJarFile.sync2Local(true);
             String unberJarURL = "local" + String.valueOf(unberJarFile.getFile().toURI().toURL()).substring("file".length());
             LOG.info("TIS unberJarURL:{}", unberJarURL);
-            TISFlinkClassLoaderFactory.synAppRelevantCfgsAndTpis(Optional.empty(), new URL[]{unberJarFile.getFile().toURI().toURL()});
+            TISFlinkClassLoaderFactory.synAppRelevantCfgsAndTpis(new URL[]{unberJarFile.getFile().toURI().toURL()});
             configuration.set(PipelineOptions.JARS, Lists.newArrayList(unberJarURL));
             program = getPackagedProgram(configuration);
         } catch (Exception e) {

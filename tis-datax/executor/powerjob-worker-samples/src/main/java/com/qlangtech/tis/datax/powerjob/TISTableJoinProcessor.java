@@ -131,7 +131,7 @@ public class TISTableJoinProcessor implements BasicProcessor {
         execContext.setWorkflowName(execContext.getIndexName());
         execContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
 
-        snapshotConsumer.synchronizTpisAndConfs(execContext);
+        snapshotConsumer.synchronizTpisAndConfs(execContext, TISTableDumpProcessor.cacheSnaphsot);
 
         IDataxProcessor dataxProc = execContext.getProcessor();
         IPartionableWarehouse partionableWarehouse = IDataxWriter.getPartionableWarehouse(dataxProc.getWriter(null));

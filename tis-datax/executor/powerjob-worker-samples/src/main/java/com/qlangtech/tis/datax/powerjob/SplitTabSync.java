@@ -27,8 +27,7 @@ public class SplitTabSync {
         this.tskMsg = tskMsg;
     }
 
-    public void execSync(final DefaultExecContext execChainContext, RpcServiceReference statusRpc,
-                         IDataxProcessor processor) {
+    public void execSync(final DefaultExecContext execChainContext, RpcServiceReference statusRpc) {
 
         DataXJobSubmit dataXJobSubmit = getDataXJobSubmit(execChainContext);
         if (dataXJobSubmit instanceof DataXJobRunEnvironmentParamsSetter) {
@@ -42,7 +41,7 @@ public class SplitTabSync {
         }
 
         DataXJobSubmit.IDataXJobContext dataXJobContext = DataXJobSubmit.IDataXJobContext.create(execChainContext);
-
+        IDataxProcessor processor = execChainContext.getProcessor();
         IRemoteTaskTrigger tskTrigger = dataXJobSubmit.createDataXJob(dataXJobContext, statusRpc,
                 DataXJobInfo.parse(tskMsg.getJobName()), processor, tskMsg);
 

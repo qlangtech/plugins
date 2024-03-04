@@ -11,20 +11,19 @@ import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.join.DataXJoinProcessConsumer;
 import com.qlangtech.tis.exec.DefaultExecContext;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.job.common.JobParams;
-import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-import com.qlangtech.tis.pubhook.common.RunEnvironment;
+import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -33,6 +32,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.TaskResult;
@@ -49,7 +49,7 @@ import java.util.Objects;
 public class TISTableDumpProcessor implements MapReduceProcessor {
 
     // public static final String KEY_instanceParams = "instanceParams";
-
+    public transient static final PluginAndCfgSnapshotLocalCache cacheSnaphsot = new PluginAndCfgSnapshotLocalCache();
 
     @Override
     public ProcessResult reduce(TaskContext context, List<TaskResult> taskResults) {
@@ -63,11 +63,12 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                         "childResult faild:" + childResult.getResult() + ",taskid:" + childResult.getTaskId() + "  " + "skip reduce phase");
             }
         }
-        Pair<DefaultExecContext, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context);
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context);
+
         RpcServiceReference statusRpc = createRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
 
-        DefaultExecContext execContext = Objects.requireNonNull(pair.getKey(), "execContext can not be null");
+        DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
         SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
         // execContext.putTablePt( );
         //  IDataxProcessor processor = execContext.getProcessor(); // DataxProcessor.load(null, triggerCfg
@@ -113,20 +114,26 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
         final OmsLogger logger = context.getOmsLogger();
 
-        Pair<DefaultExecContext, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context);
+        /**
+         * 同步远端resource 资源
+         */
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context);
         RpcServiceReference statusRpc = createRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = null;
+//        if (pair.getMiddle().getCfgsSnapshotWhenSuccessSync() != null) {
+//            this.cacheSnaphsot = pair.getMiddle().getCfgsSnapshotWhenSuccessSync();
+//        }
 
         try {
             svc = statusRpc.get();
 
-            final DefaultExecContext execChainContext = Objects.requireNonNull(pair.getKey(),
+            final DefaultExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
                     "execChainContext can " + "not be null");
             final SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
 
             ISelectedTab tab = new DefaultTab(triggerCfg.getTabName());
 
-            IDataxProcessor processor = DataxProcessor.load(null, triggerCfg.getResType(), triggerCfg.getDataXName());
+            // IDataxProcessor processors = DataxProcessor.load(null, triggerCfg.getResType(), triggerCfg.getDataXName());
 
             if (isRootTask()) {
 
@@ -168,7 +175,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                 SplitTabSync tabSync = (SplitTabSync) context.getSubTask();
                 try {
 
-                    tabSync.execSync(execChainContext, statusRpc, processor);
+                    tabSync.execSync(execChainContext, statusRpc);
                     return new ProcessResult(true, "table split sync:" + tabSync.tskMsg.getJobName() + ",task " +
                             "serial:" + tabSync.tskMsg.getTaskSerializeNum());
                 } catch (Exception e) {
@@ -276,7 +283,8 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
      * @return
      * @throws InstanceParamsException
      */
-    public static Pair<DefaultExecContext, SelectedTabTriggers.SelectedTabTriggersConfig> createExecContext(TaskContext context) {
+    public static Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig>
+    createExecContext(TaskContext context) {
         JSONObject instanceParams = null;
         Pair<Boolean, JSONObject> instanceParamsGetter = getInstanceParams(context);
         instanceParams = instanceParamsGetter.getRight();
@@ -292,17 +300,13 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
     }
 
 
-    private static Pair<DefaultExecContext, SelectedTabTriggers.SelectedTabTriggersConfig>  //
+    private static Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig>  //
     createExecContext(TaskContext context, Integer taskId, JSONObject instanceParams) {
         if (taskId == null) {
             throw new IllegalArgumentException("param taskId can not be null");
         }
         SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = getTriggerCfg(context);
 
-        //        JSONObject instanceParamss = JSONObject.parseObject(context.getInstanceParams());
-        //        if (instanceParams == null) {
-        //            throw new InstanceParamsException("instanceParams can not be null");
-        //        }
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
         DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, snapshotConsumer);
         execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
@@ -310,7 +314,8 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             execContext.setWorkflowName(triggerCfg.getDataXName());
         }
 
-        snapshotConsumer.synchronizTpisAndConfs(execContext);
+
+        snapshotConsumer.synchronizTpisAndConfs(execContext, cacheSnaphsot);
 
         Long triggerTimestamp = execContext.getPartitionTimestampWithMillis();// instanceParams.getLong(DataxUtils
         // .EXEC_TIMESTAMP);
@@ -336,7 +341,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
         });
 
 
-        return Pair.of(execContext, triggerCfg);
+        return Triple.of(execContext, snapshotConsumer, triggerCfg);
     }
 
 

@@ -29,6 +29,7 @@ import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
+import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
@@ -143,7 +144,9 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     }
 
     // 本地缓存
-    private PluginAndCfgsSnapshot localCache = null;
+    //  private PluginAndCfgsSnapshot localCache = null;
+
+    private static final PluginAndCfgSnapshotLocalCache localCache = new PluginAndCfgSnapshotLocalCache();
 
     @Override
     public BlobLibraryCacheManager.ClassLoaderFactory buildServerLoaderFactory(
@@ -168,9 +171,10 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
             public URLClassLoader createClassLoader(URL[] libraryURLs) {
                 try {
 
-                    localCache = synAppRelevantCfgsAndTpis(Optional.ofNullable(localCache), libraryURLs);
+                    PluginAndCfgsSnapshot snapshot = synAppRelevantCfgsAndTpis( libraryURLs);
 
-                    final Set<String> relativePluginNames = Sets.newHashSet(localCache.getPluginNames())
+
+                    final Set<String> relativePluginNames = Sets.newHashSet(snapshot.getPluginNames())
                             .stream().filter((pluginName) -> !SKIP_PLUGIN_NAMES.contains(pluginName)).collect(Collectors.toSet());
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
                     return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)
@@ -183,14 +187,16 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
         };
     }
 
-    public static PluginAndCfgsSnapshot synAppRelevantCfgsAndTpis(Optional<PluginAndCfgsSnapshot> preSnapshot, URL[] libraryURLs) throws Exception {
-        PluginAndCfgsSnapshot cfgSnapshot = null;//= getTisAppName();
+
+    public static PluginAndCfgsSnapshot synAppRelevantCfgsAndTpis( URL[] libraryURLs) throws Exception {
+
         File nodeExcludeLock = new File(Config.getDataDir(), "initial.lock");
         FileUtils.touch(nodeExcludeLock);
         RandomAccessFile raf = new RandomAccessFile(nodeExcludeLock, "rw");
         try (FileChannel channel = raf.getChannel()) {
             // 服务器节点级别通过文件来排他
             try (FileLock fileLock = channel.tryLock()) {
+                PluginAndCfgsSnapshot cfgSnapshot = null;//= getTisAppName();
                 PluginAndCfgsSnapshot localSnaphsot = null;
                 try {
                     TIS.permitInitialize = false;
@@ -214,8 +220,16 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 } finally {
                     TIS.permitInitialize = true;
                 }
-                cfgSnapshot.synchronizTpisAndConfs(localSnaphsot, preSnapshot);
-
+                final PluginAndCfgsSnapshot cfgSnapshotFinal = cfgSnapshot;//= getTisAppName();
+                final PluginAndCfgsSnapshot localSnaphsotFinal = localSnaphsot;
+                localCache.processLocalCache(cfgSnapshot.getAppName(), (cacheSnapshot) -> {
+                    try {
+                        cfgSnapshotFinal.synchronizTpisAndConfs(localSnaphsotFinal, cacheSnapshot);
+                        return cfgSnapshotFinal;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
                 return cfgSnapshot;
 

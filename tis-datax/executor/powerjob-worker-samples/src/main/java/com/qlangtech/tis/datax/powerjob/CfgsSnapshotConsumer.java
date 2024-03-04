@@ -1,6 +1,7 @@
 package com.qlangtech.tis.datax.powerjob;
 
 import com.google.common.collect.Sets;
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.exec.DefaultExecContext;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
@@ -62,8 +63,10 @@ public class CfgsSnapshotConsumer implements Consumer<PluginAndCfgsSnapshot> {
 
                     snapshotLocalCache.processLocalCache(new TargetResName(execContext.identityValue()), (cacheSnaphsot) -> {
                         try {
+
                             Objects.requireNonNull(pluginAndCfgsSnapshot, "pluginAndCfgsSnapshot can not be null") //
                                     .synchronizTpisAndConfs(localSnapshot, cacheSnaphsot);
+                            TIS.permitInitialize = true;
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }

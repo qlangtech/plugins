@@ -16,15 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @SpringBootApplication
 public class SampleApplication {
-    private static final Logger logger = LoggerFactory.getLogger(SampleApplication.class);
-
     public static void main(String[] args) {
-
-        TIS.afterTISCreate = (tis) -> {
-            logger.info("afterTISCreate", new Exception());
-        };
-
-
+        TIS.permitInitialize = false;
         SpringApplication.run(SampleApplication.class, args);
     }
 }

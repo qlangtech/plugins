@@ -2,7 +2,6 @@ package com.qlangtech.tis.datax.powerjob;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
@@ -25,6 +24,7 @@ import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
+import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -32,6 +32,7 @@ import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import tech.powerjob.worker.core.processor.ProcessResult;
@@ -42,6 +43,7 @@ import tech.powerjob.worker.log.OmsLogger;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -67,7 +69,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
         }
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context);
 
-        RpcServiceReference statusRpc = createRpcServiceReference();
+        RpcServiceReference statusRpc = getRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
 
         DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
@@ -120,7 +122,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
          * 同步远端resource 资源
          */
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context);
-        RpcServiceReference statusRpc = createRpcServiceReference();
+        RpcServiceReference statusRpc = getRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = null;
 //        if (pair.getMiddle().getCfgsSnapshotWhenSuccessSync() != null) {
 //            this.cacheSnaphsot = pair.getMiddle().getCfgsSnapshotWhenSuccessSync();
@@ -156,18 +158,22 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                     } catch (Exception e) {
                         logger.error("pretrigger:" + preTrigger + " faild", e);
                         svc.reportDumpJobStatus(true, true, false, execChainContext.getTaskId(), preTrigger, -1, -1);
+
+                        reportError(e, execChainContext, svc);
+
                         return new ProcessResult(false, e.getMessage());
                     }
                 }
-
-                List<SplitTabSync> splitTabsSync = Lists.newArrayList();
-                for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
-                    splitTabsSync.add(new SplitTabSync(tskMsg));
-                }
                 try {
+                    List<SplitTabSync> splitTabsSync = Lists.newArrayList();
+                    for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
+                        splitTabsSync.add(new SplitTabSync(tskMsg));
+                    }
+
                     map(splitTabsSync, "LEVEL1_TASK_A");
                     return new ProcessResult(true, "map success");
                 } catch (Exception e) {
+                    reportError(e, execChainContext, svc);
                     return new ProcessResult(false, e.getMessage());
                 }
             }
@@ -182,6 +188,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                             "serial:" + tabSync.tskMsg.getTaskSerializeNum());
                 } catch (Exception e) {
                     logger.error("spilt table sync job:" + tabSync.tskMsg.getJobName() + " faild", e);
+                    reportError(e, execChainContext, svc);
                     return new ProcessResult(false, e.getMessage());
                 }
             }
@@ -190,6 +197,13 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             return new ProcessResult(false, "UNKNOWN_TYPE_OF_SUB_TASK");
         } finally {
         }
+    }
+
+    private static void reportError(Exception e, DefaultExecContext execChainContext, StatusRpcClientFactory.AssembleSvcCompsite svc) {
+
+        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        svc.appendLog(LoggingEvent.Level.ERROR, execChainContext.getTaskId(), Optional.empty(),
+                rootCause != null ? ExceptionUtils.getStackTrace(rootCause) : ExceptionUtils.getStackTrace(e));
     }
 
     private IRemoteTaskTrigger createDataXJob(DefaultExecContext execContext, Pair<String,
@@ -296,9 +310,16 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             throw new IllegalStateException("instanceParams is illegal:" + JsonUtil.toString(instanceParams, true));
         }
 
+        Integer taskId = parseTaskId(instanceParams);
+//        Objects.requireNonNull(instanceParams.getInteger(JobParams.KEY_TASK_ID),
+//                JobParams.KEY_TASK_ID + " can not be null," + JsonUtil.toString(instanceParams));
+        return createExecContext(context, taskId, instanceParams);
+    }
+
+    public static Integer parseTaskId(JSONObject instanceParams) {
         Integer taskId = Objects.requireNonNull(instanceParams.getInteger(JobParams.KEY_TASK_ID),
                 JobParams.KEY_TASK_ID + " can not be null," + JsonUtil.toString(instanceParams));
-        return createExecContext(context, taskId, instanceParams);
+        return taskId;
     }
 
 
@@ -347,18 +368,18 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
     }
 
 
-    transient RpcServiceReference statusRpc;
+    private static transient RpcServiceReference statusRpc;
 
-    private RpcServiceReference createRpcServiceReference() {
-        if (this.statusRpc != null) {
-            return this.statusRpc;
+    public static RpcServiceReference getRpcServiceReference() {
+        if (statusRpc != null) {
+            return statusRpc;
         }
         try {
-            this.statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
+            statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return this.statusRpc;
+        return statusRpc;
     }
 
 

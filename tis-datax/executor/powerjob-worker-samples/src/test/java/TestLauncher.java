@@ -1,3 +1,4 @@
+import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.offline.DataxUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,6 +16,7 @@ public class TestLauncher {
 
        // TisAppLaunch.setTest(true);
         System.out.println("currentTimeStamp:" + DataxUtils.currentTimeStamp());
+        TIS.permitInitialize = false;
         SpringApplication.run(SampleApplication.class, args);
     }
 }

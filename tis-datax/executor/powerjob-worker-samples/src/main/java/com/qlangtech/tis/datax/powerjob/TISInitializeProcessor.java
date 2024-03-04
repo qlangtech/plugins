@@ -7,6 +7,10 @@ import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent.Level;
+import com.qlangtech.tis.trigger.util.JsonUtil;
+import com.tis.hadoop.rpc.RpcServiceReference;
+import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
@@ -32,6 +36,8 @@ public class TISInitializeProcessor implements BasicProcessor {
     public ProcessResult process(TaskContext context) throws Exception {
         OmsLogger omsLogger = context.getOmsLogger();
         Pair<Boolean, JSONObject> instanceParams = TISTableDumpProcessor.getInstanceParams(context);
+        RpcServiceReference rpcSvcRef = TISTableDumpProcessor.getRpcServiceReference();
+        StatusRpcClientFactory.AssembleSvcCompsite svc = rpcSvcRef.get();
         if (!instanceParams.getLeft()) {
             // 说明是定时任务触发
             omsLogger.info("trigger by crontab,now shall create taskId");
@@ -40,21 +46,23 @@ public class TISInitializeProcessor implements BasicProcessor {
             IExecChainContext.TriggerNewTaskParam triggerParams =
                     new IExecChainContext.TriggerNewTaskParam(context.getWorkflowContext().getWfInstanceId(),
                             initNodeCfg.getDataXName(), initNodeCfg.isTisDataflowType()) {
-                @Override
-                public List<HttpUtils.PostParam> params() {
-                    List<HttpUtils.PostParam> params = super.params();
-                    if (initNodeCfg.isTisDataflowType()) {
-                        // 为了满足 OfflineDatasourceAction.doExecuteWorkflow 执行
-                        params.add(new HttpUtils.PostParam("id", initNodeCfg.getWorkflowId()));
-                        params.add(new HttpUtils.PostParam(IFullBuildContext.DRY_RUN, false));
-                    }
-                    return params;
-                }
-            };
+                        @Override
+                        public List<HttpUtils.PostParam> params() {
+                            List<HttpUtils.PostParam> params = super.params();
+                            if (initNodeCfg.isTisDataflowType()) {
+                                // 为了满足 OfflineDatasourceAction.doExecuteWorkflow 执行
+                                params.add(new HttpUtils.PostParam("id", initNodeCfg.getWorkflowId()));
+                                params.add(new HttpUtils.PostParam(IFullBuildContext.DRY_RUN, false));
+                            }
+                            return params;
+                        }
+                    };
             /**=======================================================================
              *TriggerNewTask
              =======================================================================*/
             PowerjobTriggerBuildResult triggerResult = IExecChainContext.triggerNewTask(triggerParams);
+            svc.appendLog(Level.INFO, triggerResult.getTaskid(), Optional.empty(), "start to execute data synchronize pipeline:" + String.valueOf(initNodeCfg));
+
             WorkflowContext wfContext = context.getWorkflowContext();
             omsLogger.info("create task context,taskId:{},name:{}", triggerResult.getTaskid(), initNodeCfg.getDataXName());
             JSONObject iparams = IExecChainContext.createInstanceParams(triggerResult.getTaskid(), () -> initNodeCfg.getDataXName(),
@@ -63,15 +71,11 @@ public class TISInitializeProcessor implements BasicProcessor {
                 wfContext.appendData2WfContext(e.getKey(), e.getValue());
             }
 
-            //            context.getWorkflowContext().appendData2WfContext(TISTableDumpProcessor.KEY_instanceParams,
-            //                    JsonUtil.toString(DataxUtils.createInstanceParams(taskId, initNodeCfg.getDataXName
-            //                    (), false)));
-            //            {
-            //                app:"mysql_hive3"
-            //                dryRun:false
-            //                execTimeStamp:1700888302868
-            //                taskid:1968
-            //            }
+        } else {
+            // trigger by mannual 手动触发
+            Integer taskId = TISTableDumpProcessor.parseTaskId(instanceParams.getRight());
+            svc.appendLog(Level.INFO, taskId, Optional.empty()
+                    , "start to execute data synchronize pipeline:" + JsonUtil.toString(instanceParams, false));
         }
 
         return new ProcessResult(true);
@@ -116,6 +120,15 @@ public class TISInitializeProcessor implements BasicProcessor {
 
         public String getDataXName() {
             return dataXName;
+        }
+
+        @Override
+        public String toString() {
+            return "{" +
+                    "dataXName='" + dataXName + '\'' +
+                    ", tisDataflowType=" + tisDataflowType +
+                    ", workflowId=" + workflowId +
+                    '}';
         }
     }
 }

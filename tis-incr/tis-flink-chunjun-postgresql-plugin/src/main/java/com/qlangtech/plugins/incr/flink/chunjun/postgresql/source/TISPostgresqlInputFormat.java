@@ -23,7 +23,6 @@ import com.dtstack.chunjun.connector.postgresql.converter.PostgresqlColumnConver
 import com.dtstack.chunjun.connector.postgresql.source.PostgresqlInputFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
@@ -51,7 +50,7 @@ public final class TISPostgresqlInputFormat extends PostgresqlInputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         return Objects.requireNonNull(dataSourceFactory, "dataSourceFactory can not be null")
-                .getConnection(jdbcConf.getJdbcUrl()).getConnection();
+                .getConnection(jdbcConf.getJdbcUrl(), false).getConnection();
     }
 
     @Override

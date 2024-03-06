@@ -72,7 +72,7 @@
         <module>tis-flink-chunjun-mysql-plugin</module>
         <module>tis-flink-chunjun-doris-plugin</module>
 
-<!--        <module>tis-flink-chunjun-postgresql-plugin</module>-->
+<!--   -->     <module>tis-flink-chunjun-postgresql-plugin</module>
 
         <module>tis-flink-chunjun-oracle-plugin</module>
         <module>tis-chunjun-base-plugin</module>

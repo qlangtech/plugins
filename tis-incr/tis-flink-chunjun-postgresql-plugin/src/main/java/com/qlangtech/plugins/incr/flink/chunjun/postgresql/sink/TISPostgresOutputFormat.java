@@ -26,7 +26,6 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
-import org.apache.flink.connector.jdbc.statement.FieldNamedPreparedStatement;
 import org.apache.flink.table.data.RowData;
 
 import java.sql.Connection;
@@ -81,7 +80,7 @@ public class TISPostgresOutputFormat extends PostgresOutputFormat {
     @Override
     protected Connection getConnection() throws SQLException {
         DataSourceFactory dsFactory = Objects.requireNonNull(this.dsFactory, "dsFactory can not be null");
-        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl()).getConnection();
+        return dsFactory.getConnection(this.jdbcConf.getJdbcUrl(), false).getConnection();
     }
 
 

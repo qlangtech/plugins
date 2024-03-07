@@ -32,6 +32,7 @@ import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -169,12 +170,16 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     }
 
     @TISExtension()
-    public static class DescriptorImpl extends BasicDescriptor {
+    public static class DescriptorImpl extends BasicDescriptor implements IEndTypeGetter {
 
         public DescriptorImpl() {
             super();
         }
 
+        @Override
+        public EndType getEndType() {
+            return EndType.PowerJob;
+        }
 
         @Override
         protected TargetResName getWorkerType() {

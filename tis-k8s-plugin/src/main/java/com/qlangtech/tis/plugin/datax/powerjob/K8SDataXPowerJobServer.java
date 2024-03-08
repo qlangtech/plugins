@@ -52,7 +52,9 @@ import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.ResChangeCallback;
@@ -61,7 +63,6 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
 import io.kubernetes.client.openapi.apis.AutoscalingV2beta1Api;
@@ -77,7 +78,6 @@ import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscaler;
 import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscalerSpec;
 import io.kubernetes.client.openapi.models.V2beta1MetricSpec;
 import io.kubernetes.client.openapi.models.V2beta1ResourceMetricSource;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,7 +130,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
             = new ServiceResName<>("powerjob-server-nodeport", (powerJobServer) -> {
-        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace(), new CoreV1Api(powerJobServer.getK8SApi()), powerJobServerPort);
+        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace(), (powerJobServer.getK8SApi()), powerJobServerPort);
     });
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL_SERVICE
             = new ServiceResName<>("powerjob-mysql", (powerJobServer) -> {
@@ -140,7 +139,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_SERVICE
             = new ServiceResName<K8SDataXPowerJobServer>("powerjob-server-service", (powerJobServer) -> {
-        K8SUtils.createService(new CoreV1Api(powerJobServer.getK8SApi()), powerJobServer.getImage().getNamespace()
+        K8SUtils.createService((powerJobServer.getK8SApi()), powerJobServer.getImage().getNamespace()
                 , getPowerJobServerService(), getPowerJobServerRes(), powerJobServer.serverPortExport.serverPort, powerJobServerPort);
 
 
@@ -195,12 +194,13 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //    @FormField(ordinal = 9, validate = {Validator.require})
 //    public PowerJobOMSStorage omsStorage;
 
-    private transient ApiClient apiClient;
+    private transient CoreV1Api apiClient;
 
-    public ApiClient getK8SApi() {
+
+    public CoreV1Api getK8SApi() {
         if (this.apiClient == null) {
             K8sImage k8SImage = this.getK8SImage();
-            this.apiClient = k8SImage.createApiClient();
+            this.apiClient = new CoreV1Api(k8SImage.createApiClient());
         }
 
         return this.apiClient;
@@ -216,7 +216,9 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     @Override
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
-            powerJobClient = TISPowerJobClient.create(this.serverPortExport.getPowerjobHost(), this.appName, this.password);
+            powerJobClient = TISPowerJobClient.create(
+                    this.serverPortExport.getPowerjobClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace())
+                    , this.appName, this.password);
         }
         return powerJobClient;
     }
@@ -225,7 +227,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public Map<String, Object> getPayloadInfo() {
         Map<String, Object> payloads = Maps.newHashMap();
         // http://192.168.64.3:31000/#/welcome
-        payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobHost() + "/#/welcome");
+        payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobExternalHost(this.getK8SApi(), this.getK8SImage().getNamespace()) + "/#/welcome");
         return payloads;
     }
 
@@ -333,7 +335,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public RcHpaStatus getHpaStatus() {
 
         try {
-            AutoscalingV1Api hpaApi = new AutoscalingV1Api(this.getK8SApi());
+            AutoscalingV1Api hpaApi = new AutoscalingV1Api(this.getK8SApi().getApiClient());
             K8sImage k8SImage = this.getK8SImage();
             //  String name, String namespace, String pretty
             V1HorizontalPodAutoscaler autoscaler = hpaApi.readNamespacedHorizontalPodAutoscalerStatus(
@@ -436,7 +438,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
             if (supportHPA()) {
                 K8sImage k8SImage = this.getK8SImage();
-                AutoscalingV2beta1Api hpaApi = new AutoscalingV2beta1Api(this.getK8SApi());
+                AutoscalingV2beta1Api hpaApi = new AutoscalingV2beta1Api(this.getK8SApi().getApiClient());
                 //            String name,
                 //            String namespace,
                 //            String pretty,
@@ -637,13 +639,13 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         SSERunnable sse = SSERunnable.getLocal();
 
         PowerJobK8SImage powerImage = this.getImage();
-        final CoreV1Api api = new CoreV1Api(this.getK8SApi());
+        final CoreV1Api api = this.getK8SApi();
         DefaultK8SImage powerjobServerImage = new DefaultK8SImage();
         powerjobServerImage.imagePath = powerImage.getImagePath();
         powerjobServerImage.namespace = powerImage.getNamespace();
 
         // boolean success = false;
-        Set<String> relevantPodNames = null;
+        WaitReplicaControllerLaunch relevantPodNames = null;
         try {
 
             // 2. 启动powerjob server
@@ -686,7 +688,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             envs.add(envVar);
 
 
-            final String resourceVer = K8SUtils.createReplicationController(
+            final NamespacedEventCallCriteria resourceVer = K8SUtils.createReplicationController(
                     api, powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, exportPorts, envs);
             // api.listNamespacedPod()
 
@@ -704,14 +706,9 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             //  sse.writeComplete(K8S_DATAX_POWERJOB_SERVER, success);
         }
 
-        if (CollectionUtils.isEmpty(relevantPodNames)) {
-            throw new IllegalStateException("resource name:" + K8S_DATAX_POWERJOB_SERVER.getName() + " relevant pods can not be null");
-        }
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
+        relevantPodNames.validate();
 
-        }
+
         WatchPodLog watchPodLog = watchOneOfPowerJobPodLog(relevantPodNames, new PowerJobPodLogListener() {
             @Override
             protected void consumePodLogMsg(ExecuteState<String> log) {
@@ -805,9 +802,19 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
     }
 
-    WatchPodLog watchOneOfPowerJobPodLog(Set<String> relevantPodNames, PowerJobPodLogListener logListener) {
+    WatchPodLog watchOneOfPowerJobPodLog(WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
+        if (relevantPodNames.isSkipWaittingPhase()) {
+            return new WatchPodLog() {
+                @Override
+                public void addListener(ILogListener listener) {
+                }
+                @Override
+                public void close() {
+                }
+            };
+        }
         WatchPodLog watchPodLog = null;
-        for (String onePodOf : relevantPodNames) {
+        for (String onePodOf : relevantPodNames.getRelevantPodNames()) {
             watchPodLog = this.getK8SController().listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, logListener);
             return watchPodLog;
         }
@@ -822,7 +829,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     private void createHorizontalpodAutoscaler(K8sImage k8sImage, HorizontalpodAutoscaler hap) throws Exception {
         Objects.requireNonNull(hap, "param HorizontalpodAutoscaler can not be null");
 
-        AutoscalingV2beta1Api apiInstance = new AutoscalingV2beta1Api(this.getK8SApi());
+        AutoscalingV2beta1Api apiInstance = new AutoscalingV2beta1Api(this.getK8SApi().getApiClient());
 
 
         // String namespace = "namespace_example"; // String | object name and auth scope, such as for teams and projects

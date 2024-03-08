@@ -27,6 +27,7 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiCallback;
@@ -75,10 +76,10 @@ public class K8SController implements IRCController {
     protected final ApiClient client;
     protected final CoreV1Api api;
 
-    public K8SController(K8sImage k8sConfig, ApiClient client) {
+    public K8SController(K8sImage k8sConfig, CoreV1Api client) {
         this.config = k8sConfig;
-        this.client = client;
-        this.api = new CoreV1Api(client);
+        this.client = client.getApiClient();
+        this.api = client;
     }
 
     @Override
@@ -159,7 +160,12 @@ public class K8SController implements IRCController {
             body.setSpec(spec);
             V1Scale call = this.api.replaceNamespacedReplicationControllerScale(rcResName.getK8SResName()
                     , this.config.getNamespace(), body, K8SUtils.resultPrettyShow, null, null);
-            return new UpdatePodNumber(call.getStatus().getReplicas(), podNum, call.getMetadata().getResourceVersion());
+            return new UpdatePodNumber(call.getStatus().getReplicas(), podNum, new NamespacedEventCallCriteria() {
+                @Override
+                public String getResourceVersion() {
+                    return call.getMetadata().getResourceVersion();
+                }
+            });
             // client.execute(call, null);
         } catch (ApiException e) {
             throw K8sExceptionUtils.convert(rcResName.getK8SResName(), e);
@@ -169,9 +175,9 @@ public class K8SController implements IRCController {
     public static class UpdatePodNumber {
         private final int fromPodCount;
         private final int toPodCount;
-        private final String resourceVersion;
+        private final NamespacedEventCallCriteria resourceVersion;
 
-        public UpdatePodNumber(int fromPodCount, int toPodCount, String resourceVersion) {
+        public UpdatePodNumber(int fromPodCount, int toPodCount, NamespacedEventCallCriteria resourceVersion) {
             this.fromPodCount = fromPodCount;
             this.toPodCount = toPodCount;
             this.resourceVersion = resourceVersion;
@@ -185,7 +191,7 @@ public class K8SController implements IRCController {
             return toPodCount;
         }
 
-        public String getResourceVersion() {
+        public NamespacedEventCallCriteria getResourceVersion() {
             return resourceVersion;
         }
 

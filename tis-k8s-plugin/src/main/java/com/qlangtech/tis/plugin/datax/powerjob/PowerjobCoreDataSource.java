@@ -48,8 +48,10 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
 
     public final void initialPowerjobAccount(K8SDataXPowerJobServer powerJobServer) throws PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
+        // powerJobServer.getK8SApi()
         // String powerjobDomain, String appName, String password
-        final String linkHost = powerJobServer.serverPortExport.getPowerjobHost();
+        final String linkHost = powerJobServer.serverPortExport
+                .getPowerjobClusterHost(powerJobServer.getK8SApi(), powerJobServer.getImage().getNamespace());
         IRegisterApp tisPowerJob = getTISPowerjobClient();
         (tisPowerJob) //
                 .registerApp(linkHost, powerJobServer.appName, powerJobServer.password);

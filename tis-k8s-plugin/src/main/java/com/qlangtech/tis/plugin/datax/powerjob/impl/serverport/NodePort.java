@@ -7,8 +7,6 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
-import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -18,13 +16,9 @@ import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberRange;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
-import java.util.function.Supplier;
-
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
+import java.util.function.Function;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -43,42 +37,58 @@ public class NodePort extends ServerPortExport {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String host;
 
+
     @Override
-    public String getPowerjobHost() {
+    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
         if (StringUtils.isEmpty(this.host)) {
             throw new IllegalStateException("prop host can not be empty");
         }
-        return host + ":" + Objects.requireNonNull(nodePort, "node port can not be null");
+        return this.host + ":" + Objects.requireNonNull(nodePort, "node port can not be null");
     }
 
     @Override
     public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-        createService(nameSpace, api, targetPortName, this, () -> {
-            V1ServiceSpec svcSpec = new V1ServiceSpec();
-            svcSpec.setType(ServiceType.NodePort.token);
+        super.exportPort(nameSpace, api, targetPortName);
+        createService(nameSpace, api, targetPortName, this, (spec) -> {
             V1ServicePort servicePort = new V1ServicePort();
             servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
-            return Pair.of(svcSpec, servicePort);
+            return servicePort;
         });
-
     }
 
-    public static ServiceResName createService(String nameSpace, CoreV1Api api //
-            , String targetPortName, ServerPortExport portExport
-            , Supplier<Pair<V1ServiceSpec, V1ServicePort>> specCreator) throws ApiException {
-        return K8SUtils.createService(api, nameSpace
-                , K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
-                , K8S_DATAX_POWERJOB_SERVER, portExport.serverPort, targetPortName, specCreator);
+    @Override
+    protected ServiceType getServiceType() {
+        return ServiceType.NodePort;
     }
+
 
     public enum ServiceType {
-        NodePort("NodePort"),
-        LoadBalancer("LoadBalancer"),
-        ClusterIP("ClusterIP");
-        public String token;
+        NodePort("NodePort", (spec) -> {
+            throw new UnsupportedOperationException("nodePort is not support extrnalIp get process");
+        }),
+        LoadBalancer("LoadBalancer", (spec) -> {
+            return spec.getLoadBalancerIP();
+        }),
+        ClusterIP("ClusterIP", (spec) -> {
+            throw new UnsupportedOperationException(" ClusterIP is not support extrnalIp get process");
+        });
+        public final String token;
+        private final Function<V1ServiceSpec, String> externalIPSupplier;
 
-        private ServiceType(String token) {
+        private ServiceType(String token, Function<V1ServiceSpec, String> externalIPSupplier) {
             this.token = token;
+            this.externalIPSupplier = externalIPSupplier;
+        }
+
+        public String getHost(V1ServiceSpec spec, boolean clusterIP) {
+            if (!this.token.equalsIgnoreCase(spec.getType())) {
+                return null;
+            }
+            if (clusterIP) {
+                return spec.getClusterIP();
+            } else {
+                return externalIPSupplier.apply(spec);
+            }
         }
     }
 

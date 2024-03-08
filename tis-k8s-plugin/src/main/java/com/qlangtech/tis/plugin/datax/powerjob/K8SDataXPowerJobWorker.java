@@ -19,6 +19,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiException;
@@ -130,7 +131,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         ReplicasSpec replicasSpec = Objects.requireNonNull(this.getReplicasSpec(), "ReplicasSpec can not be null");
 
 
-        CoreV1Api api = new CoreV1Api(pjServer.getK8SApi());
+        CoreV1Api api = pjServer.getK8SApi();
 
         // api.
         List<V1ContainerPort> exportPorts = Lists.newArrayList();
@@ -165,7 +166,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         envs.add(envVar);
 
 
-        final String reVersion = K8SUtils.getResourceVersion(K8SUtils.createReplicationController(
+        final NamespacedEventCallCriteria reVersion = (K8SUtils.createReplicationController(
                 api, powerjobServerImage, K8S_DATAX_POWERJOB_WORKER, () -> {
                     V1Container container = new V1Container();
                     container.setCommand(Lists.newArrayList("sh", "-c"

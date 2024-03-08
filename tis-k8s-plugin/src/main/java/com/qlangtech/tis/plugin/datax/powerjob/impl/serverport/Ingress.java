@@ -25,21 +25,19 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
-import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
-import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1HTTPIngressPath;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1HTTPIngressRuleValue;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1Ingress;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1IngressBackend;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1IngressRule;
-import io.kubernetes.client.openapi.models.ExtensionsV1beta1IngressSpec;
+import io.kubernetes.client.openapi.apis.NetworkingV1Api;
+import io.kubernetes.client.openapi.models.V1HTTPIngressPath;
+import io.kubernetes.client.openapi.models.V1HTTPIngressRuleValue;
+import io.kubernetes.client.openapi.models.V1Ingress;
+import io.kubernetes.client.openapi.models.V1IngressBackend;
+import io.kubernetes.client.openapi.models.V1IngressRule;
+import io.kubernetes.client.openapi.models.V1IngressServiceBackend;
+import io.kubernetes.client.openapi.models.V1IngressSpec;
+import io.kubernetes.client.openapi.models.V1ServiceBackendPort;
 import io.kubernetes.client.openapi.models.V1ServicePort;
-import io.kubernetes.client.openapi.models.V1ServiceSpec;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
 
@@ -57,29 +55,35 @@ public class Ingress extends ServerPortExport {
 
     @Override
     public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-
-        final ServiceResName svc = NodePort.createService(nameSpace, api, targetPortName, this, () -> {
-            V1ServiceSpec svcSpec = new V1ServiceSpec();
-            svcSpec.setType(ServiceType.ClusterIP.token);
+        super.exportPort(nameSpace, api, targetPortName);
+        final ServiceResName svc = createService(nameSpace, api, targetPortName, this, (spec) -> {
+//            V1ServiceSpec svcSpec = new V1ServiceSpec();
+//            svcSpec.setType(ServiceType.ClusterIP.token);
             //svcSpec.setType("LoadBalancer");
-            V1ServicePort servicePort = new V1ServicePort();
-            return Pair.of(svcSpec, servicePort);
+            return new V1ServicePort();
         });
 
         // api.createnamespacedIn
-        ExtensionsV1beta1Api extendApi = new ExtensionsV1beta1Api(api.getApiClient());
+        NetworkingV1Api extendApi = new NetworkingV1Api(api.getApiClient());
 
 //        String namespace,
-        ExtensionsV1beta1Ingress ingressBody = new ExtensionsV1beta1Ingress();
-        ExtensionsV1beta1IngressSpec spec = new ExtensionsV1beta1IngressSpec();
-        ExtensionsV1beta1IngressRule rule = new ExtensionsV1beta1IngressRule();
+        V1Ingress ingressBody = new V1Ingress();
+        V1IngressSpec spec = new V1IngressSpec();
+        V1IngressRule rule = new V1IngressRule();
         rule.setHost(host);
-        ExtensionsV1beta1HTTPIngressRuleValue httpRuleVal = new ExtensionsV1beta1HTTPIngressRuleValue();
+        V1HTTPIngressRuleValue httpRuleVal = new V1HTTPIngressRuleValue();
 
-        ExtensionsV1beta1HTTPIngressPath path = new ExtensionsV1beta1HTTPIngressPath();
-        ExtensionsV1beta1IngressBackend backend = new ExtensionsV1beta1IngressBackend();
-        backend.setServiceName(svc.getName());
-        backend.servicePort(new IntOrString(targetPortName));
+        V1HTTPIngressPath path = new V1HTTPIngressPath();
+        V1IngressBackend backend = new V1IngressBackend();
+
+        V1IngressServiceBackend svcBackend = new V1IngressServiceBackend();
+        svcBackend.setName(svc.getName());
+        V1ServiceBackendPort port = new V1ServiceBackendPort();
+        port.setName(targetPortName);
+        // svcBackend.setPort(new IntOrString(targetPortName));
+        backend.setService(svcBackend;
+//        backend.setServiceName(svc.getName());
+//        backend.servicePort(new IntOrString(targetPortName));
         path.setBackend(backend);
         path.setPath(this.path);
         httpRuleVal.setPaths(Collections.singletonList(path));
@@ -92,15 +96,24 @@ public class Ingress extends ServerPortExport {
 //        String dryRun,
 //        String fieldManager
 
-        extendApi.createNamespacedIngress(nameSpace
-                , ingressBody, K8SUtils.resultPrettyShow, null, null);
+        extendApi.createNamespacedIngress(nameSpace, ingressBody);
         // Call call = extendApi.createNamespacedIngressCall();
 
     }
 
+//    @Override
+//    public String getPowerjobHost() {
+//        return "http://" + host;
+//    }
+
     @Override
-    public String getPowerjobHost() {
-        return "http://" + host;
+    protected ServiceType getServiceType() {
+        return ServiceType.ClusterIP;
+    }
+
+    @Override
+    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
+        return this.host + this.path;
     }
 
     @TISExtension

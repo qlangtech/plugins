@@ -13,6 +13,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
@@ -88,8 +89,8 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
             var.setName("MYSQL_ROOT_PASSWORD");
             var.setValue("No1Bug2Please3!");
             mysqlEnvs.add(var);
-            v1Api = new CoreV1Api(powerJobServer.getK8SApi());
-            final String reVersion = K8SUtils.getResourceVersion(K8SUtils.createReplicationController(
+            v1Api = powerJobServer.getK8SApi();
+            final NamespacedEventCallCriteria reVersion = (K8SUtils.createReplicationController(
                     v1Api, powerjobMySQLImage, K8S_DATAX_POWERJOB_MYSQL, () -> {
                         V1Container container = new V1Container();
                         container.setArgs(Collections.singletonList("--lower_case_table_names=1"));
@@ -110,7 +111,7 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
 
     @Override
     public void launchMetaStoreService(K8SDataXPowerJobServer powerJobServer) throws ApiException {
-        K8SUtils.createService(new CoreV1Api(powerJobServer.getK8SApi()), powerJobServer.getImage().namespace //
+        K8SUtils.createService(powerJobServer.getK8SApi(), powerJobServer.getImage().namespace //
                 , K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE, K8S_DATAX_POWERJOB_MYSQL, mysqlPort3306, mysql3306);
     }
 

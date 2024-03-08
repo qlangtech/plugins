@@ -14,12 +14,13 @@ import com.qlangtech.tis.datax.job.DataXJobWorker.K8SWorkerCptType;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.SubJobResName;
+import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiCallback;
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
@@ -38,11 +39,11 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.util.Watch;
-import okhttp3.Call;
+//import okhttp3.Call;
+//import okhttp3.Call;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,8 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
+
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/12/13
@@ -65,6 +68,7 @@ public class K8SUtils {
     public static final String REPLICATION_CONTROLLER_VERSION = "v1";
     public static final String resultPrettyShow = "true";
     public static final String LABEL_APP = "app";
+    public static final String LABEL_APP_TIMESTAMP = "appTimestamp";
 
 
     public static final List<K8SRCResName> getPowerJobRCRes() {
@@ -145,29 +149,36 @@ public class K8SUtils {
 //        public void accept(T t) throws Exception;
 //    }
 
-    public static String createReplicationController(final CoreV1Api api
+    public static NamespacedEventCallCriteria createReplicationController(final CoreV1Api api
             , final K8sImage config, TargetResName name //
             , ReplicasSpec replicasSpec, List<V1ContainerPort> exportPorts, List<V1EnvVar> envs) throws ApiException {
-        V1ReplicationController newRC = createReplicationController(api, config, name, () -> new V1Container(), replicasSpec, exportPorts, envs);
+        return createReplicationController(api, config, name, () -> new V1Container(), replicasSpec, exportPorts, envs);
         // newRC.getMetadata().
-        return getResourceVersion(newRC);// newRC.getMetadata().getResourceVersion();
+        // return createResVersion(newRC);// newRC.getMetadata().getResourceVersion();
     }
 
     public static void createService(final CoreV1Api api, String namespace //
             , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName
     ) throws ApiException {
-        createService(api, namespace, svcRes, selector, exportPort, targetPortName, () -> {
-            V1ServiceSpec svcSpec = new V1ServiceSpec();
-            svcSpec.setType("ClusterIP");
-            return Pair.of(svcSpec, new V1ServicePort());
-        });
+
+//        () -> {
+//            V1ServiceSpec svcSpec = new V1ServiceSpec();
+//            svcSpec.setType("ClusterIP");
+//            return Pair.of(svcSpec, new V1ServicePort());
+//        }
+
+        V1ServiceSpec svcSpec = new V1ServiceSpec();
+        svcSpec.setType(ServiceType.ClusterIP.token);
+        createService(api, namespace, svcRes, selector, exportPort, targetPortName, svcSpec, new V1ServicePort());
     }
 
     public static ServiceResName createService(final CoreV1Api api, String namespace //
             , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName
-            , Supplier<Pair<V1ServiceSpec, V1ServicePort>> specCreator) throws ApiException {
+            , V1ServiceSpec svcSpec, V1ServicePort svcPort) throws ApiException {
         // SSERunnable sse = SSERunnable.getLocal();
         // boolean success = false;
+        Objects.requireNonNull(svcSpec, "param svcSpec can not be null");
+        Objects.requireNonNull(svcPort, "param servicePort can not be null");
         try {
 
             V1Service svcBody = new V1Service();
@@ -176,11 +187,11 @@ public class K8SUtils {
             meta.setName(svcRes.getName());
             svcBody.setMetadata(meta);
 
-            V1ServiceSpec svcSpec = specCreator.get().getKey();// new V1ServiceSpec();
+            // V1ServiceSpec svcSpec = specCreator.get().getKey();// new V1ServiceSpec();
             //svcSpec.setType("ClusterIP");
             svcSpec.setSelector(Collections.singletonMap(K8SUtils.LABEL_APP, selector.getK8SResName()));
 
-            V1ServicePort svcPort = specCreator.get().getRight();// new V1ServicePort();
+            // V1ServicePort svcPort = specCreator.get().getRight();// new V1ServicePort();
             svcPort.setName(targetPortName);
             svcPort.setTargetPort(new IntOrString(targetPortName));
             svcPort.setPort(exportPort);
@@ -189,7 +200,8 @@ public class K8SUtils {
 
             svcBody.setSpec(svcSpec);
 
-            V1Service svc = api.createNamespacedService(namespace, svcBody, K8SUtils.resultPrettyShow, null, null);
+            V1Service svc
+                    = api.createNamespacedService(namespace, svcBody).pretty( K8SUtils.resultPrettyShow).execute();
             return svcRes;
             //  System.out.println(svc);
             // sse.info(svcRes.getName(), TimeFormat.getCurrentTimeStamp(), "success to publish service'" + svcRes.getName() + "'");
@@ -199,9 +211,13 @@ public class K8SUtils {
         }
     }
 
-    public static String getResourceVersion(V1ReplicationController newRC) {
-        return Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion();
+    public static UID createUID(V1ReplicationController newRC) {
+        return new UID(Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getUid());
     }
+
+//    public static NamespacedEventCallCriteria createResVersion(V1ReplicationController newRC) {
+//        return new NamespacedEventCallCriteria(Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion());
+//    }
 
     public static V1ResourceRequirements createResourceRequirements(ReplicasSpec replicasSpec) {
         V1ResourceRequirements rRequirements = new V1ResourceRequirements();
@@ -226,7 +242,7 @@ public class K8SUtils {
      * @param envs
      * @throws ApiException
      */
-    public static V1ReplicationController createReplicationController(final CoreV1Api api //
+    public static NamespacedEventCallCriteria createReplicationController(final CoreV1Api api //
             , final K8sImage config, TargetResName name, Supplier<V1Container> containerCreator //
             , ReplicasSpec replicasSpec, List<V1ContainerPort> exportPorts, List<V1EnvVar> envs) throws ApiException {
         if (replicasSpec == null) {
@@ -240,6 +256,14 @@ public class K8SUtils {
         meta.setName(name.getK8SResName());
         Map<String, String> labes = Maps.newHashMap();
         labes.put(LABEL_APP, name.getK8SResName());
+        final String timeStamp = name.getK8SResName() + TimeFormat.getCurrentTimeStamp();
+        labes.put(LABEL_APP_TIMESTAMP, timeStamp);
+        final NamespacedEventCallCriteria evtCallCriteria = new NamespacedEventCallCriteria() {
+            @Override
+            public String getLabelSelector() {
+                return LABEL_APP_TIMESTAMP + "=" + timeStamp;
+            }
+        };
         meta.setLabels(labes);
         templateSpec.setMetadata(meta);
         V1PodSpec podSpec = new V1PodSpec();
@@ -274,10 +298,7 @@ public class K8SUtils {
 //        requestQuantityMap.put("cpu", new Quantity(replicasSpec.getCpuRequest().literalVal()));
 //        requestQuantityMap.put("memory", new Quantity(replicasSpec.getMemoryRequest().literalVal()));
 //        rRequirements.setRequests(requestQuantityMap);
-//
-//        ;
         container.setResources(createResourceRequirements(replicasSpec));
-
 
         containers.add(container);
         if (containers.size() < 1) {
@@ -307,7 +328,19 @@ public class K8SUtils {
         meta.setName(name.getK8SResName());
         rc.setMetadata(meta);
 
-        return api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
+        V1ReplicationController createdRC
+                = api.createNamespacedReplicationController(config.getNamespace(), rc, resultPrettyShow, null, null);
+        //  UID uid = K8SUtils.createUID(createdRC);
+        // String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
+
+        return evtCallCriteria;
+
+//        for (V1ReplicationController fetchRC : api.listNamespacedReplicationController(
+//                config.getNamespace(), resultPrettyShow, null, null
+//                , uid.fieldSelector(), null, null, null, null, null).getItems()) {
+//            return fetchRC;
+//        }
+//        throw new IllegalStateException("uid:" + uid.val + " can not find relevant replicaController");
     }
 
     public static ReplicasSpec createDftReplicasSpec() {
@@ -330,10 +363,10 @@ public class K8SUtils {
         return mysqlRcSpec;
     }
 
-    public static Set<String> waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, ReplicasSpec powerjobServerSpec, ApiClient apiClient, String resourceVer)  //
+    public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
+            , TargetResName targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api apiClient, NamespacedEventCallCriteria resVer)  //
             throws ApiException, PowerjobOrchestrateException {
-        return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resourceVer, (r, name) -> {
+        return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resVer, (r, name) -> {
         });
     }
 
@@ -362,21 +395,110 @@ public class K8SUtils {
         }
     }
 
+    public static class UID {
+        private final String val;
+
+        public UID(String val) {
+            if (StringUtils.isEmpty(val)) {
+                throw new IllegalArgumentException("param val can not be null");
+            }
+            this.val = val;
+        }
+
+        public String fieldSelector() {
+            return "metadata.uid=" + this.val;
+        }
+    }
+
+    /**
+     * 用于在watch Event 阶段查看 event事件过滤用
+     */
+    public static abstract class NamespacedEventCallCriteria {
+        //        private final String val;
+//
+//        public NamespacedEventCallCriteria(String val) {
+//            if (StringUtils.isEmpty(val)) {
+//                throw new IllegalArgumentException("param val can not be null");
+//            }
+//            this.val = val;
+//        }
+//
+//        public String getVer() {
+//            return val;
+//        }
+        public String getLabelSelector() {
+            return null;
+        }
+
+        public String getResourceVersion() {
+            return null;
+        }
+    }
+
+    static final boolean skipWaittingPhase = true;
+
+    public static class WaitReplicaControllerLaunch {
+        private final Set<String> relevantPodNames;
+        private final boolean skipWaittingPhase;
+
+        public WaitReplicaControllerLaunch() {
+            this(Collections.emptySet(), true);
+            try {
+                Thread.sleep(3000l);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public Set<String> getRelevantPodNames() {
+            return this.relevantPodNames;
+        }
+
+        public boolean isSkipWaittingPhase() {
+            return skipWaittingPhase;
+        }
+
+        public WaitReplicaControllerLaunch(Set<String> relevantPodNames) {
+            this(relevantPodNames, false);
+        }
+
+        public WaitReplicaControllerLaunch(Set<String> relevantPodNames, boolean skipWaittingPhase) {
+            this.relevantPodNames = relevantPodNames;
+            this.skipWaittingPhase = skipWaittingPhase;
+        }
+
+        public void validate() {
+            if (!this.skipWaittingPhase && CollectionUtils.isEmpty(relevantPodNames)) {
+                throw new IllegalStateException("resource name:" + K8S_DATAX_POWERJOB_SERVER.getName() + " relevant pods can not be null");
+            }
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+
+            }
+        }
+    }
+
+
     /**
      * 等待RC资源启动
      *
      * @param powerjobServerImage
      * @param expectResChangeCount
-     * @param apiClient
+     * @param api
      * @param resourceVer
      * @throws ApiException
      * @throws PowerjobOrchestrateException
      */
-    public static Set<String> waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, final int expectResChangeCount, ApiClient apiClient, String resourceVer, ResChangeCallback changeCallback)  //
+    public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
+            , TargetResName targetResName, final int expectResChangeCount, CoreV1Api api, NamespacedEventCallCriteria resourceVer, ResChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
-        CoreV1Api api = new CoreV1Api(apiClient);
+        // CoreV1Api api = new CoreV1Api(apiClient);
+
+        if (skipWaittingPhase) {
+            return new WaitReplicaControllerLaunch();
+        }
 
         final Set<String> relevantPodNames = Sets.newHashSet();
         final K8SRCResName powerJobRCResName = targetResName(targetResName);
@@ -386,10 +508,18 @@ public class K8SUtils {
         int tryProcessWatcherLogsCount = 0;
         processWatcherLogs:
         while (true) { // 处理 watcher SocketTimeoutException 超时的错误
+
+            Call rcCall =  api.listNamespacedEvent(powerjobServerImage.getNamespace())
+                    .pretty(resultPrettyShow)
+                    .allowWatchBookmarks(false)
+                    .labelSelector(resourceVer.getLabelSelector())
+                    .resourceVersion(resourceVer.getResourceVersion())
+                    .buildCall(createApiCallback());
+
             Call rcCall = api.listNamespacedEventCall(powerjobServerImage.getNamespace() //
                     , resultPrettyShow, false, null, null //
-                    , null, null, resourceVer, null, true, createApiCallback());
-            Watch<V1Event> rcWatch = Watch.createWatch(apiClient, rcCall, new TypeToken<Watch.Response<V1Event>>() {
+                    , resourceVer.getLabelSelector(), null, resourceVer.getResourceVersion(), null, true, createApiCallback());
+            Watch<V1Event> rcWatch = Watch.createWatch(api.getApiClient(), rcCall, new TypeToken<Watch.Response<V1Event>>() {
             }.getType());
             V1Event evt = null;
             V1ObjectReference objRef = null;
@@ -401,6 +531,9 @@ public class K8SUtils {
             try {
                 for (Watch.Response<V1Event> event : rcWatch) {
                     //System.out.println("-----------------------------------------");
+                    if ("error".equalsIgnoreCase(event.type)) {
+                        throw TisException.create(String.valueOf(event.status));
+                    }
                     evt = event.object;
                     //  System.out.println();
                     // V1ObjectMeta metadata = evt.getMetadata();
@@ -480,7 +613,7 @@ public class K8SUtils {
             }
 
         }
-        return relevantPodNames;
+        return new WaitReplicaControllerLaunch(relevantPodNames);
     }
 
     private static ApiCallback createApiCallback() {

@@ -34,10 +34,13 @@ import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
+import com.qlangtech.tis.datax.job.JobResName;
+import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServerLaunchLog;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
@@ -52,11 +55,10 @@ import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.ResChangeCallback;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -65,19 +67,14 @@ import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
-import io.kubernetes.client.openapi.apis.AutoscalingV2beta1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
+import io.kubernetes.client.openapi.models.V1CrossVersionObjectReference;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscaler;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerSpec;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
-import io.kubernetes.client.openapi.models.V2beta1CrossVersionObjectReference;
-import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscaler;
-import io.kubernetes.client.openapi.models.V2beta1HorizontalPodAutoscalerSpec;
-import io.kubernetes.client.openapi.models.V2beta1MetricSpec;
-import io.kubernetes.client.openapi.models.V2beta1ResourceMetricSource;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,19 +110,26 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_WORKER
             = new K8SRCResName<>(K8SWorkerCptType.Worker
-            , (powerJobServer) -> {
-        powerJobServer.launchPowerjobWorker();
+            , new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
+        @Override
+        public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
+            powerJobServer.launchPowerjobWorker();
+            return null;
+        }
     });
 
+
     public static final SubJobResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
-            = new SubJobResName<K8SDataXPowerJobServer>("datax-worker-powerjob-register-account", (powerJobServer) -> {
+            = JobResName.createSubJob("PowerJob Account", (powerJobServer) -> {
         powerJobServer.powerJobRegisterAccount();
-    }) {
-        @Override
-        protected String getResourceType() {
-            return "PowerJob Account";
-        }
-    };
+    });
+
+//    SubJobResName("datax-worker-powerjob-register-account",) {
+//        @Override
+//        protected String getResourceType () {
+//            return "PowerJob Account";
+//        }
+//    }
 
 
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
@@ -147,9 +151,13 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER
             = new K8SRCResName<>(K8SWorkerCptType.Server,
-            (powerJobServer) -> {
-                powerJobServer.launchPowerjobServer();
+            new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
+                @Override
+                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
+                    return powerJobServer.launchPowerjobServer();
+                }
             }
+
             , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE);
 
     private static K8SRCResName<K8SDataXPowerJobServer> getPowerJobServerRes() {
@@ -160,15 +168,19 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         return K8S_DATAX_POWERJOB_SERVER_SERVICE;
     }
 
+
     public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL
-            = new K8SRCResName<K8SDataXPowerJobServer>("datax-worker-powerjob-mysql", (powerJobServer) -> {
-//        powerJobServer.createMetaStoreService();
-        powerJobServer.coreDS.launchMetaStore(powerJobServer);
+            = new K8SRCResName<>("datax-worker-powerjob-mysql",
+            new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
+                @Override
+                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
+                    return powerJobServer.coreDS.launchMetaStore(powerJobServer);
+                }
+            }
+            , K8S_DATAX_POWERJOB_MYSQL_SERVICE);
 
-    }, K8S_DATAX_POWERJOB_MYSQL_SERVICE);
-
-    public static final SubJobResName[] powerJobRes //
-            = new SubJobResName[]{
+    public static final JobResName[] powerJobRes //
+            = new JobResName[]{
             K8S_DATAX_POWERJOB_MYSQL
             , K8S_DATAX_POWERJOB_SERVER
             , K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
@@ -196,6 +208,12 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     private transient CoreV1Api apiClient;
 
+
+    public String getPowerJobMasterGateway() {
+        final String linkHost = this.serverPortExport
+                .getPowerjobClusterHost(this.getK8SApi(), this.getImage().getNamespace());
+        return linkHost;
+    }
 
     public CoreV1Api getK8SApi() {
         if (this.apiClient == null) {
@@ -248,12 +266,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public List<ExecuteStep> getExecuteSteps() {
         List<ExecuteStep> launchSteps = Lists.newArrayList();
 
-
-        for (SubJobResName rcRes : powerJobRes) {
+        for (JobResName rcRes : powerJobRes) {
 
             launchSteps.add(new ExecuteStep(rcRes, null));
             if (rcRes instanceof K8SRCResName) {
-                for (K8SUtils.ServiceResName svc : ((K8SRCResName) rcRes).getRelevantSvc()) {
+                for (ServiceResName svc : ((K8SRCResName) rcRes).getRelevantSvc()) {
                     launchSteps.add(new ExecuteStep(svc, null));
                 }
             }
@@ -318,10 +335,10 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                             }
                         }
 
-                        @Override
-                        public boolean isBreakEventWatch(int podFaildCount, int podCompleteCount, int rcCompleteCount, int expectResChangeCount) {
-                            return rcCompleteCount >= expectResChangeCount;
-                        }
+//                        @Override
+//                        public boolean isBreakEventWatch(int podFaildCount, int podCompleteCount, int rcCompleteCount, int expectResChangeCount) {
+//                            return rcCompleteCount >= expectResChangeCount;
+//                        }
                     });
 
 
@@ -338,8 +355,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             AutoscalingV1Api hpaApi = new AutoscalingV1Api(this.getK8SApi().getApiClient());
             K8sImage k8SImage = this.getK8SImage();
             //  String name, String namespace, String pretty
-            V1HorizontalPodAutoscaler autoscaler = hpaApi.readNamespacedHorizontalPodAutoscalerStatus(
-                    this.getHpaName(), k8SImage.getNamespace(), K8SUtils.resultPrettyShow);
+
+            V1HorizontalPodAutoscaler autoscaler
+                    = hpaApi.readNamespacedHorizontalPodAutoscalerStatus(
+                    this.getHpaName(), k8SImage.getNamespace())
+                    .pretty(K8SUtils.resultPrettyShow).execute();
 
             V1HorizontalPodAutoscalerSpec spec = autoscaler.getSpec();
             RcHpaStatus.HpaAutoscalerSpec autoscalerSpec = new RcHpaStatus.HpaAutoscalerSpec();
@@ -353,7 +373,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             autoscalerStatus.setCurrentReplicas(status.getCurrentReplicas());
             autoscalerStatus.setDesiredReplicas(status.getDesiredReplicas());
             if (status.getLastScaleTime() != null) {
-                autoscalerStatus.setLastScaleTime(status.getLastScaleTime().getMillis());
+                autoscalerStatus.setLastScaleTime(status.getLastScaleTime().toInstant().toEpochMilli());
             }
 
             V1ObjectMeta metadata = autoscaler.getMetadata();
@@ -427,7 +447,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                     logger.warn("delete rc faild:" + rcResName.getK8SResName(), e);
                 }
                 // 删除服务
-                for (K8SUtils.ServiceResName svc : rcResName.getRelevantSvc()) {
+                for (ServiceResName svc : rcResName.getRelevantSvc()) {
                     try {
                         k8SController.deleteSerivce(svc);
                     } catch (Exception e) {
@@ -438,7 +458,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
             if (supportHPA()) {
                 K8sImage k8SImage = this.getK8SImage();
-                AutoscalingV2beta1Api hpaApi = new AutoscalingV2beta1Api(this.getK8SApi().getApiClient());
+                AutoscalingV1Api hpaApi = new AutoscalingV1Api(this.getK8SApi().getApiClient());
                 //            String name,
                 //            String namespace,
                 //            String pretty,
@@ -447,8 +467,9 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 //            Boolean orphanDependents,
                 //            String propagationPolicy,
                 //            V1DeleteOptions body
-                hpaApi.deleteNamespacedHorizontalPodAutoscaler(this.getHpaName(), k8SImage.getNamespace(), K8SUtils.resultPrettyShow
-                        , null, null, null, null, null);
+                hpaApi.deleteNamespacedHorizontalPodAutoscaler(this.getHpaName(), k8SImage.getNamespace())
+                        .pretty(K8SUtils.resultPrettyShow)
+                        .execute();
 
             }
         } catch (ApiException e) {
@@ -517,6 +538,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         if (inService()) {
             throw new IllegalStateException("k8s instance of:" + DataXJobWorker.KEY_FIELD_NAME + " is running can not relaunch");
         }
+
         try {
             // 启动服务
 //            ExponentialBackoffRetry retryPolicy = new ExponentialBackoffRetry(1000, 3);
@@ -635,7 +657,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
 
-    public void launchPowerjobServer() throws ApiException, PowerjobOrchestrateException {
+    public NamespacedEventCallCriteria launchPowerjobServer() throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
 
         PowerJobK8SImage powerImage = this.getImage();
@@ -646,6 +668,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
         // boolean success = false;
         WaitReplicaControllerLaunch relevantPodNames = null;
+        NamespacedEventCallCriteria resourceVer = null;
         try {
 
             // 2. 启动powerjob server
@@ -688,14 +711,41 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             envs.add(envVar);
 
 
-            final NamespacedEventCallCriteria resourceVer = K8SUtils.createReplicationController(
+            resourceVer = K8SUtils.createReplicationController(
                     api, powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, exportPorts, envs);
             // api.listNamespacedPod()
 
 
+            ///////////////////////////
+//            System.out.println("resourceVer.getResourceVersion():" + resourceVer.getResourceVersion());
+//            // test
+//            Watch<V1Pod> rcWatch = Watch.createWatch(api.getApiClient()
+//                    //
+//                    ,
+//                    this.getK8SApi().listNamespacedPod(powerjobServerImage.getNamespace()).allowWatchBookmarks(false).watch(true)
+//                            .resourceVersion(resourceVer.getResourceVersion())
+//                            .buildCall(K8SUtils.createApiCallback())
+//
+//                    //
+//                    , new TypeToken<Response<V1Pod>>() {
+//                    }.getType());
+//            try {
+//                for (Watch.Response<V1Pod> event : rcWatch) {
+//
+//                    System.out.println("type:" + event.type + ",object:" + event.object.getMetadata().getName());
+//                }
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+
+
+            //////////////////////////////
+
+
             // String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch, ApiCallback< V1ReplicationControllerList > _callback
             //K8SUtils.LABEL_APP + "=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
-            relevantPodNames = K8SUtils.waitReplicaControllerLaunch(powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, this.getK8SApi(), resourceVer);
+            relevantPodNames = K8SUtils.waitReplicaControllerLaunch(
+                    powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, this.getK8SApi(), resourceVer);
 
             // sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), " successful publish '" + K8S_DATAX_POWERJOB_SERVER.getK8SResName() + "'");
             //  success = true;
@@ -743,13 +793,14 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //        }
 
         //
-
+        return resourceVer;
         // 等待Server 启动完毕
         // 1. 创建对外暴露端口
         //  this.serverPortExport.exportPort(powerjobServerImage.getNamespace(), api, powerJobServerPort);
 //      // 2. 初始化 app
 
         //  powerJobRegisterAccount();
+
     }
 
     private void powerJobRegisterAccount() {
@@ -808,6 +859,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 @Override
                 public void addListener(ILogListener listener) {
                 }
+
                 @Override
                 public void close() {
                 }
@@ -829,31 +881,32 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     private void createHorizontalpodAutoscaler(K8sImage k8sImage, HorizontalpodAutoscaler hap) throws Exception {
         Objects.requireNonNull(hap, "param HorizontalpodAutoscaler can not be null");
 
-        AutoscalingV2beta1Api apiInstance = new AutoscalingV2beta1Api(this.getK8SApi().getApiClient());
+        AutoscalingV1Api apiInstance = new AutoscalingV1Api(this.getK8SApi().getApiClient());
 
 
         // String namespace = "namespace_example"; // String | object name and auth scope, such as for teams and projects
-        V2beta1HorizontalPodAutoscaler body = new V2beta1HorizontalPodAutoscaler(); // V2beta1HorizontalPodAutoscaler |
+        V1HorizontalPodAutoscaler body = new V1HorizontalPodAutoscaler(); // V2beta1HorizontalPodAutoscaler |
         V1ObjectMeta meta = new V1ObjectMeta();
         meta.setName(getHpaName());
         body.setMetadata(meta);
-        V2beta1CrossVersionObjectReference objectReference = null;
-        V2beta1HorizontalPodAutoscalerSpec spec = new V2beta1HorizontalPodAutoscalerSpec();
+        V1CrossVersionObjectReference objectReference = null;
+        V1HorizontalPodAutoscalerSpec spec = new V1HorizontalPodAutoscalerSpec();
         spec.setMaxReplicas(hap.getMaxPod());
         spec.setMinReplicas(hap.getMinPod());
-        objectReference = new V2beta1CrossVersionObjectReference();
+        objectReference = new V1CrossVersionObjectReference();
         objectReference.setApiVersion(K8SUtils.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
         objectReference.setName(DataXJobWorker.K8S_DATAX_INSTANCE_NAME.getK8SResName());
         spec.setScaleTargetRef(objectReference);
 
-        V2beta1MetricSpec monitorResource = new V2beta1MetricSpec();
-        V2beta1ResourceMetricSource cpuResource = new V2beta1ResourceMetricSource();
-        cpuResource.setName("cpu");
-        cpuResource.setTargetAverageUtilization(hap.getCpuAverageUtilization());
-        monitorResource.setResource(cpuResource);
-        monitorResource.setType("Resource");
-        spec.setMetrics(Collections.singletonList(monitorResource));
+//        V1MetricSpec monitorResource = new V1MetricSpec();
+//        V1ResourceMetricSource cpuResource = new V2beta1ResourceMetricSource();
+//        cpuResource.setName("cpu");
+//        cpuResource.setTargetAverageUtilization(hap.getCpuAverageUtilization());
+//        monitorResource.setResource(cpuResource);
+//        monitorResource.setType("Resource");
+        spec.setTargetCPUUtilizationPercentage(hap.getCpuAverageUtilization());
+        //  spec.setMetrics(Collections.singletonList(monitorResource));
         body.setSpec(spec);
 
 
@@ -861,7 +914,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         String dryRun = "dryRun_example"; // String | When present, indicates that modifications should not be persisted. An invalid or unrecognized dryRun directive will result in an error response and no further processing of the request. Valid values are: - All: all dry run stages will be processed
         String fieldManager = null; // String | fieldManager is a name associated with the actor or entity that is making these changes. The value must be less than or 128 characters long, and only contain printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
         try {
-            V2beta1HorizontalPodAutoscaler result = apiInstance.createNamespacedHorizontalPodAutoscaler(k8sImage.getNamespace(), body, null, null, null);
+            V1HorizontalPodAutoscaler result = apiInstance.createNamespacedHorizontalPodAutoscaler(k8sImage.getNamespace(), body).execute();
             // System.out.println(result);
             logger.info("NamespacedHorizontalPodAutoscaler created");
             logger.info(result.toString());

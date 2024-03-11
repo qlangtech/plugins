@@ -74,18 +74,18 @@
             <version>${project.version}</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>io.kubernetes</groupId>-->
-<!--            <artifactId>client-java</artifactId>-->
-<!--            <version>9.0.1</version>-->
-<!--            <scope>compile</scope>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.sun</groupId>-->
-<!--                    <artifactId>tools</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>io.kubernetes</groupId>-->
+        <!--            <artifactId>client-java</artifactId>-->
+        <!--            <version>9.0.1</version>-->
+        <!--            <scope>compile</scope>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>com.sun</groupId>-->
+        <!--                    <artifactId>tools</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>io.kubernetes</groupId>
@@ -98,6 +98,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
@@ -117,6 +118,7 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
         </dependency>
+
 
     </dependencies>
 

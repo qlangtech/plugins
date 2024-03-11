@@ -9,6 +9,7 @@ import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -50,8 +51,11 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
         SSERunnable sse = SSERunnable.getLocal();
         // powerJobServer.getK8SApi()
         // String powerjobDomain, String appName, String password
-        final String linkHost = powerJobServer.serverPortExport
-                .getPowerjobClusterHost(powerJobServer.getK8SApi(), powerJobServer.getImage().getNamespace());
+//        final String linkHost = powerJobServer.serverPortExport
+//                .getPowerjobClusterHost(powerJobServer.getK8SApi(), powerJobServer.getImage().getNamespace());
+
+        final String linkHost = powerJobServer.getPowerJobMasterGateway();
+
         IRegisterApp tisPowerJob = getTISPowerjobClient();
         (tisPowerJob) //
                 .registerApp(linkHost, powerJobServer.appName, powerJobServer.password);
@@ -84,7 +88,7 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
 //        }
         this.startWaitServerLaunchedAndInitialPowerjobAccount(powerjobServer);
         int tryCount = 0;
-        final int tryLimit = 100;
+        final int tryLimit = 20;
         while (true) {
             try {
                 //this.serverPortExport.initialPowerjobAccount(this);
@@ -101,7 +105,7 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
 
                     // 说明是超时等待片刻即可
                     logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
-                            + " tryCount:" + tryCount + " " + e.getMessage());
+                            + " tryCount:" + tryCount + ",powerjob GateWay:" + powerjobServer.getPowerJobMasterGateway() + " " + e.getMessage());
 
                     try {
                         Thread.sleep(4500);
@@ -130,7 +134,7 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
      * @throws ApiException
      * @throws PowerjobOrchestrateException
      */
-    public abstract void launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException, PowerjobOrchestrateException;
+    public abstract NamespacedEventCallCriteria launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException, PowerjobOrchestrateException;
 
     /**
      * 发布RC对应的Service

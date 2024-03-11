@@ -13,7 +13,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
@@ -38,11 +38,6 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
     private static final String mysql3306 = "mysqlport";
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedPowerjobCoreDataSource.class);
 
-    //    @Override
-//    public String createCoreJdbcParams() {
-//    }
-
-
     @Override
     protected String getJdbcUrl() {
         return "jdbc:mysql://" + K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE.getHostPortReplacement()
@@ -57,7 +52,7 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
     }
 
     @Override
-    public void launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException, PowerjobOrchestrateException {
+    public NamespacedEventCallCriteria launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
         // 需要启动一个pod的mysql实例
         //  boolean success = false;
@@ -101,6 +96,7 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
 
             K8SUtils.waitReplicaControllerLaunch(powerjobMySQLImage //
                     , K8S_DATAX_POWERJOB_MYSQL, mysqlRcSpec, powerJobServer.getK8SApi(), reVersion);
+            return reVersion;
             // success = true;
         } finally {
             // sse.writeComplete(K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL, success);

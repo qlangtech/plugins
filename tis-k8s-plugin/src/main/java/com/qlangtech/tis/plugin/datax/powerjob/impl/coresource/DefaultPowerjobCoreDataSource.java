@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.ds.IDBAuthorizeTokenGetter;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.collections.CollectionUtils;
@@ -155,8 +156,9 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
 
 
     @Override
-    public void launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException {
+    public NamespacedEventCallCriteria launchMetaStore(K8SDataXPowerJobServer powerJobServer) throws ApiException {
         // 不需要执行任何逻辑
+        return null;
     }
 
     @Override

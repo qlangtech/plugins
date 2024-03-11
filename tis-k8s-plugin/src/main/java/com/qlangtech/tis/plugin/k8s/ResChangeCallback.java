@@ -18,7 +18,10 @@
 
 package com.qlangtech.tis.plugin.k8s;
 
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
+
+import java.util.Map;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -29,15 +32,22 @@ public interface ResChangeCallback {
 
 
     /**
-     * 是否终止K8S 资源变化监听
      *
-     * @param podFaildCount        pod 执行失败数量
+     *
+     * @param         pod 执行失败数量
      * @param podCompleteCount     pod 执行完成（包括失败）数量
      * @param rcCompleteCount      RC 执行完成数量
      * @param expectResChangeCount 期望达到的资源变化数量
      * @return
      */
-    public default boolean isBreakEventWatch(int podFaildCount, int podCompleteCount, int rcCompleteCount, final int expectResChangeCount) {
-        return (podCompleteCount >= expectResChangeCount);
+    /**
+     * 是否终止K8S 资源变化监听
+     *
+     * @param relevantPodNames
+     * @param expectResChangeCount
+     * @return
+     */
+    public default boolean isBreakEventWatch(final Map<String, RunningStatus> relevantPodNames, final int expectResChangeCount) {
+        return (relevantPodNames.values().size() >= expectResChangeCount);
     }
 }

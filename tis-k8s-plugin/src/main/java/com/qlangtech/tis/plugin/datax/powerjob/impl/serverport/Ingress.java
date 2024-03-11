@@ -25,7 +25,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
+import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.NetworkingV1Api;
@@ -36,6 +37,7 @@ import io.kubernetes.client.openapi.models.V1IngressBackend;
 import io.kubernetes.client.openapi.models.V1IngressRule;
 import io.kubernetes.client.openapi.models.V1IngressServiceBackend;
 import io.kubernetes.client.openapi.models.V1IngressSpec;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ServiceBackendPort;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 
@@ -68,6 +70,10 @@ public class Ingress extends ServerPortExport {
 
 //        String namespace,
         V1Ingress ingressBody = new V1Ingress();
+        V1ObjectMeta metadata = new V1ObjectMeta();
+        metadata.setName(svc.getName() + "-ingress");
+        ingressBody.setMetadata(metadata);
+
         V1IngressSpec spec = new V1IngressSpec();
         V1IngressRule rule = new V1IngressRule();
         rule.setHost(host);
@@ -80,12 +86,14 @@ public class Ingress extends ServerPortExport {
         svcBackend.setName(svc.getName());
         V1ServiceBackendPort port = new V1ServiceBackendPort();
         port.setName(targetPortName);
-        // svcBackend.setPort(new IntOrString(targetPortName));
-        backend.setService(svcBackend;
+        // new IntOrString(targetPortName)
+        svcBackend.setPort(port);
+        backend.setService(svcBackend);
 //        backend.setServiceName(svc.getName());
 //        backend.servicePort(new IntOrString(targetPortName));
         path.setBackend(backend);
         path.setPath(this.path);
+        path.setPathType("Prefix");
         httpRuleVal.setPaths(Collections.singletonList(path));
         rule.setHttp(httpRuleVal);
         spec.setRules(Collections.singletonList(rule));
@@ -96,7 +104,9 @@ public class Ingress extends ServerPortExport {
 //        String dryRun,
 //        String fieldManager
 
-        extendApi.createNamespacedIngress(nameSpace, ingressBody);
+        extendApi.createNamespacedIngress(nameSpace, ingressBody)
+                .pretty(K8SUtils.resultPrettyShow)
+                .execute();
         // Call call = extendApi.createNamespacedIngressCall();
 
     }

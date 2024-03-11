@@ -19,7 +19,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.NamespacedEventCallCriteria;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiException;

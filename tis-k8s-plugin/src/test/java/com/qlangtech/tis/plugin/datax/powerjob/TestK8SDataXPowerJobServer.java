@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
+import com.qlangtech.tis.coredefine.module.action.ResName;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.SSERunnable;
@@ -10,9 +11,11 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.EmbeddedPowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.coresource.TestEmbeddedPowerjobCoreDataSource;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import junit.framework.TestCase;
@@ -27,27 +30,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        SSERunnable.setLocalThread(new SSERunnable() {
-            @Override
-            public void writeComplete(TargetResName subJob, boolean success) {
-            }
-
-            @Override
-            public void info(String serviceName, long timestamp, String msg) {
-            }
-
-            @Override
-            public void error(String serviceName, long timestamp, String msg) {
-            }
-
-            @Override
-            public void fatal(String serviceName, long timestamp, String msg) {
-            }
-
-            @Override
-            public void run() {
-            }
-        });
+        SSERunnable.setLocalThread(SSERunnable.createMock());
     }
 
     public void testScalePodNumber() throws Exception {
@@ -60,12 +43,13 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     public void testWatchOneOfPowerJobPodLog() throws Exception {
         K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
 
-        WatchPodLog podLog = powerJobServer.watchOneOfPowerJobPodLog(Sets.newHashSet("datax-worker-powerjob-server-pqlml"), new PowerJobPodLogListener() {
-            @Override
-            protected void consumePodLogMsg(ExecuteState<String> log) {
-                System.out.println(log.getMsg());
-            }
-        });
+        WatchPodLog podLog = powerJobServer.watchOneOfPowerJobPodLog(
+                new WaitReplicaControllerLaunch(Sets.newHashSet("datax-worker-powerjob-server-pqlml")), new PowerJobPodLogListener() {
+                    @Override
+                    protected void consumePodLogMsg(ExecuteState<String> log) {
+                        System.out.println(log.getMsg());
+                    }
+                });
 
         Thread.sleep(99000);
         podLog.close();
@@ -102,7 +86,9 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     public void testLaunchPowerjobServer() throws Exception {
         try {
 
-            NodePort portExport = createNodePort();
+          //  NodePort portExport = createNodePort();
+
+            LoadBalance portExport = createLoadBalance();
 
             K8SDataXPowerJobServer powerJobServer = createPowerJobServer(portExport);
 
@@ -112,6 +98,13 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         } catch (ApiException e) {
             throw new RuntimeException(e.getResponseBody());
         }
+    }
+
+    private LoadBalance createLoadBalance() {
+        LoadBalance loadBalance = new LoadBalance();
+        loadBalance.serverPort = 7700;
+        loadBalance.usingClusterIP = false;
+        return loadBalance;
     }
 
     public void testRegisterApp() throws Exception {
@@ -130,7 +123,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         return portExport;
     }
 
-    public static K8SDataXPowerJobServer createPowerJobServer(NodePort portExport) {
+    public static K8SDataXPowerJobServer createPowerJobServer(ServerPortExport portExport) {
 
         final K8SDataXPowerJobWorker powerJobWorker = new K8SDataXPowerJobWorker();
         powerJobWorker.port = 27777;
@@ -140,7 +133,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         powerJobWorker.maxLightweightTaskNum = 1024;
         powerJobWorker.maxHeavyweightTaskNum = 64;
         powerJobWorker.healthReportInterval = 10;
-        powerJobWorker.k8sImage = TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
+        powerJobWorker.k8sImage =  TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
 
 
         ReplicasSpec replicasSpec = K8SUtils.createDftReplicasSpec();

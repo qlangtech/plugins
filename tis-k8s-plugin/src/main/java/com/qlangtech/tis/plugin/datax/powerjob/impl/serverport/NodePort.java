@@ -12,8 +12,11 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
+import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1ServiceStatus;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberRange;
 
@@ -63,31 +66,37 @@ public class NodePort extends ServerPortExport {
 
 
     public enum ServiceType {
-        NodePort("NodePort", (spec) -> {
+        NodePort("NodePort", (svc) -> {
             throw new UnsupportedOperationException("nodePort is not support extrnalIp get process");
         }),
-        LoadBalancer("LoadBalancer", (spec) -> {
-            return spec.getLoadBalancerIP();
+        LoadBalancer("LoadBalancer", (svc) -> {
+            V1ServiceStatus status = svc.getStatus();
+
+            for (V1LoadBalancerIngress ingress
+                    : Objects.requireNonNull(status.getLoadBalancer(), "loadBalancer can not be null").getIngress()) {
+                return ingress.getIp();
+            }
+            throw new IllegalStateException("can not find any ingress ip");
         }),
         ClusterIP("ClusterIP", (spec) -> {
             throw new UnsupportedOperationException(" ClusterIP is not support extrnalIp get process");
         });
         public final String token;
-        private final Function<V1ServiceSpec, String> externalIPSupplier;
+        private final Function<V1Service, String> externalIPSupplier;
 
-        private ServiceType(String token, Function<V1ServiceSpec, String> externalIPSupplier) {
+        private ServiceType(String token, Function<V1Service, String> externalIPSupplier) {
             this.token = token;
             this.externalIPSupplier = externalIPSupplier;
         }
 
-        public String getHost(V1ServiceSpec spec, boolean clusterIP) {
+        public String getHost(V1Service svc, V1ServiceSpec spec, boolean clusterIP) {
             if (!this.token.equalsIgnoreCase(spec.getType())) {
                 return null;
             }
             if (clusterIP) {
                 return spec.getClusterIP();
             } else {
-                return externalIPSupplier.apply(spec);
+                return externalIPSupplier.apply(svc);
             }
         }
     }

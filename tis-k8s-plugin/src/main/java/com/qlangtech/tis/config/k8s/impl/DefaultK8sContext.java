@@ -37,6 +37,7 @@ import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
@@ -136,11 +137,12 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
                 ApiClient client = k8sCfg.createConfigInstance();
                 CoreV1Api api = new CoreV1Api(client);
                 //String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
-                V1NamespaceList namespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null);
+                V1NamespaceList namespaceList = api.listNamespace().execute();
                 if (namespaceList.getItems().size() < 1) {
                     msgHandler.addActionMessage(context, "now the namespace is empty");
                 } else {
-                    msgHandler.addActionMessage(context, "exist namespace is:" + namespaceList.getItems().stream().map((ns) -> {
+                    msgHandler.addActionMessage(context
+                            , "exist namespace is:" + namespaceList.getItems().stream().map((ns) -> {
                         return ns.getMetadata().getName();
                     }).collect(Collectors.joining(",")));
                 }
@@ -152,8 +154,9 @@ public class DefaultK8sContext extends ParamsConfig implements IK8sContext {
             return true;
         }
 
-        public boolean validateKubeConfigContent(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
-            final Yaml yaml = new Yaml(new SafeConstructor());
+        public boolean validateKubeConfigContent(
+                IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
             try {
                 try (Reader reader = new StringReader(value)) {
                     Object config = yaml.load(reader);

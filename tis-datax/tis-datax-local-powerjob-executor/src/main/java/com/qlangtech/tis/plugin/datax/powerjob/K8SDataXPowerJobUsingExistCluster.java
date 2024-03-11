@@ -28,6 +28,7 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
+import com.qlangtech.tis.datax.job.JobResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
@@ -66,15 +67,10 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
     private static final String existPowerJobCluster = "exist_powerjob_cluster";
 
     public static final SubJobResName<K8SDataXPowerJobUsingExistCluster> LAUNCH_EXIST_CLUSTER
-            = new SubJobResName<K8SDataXPowerJobUsingExistCluster>(existPowerJobCluster, (powerJobServer) -> {
+            = JobResName.createSubJob(existPowerJobCluster, (powerJobServer) -> {
         powerJobServer.testPowerJobClient((result) -> {
         });
-    }) {
-        @Override
-        protected String getResourceType() {
-            return existPowerJobCluster;
-        }
-    };
+    });
 
     public static final SubJobResName[] powerJobRes //
             = new SubJobResName[]{
@@ -108,6 +104,7 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
         payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + serverAddress + "/#/oms/home");
         return payloads;
     }
+
     @Override
     public List<ExecuteStep> getExecuteSteps() {
         List<ExecuteStep> launchSteps = Lists.newArrayList();

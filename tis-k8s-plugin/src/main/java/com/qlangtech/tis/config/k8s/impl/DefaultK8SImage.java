@@ -189,7 +189,7 @@ public class DefaultK8SImage extends K8sImage {
                 CoreV1Api api = new CoreV1Api(client);
 
                 //String name, String pretty, Boolean exact, Boolean export
-                V1Namespace v1Namespace = api.readNamespace(k8sCfg.getNamespace(), null, null, null);
+                V1Namespace v1Namespace = api.readNamespace(k8sCfg.getNamespace()).execute();
 
                 //  V1NamespaceList namespaceList = api.listNamespace(null, null, null, null, null, null, null, null, null);
                 if (v1Namespace == null) {

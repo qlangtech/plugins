@@ -6,7 +6,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.ServiceResName;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -42,14 +42,20 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
         String resultHost = null;
         V1ServiceList svcList = null;
         try {
+//            svcList = Objects.requireNonNull(api, "coreApi can not be null")
+//                    .listNamespacedService(nameSpace, K8SUtils.resultPrettyShow, null, null
+//                            , "metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName()
+//                            , null//"app=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
+//                            , null, null, null, null);
+
             svcList = Objects.requireNonNull(api, "coreApi can not be null")
-                    .listNamespacedService(nameSpace, K8SUtils.resultPrettyShow, null, null
-                            , "metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName()
-                            , null//"app=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
-                            , null, null, null, null);
+                    .listNamespacedService(nameSpace)
+                    .pretty(K8SUtils.resultPrettyShow)
+                    .fieldSelector("metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName())
+                    .execute();
 
             for (V1Service svc : svcList.getItems()) {
-                resultHost = serviceType.getHost(svc.getSpec(), clusterIP);
+                resultHost = serviceType.getHost(svc, svc.getSpec(), clusterIP);
                 if (StringUtils.isNotEmpty(resultHost)) {
                     return resultHost;
                 }

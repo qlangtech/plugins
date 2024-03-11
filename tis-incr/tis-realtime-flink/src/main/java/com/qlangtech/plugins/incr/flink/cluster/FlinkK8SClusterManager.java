@@ -31,11 +31,12 @@ import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.FlinkClusterPojo;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
+import com.qlangtech.tis.datax.job.JobResName;
+import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
-import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -45,9 +46,11 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
@@ -96,16 +99,33 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
 //    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
 
-    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster
-            , (flinkManager) -> {
-        JSONObject[] clusterMeta = new JSONObject[1];
-        flinkManager.processFlinkCluster((cli) -> {
-            cli.run(new String[]{}, (clusterClient) -> {
-                clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
+//    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster
+//            , (flinkManager) -> {
+//        JSONObject[] clusterMeta = new JSONObject[1];
+//        flinkManager.processFlinkCluster((cli) -> {
+//            cli.run(new String[]{}, (clusterClient) -> {
+//                clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
+//            });
+//            SSERunnable.getLocal().run();
+//        });
+//        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+//    });
+
+
+    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
+            , new OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria>() {
+        @Override
+        public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
+            JSONObject[] clusterMeta = new JSONObject[1];
+            flinkManager.processFlinkCluster((cli) -> {
+                cli.run(new String[]{}, (clusterClient) -> {
+                    clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
+                });
+                SSERunnable.getLocal().run();
             });
-            SSERunnable.getLocal().run();
-        });
-        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+            SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+            return null;
+        }
     });
 
     public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
@@ -176,7 +196,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         try {
             for (ExecuteStep execStep : getExecuteSteps()) {
 
-                SubJobResName subJob = execStep.getSubJob();
+                JobResName subJob = execStep.getSubJob();
 
                 subJob.execSubJob(this);
             }
@@ -330,7 +350,9 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         // String name, String namespace, String pretty, Boolean exact, Boolean export
         try {
             V1Deployment deploy
-                    = appsApi.readNamespacedDeployment(this.clusterId, k8sImage.getNamespace(), "true", null, null);
+                    = appsApi.readNamespacedDeployment(this.clusterId, k8sImage.getNamespace())
+                    .pretty(K8SUtils.resultPrettyShow)
+                    .execute();
 
             K8SController.fillSpecInfo(deployment, deploy.getSpec().getReplicas(), deploy.getSpec().getTemplate());
 

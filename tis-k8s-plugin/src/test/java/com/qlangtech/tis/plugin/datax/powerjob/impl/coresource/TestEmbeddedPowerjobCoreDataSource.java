@@ -10,8 +10,8 @@ import junit.framework.TestCase;
  * @date 2023/12/13
  */
 public class TestEmbeddedPowerjobCoreDataSource extends TestCase {
-    public static final String K8S_IMAGE = "test";
-    //public static final String K8S_IMAGE = "test160";
+   // public static final String K8S_IMAGE = "test";
+    public static final String K8S_IMAGE = "aliyun";
 
     // public static final String K8S_IMAGE = "aliyun-k8s";
     public void testLaunchMetaStoreService() throws Exception {

@@ -24,7 +24,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
-import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -41,10 +41,10 @@ public class TestDefaultWatchPodLog extends TestCase {
         Optional<String> containerId = Optional.empty();
         String podName = "datax-worker-powerjob-server-mfgk8";
         K8SDataXPowerJobServer powerJobServer = TestK8SDataXPowerJobServer.createPowerJobServer(null);
-        ApiClient client = powerJobServer.getK8SApi();
+        CoreV1Api client = powerJobServer.getK8SApi();
         final K8sImage config = powerJobServer.getImage();
 
-        DefaultWatchPodLog watchPodLog = new DefaultWatchPodLog(containerId, DataXJobWorker.K8S_DATAX_INSTANCE_NAME, podName, client, config);
+        DefaultWatchPodLog watchPodLog = new DefaultWatchPodLog(containerId, DataXJobWorker.K8S_DATAX_INSTANCE_NAME, podName, client.getApiClient(), config);
 
         watchPodLog.addListener(new ILogListener() {
             @Override

@@ -176,8 +176,9 @@ public class K8SController implements IRCController {
             NamespacedEventCallCriteria evtCallCriteria = null;
             for (V1OwnerReference ownerRef : call.getMetadata().getOwnerReferences()) {
                 // ownerRef 对应RC的Uid
+
                 evtCallCriteria
-                        = NamespacedEventCallCriteria.createResVersion(ownerRef.getUid(), call.getMetadata().getResourceVersion());
+                        = NamespacedEventCallCriteria.createResVersion(ownerRef.getUid(), ownerRef.getName(), call.getMetadata().getResourceVersion());
                 break;
             }
 

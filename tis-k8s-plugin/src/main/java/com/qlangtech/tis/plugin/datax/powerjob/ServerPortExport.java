@@ -1,12 +1,12 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.datax.job.ServiceResName;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -14,6 +14,7 @@ import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -55,7 +56,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
                     .execute();
 
             for (V1Service svc : svcList.getItems()) {
-                resultHost = serviceType.getHost(svc, svc.getSpec(), clusterIP);
+                resultHost = serviceType.getHost(Pair.of(api, svc), svc.getSpec(), clusterIP);
                 if (StringUtils.isNotEmpty(resultHost)) {
                     return resultHost;
                 }

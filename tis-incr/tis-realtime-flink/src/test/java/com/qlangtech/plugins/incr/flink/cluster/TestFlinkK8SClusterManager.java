@@ -18,9 +18,12 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
+import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.DefaultSSERunnable;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteStep;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteSteps;
+import com.qlangtech.tis.util.HeteroEnum;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.PrintWriter;
@@ -32,6 +35,13 @@ import java.util.List;
  * @create: 2024-01-04 10:54
  **/
 public class TestFlinkK8SClusterManager {
+
+    @Test
+    public void testGetExecuteSteps() {
+        FlinkK8SClusterManager clusterManager = new FlinkK8SClusterManager();
+        List<ExecuteStep> executeSteps = clusterManager.getExecuteSteps();
+        Assert.assertEquals(1, executeSteps.size());
+    }
 
     @Test
     public void testLaunchService() {

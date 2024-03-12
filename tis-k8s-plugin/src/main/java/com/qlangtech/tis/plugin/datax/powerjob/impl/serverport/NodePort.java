@@ -1,12 +1,15 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.gson.reflect.TypeToken;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
+import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -17,9 +20,13 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.openapi.models.V1ServiceStatus;
+import io.kubernetes.client.util.Watch;
+import io.kubernetes.client.util.Watch.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberRange;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -69,36 +76,89 @@ public class NodePort extends ServerPortExport {
         NodePort("NodePort", (svc) -> {
             throw new UnsupportedOperationException("nodePort is not support extrnalIp get process");
         }),
-        LoadBalancer("LoadBalancer", (svc) -> {
+        LoadBalancer("LoadBalancer", (p) -> {
+            V1Service svc = p.getRight();
+
             V1ServiceStatus status = svc.getStatus();
 
-            for (V1LoadBalancerIngress ingress
-                    : Objects.requireNonNull(status.getLoadBalancer(), "loadBalancer can not be null").getIngress()) {
-                return ingress.getIp();
-            }
-            throw new IllegalStateException("can not find any ingress ip");
+            return parseExternalIP(svc, p.getLeft(), true);
+
+
         }),
         ClusterIP("ClusterIP", (spec) -> {
             throw new UnsupportedOperationException(" ClusterIP is not support extrnalIp get process");
         });
         public final String token;
-        private final Function<V1Service, String> externalIPSupplier;
+        private final Function<Pair<CoreV1Api, V1Service>, String> externalIPSupplier;
 
-        private ServiceType(String token, Function<V1Service, String> externalIPSupplier) {
+        private ServiceType(String token, Function<Pair<CoreV1Api, V1Service>, String> externalIPSupplier) {
             this.token = token;
             this.externalIPSupplier = externalIPSupplier;
         }
 
-        public String getHost(V1Service svc, V1ServiceSpec spec, boolean clusterIP) {
+        public String getHost(Pair<CoreV1Api, V1Service> api, V1ServiceSpec spec, boolean clusterIP) {
             if (!this.token.equalsIgnoreCase(spec.getType())) {
                 return null;
             }
             if (clusterIP) {
                 return spec.getClusterIP();
             } else {
-                return externalIPSupplier.apply(svc);
+                return externalIPSupplier.apply(api);
             }
         }
+    }
+
+
+    private static String parseExternalIP(V1Service svc, CoreV1Api coreApi, boolean shallWatchChange) {
+        V1ServiceStatus status = svc.getStatus();
+
+        List<V1LoadBalancerIngress> ingressList
+                = Objects.requireNonNull(status.getLoadBalancer(), "loadBalancer can not be null").getIngress();
+
+        if (ingressList == null && shallWatchChange) {
+            // 由于刚创建LoadBalancer，extrnalIP 还没有创建
+            Watch<V1Service> rcWatch = null;
+            try {
+                rcWatch = Watch.createWatch(coreApi.getApiClient()
+                        //
+                        ,
+                        K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.setFieldSelector(
+                                coreApi.listNamespacedService(svc.getMetadata().getNamespace())
+                                        .pretty(K8SUtils.resultPrettyShow)
+                                        .watch(true)
+                                        .resourceVersion(svc.getMetadata().getResourceVersion())
+                        )
+                                .buildCall(K8SUtils.createApiCallback())
+                        //
+                        , new TypeToken<Response<V1Service>>() {
+                        }.getType());
+
+                for (Watch.Response<V1Service> event : rcWatch) {
+                    String externalIP = null;
+                    if ((externalIP = parseExternalIP(event.object, coreApi, false)) != null) {
+                        return externalIP;
+                    }
+                }
+
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    rcWatch.close();
+                } catch (Throwable e) {
+
+                }
+            }
+        }
+
+        if (ingressList == null) {
+            return null;
+        }
+
+        for (V1LoadBalancerIngress ingress : ingressList) {
+            return ingress.getIp();
+        }
+        throw new IllegalStateException("can not find any ingress ip");
     }
 
 

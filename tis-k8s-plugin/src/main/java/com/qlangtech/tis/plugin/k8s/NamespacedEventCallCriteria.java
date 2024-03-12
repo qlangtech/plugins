@@ -32,9 +32,15 @@ public abstract class NamespacedEventCallCriteria {
      * 如果是pod，ownerid 则为该Pod 隶属的 rc 的uid
      */
     private final String ownerUid;
+    private final String ownerName;
 
-    private NamespacedEventCallCriteria(String ownerUid) {
+    private NamespacedEventCallCriteria(String ownerUid, String ownerName) {
         this.ownerUid = ownerUid;
+        this.ownerName = ownerName;
+    }
+
+    public final String getOwnerName() {
+        return ownerName;
     }
 
     public final String getOwnerUid() {
@@ -60,7 +66,7 @@ public abstract class NamespacedEventCallCriteria {
 //            return val;
 //        }
 
-    public static NamespacedEventCallCriteria createResVersion(String ownerUid, final String resourceVersion) {
+    public static NamespacedEventCallCriteria createResVersion(String ownerUid, String ownerName, final String resourceVersion) {
 
         if (StringUtils.isEmpty(resourceVersion)) {
             throw new IllegalArgumentException("resourceVersion can not be empty");
@@ -68,7 +74,10 @@ public abstract class NamespacedEventCallCriteria {
         if (StringUtils.isEmpty(ownerUid)) {
             throw new IllegalArgumentException("ownerUid can not be empty");
         }
-        return new NamespacedEventCallCriteria(ownerUid) {
+        if (StringUtils.isEmpty(ownerName)) {
+            throw new IllegalArgumentException("ownerName can not be be empty");
+        }
+        return new NamespacedEventCallCriteria(ownerUid, ownerName) {
             @Override
             public String getResourceVersion() {
                 return resourceVersion;// Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion();
@@ -78,7 +87,7 @@ public abstract class NamespacedEventCallCriteria {
 
     public static NamespacedEventCallCriteria createResVersion(V1ReplicationController newRC) {
         V1ObjectMeta metadata = Objects.requireNonNull(newRC, "newRC can not be null").getMetadata();
-        return createResVersion(metadata.getUid(), metadata.getResourceVersion());
+        return createResVersion(metadata.getUid(), metadata.getName(), metadata.getResourceVersion());
 //        return new NamespacedEventCallCriteria() {
 //            @Override
 //            public String getResourceVersion() {

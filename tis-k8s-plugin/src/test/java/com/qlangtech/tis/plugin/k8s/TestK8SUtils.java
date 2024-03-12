@@ -23,7 +23,6 @@ import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import io.kubernetes.client.openapi.apis.CoreV1Api;

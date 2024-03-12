@@ -8,7 +8,6 @@ import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
-import com.qlangtech.tis.datax.job.DataXJobWorker.K8SWorkerCptType;
 import com.qlangtech.tis.datax.job.OwnerJobResName;
 import com.qlangtech.tis.datax.job.OwnerJobResName.SSEExecuteOwner;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
@@ -53,8 +52,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
 
@@ -67,6 +64,7 @@ import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S
 public class K8SUtils {
     private static final Logger logger = LoggerFactory.getLogger(K8SUtils.class);
     public static final String REPLICATION_CONTROLLER_VERSION = "v1";
+    public static final String REPLICATION_CONTROLLER_KIND = "ReplicationController";
     public static final String resultPrettyShow = "true";
     public static final String LABEL_APP = "app";
     public static final String LABEL_APP_TIMESTAMP = "appTimestamp";
@@ -101,52 +99,7 @@ public class K8SUtils {
         throw new IllegalStateException("podName is illegal:" + resName.getName());
     }
 
-    public static class K8SRCResName<T> extends OwnerJobResName<T, NamespacedEventCallCriteria> {
-        final Pattern patternTargetResource;
-        final ServiceResName[] relevantSvc;
-
-        public K8SRCResName(K8SWorkerCptType cptType, OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec) {
-            this(cptType.token, subJobExec);
-        }
-
-        public K8SRCResName(String name, OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec) {
-            this(name, subJobExec, new ServiceResName[0]);
-        }
-
-        public K8SRCResName(K8SWorkerCptType cptType, OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
-            this(cptType.token, subJobExec, relevantSvc);
-        }
-
-        public K8SRCResName(String name, OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
-            super(name, subJobExec);
-            this.relevantSvc = relevantSvc;
-            this.patternTargetResource = Pattern.compile("(" + this.getK8SResName() + ")\\-[a-z0-9]{1,}");
-        }
-
-        public boolean isPodMatch(String podName) {
-            Matcher matcher = this.patternTargetResource.matcher(podName);
-            return matcher.matches();
-        }
-
-        public ServiceResName[] getRelevantSvc() {
-            return relevantSvc;
-        }
-
-        @Override
-        protected String getResourceType() {
-            return StringUtils.EMPTY;
-        }
-
-        public Optional<String> findPodResName(String msg) {
-            Matcher matcher = this.patternTargetResource.matcher(msg);
-            if (matcher.find()) {
-                return Optional.of(matcher.group(0));
-            }
-            return Optional.empty();
-        }
-    }
-
-//    public interface SubJobExec<T> {
+    //    public interface SubJobExec<T> {
 //        public void accept(T t) throws Exception;
 //    }
 
@@ -182,8 +135,7 @@ public class K8SUtils {
         Objects.requireNonNull(svcPort, "param servicePort can not be null");
         try {
 
-           // SSERunnable sse = SSERunnable.getLocal();
-
+            // SSERunnable sse = SSERunnable.getLocal();
 
 
             V1Service svcBody = new V1Service();
@@ -191,10 +143,7 @@ public class K8SUtils {
             V1ObjectMeta meta = new V1ObjectMeta();
             meta.setName(svcRes.getName());
 
-            SSEExecuteOwner contextAttr = OwnerJobResName.getSSEExecuteOwner();
-            NamespacedEventCallCriteria criteria = (NamespacedEventCallCriteria) contextAttr.owner;
-            V1OwnerReference ownerRef = new V1OwnerReference();
-            ownerRef.setUid(criteria.getOwnerUid());
+            V1OwnerReference ownerRef = createOwnerReference();
             List<V1OwnerReference> ownerRefs = Collections.singletonList(ownerRef);
             meta.setOwnerReferences(ownerRefs);
             svcBody.setMetadata(meta);
@@ -221,6 +170,17 @@ public class K8SUtils {
         } finally {
 
         }
+    }
+
+    public static V1OwnerReference createOwnerReference() {
+        SSEExecuteOwner contextAttr = OwnerJobResName.getSSEExecuteOwner();
+        NamespacedEventCallCriteria criteria = (NamespacedEventCallCriteria) contextAttr.owner;
+        V1OwnerReference ownerRef = new V1OwnerReference();
+        ownerRef.setUid(criteria.getOwnerUid());
+        ownerRef.setName(criteria.getOwnerName());
+        ownerRef.setApiVersion(REPLICATION_CONTROLLER_VERSION);
+        ownerRef.setKind(REPLICATION_CONTROLLER_KIND);
+        return ownerRef;
     }
 
     public static UID createUID(V1ReplicationController newRC) {

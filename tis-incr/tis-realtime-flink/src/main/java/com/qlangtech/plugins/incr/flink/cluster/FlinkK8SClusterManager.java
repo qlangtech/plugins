@@ -46,8 +46,8 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
@@ -112,21 +112,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //    });
 
 
-    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
-            , new OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria>() {
-        @Override
-        public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
-            JSONObject[] clusterMeta = new JSONObject[1];
-            flinkManager.processFlinkCluster((cli) -> {
-                cli.run(new String[]{}, (clusterClient) -> {
-                    clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
-                });
-                SSERunnable.getLocal().run();
-            });
-            SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
-            return null;
-        }
-    });
+    private static K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster;
 
     public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
 
@@ -185,9 +171,29 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     @Override
     public List<ExecuteStep> getExecuteSteps() {
 
-        ExecuteStep step = new ExecuteStep(launchFlinkCluster, "launch Flink Cluster");
 
-        return Lists.newArrayList(step);
+        if (launchFlinkCluster == null) {
+            launchFlinkCluster = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
+                    , new OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria>() {
+                @Override
+                public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
+                    JSONObject[] clusterMeta = new JSONObject[1];
+                    flinkManager.processFlinkCluster((cli) -> {
+                        cli.run(new String[]{}, (clusterClient) -> {
+                            clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
+                        });
+                        SSERunnable.getLocal().run();
+                    });
+                    SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+                    return null;
+                }
+            });
+
+            return Collections.emptyList();
+        }
+
+
+        return Lists.newArrayList(new ExecuteStep(launchFlinkCluster, "launch Flink Cluster"));
     }
 
     @Override

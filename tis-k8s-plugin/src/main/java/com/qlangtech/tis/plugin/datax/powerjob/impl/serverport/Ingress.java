@@ -18,6 +18,8 @@
 
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
+import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -26,7 +28,6 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.datax.job.ServiceResName;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.NetworkingV1Api;
@@ -40,6 +41,7 @@ import io.kubernetes.client.openapi.models.V1IngressSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ServiceBackendPort;
 import io.kubernetes.client.openapi.models.V1ServicePort;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Collections;
 
@@ -52,7 +54,7 @@ public class Ingress extends ServerPortExport {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String host;
 
-    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
+    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.absolute_path})
     public String path;
 
     @Override
@@ -72,6 +74,8 @@ public class Ingress extends ServerPortExport {
         V1Ingress ingressBody = new V1Ingress();
         V1ObjectMeta metadata = new V1ObjectMeta();
         metadata.setName(svc.getName() + "-ingress");
+
+        metadata.setOwnerReferences(Lists.newArrayList(K8SUtils.createOwnerReference()));
         ingressBody.setMetadata(metadata);
 
         V1IngressSpec spec = new V1IngressSpec();
@@ -123,7 +127,7 @@ public class Ingress extends ServerPortExport {
 
     @Override
     public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
-        return this.host + this.path;
+        return this.host + ("/".equals(this.path) ? StringUtils.EMPTY : this.path);
     }
 
     @TISExtension

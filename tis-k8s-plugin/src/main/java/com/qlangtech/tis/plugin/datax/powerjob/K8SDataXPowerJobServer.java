@@ -52,8 +52,8 @@ import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
+import com.qlangtech.tis.plugin.k8s.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
-import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
@@ -68,6 +68,7 @@ import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AutoscalingV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.apis.CoreV1Api.APIlistNamespacedServiceRequest;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1CrossVersionObjectReference;
 import io.kubernetes.client.openapi.models.V1EnvVar;
@@ -132,10 +133,24 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //    }
 
 
-    public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
-            = new ServiceResName<>("powerjob-server-nodeport", (powerJobServer) -> {
+    public static final ServiceResNameWithFieldSelector K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
+            = new ServiceResNameWithFieldSelector("powerjob-server-nodeport", (powerJobServer) -> {
         powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace(), (powerJobServer.getK8SApi()), powerJobServerPort);
     });
+
+    //"metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName()
+    public static class ServiceResNameWithFieldSelector extends ServiceResName<K8SDataXPowerJobServer> {
+        public ServiceResNameWithFieldSelector(String name, SubJobExec<K8SDataXPowerJobServer> subJobExec) {
+            super(name, subJobExec);
+        }
+
+        public APIlistNamespacedServiceRequest setFieldSelector(APIlistNamespacedServiceRequest request) {
+            request.fieldSelector("metadata.name=" + this.getName());
+            return request;
+        }
+    }
+
+
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL_SERVICE
             = new ServiceResName<>("powerjob-mysql", (powerJobServer) -> {
         powerJobServer.coreDS.launchMetaStoreService(powerJobServer);

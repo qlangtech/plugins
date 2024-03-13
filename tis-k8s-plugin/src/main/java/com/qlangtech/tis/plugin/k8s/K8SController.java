@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.k8s;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IRCController;
@@ -164,23 +165,30 @@ public class K8SController implements IRCController {
     public UpdatePodNumber updatePodNumber(TargetResName rcResName, Integer podNum) {
         //  String name, String namespace, V1Patch body, String pretty, String dryRun, String fieldManager, Boolean force
         try {
+
+            V1ReplicationController rc = this.api.readNamespacedReplicationController(rcResName.getK8SResName()
+                    , this.config.getNamespace()).pretty(K8SUtils.resultPrettyShow).execute();
+            V1OwnerReference ownerRef = K8SUtils.createOwnerReference(rc);
             V1Scale body = new V1Scale();
-            body.setMetadata(new V1ObjectMeta()
+            V1ObjectMeta meta = new V1ObjectMeta();
+            meta.setOwnerReferences(Lists.newArrayList(ownerRef));
+            body.setMetadata(meta
                     .name(rcResName.getK8SResName())
                     .namespace(this.config.getNamespace()));
+
             V1ScaleSpec spec = (new V1ScaleSpec()).replicas(podNum);
             body.setSpec(spec);
             V1Scale call = this.api.replaceNamespacedReplicationControllerScale(rcResName.getK8SResName()
                     , this.config.getNamespace(), body).pretty(K8SUtils.resultPrettyShow).execute();
 
-            NamespacedEventCallCriteria evtCallCriteria = null;
-            for (V1OwnerReference ownerRef : call.getMetadata().getOwnerReferences()) {
-                // ownerRef 对应RC的Uid
+            // for (V1OwnerReference ownerRef : call.getMetadata().getOwnerReferences()) {
+            // ownerRef 对应RC的Uid
 
-                evtCallCriteria
-                        = NamespacedEventCallCriteria.createResVersion(ownerRef.getUid(), ownerRef.getName(), call.getMetadata().getResourceVersion());
-                break;
-            }
+            // call.getMetadata().getResourceVersion()
+            NamespacedEventCallCriteria evtCallCriteria
+                    = NamespacedEventCallCriteria.createResVersion(ownerRef.getUid(), ownerRef.getName(), rc.getMetadata().getResourceVersion());
+//                break;
+//            }
 
             return new UpdatePodNumber(call.getStatus().getReplicas()
                     , podNum

@@ -28,6 +28,15 @@ import java.util.Map;
  * @create: 2023-12-28 17:58
  **/
 public interface ResChangeCallback {
+    /**
+     * 在Waiting等待过程中是否要获取已有的Pods，在scala pods避免要出现刚添加的pod，随即马上去掉，此时程序识别成又添加了一个pod的情况
+     *
+     * @return
+     */
+    public default boolean shallGetExistPods() {
+        return false;
+    }
+
     public void apply(K8SResChangeReason changeReason, String podName);
 
 

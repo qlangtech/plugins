@@ -29,6 +29,7 @@ import io.kubernetes.client.openapi.models.V1HostAlias;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
 import io.kubernetes.client.openapi.models.V1ReplicationController;
@@ -40,6 +41,7 @@ import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import io.kubernetes.client.util.Watch;
 import io.kubernetes.client.util.Watch.Response;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -175,9 +177,18 @@ public class K8SUtils {
     public static V1OwnerReference createOwnerReference() {
         SSEExecuteOwner contextAttr = OwnerJobResName.getSSEExecuteOwner();
         NamespacedEventCallCriteria criteria = (NamespacedEventCallCriteria) contextAttr.owner;
+        return createOwnerReference(criteria.getOwnerUid(), criteria.getOwnerName());
+    }
+
+    public static V1OwnerReference createOwnerReference(V1ReplicationController rc) {
+        V1ObjectMeta metadata = rc.getMetadata();
+        return createOwnerReference(metadata.getUid(), metadata.getName());
+    }
+
+    private static V1OwnerReference createOwnerReference(String ownerId, String ownerName) {
         V1OwnerReference ownerRef = new V1OwnerReference();
-        ownerRef.setUid(criteria.getOwnerUid());
-        ownerRef.setName(criteria.getOwnerName());
+        ownerRef.setUid(ownerId);
+        ownerRef.setName(ownerName);
         ownerRef.setApiVersion(REPLICATION_CONTROLLER_VERSION);
         ownerRef.setKind(REPLICATION_CONTROLLER_KIND);
         return ownerRef;
@@ -441,19 +452,37 @@ public class K8SUtils {
         }
     }
 
+    private static void setPodStatus(ResChangeCallback changeCallback
+            , Map<String, RunningStatus> relevantPodNames
+            , V1ObjectMeta podMeta, boolean runState, boolean podBeCreate) {
+
+        if (podBeCreate) {
+            if (relevantPodNames.put(podMeta.getName(), runState ? RunningStatus.SUCCESS : RunningStatus.FAILD) == null) {
+                changeCallback.apply(
+                        K8SResChangeReason.SuccessfulCreate
+                        , podMeta.getName());
+            }
+        } else {
+            if (relevantPodNames.remove(podMeta.getName()) != null) {
+                changeCallback.apply(
+                        K8SResChangeReason.SuccessfulDelete
+                        , podMeta.getName());
+            }
+        }
+    }
 
     /**
      * 等待RC资源启动
      *
      * @param powerjobServerImage
-     * @param expectResChangeCount
+     * @param expectResCount
      * @param api
      * @param resourceVer
      * @throws ApiException
      * @throws PowerjobOrchestrateException
      */
     public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, final int expectResChangeCount, CoreV1Api api
+            , TargetResName targetResName, final int expectResCount, CoreV1Api api
             , NamespacedEventCallCriteria resourceVer, ResChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
@@ -464,10 +493,34 @@ public class K8SUtils {
         }
         //  RunningStatus status;
         final Map<String, RunningStatus> relevantPodNames = Maps.newHashMap();
+        if (changeCallback.shallGetExistPods()) {
+            /**
+             * 在Waiting等待过程中是否要获取已有的Pods，在scala pods避免要出现刚添加的pod，随即马上去掉，此时程序识别成又添加了一个pod的情况
+             */
+            V1PodList pods = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER
+                    .setFieldSelector(
+                            api
+                                    .listNamespacedPod(powerjobServerImage.getNamespace())
+                                    .resourceVersion(resourceVer.getResourceVersion()))
+                    .execute();
+            for (V1Pod pod : pods.getItems()) {
+                for (V1OwnerReference oref : pod.getMetadata().getOwnerReferences()) {
+                    if (StringUtils.equalsIgnoreCase(oref.getUid(), resourceVer.getOwnerUid())) {
+                        relevantPodNames.put(pod.getMetadata().getName(), RunningStatus.SUCCESS);
+                    }
+                }
+            }
+            if (MapUtils.isEmpty(relevantPodNames)) {
+                logger.warn("relevantPodNames shall not be empty");
+            } else {
+                logger.warn("relevantPodNames size:{},pods:{}", relevantPodNames.size(), String.join(",", relevantPodNames.keySet()));
+            }
+        }
         // final K8SRCResName powerJobRCResName = targetResName(targetResName);
 
         // Pattern patternTargetResource = Pattern.compile("(" + targetResName.getK8SResName() + ")-.+?");
         // final int replicaChangeCount = powerjobServerSpec.getReplicaCount();
+        String currentResVer = resourceVer.getResourceVersion();
         int tryProcessWatcherLogsCount = 0;
         processWatcherLogs:
         while (true) { // 处理 watcher SocketTimeoutException 超时的错误
@@ -482,7 +535,7 @@ public class K8SUtils {
                     api.listNamespacedPod(powerjobServerImage.getNamespace())
                             .allowWatchBookmarks(false)
                             .watch(true)
-                            .resourceVersion(resourceVer.getResourceVersion())
+                            .resourceVersion(currentResVer)
                             .buildCall(K8SUtils.createApiCallback())
 
                     //
@@ -495,6 +548,8 @@ public class K8SUtils {
 
                     pod = event.object;
                     podMeta = pod.getMetadata();
+                    // 以免下次watch list 收到重复的event
+                    currentResVer = podMeta.getResourceVersion();
                     boolean isChildOf = false;
                     for (V1OwnerReference oref : podMeta.getOwnerReferences()) {
                         if (StringUtils.equals(oref.getUid(), resourceVer.getOwnerUid())) {
@@ -509,29 +564,25 @@ public class K8SUtils {
                     boolean podBeCreate = false;
                     // relevantPodNames.add(podMeta.getName());
                     //   System.out.println("type:" + event.type + ",object:" + event.object.getMetadata().getName());
-                    switch (StringUtils.lowerCase(pod.getStatus().getPhase())) {
+                    String phase = pod.getStatus().getPhase();
+                    logger.info("pod:{},change to phase:{}", podMeta.getName(), phase);
+                    switch (StringUtils.lowerCase(phase)) {
                         case "failed":
                             podFaildCount++;
-//                            status = relevantPodNames.get(podMeta.getName());
-//                            if (status == null) {
-                            // status = ;
-                            relevantPodNames.put(podMeta.getName(), RunningStatus.FAILD);
+                            setPodStatus(changeCallback, relevantPodNames, podMeta, false, false);
                             //}
                             break;
                         case "pending":
                             podBeCreate = true;
                         case "succeeded":
                         case "terminating": // pod 被终止
-                            changeCallback.apply(
-                                    podBeCreate ? K8SResChangeReason.SuccessfulCreate : K8SResChangeReason.SuccessfulDelete
-                                    , podMeta.getName());
                             podCompleteCount++;
-                            relevantPodNames.put(podMeta.getName(), RunningStatus.SUCCESS);
+                            setPodStatus(changeCallback, relevantPodNames, podMeta, true, podBeCreate);
                             break;
                         default:
                     }
 
-                    if (changeCallback.isBreakEventWatch(relevantPodNames, expectResChangeCount)) {
+                    if (changeCallback.isBreakEventWatch(relevantPodNames, expectResCount)) {
                         break processWatcherLogs;
                     }
                 }
@@ -664,6 +715,7 @@ public class K8SUtils {
         }
         return new WaitReplicaControllerLaunch(relevantPodNames.keySet());
     }
+
 
     public static ApiCallback createApiCallback() {
         return new ApiCallback() {

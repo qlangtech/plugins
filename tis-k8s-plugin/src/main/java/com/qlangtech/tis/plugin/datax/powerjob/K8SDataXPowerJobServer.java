@@ -43,6 +43,7 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -109,8 +110,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     private final static DataXJobWorker.K8SWorkerCptType workerCptType = DataXJobWorker.K8SWorkerCptType.Server;
 
-    public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_WORKER
-            = new K8SRCResName<>(K8SWorkerCptType.Worker
+    public static final K8SRCResNameWithFieldSelector K8S_DATAX_POWERJOB_WORKER
+            = new K8SRCResNameWithFieldSelector(K8SWorkerCptType.Worker
             , new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
         @Override
         public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
@@ -118,6 +119,19 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             return null;
         }
     });
+
+    public static class K8SRCResNameWithFieldSelector extends K8SRCResName<K8SDataXPowerJobServer> {
+
+        public K8SRCResNameWithFieldSelector(K8SWorkerCptType cptType
+                , OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
+            super(cptType, subJobExec, relevantSvc);
+        }
+
+        public CoreV1Api.APIlistNamespacedPodRequest setFieldSelector(CoreV1Api.APIlistNamespacedPodRequest request) {
+            request.labelSelector("app=" + this.getName());
+            return request;
+        }
+    }
 
 
     public static final SubJobResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
@@ -316,7 +330,17 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             }
 
             K8SUtils.waitReplicaControllerLaunch(this.getImage()
-                    , cptType, replicaChangeCount, this.getK8SApi(), updatePodNumber.getResourceVersion(), new ResChangeCallback() {
+                    , cptType, updatePodNumber.getToPodCount(), this.getK8SApi(), updatePodNumber.getResourceVersion(), new ResChangeCallback() {
+                        @Override
+                        public boolean shallGetExistPods() {
+                            return true;
+                        }
+
+                        @Override
+                        public boolean isBreakEventWatch(Map<String, RunningStatus> relevantPodNames, int expectResChangeCount) {
+                            return relevantPodNames.size() == expectResChangeCount;
+                        }
+
                         @Override
                         public void apply(K8SResChangeReason changeReason, String podName) {
 

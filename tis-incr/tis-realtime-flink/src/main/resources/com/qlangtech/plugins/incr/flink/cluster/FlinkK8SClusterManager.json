@@ -7,17 +7,5 @@
   },
   "tmMemory": {
     "dftVal": "1728"
-  },
-  "k8sImage": {
-    "dftVal": "flink-cluster",
-    "creator": {
-      "label": "配置",
-      "plugin": [
-        {
-          "hetero": "flink-image",
-          "descName": "flink-image"
-        }
-      ]
-    }
   }
 }

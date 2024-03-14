@@ -27,7 +27,6 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
-import org.apache.flink.client.program.rest.RestClusterClient;
 
 import java.io.File;
 import java.util.function.Consumer;
@@ -35,6 +34,9 @@ import java.util.function.Consumer;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-07 10:36
+ * @see KubernetesApplication
+ * @see KubernetesSession
+ * @see Standalone
  **/
 public abstract class ClusterType implements Describable<ClusterType>, IFlinkClusterConfig {
 

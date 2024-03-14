@@ -70,15 +70,6 @@ public class FlinkTaskNodeController implements IRCController {
     private final TISFlinkCDCStreamFactory factory;
     public static final String CHECKPOINT_DIR_PREFIX = "chk-";
 
-//    public static final K8SRCResName<FlinkJobDeployDTO> K8S_DATAX_POWERJOB_MYSQL
-//            = new K8SRCResName<>("datax-worker-powerjob-mysql", (dto) -> {
-//        dto.taskController.factory.cluster.deploy(dto.taskController.factory, dto.collection, dto.streamUberJar, dto.requestSetter, dto.afterSuccess);
-//    });
-
-//    public static final SubJobResName[] flinkDeployRes //
-//            = new SubJobResName[]{
-//            K8S_DATAX_POWERJOB_MYSQL
-//    };
 
     public FlinkTaskNodeController(TISFlinkCDCStreamFactory factory) {
         this.factory = factory;
@@ -88,14 +79,6 @@ public class FlinkTaskNodeController implements IRCController {
 
     }
 
-//    @Override
-//    public List<ExecuteStep<FlinkTaskNodeController>> getExecuteSteps() {
-//        List<ExecuteStep<FlinkTaskNodeController>> launchSteps = Lists.newArrayList();
-//        for (SubJobResName rcRes : flinkDeployRes) {
-//            launchSteps.add(new ExecuteStep(rcRes, null));
-//        }
-//        return launchSteps;
-//    }
 
     @Override
     public void checkUseable() {
@@ -169,24 +152,16 @@ public class FlinkTaskNodeController implements IRCController {
 
         final String checkpointPath = getRestoreCheckpointPath(collection, spSupport, String.valueOf(checkpointId));
 
-        //  IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
-        //  JobID jobID = status.getLaunchJobID();
-        // final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
-        //  logger.info("restore flink job with checkpoint path:" + checkpointPath);
+
         this.relaunch(collection, (p) -> {
             return true;
         }, checkpointPath);
-        // this.relaunch(collection, checkpointPath);
     }
 
     public static String getRestoreCheckpointPath(
             TargetResName collection, IncrStreamFactory.ISavePointSupport spSupport, String checkpointId) {
         IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
         return getRestoreCheckpointPath(status.getLaunchJobID(), spSupport, checkpointId);
-//        JobID jobID = status.getLaunchJobID();
-//        final String checkpointPath = spSupport.getSavePointRootPath() + "/" + jobID.toHexString() + "/" + CHECKPOINT_DIR_PREFIX + checkpointId;
-//        logger.info("restore flink job with checkpoint path:" + checkpointPath);
-//        return checkpointPath;
     }
 
     public static String getRestoreCheckpointPath(

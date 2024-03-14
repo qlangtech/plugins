@@ -55,9 +55,6 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     private static final String KEY_FIELD_CHECKPOINT = "checkpoint";
     private static final String KEY_FIELD_STATEBACKEND = "stateBackend";
 
-//    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.identity})
-//    public String name = NAME_FLINK_CDC;
-
     @FormField(ordinal = 1, validate = {Validator.require})
     public ClusterType cluster;
 
@@ -65,11 +62,7 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     public FlinkClusterType getClusterType() {
         return cluster.getClusterType();
     }
-//    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.host, Validator.require})
-//    public String jobManagerAddress;
-//
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
-//    public String clusterId;
+
 
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer parallelism;

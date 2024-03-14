@@ -23,6 +23,8 @@ import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDbs;
+import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.ReaderSourceCreator;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.plugins.incr.flink.cdc.valconvert.DateTimeConverter;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
@@ -44,12 +46,9 @@ import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import com.ververica.cdc.connectors.mysql.source.assigners.state.PendingSplitsState;
-import com.ververica.cdc.connectors.mysql.source.split.MySqlSplit;
 import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.api.connector.source.Source;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
@@ -59,6 +58,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -181,44 +182,102 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     SourceChannel.getSourceFunction(
                             dsFactory,
                             tabs
-                            , (dbHost, dbs, tbs, debeziumProperties) -> {
-
-                                DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
-
-                                debeziumProperties.setProperty(
-                                        CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
-                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
-
-                                debeziumProperties.setProperty(
-                                        MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
-                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
-
-                                String[] databases = dbs.getDataBases();
-
-                                Source<DTO, MySqlSplit, PendingSplitsState> sourceFunc = MySqlSource.<DTO>builder()
-                                        .hostname(dbHost)
-                                        .port(dsFactory.port)
-                                        .databaseList(databases) // monitor all tables under inventory database
-                                        .tableList(tbs.toArray(new String[tbs.size()]))
-                                        .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
-                                        .username(dsFactory.getUserName())
-                                        .password(dsFactory.getPassword())
-                                        .startupOptions(sourceFactory.getStartupOptions())
-                                        .debeziumProperties(debeziumProperties)
-                                        .deserializer(deserializationSchema) // converts SourceRecord to JSON String
-                                        .build();
-
-                                return Collections.singletonList(ReaderSource.createDTOSource(
-                                        dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
-                                        , sourceFunc
-                                        )
-                                );
-                            }));
+                            , new MySQLReaderSourceCreator(dsFactory, this.sourceFactory, deserializationSchema)
+//                            (dbHost, dbs, tbs, debeziumProperties) -> {
+//
+//                                DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
+//
+//                                debeziumProperties.setProperty(
+//                                        CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
+//                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
+//
+//                                debeziumProperties.setProperty(
+//                                        MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
+//                                        , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
+//
+//                                String[] databases = dbs.getDataBases();
+//
+//                                MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()
+//                                        .hostname(dbHost)
+//                                        .port(dsFactory.port)
+//                                        .databaseList(databases) // monitor all tables under inventory database
+//                                        .tableList(tbs.toArray(new String[tbs.size()]))
+//                                        .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
+//                                        .username(dsFactory.getUserName())
+//                                        .password(dsFactory.getPassword())
+//                                        .startupOptions(sourceFactory.getStartupOptions())
+//                                        .debeziumProperties(debeziumProperties)
+//                                        .deserializer(deserializationSchema) // converts SourceRecord to JSON String
+//                                        .build();
+//
+//
+//                                return Collections.singletonList(ReaderSource.createDTOSource(
+//                                        dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
+//                                        , sourceFunc
+//                                        )
+//                                );
+//                            }
+                    ));
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
+        }
+    }
+
+    public static class MySQLReaderSourceCreator implements ReaderSourceCreator {
+        private final BasicDataSourceFactory dsFactory;
+        private final FlinkCDCMySQLSourceFactory sourceFactory;
+        private final TISDeserializationSchema deserializationSchema;
+
+        public MySQLReaderSourceCreator(BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory) {
+            this(dsFactory, sourceFactory, new TISDeserializationSchema());
+        }
+
+        public MySQLReaderSourceCreator(BasicDataSourceFactory dsFactory, FlinkCDCMySQLSourceFactory sourceFactory, TISDeserializationSchema deserializationSchema) {
+            this.dsFactory = dsFactory;
+            this.sourceFactory = sourceFactory;
+            this.deserializationSchema = deserializationSchema;
+        }
+
+        @Override
+        public List<ReaderSource> create(String dbHost, HostDbs dbs, Set<String> tbs, Properties debeziumProperties) {
+
+            DateTimeConverter.setDatetimeConverters(MySqlDateTimeConverter.class.getName(), debeziumProperties);
+
+            debeziumProperties.setProperty(
+                    CommonConnectorConfig.EVENT_PROCESSING_FAILURE_HANDLING_MODE.name()
+                    , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
+
+            debeziumProperties.setProperty(
+                    MySqlConnectorConfig.INCONSISTENT_SCHEMA_HANDLING_MODE.name()
+                    , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
+
+            String[] databases = dbs.getDataBases();
+
+            MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()
+                    .hostname(dbHost)
+                    .port(dsFactory.port)
+                    .databaseList(databases) // monitor all tables under inventory database
+                    .tableList(tbs.toArray(new String[tbs.size()]))
+                    .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
+                    .username(dsFactory.getUserName())
+                    .password(dsFactory.getPassword())
+                    .startupOptions(sourceFactory.getStartupOptions())
+                    .debeziumProperties(debeziumProperties)
+                    .deserializer(deserializationSchema) // converts SourceRecord to JSON String
+                    .build();
+
+            return createReaderSources(dbHost, dbs, sourceFunc);
+        }
+
+        protected List<ReaderSource> createReaderSources(String dbHost, HostDbs dbs, MySqlSource<DTO> sourceFunc) {
+            return Collections.singletonList(ReaderSource.createDTOSource(
+                    dbHost + ":" + dsFactory.port + ":" + dbs.joinDataBases("_")
+                    , sourceFunc
+                    )
+            );
         }
     }
 

@@ -45,7 +45,6 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -117,7 +116,6 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         public final EndType getEndType() {
             return EndType.Flink;
         }
-
 
 
         public BasicFlinkCfgDescriptor() {

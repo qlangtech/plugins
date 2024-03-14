@@ -152,12 +152,9 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
                 return false;
             });
 
+            List<ReaderSource> oneHostSources = null;
             for (Map.Entry<String /**ip*/, HostDbs/**dbs*/> entry : ip2dbs.entrySet()) {
 
-//                Set<String> tbs = entry.getValue().stream().flatMap(
-//                        (dbName) -> db2tabs.get(dbName).stream().flatMap((tab) -> {
-//                            return tabnameCreator.apply(new DBTable(dbName, tab));
-//                        })).collect(Collectors.toSet());
 
                 Set<String> tbs = entry.getValue().mapPhysicsTabs(db2tabs, tabnameCreator);
 
@@ -166,7 +163,10 @@ public class SourceChannel implements AsyncMsg<List<ReaderSource>> {
 
                 String dbHost = entry.getKey();
                 HostDbs dbs = entry.getValue();
-                sourceFuncs.addAll(sourceFunctionCreator.create(dbHost, dbs, tbs, debeziumProperties));
+                oneHostSources = sourceFunctionCreator.create(dbHost, dbs, tbs, debeziumProperties);
+                if (oneHostSources != null) {
+                    sourceFuncs.addAll(oneHostSources);
+                }
             }
 
             return sourceFuncs;

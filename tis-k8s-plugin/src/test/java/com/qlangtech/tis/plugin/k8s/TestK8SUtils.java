@@ -23,6 +23,7 @@ import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8SRCResNameWithFieldSelector;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -57,7 +58,7 @@ public class TestK8SUtils extends TestCase {
     public void testWaitReplicaControllerLaunch() throws Exception {
 
         DefaultK8SImage powerjobServerImage = (DefaultK8SImage) ImageCategory.DEFAULT_POWERJOB_DESC_NAME.getPluginStore().find("aliyun");
-        TargetResName targetResName = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
+        K8SRCResNameWithFieldSelector targetResName = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
         ReplicasSpec powerjobServerSpec = new ReplicasSpec();
         powerjobServerSpec.setReplicaCount(1);
         CoreV1Api coreApi = new CoreV1Api(powerjobServerImage.createApiClient());
@@ -65,7 +66,7 @@ public class TestK8SUtils extends TestCase {
 //         appLabelSelector
 //                = NamespacedEventCallCriteria.createAppTimestampLabelSelector(resName, 1709959541333l);
 
-        NamespacedEventCallCriteria appLabelSelector = NamespacedEventCallCriteria.createResVersion("ownerUid", "15431267");
+        NamespacedEventCallCriteria appLabelSelector = NamespacedEventCallCriteria.createResVersion("ownerUid", "15431267", null);
 
         System.out.println(appLabelSelector);
 

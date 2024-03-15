@@ -23,16 +23,14 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus.State;
-import com.qlangtech.tis.coredefine.module.action.IRCController;
+import com.qlangtech.tis.coredefine.module.action.IRCController.SupportTriggerSavePointResult;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.FlinkJobDeploymentDetails;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
-import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
-import com.qlangtech.tis.trigger.jst.ILogListener;
 import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -65,7 +63,7 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-10-20 13:39
  **/
-public class FlinkTaskNodeController implements IRCController {
+public class FlinkTaskNodeController {
     private static final Logger logger = LoggerFactory.getLogger(FlinkTaskNodeController.class);
     private final TISFlinkCDCStreamFactory factory;
     public static final String CHECKPOINT_DIR_PREFIX = "chk-";
@@ -80,11 +78,11 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
-    public void checkUseable() {
-        ClusterType cluster = factory.getClusterCfg();
-        cluster.checkUseable();
-    }
+    //@Override
+//    public void checkUseable() {
+//        ClusterType cluster = factory.getClusterCfg();
+//        cluster.checkUseable();
+//    }
 
     /**
      * 重新启动
@@ -92,7 +90,7 @@ public class FlinkTaskNodeController implements IRCController {
      * @param collection
      * @param targetPod
      */
-    @Override
+
     public void relaunch(TargetResName collection, String... targetPod) {
         this.relaunch(collection, (p) -> {
             String savepointPath = p.getLeft();
@@ -140,7 +138,7 @@ public class FlinkTaskNodeController implements IRCController {
                 + ",stored path:" + savepoints.stream().map((p) -> p.getPath()).collect(Collectors.joining(",")));
     }
 
-    @Override
+
     public void restoreFromCheckpoint(TargetResName collection, Integer checkpointId) {
 
         IncrStreamFactory streamFactory = getStreamFactory(collection);
@@ -176,49 +174,27 @@ public class FlinkTaskNodeController implements IRCController {
         return checkpointPath;
     }
 
-    @Override
+
     public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
 
 
-        File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
-
-        this.deploy(collection, streamUberJar
-                , (request) -> {
-                }, (jobId) -> {
-                    IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
-                    incrJob.createNewJob(jobId);
-                });
+//        File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
+//
+//        this.deploy(collection, streamUberJar
+//                , (request) -> {
+//                }, (jobId) -> {
+//                    IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
+//                    incrJob.createNewJob(jobId);
+//                });
     }
 
-
+    //
+//
     private void deploy(TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
 
-//        FlinkJobDeployDTO dto = new FlinkJobDeployDTO(this, collection, streamUberJar, requestSetter, afterSuccess);
-//
-//        for (ExecuteStep execStep : getExecuteSteps()) {
-//            execStep.getSubJob().execSubJob(dto);
-//        }
-
-        factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
+        //factory.cluster.deploy(this.factory, collection, streamUberJar, requestSetter, afterSuccess);
     }
-
-//    private static class FlinkJobDeployDTO {
-//        private final FlinkTaskNodeController taskController;
-//        private final TargetResName collection;
-//        private final File streamUberJar;
-//        private final Consumer<JarSubmitFlinkRequest> requestSetter;
-//        private final Consumer<JobID> afterSuccess;
-//
-//        public FlinkJobDeployDTO(FlinkTaskNodeController taskController, TargetResName collection //
-//                , File streamUberJar, Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) {
-//            this.taskController = taskController;
-//            this.collection = collection;
-//            this.streamUberJar = streamUberJar;
-//            this.requestSetter = requestSetter;
-//            this.afterSuccess = afterSuccess;
-//        }
-//    }
 
 
     private static IFlinkIncrJobStatus<JobID> getIncrJobStatus(TargetResName collection) {
@@ -231,7 +207,6 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
     public IDeploymentDetail getRCDeployment(TargetResName collection) {
         ExtendFlinkJobDeploymentDetails rcDeployment = null;
         IFlinkIncrJobStatus<JobID> incrJobStatus = getIncrJobStatus(collection);
@@ -293,7 +268,6 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
     public SupportTriggerSavePointResult supportTriggerSavePoint(TargetResName collection) {
         SupportTriggerSavePointResult result = new SupportTriggerSavePointResult(false);
         ValidateFlinkJob validateFlinkJob = new ValidateFlinkJob(collection) {
@@ -319,7 +293,7 @@ public class FlinkTaskNodeController implements IRCController {
      *
      * @param collection
      */
-    @Override
+
     public void triggerSavePoint(TargetResName collection) {
         processFlinkJob(collection, (restClient, savePoint, status) -> {
             String savepointDirectory = savePoint.createSavePointPath();
@@ -329,7 +303,7 @@ public class FlinkTaskNodeController implements IRCController {
         });
     }
 
-    @Override
+
     public void discardSavepoint(TargetResName collection, String savepointPath) {
 //        FlinkIncrJobStatus status = getIncrJobStatus(resName);
 //        status.discardSavepoint(savepointPath);
@@ -382,7 +356,6 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
     public void stopInstance(TargetResName collection) {
         processFlinkJob(collection, (restClient, savePoint, status) -> {
             //job 任务没有终止，立即停止
@@ -396,7 +369,6 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
     public void removeInstance(TargetResName collection) throws Exception {
         IFlinkIncrJobStatus<JobID> status = getIncrJobStatus(collection);
         try {
@@ -435,10 +407,9 @@ public class FlinkTaskNodeController implements IRCController {
     }
 
 
-    @Override
-    public WatchPodLog listPodAndWatchLog(TargetResName collection, String podName, ILogListener listener) {
-        return null;
-    }
+//    public WatchPodLog listPodAndWatchLog(TargetResName collection, String podName, ILogListener listener) {
+//        return null;
+//    }
 
     private class ValidateFlinkJob {
         protected TargetResName collection;

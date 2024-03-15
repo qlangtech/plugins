@@ -19,10 +19,14 @@
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.plugins.incr.flink.common.FlinkCluster;
+import com.qlangtech.plugins.incr.flink.launch.FlinkTaskNodeController;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -44,8 +48,14 @@ public class Standalone extends AbstractClusterType {
     public String flinkCluster;
 
     @Override
-    public void checkUseable() throws TisException {
-        this.getClusterCfg().checkUseable();
+    protected JSONObject createClusterMeta(ClusterClient restClient) {
+        return ClusterType.createClusterMeta(getClusterType(), restClient, null);
+    }
+
+    @Override
+    public void removeInstance(TISFlinkCDCStreamFactory factory, TargetResName collection) throws Exception {
+        FlinkTaskNodeController nodeController = new FlinkTaskNodeController(factory);
+        nodeController.removeInstance(collection);
     }
 
     @Override
@@ -78,7 +88,7 @@ public class Standalone extends AbstractClusterType {
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             try {
                 Standalone standalone = postFormVals.newInstance();
-                standalone.getClusterCfg().checkUseable();
+                standalone.checkUseable(null);
             } catch (TisException e) {
                 msgHandler.addFieldError(context, KEY_FIELD_FLINK_CLUSTER, e.getMessage());
                 return false;

@@ -110,7 +110,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     private final static DataXJobWorker.K8SWorkerCptType workerCptType = DataXJobWorker.K8SWorkerCptType.Server;
 
-    public static final K8SRCResNameWithFieldSelector K8S_DATAX_POWERJOB_WORKER
+    public static final K8SRCResNameWithFieldSelector<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_WORKER
             = new K8SRCResNameWithFieldSelector(K8SWorkerCptType.Worker
             , new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
         @Override
@@ -120,10 +120,15 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
     });
 
-    public static class K8SRCResNameWithFieldSelector extends K8SRCResName<K8SDataXPowerJobServer> {
+    public static class K8SRCResNameWithFieldSelector<T> extends K8SRCResName<T> {
 
         public K8SRCResNameWithFieldSelector(K8SWorkerCptType cptType
-                , OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
+                , OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
+            super(cptType, subJobExec, relevantSvc);
+        }
+
+        public K8SRCResNameWithFieldSelector(String cptType
+                , OwnerJobExec<T, NamespacedEventCallCriteria> subJobExec, ServiceResName... relevantSvc) {
             super(cptType, subJobExec, relevantSvc);
         }
 
@@ -178,15 +183,14 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     });
 
-    public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER
-            = new K8SRCResName<>(K8SWorkerCptType.Server,
+    public static final K8SRCResNameWithFieldSelector<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER
+            = new K8SRCResNameWithFieldSelector(K8SWorkerCptType.Server,
             new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
                 @Override
                 public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
                     return powerJobServer.launchPowerjobServer();
                 }
             }
-
             , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE);
 
     private static K8SRCResName<K8SDataXPowerJobServer> getPowerJobServerRes() {
@@ -198,8 +202,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
 
-    public static final K8SRCResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL
-            = new K8SRCResName<>("datax-worker-powerjob-mysql",
+    public static final K8SRCResNameWithFieldSelector<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL
+            = new K8SRCResNameWithFieldSelector("datax-worker-powerjob-mysql",
             new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
                 @Override
                 public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
@@ -315,22 +319,27 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
      */
     @Override
     public void updatePodNumber(SSERunnable sse, TargetResName cptType, Integer podNum) {
-        // super.updatePodNumber(podNum);
         if (podNum < 1) {
             throw new IllegalArgumentException("illegal param podNum can not small than podNum");
         }
-        // SSERunnable sse = SSERunnable.getLocal();
         try {
             UpdatePodNumber updatePodNumber = this.getK8SController().updatePodNumber(cptType, podNum);
-
             int replicaChangeCount = updatePodNumber.getReplicaChangeCount();
             if (replicaChangeCount < 1) {
                 // TODO 没有变化
                 return;
             }
 
+            K8SRCResNameWithFieldSelector workerRes = K8S_DATAX_POWERJOB_WORKER;
+
+            if (!workerRes.equalWithName(cptType.getName())) {
+                throw new IllegalStateException("cptType:" + cptType + ", must equal with:" + workerRes);
+            }
             K8SUtils.waitReplicaControllerLaunch(this.getImage()
-                    , cptType, updatePodNumber.getToPodCount(), this.getK8SApi(), updatePodNumber.getResourceVersion(), new ResChangeCallback() {
+                    , workerRes, updatePodNumber.getToPodCount() //
+                    , this.getK8SApi() //
+                    , updatePodNumber.getResourceVersion() //
+                    , new ResChangeCallback() {
                         @Override
                         public boolean shallGetExistPods() {
                             return true;
@@ -483,16 +492,16 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 try {
                     k8SController.removeInstance(rcResName);
                 } catch (Exception e) {
-                    logger.warn("delete rc faild:" + rcResName.getK8SResName(), e);
+                    logger.warn("delete rc faild:" + rcResName.getK8SResName());
                 }
                 // 删除服务
-                for (ServiceResName svc : rcResName.getRelevantSvc()) {
-                    try {
-                        k8SController.deleteSerivce(svc);
-                    } catch (Exception e) {
-                        logger.warn("delete svc faild:" + svc.getK8SResName(), e);
-                    }
-                }
+//                for (ServiceResName svc : rcResName.getRelevantSvc()) {
+//                    try {
+//                        k8SController.deleteSerivce(svc);
+//                    } catch (Exception e) {
+//                        logger.warn("delete svc faild:" + svc.getK8SResName());
+//                    }
+//                }
             }
 
             if (supportHPA()) {
@@ -893,6 +902,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
     WatchPodLog watchOneOfPowerJobPodLog(WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
+        return watchOneOfPowerJobPodLog(this.getK8SController(), relevantPodNames, logListener);
+    }
+
+    public static WatchPodLog watchOneOfPowerJobPodLog(K8SController controller
+            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
         if (relevantPodNames.isSkipWaittingPhase()) {
             return new WatchPodLog() {
                 @Override
@@ -906,7 +920,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
         WatchPodLog watchPodLog = null;
         for (String onePodOf : relevantPodNames.getRelevantPodNames()) {
-            watchPodLog = this.getK8SController().listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, logListener);
+            watchPodLog = controller.listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, logListener);
             return watchPodLog;
         }
         throw new IllegalStateException("must return a watchPodLog instance");

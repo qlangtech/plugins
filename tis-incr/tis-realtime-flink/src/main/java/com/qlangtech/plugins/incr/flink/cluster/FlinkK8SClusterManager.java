@@ -305,7 +305,8 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                 // clusterClientServiceLoader.getClusterClientFactory(configuration);
 
                 try (final ClusterDescriptor<String> kubernetesClusterDescriptor =
-                             kubernetesClusterClientFactory.createClusterDescriptor(configuration)) {
+                             kubernetesClusterClientFactory.createClusterDescriptor(configuration)
+                ) {
                     ClusterClientProvider<String> clientProvider = kubernetesClusterDescriptor.retrieve(this.clusterId);
                     return clientProvider.getClusterClient();
                 }

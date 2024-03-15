@@ -19,9 +19,12 @@
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.qlangtech.plugins.incr.flink.cluster.KubernetesApplicationClusterConfig;
-import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.SSERunnable;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.configuration.Configuration;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -32,17 +35,22 @@ import java.io.File;
  **/
 public class TestKubernetesApplication {
 
+    @Before
+    public void executeBefore() {
+        SSERunnable.setLocalThread(SSERunnable.createMock());
+    }
+
     @Test
     public void testDeploy() throws Exception {
 
-       // FlinkK8SImage k8SImage = new FlinkK8SImage();
+        // FlinkK8SImage k8SImage = new FlinkK8SImage();
         //   k8SImage.namespace =
 
         KubernetesApplication k8sApp = new KubernetesApplication() {
             @Override
             protected KubernetesApplicationClusterConfig getK8SClusterCfg() {
                 KubernetesApplicationClusterConfig clusterCfg = new KubernetesApplicationClusterConfig();
-                clusterCfg.k8sImage = "tis_flink_image";
+                clusterCfg.k8sImage = "local-tis";
                 // k8SClusterManager.clusterId = "tis-flink-cluster";
                 clusterCfg.jmMemory = 1238400;
                 clusterCfg.tmMemory = 1169472;
@@ -52,11 +60,17 @@ public class TestKubernetesApplication {
                 clusterCfg.svcAccount = "default";
                 return clusterCfg;
             }
+
+            @Override
+            protected ClusterClient createClient(Configuration flinkConfig, boolean execDeploy) {
+                return super.createClient(flinkConfig, false);
+            }
         };
-        k8sApp.clusterId = "tis-flink-cluster";
+        k8sApp.clusterId = "flink1";
+
         // k8sApp.clusterCfg = "";
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
-        TargetResName coll = new TargetResName("mysql_mysql4");
+        TargetResName coll = new TargetResName("mysql_mysql");
         File streamUberJar = new File(".");
         k8sApp.deploy(streamFactory, coll, streamUberJar //
                 , (request) -> {

@@ -63,10 +63,6 @@ public class K8sIncrSync extends K8SController //implements IRCController
 //        this.api = new CoreV1Api(client);
     }
 
-    @Override
-    public void checkUseable() {
-        super.checkUseable();
-    }
 //    @Override
 //    public void relaunch(String collection) {
 //

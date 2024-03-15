@@ -83,8 +83,13 @@ public class K8SController implements IRCController {
     }
 
     @Override
-    public void checkUseable() {
+    public void checkUseable(TargetResName name) {
 
+    }
+
+    @Override
+    public boolean hasCreated(TargetResName collection) {
+        return true;
     }
 
     public void deleteSerivce(ServiceResName svc) {

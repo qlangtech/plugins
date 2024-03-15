@@ -59,12 +59,12 @@ public class TestFlinkTaskNodeController {
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
        // streamFactory.flinkCluster = "my-first-flink-cluster";
         streamFactory.parallelism = 1;
-        FlinkTaskNodeController taskNodeController = new FlinkTaskNodeController(streamFactory);
+       // FlinkTaskNodeController taskNodeController = new FlinkTaskNodeController(streamFactory);
 
         TargetResName collection = new TargetResName("hudi");
         ReplicasSpec replicasSpec = new ReplicasSpec();
         long timestamp = 20220325135114l;
-        taskNodeController.deploy(collection, replicasSpec, timestamp);
+        streamFactory.deploy(collection, replicasSpec, timestamp);
 
 
 //        Map<String, Object> accumulators = taskNodeController.getAccumulators();

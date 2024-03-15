@@ -79,25 +79,6 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         return super.getDescribleClass();
     }
 
-    /**
-     * 校验是否可用
-     *
-     * @throws TisException
-     */
-    public void checkUseable() throws TisException {
-        FlinkCluster cluster = this;
-        try {
-            try (ClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.empty(), Optional.of(1000l))) {
-                // restClient.getClusterId();
-                CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
-                Collection<JobStatusMessage> jobStatus = status.get();
-            }
-
-        } catch (Throwable e) {
-            throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
-        }
-    }
-
 
     @Override
     public ClusterClient createConfigInstance() {
@@ -148,41 +129,27 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
             // this.load();
         }
 
+        /**
+         * 校验是否可用
+         *
+         * @throws TisException
+         */
+        private void checkUseable(FlinkCluster cluster) throws TisException {
+            try {
+                try (ClusterClient restClient = cluster.createFlinkRestClusterClient(Optional.empty(), Optional.of(1000l))) {
+                    // restClient.getClusterId();
+                    CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
+                    Collection<JobStatusMessage> jobStatus = status.get();
+                }
+            } catch (Throwable e) {
+                throw TisException.create("Please check link is valid:" + cluster.getJobManagerAddress().getURL(), e);
+            }
+        }
+
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             FlinkCluster flinkCluster = postFormVals.newInstance();
-
-//            ParseDescribable<Describable> paramsConfigParseDescribable = this.newInstance((IPluginContext) msgHandler, postFormVals.rawFormData, Optional.empty());
-//            FlinkCluster flinkCluster = paramsConfigParseDescribable.getInstance();
-
-            //try {
-            flinkCluster.checkUseable();
-//            } catch (TisException e) {
-//               // msgHandler.addErrorMessage(context, e.getMessage());
-//                return false;
-//            }
-
-//            JobManagerAddress jobManagerAddress = flinkCluster.getJobManagerAddress();
-//
-//            try {
-//                final Integer serverStatus = HttpUtils.get(new URL(jobManagerAddress.getURL()), new ConfigFileContext.StreamProcess<Integer>() {
-//                    @Override
-//                    public Integer p(int status, InputStream stream, Map<String, List<String>> headerFields) {
-//                        return status;
-//                    }
-//                });
-//                if (serverStatus != HttpURLConnection.HTTP_OK) {
-//                    msgHandler.addErrorMessage(context, "不可用的URL：" + jobManagerAddress.getURL() + ",responseStatus:" + serverStatus);
-//                    return false;
-//                }
-//            } catch (Exception e) {
-//                // throw TisException.create(jobManagerAddress.getURL(), e);
-//                msgHandler.addErrorMessage(context, "不可用的URL：" + jobManagerAddress.getURL() + "，" + e.getMessage());
-//                logger.warn(jobManagerAddress.getURL(), e);
-//                return false;
-//            }
-
-
+            checkUseable(flinkCluster);
             return true;
         }
     }

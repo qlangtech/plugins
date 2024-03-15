@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.k8s;
 
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
+import io.kubernetes.client.openapi.models.V1Pod;
 
 import java.util.Map;
 
@@ -37,7 +38,9 @@ public interface ResChangeCallback {
         return false;
     }
 
-    public void apply(K8SResChangeReason changeReason, String podName);
+    public default void apply(K8SResChangeReason changeReason, String podName) {
+
+    }
 
 
     /**
@@ -58,5 +61,9 @@ public interface ResChangeCallback {
      */
     public default boolean isBreakEventWatch(final Map<String, RunningStatus> relevantPodNames, final int expectResChangeCount) {
         return (relevantPodNames.values().size() >= expectResChangeCount);
+    }
+
+    default void applyDefaultPodPhase(final Map<String, RunningStatus> relevantPodNames, V1Pod pod) {
+
     }
 }

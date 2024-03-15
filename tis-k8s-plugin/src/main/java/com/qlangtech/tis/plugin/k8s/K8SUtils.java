@@ -15,6 +15,7 @@ import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
+import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8SRCResNameWithFieldSelector;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobWorker;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import io.kubernetes.client.custom.IntOrString;
@@ -361,9 +362,10 @@ public class K8SUtils {
     }
 
     public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api apiClient, NamespacedEventCallCriteria resVer)  //
+            , K8SRCResNameWithFieldSelector targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api apiClient, NamespacedEventCallCriteria resVer)  //
             throws ApiException, PowerjobOrchestrateException {
-        return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resVer, (r, name) -> {
+        return waitReplicaControllerLaunch(powerjobServerImage, targetResName, powerjobServerSpec.getReplicaCount(), apiClient, resVer, new ResChangeCallback() {
+
         });
     }
 
@@ -482,7 +484,7 @@ public class K8SUtils {
      * @throws PowerjobOrchestrateException
      */
     public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , TargetResName targetResName, final int expectResCount, CoreV1Api api
+            , K8SRCResNameWithFieldSelector targetResName, final int expectResCount, CoreV1Api api
             , NamespacedEventCallCriteria resourceVer, ResChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
@@ -497,11 +499,10 @@ public class K8SUtils {
             /**
              * 在Waiting等待过程中是否要获取已有的Pods，在scala pods避免要出现刚添加的pod，随即马上去掉，此时程序识别成又添加了一个pod的情况
              */
-            V1PodList pods = K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_WORKER
-                    .setFieldSelector(
-                            api
-                                    .listNamespacedPod(powerjobServerImage.getNamespace())
-                                    .resourceVersion(resourceVer.getResourceVersion()))
+            V1PodList pods = targetResName.setFieldSelector(
+                    api
+                            .listNamespacedPod(powerjobServerImage.getNamespace())
+                            .resourceVersion(resourceVer.getResourceVersion()))
                     .execute();
             for (V1Pod pod : pods.getItems()) {
                 for (V1OwnerReference oref : pod.getMetadata().getOwnerReferences()) {
@@ -515,11 +516,10 @@ public class K8SUtils {
             } else {
                 logger.warn("relevantPodNames size:{},pods:{}", relevantPodNames.size(), String.join(",", relevantPodNames.keySet()));
             }
+            if (changeCallback.isBreakEventWatch(relevantPodNames, expectResCount)) {
+                return new WaitReplicaControllerLaunch(relevantPodNames.keySet());
+            }
         }
-        // final K8SRCResName powerJobRCResName = targetResName(targetResName);
-
-        // Pattern patternTargetResource = Pattern.compile("(" + targetResName.getK8SResName() + ")-.+?");
-        // final int replicaChangeCount = powerjobServerSpec.getReplicaCount();
         String currentResVer = resourceVer.getResourceVersion();
         int tryProcessWatcherLogsCount = 0;
         processWatcherLogs:
@@ -532,10 +532,11 @@ public class K8SUtils {
             Watch<V1Pod> rcWatch = Watch.createWatch(api.getApiClient()
                     //
                     ,
-                    api.listNamespacedPod(powerjobServerImage.getNamespace())
-                            .allowWatchBookmarks(false)
-                            .watch(true)
-                            .resourceVersion(currentResVer)
+                    targetResName.setFieldSelector(
+                            api.listNamespacedPod(powerjobServerImage.getNamespace())
+                                    .allowWatchBookmarks(false)
+                                    .watch(true)
+                                    .resourceVersion(currentResVer))
                             .buildCall(K8SUtils.createApiCallback())
 
                     //
@@ -564,9 +565,9 @@ public class K8SUtils {
                     boolean podBeCreate = false;
                     // relevantPodNames.add(podMeta.getName());
                     //   System.out.println("type:" + event.type + ",object:" + event.object.getMetadata().getName());
-                    String phase = pod.getStatus().getPhase();
+                    String phase = StringUtils.lowerCase(pod.getStatus().getPhase());
                     logger.info("pod:{},change to phase:{}", podMeta.getName(), phase);
-                    switch (StringUtils.lowerCase(phase)) {
+                    switch (phase) {
                         case "failed":
                             podFaildCount++;
                             setPodStatus(changeCallback, relevantPodNames, podMeta, false, false);
@@ -579,7 +580,9 @@ public class K8SUtils {
                             podCompleteCount++;
                             setPodStatus(changeCallback, relevantPodNames, podMeta, true, podBeCreate);
                             break;
-                        default:
+                        default: {
+                            changeCallback.applyDefaultPodPhase(relevantPodNames, pod);
+                        }
                     }
 
                     if (changeCallback.isBreakEventWatch(relevantPodNames, expectResCount)) {
@@ -600,112 +603,6 @@ public class K8SUtils {
 
                 }
             }
-
-            // okhttp3.Call rcCall = ;
-
-//            Call rcCall = api.listNamespacedEventCall(powerjobServerImage.getNamespace() //
-//                    , resultPrettyShow, false, null, null //
-//                    , resourceVer.getLabelSelector(), null, resourceVer.getResourceVersion(), null, true, createApiCallback());
-//            Watch<CoreV1Event> rcWatch = Watch.createWatch(api.getApiClient()
-//                    //
-//                    , api.listNamespacedEvent(powerjobServerImage.getNamespace())
-//                            .pretty(resultPrettyShow)
-//                            .watch(true)
-//                            .allowWatchBookmarks(true)
-//                            // .labelSelector(resourceVer.getLabelSelector())
-//                            // https://kubernetes.io/docs/reference/using-api/api-concepts/#streaming-lists
-//                            .resourceVersion(resourceVer.getResourceVersion())
-//                            //.resourceVersionMatch("NotOlderThan")
-//                            //.sendInitialEvents(false)
-//                            .buildCall(createApiCallback())
-//                    //
-//                    , new TypeToken<Watch.Response<CoreV1Event>>() {
-//                    }.getType());
-//            CoreV1Event evt = null;
-//            V1ObjectReference objRef = null;
-//
-//            int rcCompleteCount = 0;
-//
-//            String formatMessage = null;
-//            K8SResChangeReason changeReason = null;
-//            try {
-//                for (Watch.Response<CoreV1Event> event : rcWatch) {
-//                    //System.out.println("-----------------------------------------");
-//                    if ("error".equalsIgnoreCase(event.type)) {
-//                        throw TisException.create(String.valueOf(event.status));
-//                    }
-//                    evt = event.object;
-//                    //  System.out.println();
-//                    // V1ObjectMeta metadata = evt.getMetadata();
-//                    String msg = evt.getMessage();
-////                    evt.getType();
-////                    evt.getReason();
-//                    objRef = evt.getInvolvedObject();
-//                    //            evt.getInvolvedObject().getName();
-//                    //            evt.getInvolvedObject().getKind();
-//                    // reason:Scheduled,name:datax-worker-powerjob-server-4g4cp,kind:Pod,message:Successfully assigned default/datax-worker-powerjob-server-4g4cp to minikube
-//                    // Matcher matcher = patternTargetResource.matcher(objRef.getName());
-//
-//                    //;
-//                    formatMessage = "reason:" + evt.getReason() + ",name:" + objRef.getName() + ",kind:" + objRef.getKind() + ",message:" + msg;
-//                    logger.info(formatMessage);
-//                    changeReason = K8SResChangeReason.parse(evt.getReason());
-//                    if ("pod".equalsIgnoreCase(objRef.getKind()) && powerJobRCResName.isPodMatch(objRef.getName())) {
-//                        relevantPodNames.add(objRef.getName());
-//
-//                        //  System.out.println();
-//                        sse.info(targetResName.getName(), TimeFormat.getCurrentTimeStamp(), formatMessage);
-//                        if (changeReason != null) {
-//                            switch (changeReason) {
-//                                case FAILD:
-//                                case FailedScheduling:
-//                                    podFaildCount++;
-//                                case KILL:
-//                                case LAUNCHED:
-//                                    podCompleteCount++;
-//                                default:
-//                                    changeCallback.apply(changeReason, objRef.getName());
-//                            }
-//                        }
-//                    }
-//                    // reason:SuccessfulDelete,name:powerjob-worker,kind:ReplicationController,message:Deleted pod: powerjob-worker-r6hxn
-//                    // reason:SuccessfulCreate,name:powerjob-worker,kind:ReplicationController,message:Created pod: powerjob-worker-wknhr
-//                    Optional<String> podResName = null;
-//                    if ("ReplicationController".equalsIgnoreCase(objRef.getKind())
-//                            && (podResName = powerJobRCResName.findPodResName(msg)).isPresent()) {
-//                        if (changeReason != null) {
-//                            switch (changeReason) {
-//                                case SuccessfulDelete:
-//                                case SuccessfulCreate:
-//                                    rcCompleteCount++;
-//                                default:
-//                                    changeCallback.apply(changeReason, podResName.get());
-//                            }
-//                        }
-//                    }
-//                    //if (podCompleteCount >= expectResChangeCount) {
-//                    if (changeCallback.isBreakEventWatch(podFaildCount, podCompleteCount, rcCompleteCount, expectResChangeCount)) {
-//                        break processWatcherLogs;
-//                    }
-//
-//                    // if ("running".equalsIgnoreCase(status.getPhase())) {
-//
-//                    //}
-//                }
-//            } catch (Exception e) {
-//                if (tryProcessWatcherLogsCount++ < 3 //
-//                        && ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class) > -1) {
-//                    continue processWatcherLogs;
-//                } else {
-//                    throw e;
-//                }
-//            } finally {
-//                try {
-//                    rcWatch.close();
-//                } catch (Throwable e) {
-//
-//                }
-//            }
 
             if (podFaildCount > 0) {
                 throw new PowerjobOrchestrateException(

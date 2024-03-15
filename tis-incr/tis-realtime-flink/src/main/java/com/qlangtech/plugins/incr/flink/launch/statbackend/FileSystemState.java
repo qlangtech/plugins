@@ -62,9 +62,6 @@ public class FileSystemState extends StateBackendFactory implements IncrStreamFa
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String checkpointDir;
 
-//    @FormField(ordinal = 2, type = FormFieldType.ENUM, validate = {})
-//    public String historyCheckpoint;
-
     @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean enableSavePoint;
 

@@ -19,19 +19,22 @@
 package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.plugins.incr.flink.cluster.FlinkK8SClusterManager;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.HeteroEnum;
+import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.slf4j.Logger;
@@ -60,15 +63,20 @@ public class KubernetesSession extends AbstractClusterType {
     }
 
     @Override
-    public void checkUseable() throws TisException {
-
+    protected JSONObject createClusterMeta(ClusterClient restClient) {
+        FlinkK8SClusterManager sessionCluster = HeteroEnum.getFlinkK8SSessionCluster(flinkCluster);
+        return ClusterType.createClusterMeta(getClusterType(), restClient, sessionCluster.getFlinkK8SImage());
     }
+
+
 
     @Override
     public ClusterClient createRestClusterClient() {
 
         //   flinkCluster
         FlinkK8SClusterManager cluster = HeteroEnum.getFlinkK8SSessionCluster(flinkCluster);
+
+
         // HeteroEnum.K8S_SESSION_WORKER.getPluginStore(null,) ;
         //FlinkCluster flinkCluster = new FlinkCluster();
         return cluster.createClusterClient();
@@ -77,7 +85,12 @@ public class KubernetesSession extends AbstractClusterType {
 
     @Override
     public JobManagerAddress getJobManagerAddress() {
-        return null;
+        return new JobManagerAddress(null, -1) {
+            @Override
+            public String getURL() {
+                return createRestClusterClient().getWebInterfaceURL();
+            }
+        };
     }
 
 

@@ -21,7 +21,8 @@ package com.qlangtech.plugins.incr.flink.common;
 import com.qlangtech.plugins.incr.flink.cluster.BasicFlinkK8SClusterCfg;
 import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.utils.TisMetaProps;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -29,7 +30,13 @@ import com.qlangtech.tis.utils.TisMetaProps;
  **/
 public class FlinkK8SImage extends DefaultK8SImage {
 
+    public AppsV1Api createAppsV1Api() {
+        return new AppsV1Api(this.createApiClient());
+    }
 
+    public CoreV1Api createCoreV1Api() {
+        return new CoreV1Api(this.createApiClient());
+    }
 
     @TISExtension()
     public static class FlinkDescriptorImpl extends DescriptorImpl {

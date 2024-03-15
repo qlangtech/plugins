@@ -22,27 +22,35 @@ package com.qlangtech.plugins.incr.flink.launch;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.plugins.incr.flink.launch.ckpt.CKOn;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.ClusterType;
+import com.qlangtech.tis.config.k8s.ReplicasSpec;
+import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
-import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
+import com.qlangtech.tis.manage.common.incr.UberJarUtil;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
+import com.qlangtech.tis.plugin.incr.WatchPodLog;
+import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.trigger.jst.ILogListener;
 import org.apache.flink.annotation.Public;
+import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -112,10 +120,6 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         return item.createRestClusterClient();
     }
 
-//    public RestClusterClient getFlinkCluster(long timeout) {
-//        FlinkCluster item = getClusterCfg();
-//        return item.createFlinkRestClusterClient(Optional.of(timeout));
-//    }
 
     @Override
     public StreamExecutionEnvironment createStreamExecutionEnvironment() {
@@ -136,11 +140,90 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         return this.cluster;
     }
 
-    @Override
-    public IRCController getIncrSync() {
+    // @Override
+    private FlinkTaskNodeController getIncrSync() {
         FlinkTaskNodeController flinkTaskNodeController = new FlinkTaskNodeController(this);
         return flinkTaskNodeController;
     }
+
+    /**
+     * ==========================================================================
+     * implement: IRCController Start
+     * ==========================================================================
+     */
+    @Override
+    public void checkUseable(TargetResName collection) {
+        this.getClusterCfg().checkUseable(collection);
+    }
+
+    @Override
+    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
+
+        File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
+        this.deploy(collection, streamUberJar
+                , (request) -> {
+                }, (jobId) -> {
+                    IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
+                    incrJob.createNewJob(jobId);
+                });
+    }
+
+
+    private void deploy(TargetResName collection, File streamUberJar
+            , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSuccess) throws Exception {
+        this.getClusterCfg().deploy(this, collection, streamUberJar, requestSetter, afterSuccess);
+    }
+
+    @Override
+    public void removeInstance(TargetResName collection) throws Exception {
+        this.getClusterCfg().removeInstance(this, collection);
+    }
+
+    @Override
+    public void stopInstance(TargetResName indexName) {
+        this.getIncrSync().stopInstance(indexName);
+    }
+
+    @Override
+    public SupportTriggerSavePointResult supportTriggerSavePoint(TargetResName collection) {
+        return this.getIncrSync().supportTriggerSavePoint(collection);
+    }
+
+    @Override
+    public void restoreFromCheckpoint(TargetResName resName, Integer checkpointId) {
+        this.getIncrSync().restoreFromCheckpoint(resName, checkpointId);
+    }
+
+    @Override
+    public void triggerSavePoint(TargetResName collection) {
+        this.getIncrSync().triggerSavePoint(collection);
+    }
+
+    @Override
+    public void relaunch(TargetResName collection, String... targetPod) {
+        this.getIncrSync().relaunch(collection, targetPod);
+    }
+
+    @Override
+    public IDeploymentDetail getRCDeployment(TargetResName collection) {
+        return this.getIncrSync().getRCDeployment(collection);
+    }
+
+    @Override
+    public WatchPodLog listPodAndWatchLog(TargetResName collection, String podName, ILogListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void discardSavepoint(TargetResName resName, String savepointPath) {
+        this.getIncrSync().discardSavepoint(resName, savepointPath);
+    }
+
+    /**
+     * ==========================================================================
+     * implement: IRCController END
+     * ==========================================================================
+     */
 
 
     @TISExtension()

@@ -34,7 +34,7 @@ public abstract class NamespacedEventCallCriteria {
     private final String ownerUid;
     private final String ownerName;
 
-    private NamespacedEventCallCriteria(String ownerUid, String ownerName) {
+    protected NamespacedEventCallCriteria(String ownerUid, String ownerName) {
         this.ownerUid = ownerUid;
         this.ownerName = ownerName;
     }
@@ -83,6 +83,11 @@ public abstract class NamespacedEventCallCriteria {
                 return resourceVersion;// Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion();
             }
         };
+    }
+
+    public static NamespacedEventCallCriteria createResVersion(V1ObjectMeta metadata) {
+        Objects.requireNonNull(metadata, "metadata can not be null");
+        return createResVersion(metadata.getUid(), metadata.getName(), metadata.getResourceVersion());
     }
 
     public static NamespacedEventCallCriteria createResVersion(V1ReplicationController newRC) {

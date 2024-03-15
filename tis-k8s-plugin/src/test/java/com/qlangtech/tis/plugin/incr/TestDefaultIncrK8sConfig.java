@@ -77,7 +77,7 @@ public class TestDefaultIncrK8sConfig extends TestCase {
         IncrStreamFactory incrStream = store.getPlugin();
         assertNotNull(incrStream);
 
-        IRCController incrSync = incrStream.getIncrSync();
+        IRCController incrSync = incrStream;
         assertNotNull(incrSync);
         return incrSync;
     }

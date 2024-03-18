@@ -35,14 +35,15 @@ public class Test {
 //        while (resources.hasMoreElements()) {
 //            System.out.println(resources.nextElement());
 //        }
+        System.out.println(
+                "Exception in thread \"main\" java.sql.SQLException: Data source is closed\n\tat org.apache.commons.dbcp.BasicDataSource.createDataSource(BasicDataSource.java:1362)\n\tat org.apache.commons.dbcp.BasicDataSource.getConnection(BasicDataSource.java:1044)\n\tat com.qlangtech.tis.manage.spring.TISDataSourceFactory$SystemDBInit.dbTisConsoleExist(TISDataSourceFactory.java:75)\n\tat com.qlangtech.tis.runtime.module.action.SysInitializeAction.init(SysInitializeAction.java:163)\n\tat com.qlangtech.tis.runtime.module.action.SysInitializeAction.main(SysInitializeAction.java:128)");
 
 
-
-        Enumeration<URL> resources
-                =  TIS.get().getPluginManager().uberClassLoader.getResources("com/esotericsoftware/kryo/Serializer.class");
-        while (resources.hasMoreElements()) {
-            System.out.println(resources.nextElement());
-        }
+//        Enumeration<URL> resources
+//                =  TIS.get().getPluginManager().uberClassLoader.getResources("com/esotericsoftware/kryo/Serializer.class");
+//        while (resources.hasMoreElements()) {
+//            System.out.println(resources.nextElement());
+//        }
 
 
 

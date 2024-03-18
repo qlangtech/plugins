@@ -20,10 +20,12 @@ package com.qlangtech.plugins.incr.flink.launch.clustertype;
 
 import com.qlangtech.plugins.incr.flink.cluster.KubernetesApplicationClusterConfig;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
+import com.qlangtech.tis.config.flink.JobManagerAddress;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,11 +74,15 @@ public class TestKubernetesApplication {
         TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
         TargetResName coll = new TargetResName("mysql_mysql");
         File streamUberJar = new File(".");
-        k8sApp.deploy(streamFactory, coll, streamUberJar //
-                , (request) -> {
+//        k8sApp.deploy(streamFactory, coll, streamUberJar //
+//                , (request) -> {
+//
+//                }, (jobId) -> {
+//
+//                });
 
-                }, (jobId) -> {
-
-                });
+        JobManagerAddress jobManagerAddress = k8sApp.getJobManagerAddress();
+        Assert.assertNotNull(jobManagerAddress);
+        System.out.println(   jobManagerAddress.getURL() );
     }
 }

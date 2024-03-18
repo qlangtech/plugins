@@ -28,9 +28,11 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.lang.TisException.ErrorCode;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.runtime.client.JobStatusMessage;
@@ -67,7 +69,7 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
                 Collection<JobStatusMessage> jobStatus = status.get();
             }
         } catch (Throwable e) {
-            throw TisException.create("Please check link is valid:" + webInterfaceURL, e);
+            throw TisException.create(ErrorCode.FLINK_CLUSTER_LOSS_OF_CONTACT, ExceptionUtils.getRootCauseMessage(e), e);
         }
     }
 

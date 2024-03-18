@@ -24,14 +24,14 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
-import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.plugins.flink.client.FlinkClient;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -40,15 +40,19 @@ import java.util.function.Consumer;
  **/
 public abstract class AbstractClusterType extends ClusterType {
     protected static final String KEY_FIELD_FLINK_CLUSTER = "flinkCluster";
+    private static final Logger logger = LoggerFactory.getLogger(AbstractClusterType.class);
 
     @Override
     public void removeInstance(TISFlinkCDCStreamFactory factory, TargetResName collection) throws Exception {
         // JobID jobID = getCreatedJobID(collection);
         IFlinkIncrJobStatus<JobID> incrJobStatus = factory.getIncrJobStatus(collection);
-
         JobID launchJobID = incrJobStatus.getLaunchJobID();
-        if (launchJobID != null) {
-            this.createRestClusterClient().cancel(launchJobID);
+        try {
+            if (launchJobID != null) {
+                this.createRestClusterClient().cancel(launchJobID);
+            }
+        } catch (Exception e) {
+            logger.warn(e.getMessage());
         }
         this.getLaunchToken(collection).deleteLaunchToken();
     }
@@ -66,29 +70,29 @@ public abstract class AbstractClusterType extends ClusterType {
 
 
         ServerLaunchToken launchToken = this.getLaunchToken(collection);
-        launchToken.writeLaunchToken(() -> {
+        //  launchToken.writeLaunchToken(() -> {
 
-            final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
-            try (ClusterClient restClient = createRestClusterClient()) {
-
-
-                FlinkClient flinkClient = new FlinkClient();
-
-                JarSubmitFlinkRequest request
-                        = JarSubmitFlinkRequest.createFlinkJobRequest(factory, collection, streamUberJar, requestSetter);
-                JSONObject clusterMeta = createClusterMeta(restClient);
-
-                JobID jobID = flinkClient.submitJar(restClient, request);
-
-                afterSuccess.accept(jobID);
-                return Optional.of(clusterMeta);
-            } finally {
-                Thread.currentThread().setContextClassLoader(currentClassLoader);
-            }
+        final ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(TIS.get().getPluginManager().uberClassLoader);
+        try (ClusterClient restClient = createRestClusterClient()) {
 
 
-        });
+            FlinkClient flinkClient = new FlinkClient();
+
+            JarSubmitFlinkRequest request
+                    = JarSubmitFlinkRequest.createFlinkJobRequest(factory, collection, streamUberJar, requestSetter);
+            JSONObject clusterMeta = createClusterMeta(restClient);
+
+            JobID jobID = flinkClient.submitJar(restClient, request);
+            afterSuccess.accept(jobID);
+            launchToken.appendJobNote(clusterMeta);
+            // return Optional.of(clusterMeta);
+        } finally {
+            Thread.currentThread().setContextClassLoader(currentClassLoader);
+        }
+
+
+        // });
     }
 
     protected abstract JSONObject createClusterMeta(ClusterClient restClient);

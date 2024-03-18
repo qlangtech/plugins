@@ -52,6 +52,7 @@ import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.jst.ILogListener;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -82,6 +83,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOG4J_NAME;
 import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NAME;
@@ -188,8 +191,6 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                     return null;
                 }
             });
-
-            return Collections.emptyList();
         }
 
 
@@ -405,6 +406,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         processFlinkCluster((cli) -> {
             cli.killCluster(clusterId);
             this.deleteLaunchToken();
+            ServerLaunchToken.createFlinkClusterToken().deleteFlinkSessionCluster(clusterId);
         });
     }
 
@@ -449,6 +451,24 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return this.verify(msgHandler, context, postFormVals);
         }
+
+        private static final Pattern pattern_cluster_id = Pattern.compile("[a-z][\\da-z\\-]{3,44}");
+
+        public boolean validateClusterId(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return checkClusterId(msgHandler, context, fieldName, value);
+        }
+
+        public static boolean checkClusterId(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Matcher matcher = pattern_cluster_id.matcher(value);
+            if (!matcher.matches()) {
+                msgHandler.addFieldError(context, fieldName, "not match pattern:" + pattern_cluster_id);
+                return false;
+            }
+
+            return true;
+        }
+
+        //
 
         @Override
         protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {

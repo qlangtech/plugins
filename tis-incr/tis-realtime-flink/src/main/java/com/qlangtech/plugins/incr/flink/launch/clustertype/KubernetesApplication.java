@@ -57,6 +57,7 @@ import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.ResChangeCallback;
 import com.qlangtech.tis.plugins.flink.client.JarSubmitFlinkRequest;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
+import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.trigger.socket.ExecuteState;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
@@ -87,7 +88,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -125,16 +125,16 @@ public class KubernetesApplication extends ClusterType {
         return FlinkClusterType.K8SApplication;
     }
 
-    private transient ClusterClient _clusterClient;
+    //  private transient ClusterClient _clusterClient;
 
     @Override
     public ClusterClient createRestClusterClient() {
-        if (this._clusterClient == null) {
-            final Configuration flinkConfig = getFlinkCfg();
-            this._clusterClient = createClient(flinkConfig, false);
-        }
+//        if (this._clusterClient == null) {
+        final Configuration flinkConfig = getFlinkCfg();
+//            this._clusterClient =
+//        }
 
-        return this._clusterClient;
+        return this.createClient(flinkConfig, false);
     }
 
     @Override
@@ -248,10 +248,10 @@ public class KubernetesApplication extends ClusterType {
             , TargetResName collection, File streamUberJar
             , Consumer<JarSubmitFlinkRequest> requestSetter, Consumer<JobID> afterSucce) throws Exception {
         final SSERunnable sse = SSERunnable.getLocal();
-        ServerLaunchToken launchToken = getLaunchToken(collection);
-        launchToken.writeLaunchToken(() -> {
 
-            FlinkK8SImage flinkK8SImage = getFlinkK8SImage();
+        //  launchToken.writeLaunchToken(() -> {
+
+        FlinkK8SImage flinkK8SImage = getFlinkK8SImage();
 
 //        =new KubernetesApplicationClusterConfig();
 //        k8SClusterManager.k8sImage = "tis_flink_image";
@@ -264,12 +264,12 @@ public class KubernetesApplication extends ClusterType {
 //        k8SClusterManager.svcAccount = "default";
 
 
-            Configuration flinkConfig = getFlinkCfg();
-            flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, TISFlinkCDCStart.class.getName());
+        Configuration flinkConfig = getFlinkCfg();
+        flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, TISFlinkCDCStart.class.getName());
 
 
-            flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, Lists.newArrayList(collection.getName()));
-            flinkConfig.set(DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
+        flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, Lists.newArrayList(collection.getName()));
+        flinkConfig.set(DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
 
 //                ClusterClientFactory<String> kubernetesClusterClientFactory
 //                        = clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
@@ -282,14 +282,14 @@ public class KubernetesApplication extends ClusterType {
 //            KubernetesClusterDescriptor kubernetesClusterDescriptor
 //                    = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
 
-            FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
+        FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
 
 //                ClusterClientProvider<String> clusterProvider
 //                        = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
 //                        , ApplicationConfiguration.fromConfiguration(flinkConfig));
-            JSONObject token = null;//new JSONObject();
-            WatchPodLog watchPodLog = null;
-            try (ClusterClient<String> clusterClient = createClient(flinkConfig, true)) {
+        // = null;//new JSONObject();
+        WatchPodLog watchPodLog = null;
+        try (ClusterClient<String> clusterClient = createClient(flinkConfig, true)) {
 //                    final String entryUrl = clusterClient.getWebInterfaceURL();
 //                    System.out.println(clusterClient.getWebInterfaceURL());
 //                    token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
@@ -299,80 +299,82 @@ public class KubernetesApplication extends ClusterType {
 //            , K8SRCResNameWithFieldSelector targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api
 //                apiClient, NamespacedEventCallCriteria resVer
 
-                AppsV1Api appsV1Api = flinkK8SImage.createAppsV1Api();
-                CoreV1Api coreV1Api = flinkK8SImage.createCoreV1Api();
+            AppsV1Api appsV1Api = flinkK8SImage.createAppsV1Api();
+            CoreV1Api coreV1Api = flinkK8SImage.createCoreV1Api();
 
-                V1Deployment deployment = appsV1Api.readNamespacedDeployment(this.clusterId, flinkK8SImage.namespace)
-                        .pretty(K8SUtils.resultPrettyShow).execute();
-                NamespacedEventCallCriteria evtCallCriteria = null;
-                for (V1ReplicaSet rs : appsV1Api.listNamespacedReplicaSet(flinkK8SImage.namespace)
-                        .pretty(K8SUtils.resultPrettyShow).execute().getItems()) {
-                    for (V1OwnerReference oref : rs.getMetadata().getOwnerReferences()) {
-                        if (StringUtils.equals(oref.getUid(), deployment.getMetadata().getUid())) {
-                            evtCallCriteria = NamespacedEventCallCriteria.createResVersion(rs.getMetadata());
-                        }
+            V1Deployment deployment = appsV1Api.readNamespacedDeployment(this.clusterId, flinkK8SImage.namespace)
+                    .pretty(K8SUtils.resultPrettyShow).execute();
+            NamespacedEventCallCriteria evtCallCriteria = null;
+            for (V1ReplicaSet rs : appsV1Api.listNamespacedReplicaSet(flinkK8SImage.namespace)
+                    .pretty(K8SUtils.resultPrettyShow).execute().getItems()) {
+                for (V1OwnerReference oref : rs.getMetadata().getOwnerReferences()) {
+                    if (StringUtils.equals(oref.getUid(), deployment.getMetadata().getUid())) {
+                        evtCallCriteria = NamespacedEventCallCriteria.createResVersion(rs.getMetadata());
                     }
-                }
-                Objects.requireNonNull(evtCallCriteria, "evtCallCriteria can not be null");
-
-
-                K8SRCResNameWithFieldSelector resSelector
-                        = new K8SRCResNameWithFieldSelector(this.clusterId
-                        , new OwnerJobExec<Object, NamespacedEventCallCriteria>() {
-                    @Override
-                    public NamespacedEventCallCriteria accept(Object powerJobServer) throws Exception {
-                        throw new UnsupportedOperationException();
-                    }
-                });
-                WaitReplicaControllerLaunch controllerLaunch
-                        = K8SUtils.waitReplicaControllerLaunch(flinkK8SImage, resSelector
-                        , deployment.getSpec().getReplicas(), coreV1Api, evtCallCriteria, new ResChangeCallback() {
-                            @Override
-                            public void applyDefaultPodPhase(final Map<String, RunningStatus> relevantPodNames, V1Pod pod) {
-                                relevantPodNames.put(pod.getMetadata().getName(), RunningStatus.SUCCESS);
-                            }
-
-                            @Override
-                            public boolean shallGetExistPods() {
-                                return true;
-                            }
-                        });
-
-
-                watchPodLog = K8SDataXPowerJobServer.watchOneOfPowerJobPodLog(
-                        new K8SController(flinkK8SImage, coreV1Api), controllerLaunch, new PowerJobPodLogListener() {
-                            @Override
-                            protected void consumePodLogMsg(ExecuteState<String> log) {
-                                sse.info(clusterId, TimeFormat.getCurrentTimeStamp(), log.getMsg());
-                            }
-                        });
-
-
-                int tryCount = 0;
-                boolean hasGetJobInfo = false;
-
-                tryGetJob:
-                while (tryCount++ < 5) {
-                    for (JobStatusMessage jobStat : clusterClient.listJobs().get()) {
-                        afterSucce.accept(jobStat.getJobId());
-                        token = createClusterMeta(FlinkClusterType.K8SApplication, clusterClient, flinkK8SImage);
-                        hasGetJobInfo = true;
-                        break tryGetJob;
-                    }
-                    Thread.sleep(3000);
-                }
-
-                if (!hasGetJobInfo) {
-                    throw TisException.create("has not get jobId");
-                }
-
-            } finally {
-                try {
-                    watchPodLog.close();
-                } catch (Throwable e) {
-
                 }
             }
+            Objects.requireNonNull(evtCallCriteria, "evtCallCriteria can not be null");
+
+
+            K8SRCResNameWithFieldSelector resSelector
+                    = new K8SRCResNameWithFieldSelector(this.clusterId
+                    , new OwnerJobExec<Object, NamespacedEventCallCriteria>() {
+                @Override
+                public NamespacedEventCallCriteria accept(Object powerJobServer) throws Exception {
+                    throw new UnsupportedOperationException();
+                }
+            });
+            WaitReplicaControllerLaunch controllerLaunch
+                    = K8SUtils.waitReplicaControllerLaunch(flinkK8SImage, resSelector
+                    , deployment.getSpec().getReplicas(), coreV1Api, evtCallCriteria, new ResChangeCallback() {
+                        @Override
+                        public void applyDefaultPodPhase(final Map<String, RunningStatus> relevantPodNames, V1Pod pod) {
+                            relevantPodNames.put(pod.getMetadata().getName(), RunningStatus.SUCCESS);
+                        }
+
+                        @Override
+                        public boolean shallGetExistPods() {
+                            return true;
+                        }
+                    });
+
+
+            watchPodLog = K8SDataXPowerJobServer.watchOneOfPowerJobPodLog(
+                    new K8SController(flinkK8SImage, coreV1Api), controllerLaunch, new PowerJobPodLogListener() {
+                        @Override
+                        protected void consumePodLogMsg(ExecuteState<String> log) {
+                            sse.info(clusterId, TimeFormat.getCurrentTimeStamp(), log.getMsg());
+                        }
+                    });
+
+
+            int tryCount = 0;
+            boolean hasGetJobInfo = false;
+
+            tryGetJob:
+            while (tryCount++ < 5) {
+                for (JobStatusMessage jobStat : clusterClient.listJobs().get()) {
+                    afterSucce.accept(jobStat.getJobId());
+                    JSONObject token = createClusterMeta(FlinkClusterType.K8SApplication, clusterClient, flinkK8SImage);
+                    token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
+                    this.getLaunchToken(collection).appendJobNote(token);
+                    hasGetJobInfo = true;
+                    break tryGetJob;
+                }
+                Thread.sleep(3000);
+            }
+
+            if (!hasGetJobInfo) {
+                throw TisException.create("has not get jobId");
+            }
+
+        } finally {
+            try {
+                watchPodLog.close();
+            } catch (Throwable e) {
+
+            }
+        }
 
 
 //                token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_ID, clusterId);
@@ -382,13 +384,13 @@ public class KubernetesApplication extends ClusterType {
 //                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_NAMESPACE, flinkK8SImage.getNamespace());
 //                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_BASE_PATH, flinkK8SImage.getK8SCfg().getKubeBasePath());
 //                token.put(FlinkClusterTokenManager.JSON_KEY_K8S_ID, flinkK8SImage.identityValue());
-            token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
-            return Optional.of(token);
-            //  }
-            //finally {
-            // Thread.currentThread().setContextClassLoader(originClassLoader);
-            //  }
-        });
+
+        //  return Optional.of(token);
+        //  }
+        //finally {
+        // Thread.currentThread().setContextClassLoader(originClassLoader);
+        //  }
+        // });
         // launchToken.writeLaunchToken(Optional.of(token));
 
     }
@@ -422,6 +424,10 @@ public class KubernetesApplication extends ClusterType {
             this.registerSelectOptions(KEY_CLUSTER_CFG, () -> allClusterCfgs());
             opts = FlinkPropAssist.createOpts(this);
             BasicFlinkK8SClusterCfg.addClusterIdOption(opts).overwritePlaceholder("tis-flink-cluster");
+        }
+
+        public boolean validateClusterId(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            return FlinkK8SClusterManager.DescriptorImpl.checkClusterId(msgHandler, context, fieldName, value);
         }
 
 

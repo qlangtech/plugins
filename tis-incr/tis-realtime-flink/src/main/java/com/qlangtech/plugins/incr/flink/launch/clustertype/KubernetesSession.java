@@ -21,9 +21,7 @@ package com.qlangtech.plugins.incr.flink.launch.clustertype;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.plugins.incr.flink.cluster.FlinkK8SClusterManager;
-import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
@@ -34,7 +32,6 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.HeteroEnum;
-import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.kubernetes.configuration.KubernetesDeploymentTarget;
 import org.slf4j.Logger;
@@ -48,18 +45,13 @@ import java.util.stream.Collectors;
  **/
 public class KubernetesSession extends AbstractClusterType {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesSession.class);
-//    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.identity, Validator.require})
-//    public String clusterId;
 
-    //    public String getClusterId() {
-//        return clusterId;
-//    }
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String flinkCluster;
 
     @Override
     public FlinkClusterType getClusterType() {
-        return FlinkClusterType.K8SSession;
+        return FlinkClusterType.K8SSessionReference;
     }
 
     @Override
@@ -67,7 +59,6 @@ public class KubernetesSession extends AbstractClusterType {
         FlinkK8SClusterManager sessionCluster = HeteroEnum.getFlinkK8SSessionCluster(flinkCluster);
         return ClusterType.createClusterMeta(getClusterType(), restClient, sessionCluster.getFlinkK8SImage());
     }
-
 
 
     @Override
@@ -93,6 +84,18 @@ public class KubernetesSession extends AbstractClusterType {
         };
     }
 
+    public static class ClusterId implements IdentityName {
+        private final String val;
+
+        public ClusterId(String val) {
+            this.val = val;
+        }
+
+        @Override
+        public String identityValue() {
+            return this.val;
+        }
+    }
 
     @TISExtension
     public static class DftDescriptor extends Descriptor<ClusterType> {
@@ -100,17 +103,12 @@ public class KubernetesSession extends AbstractClusterType {
         public DftDescriptor() {
             super();
             this.registerSelectOptions(KEY_FIELD_FLINK_CLUSTER, () -> {
-                return ServerLaunchToken.createFlinkClusterToken().getAllClusters().stream()
-                        .filter((cluster) -> cluster.clusterType == FlinkClusterType.K8SSession)
-                        .map((cluster) -> new IdentityName() {
-                            @Override
-                            public String identityValue() {
-                                return cluster.getClusterId();
-                            }
-                        }).collect(Collectors.toList());
-
+                return ServerLaunchToken.createFlinkClusterToken()
+                        .getAllFlinkSessionClusters()
+                        .stream().map((c) -> new ClusterId(c.getClusterId())).collect(Collectors.toList());
             });
         }
+
 
         @Override
         public String getDisplayName() {

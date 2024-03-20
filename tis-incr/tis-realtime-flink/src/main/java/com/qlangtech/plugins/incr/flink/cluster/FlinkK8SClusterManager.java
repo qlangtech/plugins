@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.KubernetesApplication;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.RcHpaStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
@@ -62,6 +63,7 @@ import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.client.deployment.ClusterClientFactory;
 import org.apache.flink.client.deployment.ClusterDescriptor;
 import org.apache.flink.client.deployment.ClusterRetrieveException;
@@ -114,7 +116,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
 //    });
 
-
+    public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
     private static K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster;
 
     public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
@@ -238,9 +240,9 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
             // FlinkConfMountDecorator.flinkConfigMapData =
             try {
-                getCreateAccompanyConfigMapResource();
+                getCreateAccompanyConfigMapResource(configuration.getRight());
                 //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
-                final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
+                final KubernetesSessionCli cli = new KubernetesSessionCli(configuration.getLeft(), "./conf");
 
                 process.apply(cli);
 
@@ -280,16 +282,13 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     }
 
 
-    private <T> T classLoaderSetter(Function<Configuration, T> consumer) {
+    private <T> T classLoaderSetter(Function<Pair<Configuration, IK8sContext>, T> consumer) {
         final Thread trd = Thread.currentThread();
         final ClassLoader currentClassLoader = trd.getContextClassLoader();
         try {
             trd.setContextClassLoader(FlinkK8SClusterManager.class.getClassLoader());
 
-
-            final Configuration configuration = createFlinkConfig();
-
-            return consumer.apply(configuration);
+            return consumer.apply(createFlinkConfig());
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -306,7 +305,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                 // clusterClientServiceLoader.getClusterClientFactory(configuration);
 
                 try (final ClusterDescriptor<String> kubernetesClusterDescriptor =
-                             kubernetesClusterClientFactory.createClusterDescriptor(configuration)
+                             kubernetesClusterClientFactory.createClusterDescriptor(configuration.getLeft())
                 ) {
                     ClusterClientProvider<String> clientProvider = kubernetesClusterDescriptor.retrieve(this.clusterId);
                     return clientProvider.getClusterClient();
@@ -411,10 +410,13 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     }
 
 
-    public static void getCreateAccompanyConfigMapResource() throws IOException {
+    public static void getCreateAccompanyConfigMapResource(IK8sContext kubeConf) throws IOException {
         Map<String, ConfigMapData> configMap = Maps.newHashMap();
         addResFromCP(configMap, CONFIG_FILE_LOGBACK_NAME);
         addResFromCP(configMap, CONFIG_FILE_LOG4J_NAME);
+
+        addResFromCP(configMap, CONFIG_FILE_KUBE_CONFIG, kubeConf.getKubeConfigContent());
+
         FlinkConfMountDecorator.flinkConfigMapData = configMap;
 
         //Map<String, ConfigMapData> tisConfMap = Maps.newHashMap();
@@ -440,7 +442,12 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     private static ConfigMapData addResFromCP(Map<String, ConfigMapData> configMap
             , String configFileLogbackName, InputStream input) throws IOException {
-        ConfigMapData cfgMapper = new ConfigMapData(configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
+        return addResFromCP(configMap, configFileLogbackName, IOUtils.toString(input, TisUTF8.get()));
+    }
+
+    private static ConfigMapData addResFromCP(Map<String, ConfigMapData> configMap
+            , String configFileLogbackName, String inputContent) {
+        ConfigMapData cfgMapper = new ConfigMapData(configFileLogbackName, inputContent);
         configMap.put(configFileLogbackName, cfgMapper);
         return cfgMapper;
     }

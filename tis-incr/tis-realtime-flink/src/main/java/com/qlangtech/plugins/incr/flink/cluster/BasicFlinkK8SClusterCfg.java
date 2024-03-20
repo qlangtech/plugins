@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.MemorySize;
@@ -98,13 +99,13 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         return this.getK8SImage();
     }
 
-    public final Configuration createFlinkConfig() throws Exception {
+    public final Pair<Configuration, IK8sContext> createFlinkConfig() throws Exception {
         K8sImage k8SImageCfg = this.getFlinkK8SImage();
         IK8sContext kubeConfig = k8SImageCfg.getK8SCfg();
         FlinkKubeClientFactory.kubeConfig
                 = org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
         final Configuration configuration = ((BasicFlinkCfgDescriptor) this.getDescriptor()).opts.createFlinkCfg(this);
-        return configuration;
+        return Pair.of(configuration, kubeConfig);
     }
 
     public abstract static class BasicFlinkCfgDescriptor extends BasicDescriptor implements IEndTypeGetter {

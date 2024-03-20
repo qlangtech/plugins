@@ -30,6 +30,7 @@ import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
@@ -67,6 +68,7 @@ import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.deployment.ClusterClientFactory;
 import org.apache.flink.client.deployment.ClusterSpecification;
@@ -130,11 +132,11 @@ public class KubernetesApplication extends ClusterType {
     @Override
     public ClusterClient createRestClusterClient() {
 //        if (this._clusterClient == null) {
-        final Configuration flinkConfig = getFlinkCfg();
+        //  final Pair<Configuration, IK8sContext> flinkConfig = ;
 //            this._clusterClient =
 //        }
 
-        return this.createClient(flinkConfig, false);
+        return this.createClient(getFlinkCfg(), false);
     }
 
     @Override
@@ -175,7 +177,7 @@ public class KubernetesApplication extends ClusterType {
     }
 
 
-    protected ClusterClient createClient(Configuration flinkConfig, boolean execDeploy) {
+    protected ClusterClient createClient(Pair<Configuration, IK8sContext> flinkConfig, boolean execDeploy) {
         // File launchTokenParentDir = new File(k8sApplicationCfs.getTargetFile().getFile().getParentFile().getParentFile(), "");
         final ClassLoader originClassLoader = Thread.currentThread().getContextClassLoader();
 
@@ -207,23 +209,23 @@ public class KubernetesApplication extends ClusterType {
             //clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
 
             ClusterSpecification clusterSpecification = kubernetesClusterClientFactory.getClusterSpecification(
-                    flinkConfig);
+                    flinkConfig.getLeft());
 
 //                FlinkKubeClient client
 //                        = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
             KubernetesClusterDescriptor kubernetesClusterDescriptor
-                    = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
+                    = new KubernetesClusterDescriptor(flinkConfig.getKey(), FlinkKubeClientFactory.getInstance());
 
-            FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
+            FlinkK8SClusterManager.getCreateAccompanyConfigMapResource(flinkConfig.getRight());
 
             if (execDeploy) {
                 ClusterClientProvider<String> clusterProvider
                         = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
-                        , ApplicationConfiguration.fromConfiguration(flinkConfig));
+                        , ApplicationConfiguration.fromConfiguration(flinkConfig.getLeft()));
                 return clusterProvider.getClusterClient();
             } else {
                 return kubernetesClusterDescriptor.retrieve(
-                        flinkConfig.getString(KubernetesConfigOptions.CLUSTER_ID)).getClusterClient();
+                        flinkConfig.getLeft().getString(KubernetesConfigOptions.CLUSTER_ID)).getClusterClient();
             }
 
         } catch (Exception e) {
@@ -264,7 +266,8 @@ public class KubernetesApplication extends ClusterType {
 //        k8SClusterManager.svcAccount = "default";
 
 
-        Configuration flinkConfig = getFlinkCfg();
+        Pair<Configuration, IK8sContext> pair = getFlinkCfg();
+        Configuration flinkConfig = pair.getLeft();
         flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, TISFlinkCDCStart.class.getName());
 
 
@@ -282,14 +285,14 @@ public class KubernetesApplication extends ClusterType {
 //            KubernetesClusterDescriptor kubernetesClusterDescriptor
 //                    = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
 
-        FlinkK8SClusterManager.getCreateAccompanyConfigMapResource();
+      //  FlinkK8SClusterManager.getCreateAccompanyConfigMapResource(pair.getRight());
 
 //                ClusterClientProvider<String> clusterProvider
 //                        = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
 //                        , ApplicationConfiguration.fromConfiguration(flinkConfig));
         // = null;//new JSONObject();
         WatchPodLog watchPodLog = null;
-        try (ClusterClient<String> clusterClient = createClient(flinkConfig, true)) {
+        try (ClusterClient<String> clusterClient = createClient(pair, true)) {
 //                    final String entryUrl = clusterClient.getWebInterfaceURL();
 //                    System.out.println(clusterClient.getWebInterfaceURL());
 //                    token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
@@ -396,12 +399,17 @@ public class KubernetesApplication extends ClusterType {
     }
 
 
-    private Configuration getFlinkCfg() {
+    private Pair<Configuration, IK8sContext> getFlinkCfg() {
         try {
             KubernetesApplicationClusterConfig k8SClusterManager = getK8SClusterCfg();
-            Configuration flinkConfig
+            Pair<Configuration, IK8sContext> flinkConfig
                     = Objects.requireNonNull(k8SClusterManager, "k8SClusterManager can not be null").createFlinkConfig();
-            flinkConfig.set(KubernetesConfigOptions.CLUSTER_ID, this.clusterId);
+
+            Configuration cfg = flinkConfig.getLeft();
+            cfg.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
+                    , cfg.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
+                            + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
+            cfg.set(KubernetesConfigOptions.CLUSTER_ID, this.clusterId);
             return flinkConfig;
         } catch (Exception e) {
             throw new RuntimeException(e);

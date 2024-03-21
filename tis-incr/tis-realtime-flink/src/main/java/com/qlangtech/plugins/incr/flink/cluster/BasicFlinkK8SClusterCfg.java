@@ -46,6 +46,7 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 
+import java.io.File;
 import java.util.Optional;
 
 /**
@@ -105,6 +106,11 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         FlinkKubeClientFactory.kubeConfig
                 = org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
         final Configuration configuration = ((BasicFlinkCfgDescriptor) this.getDescriptor()).opts.createFlinkCfg(this);
+
+        configuration.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
+                , configuration.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
+                        + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
+
         return Pair.of(configuration, kubeConfig);
     }
 

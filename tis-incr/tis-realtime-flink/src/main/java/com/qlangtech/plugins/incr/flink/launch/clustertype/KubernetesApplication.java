@@ -285,7 +285,7 @@ public class KubernetesApplication extends ClusterType {
 //            KubernetesClusterDescriptor kubernetesClusterDescriptor
 //                    = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
 
-      //  FlinkK8SClusterManager.getCreateAccompanyConfigMapResource(pair.getRight());
+        //  FlinkK8SClusterManager.getCreateAccompanyConfigMapResource(pair.getRight());
 
 //                ClusterClientProvider<String> clusterProvider
 //                        = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
@@ -406,9 +406,9 @@ public class KubernetesApplication extends ClusterType {
                     = Objects.requireNonNull(k8SClusterManager, "k8SClusterManager can not be null").createFlinkConfig();
 
             Configuration cfg = flinkConfig.getLeft();
-            cfg.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
-                    , cfg.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
-                            + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
+//            cfg.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
+//                    , cfg.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
+//                            + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
             cfg.set(KubernetesConfigOptions.CLUSTER_ID, this.clusterId);
             return flinkConfig;
         } catch (Exception e) {

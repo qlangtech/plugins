@@ -27,6 +27,8 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
+import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.lang.TisException.ErrorCode;
 import com.qlangtech.tis.manage.common.TisUTF8;
@@ -40,6 +42,8 @@ import org.apache.flink.runtime.client.JobStatusMessage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -69,7 +73,9 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
                 Collection<JobStatusMessage> jobStatus = status.get();
             }
         } catch (Throwable e) {
-            throw TisException.create(ErrorCode.FLINK_CLUSTER_LOSS_OF_CONTACT, ExceptionUtils.getRootCauseMessage(e), e);
+            throw TisException.create(
+                    ErrorValue.create(ErrorCode.FLINK_INSTANCE_LOSS_OF_CONTACT, IFullBuildContext.KEY_APP_NAME, collection.getName())
+                    , ExceptionUtils.getRootCauseMessage(e), e);
         }
     }
 
@@ -83,10 +89,19 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
 
     public static JSONObject createClusterMeta(
             FlinkClusterType clusterType, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
+        return createClusterMeta(clusterType, Optional.empty(), clusterClient, flinkK8SImage);
+    }
+
+
+    public static JSONObject createClusterMeta(
+            FlinkClusterType clusterType, Optional<String> entryUrl, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
         JSONObject token = new JSONObject();
-        final String entryUrl = clusterClient.getWebInterfaceURL();
+        // final String entryUrl = clusterClient.getWebInterfaceURL();
         // System.out.println(clusterClient.getWebInterfaceURL());
-        token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
+        token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL
+                , Objects.requireNonNull(entryUrl, "entryUrl can not be null")
+                        .orElse(clusterClient.getWebInterfaceURL()));
+
         token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_ID, clusterClient.getClusterId());
         // token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
         token.put(FlinkClusterTokenManager.JSON_KEY_CLUSTER_TYPE, clusterType.getToken());

@@ -43,8 +43,11 @@ import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
+import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.lang.TisException.ErrorCode;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -78,6 +81,7 @@ import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerSpec;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,11 +155,20 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 //        }
 //    }
 
+    private static class ServiceResAndOwnerGetter {
+        Pair<ServiceResName, TargetResName> get() {
+            return Pair.of(K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, K8S_DATAX_POWERJOB_SERVER);
+        }
+    }
+
+    private static final ServiceResAndOwnerGetter powerJobServiceResAndOwnerGetter = new ServiceResAndOwnerGetter();
 
     public static final ServiceResNameWithFieldSelector K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
             = new ServiceResNameWithFieldSelector("powerjob-server-nodeport", (powerJobServer) -> {
-        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace(), (powerJobServer.getK8SApi()), powerJobServerPort);
+        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace()
+                , (powerJobServer.getK8SApi()), powerJobServerPort, powerJobServiceResAndOwnerGetter.get(), Optional.empty());
     });
+
 
     //"metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName()
     public static class ServiceResNameWithFieldSelector extends ServiceResName<K8SDataXPowerJobServer> {
@@ -244,7 +257,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public String getPowerJobMasterGateway() {
         final String linkHost = this.serverPortExport
-                .getPowerjobClusterHost(this.getK8SApi(), this.getImage().getNamespace());
+                .getPowerjobClusterHost(this.getK8SApi(), this.getImage().getNamespace(), powerJobServiceResAndOwnerGetter.get());
         return linkHost;
     }
 
@@ -268,7 +281,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
             powerJobClient = TISPowerJobClient.create(
-                    this.serverPortExport.getPowerjobClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace())
+                    this.serverPortExport.getPowerjobClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get())
                     , this.appName, this.password);
         }
         return powerJobClient;
@@ -278,7 +291,9 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public Map<String, Object> getPayloadInfo() {
         Map<String, Object> payloads = Maps.newHashMap();
         // http://192.168.64.3:31000/#/welcome
-        payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobExternalHost(this.getK8SApi(), this.getK8SImage().getNamespace()) + "/#/welcome");
+        payloads.put(CLUSTER_ENTRYPOINT_HOST
+                , "http://" + this.serverPortExport.getPowerjobExternalHost(
+                        this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
         return payloads;
     }
 
@@ -370,16 +385,6 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                                         }
                                         sse.writeComplete(new TargetResName(podName + (kill ? '-' : '+')), true);
                                     }
-
-//                                case FailedScheduling:
-//                                case FAILD:
-//                                    sse.writeComplete(new TargetResName(podName), false);
-//                                    break;
-//                                case LAUNCHED:
-//                                    kill = false;
-//                                case KILL:
-//                                    sse.writeComplete(new TargetResName(podName + (kill ? '-' : '+')), true);
-
                             }
                         }
 
@@ -537,7 +542,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     @Override
     public void relaunch() {
-        getK8SController().relaunch(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
+        getK8SController().relaunch(TargetResName.K8S_DATAX_INSTANCE_NAME);
     }
 
     @Override
@@ -556,7 +561,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         K8SController k8SController = getK8SController();
         RcDeployment powerjobServer = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_SERVER);
         if (powerjobServer == null) {
-            throw TisException.create("the powerJob has been loss of communication");
+            // throw TisException.create("the powerJob has been loss of communication");
+            throw TisException.create(
+                    ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
+                            , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
+                    , "the powerJob has been loss of communication");
         }
         powerjobServer.setReplicaScalable(false);
 
@@ -578,7 +587,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     @Override
     public WatchPodLog listPodAndWatchLog(String podName, ILogListener listener) {
-        return getK8SController().listPodAndWatchLog(DataXJobWorker.K8S_DATAX_INSTANCE_NAME, podName, listener);
+        return getK8SController().listPodAndWatchLog(TargetResName.K8S_DATAX_INSTANCE_NAME, podName, listener);
     }
 
     @Override
@@ -949,7 +958,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         objectReference = new V1CrossVersionObjectReference();
         objectReference.setApiVersion(K8SUtils.REPLICATION_CONTROLLER_VERSION);
         objectReference.setKind("ReplicationController");
-        objectReference.setName(DataXJobWorker.K8S_DATAX_INSTANCE_NAME.getK8SResName());
+        objectReference.setName(TargetResName.K8S_DATAX_INSTANCE_NAME.getK8SResName());
         spec.setScaleTargetRef(objectReference);
 
 //        V1MetricSpec monitorResource = new V1MetricSpec();
@@ -984,7 +993,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     }
 
     private String getHpaName() {
-        return DataXJobWorker.K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
+        return TargetResName.K8S_DATAX_INSTANCE_NAME.getK8SResName() + "-hpa";
     }
 
 
@@ -1028,7 +1037,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
         @Override
         protected TargetResName getWorkerType() {
-            return DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
+            return TargetResName.K8S_DATAX_INSTANCE_NAME;
         }
 
         @Override

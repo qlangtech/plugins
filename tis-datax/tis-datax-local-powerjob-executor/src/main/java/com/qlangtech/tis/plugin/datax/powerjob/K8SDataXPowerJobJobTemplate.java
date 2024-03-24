@@ -132,7 +132,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
 
         @Override
         protected TargetResName getWorkerType() {
-            return K8S_DATAX_INSTANCE_NAME;
+            return TargetResName.K8S_DATAX_INSTANCE_NAME;
         }
     }
 }

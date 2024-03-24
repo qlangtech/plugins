@@ -1,14 +1,20 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.Ingress;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.V1ServicePort;
@@ -17,19 +23,30 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
-
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/12/18
+ * @see Ingress
+ * @see LoadBalance
+ * @see NodePort
  */
 public abstract class ServerPortExport implements Describable<ServerPortExport> {
 
+    /**
+     * 容器端口
+     */
     @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer serverPort;
+
+    /**
+     * 服务向外暴露的端口
+     *
+     * @return
+     */
+    protected abstract Integer getExportPort();
 
     private transient String clusterIP;
 
@@ -39,20 +56,21 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
     @FormField(ordinal = 1, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean usingClusterIP;
 
-    public static String getHost(CoreV1Api api, String nameSpace, ServiceType serviceType, boolean clusterIP) {
+    public static String getHost(CoreV1Api api, String nameSpace, ServiceType serviceType, ServiceResName svcRes, boolean clusterIP) {
         String resultHost = null;
         V1ServiceList svcList = null;
         try {
+
 //            svcList = Objects.requireNonNull(api, "coreApi can not be null")
-//                    .listNamespacedService(nameSpace, K8SUtils.resultPrettyShow, null, null
-//                            , "metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName()
-//                            , null//"app=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
-//                            , null, null, null, null);
+//                    .listNamespacedService(nameSpace)
+//                    .pretty(K8SUtils.resultPrettyShow)
+//                    .fieldSelector("metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName())
+//                    .execute();
 
             svcList = Objects.requireNonNull(api, "coreApi can not be null")
                     .listNamespacedService(nameSpace)
                     .pretty(K8SUtils.resultPrettyShow)
-                    .fieldSelector("metadata.name=" + K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.getName())
+                    .fieldSelector("metadata.name=" + svcRes.getName())
                     .execute();
 
             for (V1Service svc : svcList.getItems()) {
@@ -71,23 +89,36 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 
     }
 
-    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
+    /**
+     * @param nameSpace
+     * @param api
+     * @param targetPortName
+     * @param serviceResAndOwner example:Pair.of(K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, K8S_DATAX_POWERJOB_SERVER)
+     * @throws ApiException
+     */
+    public void exportPort(String nameSpace, CoreV1Api api
+            , String targetPortName, Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
         this.clusterIP = null;
     }
 
     protected ServiceResName createService(String nameSpace, CoreV1Api api //
-            , String targetPortName, ServerPortExport portExport
-            , Function<V1ServiceSpec, V1ServicePort> specCreator) throws ApiException {
+            , String targetPortName
+            , Function<V1ServiceSpec, V1ServicePort> specCreator
+            , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
 
         V1ServiceSpec svcSpec = new V1ServiceSpec();
         svcSpec.setType(this.getServiceType().token);
         V1ServicePort servicePort = specCreator.apply(svcSpec);
-
+        final IntOrString containerPort = new IntOrString(this.serverPort);
+        //  Optional<V1OwnerReference> ownerRef = Optional.empty();
         return K8SUtils.createService(api, nameSpace
-                , K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
-                , K8S_DATAX_POWERJOB_SERVER, portExport.serverPort, targetPortName, svcSpec, servicePort);
+                , Objects.requireNonNull(serviceResAndOwner, "serviceResAndOwner can not be null").getKey()
+                , serviceResAndOwner.getRight(), this.getExportPort(), targetPortName, containerPort, ownerRef, svcSpec, servicePort);
     }
 
+//    protected Pair<ServiceResName, TargetResName> getServiceResAndOwner() {
+//        return Pair.of(K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, K8S_DATAX_POWERJOB_SERVER);
+//    }
 
     /**
      * 内部集群可用host地址
@@ -96,13 +127,15 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      * @param nameSpace
      * @return
      */
-    public final String getPowerjobClusterHost(CoreV1Api api, String nameSpace) {
+    public final String getPowerjobClusterHost(
+            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
 
         if (!this.usingClusterIP) {
-            return getPowerjobExternalHost(api, nameSpace);
+            return getPowerjobExternalHost(api, nameSpace, serviceResAndOwner);
         }
         if (clusterIP == null) {
-            this.clusterIP = getHost(api, nameSpace, getServiceType(), true);
+            //Pair<ServiceResName, TargetResName> serviceResAndOwner = getServiceResAndOwner();
+            this.clusterIP = getHost(api, nameSpace, getServiceType(), serviceResAndOwner.getKey(), true);
         }
         return this.clusterIP + ":" + Objects.requireNonNull(serverPort, "serverPort  can not be null");
     }
@@ -120,5 +153,6 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      * @return
      */
     //  public abstract String getPowerjobHost();
-    public abstract String getPowerjobExternalHost(CoreV1Api api, String nameSpace);
+    public abstract String getPowerjobExternalHost(
+            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner);
 }

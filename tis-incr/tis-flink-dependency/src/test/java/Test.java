@@ -16,11 +16,6 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.TIS;
-
-import java.net.URL;
-import java.util.Enumeration;
-
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-22 15:14
@@ -36,15 +31,20 @@ public class Test {
 //            System.out.println(resources.nextElement());
 //        }
 
-
-
-        Enumeration<URL> resources
-                =  TIS.get().getPluginManager().uberClassLoader.getResources("com/esotericsoftware/kryo/Serializer.class");
-        while (resources.hasMoreElements()) {
-            System.out.println(resources.nextElement());
-        }
-
-
+//        new Xxxxx().xxx();
+//
+//        Enumeration<URL> resources
+//                = TIS.get().getPluginManager().uberClassLoader.getResources("com/esotericsoftware/kryo/Serializer.class");
+//        while (resources.hasMoreElements()) {
+//            System.out.println(resources.nextElement());
+//        }
 
     }
+
+//    private static class Xxxxx {
+//
+//        private void xxx() {
+//            System.out.println("============" + MethodHandles.lookup().in());
+//        }
+//    }
 }

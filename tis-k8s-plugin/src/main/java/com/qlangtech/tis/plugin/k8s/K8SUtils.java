@@ -132,6 +132,25 @@ public class K8SUtils {
     public static ServiceResName createService(final CoreV1Api api, String namespace //
             , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName
             , V1ServiceSpec svcSpec, V1ServicePort svcPort) throws ApiException {
+        return createService(api, namespace, svcRes, selector, exportPort, targetPortName, new IntOrString(targetPortName), Optional.empty(), svcSpec, svcPort);
+    }
+
+    /**
+     * @param api
+     * @param namespace
+     * @param svcRes
+     * @param selector
+     * @param exportPort     服务对于外暴露端口
+     * @param targetPortName
+     * @param targetPort     容器端口
+     * @param svcSpec
+     * @param svcPort
+     * @return
+     * @throws ApiException
+     */
+    public static ServiceResName createService(final CoreV1Api api, String namespace //
+            , ServiceResName svcRes, TargetResName selector, Integer exportPort, String targetPortName, IntOrString targetPort
+            , Optional<V1OwnerReference> ownerRef, V1ServiceSpec svcSpec, V1ServicePort svcPort) throws ApiException {
         // SSERunnable sse = SSERunnable.getLocal();
         // boolean success = false;
         Objects.requireNonNull(svcSpec, "param svcSpec can not be null");
@@ -146,8 +165,8 @@ public class K8SUtils {
             V1ObjectMeta meta = new V1ObjectMeta();
             meta.setName(svcRes.getName());
 
-            V1OwnerReference ownerRef = createOwnerReference();
-            List<V1OwnerReference> ownerRefs = Collections.singletonList(ownerRef);
+            // V1OwnerReference ownerRef = createOwnerReference();
+            List<V1OwnerReference> ownerRefs = Collections.singletonList(ownerRef.orElseGet(() -> createOwnerReference()));
             meta.setOwnerReferences(ownerRefs);
             svcBody.setMetadata(meta);
 
@@ -157,7 +176,7 @@ public class K8SUtils {
 
             // V1ServicePort svcPort = specCreator.get().getRight();// new V1ServicePort();
             svcPort.setName(targetPortName);
-            svcPort.setTargetPort(new IntOrString(targetPortName));
+            svcPort.setTargetPort(targetPort);
             svcPort.setPort(exportPort);
             svcPort.setProtocol("TCP");
             svcSpec.setPorts(Lists.newArrayList(svcPort));
@@ -192,6 +211,8 @@ public class K8SUtils {
         ownerRef.setName(ownerName);
         ownerRef.setApiVersion(REPLICATION_CONTROLLER_VERSION);
         ownerRef.setKind(REPLICATION_CONTROLLER_KIND);
+        ownerRef.setController(true);
+        ownerRef.setBlockOwnerDeletion(true);
         return ownerRef;
     }
 
@@ -637,7 +658,7 @@ public class K8SUtils {
 
     public static K8SDataXPowerJobWorker getK8SDataXPowerJobWorker() {
         return (K8SDataXPowerJobWorker)
-                DataXJobWorker.getJobWorker(DataXJobWorker.K8S_DATAX_INSTANCE_NAME
+                DataXJobWorker.getJobWorker(TargetResName.K8S_DATAX_INSTANCE_NAME
                         , Optional.of(DataXJobWorker.K8SWorkerCptType.Worker));
     }
 

@@ -31,6 +31,7 @@ import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.FlinkClusterPojo;
+import com.qlangtech.tis.datax.job.FlinkSessionResName;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.JobResName;
 import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
@@ -38,13 +39,18 @@ import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterTokenManager;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
+import com.qlangtech.tis.lang.ErrorValue;
+import com.qlangtech.tis.lang.TisException.ErrorCode;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SRCResName;
@@ -61,6 +67,8 @@ import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentStatus;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
+import io.kubernetes.client.openapi.models.V1Service;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,6 +80,7 @@ import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.kubernetes.KubernetesClusterClientFactory;
 import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
+import org.apache.flink.kubernetes.kubeclient.decorators.ExternalServiceDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator.ConfigMapData;
 import org.slf4j.Logger;
@@ -116,7 +125,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
 //    });
 
-    public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
+    //  public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
     private static K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster;
 
     public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
@@ -179,24 +188,62 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
         if (launchFlinkCluster == null) {
             launchFlinkCluster = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
-                    , new OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria>() {
-                @Override
-                public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
-                    JSONObject[] clusterMeta = new JSONObject[1];
-                    flinkManager.processFlinkCluster((cli) -> {
-                        cli.run(new String[]{}, (clusterClient) -> {
-                            clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
-                        });
-                        SSERunnable.getLocal().run();
-                    });
-                    SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
-                    return null;
-                }
-            });
+                    , new CreateFlinkSessionJobExec());
         }
 
 
         return Lists.newArrayList(new ExecuteStep(launchFlinkCluster, "launch Flink Cluster"));
+    }
+
+    private static class CreateFlinkSessionJobExec implements OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria> {
+        @Override
+        public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
+            JSONObject[] clusterMeta = new JSONObject[1];
+            final String clusterId = flinkManager.clusterId;
+            final CoreV1Api coreApi = new CoreV1Api(flinkManager.getK8SApi());
+            final ServerPortExport serverPortExport = flinkManager.serverPortExport;
+            flinkManager.processFlinkCluster((cli) -> {
+                cli.run(new String[]{}, (clusterClient, externalService) -> {
+
+                    if (!externalService.isPresent()) {
+                        /**
+                         * 创建TIS配套的额外的服务
+                         */
+                        String targetPortName = ExternalServiceDecorator.getExternalServiceName(clusterId + "-tis");
+
+                        Pair<ServiceResName, TargetResName> serviceResAndOwner
+                                = Pair.of(new ServiceResName(targetPortName, null), new TargetResName(clusterId));
+
+                        try {
+
+                            V1Service svc
+                                    = coreApi.readNamespacedService(
+                                    ExternalServiceDecorator.getExternalServiceName(clusterId)
+                                    , flinkManager.getK8SImage().getNamespace())
+                                    .pretty(K8SUtils.resultPrettyShow).execute();
+                            V1OwnerReference ownerReference = null;
+                            for (V1OwnerReference ref : svc.getMetadata().getOwnerReferences()) {
+                                ownerReference = ref;
+                            }
+                            Objects.requireNonNull(ownerReference, "ownerReference can not be null");
+                            serverPortExport.exportPort(flinkManager.getK8SImage().getNamespace()
+                                    , coreApi, targetPortName, serviceResAndOwner, Optional.of(ownerReference));
+                        } catch (ApiException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
+                                , Optional.of("http://" + serverPortExport.getPowerjobClusterHost(
+                                        coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
+                                , clusterClient, flinkManager.getK8SImage());
+                        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+                    }
+
+                });
+                SSERunnable.getLocal().run();
+            });
+            return null;
+        }
     }
 
     @Override
@@ -374,7 +421,11 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
             K8SController.fillCreateTimestamp(deployment, deploy.getMetadata());
             K8SController.fillPods(coreApi, k8sImage, deployment, new TargetResName(this.clusterId));
         } catch (ApiException e) {
-            throw K8sExceptionUtils.convert(this.clusterId, e);
+
+            ErrorValue ev = ErrorValue.create(ErrorCode.FLINK_SESSION_CLUSTER_LOSS_OF_CONTACT
+                    , IFullBuildContext.KEY_TARGET_NAME, FlinkSessionResName.group().getName() + "/" + this.clusterId);
+
+            throw K8sExceptionUtils.convert(ev, this.clusterId, e);
         }
 
         return Collections.singletonList(deployment);
@@ -415,7 +466,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         addResFromCP(configMap, CONFIG_FILE_LOGBACK_NAME);
         addResFromCP(configMap, CONFIG_FILE_LOG4J_NAME);
 
-        addResFromCP(configMap, CONFIG_FILE_KUBE_CONFIG, kubeConf.getKubeConfigContent());
+//        addResFromCP(configMap, CONFIG_FILE_KUBE_CONFIG, kubeConf.getKubeConfigContent());
 
         FlinkConfMountDecorator.flinkConfigMapData = configMap;
 

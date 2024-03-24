@@ -2,6 +2,8 @@ package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.gson.reflect.TypeToken;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -16,6 +18,7 @@ import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
@@ -28,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -47,9 +51,13 @@ public class NodePort extends ServerPortExport {
     @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.hostWithoutPort})
     public String host;
 
+    @Override
+    protected Integer getExportPort() {
+        return this.nodePort;
+    }
 
     @Override
-    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
+    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
         if (StringUtils.isEmpty(this.host)) {
             throw new IllegalStateException("prop host can not be empty");
         }
@@ -57,13 +65,14 @@ public class NodePort extends ServerPortExport {
     }
 
     @Override
-    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-        super.exportPort(nameSpace, api, targetPortName);
-        createService(nameSpace, api, targetPortName, this, (spec) -> {
+    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName
+            , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
+        super.exportPort(nameSpace, api, targetPortName, serviceResAndOwner, ownerRef);
+        createService(nameSpace, api, targetPortName, (spec) -> {
             V1ServicePort servicePort = new V1ServicePort();
             servicePort.setNodePort(Objects.requireNonNull(this.nodePort, "nodePort can not be null"));
             return servicePort;
-        });
+        }, serviceResAndOwner, ownerRef);
     }
 
     @Override

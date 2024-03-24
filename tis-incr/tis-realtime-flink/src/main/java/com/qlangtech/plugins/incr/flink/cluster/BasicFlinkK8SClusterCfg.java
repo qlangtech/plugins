@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.IPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -42,11 +43,12 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
 import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.MemorySize.MemoryUnit;
+import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
+import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.ServiceExposedType;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
 
-import java.io.File;
 import java.util.Optional;
 
 /**
@@ -54,6 +56,9 @@ import java.util.Optional;
  * @create: 2024-01-13 08:34
  **/
 public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
+
+    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
+    public ServerPortExport serverPortExport;
 
     @FormField(ordinal = 4, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public Integer jmMemory;
@@ -71,8 +76,10 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
     @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String svcAccount;
 
-    @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
-    public String svcExposedType;
+    // @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
+    // 固定暴露的就用ClusterIP类型，其他向用户暴露的入口，再由
+    // public final String svcExposedType = ServiceExposedType.ClusterIP.name();
+
 
     public static ImageCategory k8sImage() {
         return ImageCategory.DEFAULT_FLINK_DESC_NAME;
@@ -106,10 +113,12 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         FlinkKubeClientFactory.kubeConfig
                 = org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.client.Config.fromKubeconfig(kubeConfig.getKubeConfigContent());
         final Configuration configuration = ((BasicFlinkCfgDescriptor) this.getDescriptor()).opts.createFlinkCfg(this);
-
-        configuration.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
-                , configuration.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
-                        + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
+        configuration.set(KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE, ServiceExposedType.ClusterIP);
+        configuration.set(RestOptions.BIND_PORT, String.valueOf(serverPortExport.serverPort));
+        configuration.set(RestOptions.PORT, (serverPortExport.serverPort));
+//        configuration.set(KubernetesConfigOptions.KUBE_CONFIG_FILE
+//                , configuration.getString(KubernetesConfigOptions.FLINK_CONF_DIR)
+//                        + File.separator + FlinkK8SClusterManager.CONFIG_FILE_KUBE_CONFIG);
 
         return Pair.of(configuration, kubeConfig);
     }
@@ -162,7 +171,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
 
             opts.add("taskSlot", TISFlinkProp.create(TaskManagerOptions.NUM_TASK_SLOTS));
             opts.add("svcAccount", TISFlinkProp.create(KubernetesConfigOptions.KUBERNETES_SERVICE_ACCOUNT));
-            opts.add("svcExposedType", TISFlinkProp.create(KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE));
+            // opts.add("svcExposedType", TISFlinkProp.create(KubernetesConfigOptions.REST_SERVICE_EXPOSED_TYPE));
 
         }
 

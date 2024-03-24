@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -39,11 +40,14 @@ import io.kubernetes.client.openapi.models.V1IngressRule;
 import io.kubernetes.client.openapi.models.V1IngressServiceBackend;
 import io.kubernetes.client.openapi.models.V1IngressSpec;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1ServiceBackendPort;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -58,14 +62,20 @@ public class Ingress extends ServerPortExport {
     public String path;
 
     @Override
-    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-        super.exportPort(nameSpace, api, targetPortName);
-        final ServiceResName svc = createService(nameSpace, api, targetPortName, this, (spec) -> {
+    protected Integer getExportPort() {
+        return this.serverPort;
+    }
+
+    @Override
+    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName
+            , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
+        super.exportPort(nameSpace, api, targetPortName, serviceResAndOwner, ownerRef);
+        final ServiceResName svc = createService(nameSpace, api, targetPortName, (spec) -> {
 //            V1ServiceSpec svcSpec = new V1ServiceSpec();
 //            svcSpec.setType(ServiceType.ClusterIP.token);
             //svcSpec.setType("LoadBalancer");
             return new V1ServicePort();
-        });
+        }, serviceResAndOwner, ownerRef);
 
         // api.createnamespacedIn
         NetworkingV1Api extendApi = new NetworkingV1Api(api.getApiClient());
@@ -75,7 +85,7 @@ public class Ingress extends ServerPortExport {
         V1ObjectMeta metadata = new V1ObjectMeta();
         metadata.setName(svc.getName() + "-ingress");
 
-        metadata.setOwnerReferences(Lists.newArrayList(K8SUtils.createOwnerReference()));
+        metadata.setOwnerReferences(Lists.newArrayList(ownerRef.orElseGet(() -> K8SUtils.createOwnerReference())));
         ingressBody.setMetadata(metadata);
 
         V1IngressSpec spec = new V1IngressSpec();
@@ -126,7 +136,7 @@ public class Ingress extends ServerPortExport {
     }
 
     @Override
-    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
+    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
         return this.host + ("/".equals(this.path) ? StringUtils.EMPTY : this.path);
     }
 

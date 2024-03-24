@@ -180,7 +180,7 @@ public class K8SDataXPowerJobUsingExistCluster extends BasicPowerjobWorker imple
 
         @Override
         protected TargetResName getWorkerType() {
-            return K8S_DATAX_INSTANCE_NAME;
+            return TargetResName.K8S_DATAX_INSTANCE_NAME;
         }
 
         @Override

@@ -9,6 +9,7 @@ import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -76,7 +77,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import static com.qlangtech.tis.datax.job.DataXJobWorker.K8S_DATAX_INSTANCE_NAME;
+
 import static com.qlangtech.tis.fullbuild.IFullBuildContext.KEY_WORKFLOW_ID;
 import static com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit.KEY_START_INITIALIZE_SUFFIX;
 import static com.qlangtech.tis.plugin.datax.DistributedPowerJobDataXJobSubmit.createWorkflowNode;
@@ -473,7 +474,7 @@ public abstract class PowerWorkflowPayload {
         innerSaveJob(selectedTabTriggers, unEffectiveOpt, jobTpl.orElseGet(() -> {
             // 为空,调用全局模版
             return (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(
-                    K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
+                    TargetResName.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
         }), statusRpc);
     }
 

@@ -19,20 +19,24 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
-import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberRange;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -42,12 +46,18 @@ public class LoadBalance extends ServerPortExport {
     private transient String host;
 
     @Override
-    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName) throws ApiException {
-        super.exportPort(nameSpace, api, targetPortName);
-        createService(nameSpace, api, targetPortName, this, (spec) -> {
+    protected Integer getExportPort() {
+        return this.serverPort;
+    }
+
+    @Override
+    public void exportPort(String nameSpace, CoreV1Api api, String targetPortName
+            , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
+        super.exportPort(nameSpace, api, targetPortName, serviceResAndOwner, ownerRef);
+        createService(nameSpace, api, targetPortName, (spec) -> {
             V1ServicePort servicePort = new V1ServicePort();
             return servicePort;
-        });
+        }, serviceResAndOwner, ownerRef);
         this.host = null;
 
     }
@@ -60,14 +70,15 @@ public class LoadBalance extends ServerPortExport {
 
 
     @Override
-    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace) {
+    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
 
         if (StringUtils.isEmpty(this.host)) {
             // K8SUtils.resultPrettyShow
 //            String namespace, String pretty, Boolean allowWatchBookmarks, String _continue
 //                    , String fieldSelector, String labelSelector, Integer limit
 //                    , String resourceVersion, Integer timeoutSeconds, Boolean watch
-            this.host = getHost(api, nameSpace, ServiceType.LoadBalancer, false);
+            // Pair<ServiceResName, TargetResName> serviceResAndOwner = getServiceResAndOwner();
+            this.host = getHost(api, nameSpace, getServiceType(), serviceResAndOwner.getKey(), false);
 
         }
 

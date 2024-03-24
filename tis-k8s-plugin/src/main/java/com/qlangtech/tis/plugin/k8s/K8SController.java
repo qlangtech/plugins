@@ -242,14 +242,16 @@ public class K8SController implements IRCController {
         }
         //String name, String namespace, String pretty, V1DeleteOptions body, String dryRun, Integer gracePeriodSeconds, Boolean orphanDependents, String propagationPolicy
         //https://raw.githubusercontent.com/kubernetes-client/java/master/kubernetes/docs/CoreV1Api.md
-        V1DeleteOptions body = new V1DeleteOptions();
-        body.setOrphanDependents(true);
+//        V1DeleteOptions body = new V1DeleteOptions();
+//        body.setPropagationPolicy("Foreground");
         // Boolean orphanDependents = true;
         try {
             // this.api.deleteNamespacedReplicationControllerCall()
             // Call call =
             this.api.deleteNamespacedReplicationController(
-                    indexName.getK8SResName(), this.config.getNamespace()).pretty(K8SUtils.resultPrettyShow).execute();
+                    indexName.getK8SResName(), this.config.getNamespace())
+                    .propagationPolicy("Foreground")
+                    .pretty(K8SUtils.resultPrettyShow).execute();
             // client.execute(call, null);
 
             // 再把pod删除

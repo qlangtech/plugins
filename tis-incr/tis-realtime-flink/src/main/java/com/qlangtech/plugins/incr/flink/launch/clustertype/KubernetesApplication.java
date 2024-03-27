@@ -431,7 +431,7 @@ public class KubernetesApplication extends ClusterType {
             super();
             this.registerSelectOptions(KEY_CLUSTER_CFG, () -> allClusterCfgs());
             opts = FlinkPropAssist.createOpts(this);
-            BasicFlinkK8SClusterCfg.addClusterIdOption(opts).overwritePlaceholder("tis-flink-cluster");
+            BasicFlinkK8SClusterCfg.addClusterIdOption(opts);//.overwritePlaceholder();
         }
 
         public boolean validateClusterId(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

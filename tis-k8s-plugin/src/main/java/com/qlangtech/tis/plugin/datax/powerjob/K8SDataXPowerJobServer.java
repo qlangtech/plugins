@@ -52,6 +52,7 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport.DefaultExportPortProvider;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
@@ -108,6 +109,8 @@ import java.util.regex.Pattern;
 @Public
 public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJob, ILaunchingOrchestrate {
 
+
+    public static final Integer DEFAULT_POWERJOB_SERVER_PORT = 7700;
 
     static final String powerJobServerPort = "pj-server-port";
 
@@ -1001,10 +1004,16 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public static final Pattern zk_path_pattern = Pattern.compile("(/[\\da-z]{1,})+");
 
     @TISExtension()
-    public static class DescriptorImpl extends DataXJobWorker.BasicDescriptor implements IEndTypeGetter {
+    public static class DescriptorImpl extends DataXJobWorker.BasicDescriptor implements IEndTypeGetter, DefaultExportPortProvider {
 
         public DescriptorImpl() {
             super();
+            //  this.addFieldDescriptor("serverPortExport.serverPort", 7700, null);
+        }
+
+        @Override
+        public Integer get() {
+            return DEFAULT_POWERJOB_SERVER_PORT;
         }
 
         @Override

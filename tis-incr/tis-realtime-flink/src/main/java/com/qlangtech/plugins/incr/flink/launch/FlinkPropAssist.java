@@ -161,6 +161,7 @@ public class FlinkPropAssist<T extends Describable> {
         }
 
         public TISFlinkProp overwriteDft(Object dftVal) {
+            // overwriteProp.setDftVal(dftVal);
             return this.setOverwriteProp(OverwriteProps.dft(dftVal));
         }
 

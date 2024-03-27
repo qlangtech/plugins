@@ -11,6 +11,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -40,6 +42,19 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      */
     @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer serverPort;
+
+    public static Integer dftExportPort() {
+        return ((DefaultExportPortProvider) DescriptorsJSONResult.getRootDescInstance()).get();
+    }
+
+
+    /**
+     * 提供Describer支持默认端口值
+     */
+    public interface DefaultExportPortProvider extends Supplier<Integer> {
+
+    }
+
 
     /**
      * 服务向外暴露的端口

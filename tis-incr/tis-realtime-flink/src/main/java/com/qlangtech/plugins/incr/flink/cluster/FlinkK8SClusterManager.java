@@ -128,7 +128,6 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     //  public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
     private static K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster;
 
-    public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
 
     @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
@@ -505,6 +504,11 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     @TISExtension()
     public static class DescriptorImpl extends BasicFlinkCfgDescriptor {
+        public DescriptorImpl() {
+            super();
+            addClusterIdOption(opts);
+        }
+
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             return this.verify(msgHandler, context, postFormVals);
@@ -542,10 +546,6 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
             return true;
         }
 
-        public DescriptorImpl() {
-            super();
-            addClusterIdOption(opts).overwriteDft("tis-flink-cluster");
-        }
 
         @Override
         public K8SWorkerCptType getWorkerCptType() {

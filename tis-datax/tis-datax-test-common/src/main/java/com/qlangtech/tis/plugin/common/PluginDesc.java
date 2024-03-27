@@ -35,7 +35,7 @@ public class PluginDesc {
             TT plugin = clazz.newInstance();
             // DescriptorsJSON descJson = new DescriptorsJSON(plugin.getDescriptor());
             JsonUtil.assertJSONEqual(clazz, assertFileName
-                    , DescriptorsJSON.desc(plugin.getDescriptor()), (m, e, a) -> {
+                    , DescriptorsJSON.desc(plugin.getDescriptor()).toJSONString(), (m, e, a) -> {
                         Assert.assertEquals(m, e, a);
                     });
             //return plugin;

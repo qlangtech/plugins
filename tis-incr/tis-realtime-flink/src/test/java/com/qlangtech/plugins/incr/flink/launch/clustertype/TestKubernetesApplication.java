@@ -21,8 +21,10 @@ package com.qlangtech.plugins.incr.flink.launch.clustertype;
 import com.qlangtech.plugins.incr.flink.cluster.KubernetesApplicationClusterConfig;
 import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.config.flink.JobManagerAddress;
+import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.SSERunnable;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
 import org.junit.Assert;
@@ -58,13 +60,13 @@ public class TestKubernetesApplication {
                 clusterCfg.tmMemory = 1169472;
                 clusterCfg.tmCPUCores = 150;
                 clusterCfg.taskSlot = 1;
-                clusterCfg.svcExposedType = "NodePort";
+               // clusterCfg.svcExposedType = "NodePort";
                 clusterCfg.svcAccount = "default";
                 return clusterCfg;
             }
 
             @Override
-            protected ClusterClient createClient(Configuration flinkConfig, boolean execDeploy) {
+            protected ClusterClient createClient(Pair<Configuration, IK8sContext> flinkConfig, boolean execDeploy) {
                 return super.createClient(flinkConfig, false);
             }
         };

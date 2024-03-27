@@ -35,6 +35,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
+import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport.DefaultExportPortProvider;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -56,7 +57,7 @@ import java.util.Optional;
  * @create: 2024-01-13 08:34
  **/
 public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
-
+    public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public ServerPortExport serverPortExport;
 
@@ -91,10 +92,16 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
     }
 
     public static TISFlinkProp addClusterIdOption(Options<?> opts) {
-        String clusterId = "clusterId";
+        //String clusterId = "clusterId";
         TISFlinkProp tisFlinkProp = TISFlinkProp.create(KubernetesConfigOptions.CLUSTER_ID);
-        opts.add(clusterId, tisFlinkProp);
-        return tisFlinkProp;
+        try {
+            int size = ServerLaunchToken.createFlinkClusterToken().getAllFlinkSessionClusters().size();
+            tisFlinkProp.overwriteDft("tis-flink-cluster-" + (size + 1));
+            opts.add(KEY_FIELD_CLUSTER_ID, tisFlinkProp);
+            return tisFlinkProp;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -123,7 +130,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         return Pair.of(configuration, kubeConfig);
     }
 
-    public abstract static class BasicFlinkCfgDescriptor extends BasicDescriptor implements IEndTypeGetter {
+    public abstract static class BasicFlinkCfgDescriptor extends BasicDescriptor implements IEndTypeGetter, DefaultExportPortProvider {
 
         private static final MemorySize MEMORY_8G = MemorySize.ofMebiBytes(8 * 1024);
         protected final Options<BasicFlinkK8SClusterCfg> opts;
@@ -133,13 +140,22 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
             return EndType.Flink;
         }
 
+        /**
+         * @return
+         * @see DefaultExportPortProvider
+         */
+        @Override
+        public Integer get() {
+            return RestOptions.PORT.defaultValue();
+        }
 
         public BasicFlinkCfgDescriptor() {
             super();
             //FlinkK8SClusterManager
+            //this.addFieldDescriptor("serverPortExport.serverPort", 8081, null);
             this.opts = FlinkPropAssist.createOpts(this);
             opts.add("tmMemory", TISFlinkProp.create(TaskManagerOptions.TOTAL_PROCESS_MEMORY)
-                            .setOverwriteProp(OverwriteProps.dft(MemorySize.ofMebiBytes(1728)))
+                            .overwriteDft((MemorySize.ofMebiBytes(1728)))
                     , (fm) -> {
                         return MemorySize.parse(String.valueOf(fm.tmMemory), MemoryUnit.KILO_BYTES);
                     }

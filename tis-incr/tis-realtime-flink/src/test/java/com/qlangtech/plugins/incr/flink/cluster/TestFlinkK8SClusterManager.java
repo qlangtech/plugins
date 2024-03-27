@@ -18,11 +18,10 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
-import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.DefaultSSERunnable;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteStep;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteSteps;
-import com.qlangtech.tis.util.HeteroEnum;
+import com.qlangtech.tis.plugin.common.PluginDesc;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -44,6 +43,12 @@ public class TestFlinkK8SClusterManager {
     }
 
     @Test
+    public void testDescJson() {
+
+        PluginDesc.testDescGenerate(FlinkK8SClusterManager.class, "flink-k8s-cluster-manager.json");
+    }
+
+    @Test
     public void testLaunchService() {
         FlinkK8SClusterManager clusterManager = new FlinkK8SClusterManager();
         clusterManager.clusterId = "tis-flink-cluster";
@@ -53,7 +58,7 @@ public class TestFlinkK8SClusterManager {
         clusterManager.tmCPUCores = 700;
         clusterManager.taskSlot = 1;
         clusterManager.svcAccount = "default";
-        clusterManager.svcExposedType = "NodePort";
+        // clusterManager.svcExposedType = "NodePort";
 
 
         try (PrintWriter clientWriter = new PrintWriter(new StringWriter())) {

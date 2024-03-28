@@ -1012,6 +1012,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
 
         @Override
+        public Boolean dftUsingClusterIP() {
+            return true;
+        }
+
+        @Override
         public Integer get() {
             return DEFAULT_POWERJOB_SERVER_PORT;
         }

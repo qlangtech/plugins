@@ -140,6 +140,7 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
             return EndType.Flink;
         }
 
+
         /**
          * @return
          * @see DefaultExportPortProvider
@@ -147,6 +148,11 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         @Override
         public Integer get() {
             return RestOptions.PORT.defaultValue();
+        }
+
+        @Override
+        public Boolean dftUsingClusterIP() {
+            return false;
         }
 
         public BasicFlinkCfgDescriptor() {

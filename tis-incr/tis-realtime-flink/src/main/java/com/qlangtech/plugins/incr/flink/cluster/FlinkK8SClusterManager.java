@@ -126,7 +126,6 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //    });
 
     //  public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
-    private static K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster;
 
 
     @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
@@ -185,11 +184,9 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     public List<ExecuteStep> getExecuteSteps() {
 
 
-        if (launchFlinkCluster == null) {
-            launchFlinkCluster = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
-                    , new CreateFlinkSessionJobExec());
-        }
-
+        K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster
+                = new K8SRCResName<>(K8SWorkerCptType.FlinkCluster
+                , new CreateFlinkSessionJobExec());
 
         return Lists.newArrayList(new ExecuteStep(launchFlinkCluster, "launch Flink Cluster"));
     }
@@ -202,42 +199,41 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
             final CoreV1Api coreApi = new CoreV1Api(flinkManager.getK8SApi());
             final ServerPortExport serverPortExport = flinkManager.serverPortExport;
             flinkManager.processFlinkCluster((cli) -> {
-                cli.run(new String[]{}, (clusterClient, externalService) -> {
+                cli.run(false, new String[]{}, (clusterClient, externalService) -> {
+                    if (externalService.isPresent()) {
+                        throw new IllegalStateException(" this is create flink-session process can not get externalService ahead,clusterId:" + clusterId);
+                    }
+                    /**
+                     * 说明刚刚新建了flink-session集群
+                     * 创建TIS配套的额外的服务
+                     */
+                    String targetPortName = ExternalServiceDecorator.getExternalServiceName(clusterId + "-tis");
 
-                    if (!externalService.isPresent()) {
-                        /**
-                         * 创建TIS配套的额外的服务
-                         */
-                        String targetPortName = ExternalServiceDecorator.getExternalServiceName(clusterId + "-tis");
+                    Pair<ServiceResName, TargetResName> serviceResAndOwner
+                            = Pair.of(new ServiceResName(targetPortName, null), new TargetResName(clusterId));
 
-                        Pair<ServiceResName, TargetResName> serviceResAndOwner
-                                = Pair.of(new ServiceResName(targetPortName, null), new TargetResName(clusterId));
-
-                        try {
-
-                            V1Service svc
-                                    = coreApi.readNamespacedService(
-                                    ExternalServiceDecorator.getExternalServiceName(clusterId)
-                                    , flinkManager.getK8SImage().getNamespace())
-                                    .pretty(K8SUtils.resultPrettyShow).execute();
-                            V1OwnerReference ownerReference = null;
-                            for (V1OwnerReference ref : svc.getMetadata().getOwnerReferences()) {
-                                ownerReference = ref;
-                            }
-                            Objects.requireNonNull(ownerReference, "ownerReference can not be null");
-                            serverPortExport.exportPort(flinkManager.getK8SImage().getNamespace()
-                                    , coreApi, targetPortName, serviceResAndOwner, Optional.of(ownerReference));
-                        } catch (ApiException e) {
-                            throw new RuntimeException(e);
+                    try {
+                        V1Service svc
+                                = coreApi.readNamespacedService(
+                                ExternalServiceDecorator.getExternalServiceName(clusterId)
+                                , flinkManager.getK8SImage().getNamespace())
+                                .pretty(K8SUtils.resultPrettyShow).execute();
+                        V1OwnerReference ownerReference = null;
+                        for (V1OwnerReference ref : svc.getMetadata().getOwnerReferences()) {
+                            ownerReference = ref;
                         }
-
-                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
-                                , Optional.of("http://" + serverPortExport.getPowerjobClusterHost(
-                                        coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
-                                , clusterClient, flinkManager.getK8SImage());
-                        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+                        Objects.requireNonNull(ownerReference, "ownerReference can not be null");
+                        serverPortExport.exportPort(flinkManager.getK8SImage().getNamespace()
+                                , coreApi, targetPortName, serviceResAndOwner, Optional.of(ownerReference));
+                    } catch (ApiException e) {
+                        throw new RuntimeException(e);
                     }
 
+                    clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
+                            , Optional.of("http://" + serverPortExport.getPowerjobClusterHost(
+                                    coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
+                            , clusterClient, flinkManager.getK8SImage());
+                    SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
                 });
                 SSERunnable.getLocal().run();
             });

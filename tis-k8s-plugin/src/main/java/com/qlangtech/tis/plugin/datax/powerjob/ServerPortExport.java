@@ -47,11 +47,22 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
         return ((DefaultExportPortProvider) DescriptorsJSONResult.getRootDescInstance()).get();
     }
 
+    public static Boolean dftUsingClusterIP() {
+        return ((DefaultExportPortProvider) DescriptorsJSONResult.getRootDescInstance()).dftUsingClusterIP();
+    }
+
 
     /**
      * 提供Describer支持默认端口值
      */
     public interface DefaultExportPortProvider extends Supplier<Integer> {
+
+        /**
+         * 默认是否使用clusterIP作为用户暴露终端
+         *
+         * @return
+         */
+        public Boolean dftUsingClusterIP();
 
     }
 

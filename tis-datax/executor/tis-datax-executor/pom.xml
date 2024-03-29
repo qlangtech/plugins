@@ -70,29 +70,17 @@
             <version>${tis.version}</version>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>com.qlangtech.tis</groupId>-->
-        <!--            <artifactId>tis-logback-flume-appender</artifactId>-->
-        <!--            <classifier>shaded</classifier>-->
-        <!--            <version>${tis.version}</version>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>*</groupId>-->
-        <!--                    <artifactId>*</artifactId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--        </dependency>-->
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-core</artifactId>
-            <version>${tis.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>datax-core</artifactId>-->
+<!--            <version>${tis.version}</version>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.datax</groupId>-->
+<!--            <artifactId>datax-common</artifactId>-->
+<!--        </dependency>-->
 
         <!--        <dependency>-->
         <!--            <groupId>com.alibaba.datax</groupId>-->

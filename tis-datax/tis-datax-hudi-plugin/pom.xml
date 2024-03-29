@@ -100,12 +100,7 @@
             <artifactId>tis-datax-hudi-dependency</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-logback-flume-appender</artifactId>
-                </exclusion>
-            </exclusions>
+
         </dependency>
 
 

@@ -111,7 +111,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 // 等待5个小时
                 resultHandler.waitFor(TimeUnit.HOURS.toMillis(5));
 
-                if (resultHandler.getExitValue() != DataxExecutor.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
+                if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
                     if ( //resultHandler.hasResult() &&
                             resultHandler.getExitValue() != 0) {
                         // it was killed on purpose by the watchdog

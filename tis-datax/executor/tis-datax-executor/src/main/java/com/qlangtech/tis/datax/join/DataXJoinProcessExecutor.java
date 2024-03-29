@@ -3,7 +3,6 @@ package com.qlangtech.tis.datax.join;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
-import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.RpcUtils;
@@ -27,6 +26,7 @@ import com.qlangtech.tis.sql.parser.er.IPrimaryTabFinder;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -117,7 +117,7 @@ public class DataXJoinProcessExecutor {
 
 
         RpcServiceReference statusRpc = StatusRpcClientFactory.getService(ITISCoordinator.create());
-        DataxExecutor.statusRpc = (statusRpc);
+        AssembleSvcCompsite.statusRpc = (statusRpc);
 
         try {
             DefaultExecContext execContext = createDftExecContent(line);

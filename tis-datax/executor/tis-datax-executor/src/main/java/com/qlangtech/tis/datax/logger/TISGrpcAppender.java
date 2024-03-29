@@ -4,12 +4,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.UnknownHostException;
@@ -58,7 +58,7 @@ public class TISGrpcAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 //        if(DataxExecutor.statusRpc == null){
 //
 //        }
-        ITISRpcService rpcService = DataxExecutor.statusRpc.get();
+        ITISRpcService rpcService = AssembleSvcCompsite.statusRpc.get();
         if (rpcService == null) {
             addError("have not initialize rpcService", new Exception());
             return;

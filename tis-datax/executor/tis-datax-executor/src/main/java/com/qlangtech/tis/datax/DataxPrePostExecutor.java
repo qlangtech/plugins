@@ -29,6 +29,7 @@ import com.qlangtech.tis.plugin.ds.DefaultTab;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class DataxPrePostExecutor {
         }
         RpcServiceReference statusRpc =
                 StatusRpcClientFactory.getService(ITISCoordinator.create(Optional.of(incrStateCollectAddress)));
-        DataxExecutor.statusRpc = (statusRpc);
+        AssembleSvcCompsite.statusRpc = (statusRpc);
 
         final String lifecycleHookName = args[3];
         final ISelectedTab tab = new DefaultTab(args[4]);

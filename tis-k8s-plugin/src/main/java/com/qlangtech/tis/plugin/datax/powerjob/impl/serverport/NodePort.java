@@ -9,7 +9,6 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.realtime.utils.NetUtils;
@@ -131,12 +130,13 @@ public class NodePort extends ServerPortExport {
                 rcWatch = Watch.createWatch(coreApi.getApiClient()
                         //
                         ,
-                        K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.setFieldSelector(
-                                coreApi.listNamespacedService(svc.getMetadata().getNamespace())
-                                        .pretty(K8SUtils.resultPrettyShow)
-                                        .watch(true)
-                                        .resourceVersion(svc.getMetadata().getResourceVersion())
-                        )
+                        //   K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE.setFieldSelector(
+                        coreApi.listNamespacedService(svc.getMetadata().getNamespace())
+                                .pretty(K8SUtils.resultPrettyShow)
+                                .watch(true)
+                                .resourceVersion(svc.getMetadata().getResourceVersion())
+                                .fieldSelector("metadata.name=" + svc.getMetadata().getName())
+                                //)
                                 .buildCall(K8SUtils.createApiCallback())
                         //
                         , new TypeToken<Response<V1Service>>() {

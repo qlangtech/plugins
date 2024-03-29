@@ -37,13 +37,13 @@ import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.qlangtech.tis.order.center.IParamContext;
 
 import java.net.MalformedURLException;
 import java.util.List;
@@ -146,9 +146,9 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         Integer jobId = jobDTO.getTaskId();
 
         String dataXName = jobDTO.getDataXName();
-        DataxExecutor.statusRpc = statusRpc;
+       // DataxExecutor.statusRpc = statusRpc;
         final DataxExecutor dataxExecutor
-                = new DataxExecutor(InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
+                = new DataxExecutor(statusRpc, InstanceType.EMBEDDED, jobDTO.getAllRowsApproximately());
 
         if (uberClassLoader == null) {
             uberClassLoader = new TISJarLoader(TIS.get().getPluginManager());

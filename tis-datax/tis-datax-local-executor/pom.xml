@@ -37,11 +37,16 @@
             <artifactId>tis-datax-common-plugin</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-web-start-api</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-web-start-api</artifactId>-->
+        <!--        </dependency>-->
 
 
         <dependency>
@@ -53,31 +58,38 @@
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>tis-plugin</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-hadoop-rpc</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>logback-flume-appender</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-dag</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.qlangtech.tis</groupId>-->
-<!--            <artifactId>tis-solrj-client</artifactId>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.qlangtech.tis</groupId>-->
+        <!--            <artifactId>tis-solrj-client</artifactId>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-hadoop-rpc</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <version>${tis.version}</version>
+            <scope>provided</scope>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-core</artifactId>
+            <version>${tis.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <version>${tis.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
 
     </dependencies>

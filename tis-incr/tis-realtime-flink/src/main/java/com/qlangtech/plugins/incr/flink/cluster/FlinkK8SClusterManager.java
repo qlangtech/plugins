@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
 import com.qlangtech.plugins.incr.flink.launch.clustertype.KubernetesApplication;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.config.k8s.IK8sContext;
@@ -379,11 +380,25 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
         //args = new String[]{"--" + JobManagerOptions.TOTAL_PROCESS_MEMORY.key() + "=1600m"};
         // CenterResource.setNotFetchFromCenterRepository();
+        throw new UnsupportedOperationException();
 
     }
 
     @Override
     public void relaunch(String podName) {
+        if (StringUtils.isEmpty(podName)) {
+            throw new IllegalArgumentException("param podName can not be empty");
+        }
+        FlinkK8SImage k8SImage = getFlinkK8SImage();
+        final CoreV1Api coreApi = k8SImage.createCoreV1Api();
+
+        try {
+            coreApi.deleteNamespacedPod(
+                    podName, k8SImage.getNamespace())
+                    .pretty(K8SUtils.resultPrettyShow).execute();
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert(e);
+        }
 
     }
 

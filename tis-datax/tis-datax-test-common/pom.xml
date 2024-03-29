@@ -62,10 +62,7 @@
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
             <artifactId>tis-datax-executor</artifactId>
-            <version>4.0.0</version>
-            <exclusions>
-
-            </exclusions>
+            <version>${project.version}</version>
         </dependency>
 
 
@@ -86,6 +83,12 @@
             <scope>compile</scope>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-local-executor-utils</artifactId>
+            <version>${tis.version}</version>
+        </dependency>
 
     </dependencies>
 

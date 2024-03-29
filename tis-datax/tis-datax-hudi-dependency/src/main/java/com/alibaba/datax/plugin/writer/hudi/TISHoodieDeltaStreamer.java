@@ -19,7 +19,6 @@
 package com.alibaba.datax.plugin.writer.hudi;
 
 import com.alibaba.datax.plugin.writer.hudi.log.LogbackBinder;
-import com.gilt.logback.flume.tis.TisFlumeLogstashV1Appender;
 import com.qlangtech.tis.config.authtoken.IKerberosUserToken;
 import com.qlangtech.tis.config.authtoken.IOffUserToken;
 import com.qlangtech.tis.config.authtoken.IUserNamePasswordUserToken;
@@ -109,7 +108,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
             throw new IllegalStateException("system property '" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "' is illegal,logbackPath:" + logbackPath);
         }
         LogManager.getRootLogger().addAppender(new HudiLoggerAppender());
-        Objects.requireNonNull(TisFlumeLogstashV1Appender.instance, "flume remote logger can not be null");
+        // Objects.requireNonNull(TisFlumeLogstashV1Appender.instance, "flume remote logger can not be null");
 
 
         System.setProperty(Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS
@@ -186,7 +185,7 @@ public class TISHoodieDeltaStreamer implements Serializable {
                 jssc.stop();
                 // logger appender queue中的消息都排除
                 Thread.sleep(3000);
-                TisFlumeLogstashV1Appender.instance.stop();
+                //   TisFlumeLogstashV1Appender.instance.stop();
             } catch (Throwable e) {
 
             }

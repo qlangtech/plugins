@@ -23,37 +23,42 @@
     <parent>
         <artifactId>tis-datax</artifactId>
         <groupId>com.qlangtech.tis.plugins</groupId>
-        <version>${revision}</version>
-        <relativePath>../pom.xml</relativePath>
+        <version>4.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>tpi</packaging>
 
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <artifactId>tis-datax-local-embedded-executor</artifactId>
+    <artifactId>tis-datax-local-executor-utils</artifactId>
+
 
     <dependencies>
-
-
         <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-executor</artifactId>
-            <version>4.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-plugin</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-hadoop-rpc</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.qlangtech.tis</groupId>
-                    <artifactId>tis-dag</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-core</artifactId>
+            <version>${tis.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
+            <version>${tis.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-dag</artifactId>
+            <version>${tis.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
         </dependency>
     </dependencies>
+
 
 </project>

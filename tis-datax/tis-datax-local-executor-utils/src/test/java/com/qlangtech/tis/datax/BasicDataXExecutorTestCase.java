@@ -25,7 +25,9 @@ import com.qlangtech.tis.test.TISTestCase;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Assert;
 import org.junit.Before;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -50,7 +52,7 @@ public abstract class BasicDataXExecutorTestCase extends TISTestCase implements 
         ref.set(StatusRpcClientFactory.AssembleSvcCompsite.MOCK_PRC);
         statusRpc = new RpcServiceReference(ref, () -> {
         });
-        DataxExecutor.statusRpc = statusRpc;
+        AssembleSvcCompsite.statusRpc = statusRpc;
         executor = createExecutor();
     }
 
@@ -59,12 +61,12 @@ public abstract class BasicDataXExecutorTestCase extends TISTestCase implements 
     }
 
     protected DataxExecutor createExecutor() {
-        return new DataxExecutor(DataXJobSubmit.InstanceType.LOCAL, 300) {
+        return new DataxExecutor(AssembleSvcCompsite.statusRpc, DataXJobSubmit.InstanceType.LOCAL, 300) {
             @Override
             protected void startEngine(Pair<Configuration, IDataXNameAware> cfg, DataXJobArgs args,
                                        DataXJobInfo jobName) {
                 //  make skip the ex
-                assertNotNull(cfg.getKey());
+                Assert.assertNotNull(cfg.getKey());
             }
         };
     }

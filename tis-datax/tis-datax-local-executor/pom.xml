@@ -65,31 +65,17 @@
         <!--            <artifactId>tis-solrj-client</artifactId>-->
         <!--            <scope>test</scope>-->
         <!--        </dependency>-->
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-hadoop-rpc</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-dag</artifactId>
-            <version>${tis.version}</version>
-            <scope>provided</scope>
-        </dependency>
+
 
 
         <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-core</artifactId>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-local-executor-utils</artifactId>
             <version>${tis.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.alibaba.datax</groupId>
-            <artifactId>datax-common</artifactId>
-            <version>${tis.version}</version>
-            <scope>compile</scope>
-        </dependency>
+
+
 
 
     </dependencies>

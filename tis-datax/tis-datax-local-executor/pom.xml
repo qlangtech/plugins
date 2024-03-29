@@ -58,6 +58,14 @@
                     <groupId>com.qlangtech.tis</groupId>
                     <artifactId>tis-plugin</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-dag</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <!--        <dependency>-->

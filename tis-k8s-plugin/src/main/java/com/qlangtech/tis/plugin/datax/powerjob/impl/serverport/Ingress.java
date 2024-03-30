@@ -67,6 +67,11 @@ public class Ingress extends ServerPortExport {
     }
 
     @Override
+    public <T> T accept(ServerPortExportVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public void exportPort(String nameSpace, CoreV1Api api, String targetPortName
             , Pair<ServiceResName, TargetResName> serviceResAndOwner, Optional<V1OwnerReference> ownerRef) throws ApiException {
         super.exportPort(nameSpace, api, targetPortName, serviceResAndOwner, ownerRef);
@@ -136,7 +141,7 @@ public class Ingress extends ServerPortExport {
     }
 
     @Override
-    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
         return this.host + ("/".equals(this.path) ? StringUtils.EMPTY : this.path);
     }
 

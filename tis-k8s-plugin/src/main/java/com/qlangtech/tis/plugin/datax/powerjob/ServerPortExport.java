@@ -52,6 +52,17 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
     }
 
 
+    public abstract <T> T accept(ServerPortExportVisitor<T> visitor);
+
+    public interface ServerPortExportVisitor<T> {
+        public T visit(Ingress ingress);
+
+        public T visit(LoadBalance loadBalance);
+
+        public T visit(NodePort nodePort);
+    }
+
+
     /**
      * 提供Describer支持默认端口值
      */
@@ -146,6 +157,11 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 //        return Pair.of(K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE, K8S_DATAX_POWERJOB_SERVER);
 //    }
 
+    public final String getClusterHost(
+            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+        return getClusterHost(api, nameSpace, serviceResAndOwner, false);
+    }
+
     /**
      * 内部集群可用host地址
      *
@@ -153,11 +169,11 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      * @param nameSpace
      * @return
      */
-    public final String getPowerjobClusterHost(
-            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public final String getClusterHost(
+            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner, boolean forceExternalHost) {
 
-        if (!this.usingClusterIP) {
-            return getPowerjobExternalHost(api, nameSpace, serviceResAndOwner);
+        if (forceExternalHost || !this.usingClusterIP) {
+            return getExternalHost(api, nameSpace, serviceResAndOwner);
         }
         if (clusterIP == null) {
             //Pair<ServiceResName, TargetResName> serviceResAndOwner = getServiceResAndOwner();
@@ -179,6 +195,6 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      * @return
      */
     //  public abstract String getPowerjobHost();
-    public abstract String getPowerjobExternalHost(
+    public abstract String getExternalHost(
             CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner);
 }

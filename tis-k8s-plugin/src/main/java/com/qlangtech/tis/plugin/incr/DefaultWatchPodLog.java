@@ -170,16 +170,8 @@ public class DefaultWatchPodLog extends WatchPodLog {
                     this.lock.set(false);
                 }
             });
-//            try {
-//                countdown.await();
-//            } catch (InterruptedException e) {
-//                logger.error(e.getMessage(), e);
-//            }
-//            } finally {
-//               // lock.unlock();
-//            }
         } else {
-            logger.info("has not gain the watch lock");
+            logger.info("has not gain the watch lock:" + this.indexName);
         }
     }
 

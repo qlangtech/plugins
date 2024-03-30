@@ -260,7 +260,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public String getPowerJobMasterGateway() {
         final String linkHost = this.serverPortExport
-                .getPowerjobClusterHost(this.getK8SApi(), this.getImage().getNamespace(), powerJobServiceResAndOwnerGetter.get());
+                .getClusterHost(this.getK8SApi(), this.getImage().getNamespace(), powerJobServiceResAndOwnerGetter.get());
         return linkHost;
     }
 
@@ -284,7 +284,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
             powerJobClient = TISPowerJobClient.create(
-                    this.serverPortExport.getPowerjobClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get())
+                    this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get())
                     , this.appName, this.password);
         }
         return powerJobClient;
@@ -295,7 +295,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         Map<String, Object> payloads = Maps.newHashMap();
         // http://192.168.64.3:31000/#/welcome
         payloads.put(CLUSTER_ENTRYPOINT_HOST
-                , "http://" + this.serverPortExport.getPowerjobExternalHost(
+                , "http://" + this.serverPortExport.getExternalHost(
                         this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
         return payloads;
     }
@@ -919,6 +919,11 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static WatchPodLog watchOneOfPowerJobPodLog(K8SController controller
             , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
+        return watchOneOfPodLog(K8S_DATAX_POWERJOB_SERVER, controller, relevantPodNames, logListener);
+    }
+
+    public static WatchPodLog watchOneOfPodLog(TargetResName indexName, K8SController controller
+            , WaitReplicaControllerLaunch relevantPodNames, PowerJobPodLogListener logListener) {
         if (relevantPodNames.isSkipWaittingPhase()) {
             return new WatchPodLog() {
                 @Override
@@ -932,7 +937,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
         WatchPodLog watchPodLog = null;
         for (String onePodOf : relevantPodNames.getRelevantPodNames()) {
-            watchPodLog = controller.listPodAndWatchLog(K8S_DATAX_POWERJOB_SERVER, onePodOf, logListener);
+            watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf, logListener);
             return watchPodLog;
         }
         throw new IllegalStateException("must return a watchPodLog instance");

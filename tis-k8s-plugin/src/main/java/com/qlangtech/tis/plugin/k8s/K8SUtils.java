@@ -56,8 +56,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER;
-
 //import okhttp3;
 
 /**
@@ -436,9 +434,11 @@ public class K8SUtils {
     public static class WaitReplicaControllerLaunch {
         private final Set<String> relevantPodNames;
         private final boolean skipWaittingPhase;
+        private final K8SRCResNameWithFieldSelector resName;
 
-        public WaitReplicaControllerLaunch() {
-            this(Collections.emptySet(), true);
+        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName) {
+            this(resName, Collections.emptySet(), true);
+
             try {
                 Thread.sleep(3000l);
             } catch (InterruptedException e) {
@@ -454,18 +454,20 @@ public class K8SUtils {
             return skipWaittingPhase;
         }
 
-        public WaitReplicaControllerLaunch(Set<String> relevantPodNames) {
-            this(relevantPodNames, false);
+        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Set<String> relevantPodNames) {
+            this(resName, relevantPodNames, false);
         }
 
-        public WaitReplicaControllerLaunch(Set<String> relevantPodNames, boolean skipWaittingPhase) {
+        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Set<String> relevantPodNames, boolean skipWaittingPhase) {
             this.relevantPodNames = relevantPodNames;
             this.skipWaittingPhase = skipWaittingPhase;
+            this.resName = resName;
         }
 
         public void validate() {
             if (!this.skipWaittingPhase && CollectionUtils.isEmpty(relevantPodNames)) {
-                throw new IllegalStateException("resource name:" + K8S_DATAX_POWERJOB_SERVER.getName() + " relevant pods can not be null");
+                //K8S_DATAX_POWERJOB_SERVER
+                throw new IllegalStateException("resource name:" + resName.getName() + " relevant pods can not be null");
             }
             try {
                 Thread.sleep(3000);
@@ -512,7 +514,7 @@ public class K8SUtils {
         // CoreV1Api api = new CoreV1Api(apiClient);
 
         if (skipWaittingPhase) {
-            return new WaitReplicaControllerLaunch();
+            return new WaitReplicaControllerLaunch(targetResName);
         }
         //  RunningStatus status;
         final Map<String, RunningStatus> relevantPodNames = Maps.newHashMap();
@@ -538,7 +540,7 @@ public class K8SUtils {
                 logger.warn("relevantPodNames size:{},pods:{}", relevantPodNames.size(), String.join(",", relevantPodNames.keySet()));
             }
             if (changeCallback.isBreakEventWatch(relevantPodNames, expectResCount)) {
-                return new WaitReplicaControllerLaunch(relevantPodNames.keySet());
+                return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.keySet());
             }
         }
         String currentResVer = resourceVer.getResourceVersion();
@@ -631,7 +633,7 @@ public class K8SUtils {
             }
 
         }
-        return new WaitReplicaControllerLaunch(relevantPodNames.keySet());
+        return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.keySet());
     }
 
 

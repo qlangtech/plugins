@@ -62,6 +62,10 @@ public class LoadBalance extends ServerPortExport {
 
     }
 
+    @Override
+    public <T> T accept(ServerPortExportVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 
     @Override
     protected ServiceType getServiceType() {
@@ -70,7 +74,7 @@ public class LoadBalance extends ServerPortExport {
 
 
     @Override
-    public String getPowerjobExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
 
         if (StringUtils.isEmpty(this.host)) {
             // K8SUtils.resultPrettyShow

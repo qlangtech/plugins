@@ -52,6 +52,10 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
+import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport.ServerPortExportVisitor;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.Ingress;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.LoadBalance;
+import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SRCResName;
@@ -68,8 +72,6 @@ import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentStatus;
-import io.kubernetes.client.openapi.models.V1OwnerReference;
-import io.kubernetes.client.openapi.models.V1Service;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -81,9 +83,14 @@ import org.apache.flink.client.program.ClusterClientProvider;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.kubernetes.KubernetesClusterClientFactory;
 import org.apache.flink.kubernetes.cli.KubernetesSessionCli;
+import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.ServiceExposedType;
+import org.apache.flink.kubernetes.kubeclient.Endpoint;
+import org.apache.flink.kubernetes.kubeclient.FlinkKubeClient;
 import org.apache.flink.kubernetes.kubeclient.decorators.ExternalServiceDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator;
 import org.apache.flink.kubernetes.kubeclient.decorators.FlinkConfMountDecorator.ConfigMapData;
+import org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.api.model.Service;
+import org.apache.flink.kubernetes.shaded.io.fabric8.kubernetes.api.model.ServicePort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,23 +118,6 @@ import static org.apache.flink.kubernetes.utils.Constants.CONFIG_FILE_LOGBACK_NA
 @Public
 public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements ILaunchingOrchestrate, IdentityName {
     private static final Logger logger = LoggerFactory.getLogger(FlinkK8SClusterManager.class);
-//    @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-//    public final String name = K8S_FLINK_CLUSTER_NAME.getName();
-
-//    private static final K8SRCResName<FlinkK8SClusterManager> launchFlinkCluster = new K8SRCResName<FlinkK8SClusterManager>(K8SWorkerCptType.FlinkCluster
-//            , (flinkManager) -> {
-//        JSONObject[] clusterMeta = new JSONObject[1];
-//        flinkManager.processFlinkCluster((cli) -> {
-//            cli.run(new String[]{}, (clusterClient) -> {
-//                clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, clusterClient, flinkManager.getK8SImage());
-//            });
-//            SSERunnable.getLocal().run();
-//        });
-//        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
-//    });
-
-    //  public static final String CONFIG_FILE_KUBE_CONFIG = "tis-kube-config";
-
 
     @FormField(ordinal = 0, identity = true, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String clusterId;
@@ -150,35 +140,8 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         if (cluster != null) {
             payloads = Collections.singletonMap(CLUSTER_ENTRYPOINT_HOST, cluster.getWebInterfaceURL());
         }
-        // try {
-        // Map<String, Object> payloads = Maps.newHashMap();
 
-//
-//            ServiceExposedType serviceExposedType = ServiceExposedType.valueOf(svcExposedType);
-//            switch (serviceExposedType) {
-//                case NodePort:
-//                    return payloads;
-//                case ClusterIP:
-//                    CoreV1Api coreApi = new CoreV1Api(getK8SApi());
-//                    V1Service svc = coreApi.readNamespacedService(this.clusterId + "-rest" //
-//                            , this.getK8SImage().getNamespace(), K8SUtils.resultPrettyShow, null, null);
-//                    V1ServiceSpec spec = svc.getSpec();
-//                    for (V1ServicePort port : spec.getPorts()) {
-//                        payloads.put(CLUSTER_ENTRYPOINT_HOST, ) ;
-//                        return payloads;
-//                    }
-//                case LoadBalancer:
-//
-//                default:
-//                    throw new IllegalStateException("illegal serviceExposedType:" + serviceExposedType);
-//            }
-//
-//            // http://192.168.64.3:31000/#/welcome
-//            payloads.put(CLUSTER_ENTRYPOINT_HOST, "http://" + this.serverPortExport.getPowerjobHost() + "/#/welcome");
         return payloads;
-//        } catch (ApiException e) {
-//            throw K8sExceptionUtils.convert(this.clusterId, e);
-//        }
     }
 
     @Override
@@ -197,50 +160,115 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
             JSONObject[] clusterMeta = new JSONObject[1];
             final String clusterId = flinkManager.clusterId;
-            final CoreV1Api coreApi = new CoreV1Api(flinkManager.getK8SApi());
+            //  final CoreV1Api coreApi = new CoreV1Api(flinkManager.getK8SApi());
             final ServerPortExport serverPortExport = flinkManager.serverPortExport;
             flinkManager.processFlinkCluster((cli) -> {
-                cli.run(false, new String[]{}, (clusterClient, externalService) -> {
-                    if (externalService.isPresent()) {
-                        throw new IllegalStateException(" this is create flink-session process can not get externalService ahead,clusterId:" + clusterId);
-                    }
-                    /**
-                     * 说明刚刚新建了flink-session集群
-                     * 创建TIS配套的额外的服务
-                     */
-                    String targetPortName = ExternalServiceDecorator.getExternalServiceName(clusterId + "-tis");
-
-                    Pair<ServiceResName, TargetResName> serviceResAndOwner
-                            = Pair.of(new ServiceResName(targetPortName, null), new TargetResName(clusterId));
-
-                    try {
-                        V1Service svc
-                                = coreApi.readNamespacedService(
-                                ExternalServiceDecorator.getExternalServiceName(clusterId)
-                                , flinkManager.getK8SImage().getNamespace())
-                                .pretty(K8SUtils.resultPrettyShow).execute();
-                        V1OwnerReference ownerReference = null;
-                        for (V1OwnerReference ref : svc.getMetadata().getOwnerReferences()) {
-                            ownerReference = ref;
+                try {
+                    final String externalServiceName = createExternalServiceSuppler(clusterId, serverPortExport);
+                    cli.run(false, new String[]{}, (clusterClient, kubeClient, externalService) -> {
+                        if (externalService.isPresent()) {
+                            throw new IllegalStateException(" this is create flink-session process can not get externalService ahead,clusterId:" + clusterId);
                         }
-                        Objects.requireNonNull(ownerReference, "ownerReference can not be null");
-                        serverPortExport.exportPort(flinkManager.getK8SImage().getNamespace()
-                                , coreApi, targetPortName, serviceResAndOwner, Optional.of(ownerReference));
-                    } catch (ApiException e) {
-                        throw new RuntimeException(e);
-                    }
+                        Pair<ServiceResName, TargetResName> serviceResAndOwner
+                                = Pair.of(new ServiceResName(externalServiceName, null), new TargetResName(clusterId));
+//
+//                        try {
+//                            V1Service svc
+//                                    = coreApi.readNamespacedService(
+//                                    ExternalServiceDecorator.getExternalServiceName(clusterId)
+//                                    , flinkManager.getK8SImage().getNamespace())
+//                                    .pretty(K8SUtils.resultPrettyShow).execute();
+//                            V1OwnerReference ownerReference = null;
+//                            for (V1OwnerReference ref : svc.getMetadata().getOwnerReferences()) {
+//                                ownerReference = ref;
+//                            }
+//                            Objects.requireNonNull(ownerReference, "ownerReference can not be null");
+//                            serverPortExport.exportPort(flinkManager.getK8SImage().getNamespace()
+//                                    , coreApi, externalServiceName, serviceResAndOwner, Optional.of(ownerReference));
+//                        } catch (ApiException e) {
+//                            throw new RuntimeException(e);
+//                        }
+                        // get from Fabric8FlinkKubeClient
 
-                    clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
-                            , Optional.of("http://" + serverPortExport.getPowerjobClusterHost(
-                                    coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
-                            , clusterClient, flinkManager.getK8SImage());
-                    SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
-                });
-                SSERunnable.getLocal().run();
+                        Endpoint endpoint = getEndpoint(clusterId, serverPortExport, externalServiceName, kubeClient);
+
+//                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
+//                                , Optional.of("http://" + serverPortExport.getClusterHost(
+//                                        coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
+//                                , clusterClient, flinkManager.getK8SImage());
+                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, endpoint
+                                , clusterClient, flinkManager.getK8SImage());
+
+                        SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
+                    });
+                    SSERunnable.getLocal().run();
+                } finally {
+                    ExternalServiceDecorator.externalServiceSuppler = null;
+                }
             });
             return null;
         }
+
+
     }
+
+    public static String createExternalServiceSuppler(String clusterId, ServerPortExport serverPortExport) {
+        final String externalServiceName = ExternalServiceDecorator.getExternalServiceName(
+                clusterId + ExternalServiceDecorator.TIS_EXTERNAL_SERVICE_SUFFIX);
+        ExternalServiceDecorator.externalServiceSuppler = (kubeParams) -> {
+            return serverPortExport.accept(new ServerPortExportVisitor<Service>() {
+                @Override
+                public Service visit(Ingress ingress) {
+                    throw new UnsupportedOperationException();
+                }
+
+                private Service createService(ServiceExposedType exposedType) {
+                    return exposedType
+                            .serviceType().buildUpExternalRestService(externalServiceName, kubeParams);
+                }
+
+                @Override
+                public Service visit(LoadBalance loadBalance) {
+                    return createService(ServiceExposedType.LoadBalancer);
+                }
+
+                @Override
+                public Service visit(NodePort nodePort) {
+                    Service svc = createService(ServiceExposedType.NodePort);
+                    for (ServicePort port : svc.getSpec().getPorts()) {
+                        port.setNodePort(nodePort.nodePort);
+                    }
+                    return svc;
+                }
+            });
+        };
+        return externalServiceName;
+    }
+
+    public static Endpoint getEndpoint(String clusterId, ServerPortExport serverPortExport, String externalServiceName, FlinkKubeClient kubeClient) {
+        return serverPortExport.accept(new ServerPortExportVisitor<Endpoint>() {
+            @Override
+            public Endpoint visit(Ingress ingress) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Endpoint visit(LoadBalance loadBalance) {
+                Optional<Endpoint> restEndpoint = kubeClient.getRestEndpoint(clusterId, false);
+                if (!restEndpoint.isPresent()) {
+                    throw new IllegalStateException("can not get restEndpoint for service:" + externalServiceName);
+                }
+                Endpoint endpoint1 = restEndpoint.get();
+                return endpoint1;
+            }
+
+            @Override
+            public Endpoint visit(NodePort nodePort) {
+                return new Endpoint(nodePort.host, nodePort.nodePort);
+            }
+        });
+    }
+
 
     @Override
     public Optional<JSONObject> launchService(SSERunnable launchProcess) {
@@ -294,34 +322,6 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                 throw new RuntimeException(e);
             }
         });
-
-//        final Thread trd = Thread.currentThread();
-//        final ClassLoader currentClassLoader = trd.getContextClassLoader();
-//        try {
-//            trd.setContextClassLoader(FlinkK8SClusterManager.class.getClassLoader());
-//
-//
-//            final Configuration configuration = createFlinkConfig();
-//
-//            // "registry.cn-hangzhou.aliyuncs.com/tis/flink-3.1.0:latest"
-////            configuration.set(KubernetesConfigOptions.CONTAINER_IMAGE, k8SImageCfg.getImagePath());
-////            configuration.set(KubernetesConfigOptions.CLUSTER_ID, clusterId);
-////            configuration.set(KubernetesConfigOptions.NAMESPACE, k8SImageCfg.getNamespace());
-//            // FlinkConfMountDecorator.flinkConfigMapData =
-//            getCreateAccompanyConfigMapResource();
-//
-//            //  final String configDir = CliFrontend.getConfigurationDirectoryFromEnv();
-//
-//
-//            final KubernetesSessionCli cli = new KubernetesSessionCli(configuration, "./conf");
-//
-//            process.apply(cli);
-//
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        } finally {
-//            trd.setContextClassLoader(currentClassLoader);
-//        }
     }
 
 

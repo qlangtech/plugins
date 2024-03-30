@@ -37,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.kubernetes.kubeclient.Endpoint;
 import org.apache.flink.runtime.client.JobStatusMessage;
 
 import java.io.File;
@@ -90,6 +91,11 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
     public static JSONObject createClusterMeta(
             FlinkClusterType clusterType, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
         return createClusterMeta(clusterType, Optional.empty(), clusterClient, flinkK8SImage);
+    }
+
+    public static JSONObject createClusterMeta(
+            FlinkClusterType clusterType, Endpoint endpoint, ClusterClient<String> clusterClient, FlinkK8SImage flinkK8SImage) {
+        return createClusterMeta(clusterType, Optional.of("http://" + endpoint.getAddress() + ":" + endpoint.getPort()), clusterClient, flinkK8SImage);
     }
 
 

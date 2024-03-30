@@ -109,7 +109,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 int timeout = 5;
 
                 // 等待5个小时
-                resultHandler.waitFor(TimeUnit.HOURS.toMillis(5));
+                resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
 
                 if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
                     if ( //resultHandler.hasResult() &&

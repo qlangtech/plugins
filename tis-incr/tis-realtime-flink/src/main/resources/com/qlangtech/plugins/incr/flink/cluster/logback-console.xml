@@ -58,7 +58,8 @@
     <logger name="org.apache.kafka" level="INFO"/>
     <logger name="org.apache.hadoop" level="INFO"/>
     <logger name="org.apache.zookeeper" level="INFO"/>
-
+    <!--https://github.com/datavane/tis/issues/310-->
+    <logger name="org.apache.flink.runtime.dispatcher.DispatcherRestEndpoint" level="ERROR"/>
     <!-- Suppress the irrelevant (wrong) warnings from the Netty channel handler -->
     <logger name="org.apache.flink.shaded.akka.org.jboss.netty.channel.DefaultChannelPipeline" level="ERROR"/>
 </configuration>

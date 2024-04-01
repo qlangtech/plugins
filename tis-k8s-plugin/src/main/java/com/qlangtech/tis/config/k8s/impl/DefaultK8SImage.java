@@ -68,10 +68,10 @@ public class DefaultK8SImage extends K8sImage {
     @FormField(ordinal = 1, type = FormFieldType.SELECTABLE, validate = {Validator.require})
     public String k8sCfg;
 
-    @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String namespace;
 
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
 

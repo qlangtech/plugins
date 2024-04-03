@@ -117,12 +117,17 @@ public class KubernetesApplication extends ClusterType {
 
     @Override
     public void checkUseable(TargetResName collection) throws TisException {
-        ServerLaunchToken launchToken = this.getLaunchToken(collection);
+        ServerLaunchToken launchToken = getLaunchToken();
         if (!launchToken.isLaunchTokenExist()) {
             // 实例还没有创建，直接退出
             return;
         }
         super.checkUseable(collection);
+    }
+
+
+    private ServerLaunchToken getLaunchToken() {
+        return this.getLaunchToken(new TargetResName(this.clusterId));
     }
 
     @Override
@@ -170,7 +175,7 @@ public class KubernetesApplication extends ClusterType {
 
 
         //
-        this.getLaunchToken(collection).deleteLaunchToken();
+        this.getLaunchToken().deleteLaunchToken();
 
     }
 
@@ -243,10 +248,15 @@ public class KubernetesApplication extends ClusterType {
 
     @Override
     public JobManagerAddress getJobManagerAddress() {
+        JSONObject meta = this.getLaunchToken().readLaunchedToken();
         return new JobManagerAddress(null, -1) {
             @Override
             public String getURL() {
-                return createRestClusterClient().getWebInterfaceURL();
+                String url = meta.getString(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL);
+                if (StringUtils.isEmpty(url)) {
+                    throw new IllegalStateException("key:" + FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL + " relevant value can not be empty");
+                }
+                return url;
             }
         };
     }
@@ -366,17 +376,17 @@ public class KubernetesApplication extends ClusterType {
 
 
                     Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(clusterId, this.getK8SClusterCfg().serverPortExport, externalService, kubeClient);
-
+                    logger.info("clusterId:{},relevant endpoint:{}", clusterId, (endpoint.getAddress() + ":" + endpoint.getPort()));
                     int tryCount = 0;
                     boolean hasGetJobInfo = false;
 
                     tryGetJob:
-                    while (tryCount++ < 5) {
+                    while (tryCount++ < 10) {
                         for (JobStatusMessage jobStat : clusterClient.listJobs().get()) {
                             afterSucce.accept(jobStat.getJobId());
                             JSONObject token = createClusterMeta(FlinkClusterType.K8SApplication, endpoint, clusterClient, flinkK8SImage);
                             token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
-                            this.getLaunchToken(collection).appendJobNote(token);
+                            this.getLaunchToken().appendJobNote(token);
                             hasGetJobInfo = true;
                             break tryGetJob;
                         }

@@ -37,6 +37,8 @@ import org.apache.flink.runtime.entrypoint.ClusterEntrypointUtils;
 import org.apache.flink.runtime.entrypoint.DynamicParametersConfigurationParserFactory;
 import org.apache.flink.util.FlinkException;
 import org.apache.flink.util.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -53,7 +55,7 @@ import java.util.Objects;
  * // @see KubernetesApplicationClusterEntrypoint
  **/
 public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClusterEntryPoint {
-
+    protected static final Logger logger = LoggerFactory.getLogger(KubernetesApplicationClusterEntrypointOfTIS.class);
     //  private static final PluginAndCfgSnapshotLocalCache snapshotLocalCache = new PluginAndCfgSnapshotLocalCache();
 
     private KubernetesApplicationClusterEntrypointOfTIS(Configuration configuration, PackagedProgram program) {
@@ -88,19 +90,19 @@ public class KubernetesApplicationClusterEntrypointOfTIS extends ApplicationClus
             TISRes unberJarFile = UberJarUtil.getStreamUberJarFile(targetResName);
             unberJarFile.sync2Local(true);
             String unberJarURL = "local" + String.valueOf(unberJarFile.getFile().toURI().toURL()).substring("file".length());
-            LOG.info("TIS unberJarURL:{}", unberJarURL);
+            logger.info("TIS unberJarURL:{}", unberJarURL);
             TISFlinkClassLoaderFactory.synAppRelevantCfgsAndTpis(new URL[]{unberJarFile.getFile().toURI().toURL()});
             configuration.set(PipelineOptions.JARS, Lists.newArrayList(unberJarURL));
             program = getPackagedProgram(configuration);
         } catch (Exception e) {
-            LOG.error("Could not create application program.", e);
+            logger.error("Could not create application program.", e);
             System.exit(1);
         }
 
         try {
             configureExecution(configuration, program);
         } catch (Exception e) {
-            LOG.error("Could not apply application configuration.", e);
+            logger.error("Could not apply application configuration.", e);
             System.exit(1);
         }
 

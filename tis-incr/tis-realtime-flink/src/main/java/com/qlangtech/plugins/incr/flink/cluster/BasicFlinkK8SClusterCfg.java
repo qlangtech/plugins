@@ -163,6 +163,9 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
             opts.add("tmMemory", TISFlinkProp.create(TaskManagerOptions.TOTAL_PROCESS_MEMORY)
                             .overwriteDft((MemorySize.ofMebiBytes(1728)))
                     , (fm) -> {
+                        if (fm.tmMemory == null) {
+                            return null;
+                        }
                         return MemorySize.parse(String.valueOf(fm.tmMemory), MemoryUnit.KILO_BYTES);
                     }
             );
@@ -181,7 +184,12 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
 
             opts.add("jmMemory", TISFlinkProp.create(JobManagerOptions.TOTAL_PROCESS_MEMORY)
                             .setOverwriteProp(OverwriteProps.dft(MemorySize.ofMebiBytes(1600)))
-                    , (fm) -> MemorySize.parse(String.valueOf(fm.jmMemory), MemoryUnit.KILO_BYTES)
+                    , (fm) -> {
+                        if (fm.jmMemory == null) {
+                            return null;
+                        }
+                        return MemorySize.parse(String.valueOf(fm.jmMemory), MemoryUnit.KILO_BYTES);
+                    }
             );
             opts.add(KubernetesConfigOptions.CONTAINER_IMAGE, (fm) -> {
                 return fm.getK8SImage().getImagePath();

@@ -109,6 +109,7 @@ import java.util.regex.Pattern;
 @Public
 public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJob, ILaunchingOrchestrate {
 
+    private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
 
     public static final Integer DEFAULT_POWERJOB_SERVER_PORT = 7700;
 
@@ -235,7 +236,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             , K8S_DATAX_POWERJOB_REGISTER_ACCOUNT
             , K8S_DATAX_POWERJOB_WORKER};
 
-    private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobServer.class);
+
 
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public ServerPortExport serverPortExport;
@@ -935,6 +936,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 }
             };
         }
+        logger.info("watch onOfPod log:{}", String.join(",", relevantPodNames.getRelevantPodNames()));
         WatchPodLog watchPodLog = null;
         for (String onePodOf : relevantPodNames.getRelevantPodNames()) {
             watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf, logListener);

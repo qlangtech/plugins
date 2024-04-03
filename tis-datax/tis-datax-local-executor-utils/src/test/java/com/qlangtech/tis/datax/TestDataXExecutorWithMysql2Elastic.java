@@ -24,6 +24,7 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.ds.DBIdentity;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -71,7 +72,7 @@ public class TestDataXExecutorWithMysql2Elastic extends BasicDataXExecutorTestCa
     }
 
     protected DataxExecutor createExecutor() {
-        return new DataxExecutor(DataXJobSubmit.InstanceType.LOCAL, 300) {
+        return new DataxExecutor(AssembleSvcCompsite.statusRpc, DataXJobSubmit.InstanceType.LOCAL, 300) {
 
             @Override
             protected void startEngine(Pair<Configuration, IDataXNameAware> cfg, DataXJobArgs args,

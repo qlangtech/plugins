@@ -246,7 +246,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
     }
 
     public static Endpoint getEndpoint(String clusterId, ServerPortExport serverPortExport, String externalServiceName, FlinkKubeClient kubeClient) {
-        return serverPortExport.accept(new ServerPortExportVisitor<Endpoint>() {
+        Endpoint endpoint = serverPortExport.accept(new ServerPortExportVisitor<Endpoint>() {
             @Override
             public Endpoint visit(Ingress ingress) {
                 throw new UnsupportedOperationException();
@@ -267,6 +267,9 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                 return new Endpoint(nodePort.host, nodePort.nodePort);
             }
         });
+
+        logger.info("clusterId:{},relevant endpoint:{}", clusterId, (endpoint.getAddress() + ":" + endpoint.getPort()));
+        return endpoint;
     }
 
 

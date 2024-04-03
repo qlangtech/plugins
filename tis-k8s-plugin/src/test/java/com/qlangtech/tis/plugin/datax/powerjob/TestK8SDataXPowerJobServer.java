@@ -3,7 +3,6 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
-import com.qlangtech.tis.coredefine.module.action.ResName;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.SSERunnable;
@@ -44,7 +43,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         K8SDataXPowerJobServer powerJobServer = createPowerJobServer(null);
 
         WatchPodLog podLog = powerJobServer.watchOneOfPowerJobPodLog(
-                new WaitReplicaControllerLaunch(Sets.newHashSet("datax-worker-powerjob-server-pqlml")), new PowerJobPodLogListener() {
+                new WaitReplicaControllerLaunch(null, Sets.newHashSet("datax-worker-powerjob-server-pqlml")), new PowerJobPodLogListener() {
                     @Override
                     protected void consumePodLogMsg(ExecuteState<String> log) {
                         System.out.println(log.getMsg());
@@ -86,7 +85,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     public void testLaunchPowerjobServer() throws Exception {
         try {
 
-          //  NodePort portExport = createNodePort();
+            //  NodePort portExport = createNodePort();
 
             LoadBalance portExport = createLoadBalance();
 
@@ -133,7 +132,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
         powerJobWorker.maxLightweightTaskNum = 1024;
         powerJobWorker.maxHeavyweightTaskNum = 64;
         powerJobWorker.healthReportInterval = 10;
-        powerJobWorker.k8sImage =  TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
+        powerJobWorker.k8sImage = TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
 
 
         ReplicasSpec replicasSpec = K8SUtils.createDftReplicasSpec();

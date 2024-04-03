@@ -376,7 +376,7 @@ public class KubernetesApplication extends ClusterType {
 
 
                     Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(clusterId, this.getK8SClusterCfg().serverPortExport, externalService, kubeClient);
-                    logger.info("clusterId:{},relevant endpoint:{}", clusterId, (endpoint.getAddress() + ":" + endpoint.getPort()));
+
                     int tryCount = 0;
                     boolean hasGetJobInfo = false;
 

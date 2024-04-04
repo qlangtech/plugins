@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 当客户端选择使用 kerbernetes-application 部署方式的时候，在flink-jobManager 端服务组装构建jobGraph实例，需要从TIS-console端拉区 同步任务对应的jar包到本地
+ * 当客户端选择使用 kerbernetes-application 部署方式的时候，在flink-jobManager 端服务组装构建jobGraph实例，需要从TIS-console端拉取 同步任务对应的jar包到本地
  *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-01-08 15:47

@@ -19,6 +19,8 @@
 package com.qlangtech.plugins.incr.flink.cluster;
 
 import com.alibaba.citrus.turbine.Context;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist;
 import com.qlangtech.plugins.incr.flink.launch.FlinkPropAssist.Options;
@@ -36,9 +38,18 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport.DefaultExportPortProvider;
+import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.K8sImage.ImageCategory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.RbacAuthorizationV1Api;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1RoleBinding;
+import io.kubernetes.client.openapi.models.V1RoleRef;
+import io.kubernetes.client.openapi.models.V1Subject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.JobManagerOptions;
@@ -49,8 +60,11 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions;
 import org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.ServiceExposedType;
 import org.apache.flink.kubernetes.kubeclient.FlinkKubeClientFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -58,6 +72,10 @@ import java.util.Optional;
  **/
 public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
     public static final String KEY_FIELD_CLUSTER_ID = "clusterId";
+    private static final Logger logger = LoggerFactory.getLogger(BasicFlinkK8SClusterCfg.class);
+
+    private final static transient Set<String> processedCluster = Sets.newHashSet();
+
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
     public ServerPortExport serverPortExport;
 
@@ -76,6 +94,8 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
 
     @FormField(ordinal = 10, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String svcAccount;
+    @FormField(ordinal = 11, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean impower;
 
     // @FormField(ordinal = 12, type = FormFieldType.ENUM, validate = {Validator.require, Validator.identity})
     // 固定暴露的就用ClusterIP类型，其他向用户暴露的入口，再由
@@ -110,8 +130,71 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
         throw new UnsupportedOperationException();
     }
 
+    final V1RoleBinding readRoleBinding() {
+        try {
+            FlinkK8SImage k8s = this.getK8SImage();
+            RbacAuthorizationV1Api authorizationApi = new RbacAuthorizationV1Api(k8s.createApiClient());
+            V1RoleBinding binding = authorizationApi.readNamespacedRoleBinding(getRoleBindingName(), k8s.getNamespace()).execute();
+            return binding;
+        } catch (ApiException e) {
+            logger.warn(e.getMessage());
+            return null;
+        }
+    }
+
     public final FlinkK8SImage getFlinkK8SImage() {
-        return this.getK8SImage();
+        FlinkK8SImage k8s = this.getK8SImage();
+        IK8sContext cfg = k8s.getK8SCfg();
+        ApiClient apiClient = k8s.createApiClient();
+        final String cacheKey = this.svcAccount + "-" + k8s.getNamespace() + "-" + cfg.getKubeBasePath();
+        if (this.impower && !processedCluster.contains(cacheKey)) {
+
+            try {
+
+                final String bindingName = getRoleBindingName();
+
+                //kubectl  create clusterrolebinding tis-flink-manager --clusterrole=cluster-admin --serviceaccount=default:default
+                RbacAuthorizationV1Api authorizationApi = new RbacAuthorizationV1Api(apiClient);
+
+                V1RoleBinding roleBinding = this.readRoleBinding();
+
+                if (roleBinding != null) {
+                    processedCluster.add(cacheKey);
+                    return k8s;
+                }
+
+                roleBinding = new V1RoleBinding();
+                V1ObjectMeta meta = new V1ObjectMeta();
+                meta.setName(bindingName);
+                meta.setNamespace(k8s.getNamespace());
+                roleBinding.setMetadata(meta);
+
+                V1RoleRef roleRef = new V1RoleRef();
+                roleRef.setName("cluster-admin");
+                //  supported values: \"Role\", \"ClusterRole\"",
+                roleRef.kind("ClusterRole");
+                roleBinding.setRoleRef(roleRef);
+
+                V1Subject subject = new V1Subject();
+                subject.setName(this.svcAccount);
+                subject.setNamespace(k8s.getNamespace());
+                // supported values: \"ServiceAccount\", \"User\", \"Group\"",
+                subject.setKind("ServiceAccount");
+                roleBinding.setSubjects(Lists.newArrayList(subject));
+                authorizationApi.createNamespacedRoleBinding(
+                        k8s.getNamespace(), roleBinding).pretty(K8SUtils.resultPrettyShow).execute();
+            } catch (ApiException e) {
+                throw K8sExceptionUtils.convert(e);
+            }
+
+            processedCluster.add(cacheKey);
+        }
+        return k8s;
+    }
+
+
+    private String getRoleBindingName() {
+        return "tis-flink-manager-" + this.svcAccount;
     }
 
     public final Pair<Configuration, IK8sContext> createFlinkConfig() throws Exception {

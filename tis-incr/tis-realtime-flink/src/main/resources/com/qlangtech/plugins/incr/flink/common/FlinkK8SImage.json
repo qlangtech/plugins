@@ -2,19 +2,5 @@
   "imagePath": {
     "dftVal": "com.qlangtech.tis.plugins.incr.flink.FlinkCommon.dftImagePath()",
     "help": "Flink Docker Image Path 由TIS定制"
-  },
-  "impower": {
-    "label": "授权",
-    "dftVal": true,
-    "enum": [
-      {
-        "val": true,
-        "label": "是"
-      },
-      {
-        "val": false,
-        "label": "否"
-      }
-    ]
   }
 }

@@ -81,7 +81,7 @@ public class TestKubernetesApplication {
                         }
                     }
                 };
-                flinkK8SImage.impower = false;
+             //   flinkK8SImage.impower = false;
                 return flinkK8SImage;
             }
         };

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cluster;
 
+import com.qlangtech.plugins.incr.flink.common.FlinkK8SImage;
 import com.qlangtech.tis.datax.job.DefaultSSERunnable;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteStep;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate.ExecuteSteps;
@@ -50,14 +51,7 @@ public class TestFlinkK8SClusterManager {
 
     @Test
     public void testLaunchService() {
-        FlinkK8SClusterManager clusterManager = new FlinkK8SClusterManager();
-        clusterManager.clusterId = "tis-flink-cluster";
-        clusterManager.k8sImage = "tis_flink_image";
-        clusterManager.jmMemory = 812000;
-        clusterManager.tmMemory = 1012000;
-        clusterManager.tmCPUCores = 700;
-        clusterManager.taskSlot = 1;
-        clusterManager.svcAccount = "default";
+        FlinkK8SClusterManager clusterManager = getClusterManager();
         // clusterManager.svcExposedType = "NodePort";
 
 
@@ -69,5 +63,27 @@ public class TestFlinkK8SClusterManager {
             DefaultSSERunnable sseRunnable = new DefaultSSERunnable(clientWriter, new ExecuteSteps(clusterManager, executeSteps), runnable);
             clusterManager.launchService(sseRunnable);
         }
+    }
+
+
+    private FlinkK8SClusterManager getClusterManager() {
+        FlinkK8SClusterManager clusterManager = new FlinkK8SClusterManager();
+        clusterManager.clusterId = "tis-flink-cluster";
+        clusterManager.k8sImage = "local-tis";
+        clusterManager.jmMemory = 812000;
+        clusterManager.tmMemory = 1012000;
+        clusterManager.tmCPUCores = 700;
+        clusterManager.taskSlot = 1;
+        clusterManager.svcAccount = "default";
+        clusterManager.impower = true;
+        return clusterManager;
+    }
+
+    @Test
+    public void testGetFlinkK8SImage() {
+        FlinkK8SClusterManager clusterManager = getClusterManager();
+        FlinkK8SImage flinkK8SImage = clusterManager.getFlinkK8SImage();
+
+        clusterManager.readRoleBinding();
     }
 }

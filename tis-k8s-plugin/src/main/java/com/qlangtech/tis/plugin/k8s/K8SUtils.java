@@ -525,7 +525,8 @@ public class K8SUtils {
             V1PodList pods = targetResName.setFieldSelector(
                     api
                             .listNamespacedPod(powerjobServerImage.getNamespace())
-                            .resourceVersion(resourceVer.getResourceVersion()))
+                           // .resourceVersion(resourceVer.getResourceVersion())
+                             )
                     .execute();
             for (V1Pod pod : pods.getItems()) {
                 for (V1OwnerReference oref : pod.getMetadata().getOwnerReferences()) {

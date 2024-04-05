@@ -341,7 +341,7 @@ public class KubernetesApplication extends ClusterType {
                         }
                     }
                     Objects.requireNonNull(evtCallCriteria, "evtCallCriteria can not be null");
-
+                    logger.info("evtCallCriteria ownerUid:{},resourceVer:{}", evtCallCriteria.getOwnerUid(), evtCallCriteria.getResourceVersion());
 
                     K8SRCResNameWithFieldSelector resSelector
                             = new K8SRCResNameWithFieldSelector(this.clusterId

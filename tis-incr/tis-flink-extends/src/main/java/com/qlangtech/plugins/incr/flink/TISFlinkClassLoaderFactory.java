@@ -66,7 +66,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
      */
 
 
-    private static final Set<String> SKIP_PLUGIN_NAMES = Sets.newHashSet(IFlinkCluster.PLUGIN_DEPENDENCY_FLINK_DEPENDENCY, IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS);
+  //  public static final Set<String> SKIP_PLUGIN_NAMES = IFlinkClusterIFlinkCluster Sets.newHashSet(IFlinkCluster.PLUGIN_DEPENDENCY_FLINK_DEPENDENCY, IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS);
 
     public static final String SKIP_CLASSLOADER_FACTORY_CREATION = IFlinkCluster.SKIP_CLASSLOADER_FACTORY_CREATION;
 
@@ -171,11 +171,11 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
             public URLClassLoader createClassLoader(URL[] libraryURLs) {
                 try {
 
-                    PluginAndCfgsSnapshot snapshot = synAppRelevantCfgsAndTpis( libraryURLs);
+                    PluginAndCfgsSnapshot snapshot = synAppRelevantCfgsAndTpis(libraryURLs);
 
 
                     final Set<String> relativePluginNames = Sets.newHashSet(snapshot.getPluginNames())
-                            .stream().filter((pluginName) -> !SKIP_PLUGIN_NAMES.contains(pluginName)).collect(Collectors.toSet());
+                            .stream().filter((pluginName) -> !IFlinkCluster.SKIP_PLUGIN_NAMES.contains(pluginName)).collect(Collectors.toSet());
                     logger.info("relativePluginNames:{}", relativePluginNames.stream().collect(Collectors.joining(",")));
                     return new TISChildFirstClassLoader(new UberClassLoader(TIS.get().getPluginManager(), relativePluginNames)
                             , libraryURLs, this.getParentClassLoader()
@@ -188,7 +188,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
     }
 
 
-    public static PluginAndCfgsSnapshot synAppRelevantCfgsAndTpis( URL[] libraryURLs) throws Exception {
+    public static PluginAndCfgsSnapshot synAppRelevantCfgsAndTpis(URL[] libraryURLs) throws Exception {
 
         File nodeExcludeLock = new File(Config.getDataDir(), "initial.lock");
         FileUtils.touch(nodeExcludeLock);

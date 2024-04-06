@@ -60,7 +60,7 @@ public interface ResChangeCallback {
      * @return
      */
     public default boolean isBreakEventWatch(final Map<String, PodStat> relevantPodNames, final int expectResChangeCount) {
-        return (relevantPodNames.values().size() >= expectResChangeCount);
+         return (relevantPodNames.values().size() >= expectResChangeCount);
     }
 
     default void applyDefaultPodPhase(final Map<String, PodStat> relevantPodNames, V1Pod pod) {

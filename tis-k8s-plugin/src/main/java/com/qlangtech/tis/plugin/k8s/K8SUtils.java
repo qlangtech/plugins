@@ -335,6 +335,8 @@ public class K8SUtils {
         meta.setName(name.getK8SResName());
         rc.setMetadata(meta);
 
+        final String preListPodsResourceVersion
+                = api.listNamespacedPod(config.getNamespace()).pretty(K8SUtils.resultPrettyShow).execute().getMetadata().getResourceVersion();
 
         V1ReplicationController createdRC =
                 api.createNamespacedReplicationController(config.getNamespace(), rc)
@@ -351,7 +353,7 @@ public class K8SUtils {
 
         //  UID uid = K8SUtils.createUID(createdRC);
         // String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch
-        return NamespacedEventCallCriteria.createResVersion(createdRC);
+        return NamespacedEventCallCriteria.createResVersion(createdRC, preListPodsResourceVersion);
         // return evtCallCriteria;
 
 //        for (V1ReplicationController fetchRC : api.listNamespacedReplicationController(
@@ -563,7 +565,7 @@ public class K8SUtils {
      * @throws PowerjobOrchestrateException
      */
     public static WaitReplicaControllerLaunch waitReplicaControllerLaunch(DefaultK8SImage powerjobServerImage //
-            , K8SRCResNameWithFieldSelector targetResName, final int expectResCount, CoreV1Api api
+            , final K8SRCResNameWithFieldSelector targetResName, final int expectResCount, CoreV1Api api
             , NamespacedEventCallCriteria resourceVer, ResChangeCallback changeCallback)  //
             throws ApiException, PowerjobOrchestrateException {
         SSERunnable sse = SSERunnable.getLocal();
@@ -581,9 +583,10 @@ public class K8SUtils {
             V1PodList pods = targetResName.setFieldSelector(
                     api
                             .listNamespacedPod(powerjobServerImage.getNamespace())
-                    // .resourceVersion(resourceVer.getResourceVersion())
+                            .resourceVersion(resourceVer.getPreListPodsResourceVersion())
             )
                     .execute();
+
             for (V1Pod pod : pods.getItems()) {
                 for (V1OwnerReference oref : pod.getMetadata().getOwnerReferences()) {
                     if (StringUtils.equalsIgnoreCase(oref.getUid(), resourceVer.getOwnerUid())) {
@@ -600,7 +603,7 @@ public class K8SUtils {
                 return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.values());
             }
         }
-        String currentResVer = resourceVer.getResourceVersion();
+        String currentResVer = resourceVer.getPreListPodsResourceVersion();
         int tryProcessWatcherLogsCount = 0;
         processWatcherLogs:
         while (true) { // 处理 watcher SocketTimeoutException 超时的错误
@@ -676,9 +679,10 @@ public class K8SUtils {
             } catch (Exception e) {
                 if (tryProcessWatcherLogsCount++ < 3 //
                         && ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class) > -1) {
+                    logger.warn("resName:" + targetResName.getName() + ",errorMsg:" + e.getMessage());
                     continue processWatcherLogs;
                 } else {
-                    throw e;
+                    throw new RuntimeException("targetResName:" + targetResName.getName() + ",trycount:" + tryProcessWatcherLogsCount + ",resVer:" + currentResVer, e);
                 }
             } finally {
                 try {

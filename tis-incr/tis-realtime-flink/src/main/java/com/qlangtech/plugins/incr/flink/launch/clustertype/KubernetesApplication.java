@@ -349,7 +349,7 @@ public class KubernetesApplication extends ClusterType {
                         }
                     }
                     Objects.requireNonNull(evtCallCriteria, "evtCallCriteria can not be null");
-                    logger.info("evtCallCriteria ownerUid:{},resourceVer:{}", evtCallCriteria.getOwnerUid(), evtCallCriteria.getResourceVersion());
+                    logger.info("evtCallCriteria ownerUid:{},resourceVer:{}", evtCallCriteria.getOwnerUid(), evtCallCriteria.getPreListPodsResourceVersion());
 
                     K8SRCResNameWithFieldSelector resSelector
                             = new K8SRCResNameWithFieldSelector(this.clusterId
@@ -361,7 +361,13 @@ public class KubernetesApplication extends ClusterType {
                     });
                     WaitReplicaControllerLaunch controllerLaunch
                             = K8SUtils.waitReplicaControllerLaunch(flinkK8SImage, resSelector
-                            , deployment.getSpec().getReplicas(), coreV1Api, evtCallCriteria, new ResChangeCallback() {
+                            , deployment.getSpec().getReplicas(), coreV1Api //
+                            , new NamespacedEventCallCriteria(evtCallCriteria.getOwnerUid(), evtCallCriteria.getOwnerName()) {
+                                @Override
+                                public String getPreListPodsResourceVersion() {
+                                    return null;
+                                }
+                            }, new ResChangeCallback() {
                                 @Override
                                 public void applyDefaultPodPhase(final Map<String, PodStat> relevantPodNames, V1Pod pod) {
                                     relevantPodNames.put(pod.getMetadata().getName(), new PodStat(pod, RunningStatus.SUCCESS));

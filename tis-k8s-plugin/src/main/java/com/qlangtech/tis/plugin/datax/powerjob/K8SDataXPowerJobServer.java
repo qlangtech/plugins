@@ -44,6 +44,7 @@ import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.lang.TisException.ErrorCode;
@@ -81,6 +82,7 @@ import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscaler;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerSpec;
 import io.kubernetes.client.openapi.models.V1HorizontalPodAutoscalerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -775,39 +777,10 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
             resourceVer = K8SUtils.createReplicationController(
                     api, powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, exportPorts, envs);
-            // api.listNamespacedPod()
-
-
-            ///////////////////////////
-//            System.out.println("resourceVer.getResourceVersion():" + resourceVer.getResourceVersion());
-//            // test
-//            Watch<V1Pod> rcWatch = Watch.createWatch(api.getApiClient()
-//                    //
-//                    ,
-//                    this.getK8SApi().listNamespacedPod(powerjobServerImage.getNamespace()).allowWatchBookmarks(false).watch(true)
-//                            .resourceVersion(resourceVer.getResourceVersion())
-//                            .buildCall(K8SUtils.createApiCallback())
-//
-//                    //
-//                    , new TypeToken<Response<V1Pod>>() {
-//                    }.getType());
-//            try {
-//                for (Watch.Response<V1Pod> event : rcWatch) {
-//
-//                    System.out.println("type:" + event.type + ",object:" + event.object.getMetadata().getName());
-//                }
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
-
-
-            //////////////////////////////
-
 
             // String namespace, String pretty, Boolean allowWatchBookmarks, String _continue, String fieldSelector, String labelSelector, Integer limit, String resourceVersion, Integer timeoutSeconds, Boolean watch, ApiCallback< V1ReplicationControllerList > _callback
             //K8SUtils.LABEL_APP + "=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName()
-            relevantPodNames = K8SUtils.waitReplicaControllerLaunch(
-                    powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec, this.getK8SApi(), resourceVer);
+            relevantPodNames = waitPowerjobPods(powerjobServerImage, resourceVer, powerjobServerSpec);
 
             // sse.info(K8S_DATAX_POWERJOB_SERVER.getName(), TimeFormat.getCurrentTimeStamp(), " successful publish '" + K8S_DATAX_POWERJOB_SERVER.getK8SResName() + "'");
             //  success = true;
@@ -828,90 +801,53 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             }
         });
         sse.setContextAttr(WatchPodLog.class, watchPodLog);
-        //   this.k8SController.listPodAndWatchLog();
-
-//        K8SUtils.createService(api, powerjobServerImage.getNamespace()
-//                , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER, this.serverPortExport.serverPort, powerJobServerPort);
-
-
-//        Call rcCall = api.listNamespacedPodCall(
-//                powerjobServerImage.getNamespace(), K8SUtils.resultPrettyShow, false, null, null
-//                , K8SUtils.LABEL_APP + "=" + K8S_DATAX_POWERJOB_SERVER.getK8SResName(), null, null, null, true, createApiCallback());
-
-
-//        Watch<V1Pod> rcWatch = Watch.createWatch(this.getK8SApi(), rcCall, new TypeToken<Watch.Response<V1Pod>>() {
-//        }.getType());
-//        V1Pod pod = null;
-//        for (Watch.Response<V1Pod> event : rcWatch) {
-//            System.out.println("-----------------------------------------");
-//            pod = event.object;
-//            //  System.out.println();
-//            V1ObjectMeta metadata = pod.getMetadata();
-//            V1PodStatus status = pod.getStatus();
-//
-//            // if ("running".equalsIgnoreCase(status.getPhase())) {
-//            System.out.println(metadata.getName() + "  " + status.getPhase());
-//            //}
-//        }
-
-        //
         return resourceVer;
-        // 等待Server 启动完毕
-        // 1. 创建对外暴露端口
-        //  this.serverPortExport.exportPort(powerjobServerImage.getNamespace(), api, powerJobServerPort);
-//      // 2. 初始化 app
 
-        //  powerJobRegisterAccount();
+    }
 
+
+    WaitReplicaControllerLaunch waitPowerjobPods(DefaultK8SImage powerjobServerImage
+            , NamespacedEventCallCriteria resourceVer, ReplicasSpec powerjobServerSpec) throws ApiException, PowerjobOrchestrateException {
+        return K8SUtils.waitReplicaControllerLaunch(
+                powerjobServerImage, K8S_DATAX_POWERJOB_SERVER, powerjobServerSpec.getReplicaCount()
+                , this.getK8SApi(), resourceVer, new ResChangeCallback() {
+
+                    @Override
+                    public boolean shallGetExistPods() {
+                        return true;
+                    }
+
+                    @Override
+                    public void applyDefaultPodPhase(Map<String, PodStat> relevantPodNames, V1Pod pod) {
+                        relevantPodNames.put(pod.getMetadata().getName(), new PodStat(pod, RunningStatus.SUCCESS));
+                    }
+
+                    @Override
+                    public boolean isBreakEventWatch(Map<String, PodStat> relevantPodNames, int expectResChangeCount) {
+                        if (relevantPodNames.values().size() < expectResChangeCount) {
+                            return false;
+                        }
+                        for (PodStat stat : relevantPodNames.values()) {
+                            if (stat.isRunning()) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
     }
 
     private void powerJobRegisterAccount() {
         SSERunnable sse = SSERunnable.getLocal();
 
         WatchPodLog watchPodLog = sse.getContextAttr(WatchPodLog.class);
-//        boolean success;
-//        success = false;
         try {
 
             this.coreDS.waitServerLaunchedAndInitialPowerjobAccount(this);
-//            int tryCount = 0;
-//            final int tryLimit = 100;
-//            while (true) {
-//                try {
-//                    //this.serverPortExport.initialPowerjobAccount(this);
-//
-//                    // 需要打印日志
-//                    logger.info("success initialPowerjobAccount");
-//                    sse.info(K8S_DATAX_POWERJOB_REGISTER_ACCOUNT.getName(), TimeFormat.getCurrentTimeStamp(), "success initialPowerjobAccount with appName:" + this.appName);
-//                    break;
-//                } catch (Exception e) {
-//                    int idxOfError = -1;
-//                    if (tryCount++ < tryLimit && ( //
-//                            (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.SocketTimeoutException.class)) > -1 ||
-//                                    (idxOfError = ExceptionUtils.indexOfThrowable(e, java.net.ConnectException.class)) > -1)
-//                    ) {
-//
-//                        // 说明是超时等待片刻即可
-//                        logger.warn("contain " + ExceptionUtils.getThrowableList(e).get(idxOfError).getMessage()
-//                                + " tryCount:" + tryCount + " " + e.getMessage());
-//
-//                        try {
-//                            Thread.sleep(4500);
-//                        } catch (InterruptedException ex) {
-//                            throw new RuntimeException(ex);
-//                        }
-//                    } else {
-//                        // 其他日志直接中断了
-//                        throw new RuntimeException(e);
-//                    }
-//                }
-//            }
-            //  success = true;
         } finally {
             if (watchPodLog != null) {
                 watchPodLog.close();
             }
-            //  sse.writeComplete(K8S_DATAX_POWERJOB_REGISTER_ACCOUNT, success);
         }
     }
 
@@ -943,8 +879,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         for (PodStat onePodOf : pods) {
             if (onePodOf.isRunning()) {
                 watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf.getPodName(), logListener);
+                return watchPodLog;
             }
-            return watchPodLog;
         }
         throw new IllegalStateException("must return a watchPodLog instance");
     }

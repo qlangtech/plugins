@@ -51,7 +51,7 @@ public abstract class NamespacedEventCallCriteria {
         return null;
     }
 
-    public String getResourceVersion() {
+    public String getPreListPodsResourceVersion() {
         return null;
     }
 //
@@ -79,7 +79,7 @@ public abstract class NamespacedEventCallCriteria {
         }
         return new NamespacedEventCallCriteria(ownerUid, ownerName) {
             @Override
-            public String getResourceVersion() {
+            public String getPreListPodsResourceVersion() {
                 return resourceVersion;// Objects.requireNonNull(newRC, "newRC can not be null").getMetadata().getResourceVersion();
             }
         };
@@ -90,9 +90,9 @@ public abstract class NamespacedEventCallCriteria {
         return createResVersion(metadata.getUid(), metadata.getName(), metadata.getResourceVersion());
     }
 
-    public static NamespacedEventCallCriteria createResVersion(V1ReplicationController newRC) {
+    public static NamespacedEventCallCriteria createResVersion(V1ReplicationController newRC, String preListPodsResourceVersion) {
         V1ObjectMeta metadata = Objects.requireNonNull(newRC, "newRC can not be null").getMetadata();
-        return createResVersion(metadata.getUid(), metadata.getName(), metadata.getResourceVersion());
+        return createResVersion(metadata.getUid(), metadata.getName(), preListPodsResourceVersion);
 //        return new NamespacedEventCallCriteria() {
 //            @Override
 //            public String getResourceVersion() {

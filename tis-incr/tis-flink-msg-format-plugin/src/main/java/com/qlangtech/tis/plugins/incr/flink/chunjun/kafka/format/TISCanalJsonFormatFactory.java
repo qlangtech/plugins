@@ -25,9 +25,9 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import org.apache.flink.api.common.serialization.SerializationSchema;
-import org.apache.flink.formats.json.JsonOptions;
+import org.apache.flink.formats.json.JsonFormatOptions;
 import org.apache.flink.formats.json.canal.CanalJsonFormatFactory;
-import org.apache.flink.formats.json.canal.CanalJsonOptions;
+import org.apache.flink.formats.json.canal.CanalJsonFormatOptions;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 
@@ -57,7 +57,7 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
         CanalJsonFormatFactory canalFormatFactory = new CanalJsonFormatFactory();
         DftDescriptor desc = (DftDescriptor) this.getDescriptor();
         return canalFormatFactory.createEncodingFormat(null
-                , desc.options.createFlinkCfg(this).set(JsonOptions.TARGET_TABLE_NAME, targetTabName));
+                , desc.options.createFlinkCfg(this).set(JsonFormatOptions.TARGET_TABLE_NAME, targetTabName));
     }
 
 //    public static class DefaultDescriptor extends FlinkDescriptor<CompactionConfig> {
@@ -81,13 +81,13 @@ public class TISCanalJsonFormatFactory extends FormatFactory {
         public DftDescriptor() {
             //  super();
             this.options = FlinkPropAssist.createOpts(this);
-            options.add("ignoreParseErrors", TISFlinkProp.create(CanalJsonOptions.IGNORE_PARSE_ERRORS));
-            options.add("timestampFormat", TISFlinkProp.create(CanalJsonOptions.TIMESTAMP_FORMAT));
-            options.add("dbInclude", TISFlinkProp.create(CanalJsonOptions.DATABASE_INCLUDE));
-            options.add("tableInclude", TISFlinkProp.create(CanalJsonOptions.TABLE_INCLUDE));
-            options.add("nullKeyMode", TISFlinkProp.create(CanalJsonOptions.JSON_MAP_NULL_KEY_MODE));
-            options.add("nullKeyLiteral", TISFlinkProp.create(CanalJsonOptions.JSON_MAP_NULL_KEY_LITERAL));
-            options.add("encodeDecimal", TISFlinkProp.create(JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
+            options.add("ignoreParseErrors", TISFlinkProp.create(CanalJsonFormatOptions.IGNORE_PARSE_ERRORS));
+            options.add("timestampFormat", TISFlinkProp.create(CanalJsonFormatOptions.TIMESTAMP_FORMAT));
+            options.add("dbInclude", TISFlinkProp.create(CanalJsonFormatOptions.DATABASE_INCLUDE));
+            options.add("tableInclude", TISFlinkProp.create(CanalJsonFormatOptions.TABLE_INCLUDE));
+            options.add("nullKeyMode", TISFlinkProp.create(CanalJsonFormatOptions.JSON_MAP_NULL_KEY_MODE));
+            options.add("nullKeyLiteral", TISFlinkProp.create(CanalJsonFormatOptions.JSON_MAP_NULL_KEY_LITERAL));
+            options.add("encodeDecimal", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
 

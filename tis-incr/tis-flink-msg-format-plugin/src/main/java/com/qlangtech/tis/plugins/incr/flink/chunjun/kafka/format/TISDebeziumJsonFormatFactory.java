@@ -26,9 +26,9 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.formats.json.JsonOptions;
+import org.apache.flink.formats.json.JsonFormatOptions;
 import org.apache.flink.formats.json.debezium.DebeziumJsonFormatFactory;
-import org.apache.flink.formats.json.debezium.DebeziumJsonOptions;
+import org.apache.flink.formats.json.debezium.DebeziumJsonFormatOptions;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 
@@ -62,7 +62,7 @@ public class TISDebeziumJsonFormatFactory extends FormatFactory {
         Configuration cfg = desc.options.createFlinkCfg(this);
 
         return djsonFormatFactory
-                .createEncodingFormat(null, cfg.set(JsonOptions.TARGET_TABLE_NAME, targetTableName));
+                .createEncodingFormat(null, cfg.set(JsonFormatOptions.TARGET_TABLE_NAME, targetTableName));
     }
 
     @TISExtension
@@ -76,11 +76,11 @@ public class TISDebeziumJsonFormatFactory extends FormatFactory {
 
 //            // schemaInclude 不支持
 //            options.add("schemaInclude", DebeziumJsonOptions.SCHEMA_INCLUDE);
-            options.add("ignoreParseErrors", TISFlinkProp.create(DebeziumJsonOptions.IGNORE_PARSE_ERRORS));
-            options.add("timestampFormat", TISFlinkProp.create(DebeziumJsonOptions.TIMESTAMP_FORMAT));
-            options.add("nullKeyMode", TISFlinkProp.create(DebeziumJsonOptions.JSON_MAP_NULL_KEY_MODE));
-            options.add("nullKeyLiteral", TISFlinkProp.create(DebeziumJsonOptions.JSON_MAP_NULL_KEY_LITERAL));
-            options.add("encodeDecimal", TISFlinkProp.create(JsonOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
+            options.add("ignoreParseErrors", TISFlinkProp.create(DebeziumJsonFormatOptions.IGNORE_PARSE_ERRORS));
+            options.add("timestampFormat", TISFlinkProp.create(DebeziumJsonFormatOptions.TIMESTAMP_FORMAT));
+            options.add("nullKeyMode", TISFlinkProp.create(DebeziumJsonFormatOptions.JSON_MAP_NULL_KEY_MODE));
+            options.add("nullKeyLiteral", TISFlinkProp.create(DebeziumJsonFormatOptions.JSON_MAP_NULL_KEY_LITERAL));
+            options.add("encodeDecimal", TISFlinkProp.create(JsonFormatOptions.ENCODE_DECIMAL_AS_PLAIN_NUMBER));
         }
 
         @Override

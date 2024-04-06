@@ -53,6 +53,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.impl.PowerJobPodLogListener;
 import com.qlangtech.tis.plugin.incr.WatchPodLog;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.PodStat;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.plugin.k8s.ResChangeCallback;
@@ -127,7 +128,12 @@ public class KubernetesApplication extends ClusterType {
 
 
     private ServerLaunchToken getLaunchToken() {
-        return this.getLaunchToken(new TargetResName(this.clusterId));
+        return this.getLaunchToken(null);
+    }
+
+    @Override
+    public ServerLaunchToken getLaunchToken(TargetResName collection) {
+        return super.getLaunchToken(new TargetResName(this.clusterId));
     }
 
     @Override
@@ -173,7 +179,7 @@ public class KubernetesApplication extends ClusterType {
             logger.warn(e.getMessage());
         }
 
-
+        this.launchTokenMeta = null;
         //
         this.getLaunchToken().deleteLaunchToken();
 
@@ -246,9 +252,11 @@ public class KubernetesApplication extends ClusterType {
         }
     }
 
+    private transient JSONObject launchTokenMeta;
+
     @Override
     public JobManagerAddress getJobManagerAddress() {
-        JSONObject meta = this.getLaunchToken().readLaunchedToken();
+        JSONObject meta = launchTokenMeta != null ? this.launchTokenMeta : this.getLaunchToken().readLaunchedToken();
         return new JobManagerAddress(null, -1) {
             @Override
             public String getURL() {
@@ -329,8 +337,8 @@ public class KubernetesApplication extends ClusterType {
                     AppsV1Api appsV1Api = flinkK8SImage.createAppsV1Api();
                     CoreV1Api coreV1Api = flinkK8SImage.createCoreV1Api();
 
-                    V1Deployment deployment = appsV1Api.readNamespacedDeployment(this.clusterId, flinkK8SImage.namespace)
-                            .pretty(K8SUtils.resultPrettyShow).execute();
+                    V1Deployment deployment = appsV1Api
+                            .readNamespacedDeployment(this.clusterId, flinkK8SImage.namespace).pretty(K8SUtils.resultPrettyShow).execute();
                     NamespacedEventCallCriteria evtCallCriteria = null;
                     for (V1ReplicaSet rs : appsV1Api.listNamespacedReplicaSet(flinkK8SImage.namespace)
                             .pretty(K8SUtils.resultPrettyShow).execute().getItems()) {
@@ -355,8 +363,21 @@ public class KubernetesApplication extends ClusterType {
                             = K8SUtils.waitReplicaControllerLaunch(flinkK8SImage, resSelector
                             , deployment.getSpec().getReplicas(), coreV1Api, evtCallCriteria, new ResChangeCallback() {
                                 @Override
-                                public void applyDefaultPodPhase(final Map<String, RunningStatus> relevantPodNames, V1Pod pod) {
-                                    relevantPodNames.put(pod.getMetadata().getName(), RunningStatus.SUCCESS);
+                                public void applyDefaultPodPhase(final Map<String, PodStat> relevantPodNames, V1Pod pod) {
+                                    relevantPodNames.put(pod.getMetadata().getName(), new PodStat(pod, RunningStatus.SUCCESS));
+                                }
+
+                                @Override
+                                public boolean isBreakEventWatch(Map<String, PodStat> relevantPodNames, int expectResChangeCount) {
+                                    if (relevantPodNames.size() < 1) {
+                                        return false;
+                                    }
+                                    for (PodStat stat : relevantPodNames.values()) {
+                                        if (stat.isStopped() || stat.isRunning()) {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
                                 }
 
                                 @Override
@@ -365,7 +386,7 @@ public class KubernetesApplication extends ClusterType {
                                 }
                             });
 
-
+                    // 开始查看watch日志
                     watchPodLog = K8SDataXPowerJobServer.watchOneOfPodLog(resSelector,
                             new K8SController(flinkK8SImage, coreV1Api), controllerLaunch, new PowerJobPodLogListener() {
                                 @Override
@@ -385,6 +406,7 @@ public class KubernetesApplication extends ClusterType {
                         for (JobStatusMessage jobStat : clusterClient.listJobs().get()) {
                             afterSucce.accept(jobStat.getJobId());
                             JSONObject token = createClusterMeta(FlinkClusterType.K8SApplication, endpoint, clusterClient, flinkK8SImage);
+                            this.launchTokenMeta = token;
                             token.put(FlinkClusterTokenManager.JSON_KEY_APP_NAME, collection.getName());
                             this.getLaunchToken().appendJobNote(token);
                             hasGetJobInfo = true;

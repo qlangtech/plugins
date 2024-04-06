@@ -57,7 +57,7 @@ import java.util.function.Consumer;
  **/
 public abstract class ClusterType implements Describable<ClusterType>, IFlinkClusterConfig {
 
-    protected ServerLaunchToken getLaunchToken(TargetResName collection) {
+    public ServerLaunchToken getLaunchToken(TargetResName collection) {
         FlinkClusterTokenManager flinkClusterToken = ServerLaunchToken.createFlinkClusterToken();
         return flinkClusterToken.token(getClusterType(), collection);
     }
@@ -65,10 +65,10 @@ public abstract class ClusterType implements Describable<ClusterType>, IFlinkClu
 
     public void checkUseable(TargetResName collection) throws TisException {
 
-       // String webInterfaceURL = null;
+        // String webInterfaceURL = null;
         try {
             try (ClusterClient restClient = createRestClusterClient()) {
-         //       webInterfaceURL = restClient.getWebInterfaceURL();
+                //       webInterfaceURL = restClient.getWebInterfaceURL();
                 // restClient.getClusterId();
                 CompletableFuture<Collection<JobStatusMessage>> status = restClient.listJobs();
                 Collection<JobStatusMessage> jobStatus = status.get();

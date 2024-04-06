@@ -44,7 +44,6 @@ import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.datax.job.SubJobResName;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
-import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.lang.ErrorValue;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.lang.TisException.ErrorCode;
@@ -60,6 +59,7 @@ import com.qlangtech.tis.plugin.k8s.K8SController.UpdatePodNumber;
 import com.qlangtech.tis.plugin.k8s.K8SRCResName;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.K8SResChangeReason;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.PodStat;
 import com.qlangtech.tis.plugin.k8s.K8SUtils.WaitReplicaControllerLaunch;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
@@ -92,8 +92,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -237,7 +239,6 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             , K8S_DATAX_POWERJOB_WORKER};
 
 
-
     @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public ServerPortExport serverPortExport;
 
@@ -365,7 +366,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                         }
 
                         @Override
-                        public boolean isBreakEventWatch(Map<String, RunningStatus> relevantPodNames, int expectResChangeCount) {
+                        public boolean isBreakEventWatch(Map<String, PodStat> relevantPodNames, int expectResChangeCount) {
                             return relevantPodNames.size() == expectResChangeCount;
                         }
 
@@ -936,10 +937,13 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 }
             };
         }
-        logger.info("watch onOfPod log:{}", String.join(",", relevantPodNames.getRelevantPodNames()));
+        Set<PodStat> pods = relevantPodNames.getRelevantPods();
+        logger.info("watch onOfPod log:{}", pods.stream().map((pod) -> pod.getPodName()).collect(Collectors.joining(",")));
         WatchPodLog watchPodLog = null;
-        for (String onePodOf : relevantPodNames.getRelevantPodNames()) {
-            watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf, logListener);
+        for (PodStat onePodOf : pods) {
+            if (onePodOf.isRunning()) {
+                watchPodLog = controller.listPodAndWatchLog(indexName, onePodOf.getPodName(), logListener);
+            }
             return watchPodLog;
         }
         throw new IllegalStateException("must return a watchPodLog instance");

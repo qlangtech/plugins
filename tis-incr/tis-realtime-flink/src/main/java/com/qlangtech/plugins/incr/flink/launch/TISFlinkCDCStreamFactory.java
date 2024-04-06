@@ -26,6 +26,7 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
@@ -75,6 +76,10 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer parallelism;
 
+    @Override
+    public ServerLaunchToken getLaunchToken(TargetResName indexName) {
+        return cluster.getLaunchToken(indexName);
+    }
 
     @FormField(ordinal = 4, validate = {Validator.require})
     public RestartStrategyFactory restartStrategy;

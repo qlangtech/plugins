@@ -48,7 +48,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -432,7 +434,7 @@ public class K8SUtils {
     static final boolean skipWaittingPhase = false;
 
     public static class WaitReplicaControllerLaunch {
-        private final Set<String> relevantPodNames;
+        private final Set<PodStat> relevantPodNames;
         private final boolean skipWaittingPhase;
         private final K8SRCResNameWithFieldSelector resName;
 
@@ -446,7 +448,7 @@ public class K8SUtils {
             }
         }
 
-        public Set<String> getRelevantPodNames() {
+        public Set<PodStat> getRelevantPods() {
             return this.relevantPodNames;
         }
 
@@ -454,12 +456,12 @@ public class K8SUtils {
             return skipWaittingPhase;
         }
 
-        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Set<String> relevantPodNames) {
-            this(resName, relevantPodNames, false);
+        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Collection<PodStat> relevantPods) {
+            this(resName, relevantPods, false);
         }
 
-        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Set<String> relevantPodNames, boolean skipWaittingPhase) {
-            this.relevantPodNames = relevantPodNames;
+        public WaitReplicaControllerLaunch(K8SRCResNameWithFieldSelector resName, Collection<PodStat> relevantPods, boolean skipWaittingPhase) {
+            this.relevantPodNames = new HashSet<>(relevantPods);
             this.skipWaittingPhase = skipWaittingPhase;
             this.resName = resName;
         }
@@ -478,11 +480,11 @@ public class K8SUtils {
     }
 
     private static void setPodStatus(ResChangeCallback changeCallback
-            , Map<String, RunningStatus> relevantPodNames
-            , V1ObjectMeta podMeta, boolean runState, boolean podBeCreate) {
-
+            , Map<String, PodStat> relevantPodNames
+            , V1Pod pod, boolean runState, boolean podBeCreate) {
+        V1ObjectMeta podMeta = pod.getMetadata();
         if (podBeCreate) {
-            if (relevantPodNames.put(podMeta.getName(), runState ? RunningStatus.SUCCESS : RunningStatus.FAILD) == null) {
+            if (relevantPodNames.put(podMeta.getName(), new PodStat(pod, runState ? RunningStatus.SUCCESS : RunningStatus.FAILD)) == null) {
                 changeCallback.apply(
                         K8SResChangeReason.SuccessfulCreate
                         , podMeta.getName());
@@ -492,6 +494,60 @@ public class K8SUtils {
                 changeCallback.apply(
                         K8SResChangeReason.SuccessfulDelete
                         , podMeta.getName());
+            }
+        }
+    }
+
+    public enum PodPhase {
+        //https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
+        FAILD("failed"), PENDING("pending"), SUCCEEDED("succeeded"), TERMINATING("terminating"), RUNING("running");
+        private final String token;
+
+        public static PodPhase parse(V1Pod pod) {
+            for (PodPhase p : PodPhase.values()) {
+                if (p.token.equalsIgnoreCase(pod.getStatus().getPhase())) {
+                    return p;
+                }
+            }
+
+            throw new IllegalStateException("illegal pod phase:" + pod.getStatus().getPhase());
+        }
+
+        PodPhase(String token) {
+            this.token = token;
+        }
+    }
+
+    public static class PodStat {
+        private final V1Pod pod;
+        private final PodPhase phase;
+        private final RunningStatus runningStat;
+
+        public PodStat(V1Pod pod, RunningStatus runningStat) {
+            this.pod = pod;
+            this.phase = PodPhase.parse(pod);
+            this.runningStat = runningStat;
+        }
+
+        public String getPodName() {
+            return pod.getMetadata().getName();
+        }
+
+
+        public boolean isRunning() {
+            return phase == PodPhase.RUNING;
+        }
+
+        public boolean isStopped() {
+            switch (this.phase) {
+                case TERMINATING:
+                case FAILD:
+                case SUCCEEDED: {
+                    return true;
+                }
+                default: {
+                    return false;
+                }
             }
         }
     }
@@ -517,7 +573,7 @@ public class K8SUtils {
             return new WaitReplicaControllerLaunch(targetResName);
         }
         //  RunningStatus status;
-        final Map<String, RunningStatus> relevantPodNames = Maps.newHashMap();
+        final Map<String, PodStat> relevantPodNames = Maps.newHashMap();
         if (changeCallback.shallGetExistPods()) {
             /**
              * 在Waiting等待过程中是否要获取已有的Pods，在scala pods避免要出现刚添加的pod，随即马上去掉，此时程序识别成又添加了一个pod的情况
@@ -525,13 +581,13 @@ public class K8SUtils {
             V1PodList pods = targetResName.setFieldSelector(
                     api
                             .listNamespacedPod(powerjobServerImage.getNamespace())
-                           // .resourceVersion(resourceVer.getResourceVersion())
-                             )
+                    // .resourceVersion(resourceVer.getResourceVersion())
+            )
                     .execute();
             for (V1Pod pod : pods.getItems()) {
                 for (V1OwnerReference oref : pod.getMetadata().getOwnerReferences()) {
                     if (StringUtils.equalsIgnoreCase(oref.getUid(), resourceVer.getOwnerUid())) {
-                        relevantPodNames.put(pod.getMetadata().getName(), RunningStatus.SUCCESS);
+                        relevantPodNames.put(pod.getMetadata().getName(), new PodStat(pod, RunningStatus.SUCCESS));
                     }
                 }
             }
@@ -541,7 +597,7 @@ public class K8SUtils {
                 logger.warn("relevantPodNames size:{},pods:{}", relevantPodNames.size(), String.join(",", relevantPodNames.keySet()));
             }
             if (changeCallback.isBreakEventWatch(relevantPodNames, expectResCount)) {
-                return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.keySet());
+                return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.values());
             }
         }
         String currentResVer = resourceVer.getResourceVersion();
@@ -589,20 +645,24 @@ public class K8SUtils {
                     boolean podBeCreate = false;
                     // relevantPodNames.add(podMeta.getName());
                     //   System.out.println("type:" + event.type + ",object:" + event.object.getMetadata().getName());
-                    String phase = StringUtils.lowerCase(pod.getStatus().getPhase());
+
+                    PodPhase phase = PodPhase.parse(pod);
+
+                    // String phase = StringUtils.lowerCase(pod.getStatus().getPhase());
                     logger.info("pod:{},change to phase:{}", podMeta.getName(), phase);
                     switch (phase) {
-                        case "failed":
+                        case FAILD:
                             podFaildCount++;
-                            setPodStatus(changeCallback, relevantPodNames, podMeta, false, false);
+                            setPodStatus(changeCallback, relevantPodNames, pod, false, false);
                             //}
                             break;
-                        case "pending":
+                        case PENDING:
                             podBeCreate = true;
-                        case "succeeded":
-                        case "terminating": // pod 被终止
+                        case SUCCEEDED:
+                        case TERMINATING:
+                            // case "terminating": // pod 被终止
                             podCompleteCount++;
-                            setPodStatus(changeCallback, relevantPodNames, podMeta, true, podBeCreate);
+                            setPodStatus(changeCallback, relevantPodNames, pod, true, podBeCreate);
                             break;
                         default: {
                             changeCallback.applyDefaultPodPhase(relevantPodNames, pod);
@@ -634,7 +694,7 @@ public class K8SUtils {
             }
 
         }
-        return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.keySet());
+        return new WaitReplicaControllerLaunch(targetResName, relevantPodNames.values());
     }
 
 

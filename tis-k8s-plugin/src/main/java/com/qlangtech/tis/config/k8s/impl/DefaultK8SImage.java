@@ -46,6 +46,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * k8s image 插件
@@ -138,6 +140,10 @@ public class DefaultK8SImage extends K8sImage {
     @TISExtension()
     public static class DescriptorImpl extends BasicDesc implements IEndTypeGetter {
         private static final Logger logger = LoggerFactory.getLogger(DescriptorImpl.class);
+        /**
+         * https://stackoverflow.com/questions/65004095/regex-for-testing-that-a-docker-image-name-is-prefixed-with-a-registry
+         */
+         static final Pattern PATTERN_IMAGE_PATH = Pattern.compile("([^/]+\\.[^/.]+/)?([^/.]+/)?[^/.]+(:.+)?");
 
         public DescriptorImpl() {
             super();
@@ -149,6 +155,16 @@ public class DefaultK8SImage extends K8sImage {
             return EndType.Docker;
         }
 
+
+        public boolean validateImagePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+            Matcher matcher = PATTERN_IMAGE_PATH.matcher(value);
+            if (!matcher.matches() || StringUtils.indexOfAny(value, new char[]{' ', '\t'}) > -1) {
+                msgHandler.addFieldError(context, fieldName, "不符合格式:" + PATTERN_IMAGE_PATH.pattern());
+                return false;
+            }
+
+            return true;
+        }
 
 
         public boolean validateHostAliases(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {

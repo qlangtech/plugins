@@ -162,7 +162,7 @@ public class TestK8SDataXPowerJobServer extends TestCase {
     private LoadBalance createLoadBalance() {
         LoadBalance loadBalance = new LoadBalance();
         loadBalance.serverPort = 7700;
-        loadBalance.usingClusterIP = false;
+       // loadBalance.usingClusterIP = false;
         return loadBalance;
     }
 

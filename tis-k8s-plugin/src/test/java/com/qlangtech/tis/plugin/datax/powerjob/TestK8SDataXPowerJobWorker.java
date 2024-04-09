@@ -19,9 +19,12 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import junit.framework.TestCase;
 import org.junit.Assert;
+
+import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_SERVER_SERVICE;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -31,5 +34,12 @@ public class TestK8SDataXPowerJobWorker extends TestCase {
     public void testGetK8SDataXPowerJobWorker() {
         K8SDataXPowerJobWorker pjWorker = K8SUtils.getK8SDataXPowerJobWorker();
         Assert.assertNotNull(pjWorker);
+    }
+
+    public void testGetPowerJobServerHostReplacement() {
+        DefaultK8SImage powerJobImage = new DefaultK8SImage();
+        powerJobImage.namespace = "default";
+        final String powerJobServerHostReplacement = K8S_DATAX_POWERJOB_SERVER_SERVICE.getHostPortReplacement(powerJobImage);
+        Assert.assertEquals("powerjob-server-service.default:$(POWERJOB_SERVER_SERVICE_SERVICE_PORT)", powerJobServerHostReplacement);
     }
 }

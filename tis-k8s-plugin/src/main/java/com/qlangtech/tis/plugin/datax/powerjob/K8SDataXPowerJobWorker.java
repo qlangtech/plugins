@@ -28,6 +28,8 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EnvVar;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -46,7 +48,7 @@ import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S
  */
 public class K8SDataXPowerJobWorker extends DataXJobWorker {
 
-
+    private static final Logger logger = LoggerFactory.getLogger(K8SDataXPowerJobWorker.class);
 //    @FormField(ordinal = 1, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.host})
 //    public String serverAddress;
 
@@ -169,11 +171,15 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
         final NamespacedEventCallCriteria reVersion = (K8SUtils.createReplicationController(
                 api, powerjobServerImage, K8S_DATAX_POWERJOB_WORKER, () -> {
                     V1Container container = new V1Container();
-                    container.setCommand(Lists.newArrayList("sh", "-c"
+
+                    List<String> command = Lists.newArrayList("sh", "-c"
                             , "chmod +x wait-for-it.sh && ./wait-for-it.sh " + powerJobServerHostReplacement
                                     + " --strict -- java " + replicasSpec.toJavaMemorySpec()
                                     + " " + DataXJobRunEnvironmentParamsSetter.createSysPramsSuppiler().serialize()
-                                    + " -jar /powerjob-worker-samples.jar $PARAMS"));
+                                    + " -jar /powerjob-worker-samples.jar $PARAMS");
+                    logger.info("exec powerjob worker command:" + String.join(" ", command));
+
+                    container.setCommand(command);
                     return container;
                 }, replicasSpec, exportPorts, envs));
 

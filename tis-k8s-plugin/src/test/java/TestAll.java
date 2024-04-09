@@ -18,6 +18,7 @@
 
 import com.qlangtech.tis.config.k8s.impl.TestDefaultK8SImage;
 import com.qlangtech.tis.plugin.datax.TestK8SDataXJobWorker;
+import com.qlangtech.tis.plugin.datax.powerjob.TestK8SDataXPowerJobWorker;
 import com.qlangtech.tis.plugin.incr.TestDefaultIncrK8sConfig;
 import com.qlangtech.tis.plugin.incr.TestK8sIncrSync;
 import junit.framework.Test;
@@ -39,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TestK8sIncrSync.class);
         suite.addTestSuite(TestK8SDataXJobWorker.class);
         suite.addTestSuite(TestDefaultK8SImage.class);
+        suite.addTestSuite(TestK8SDataXPowerJobWorker.class);
 
 
         return suite;

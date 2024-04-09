@@ -266,7 +266,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     }
 
     public List<String> getJdbcUrls() {
-        return getJdbcUrls(true);
+        return getJdbcUrls(false);
     }
 
 

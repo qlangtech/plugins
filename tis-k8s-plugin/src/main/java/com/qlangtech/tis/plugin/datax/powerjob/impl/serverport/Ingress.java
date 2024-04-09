@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
@@ -141,7 +142,7 @@ public class Ingress extends ServerPortExport {
     }
 
     @Override
-    public String getExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
         return this.host + ("/".equals(this.path) ? StringUtils.EMPTY : this.path);
     }
 

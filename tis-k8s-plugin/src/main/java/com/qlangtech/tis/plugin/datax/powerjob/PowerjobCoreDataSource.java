@@ -8,6 +8,7 @@ import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.ExtensionList;
+import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
@@ -24,6 +25,7 @@ import java.text.MessageFormat;
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/10/31
  */
+@TISExtensible
 public abstract class PowerjobCoreDataSource implements Describable<PowerjobCoreDataSource> {
 
     protected static final MessageFormat KEY_USERNAME_AND_PASSWORD //

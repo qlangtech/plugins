@@ -1,5 +1,6 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Describable;
@@ -43,6 +44,14 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
     @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.require, Validator.integer})
     public Integer serverPort;
 
+    private transient String clusterIP;
+
+//    /**
+//     * 是否使用clusterIP，当TIS和Powerjob在同一个K8S的网络中，可以使用clusterIP作为连接地址，如不在同一个网络中需要使用extrnalIP地址
+//     */
+//    @FormField(ordinal = 1, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
+//    public Boolean usingClusterIP;
+
     public static Integer dftExportPort() {
         return ((DefaultExportPortProvider) DescriptorsJSONResult.getRootDescInstance()).get();
     }
@@ -85,13 +94,6 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      */
     protected abstract Integer getExportPort();
 
-    private transient String clusterIP;
-
-    /**
-     * 是否使用clusterIP，当TIS和Powerjob在同一个K8S的网络中，可以使用clusterIP作为连接地址，如不在同一个网络中需要使用extrnalIP地址
-     */
-    @FormField(ordinal = 1, advance = true, type = FormFieldType.ENUM, validate = {Validator.require})
-    public Boolean usingClusterIP;
 
     public static String getHost(CoreV1Api api, String nameSpace, ServiceType serviceType, ServiceResName svcRes, boolean clusterIP) {
         String resultHost = null;
@@ -158,22 +160,22 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 //    }
 
     public final String getClusterHost(
-            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
-        return getClusterHost(api, nameSpace, serviceResAndOwner, false);
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+        return getClusterHost(api, k8SImage, serviceResAndOwner, false);
     }
 
     /**
      * 内部集群可用host地址
      *
      * @param api
-     * @param nameSpace
+     * @param k8SImage
      * @return
      */
     public final String getClusterHost(
-            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner, boolean forceExternalHost) {
-
-        if (forceExternalHost || !this.usingClusterIP) {
-            return getExternalHost(api, nameSpace, serviceResAndOwner);
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner, boolean forceExternalHost) {
+        String nameSpace = k8SImage.getNamespace();
+        if (forceExternalHost || !k8SImage.internalClusterAvailable()) {
+            return getExternalHost(api, k8SImage, serviceResAndOwner);
         }
         if (clusterIP == null) {
             //Pair<ServiceResName, TargetResName> serviceResAndOwner = getServiceResAndOwner();
@@ -196,5 +198,5 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      */
     //  public abstract String getPowerjobHost();
     public abstract String getExternalHost(
-            CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner);
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner);
 }

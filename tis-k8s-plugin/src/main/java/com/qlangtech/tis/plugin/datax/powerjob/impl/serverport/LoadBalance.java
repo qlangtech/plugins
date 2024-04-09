@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
@@ -74,7 +75,7 @@ public class LoadBalance extends ServerPortExport {
 
 
     @Override
-    public String getExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
 
         if (StringUtils.isEmpty(this.host)) {
             // K8SUtils.resultPrettyShow
@@ -82,7 +83,7 @@ public class LoadBalance extends ServerPortExport {
 //                    , String fieldSelector, String labelSelector, Integer limit
 //                    , String resourceVersion, Integer timeoutSeconds, Boolean watch
             // Pair<ServiceResName, TargetResName> serviceResAndOwner = getServiceResAndOwner();
-            this.host = getHost(api, nameSpace, getServiceType(), serviceResAndOwner.getKey(), false);
+            this.host = getHost(api, k8SImage.getNamespace(), getServiceType(), serviceResAndOwner.getKey(), false);
 
         }
 

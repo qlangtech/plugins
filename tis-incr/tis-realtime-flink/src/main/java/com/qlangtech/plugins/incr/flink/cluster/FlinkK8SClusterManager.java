@@ -166,6 +166,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
                 try {
                     final String externalServiceName = createExternalServiceSuppler(clusterId, serverPortExport);
                     cli.run(false, new String[]{}, (clusterClient, kubeClient, externalService) -> {
+                        FlinkK8SImage k8SImage = flinkManager.getK8SImage();
                         if (externalService.isPresent()) {
                             throw new IllegalStateException(" this is create flink-session process can not get externalService ahead,clusterId:" + clusterId);
                         }
@@ -190,14 +191,14 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //                        }
                         // get from Fabric8FlinkKubeClient
 
-                        Endpoint endpoint = getEndpoint(clusterId, serverPortExport, externalServiceName, kubeClient);
+                        Endpoint endpoint = getEndpoint(clusterId, k8SImage, serverPortExport, externalServiceName, kubeClient);
 
 //                        clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession
 //                                , Optional.of("http://" + serverPortExport.getClusterHost(
 //                                        coreApi, flinkManager.getK8SImage().getNamespace(), serviceResAndOwner))
 //                                , clusterClient, flinkManager.getK8SImage());
                         clusterMeta[0] = KubernetesApplication.createClusterMeta(FlinkClusterType.K8SSession, endpoint
-                                , clusterClient, flinkManager.getK8SImage());
+                                , clusterClient, k8SImage);
 
                         SSERunnable.getLocal().setContextAttr(JSONObject[].class, clusterMeta);
                     });
@@ -245,7 +246,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
         return externalServiceName;
     }
 
-    public static Endpoint getEndpoint(String clusterId, ServerPortExport serverPortExport, String externalServiceName, FlinkKubeClient kubeClient) {
+    public static Endpoint getEndpoint(String clusterId, FlinkK8SImage k8SImage, ServerPortExport serverPortExport, String externalServiceName, FlinkKubeClient kubeClient) {
         Endpoint endpoint = serverPortExport.accept(new ServerPortExportVisitor<Endpoint>() {
             @Override
             public Endpoint visit(Ingress ingress) {
@@ -264,6 +265,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
             @Override
             public Endpoint visit(NodePort nodePort) {
+
                 return new Endpoint(nodePort.host, nodePort.nodePort);
             }
         });

@@ -264,7 +264,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public String getPowerJobMasterGateway() {
         final String linkHost = this.serverPortExport
-                .getClusterHost(this.getK8SApi(), this.getImage().getNamespace(), powerJobServiceResAndOwnerGetter.get());
+                .getClusterHost(this.getK8SApi(), this.getImage(), powerJobServiceResAndOwnerGetter.get());
         return linkHost;
     }
 
@@ -288,7 +288,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
             powerJobClient = TISPowerJobClient.create(
-                    this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get())
+                    this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
                     , this.appName, this.password);
         }
         return powerJobClient;
@@ -300,7 +300,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         // http://192.168.64.3:31000/#/welcome
         payloads.put(CLUSTER_ENTRYPOINT_HOST
                 , "http://" + this.serverPortExport.getExternalHost(
-                        this.getK8SApi(), this.getK8SImage().getNamespace(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
+                        this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
         return payloads;
     }
 

@@ -2,6 +2,7 @@ package com.qlangtech.tis.plugin.datax.powerjob.impl.serverport;
 
 import com.alibaba.citrus.turbine.Context;
 import com.google.gson.reflect.TypeToken;
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
@@ -61,7 +62,9 @@ public class NodePort extends ServerPortExport {
     }
 
     @Override
-    public String getExternalHost(CoreV1Api api, String nameSpace, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+        // String nameSpace = k8SImage.getNamespace();
+        // k8SImage.internalClusterAvailable();
         if (StringUtils.isEmpty(this.host)) {
             throw new IllegalStateException("prop host can not be empty");
         }

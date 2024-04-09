@@ -28,14 +28,21 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.k8s.HostAlias;
+import com.qlangtech.tis.plugin.k8s.K8SUtils;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.V1Node;
+import io.kubernetes.client.openapi.models.V1NodeAddress;
+import io.kubernetes.client.openapi.models.V1NodeList;
+import io.kubernetes.client.openapi.models.V1NodeSpec;
+import io.kubernetes.client.openapi.models.V1NodeStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -45,6 +52,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,6 +87,58 @@ public class DefaultK8SImage extends K8sImage {
 
     @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = true, validate = {})
     public String hostAliases;
+
+    /**
+     * 会否能联通到K8S集群内网，tis-console节点是否和K8S集群同在一个内网
+     */
+    public transient ClusterIPAvailable clusterIPAvailable;
+
+    @Override
+    public boolean internalClusterAvailable() {
+        this.createApiClient();
+        return Objects.requireNonNull(clusterIPAvailable).getClusterIPAvailable();
+    }
+
+    /**
+     * ParamsConfig.createConfigInstance():
+     *
+     * @param
+     * @return
+     */
+    public io.kubernetes.client.openapi.ApiClient createApiClient() {
+        io.kubernetes.client.openapi.ApiClient apiClient = super.createApiClient();
+        try {
+            if (clusterIPAvailable == null) {
+
+                CoreV1Api core = new CoreV1Api(apiClient);
+                V1NodeList nodes = core.listNode().pretty(K8SUtils.resultPrettyShow).execute();
+                V1NodeSpec spec = null;
+                V1NodeStatus status = null;
+                for (V1Node node : nodes.getItems()) {
+                    spec = node.getSpec();
+                    status = node.getStatus();
+                    if (spec.getUnschedulable() == null
+                            || spec.getUnschedulable()) {
+                        continue;
+                    }
+
+                    for (V1NodeAddress address : status.getAddresses()) {
+                        // @see org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.NodePortAddressType
+                        if ("InternalIP".equals(address.getType())) {
+                            clusterIPAvailable
+                                    = new ClusterIPAvailable(NetUtils.isReachable(address.getAddress()), address.getAddress());
+                        }
+                    }
+                }
+                if (clusterIPAvailable == null) {
+                    clusterIPAvailable = new ClusterIPAvailable(false, null);
+                }
+            }
+        } catch (ApiException e) {
+            throw K8sExceptionUtils.convert(e);
+        }
+        return apiClient;
+    }
 
     @Override
     public List<HostAlias> getHostAliases() {
@@ -143,7 +203,7 @@ public class DefaultK8SImage extends K8sImage {
         /**
          * https://stackoverflow.com/questions/65004095/regex-for-testing-that-a-docker-image-name-is-prefixed-with-a-registry
          */
-         static final Pattern PATTERN_IMAGE_PATH = Pattern.compile("([^/]+\\.[^/.]+/)?([^/.]+/)?[^/.]+(:.+)?");
+        static final Pattern PATTERN_IMAGE_PATH = Pattern.compile("([^/]+\\.[^/.]+/)?([^/.]+/)?[^/.]+(:.+)?");
 
         public DescriptorImpl() {
             super();
@@ -156,7 +216,7 @@ public class DefaultK8SImage extends K8sImage {
         }
 
 
-        public boolean validateImagePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+        public final boolean validateImagePath(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
             Matcher matcher = PATTERN_IMAGE_PATH.matcher(value);
             if (!matcher.matches() || StringUtils.indexOfAny(value, new char[]{' ', '\t'}) > -1) {
                 msgHandler.addFieldError(context, fieldName, "不符合格式:" + PATTERN_IMAGE_PATH.pattern());

@@ -298,23 +298,6 @@ public class KubernetesApplication extends ClusterType {
         flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, Lists.newArrayList(collection.getName()));
         flinkConfig.set(DeploymentOptions.TARGET, KubernetesDeploymentTarget.APPLICATION.getName());
 
-//                ClusterClientFactory<String> kubernetesClusterClientFactory
-//                        = clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
-//
-//                ClusterSpecification clusterSpecification = kubernetesClusterClientFactory.getClusterSpecification(
-//                        flinkConfig);
-
-//                FlinkKubeClient client
-//                        = FlinkKubeClientFactory.getInstance().fromConfiguration(flinkConfig, "client");
-//            KubernetesClusterDescriptor kubernetesClusterDescriptor
-//                    = new KubernetesClusterDescriptor(flinkConfig, FlinkKubeClientFactory.getInstance());
-
-        //  FlinkK8SClusterManager.getCreateAccompanyConfigMapResource(pair.getRight());
-
-//                ClusterClientProvider<String> clusterProvider
-//                        = kubernetesClusterDescriptor.deployApplicationCluster(clusterSpecification
-//                        , ApplicationConfiguration.fromConfiguration(flinkConfig));
-        // = null;//new JSONObject();
         WatchPodLog watchPodLog = null;
         try {
 
@@ -325,14 +308,6 @@ public class KubernetesApplication extends ClusterType {
 
 
                 try (ClusterClient<String> clusterClient = createClient(pair, true)) {
-//                    final String entryUrl = clusterClient.getWebInterfaceURL();
-//                    System.out.println(clusterClient.getWebInterfaceURL());
-//                    token.put(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL, entryUrl);
-
-
-//                efaultK8SImage powerjobServerImage //
-//            , K8SRCResNameWithFieldSelector targetResName, ReplicasSpec powerjobServerSpec, CoreV1Api
-//                apiClient, NamespacedEventCallCriteria resVer
 
                     AppsV1Api appsV1Api = flinkK8SImage.createAppsV1Api();
                     CoreV1Api coreV1Api = flinkK8SImage.createCoreV1Api();
@@ -402,7 +377,8 @@ public class KubernetesApplication extends ClusterType {
                             });
 
 
-                    Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(clusterId, this.getK8SClusterCfg().serverPortExport, externalService, kubeClient);
+                    Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(
+                            clusterId, flinkK8SImage, this.getK8SClusterCfg().serverPortExport, externalService, kubeClient);
 
                     int tryCount = 0;
                     boolean hasGetJobInfo = false;

@@ -23,6 +23,7 @@ import com.qlangtech.tis.plugin.ds.IDBAuthorizeTokenGetter;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import io.kubernetes.client.openapi.ApiException;
@@ -120,7 +121,7 @@ public class DefaultPowerjobCoreDataSource extends PowerjobCoreDataSource {
     }
 
     @Override
-    protected String getJdbcUrl() {
+    protected String getJdbcUrl(K8sImage image) {
         DataSourceFactory ds = this.getDataSourceFactory();
         final DBConfig dbConfig = ds.getDbConfig();
         AtomicReference<String> jdbcUrlRef = new AtomicReference<>();

@@ -13,6 +13,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -39,8 +40,8 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedPowerjobCoreDataSource.class);
 
     @Override
-    protected String getJdbcUrl() {
-        return "jdbc:mysql://" + K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE.getHostPortReplacement()
+    protected String getJdbcUrl(K8sImage image) {
+        return "jdbc:mysql://" + K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL_SERVICE.getHostPortReplacement(image)
                 + "/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
     }
 

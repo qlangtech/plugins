@@ -766,7 +766,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             envVar = new V1EnvVar();
             envVar.setName("PARAMS");
             // envVar.setValue("--oms.mongodb.enable=false --spring.datasource.core.jdbc-url=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai");
-            String coreJbdcParams = this.coreDS.createCoreJdbcParams();
+            String coreJbdcParams = this.coreDS.createCoreJdbcParams(powerjobServerImage);
             if (StringUtils.isEmpty(coreJbdcParams)) {
                 throw new IllegalStateException("coreJbdcUrl can not be empty");
             }

@@ -154,7 +154,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
          * param: tis-datax/executor/powerjob-worker-samples/src/main/resources/application.properties
          */
         //  --powerjob.worker.server-address=powerjob-server:7700
-        final String powerJobServerHostReplacement = K8S_DATAX_POWERJOB_SERVER_SERVICE.getHostPortReplacement();
+        final String powerJobServerHostReplacement = K8S_DATAX_POWERJOB_SERVER_SERVICE.getHostPortReplacement(powerJobImage);
 
         List<Option> params = Lists.newArrayList(new Option("powerjob.worker.app-name", pjServer.appName),
                 new Option("powerjob.worker.server-address", powerJobServerHostReplacement),

@@ -1,6 +1,7 @@
 package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.config.k8s.impl.DefaultK8SImage;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.IRegisterApp;
@@ -10,6 +11,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.ExtensionList;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.k8s.K8SController;
+import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
 import io.kubernetes.client.openapi.ApiException;
 import org.apache.commons.lang.StringUtils;
@@ -146,11 +148,11 @@ public abstract class PowerjobCoreDataSource implements Describable<PowerjobCore
      */
     public abstract void launchMetaStoreService(K8SDataXPowerJobServer powerJobServer) throws ApiException;
 
-    public final String createCoreJdbcParams() {
-        return "--spring.datasource.core.jdbc-url=" + this.getJdbcUrl() + " " + StringUtils.trimToEmpty(this.getExtractJdbcParams());
+    public final String createCoreJdbcParams(K8sImage image) {
+        return "--spring.datasource.core.jdbc-url=" + this.getJdbcUrl(image) + " " + StringUtils.trimToEmpty(this.getExtractJdbcParams());
     }
 
-    protected abstract String getJdbcUrl();
+    protected abstract String getJdbcUrl(K8sImage image);
 
     protected String getExtractJdbcParams() {
         return StringUtils.EMPTY;

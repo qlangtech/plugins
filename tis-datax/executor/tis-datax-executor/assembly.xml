@@ -63,6 +63,7 @@
                 <include>com.alibaba.datax:datax-common</include>
                 <include>ch.qos.logback:logback-classic</include>
                 <include>com.qlangtech.tis:tis-sql-parser</include>
+                <include>com.qlangtech.tis.plugins:tis-datax-local-executor-utils</include>
             </includes>
             <outputDirectory>/lib</outputDirectory>
             <useTransitiveDependencies>true</useTransitiveDependencies>
@@ -81,12 +82,12 @@
             <outputDirectory>/lib</outputDirectory>
         </dependencySet>
     </dependencySets>
-    <files>
-        <file>
-            <source>../../tis-datax-local-executor-utils/target/tis-datax-local-executor-utils.jar</source>
-            <outputDirectory>lib/</outputDirectory>
-            <destName>tis-datax-local-executor-utils-${project.version}.jar</destName>
-            <fileMode>0644</fileMode>
-        </file>
-    </files>
+<!--    <files>-->
+<!--        <file>-->
+<!--            <source>../../tis-datax-local-executor-utils/target/tis-datax-local-executor-utils.jar</source>-->
+<!--            <outputDirectory>lib/</outputDirectory>-->
+<!--            <destName>tis-datax-local-executor-utils-${project.version}.jar</destName>-->
+<!--            <fileMode>0644</fileMode>-->
+<!--        </file>-->
+<!--    </files>-->
 </assembly>

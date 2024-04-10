@@ -114,6 +114,13 @@
             <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-sql-parser</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis.plugins</groupId>
+            <artifactId>tis-datax-local-executor-utils</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

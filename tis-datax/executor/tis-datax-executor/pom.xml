@@ -138,6 +138,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <tarLongFileMode>posix</tarLongFileMode>
                     <appnamePattern>datax</appnamePattern>
+
                 </configuration>
                 <executions>
                     <execution>

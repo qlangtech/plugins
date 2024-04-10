@@ -141,8 +141,8 @@ public class DataxExecutor {
 
     /**
      * @param args
-     * @see DataxPrePostConsumer
-     * @see DataXJobSingleProcessorExecutor
+     * @see //DataxPrePostConsumer
+     * @see //DataXJobSingleProcessorExecutor
      * 入口开始执行
      */
     public static void main(String[] args) throws Exception {

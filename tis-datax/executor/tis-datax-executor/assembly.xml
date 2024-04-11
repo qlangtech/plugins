@@ -64,6 +64,7 @@
                 <include>ch.qos.logback:logback-classic</include>
                 <include>com.qlangtech.tis:tis-sql-parser</include>
                 <include>com.qlangtech.tis.plugins:tis-datax-local-executor-utils</include>
+                <include>com.qlangtech.tis:tis-web-start-api</include>
             </includes>
             <outputDirectory>/lib</outputDirectory>
             <useTransitiveDependencies>true</useTransitiveDependencies>

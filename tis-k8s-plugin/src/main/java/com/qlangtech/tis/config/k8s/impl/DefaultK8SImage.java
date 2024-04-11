@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
 public class DefaultK8SImage extends K8sImage {
 
     public static final String KEY_FIELD_NAME = "k8sCfg";
-
+    private static final Logger logger = LoggerFactory.getLogger(DefaultK8SImage.class);
     private static final Yaml yaml = new Yaml();
 
 
@@ -84,6 +84,9 @@ public class DefaultK8SImage extends K8sImage {
     @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
     public String // = "docker-registry.default.svc:5000/tis/tis-incr:latest";
             imagePath;
+
+    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
+    public Boolean useExternalIP;
 
     @FormField(ordinal = 9, type = FormFieldType.TEXTAREA, advance = true, validate = {})
     public String hostAliases;
@@ -109,30 +112,45 @@ public class DefaultK8SImage extends K8sImage {
         io.kubernetes.client.openapi.ApiClient apiClient = super.createApiClient();
         try {
             if (clusterIPAvailable == null) {
+                StringBuffer debug = new StringBuffer("============================\n");
+                if (useExternalIP) {
+                    clusterIPAvailable = new ClusterIPAvailable(false, null);
+                    debug.append("useExternalIP is true,use externalIP directly\n");
+                } else {
 
-                CoreV1Api core = new CoreV1Api(apiClient);
-                V1NodeList nodes = core.listNode().pretty(K8SUtils.resultPrettyShow).execute();
-                V1NodeSpec spec = null;
-                V1NodeStatus status = null;
-                for (V1Node node : nodes.getItems()) {
-                    spec = node.getSpec();
-                    status = node.getStatus();
-                    if (spec.getUnschedulable() == null
-                            || spec.getUnschedulable()) {
-                        continue;
-                    }
+                    CoreV1Api core = new CoreV1Api(apiClient);
+                    V1NodeList nodes = core.listNode().pretty(K8SUtils.resultPrettyShow).execute();
+                    V1NodeSpec spec = null;
+                    V1NodeStatus status = null;
 
-                    for (V1NodeAddress address : status.getAddresses()) {
-                        // @see org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.NodePortAddressType
-                        if ("InternalIP".equals(address.getType())) {
-                            clusterIPAvailable
-                                    = new ClusterIPAvailable(NetUtils.isReachable(address.getAddress()), address.getAddress());
+
+                    for (V1Node node : nodes.getItems()) {
+                        spec = node.getSpec();
+                        status = node.getStatus();
+                        debug.append(status).append("\n");
+                        if (spec.getUnschedulable() != null
+                                && spec.getUnschedulable()) {
+                            continue;
+                        }
+
+                        for (V1NodeAddress address : status.getAddresses()) {
+                            // @see org.apache.flink.kubernetes.configuration.KubernetesConfigOptions.NodePortAddressType
+                            if ("InternalIP".equals(address.getType())) {
+
+                                clusterIPAvailable
+                                        = new ClusterIPAvailable(NetUtils.isReachable(address.getAddress()), address.getAddress());
+                                debug.append("testNode:" + address.getAddress()
+                                        + ",reachable:" + clusterIPAvailable.getClusterIPAvailable() + ",type:" + address.getType()).append("\n");
+                            }
                         }
                     }
+                    if (clusterIPAvailable == null) {
+                        clusterIPAvailable = new ClusterIPAvailable(false, null);
+                        debug.append("have not found any cluster nodes.\n");
+                    }
                 }
-                if (clusterIPAvailable == null) {
-                    clusterIPAvailable = new ClusterIPAvailable(false, null);
-                }
+                debug.append("============================");
+                logger.info(debug.toString());
             }
         } catch (ApiException e) {
             throw K8sExceptionUtils.convert(e);

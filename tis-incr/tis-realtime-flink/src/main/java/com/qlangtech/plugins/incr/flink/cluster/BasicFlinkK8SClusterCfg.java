@@ -233,10 +233,6 @@ public abstract class BasicFlinkK8SClusterCfg extends DataXJobWorker {
             return RestOptions.PORT.defaultValue();
         }
 
-        @Override
-        public Boolean dftUsingClusterIP() {
-            return false;
-        }
 
         public BasicFlinkCfgDescriptor() {
             super();

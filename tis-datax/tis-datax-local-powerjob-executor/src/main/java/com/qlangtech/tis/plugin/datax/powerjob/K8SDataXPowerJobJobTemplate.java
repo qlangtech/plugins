@@ -79,7 +79,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
         saveJobInfoReq.setConcurrency(this.threadParallel);
         saveJobInfoReq.setInstanceTimeLimit(this.timeLimit.longValue());
         saveJobInfoReq.setMaxWorkerCount(maxWorkerParallel);
-        saveJobInfoReq.setDispatchStrategy(DispatchStrategy.HEALTH_FIRST);
+        saveJobInfoReq.setDispatchStrategy(DispatchStrategy.RANDOM);
         saveJobInfoReq.setExecuteType(executeType);
         //   工作流 -> 不需要填写任何参数，表明该任务由工作流（workflow）触发
         saveJobInfoReq.setTimeExpressionType(TimeExpressionType.WORKFLOW);

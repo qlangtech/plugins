@@ -35,6 +35,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tech.powerjob.worker.core.processor.ProcessResult;
 import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.TaskResult;
@@ -44,6 +46,7 @@ import tech.powerjob.worker.log.OmsLogger;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -51,6 +54,7 @@ import java.util.Optional;
  */
 public class TISTableDumpProcessor implements MapReduceProcessor {
 
+    private static final Logger logger = LoggerFactory.getLogger(TISTableDumpProcessor.class);
     // public static final String KEY_instanceParams = "instanceParams";
     public transient static final PluginAndCfgSnapshotLocalCache cacheSnaphsot = new PluginAndCfgSnapshotLocalCache();
 
@@ -363,7 +367,9 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             tskMsg.setJobId(taskId);
         });
 
-
+        logger.info("tabName:" + triggerCfg.getTabName()
+                + ",splitTabsCfgs:"
+                + triggerCfg.getSplitTabsCfg().stream().map((msg) -> msg.toString()).collect(Collectors.joining(",")));
         return Triple.of(execContext, snapshotConsumer, triggerCfg);
     }
 

@@ -174,7 +174,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                         splitTabsSync.add(new SplitTabSync(tskMsg));
                     }
 
-                    map(splitTabsSync, "LEVEL1_TASK_A");
+                    map(splitTabsSync, triggerCfg.getTabName() + "Mapper");
                     return new ProcessResult(true, "map success");
                 } catch (Exception e) {
                     reportError(e, execChainContext, svc);

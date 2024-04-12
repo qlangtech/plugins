@@ -71,7 +71,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                         "childResult faild:" + childResult.getResult() + ",taskid:" + childResult.getTaskId() + "  " + "skip reduce phase");
             }
         }
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context);
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
 
         RpcServiceReference statusRpc = getRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
@@ -121,11 +121,11 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
 
         final OmsLogger logger = context.getOmsLogger();
-
+        ExecPhase execPhase = ExecPhase.parse(this, context);
         /**
          * 同步远端resource 资源
          */
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context);
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
         RpcServiceReference statusRpc = getRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = null;
 //        if (pair.getMiddle().getCfgsSnapshotWhenSuccessSync() != null) {
@@ -180,10 +180,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                     reportError(e, execChainContext, svc);
                     return new ProcessResult(false, e.getMessage());
                 }
-            }
-
-
-            if (context.getSubTask() instanceof SplitTabSync) {
+            } else if (context.getSubTask() instanceof SplitTabSync) {
                 SplitTabSync tabSync = (SplitTabSync) context.getSubTask();
                 try {
 
@@ -304,7 +301,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
      * @throws InstanceParamsException
      */
     public static Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig>
-    createExecContext(TaskContext context) {
+    createExecContext(TaskContext context, ExecPhase execPhase) {
         JSONObject instanceParams = null;
         Pair<Boolean, JSONObject> instanceParamsGetter = getInstanceParams(context);
         instanceParams = instanceParamsGetter.getRight();
@@ -315,9 +312,14 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
         }
 
         Integer taskId = parseTaskId(instanceParams);
-//        Objects.requireNonNull(instanceParams.getInteger(JobParams.KEY_TASK_ID),
-//                JobParams.KEY_TASK_ID + " can not be null," + JsonUtil.toString(instanceParams));
-        return createExecContext(context, taskId, instanceParams);
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair
+                = createExecContext(context, taskId, instanceParams);
+        SelectedTabTriggersConfig triggerCfg = pair.getRight();
+        logger.info("tabName:" + triggerCfg.getTabName() + ",phase:" + execPhase
+                + ",splitTabsCfgs:"
+                + triggerCfg.getSplitTabsCfg().stream().map((msg) -> msg.getJobName()).collect(Collectors.joining(",")));
+
+        return pair;
     }
 
     public static Integer parseTaskId(JSONObject instanceParams) {
@@ -367,9 +369,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             tskMsg.setJobId(taskId);
         });
 
-        logger.info("tabName:" + triggerCfg.getTabName()
-                + ",splitTabsCfgs:"
-                + triggerCfg.getSplitTabsCfg().stream().map((msg) -> msg.toString()).collect(Collectors.joining(",")));
+
         return Triple.of(execContext, snapshotConsumer, triggerCfg);
     }
 

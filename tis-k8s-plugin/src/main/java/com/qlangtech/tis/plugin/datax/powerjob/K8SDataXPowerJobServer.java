@@ -771,7 +771,8 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
                 throw new IllegalStateException("coreJbdcUrl can not be empty");
             }
             // --spring.datasource.core.jdbc-url=
-            envVar.setValue("--oms.mongodb.enable=false " + coreJbdcParams);
+            // --oms.transporter.active.protocols=http
+            envVar.setValue(" --oms.mongodb.enable=false " + coreJbdcParams);
             envs.add(envVar);
 
 

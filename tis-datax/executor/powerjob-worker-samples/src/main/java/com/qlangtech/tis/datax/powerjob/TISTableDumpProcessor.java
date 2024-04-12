@@ -1,7 +1,6 @@
 package com.qlangtech.tis.datax.powerjob;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
@@ -29,6 +28,7 @@ import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.web.start.TisAppLaunch;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -43,6 +43,7 @@ import tech.powerjob.worker.core.processor.TaskResult;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 import tech.powerjob.worker.log.OmsLogger;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -169,12 +170,23 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                     }
                 }
                 try {
-                    List<SplitTabSync> splitTabsSync = Lists.newArrayList();
+                    // List<SplitTabSync> splitTabsSync = Lists.newArrayList();
                     for (CuratorDataXTaskMessage tskMsg : triggerCfg.getSplitTabsCfg()) {
-                        splitTabsSync.add(new SplitTabSync(tskMsg));
+                        //  splitTabsSync.add();
+
+                        ProcessResult result
+                                = executeSplitTabSync(logger, statusRpc, svc, execChainContext, new SplitTabSync(tskMsg));
+                        if (!result.isSuccess()) {
+                            return result;
+                        }
                     }
 
-                    map(splitTabsSync, triggerCfg.getTabName() + "Mapper");
+                    // map(splitTabsSync, triggerCfg.getTabName() + "Mapper");
+                    /**
+                     * 由于powerjob 的map任务执行有问题，先把 map阶段执行的任务，都在初始化阶段执行了
+                     */
+                    map(Collections.emptyList(), triggerCfg.getTabName() + "Mapper");
+
                     return new ProcessResult(true, "map success");
                 } catch (Exception e) {
                     reportError(e, execChainContext, svc);
@@ -182,21 +194,26 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                 }
             } else if (context.getSubTask() instanceof SplitTabSync) {
                 SplitTabSync tabSync = (SplitTabSync) context.getSubTask();
-                try {
-
-                    tabSync.execSync(execChainContext, statusRpc);
-                    return new ProcessResult(true, "table split sync:" + tabSync.tskMsg.getJobName() + ",task " +
-                            "serial:" + tabSync.tskMsg.getTaskSerializeNum());
-                } catch (Exception e) {
-                    logger.error("spilt table sync job:" + tabSync.tskMsg.getJobName() + " faild", e);
-                    reportError(e, execChainContext, svc);
-                    return new ProcessResult(false, e.getMessage());
-                }
+                return executeSplitTabSync(logger, statusRpc, svc, execChainContext, tabSync);
             }
 
 
             return new ProcessResult(false, "UNKNOWN_TYPE_OF_SUB_TASK");
         } finally {
+        }
+    }
+
+    private ProcessResult executeSplitTabSync(OmsLogger logger, RpcServiceReference statusRpc
+            , AssembleSvcCompsite svc, DefaultExecContext execChainContext, SplitTabSync tabSync) {
+        try {
+
+            tabSync.execSync(execChainContext, statusRpc);
+            return new ProcessResult(true, "table split sync:" + tabSync.tskMsg.getJobName() + ",task " +
+                    "serial:" + tabSync.tskMsg.getTaskSerializeNum());
+        } catch (Exception e) {
+            logger.error("spilt table sync job:" + tabSync.tskMsg.getJobName() + " faild", e);
+            reportError(e, execChainContext, svc);
+            return new ProcessResult(false, e.getMessage());
         }
     }
 

@@ -27,6 +27,11 @@ public class PowerJobExecContext implements IExecChainContext {
     private ExecutePhaseRange executePhaseRange;
     private String appname;
 
+    @Override
+    public String getJavaMemSpec() {
+        return null;
+    }
+
     public void setExecutePhaseRange(ExecutePhaseRange executePhaseRange) {
         this.executePhaseRange = executePhaseRange;
     }

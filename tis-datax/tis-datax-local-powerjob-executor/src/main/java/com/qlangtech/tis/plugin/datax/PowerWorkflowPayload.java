@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
+import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.dao.ICommonDAOContext;
@@ -24,6 +25,7 @@ import com.qlangtech.tis.fullbuild.phasestatus.impl.AbstractChildProcessStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
 import com.qlangtech.tis.fullbuild.phasestatus.impl.JoinPhaseStatus;
 import com.qlangtech.tis.job.common.JobCommon;
+import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.biz.dal.dao.IApplicationDAO;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
 import com.qlangtech.tis.manage.biz.dal.pojo.ApplicationCriteria;
@@ -32,6 +34,7 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobOverwriteTemplate;
+import com.qlangtech.tis.plugin.datax.powerjob.PowerJobWrokerMemorySpec;
 import com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -317,7 +320,9 @@ public abstract class PowerWorkflowPayload {
         JSONObject instanceParams = createInstanceParams(tisTaskId);
         // 取得powerjob instanceId
         Long workflowInstanceId = workflowInstanceIdOpt.orElseGet(() -> {
-            // 手动触发的情况
+            /****************************************
+             * 手动触发的情况
+             ****************************************/
             Long createWorkflowInstanceId = result(this.submit.getTISPowerJob().runWorkflow(wfInfo.getId(), JsonUtil.toString(instanceParams), 0));
             logger.info("create workflow instanceId:{}", createWorkflowInstanceId);
             return createWorkflowInstanceId;
@@ -393,6 +398,11 @@ public abstract class PowerWorkflowPayload {
     protected final JSONObject createInstanceParams(Integer tisTaskId) {
         try {
             JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
+
+            DataXJobWorker worker = DataXJobWorker.getK8SDataXPowerJobWorker();
+            ReplicasSpec replicasSpec = worker.getReplicasSpec();
+            instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
+                    , replicasSpec.toJavaMemorySpec(Optional.of(PowerJobWrokerMemorySpec.dataXExecutorMemoryProportion())));
 
             return instanceParams;
 
@@ -677,11 +687,7 @@ public abstract class PowerWorkflowPayload {
                 if (this.isDisabled()) {
                     return new WorkflowUnEffectiveJudge(true);
                 }
-                // WorkflowInfoDTO wfDTO = TISPowerJobClient.result(powerClient.fetchWorkflow(powerjobWorkflowId));
-                //PEWorkflowDAG dag = wfDTO.getPEWorkflowDAG();
-//                if (dag.getNodes().size() != selectedTabTriggers.size()) {
-//                    return new WorkflowUnEffectiveJudge(true);
-//                }
+
                 Map<String /**tableName*/, SelectedTabTriggers> tabTriggers
                         = selectedTabTriggers.entrySet().stream().collect(Collectors.toMap((e) -> e.getKey().getName(), (e) -> e.getValue()));
 

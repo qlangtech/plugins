@@ -759,7 +759,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             List<V1EnvVar> envs = Lists.newArrayList();
             V1EnvVar envVar = new V1EnvVar();
             envVar.setName("JVMOPTIONS");
-            envVar.setValue(powerjobServerSpec.toJavaMemorySpec());
+            envVar.setValue(powerjobServerSpec.toJavaMemorySpec(Optional.empty()));
             envs.add(envVar);
 
 

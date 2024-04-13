@@ -724,9 +724,7 @@ public class K8SUtils {
     }
 
     public static K8SDataXPowerJobWorker getK8SDataXPowerJobWorker() {
-        return (K8SDataXPowerJobWorker)
-                DataXJobWorker.getJobWorker(TargetResName.K8S_DATAX_INSTANCE_NAME
-                        , Optional.of(DataXJobWorker.K8SWorkerCptType.Worker));
+        return DataXJobWorker.getK8SDataXPowerJobWorker();
     }
 
 }

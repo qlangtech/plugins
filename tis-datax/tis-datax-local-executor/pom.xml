@@ -81,9 +81,15 @@
             <artifactId>tis-datax-local-executor-utils</artifactId>
             <version>${tis.version}</version>
         </dependency>
-
-
-
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-base-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
+            <artifactId>tis-hadoop-rpc</artifactId>
+            <scope>test</scope>
+        </dependency>
 
 
     </dependencies>

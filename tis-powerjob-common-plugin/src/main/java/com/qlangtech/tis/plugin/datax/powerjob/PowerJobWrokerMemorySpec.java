@@ -16,21 +16,27 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestDefaultDataxSplitTabSyncConsumer;
-import com.qlangtech.tis.plugin.datax.TestLocalDataXJobSubmit;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+package com.qlangtech.tis.plugin.datax.powerjob;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-23 09:55
+ * @create: 2024-04-13 14:57
  **/
-public class TestAll extends TestCase {
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestLocalDataXJobSubmit.class);
-        suite.addTestSuite(TestDefaultDataxSplitTabSyncConsumer.class);
-        return suite;
+public class PowerJobWrokerMemorySpec {
+    private PowerJobWrokerMemorySpec() {
+
+    }
+
+    /**
+     * powerjob worker 宿主进程占用内存比例
+     *
+     * @return
+     */
+    public static int residentMemoryProportion() {
+        return 45;
+    }
+
+    public static int dataXExecutorMemoryProportion() {
+        return 100 - residentMemoryProportion();
     }
 }

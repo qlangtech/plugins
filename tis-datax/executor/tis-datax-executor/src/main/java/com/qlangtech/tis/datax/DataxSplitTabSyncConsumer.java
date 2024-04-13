@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public abstract class DataxSplitTabSyncConsumer extends DataXJobSingleProcessorExecutor<CuratorDataXTaskMessage> {
     private static final Logger logger = LoggerFactory.getLogger(DataxSplitTabSyncConsumer.class);
-    private IExecChainContext execContext;
+    protected IExecChainContext execContext;
 
     public DataxSplitTabSyncConsumer(IExecChainContext execContext) {
         this.execContext = execContext;

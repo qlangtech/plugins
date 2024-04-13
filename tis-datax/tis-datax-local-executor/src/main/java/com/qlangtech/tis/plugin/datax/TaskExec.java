@@ -22,7 +22,6 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit;
-import com.qlangtech.tis.datax.DataxSplitTabSyncConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -31,7 +30,6 @@ import com.qlangtech.tis.order.center.IJoinTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -47,48 +45,21 @@ public class TaskExec {
     ) {
         IJoinTaskContext taskContext = jobContext.getTaskContext();
         AtomicBoolean complete = new AtomicBoolean(false);
-        //  AtomicBoolean success = new AtomicBoolean(false);
         return new IRemoteTaskTrigger() {
             DataXJobSingleProcessorExecutor<CuratorDataXTaskMessage> jobConsumer;
             boolean hasCanceled;
 
-
             @Override
             public void run() {
                 try {
-//                    MDC.put(JobCommon.KEY_TASK_ID, String.valueOf(taskContext.getTaskId()));
-//                    MDC.put(JobCommon.KEY_COLLECTION, taskContext.getIndexName());
 
                     JobCommon.setMDC(taskContext);
 
-                    jobConsumer = new DataxSplitTabSyncConsumer((IExecChainContext) taskContext) {
+                    jobConsumer = new DefaultDataxSplitTabSyncConsumer((IExecChainContext) taskContext, localDataXJobSubmit);
 
-
-                        @Override
-                        protected String getClasspath() {
-                            return localDataXJobSubmit.getClasspath();
-                        }
-
-                        @Override
-                        protected String[] getExtraJavaSystemPrams() {
-                            return localDataXJobSubmit.getExtraJavaSystemPrams();
-                        }
-
-                        @Override
-                        protected String getMainClassName() {
-                            return localDataXJobSubmit.getMainClassName();
-                        }
-
-                        @Override
-                        protected File getWorkingDirectory() {
-                            return localDataXJobSubmit.getWorkingDirectory();
-                        }
-                    };
                     CuratorDataXTaskMessage
                             dataXJob = localDataXJobSubmit.getDataXJobDTO(jobContext, dataXJobInfo, processor);
                     jobConsumer.consumeMessage(dataXJob);
-                    // }
-
 
                 } catch (Throwable e) {
                     final String datax = taskContext.hasIndexName() ? taskContext.getIndexName() : ("workflow:" + taskContext.getTaskId());
@@ -96,9 +67,7 @@ public class TaskExec {
                         logger.warn("datax:" + datax + " has been canceled");
                     } else {
                         logger.error("datax:" + datax + ",jobName:" + dataXJobInfo.jobFileName, e);
-                        // if (!(e instanceof DataXJobSingleProcessorException)) {
                         throw new RuntimeException(e);
-                        // }
                     }
                 } finally {
                     complete.set(true);

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobSubmit;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
@@ -47,7 +48,7 @@ public class TestDistributedOverseerDataXJobSubmit extends TestCase {
 
     public void testPushMsgToDistributeQueue() {
 
-        DataXJobWorker dataxJobWorker = DataXJobWorker.getJobWorker(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
+        DataXJobWorker dataxJobWorker = DataXJobWorker.getJobWorker(TargetResName.K8S_DATAX_INSTANCE_NAME);
 //        assertEquals("/datax/jobs", dataxJobWorker.getZkQueuePath());
 //        assertEquals("192.168.28.200:2181/tis/cloud", dataxJobWorker.getZookeeperAddress());
 

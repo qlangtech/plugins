@@ -32,6 +32,7 @@ import java.util.Optional;
  */
 public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
 
+
     public static K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(IDataxProcessor dataxProcessor) {
         for (DataXJobWorker worker : HeteroEnum.appJobWorkerTplReWriter.getPlugins(IPluginContext.namedContext(dataxProcessor.identityValue()), null)) {
             return (K8SDataXPowerJobJobTemplate) worker;

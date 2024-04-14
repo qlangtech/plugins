@@ -46,10 +46,16 @@ public class DefaultDataxSplitTabSyncConsumer extends DataxSplitTabSyncConsumer 
         String[] extraJavaSystemPrams = localDataXJobSubmit.getExtraJavaSystemPrams();
         String javaMemory = execContext.getJavaMemSpec();//.getTaskContext().getJavaMemSpec();
         if (StringUtils.isNotEmpty(javaMemory)) {
+            String[] javaMemoryArray = StringUtils.split(javaMemory, " ");
             // 将内存规格拷贝到新的参数数组里
-            String[] params = new String[extraJavaSystemPrams.length + 1];
-            params[0] = javaMemory;
-            System.arraycopy(extraJavaSystemPrams, 0, params, 1, extraJavaSystemPrams.length);
+            String[] params = new String[extraJavaSystemPrams.length + javaMemoryArray.length];
+
+            int index = 0;
+            for (String memParam : javaMemoryArray) {
+                params[index++] = memParam;
+            }
+
+            System.arraycopy(extraJavaSystemPrams, 0, params, index, extraJavaSystemPrams.length);
             return params;
         } else {
             return extraJavaSystemPrams;

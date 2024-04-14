@@ -53,7 +53,7 @@ public class TestDefaultDataxSplitTabSyncConsumer extends TestCase implements TI
 
         this.replay();
         String[] extraJavaSystemPrams = syncConsumer.getExtraJavaSystemPrams();
-        Assert.assertEquals(2, extraJavaSystemPrams.length);
+        Assert.assertEquals(3, extraJavaSystemPrams.length);
         Assert.assertEquals("-Xms819m -Xmx1228m -DtestParam=xxxx",String.join(" ",extraJavaSystemPrams));
         this.verifyAll();
     }

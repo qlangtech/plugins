@@ -112,7 +112,10 @@ public abstract class PowerWorkflowPayload {
 
     public static PowerWorkflowPayload createApplicationPayload(DistributedPowerJobDataXJobSubmit submit, IControlMsgHandler module, String appName) {
         ICommonDAOContext commonDAOContext = getCommonDAOContext(module);
-        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
+        if (!(module instanceof IPluginContext)) {
+            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
+        }
+        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load((IPluginContext) module, appName);
         return new ApplicationPayload(submit, module, appName, commonDAOContext, dataxProcessor);
     }
 

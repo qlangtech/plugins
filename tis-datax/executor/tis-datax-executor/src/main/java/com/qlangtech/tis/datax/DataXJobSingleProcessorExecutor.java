@@ -83,7 +83,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
             cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
             cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
             for (String sysParam : this.getExtraJavaSystemPrams()) {
-                cmdLine.addArgument(sysParam);
+                cmdLine.addArgument(sysParam, false);
             }
 
             cmdLine.addArgument("-classpath");
@@ -138,8 +138,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
 
 
     protected abstract void addMainClassParams(T msg, Integer taskId, String jobName, String dataxName,
-                                      CommandLine cmdLine) ;
-
+                                               CommandLine cmdLine);
 
 
     protected boolean isCurrentJobProcessing(Integer jobId) {

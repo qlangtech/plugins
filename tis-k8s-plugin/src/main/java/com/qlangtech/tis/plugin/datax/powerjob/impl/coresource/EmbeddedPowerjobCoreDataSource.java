@@ -8,23 +8,32 @@ import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.fullbuild.indexbuild.RunningStatus;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerJobK8SImage;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerjobCoreDataSource;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8SUtils;
+import com.qlangtech.tis.plugin.k8s.K8SUtils.PodStat;
 import com.qlangtech.tis.plugin.k8s.K8sImage;
 import com.qlangtech.tis.plugin.k8s.NamespacedEventCallCriteria;
+import com.qlangtech.tis.plugin.k8s.ResChangeCallback;
+import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerPort;
 import io.kubernetes.client.openapi.models.V1EnvVar;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1Probe;
+import io.kubernetes.client.openapi.models.V1TCPSocketAction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobServer.K8S_DATAX_POWERJOB_MYSQL;
 
@@ -90,13 +99,39 @@ public class EmbeddedPowerjobCoreDataSource extends PowerjobCoreDataSource {
                     v1Api, powerjobMySQLImage, K8S_DATAX_POWERJOB_MYSQL, () -> {
                         V1Container container = new V1Container();
                         container.setArgs(Collections.singletonList("--lower_case_table_names=1"));
+
+                        V1Probe startupProbe = new V1Probe();
+                        V1TCPSocketAction tcp = new V1TCPSocketAction();
+                        tcp.setPort(new IntOrString(mysql3306));
+                        startupProbe.tcpSocket(tcp);
+                        startupProbe.initialDelaySeconds(3);
+                        container.setStartupProbe(startupProbe);
+
                         return container;
                     }, mysqlRcSpec, exportPorts, mysqlEnvs));
 
             // String namespace, V1Service body, String pretty, String dryRun, String fieldManager
 
             K8SUtils.waitReplicaControllerLaunch(powerjobMySQLImage //
-                    , K8S_DATAX_POWERJOB_MYSQL, mysqlRcSpec, powerJobServer.getK8SApi(), reVersion);
+                    , K8S_DATAX_POWERJOB_MYSQL, mysqlRcSpec.getReplicaCount(), powerJobServer.getK8SApi(), reVersion, new ResChangeCallback() {
+                        @Override
+                        public void applyDefaultPodPhase(Map<String, PodStat> relevantPodNames, V1Pod pod) {
+                            relevantPodNames.put(pod.getMetadata().getName(), new PodStat(pod, RunningStatus.SUCCESS));
+                        }
+
+                        @Override
+                        public boolean isBreakEventWatch(Map<String, PodStat> relevantPodNames, int expectResChangeCount) {
+                            if (relevantPodNames.values().size() < expectResChangeCount) {
+                                return false;
+                            }
+                            for (PodStat stat : relevantPodNames.values()) {
+                                if (stat.isRunning()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    });
             return reVersion;
             // success = true;
         } finally {

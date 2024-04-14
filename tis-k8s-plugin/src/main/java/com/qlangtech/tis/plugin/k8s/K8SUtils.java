@@ -33,12 +33,14 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodSpec;
 import io.kubernetes.client.openapi.models.V1PodTemplateSpec;
+import io.kubernetes.client.openapi.models.V1Probe;
 import io.kubernetes.client.openapi.models.V1ReplicationController;
 import io.kubernetes.client.openapi.models.V1ReplicationControllerSpec;
 import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServiceSpec;
+import io.kubernetes.client.openapi.models.V1TCPSocketAction;
 import io.kubernetes.client.util.Watch;
 import io.kubernetes.client.util.Watch.Response;
 import org.apache.commons.collections.CollectionUtils;
@@ -276,6 +278,14 @@ public class K8SUtils {
         V1PodSpec podSpec = new V1PodSpec();
         List<V1Container> containers = Lists.newArrayList();
         V1Container container = containerCreator.get();
+
+//        V1Probe startupProbe = new V1Probe();
+//        V1TCPSocketAction tcp = new V1TCPSocketAction();
+//        tcp.setPort();
+//        startupProbe.tcpSocket(tcp);
+//        startupProbe.initialDelaySeconds(3);
+//        container.setStartupProbe(startupProbe);
+
         container.setName(name.getK8SResName());
 
         Objects.requireNonNull(config, "K8sImage can not be null");

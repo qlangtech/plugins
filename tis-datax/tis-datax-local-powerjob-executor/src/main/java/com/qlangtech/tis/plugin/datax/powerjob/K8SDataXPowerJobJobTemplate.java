@@ -2,12 +2,15 @@ package com.qlangtech.tis.plugin.datax.powerjob;
 
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.BasicPowerjobWorker;
+import com.qlangtech.tis.util.HeteroEnum;
+import com.qlangtech.tis.util.IPluginContext;
 import tech.powerjob.common.enums.DispatchStrategy;
 import tech.powerjob.common.enums.ExecuteType;
 import tech.powerjob.common.enums.ProcessorType;
@@ -18,6 +21,7 @@ import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.request.http.SaveWorkflowRequest;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 配置PowerJob Worker执行器
@@ -27,6 +31,16 @@ import java.util.Objects;
  * @date 2023/10/31
  */
 public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
+
+    public static K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(IDataxProcessor dataxProcessor) {
+        for (DataXJobWorker worker : HeteroEnum.appJobWorkerTplReWriter.getPlugins(IPluginContext.namedContext(dataxProcessor.identityValue()), null)) {
+            return (K8SDataXPowerJobJobTemplate) worker;
+        }
+
+        // 为空,调用全局模版
+        return (K8SDataXPowerJobJobTemplate) getJobWorker(
+                TargetResName.K8S_DATAX_INSTANCE_NAME, Optional.of(K8SWorkerCptType.JobTpl));
+    }
 
     @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, advance = true, validate = {Validator.require, Validator.integer})
     public Integer instraceRetry;
@@ -57,6 +71,7 @@ public class K8SDataXPowerJobJobTemplate extends BasicPowerjobWorker {
      */
     @FormField(ordinal = 13, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean skipWhenFailed;
+
 
     public SaveJobInfoRequest createSqlProcessJobRequest() {
         return createDefaultJobInfoRequest(ExecuteType.STANDALONE, "com.qlangtech.tis.datax.powerjob.TISTableJoinProcessor");

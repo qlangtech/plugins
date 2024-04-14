@@ -10,7 +10,6 @@ import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.assemble.TriggerType;
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
-import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.dao.ICommonDAOContext;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -46,8 +45,6 @@ import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.sql.parser.ISqlTask;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.trigger.util.JsonUtil;
-import com.qlangtech.tis.util.HeteroEnum;
-import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.workflow.dao.IWorkFlowDAO;
 import com.qlangtech.tis.workflow.pojo.WorkFlow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowCriteria;
@@ -112,10 +109,10 @@ public abstract class PowerWorkflowPayload {
 
     public static PowerWorkflowPayload createApplicationPayload(DistributedPowerJobDataXJobSubmit submit, IControlMsgHandler module, String appName) {
         ICommonDAOContext commonDAOContext = getCommonDAOContext(module);
-        if (!(module instanceof IPluginContext)) {
-            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
-        }
-        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load((IPluginContext) module, appName);
+//        if (!(module instanceof IPluginContext)) {
+//            throw new IllegalStateException("type of module:" + module.getClass() + " must be type of " + IPluginContext.class);
+//        }
+        DataxProcessor dataxProcessor = (DataxProcessor) DataxProcessor.load(null, appName);
         return new ApplicationPayload(submit, module, appName, commonDAOContext, dataxProcessor);
     }
 
@@ -230,7 +227,7 @@ public abstract class PowerWorkflowPayload {
 
 
         RpcServiceReference rpcStub = StatusRpcClientFactory.getMockStub();
-        DataXJobWorker worker = Objects.requireNonNull(getAppRelevantDataXJobWorkerTemplate(dataxProcessor), "worker can not be empty");
+        DataXJobWorker worker = Objects.requireNonNull(K8SDataXPowerJobJobTemplate.getAppRelevantDataXJobWorkerTemplate(dataxProcessor), "worker can not be empty");
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> selectedTabTriggers = createWfNodes();
 
 
@@ -483,23 +480,18 @@ public abstract class PowerWorkflowPayload {
             , Optional<WorkflowUnEffectiveJudge> unEffectiveOpt) {
         RpcServiceReference statusRpc = StatusRpcClientFactory.getMockStub();
         // dataxApp 相关的模版
-        Optional<K8SDataXPowerJobJobTemplate> jobTpl = Optional.ofNullable(getAppRelevantDataXJobWorkerTemplate(dataxProcessor));
+        Optional<K8SDataXPowerJobJobTemplate> jobTpl = Optional.of(K8SDataXPowerJobJobTemplate.getAppRelevantDataXJobWorkerTemplate(dataxProcessor));
 
-        innerSaveJob(selectedTabTriggers, unEffectiveOpt, jobTpl.orElseGet(() -> {
-            // 为空,调用全局模版
-            return (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(
-                    TargetResName.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
-        }), statusRpc);
+        innerSaveJob(selectedTabTriggers, unEffectiveOpt, jobTpl.get()
+//                        .orElseGet(() -> {
+//            // 为空,调用全局模版
+//            return (K8SDataXPowerJobJobTemplate) DataXJobWorker.getJobWorker(
+//                    TargetResName.K8S_DATAX_INSTANCE_NAME, Optional.of(DataXJobWorker.K8SWorkerCptType.JobTpl));
+//        })
+                , statusRpc);
     }
 
-    private K8SDataXPowerJobJobTemplate getAppRelevantDataXJobWorkerTemplate(IDataxProcessor dataxProcessor) {
-        for (DataXJobWorker worker : HeteroEnum.appJobWorkerTplReWriter.getPlugins(IPluginContext.namedContext(dataxProcessor.identityValue()), null)) {
-            return (K8SDataXPowerJobJobTemplate) worker;
-        }
-        return null;
-    }
-
-//    private PowerWorkflowPayload innerSaveJob(
+    //    private PowerWorkflowPayload innerSaveJob(
 //            Optional<Map<ISelectedTab, SelectedTabTriggers>> selectedTabTriggers, Optional<WorkflowUnEffectiveJudge> unEffectiveOpt
 //            , K8SDataXPowerJobJobTemplate jobTpl, DataXJobSubmit submit, RpcServiceReference statusRpc) {
 //        return innerSaveJob(selectedTabTriggers, unEffectiveOpt, jobTpl, submit, statusRpc);

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.coredefine.module.action.PowerjobTriggerBuildResult;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.IFullBuildContext;
+import com.qlangtech.tis.job.common.JobParams;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.rpc.grpc.log.appender.LoggingEvent.Level;
@@ -70,7 +71,7 @@ public class TISInitializeProcessor implements BasicProcessor {
             for (Map.Entry<String, Object> e : iparams.entrySet()) {
                 wfContext.appendData2WfContext(e.getKey(), e.getValue());
             }
-
+            wfContext.appendData2WfContext(JobParams.KEY_JAVA_MEMORY_SPEC, triggerResult.getJavaMemorySpec());
         } else {
             // trigger by mannual 手动触发
             Integer taskId = TISTableDumpProcessor.parseTaskId(instanceParams.getRight());

@@ -350,8 +350,12 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
 
             ctx.setLatestPhaseStatusCollection(cacheSnaphsot.getPreviousStatus(ctx.getTaskId(), () -> {
+                Integer prevTaskId = instanceParams.getInteger(JobParams.KEY_PREVIOUS_TASK_ID);
+                if (prevTaskId == null) {
+                    return null;
+                }
                 AssembleSvcCompsite svc = getRpcServiceReference().get();
-                return svc.statReceiveSvc.loadPhaseStatusFromLatest(triggerCfg.getTargetRes());
+                return svc.statReceiveSvc.loadPhaseStatusFromLatest(prevTaskId);
             }));
 
         }, snapshotConsumer);

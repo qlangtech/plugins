@@ -241,7 +241,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
             //   PowerJobClient powerJobClient = getTISPowerJob();
             RpcServiceReference statusRpc = getStatusRpc();
             StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
-            return payload.triggerPowerjobWorkflow(daoContext, powerJobWorkflowInstanceIdOpt, statusRpc, feedback);
+            return payload.triggerPowerjobWorkflow(daoContext, powerJobWorkflowInstanceIdOpt, feedback);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -265,7 +265,7 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
         StatusRpcClientFactory.AssembleSvcCompsite feedback = statusRpc.get();
 
         PowerWorkflowPayload appPayload = PowerWorkflowPayload.createApplicationPayload(this, module, appName);
-        return appPayload.triggerPowerjobWorkflow(getCommonDAOContext(module), workflowInstanceIdOpt, statusRpc, feedback);
+        return appPayload.triggerPowerjobWorkflow(getCommonDAOContext(module), workflowInstanceIdOpt, feedback);
     }
 
 

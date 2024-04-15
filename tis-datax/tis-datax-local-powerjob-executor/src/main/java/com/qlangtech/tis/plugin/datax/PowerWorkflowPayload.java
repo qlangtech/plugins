@@ -39,7 +39,6 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.IDAGSessionSpec;
 import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
-import com.qlangtech.tis.realtime.yarn.rpc.SynResTarget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -47,10 +46,10 @@ import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.workflow.dao.IWorkFlowDAO;
 import com.qlangtech.tis.workflow.pojo.WorkFlow;
+import com.qlangtech.tis.workflow.pojo.WorkFlowBuildHistory;
 import com.qlangtech.tis.workflow.pojo.WorkFlowCriteria;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -255,8 +254,8 @@ public abstract class PowerWorkflowPayload {
     }
 
     public PowerjobTriggerBuildResult triggerPowerjobWorkflow(ICommonDAOContext daoContext, Optional<Long> workflowInstanceIdOpt
-            , RpcServiceReference statusRpc, StatusRpcClientFactory.AssembleSvcCompsite feedback) {
-        Objects.requireNonNull(statusRpc, "statusRpc can not be null");
+            , StatusRpcClientFactory.AssembleSvcCompsite feedback) {
+        //  Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = this.getPowerJobWorkflowId(false);
 
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> selectedTabTriggers = null;
@@ -319,7 +318,7 @@ public abstract class PowerWorkflowPayload {
         PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
         feedback.initSynJob(statusCollection);
 
-        JSONObject instanceParams = createInstanceParams(statusRpc, tisTaskId);
+        JSONObject instanceParams = createInstanceParams(tisTaskId);
         // 取得powerjob instanceId
         Long workflowInstanceId = workflowInstanceIdOpt.orElseGet(() -> {
             /****************************************
@@ -397,7 +396,7 @@ public abstract class PowerWorkflowPayload {
         return buildResult;
     }
 
-    protected final JSONObject createInstanceParams(RpcServiceReference statusRpc, Integer tisTaskId) {
+    protected final JSONObject createInstanceParams(Integer tisTaskId) {
         try {
             JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
 
@@ -405,17 +404,11 @@ public abstract class PowerWorkflowPayload {
             ReplicasSpec replicasSpec = worker.getReplicasSpec();
             instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
                     , replicasSpec.toJavaMemorySpec(Optional.of(PowerJobWrokerMemorySpec.dataXExecutorMemoryProportion())));
+            WorkFlowBuildHistory latestSuccessWorkflowHistory = this.commonDAOContext.getLatestSuccessWorkflowHistory(dataxProcessor.getResTarget());
 
-
-            AssembleSvcCompsite svc = statusRpc.get();
-            PhaseStatusCollection statusCollection
-                    = svc.statReceiveSvc.loadPhaseStatusFromLatest(SynResTarget.pipeline(dataxProcessor.identityValue()));
-            if (statusCollection != null) {
-
-               // DumpPhaseStatus dumpPhase = statusCollection.getDumpPhase();
-
+            if (latestSuccessWorkflowHistory != null) {
+                instanceParams.put(JobParams.KEY_PREVIOUS_TASK_ID, latestSuccessWorkflowHistory.getId());
             }
-
 
             return instanceParams;
 

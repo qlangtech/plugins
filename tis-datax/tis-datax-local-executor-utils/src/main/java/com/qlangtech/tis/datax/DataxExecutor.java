@@ -306,9 +306,6 @@ public class DataxExecutor {
     private IDataXPluginMeta.DataXMeta readerMeta;
     private IDataXPluginMeta.DataXMeta writerMeta;
 
-
-    // private final RpcServiceReference statusRpc;
-    //private final JarLoader uberClassLoader;
     private DataXJobSubmit.InstanceType execMode;
     private final int allRowsApproximately;
     private final long[] allReadApproximately = new long[1];
@@ -316,8 +313,6 @@ public class DataxExecutor {
 
     public DataxExecutor(RpcServiceReference statusRpc, DataXJobSubmit.InstanceType execMode, int allRows) {
         this.statusRpc = Objects.requireNonNull(statusRpc, "statusRpc can not be null");
-        //this.statusRpc = statusRpc;
-        // Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         this.execMode = execMode;
         this.allRowsApproximately = allRows;
     }

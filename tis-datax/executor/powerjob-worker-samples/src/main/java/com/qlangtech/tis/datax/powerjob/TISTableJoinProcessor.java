@@ -126,10 +126,12 @@ public class TISTableJoinProcessor implements BasicProcessor {
     private DefaultExecContext createDftExecContent(TaskContext context) {
         JSONObject instanceParams = JSONObject.parseObject(context.getInstanceParams());
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
-        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, snapshotConsumer);
-        execContext.setResType(StoreResourceType.DataFlow);
-        execContext.setWorkflowName(execContext.getIndexName());
-        execContext.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
+        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, (ctx) -> {
+            ctx.setResType(StoreResourceType.DataFlow);
+            ctx.setWorkflowName(ctx.getIndexName());
+            ctx.setExecutePhaseRange(new ExecutePhaseRange(FullbuildPhase.FullDump, FullbuildPhase.JOIN));
+        }, snapshotConsumer);
+
 
         snapshotConsumer.synchronizTpisAndConfs(execContext, TISTableDumpProcessor.cacheSnaphsot);
 

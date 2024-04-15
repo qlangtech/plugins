@@ -2,15 +2,11 @@ package com.qlangtech.tis.datax.powerjob;
 
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.DefaultExecContext;
-import com.qlangtech.tis.powerjob.SelectedTabTriggers;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers.SelectedTabTriggersConfig;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -40,11 +36,11 @@ public class TestSplitTabSync implements TISEasyMock {
 
         this.replay();
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair =
-                TISTableDumpProcessor.createExecContext(tskContext);
+                TISTableDumpProcessor.createExecContext(tskContext, ExecPhase.Prepare);
 
         RpcServiceReference rpcSvc = StatusRpcClientFactory.getService(ITISCoordinator.create());
         pair.getLeft().setCoordinator(ITISCoordinator.create());
-       // IDataxProcessor processor = DataxProcessor.load(null, pair.getRight().getDataXName());
+        // IDataxProcessor processor = DataxProcessor.load(null, pair.getRight().getDataXName());
 
         for (CuratorDataXTaskMessage tskMsg : pair.getRight().getSplitTabsCfg()) {
             SplitTabSync tabSync = new SplitTabSync(tskMsg);

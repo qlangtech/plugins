@@ -72,10 +72,11 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
                         "childResult faild:" + childResult.getResult() + ",taskid:" + childResult.getTaskId() + "  " + "skip reduce phase");
             }
         }
-        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
+
 
         RpcServiceReference statusRpc = getRpcServiceReference();
         StatusRpcClientFactory.AssembleSvcCompsite svc = statusRpc.get();
+        Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggers.SelectedTabTriggersConfig> pair = createExecContext(context, ExecPhase.Reduce);
 
         DefaultExecContext execContext = Objects.requireNonNull(pair.getLeft(), "execContext can not be null");
         SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = pair.getRight();
@@ -123,11 +124,13 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
         final OmsLogger logger = context.getOmsLogger();
         ExecPhase execPhase = ExecPhase.parse(this, context);
+        RpcServiceReference statusRpc = getRpcServiceReference();
         /**
+         *
          * 同步远端resource 资源
          */
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair = createExecContext(context, execPhase);
-        RpcServiceReference statusRpc = getRpcServiceReference();
+
         StatusRpcClientFactory.AssembleSvcCompsite svc = null;
 //        if (pair.getMiddle().getCfgsSnapshotWhenSuccessSync() != null) {
 //            this.cacheSnaphsot = pair.getMiddle().getCfgsSnapshotWhenSuccessSync();
@@ -135,6 +138,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
 
         try {
             svc = statusRpc.get();
+
 
             final DefaultExecContext execChainContext = Objects.requireNonNull(pair.getLeft(),
                     "execChainContext can " + "not be null");
@@ -317,6 +321,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
         Integer taskId = parseTaskId(instanceParams);
         Triple<DefaultExecContext, CfgsSnapshotConsumer, SelectedTabTriggersConfig> pair
                 = createExecContext(context, taskId, instanceParams);
+
         SelectedTabTriggersConfig triggerCfg = pair.getRight();
         logger.info("tabName:" + triggerCfg.getTabName() + ",phase:" + execPhase
                 + ",splitTabsCfgs:"
@@ -337,10 +342,19 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
         if (taskId == null) {
             throw new IllegalArgumentException("param taskId can not be null");
         }
+
         SelectedTabTriggers.SelectedTabTriggersConfig triggerCfg = getTriggerCfg(context);
 
         final CfgsSnapshotConsumer snapshotConsumer = new CfgsSnapshotConsumer();
-        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, snapshotConsumer);
+        DefaultExecContext execContext = IExecChainContext.deserializeInstanceParams(instanceParams, (ctx) -> {
+
+
+            ctx.setLatestPhaseStatusCollection(cacheSnaphsot.getPreviousStatus(ctx.getTaskId(), () -> {
+                AssembleSvcCompsite svc = getRpcServiceReference().get();
+                return svc.statReceiveSvc.loadPhaseStatusFromLatest(triggerCfg.getTargetRes());
+            }));
+
+        }, snapshotConsumer);
         execContext.setResType(Objects.requireNonNull(triggerCfg.getResType()));
         if (triggerCfg.getResType() == StoreResourceType.DataFlow) {
             execContext.setWorkflowName(triggerCfg.getDataXName());
@@ -380,6 +394,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
     private static transient RpcServiceReference statusRpc;
 
     public static RpcServiceReference getRpcServiceReference() {
+
         if (statusRpc != null) {
             return statusRpc;
         }

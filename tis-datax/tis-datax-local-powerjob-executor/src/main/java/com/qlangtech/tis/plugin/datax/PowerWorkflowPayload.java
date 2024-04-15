@@ -32,7 +32,6 @@ import com.qlangtech.tis.manage.common.CreateNewTaskResult;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobJobTemplate;
-import com.qlangtech.tis.plugin.datax.powerjob.K8SDataXPowerJobOverwriteTemplate;
 import com.qlangtech.tis.plugin.datax.powerjob.PowerJobWrokerMemorySpec;
 import com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
@@ -40,6 +39,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.powerjob.IDAGSessionSpec;
 import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
+import com.qlangtech.tis.realtime.yarn.rpc.SynResTarget;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.sql.parser.DAGSessionSpec;
 import com.qlangtech.tis.sql.parser.ISqlTask;
@@ -50,6 +50,7 @@ import com.qlangtech.tis.workflow.pojo.WorkFlow;
 import com.qlangtech.tis.workflow.pojo.WorkFlowCriteria;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
+import com.tis.hadoop.rpc.StatusRpcClientFactory.AssembleSvcCompsite;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -227,7 +228,7 @@ public abstract class PowerWorkflowPayload {
 
 
         RpcServiceReference rpcStub = StatusRpcClientFactory.getMockStub();
-        DataXJobWorker worker = Objects.requireNonNull(K8SDataXPowerJobJobTemplate.getAppRelevantDataXJobWorkerTemplate(dataxProcessor), "worker can not be empty");
+        K8SDataXPowerJobJobTemplate worker = Objects.requireNonNull(K8SDataXPowerJobJobTemplate.getAppRelevantDataXJobWorkerTemplate(dataxProcessor), "worker can not be empty");
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> selectedTabTriggers = createWfNodes();
 
 
@@ -242,7 +243,7 @@ public abstract class PowerWorkflowPayload {
          * =========================
          */
         this.innerSaveJob(Optional.of(selectedTabTriggers)
-                , Optional.ofNullable(unEffectiveJudge), (K8SDataXPowerJobOverwriteTemplate) worker, rpcStub);
+                , Optional.ofNullable(unEffectiveJudge), worker, rpcStub);
         if (powerJobWorkflowId == null) {
             powerJobWorkflowId = this.getPowerJobWorkflowId(true);
         }
@@ -255,6 +256,7 @@ public abstract class PowerWorkflowPayload {
 
     public PowerjobTriggerBuildResult triggerPowerjobWorkflow(ICommonDAOContext daoContext, Optional<Long> workflowInstanceIdOpt
             , RpcServiceReference statusRpc, StatusRpcClientFactory.AssembleSvcCompsite feedback) {
+        Objects.requireNonNull(statusRpc, "statusRpc can not be null");
         PowerWorkflowPayload.PowerJobWorkflow powerJobWorkflowId = this.getPowerJobWorkflowId(false);
 
         Pair<Map<ISelectedTab, SelectedTabTriggers>, Map<String, ISqlTask>> selectedTabTriggers = null;
@@ -317,7 +319,7 @@ public abstract class PowerWorkflowPayload {
         PhaseStatusCollection statusCollection = createPhaseStatus(powerJobWorkflowId, triggerCfgs, joinNodeCfgs, tisTaskId);
         feedback.initSynJob(statusCollection);
 
-        JSONObject instanceParams = createInstanceParams(tisTaskId);
+        JSONObject instanceParams = createInstanceParams(statusRpc, tisTaskId);
         // 取得powerjob instanceId
         Long workflowInstanceId = workflowInstanceIdOpt.orElseGet(() -> {
             /****************************************
@@ -395,7 +397,7 @@ public abstract class PowerWorkflowPayload {
         return buildResult;
     }
 
-    protected final JSONObject createInstanceParams(Integer tisTaskId) {
+    protected final JSONObject createInstanceParams(RpcServiceReference statusRpc, Integer tisTaskId) {
         try {
             JSONObject instanceParams = IExecChainContext.createInstanceParams(tisTaskId, dataxProcessor, false, Optional.empty());
 
@@ -403,6 +405,17 @@ public abstract class PowerWorkflowPayload {
             ReplicasSpec replicasSpec = worker.getReplicasSpec();
             instanceParams.put(JobParams.KEY_JAVA_MEMORY_SPEC
                     , replicasSpec.toJavaMemorySpec(Optional.of(PowerJobWrokerMemorySpec.dataXExecutorMemoryProportion())));
+
+
+            AssembleSvcCompsite svc = statusRpc.get();
+            PhaseStatusCollection statusCollection
+                    = svc.statReceiveSvc.loadPhaseStatusFromLatest(SynResTarget.pipeline(dataxProcessor.identityValue()));
+            if (statusCollection != null) {
+
+               // DumpPhaseStatus dumpPhase = statusCollection.getDumpPhase();
+
+            }
+
 
             return instanceParams;
 

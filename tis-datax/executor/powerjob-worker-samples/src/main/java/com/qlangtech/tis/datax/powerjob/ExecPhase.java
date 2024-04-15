@@ -22,6 +22,8 @@ import tech.powerjob.worker.core.processor.TaskContext;
 import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 
 /**
+ * powerjob 的process 分为三个阶段 准备（prepare），分子任务（Mapper），归并（Reduce）
+ *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-04-12 13:14
  **/

@@ -29,8 +29,10 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.fs.ITISFileSystem;
@@ -41,7 +43,9 @@ import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshot;
 import com.qlangtech.tis.plugin.PluginAndCfgsSnapshotUtils;
+import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.util.PluginMeta;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.launcher.SparkAppHandle;
@@ -57,6 +61,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Predicate;
 import java.util.jar.Manifest;
 
 /**
@@ -131,7 +136,8 @@ public class HudiDumpPostTask implements IRemoteTaskPostTrigger {
             if (handle != null) {
                 try {
                     handle.stop();
-                } catch (Throwable e) {}
+                } catch (Throwable e) {
+                }
             }
         } catch (Throwable e) {
             if (this.sparkAppHandle != null) {
@@ -304,18 +310,20 @@ public class HudiDumpPostTask implements IRemoteTaskPostTrigger {
 //            long timestamp,
 //            Map<String, String> extraEnvProps,
 //            Optional<Predicate<PluginMeta>> pluginMetasFilter, Set<PluginMeta> appendPluginMeta)
-
+            Optional<Predicate<PluginMeta>> pluginMetasFilter = Optional.of((meta) -> {
+                // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
+                boolean collect = !(meta.getPluginName().indexOf("hudi") > -1);
+                if (collect) {
+                    // 与增量无关
+                    collect = !meta.getPluginName().startsWith(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH);
+                }
+                return collect;
+            });
+            IDataxProcessor processor = DataxProcessor.load(null, StoreResourceType.DataApp, execContext.getIndexName());
 
             Manifest manifest = PluginAndCfgsSnapshot.createDataBatchJobManifestCfgAttrs( //
-                    new TargetResName(execContext.getIndexName()), Optional.of((meta) -> {
-                        // 目前只需要同步hdfs相关的配置文件，hudi相关的tpi包因为体积太大且远端spark中用不上先不传了
-                        boolean collect = !(meta.getPluginName().indexOf("hudi") > -1);
-                        if (collect) {
-                            // 与增量无关
-                            collect = !meta.getPluginName().startsWith(TISSinkFactory.KEY_PLUGIN_TPI_CHILD_PATH);
-                        }
-                        return collect;
-                    }), extraEnvProps);
+                    processor, extraEnvProps, pluginMetasFilter);
+
             PluginAndCfgsSnapshotUtils.writeManifest2Jar(manifestJar, manifest);
 //            if (manifest.getLeft().appLastModifyTimestamp < 1) {
 //                throw new IllegalStateException("appname:" + execContext.getIndexName() + " relevant appLastModifyTimestamp illegal:"

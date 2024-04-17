@@ -1,4 +1,5 @@
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.offline.DataxUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,7 +14,7 @@ import tech.powerjob.samples.SampleApplication;
 @SpringBootApplication
 public class TestLauncher {
     public static void main(String[] args) {
-
+        Config.setDataDir("/tmp/data");
        // TisAppLaunch.setTest(true);
         System.out.println("currentTimeStamp:" + DataxUtils.currentTimeStamp());
         TIS.permitInitialize = false;

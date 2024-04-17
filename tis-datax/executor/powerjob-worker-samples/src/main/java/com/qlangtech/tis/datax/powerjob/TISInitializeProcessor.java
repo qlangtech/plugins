@@ -72,6 +72,9 @@ public class TISInitializeProcessor implements BasicProcessor {
                 wfContext.appendData2WfContext(e.getKey(), e.getValue());
             }
             wfContext.appendData2WfContext(JobParams.KEY_JAVA_MEMORY_SPEC, triggerResult.getJavaMemorySpec());
+            if (triggerResult.getPreviousTaskId() != null) {
+                wfContext.appendData2WfContext(JobParams.KEY_PREVIOUS_TASK_ID, triggerResult.getPreviousTaskId());
+            }
         } else {
             // trigger by mannual 手动触发
             Integer taskId = TISTableDumpProcessor.parseTaskId(instanceParams.getRight());

@@ -97,47 +97,47 @@ public class DataxExecutor {
 //    }
 
 
-    public static void synchronizeDataXPluginsFromRemoteRepository(String dataxName, StoreResourceType resType,
-                                                                   DataXJobInfo jobName) {
-
-        if (CenterResource.notFetchFromCenterRepository()) {
-            return;
-        }
-
-        TIS.permitInitialize = false;
-        try {
-            if (StringUtils.isBlank(dataxName)) {
-                throw new IllegalArgumentException("param dataXName can not be null");
-            }
-            Objects.requireNonNull(jobName, "param jobName can not be null");
-            //            if (StringUtils.isBlank(jobName)) {
-            //                throw new IllegalArgumentException("param jobName can not be null");
-            //            }
-
-            KeyedPluginStore<DataxProcessor> processStore = IAppSource.getPluginStore(null, resType, dataxName);
-            List<IRepositoryResource> keyedPluginStores = Lists.newArrayList();
-            keyedPluginStores.add(TIS.getPluginStore(ParamsConfig.class));
-            keyedPluginStores.add(processStore);
-
-            if (resType == StoreResourceType.DataFlow) {
-                //   SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(dataxName);
-            }
-
-
-            keyedPluginStores.add(DataxReader.getPluginStore(null, false, dataxName));
-            keyedPluginStores.add(DataxWriter.getPluginStore(null, resType, dataxName));
-
-            ComponentMeta dataxComponentMeta = new ComponentMeta(keyedPluginStores);
-            dataxComponentMeta.synchronizePluginsFromRemoteRepository();
-
-            CenterResource.copyFromRemote2Local(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CFG_DIR_NAME + "/" + jobName.jobFileName, true);
-
-            CenterResource.synchronizeSubFiles(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CREATE_DDL_DIR_NAME);
-
-        } finally {
-            TIS.permitInitialize = true;
-        }
-    }
+//    public static void synchronizeDataXPluginsFromRemoteRepository(String dataxName, StoreResourceType resType,
+//                                                                   DataXJobInfo jobName) {
+//
+//        if (CenterResource.notFetchFromCenterRepository()) {
+//            return;
+//        }
+//
+//        TIS.permitInitialize = false;
+//        try {
+//            if (StringUtils.isBlank(dataxName)) {
+//                throw new IllegalArgumentException("param dataXName can not be null");
+//            }
+//            Objects.requireNonNull(jobName, "param jobName can not be null");
+//            //            if (StringUtils.isBlank(jobName)) {
+//            //                throw new IllegalArgumentException("param jobName can not be null");
+//            //            }
+//
+//            KeyedPluginStore<DataxProcessor> processStore = IAppSource.getPluginStore(null, resType, dataxName);
+//            List<IRepositoryResource> keyedPluginStores = Lists.newArrayList();
+//            keyedPluginStores.add(TIS.getPluginStore(ParamsConfig.class));
+//            keyedPluginStores.add(processStore);
+//
+//            if (resType == StoreResourceType.DataFlow) {
+//                //   SqlTaskNodeMeta.SqlDataFlowTopology topology = SqlTaskNodeMeta.getSqlDataFlowTopology(dataxName);
+//            }
+//
+//
+//            keyedPluginStores.add(DataxReader.getPluginStore(null, false, dataxName));
+//            keyedPluginStores.add(DataxWriter.getPluginStore(null, resType, dataxName));
+//
+//            ComponentMeta dataxComponentMeta = new ComponentMeta(keyedPluginStores);
+//            dataxComponentMeta.synchronizePluginsFromRemoteRepository();
+//
+//            CenterResource.copyFromRemote2Local(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CFG_DIR_NAME + "/" + jobName.jobFileName, true);
+//
+//            CenterResource.synchronizeSubFiles(Config.KEY_TIS_PLUGIN_CONFIG + "/" + processStore.key.getSubDirPath() + "/" + DataxProcessor.DATAX_CREATE_DDL_DIR_NAME);
+//
+//        } finally {
+//            TIS.permitInitialize = true;
+//        }
+//    }
 
     /**
      * @param args
@@ -193,7 +193,7 @@ public class DataxExecutor {
             // 如果是分布式执行状态，需要通过RPC的方式来监听监工是否执行了客户端终止操作
             Object thread = monitorDistributeCommand(jobId, jobInfo, dataXName, statusRpc, dataxExecutor);
             Objects.requireNonNull(thread);
-            DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobInfo);
+           // DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobInfo);
         }
 
         try {

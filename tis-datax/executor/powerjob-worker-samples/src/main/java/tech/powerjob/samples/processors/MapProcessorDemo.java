@@ -88,11 +88,27 @@ public class MapProcessorDemo implements MapProcessor {
         }
     }
 
-    @Getter
+
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SubTask {
         private Integer siteId;
         private List<Integer> itemIds;
+
+        public Integer getSiteId() {
+            return siteId;
+        }
+
+        public void setSiteId(Integer siteId) {
+            this.siteId = siteId;
+        }
+
+        public List<Integer> getItemIds() {
+            return itemIds;
+        }
+
+        public void setItemIds(List<Integer> itemIds) {
+            this.itemIds = itemIds;
+        }
     }
 }

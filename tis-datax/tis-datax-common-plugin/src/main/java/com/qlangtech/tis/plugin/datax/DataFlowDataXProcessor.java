@@ -38,6 +38,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
+import com.qlangtech.tis.plugin.PluginStore;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -143,6 +144,11 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void setPluginStore(PluginStore<IAppSource> pluginStore) {
+
     }
 
     public static class TopologySelectedTab extends AdapterSelectedTab {

@@ -19,7 +19,7 @@
   "authMechanism": {
     "label": "授权机制",
     "enum": "com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory.allAuthMechanism()",
-    "dftVal": "SCRAM-SHA-1",
+    "dftVal": "com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory.dftAuthMechanism()",
     "help": "the authentication mechanism"
   }
 }

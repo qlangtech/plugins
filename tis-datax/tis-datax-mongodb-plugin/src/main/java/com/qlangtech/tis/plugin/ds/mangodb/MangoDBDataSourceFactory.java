@@ -37,6 +37,8 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ import java.util.stream.Collectors;
 public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     private static final String DS_TYPE_MONGO_DB = "MongoDB";
-
+    private static final Logger logger = LoggerFactory.getLogger(MangoDBDataSourceFactory.class);
 
     //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
     //    Validator.identity})
@@ -63,17 +65,21 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     public String address;
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
     public String dbName;
-    @FormField(ordinal = 3, type = FormFieldType.INPUTTEXT, validate = {})
+
+    @FormField(ordinal = 3, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String authMechanism;
+
+    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {})
     public String username;
-
-    @FormField(ordinal = 5, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
-    public String userSource;
-
-    @FormField(ordinal = 4, type = FormFieldType.PASSWORD, validate = {})
+    @FormField(ordinal = 7, type = FormFieldType.PASSWORD, validate = {})
     public String password;
 
-    @FormField(ordinal = 6, type = FormFieldType.ENUM, validate = {Validator.require})
-    public String authMechanism;
+    @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
+    public String userSource;
+
+
+
+
 
     public String getDbName() {
         return this.dbName;
@@ -172,32 +178,41 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         MongoClient mongoClient = null;
         List<String> addressList = getAddressList(this.address); //conf.getList(KeyConstant.MONGO_ADDRESS);
         // try {
+
+
         if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
             MongoCredential credential = null;
-            AuthenticationMechanism aMechanism = AuthenticationMechanism.fromMechanismName(this.authMechanism);
-            switch (aMechanism) {
-                case PLAIN:
-                    credential = MongoCredential.createPlainCredential(this.username, this.userSource,
-                            password.toCharArray());
-                    break;
-                case GSSAPI:
-                    credential = MongoCredential.createGSSAPICredential(this.username);
-                    break;
-                case MONGODB_CR:
-                    credential = MongoCredential.createMongoCRCredential(this.username, this.userSource,
-                            password.toCharArray());
-                    break;
-                case SCRAM_SHA_1:
-                    credential = MongoCredential.createScramSha1Credential(this.username, this.userSource,
-                            password.toCharArray());
-                    break;
-                case MONGODB_X509:
-                    credential = MongoCredential.createMongoX509Credential(this.username);
-                    break;
-                default:
-                    throw new IllegalStateException("illegal authMechanism:" + aMechanism);
-            }
 
+            if (usernamePasswordAuthMethod.getValue().equals(this.authMechanism)) {
+
+                credential = MongoCredential.createCredential(this.username, this.userSource, password.toCharArray());
+                logger.info("create credential by username&password");
+            } else {
+                AuthenticationMechanism aMechanism = AuthenticationMechanism.fromMechanismName(this.authMechanism);
+                switch (aMechanism) {
+                    case PLAIN:
+                        credential = MongoCredential.createPlainCredential(this.username, this.userSource,
+                                password.toCharArray());
+                        break;
+                    case GSSAPI:
+                        credential = MongoCredential.createGSSAPICredential(this.username);
+                        break;
+                    case MONGODB_CR:
+                        credential = MongoCredential.createMongoCRCredential(this.username, this.userSource,
+                                password.toCharArray());
+                        break;
+                    case SCRAM_SHA_1:
+                        credential = MongoCredential.createScramSha1Credential(this.username, this.userSource,
+                                password.toCharArray());
+                        break;
+                    case MONGODB_X509:
+                        credential = MongoCredential.createMongoX509Credential(this.username);
+                        break;
+                    default:
+                        throw new IllegalStateException("illegal authMechanism:" + aMechanism);
+                }
+                logger.info("create credential by "+ aMechanism);
+            }
             mongoClient = new MongoClient(parseServerAddress(addressList), Collections.singletonList(credential));
         } else {
             mongoClient = new MongoClient(parseServerAddress(addressList));
@@ -206,9 +221,20 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         return mongoClient;
     }
 
+    private static final Option usernamePasswordAuthMethod = new Option("USERNAME & PASSWORD", "usernamePasswordAuthMethod");
+
+    public static String dftAuthMechanism(){
+       return (String)usernamePasswordAuthMethod.getValue();
+    }
     public static List<Option> allAuthMechanism() {
-        return Arrays.stream(AuthenticationMechanism.values()).map((e) -> new Option(e.getMechanismName(),
-                e.getMechanismName())).collect(Collectors.toList());
+
+        List<Option> authMethod = Lists.newArrayList();
+        authMethod.addAll(Arrays.stream(AuthenticationMechanism.values()).map((e) -> new Option(e.getMechanismName(),
+                e.getMechanismName())).collect(Collectors.toList()));
+
+        authMethod.add(usernamePasswordAuthMethod);
+        return authMethod;
+
     }
 
 

@@ -114,6 +114,7 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
      * 启动powerjob 执行容器
      *
      * @throws ApiException
+     * @see // tech.powerjob.worker.autoconfigure.PowerJobProperties
      */
     public void launchPowerjobWorker(K8SDataXPowerJobServer pjServer) throws ApiException, PowerjobOrchestrateException {
         //K8SDataXPowerJobWorker jobWorker = Objects.requireNonNull(getPowerJobWorker(), "powerjob woker can not be null");
@@ -157,12 +158,15 @@ public class K8SDataXPowerJobWorker extends DataXJobWorker {
          */
         //  --powerjob.worker.server-address=powerjob-server:7700
         final String powerJobServerHostReplacement = K8S_DATAX_POWERJOB_SERVER_SERVICE.getHostPortReplacement(powerJobImage);
-
+         // properties setter ref: tech.powerjob.worker.autoconfigure.PowerJobProperties
         List<Option> params = Lists.newArrayList(new Option("powerjob.worker.app-name", pjServer.appName),
                 new Option("powerjob.worker.server-address", powerJobServerHostReplacement),
                 new Option("powerjob.worker.port", this.port),
                 new Option("powerjob.worker.store-strategy", StringUtils.lowerCase(this.storeStrategy))
-                , new Option("powerjob.worker.max-result-length", this.maxResultLength));
+                , new Option("powerjob.worker.max-result-length", this.maxResultLength)
+                , new Option("powerjob.worker.maxHeavyweightTaskNum", this.maxHeavyweightTaskNum)
+                , new Option("powerjob.worker.maxLightweightTaskNum", this.maxLightweightTaskNum)
+                , new Option("powerjob.worker.healthReportInterval", this.healthReportInterval));
 
         envVar.setValue(params.stream().map((p) -> "--" + p.getName() + "=" + p.getValue()).collect(Collectors.joining(" ")));
         envs.add(envVar);

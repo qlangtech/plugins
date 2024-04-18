@@ -19,12 +19,12 @@
   "maxLightweightTaskNum": {
     "label": "轻量任务上限",
     "help": "同时运行的轻量级任务数量上限",
-    "dftVal": "1024"
+    "dftVal": "50"
   },
   "maxHeavyweightTaskNum": {
     "label": "重量任务上限",
     "help": "同时运行的重量级任务数量上限",
-    "dftVal": "64"
+    "dftVal": "12"
   },
   "healthReportInterval": {
     "label": "状态上报间隔",

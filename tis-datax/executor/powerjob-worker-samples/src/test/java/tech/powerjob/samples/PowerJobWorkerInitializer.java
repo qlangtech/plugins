@@ -30,7 +30,9 @@ public class PowerJobWorkerInitializer {
         PowerJobWorkerConfig config = new PowerJobWorkerConfig();
         // 传输协议，新用户建议直接上 HTTP
         config.setProtocol(Protocol.HTTP);
-
+       // config.setMaxHeavyweightTaskNum();
+      //  config.setMaxLightweightTaskNum();
+       // config.setHealthReportInterval();
         // 传输层端口号
         config.setPort(RemoteConstant.DEFAULT_WORKER_PORT);
         // worker 的归组，建议使用项目名称

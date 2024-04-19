@@ -57,10 +57,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     private static final String DS_TYPE_MONGO_DB = "MongoDB";
     private static final Logger logger = LoggerFactory.getLogger(MangoDBDataSourceFactory.class);
 
-    //    @FormField(identity = true, ordinal = 0, type = FormFieldType.INPUTTEXT, validate = {Validator.require,
-    //    Validator.identity})
-    //    public String name;
-
     @FormField(ordinal = 1, type = FormFieldType.TEXTAREA, validate = {Validator.require})
     public String address;
     @FormField(ordinal = 2, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.db_col_name})
@@ -148,19 +144,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @Override
     public List<ColumnMetaData> getTableMetadata(boolean inSink, EntityName table) {
-        //        MongoClient mongoClient = null;
-        //        try {
-        //            mongoClient = createMongoClient();
-        //            MongoDatabase database = mongoClient.getDatabase(this.dbName);
-        //            MongoCollection collection = database.getCollection(table);
-        //            //collection.getReadConcern()
-        //            //  collection.find().map()
-        //        } finally {
-        //            try {
-        //                mongoClient.close();
-        //            } catch (Throwable e) {
-        //            }
-        //        }
         throw new UnsupportedOperationException();
     }
 
@@ -169,17 +152,9 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
         throw new UnsupportedOperationException();
     }
 
-    //    @Override
-    //    public void refectTableInDB(TableInDB tabs, Connection conn) throws SQLException {
-    //        throw new UnsupportedOperationException();
-    //    }
-
     private MongoClient createMongoClient() {
         MongoClient mongoClient = null;
-        List<String> addressList = getAddressList(this.address); //conf.getList(KeyConstant.MONGO_ADDRESS);
-        // try {
-
-
+        List<String> addressList = getAddressList(this.address);
         if (StringUtils.isNotBlank(this.username) && StringUtils.isNotBlank(this.password)) {
             MongoCredential credential = null;
 
@@ -228,13 +203,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
     }
     public static List<Option> allAuthMechanism() {
 
-        List<Option> authMethod = Lists.newArrayList();
+        List<Option> authMethod = Lists.newArrayList(usernamePasswordAuthMethod);
         authMethod.addAll(Arrays.stream(AuthenticationMechanism.values()).map((e) -> new Option(e.getMechanismName(),
                 e.getMechanismName())).collect(Collectors.toList()));
-
-        authMethod.add(usernamePasswordAuthMethod);
         return authMethod;
-
     }
 
 

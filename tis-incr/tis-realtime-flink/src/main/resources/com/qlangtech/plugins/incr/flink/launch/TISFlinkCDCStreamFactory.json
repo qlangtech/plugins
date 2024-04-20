@@ -3,6 +3,7 @@
     "dftVal": "Standalone"
   },
   "parallelism": {
+    "label": "并行度",
     "dftVal": "1"
   },
   "enableRestore": {

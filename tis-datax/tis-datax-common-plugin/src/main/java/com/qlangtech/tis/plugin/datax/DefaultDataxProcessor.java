@@ -27,6 +27,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.biz.dal.pojo.AppType;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
+import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -45,7 +46,7 @@ import java.util.regex.Pattern;
  * @author: baisui 百岁
  * @create: 2021-04-21 09:09
  **/
-public class DefaultDataxProcessor extends DataxProcessor {
+public class DefaultDataxProcessor extends DataxProcessor  {
 
     public static final String KEY_FIELD_NAME = "globalCfg";
 
@@ -74,6 +75,8 @@ public class DefaultDataxProcessor extends DataxProcessor {
         app.setAppType(AppType.DataXPipe.getType());
         return app;
     }
+
+
 
     @Override
     public String identityValue() {

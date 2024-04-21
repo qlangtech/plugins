@@ -37,7 +37,7 @@ public class ChunjunDamengSourceFactory extends ChunjunSourceFactory {
     public static class DftDesc extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {
-            return IEndTypeGetter.EndType.Oracle;
+            return EndType.DaMeng;
         }
     }
 }

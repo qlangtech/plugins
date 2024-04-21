@@ -95,7 +95,7 @@ public class TestKubernetesApplication {
 
         FlinkKubeClientFactory kubeClientFactory = FlinkKubeClientFactory.getInstance();
         try (FlinkKubeClient kubeClient = kubeClientFactory.fromConfiguration(flinkConfig.getKey(), "client")) {
-            Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(clusterId, clusterConfig.serverPortExport, externalService, kubeClient);
+            Endpoint endpoint = FlinkK8SClusterManager.getEndpoint(clusterId, clusterConfig.getFlinkK8SImage() ,clusterConfig.serverPortExport, externalService, kubeClient);
             Assert.assertNotNull(endpoint);
         }
 

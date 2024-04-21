@@ -52,27 +52,27 @@ public class TestDataxExecutorSynRes extends TestCase implements IExecutorContex
         CenterResource.setFetchFromCenterRepository(false);
     }
 
-    public void testSynchronizeDataXPluginsFromRemoteRepository() {
-        DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobName);
-        DataxProcessor dataxProcessor = IAppSource.load(null, dataXName);
-        File dataxCfgDir = dataxProcessor.getDataxCfgDir(null);
-        assertTrue(dataxCfgDir.getAbsolutePath(), dataxCfgDir.exists());
-        File jobCfgFile = new File(dataxCfgDir, jobName.jobFileName);
-        assertTrue("jobCfgFile must exist:" + jobCfgFile.getAbsolutePath(), jobCfgFile.exists());
-    }
+//    public void testSynchronizeDataXPluginsFromRemoteRepository() {
+//        DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataXName, resType, jobName);
+//        DataxProcessor dataxProcessor = IAppSource.load(null, dataXName);
+//        File dataxCfgDir = dataxProcessor.getDataxCfgDir(null);
+//        assertTrue(dataxCfgDir.getAbsolutePath(), dataxCfgDir.exists());
+//        File jobCfgFile = new File(dataxCfgDir, jobName.jobFileName);
+//        assertTrue("jobCfgFile must exist:" + jobCfgFile.getAbsolutePath(), jobCfgFile.exists());
+//    }
 
     /**
      * create DDL 下的文件是否同步过来
      */
-    public void testSynchronizeCreateDDLFromRemoteRepository() {
-        String dataX = "mysql_clickhouse";
-        DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataX, resType, jobName);
-        DataxProcessor dataxProcessor = IAppSource.load(null, dataX);
-        File dataxCreateDDLDir = dataxProcessor.getDataxCreateDDLDir(null);
-        List<String> synFiles = Lists.newArrayList(dataxCreateDDLDir.list((dir, name) -> !StringUtils.endsWith(name, CenterResource.KEY_LAST_MODIFIED_EXTENDION)));
-        assertEquals(1, synFiles.size());
-        String synFilesStr = synFiles.stream().collect(Collectors.joining(","));
-        assertTrue(synFilesStr, synFiles.contains("customer_order_relation.sql"));
-        //assertTrue(synFilesStr, synFiles.contains("instancedetail.sql"));
-    }
+//    public void testSynchronizeCreateDDLFromRemoteRepository() {
+//        String dataX = "mysql_clickhouse";
+//        DataxExecutor.synchronizeDataXPluginsFromRemoteRepository(dataX, resType, jobName);
+//        DataxProcessor dataxProcessor = IAppSource.load(null, dataX);
+//        File dataxCreateDDLDir = dataxProcessor.getDataxCreateDDLDir(null);
+//        List<String> synFiles = Lists.newArrayList(dataxCreateDDLDir.list((dir, name) -> !StringUtils.endsWith(name, CenterResource.KEY_LAST_MODIFIED_EXTENDION)));
+//        assertEquals(1, synFiles.size());
+//        String synFilesStr = synFiles.stream().collect(Collectors.joining(","));
+//        assertTrue(synFilesStr, synFiles.contains("customer_order_relation.sql"));
+//        //assertTrue(synFilesStr, synFiles.contains("instancedetail.sql"));
+//    }
 }

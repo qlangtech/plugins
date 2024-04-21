@@ -142,7 +142,11 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
          *******************************************************/
         List<ESColumn> esCols = dataXWriter.initialIndex(esSchema);
         List<HttpHost> transportAddresses = new ArrayList<>();
-        transportAddresses.add(HttpHost.create(token.getEndpoint()));
+        String endpoint = token.getEndpoint();
+        if (StringUtils.isEmpty(endpoint)) {
+            throw new IllegalStateException("param endpoint can not be empty");
+        }
+        transportAddresses.add(HttpHost.create(endpoint));
 
         // ISelectedTab tab = null;
         IDataxReader reader = dataxProcessor.getReader(null);
@@ -216,13 +220,6 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 return null;
             }
         });
-
-//        if (StringUtils.isNotEmpty(token.getAccessKeyId())
-//                || StringUtils.isNotEmpty(token.getAccessKeySecret())) {
-//            // 如果用户设置了accessKey 或者accessSecret
-//            sinkBuilder.setRestClientFactory(new TISElasticRestClientFactory(token.getAccessKeyId(), token.getAccessKeySecret()));
-//        }
-
 
         return Collections.singletonMap(esSchema
                 , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys

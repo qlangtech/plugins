@@ -55,7 +55,9 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
         return this.sinkColsMeta;
     }
 
-
+    public List<FlinkCol> getSourceColsMeta() {
+        return this.sourceColsMeta;
+    }
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
 

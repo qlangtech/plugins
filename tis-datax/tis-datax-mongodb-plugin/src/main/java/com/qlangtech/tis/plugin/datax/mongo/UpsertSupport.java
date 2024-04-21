@@ -6,6 +6,8 @@ import com.qlangtech.tis.extension.Describable;
 /**
  * @author 百岁 (baisui@qlangtech.com)
  * @date 2023/8/30
+ * @see OffUpsertSupport
+ * @see OnUpsertSupport
  */
 public abstract class UpsertSupport implements Describable<UpsertSupport> {
 

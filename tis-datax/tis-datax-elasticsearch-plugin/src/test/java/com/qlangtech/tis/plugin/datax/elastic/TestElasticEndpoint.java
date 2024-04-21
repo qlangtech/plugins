@@ -22,6 +22,10 @@ import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
+import org.junit.Test;
+
+import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -29,6 +33,13 @@ import junit.framework.TestCase;
  **/
 public class TestElasticEndpoint extends TestCase {
 
+   // @Test
+    public void testxxxx() throws Exception {
+        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("org/elasticsearch/client/RestClient.class");
+        while(resources.hasMoreElements()){
+            System.out.printf( String.valueOf( resources.nextElement()));
+        }
+    }
 
     public void testDescJsonGenerate() {
 

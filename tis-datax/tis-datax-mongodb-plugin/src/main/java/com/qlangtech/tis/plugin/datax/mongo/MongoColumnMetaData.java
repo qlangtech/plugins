@@ -88,24 +88,27 @@ public class MongoColumnMetaData extends ColumnMetaData {
                 colsSchema.put(key, colMeta);
             } else {
                 if (colMeta.getMongoFieldType() != BsonType.STRING //
-                        && colMeta.getMongoFieldType() != val.getBsonType()) {
+                        && !val.isNull() && colMeta.getMongoFieldType() != val.getBsonType()) {
                     //TODO： 前后两次类型不同
                     // 则直接将类型改成String类型
                     colMeta = new MongoColumnMetaData(index++, key, BsonType.STRING);
                     colsSchema.put(key, colMeta);
                 }
             }
+            if (!val.isNull()) {
 
-            if (colMeta.getMongoFieldType() == BsonType.DOCUMENT && val.isDocument()) {
-                parseMongoDocTypes(true, keys, parseChildDoc ? colsSchema : colMeta.docTypeFieldEnum, val.asDocument());
+                if (colMeta.getMongoFieldType() == BsonType.DOCUMENT && val.isDocument()) {
+                    parseMongoDocTypes(true, keys, parseChildDoc ? colsSchema : colMeta.docTypeFieldEnum, val.asDocument());
+                }
+
+
+                if (colMeta.getMongoFieldType() == BsonType.STRING) {
+                    colMeta.setMaxStrLength(val.asString().getValue().length());
+                }
+
+                colMeta.incrContainValCount();
             }
 
-
-            if (colMeta.getMongoFieldType() == BsonType.STRING) {
-                colMeta.setMaxStrLength(val.asString().getValue().length());
-            }
-
-            colMeta.incrContainValCount();
         }
     }
 

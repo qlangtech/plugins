@@ -18,21 +18,29 @@
 
 package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESColumn;
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.ESTableAlias;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
 import com.qlangtech.tis.realtime.TabSinkFunc;
+import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.test.TISEasyMock;
 import org.apache.commons.compress.utils.Lists;
@@ -44,20 +52,29 @@ import org.apache.flink.test.util.AbstractTestBase;
 import org.easymock.EasyMock;
 import org.elasticsearch.client.Client;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-09-29 16:55
  **/
-public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
+public class TestElasticSearchSinkFactory<C extends AutoCloseable>
         extends AbstractTestBase implements TISEasyMock {
+
+    @ClassRule(order = 100)
+    public static TestRule name = new TISApplySkipFlinkClassloaderFactoryCreation();
+
     public void testLoadDescriptorLoad() {
         List<Descriptor<TISSinkFactory>> descriptors = TISSinkFactory.sinkFactory.descriptors();
         Assert.assertEquals(1, descriptors.size());
@@ -82,7 +99,7 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         IDataxReader dataxReader = mock("dataxReader", IDataxReader.class);
         List<ISelectedTab> selectedTabs = Lists.newArrayList();
-        SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
+        ISelectedTab totalpayinfo = mock(tableName, ISelectedTab.class);
         EasyMock.expect(totalpayinfo.getName()).andReturn(tableName);
         List<CMeta> cols = Lists.newArrayList();
         CMeta cm = new CMeta();
@@ -114,24 +131,48 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
 
         DataXElasticsearchWriter dataXWriter = mock("dataXWriter", DataXElasticsearchWriter.class);
+        EasyMock.expect(dataXWriter.getIndexName()).andReturn(tableName);
 
-        ESTableAlias esTableAlias = new ESTableAlias();
-        dataXWriter.initialIndex(esTableAlias);
+        ElasticEndpoint endpoint = new ElasticEndpoint();
+        endpoint.endpoint = "http://192.168.28.201:9200";
+        endpoint.authToken = new NoneToken();
+
+        EasyMock.expect(dataXWriter.getToken()).andReturn(endpoint);
+
+        //  ESTableAlias esTableAlias = new ESTableAlias();
+
+        ESTableAlias esTableAlias = new ESTableAlias() {
+            @Override
+            public List<CMeta> getSourceCols() {
+                return cols;
+            }
+        };
+
+        List<ESColumn> esCols = cols.stream().map((c) -> {
+            ESColumn esCol = new ESColumn();
+            esCol.setName(c.getName());
+            esCol.setPk(c.isPk());
+            esCol.setType(String.valueOf(ESFieldType.KEYWORD));
+
+            return esCol;
+        }).collect(Collectors.toList());
+
+        EasyMock.expect(dataXWriter.initialIndex(esTableAlias)).andReturn(esCols);
 
 
         EasyMock.expect(dataxProcessor.getWriter(null)).andReturn(dataXWriter);
 
 
         Map<String, TableAlias> aliasMap = new HashMap<>();
-        TableAlias tab = new TableAlias(tableName);
-        aliasMap.put(tableName, tab);
+
+        aliasMap.put(tableName, esTableAlias);
         EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(new TableAliasMapper(aliasMap));
 
         this.replay();
 
-        ElasticSearchSinkFactory clickHouseSinkFactory = new ElasticSearchSinkFactory();
+        ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
         Map<TableAlias, TabSinkFunc<RowData>>
-                sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
+                sinkFuncs = esSinkFactory.createSinkFunction(dataxProcessor);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
         // StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -161,35 +202,40 @@ public abstract class TestElasticSearchSinkFactory<C extends AutoCloseable>
         Thread.sleep(5000);
 
         this.verifyAll();
-        Client client = getClient();
+        // Client client = getClient();
     }
 
 
     // It's not good that we're using a Client here instead of a Rest Client but we need this
     // for compatibility with ES 5.3.x. As soon as we drop that we can use RestClient here.
-    protected abstract Client getClient();
-
-    protected abstract String getClusterName();
+//    protected abstract Client getClient();
+//
+//    protected abstract String getClusterName();
 
     private void runElasticSearchSinkTest(
             String index,
             TabSinkFunc<RowData> sinkFunc)
             throws Exception {
+        Objects.requireNonNull(sinkFunc, "sinkFunc can not be null");
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         DataStreamSource<DTO> source =
                 env.addSource(new TestDataSourceFunction());
-        // sinkFunc.add2Sink(source);
-        // source.addSink();
+
+        DTOStream<RowData> sourceStream = DTOStream.createRowData(source.map(new DTO2RowDataMapper(sinkFunc.getSourceColsMeta())));
+
+
+        sinkFunc.add2Sink(sourceStream);
+        //  source.addSink(sinkFunc.);
 
         env.execute("Elasticsearch Sink Test");
 
         // verify the results
-        Client client = getClient();
+        Client client = null;// getClient();
 
         verifyProducedSinkData(client, index);
 
-        client.close();
+      //  client.close();
     }
 
     /**

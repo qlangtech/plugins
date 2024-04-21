@@ -18,9 +18,8 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.dameng.table;
 
-import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugin.IEndTypeGetter.EndType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunDynamicTableFactory;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -28,6 +27,6 @@ import com.qlangtech.tis.plugins.incr.flink.chunjun.table.ChunjunTableSinkFactor
  **/
 public class DamengTableSinkFactory extends ChunjunDynamicTableFactory {
     public DamengTableSinkFactory() {
-        super(IEndTypeGetter.EndType.DaMeng);
+        super(EndType.DaMeng);
     }
 }

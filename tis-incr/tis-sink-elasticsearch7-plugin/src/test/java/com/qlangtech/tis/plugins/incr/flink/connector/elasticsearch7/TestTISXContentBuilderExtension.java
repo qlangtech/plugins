@@ -10,9 +10,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.net.URL;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Enumeration;
 import java.util.Map;
 
 /**
@@ -26,6 +28,14 @@ public class TestTISXContentBuilderExtension {
     public static void initialize() {
         TISXContentBuilderExtension.load();
     }
+
+//    @Test
+//    public void testxxxx() throws Exception {
+//        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("org/elasticsearch/client/RestClient.class");
+//        while(resources.hasMoreElements()){
+//            System.out.printf( String.valueOf( resources.nextElement()));
+//        }
+//    }
 
     @Test
     public void testTimeStampSerialize() throws Exception {

@@ -57,11 +57,11 @@ public abstract class DTOStream<T> {
         }, startNewChain);
     }
 
-    public static DTOStream createRowData() {
+    public static DTOStream<RowData> createRowData() {
         return new RowDataDTOStream();
     }
 
-    public static DTOStream createRowData(DataStream<RowData> stream) {
+    public static DTOStream<RowData> createRowData(DataStream<RowData> stream) {
         return new RowDataDTOStream(stream);
     }
 

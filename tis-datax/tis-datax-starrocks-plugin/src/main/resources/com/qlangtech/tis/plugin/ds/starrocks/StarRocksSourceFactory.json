@@ -1,5 +1,9 @@
 {
   "name": {
     "helpUrl": "https://docs.starrocks.com/zh-cn/main/loading/DataX-starrocks-writer"
+  },
+  "password": {
+    "help": "StarRocks数据库的密码",
+    "validators": "require:disable"
   }
 }

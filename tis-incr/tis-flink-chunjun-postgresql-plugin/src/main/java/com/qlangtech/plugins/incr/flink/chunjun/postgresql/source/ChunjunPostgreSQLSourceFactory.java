@@ -34,7 +34,10 @@ public class ChunjunPostgreSQLSourceFactory extends ChunjunSourceFactory {
         return new PostgreSQLSourceFunction(ChunjunPostgreSQLSourceFactory.this);
     }
 
-    @TISExtension()
+    /**
+     * 有CDC版本的polling 版本的不需要了
+     */
+   // @TISExtension()
     public static class DefaultDescriptor extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {

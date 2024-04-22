@@ -21,14 +21,17 @@ package com.qlangtech.tis.plugin.datax.tdfs.impl;
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.common.exception.DataXException;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
 import com.qlangtech.tis.plugin.tdfs.TDFSSessionVisitor;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.AttrValMap;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,19 +99,21 @@ public class FtpTDFSLinker extends TDFSLinker {
         @Override
         protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
             FtpTDFSLinker ftpLinker = (FtpTDFSLinker) postFormVals.newInstance();
+            Descriptor currentRootPluginValidator = AttrValMap.getCurrentRootPluginValidator();
 
             FTPServer server = FTPServer.getServer(ftpLinker.linker);
             return server.useFtpHelper((ftp) -> {
                 try {
                     HashSet<ITDFSSession.Res> allFiles
                             = ftp.getAllFiles(Collections.singletonList(ftpLinker.getRootPath()), 0, 10);
-                    if (CollectionUtils.isEmpty(allFiles)) {
+                    if (IDFSReader.class.isAssignableFrom(currentRootPluginValidator.clazz)
+                            && CollectionUtils.isEmpty(allFiles)) {
                         msgHandler.addFieldError(context, KEY_FIELD_PATH, "该路径下没有扫描到任何文件，请确认路径是否正确");
                         return false;
                     }
                 } catch (DataXException e) {
                     logger.warn(e.getMessage(), e);
-                    msgHandler.addFieldError(context, KEY_FIELD_PATH, "路径配置有误，请确认路径是否正确");
+                    msgHandler.addFieldError(context, KEY_FIELD_PATH, "路径配置有误，" + e.getMessage());
                     return false;
                 }
                 return true;

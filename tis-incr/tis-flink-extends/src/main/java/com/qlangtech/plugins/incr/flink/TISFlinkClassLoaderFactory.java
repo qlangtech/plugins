@@ -27,6 +27,7 @@ import com.qlangtech.tis.extension.ITPIArtifact;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.UberClassLoader;
 import com.qlangtech.tis.extension.impl.ClassicPluginStrategy;
+import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.manage.common.Config;
 import com.qlangtech.tis.maven.plugins.tpi.PluginClassifier;
 import com.qlangtech.tis.plugin.PluginAndCfgSnapshotLocalCache;
@@ -66,7 +67,7 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
      */
 
 
-  //  public static final Set<String> SKIP_PLUGIN_NAMES = IFlinkClusterIFlinkCluster Sets.newHashSet(IFlinkCluster.PLUGIN_DEPENDENCY_FLINK_DEPENDENCY, IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS);
+    //  public static final Set<String> SKIP_PLUGIN_NAMES = IFlinkClusterIFlinkCluster Sets.newHashSet(IFlinkCluster.PLUGIN_DEPENDENCY_FLINK_DEPENDENCY, IFlinkCluster.PLUGIN_SKIP_FLINK_EXTENDS);
 
     public static final String SKIP_CLASSLOADER_FACTORY_CREATION = IFlinkCluster.SKIP_CLASSLOADER_FACTORY_CREATION;
 
@@ -222,7 +223,10 @@ public class TISFlinkClassLoaderFactory implements ClassLoaderFactoryBuilder {
                 }
                 final PluginAndCfgsSnapshot cfgSnapshotFinal = cfgSnapshot;//= getTisAppName();
                 final PluginAndCfgsSnapshot localSnaphsotFinal = localSnaphsot;
-                localCache.processLocalCache(cfgSnapshot.getAppName(), (cacheSnapshot) -> {
+
+                // cfgSnapshot.getAppName()
+                // 构建全局cache，A应用之后，B应用再执行需要使用到A使用的cacheSnapshot
+                localCache.processLocalCache(new TargetResName(IFullBuildContext.KEY_APP_NAME), (cacheSnapshot) -> {
                     try {
                         cfgSnapshotFinal.synchronizTpisAndConfs(localSnaphsotFinal, cacheSnapshot);
                         return cfgSnapshotFinal;

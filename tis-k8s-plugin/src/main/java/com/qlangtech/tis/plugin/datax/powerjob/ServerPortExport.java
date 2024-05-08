@@ -91,7 +91,8 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
     protected abstract Integer getExportPort();
 
 
-    public static String getHost(CoreV1Api api, String nameSpace, ServiceType serviceType, ServiceResName svcRes, boolean clusterIP) {
+    public static String getHost(CoreV1Api api, String nameSpace
+            , ServiceType serviceType, ServiceResName svcRes, boolean clusterIP) throws ServiceNotDefinedException {
         String resultHost = null;
         V1ServiceList svcList = null;
         try {
@@ -118,7 +119,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
             throw new RuntimeException(e);
         }
         if (org.apache.commons.lang3.StringUtils.isEmpty(resultHost)) {
-            throw new IllegalStateException("LoadBalancer host can not be null, response Detail:" + String.valueOf(svcList));
+            throw new ServiceNotDefinedException("LoadBalancer host can not be null, response Detail:" + String.valueOf(svcList));
         }
         return resultHost;
 
@@ -156,7 +157,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
 //    }
 
     public final String getClusterHost(
-            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) throws ServiceNotDefinedException {
         return getClusterHost(api, k8SImage, serviceResAndOwner, false);
     }
 
@@ -168,7 +169,7 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      * @return
      */
     public final String getClusterHost(
-            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner, boolean forceExternalHost) {
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner, boolean forceExternalHost) throws ServiceNotDefinedException {
         String nameSpace = k8SImage.getNamespace();
         if (forceExternalHost || !k8SImage.internalClusterAvailable()) {
             return getExternalHost(api, k8SImage, serviceResAndOwner);
@@ -194,5 +195,5 @@ public abstract class ServerPortExport implements Describable<ServerPortExport> 
      */
     //  public abstract String getPowerjobHost();
     public abstract String getExternalHost(
-            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner);
+            CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) throws ServiceNotDefinedException;
 }

@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.unstructuredstorage.Compress;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.assemble.FullbuildPhase;
@@ -41,6 +42,7 @@ import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -121,7 +123,7 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor  {
         public DefaultDescriptor() {
             super();
             // registerSelectOptions(KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));
@@ -138,6 +140,11 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
         }
 
         @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return this.validateAll(msgHandler, context, postFormVals);
+        }
+
+        @Override
         public boolean isRdbms() {
             return false;
         }
@@ -146,5 +153,6 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
         public String getDisplayName() {
             return getEndType().name();
         }
+
     }
 }

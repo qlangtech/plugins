@@ -21,25 +21,21 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
-import com.qlangtech.tis.assemble.ExecResult;
 import com.qlangtech.tis.build.task.IBuildHistory;
+import com.qlangtech.tis.config.flink.IFlinkCluster;
 import com.qlangtech.tis.coredefine.module.action.TriggerBuildResult;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobRunEnvironmentParamsSetter;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataXJobUtils;
 import com.qlangtech.tis.datax.DataxExecutor;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.fullbuild.IFullBuildContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
-import com.qlangtech.tis.job.common.JobCommon;
 import com.qlangtech.tis.manage.common.Config;
-import com.qlangtech.tis.manage.common.ConfigFileContext;
 import com.qlangtech.tis.manage.common.HttpUtils;
-import com.qlangtech.tis.order.center.IAppSourcePipelineController;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
-import com.qlangtech.tis.order.center.IParamContext;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.web.start.TisSubModule;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
@@ -50,12 +46,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import static com.qlangtech.tis.plugin.datax.EmbeddedDataXJobSubmit.getTriggerWorkflowBuildResult;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -80,7 +73,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
     @Override
     public TriggerBuildResult triggerWorkflowJob(IControlMsgHandler module
             , Context context, IWorkflow workflow, Boolean dryRun, Optional<Long> powerJobWorkflowInstanceIdOpt) {
-        return getTriggerWorkflowBuildResult(module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt);
+        return DataXJobUtils.getTriggerWorkflowBuildResult(module, context, workflow, dryRun, powerJobWorkflowInstanceIdOpt);
     }
 
     /**
@@ -110,23 +103,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
 
     @Override
     public boolean cancelTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
-        return terminateWorkingTask(module, context, buildHistory);
-    }
-
-    static boolean terminateWorkingTask(IControlMsgHandler module, Context context, IBuildHistory buildHistory) {
-        ExecResult processState = ExecResult.parse(buildHistory.getState());
-        List<ConfigFileContext.Header> headers = Lists.newArrayList();
-        headers.add(new ConfigFileContext.Header(JobCommon.KEY_TASK_ID, String.valueOf(buildHistory.getTaskId())));
-        headers.add(new ConfigFileContext.Header(IParamContext.KEY_ASYN_JOB_NAME, String.valueOf(processState == ExecResult.ASYN_DOING)));
-        headers.add(new ConfigFileContext.Header(IFullBuildContext.KEY_APP_NAME, IAppSourcePipelineController.DATAX_FULL_PIPELINE + buildHistory.getAppName()));
-
-        TriggerBuildResult triggerResult = null;
-        try {
-            triggerResult = TriggerBuildResult.triggerBuild(module, context, ConfigFileContext.HTTPMethod.DELETE, Collections.emptyList(), headers);
-            return triggerResult.success;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        return DataXJobUtils.terminateWorkingTask(module, context, buildHistory);
     }
 
     @Override
@@ -135,7 +112,7 @@ public class LocalDataXJobSubmit extends DataXJobSubmit implements DataXJobRunEn
             , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO) {
         if (StringUtils.isEmpty(this.classpath)) {
             File assebleDir = new File(Config.getTisHome(), TisSubModule.TIS_ASSEMBLE.moduleName);
-            File localExecutorLibDir = new File(Config.getLibDir(), "plugins/tis-datax-local-executor/WEB-INF/lib");
+            File localExecutorLibDir = new File(Config.getLibDir(), "plugins/" + IFlinkCluster.PLUGIN_TIS_DATAX_LOCAL_EXECOTOR + "/WEB-INF/lib");
             File webStartDir = new File(Config.getTisHome(), TisSubModule.WEB_START.moduleName + "/lib");
             if (!localExecutorLibDir.exists()) {
                 throw new IllegalStateException("target localExecutorLibDir dir is not exist:" + localExecutorLibDir.getAbsolutePath());

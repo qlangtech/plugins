@@ -100,7 +100,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
             JSONArray fields = JSONArray.parseArray(content);
             return DefaultMetaDataWriter.deserialize(fields);
         } catch (Exception e) {
-            throw new RuntimeException(content, e);
+            throw new RuntimeException("dfsPath:" + dfsPath, e);
         }
     }
 

@@ -1,7 +1,8 @@
 {
     "name": "ftpreader",
     "parameter": {
-    #if($reader.containPort)
+        "path": "${reader.path}"
+#if($reader.containPort)
 ,"port": ${reader.port}
 #end
 #if($reader.containTimeout)
@@ -10,7 +11,6 @@
 #if($reader.containConnectPattern)
 ,"connectPattern": "${reader.connectPattern}"
 #end
-,"path": "${reader.path}"
 #if($reader.containFieldDelimiter)
 ,"fieldDelimiter": "${reader.fieldDelimiter}"
 #end
@@ -19,12 +19,6 @@
 #end
 #if($reader.containEncoding)
 ,"encoding": "${reader.encoding}"
-#end
-#if($reader.containSkipHeader)
-,"skipHeader": ${reader.skipHeader}
-#end
-#if($reader.containCsvReaderConfig)
-,"csvReaderConfig": ${reader.csvReaderConfig}
 #end
     }
 }

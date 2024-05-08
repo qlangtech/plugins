@@ -25,6 +25,7 @@ import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.datax.powerjob.ServerPortExport;
+import com.qlangtech.tis.plugin.datax.powerjob.ServiceNotDefinedException;
 import com.qlangtech.tis.plugin.datax.powerjob.impl.serverport.NodePort.ServiceType;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -75,7 +76,7 @@ public class LoadBalance extends ServerPortExport {
 
 
     @Override
-    public String getExternalHost(CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) {
+    public String getExternalHost(CoreV1Api api, DefaultK8SImage k8SImage, Pair<ServiceResName, TargetResName> serviceResAndOwner) throws ServiceNotDefinedException {
 
         if (StringUtils.isEmpty(this.host)) {
             // K8SUtils.resultPrettyShow

@@ -64,7 +64,7 @@ public class TestDataXDaMengWriter {
         writer.autoCreateTable = true;
         setPlaceholderReader();
 
-        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
+        CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(TabApplicationCreator.getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);
             col.setName("id3");

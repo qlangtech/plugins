@@ -18,9 +18,17 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.plugin.ftp.common.FtpHelper;
 import com.qlangtech.tis.plugin.datax.format.CSVFormat;
 import com.qlangtech.tis.plugin.datax.format.TextFormat;
 import com.qlangtech.tis.plugin.datax.server.FTPServer;
+import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -57,10 +65,81 @@ public class FtpWriterUtils {
         return format;
     }
 
+    private static class MockFtpHelper extends FtpHelper {
+        public MockFtpHelper(TDFSLinker dfsLinker) {
+            super(dfsLinker);
+        }
+
+        @Override
+        public void mkDirRecursive(String directoryPath) {
+
+        }
+
+        @Override
+        protected void loginFtpServer(String host, String username, String password, int port, int timeout, String connectMode) {
+
+        }
+
+        @Override
+        public void logoutFtpServer() {
+
+        }
+
+        @Override
+        public boolean isDirExist(String directoryPath) {
+            return false;
+        }
+
+        @Override
+        public boolean isFileExist(String filePath) {
+            return false;
+        }
+
+        @Override
+        public boolean isSymbolicLink(String filePath) {
+            return false;
+        }
+
+        @Override
+        public InputStream getInputStream(String filePath) {
+            if ("/admin/tis/instancedetail/meta.json".equals(filePath)) {
+
+            }
+
+            return null;
+        }
+
+        @Override
+        public Set<String> getAllFilesInDir(String path, String fileName) {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public void deleteFiles(Set<String> filesToDelete) {
+
+        }
+
+        @Override
+        public HashSet<Res> getListFiles(String directoryPath, int parentLevel, int maxTraversalLevel) {
+            return null;
+        }
+
+        @Override
+        public OutputStream getOutputStream(String filePath, boolean append) {
+            return null;
+        }
+    }
+
+
     public static FTPServer createFtpServer(FTPContainer ftpContainer) {
 
         if (ftpContainer == null) {
-            FTPServer ftpServer = new FTPServer();
+            FTPServer ftpServer = new FTPServer() {
+                @Override
+                public FtpHelper createFtpHelper(Integer timeout, TDFSLinker dfsLinker) {
+                    return new MockFtpHelper(dfsLinker);
+                }
+            };
             ftpServer.name = ftpLink;
             ftpServer.protocol = "ftp";
             ftpServer.host = "192.168.28.201";

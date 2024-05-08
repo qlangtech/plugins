@@ -23,6 +23,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.ObjectInputStream;
+import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -31,15 +33,21 @@ import java.io.ObjectInputStream;
 public class T {
     @Test
     public void test() throws Exception {
-        ObjectInputStream o = new ObjectInputStream(FileUtils.openInputStream(
-                new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-local-executor/target/classes/META-INF/annotations/com.qlangtech.tis.extension.TISExtension")));
 
-        while (true) {
-            Object o1 = o.readObject();
-            System.out.println(o1);
-            if (o1 == null) {
-                break;
-            }
+        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("com/alibaba/datax/common/plugin/AbstractJobPlugin.class");
+        while(resources.hasMoreElements()){
+            System.out.printf( String.valueOf( resources.nextElement()));
         }
+
+//        ObjectInputStream o = new ObjectInputStream(FileUtils.openInputStream(
+//                new File("/Users/mozhenghua/j2ee_solution/project/plugins/tis-datax/tis-datax-local-executor/target/classes/META-INF/annotations/com.qlangtech.tis.extension.TISExtension")));
+//
+//        while (true) {
+//            Object o1 = o.readObject();
+//            System.out.println(o1);
+//            if (o1 == null) {
+//                break;
+//            }
+//        }
     }
 }

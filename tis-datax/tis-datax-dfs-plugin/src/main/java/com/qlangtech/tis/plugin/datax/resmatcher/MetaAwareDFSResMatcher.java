@@ -85,7 +85,7 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
         // IDataxReader reader = processor.getReader(null);
         // List<ISelectedTab> selectedTabs = reader.getSelectedTabs();
         String fullMetaPath = IPath.pathConcat(path, FtpHelper.KEY_META_FILE);
-        String tabName = entityName.orElseThrow(() -> new IllegalStateException(" entitName must present"));
+       // String tabName = entityName.orElseThrow(() -> new IllegalStateException(" entitName must present"));
         DataXDFSReaderWithMeta.TargetResMeta resMeta = DataXDFSReaderWithMeta.getTargetResMeta(fullMetaPath);
         if (resMeta == null) {
             throw new IllegalStateException("resMeta can not be null ,fullMetaPath:" + fullMetaPath);

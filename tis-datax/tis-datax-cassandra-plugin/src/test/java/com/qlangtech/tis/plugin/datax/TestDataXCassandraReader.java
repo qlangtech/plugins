@@ -27,6 +27,7 @@ import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import com.qlangtech.tis.plugin.ds.cassandra.TestCassandraDatasourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 import com.qlangtech.tis.util.UploadPluginMeta;
 import junit.framework.TestCase;
 
@@ -62,11 +63,11 @@ public class TestDataXCassandraReader extends TestCase {
 
         UploadPluginMeta pluginMeta
                 = UploadPluginMeta.parse("dataxReader:require,targetDescriptorName_"+DataXCassandraReader.DATAX_NAME+",subFormFieldName_selectedTabs,dataxName_baisuitestTestcase");
-
-        JSONObject subFormDescriptorsJSON = descJson.getDescriptorsJSON(pluginMeta.getSubFormFilter());
+        DescriptorsJSONResult descriptorsJSON = descJson.getDescriptorsJSON(pluginMeta.getSubFormFilter());
+       // JSONObject subFormDescriptorsJSON = null;
 
         JsonUtil.assertJSONEqual(DataXCassandraReader.class, "cassandra-datax-reader-selected-tabs-subform-descriptor.json"
-                , subFormDescriptorsJSON, (m, e, a) -> {
+                , descriptorsJSON.toJSONString(), (m, e, a) -> {
                     assertEquals(m, e, a);
                 });
     }

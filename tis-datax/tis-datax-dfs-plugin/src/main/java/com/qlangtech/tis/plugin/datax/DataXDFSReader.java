@@ -116,11 +116,11 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
             AbstractDFSReader dataxReader = postFormVals.newInstance();
 
             //try {
-                //
-                /**
-                 * 当reader header读取，但是在head 无法正确读取到colName 则在此处会抛异常
-                 * @see CSVFormat#setCsvReaderConfig 会抛出TisException
-                 */
+            //
+            /**
+             * 当reader header读取，但是在head 无法正确读取到colName 则在此处会抛异常
+             * @see CSVFormat#setCsvReaderConfig 会抛出TisException
+             */
 //                dataxReader.getSelectedTabs();
 //            } catch (Exception e) {
 //                throw new RuntimeException(e);
@@ -168,5 +168,6 @@ public class DataXDFSReader extends AbstractDFSReader implements DataXBasicProce
         public String getDisplayName() {
             return this.getEndType().name();
         }
+
     }
 }

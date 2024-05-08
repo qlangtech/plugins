@@ -93,7 +93,7 @@ public class TestMetaAwareDFSResMatcher implements TISEasyMock {
     }
 
 
-    private static class MockTDFSLinker extends TDFSLinker {
+    public static class MockTDFSLinker extends TDFSLinker {
 
 
         public MockTDFSLinker(String rootPath) {

@@ -3,12 +3,12 @@
   <parent>
     <artifactId>tis-incr</artifactId>
     <groupId>com.qlangtech.tis.plugins</groupId>
-    <version>4.0.0</version>
+    <version>4.0.0-rc1</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.qlangtech.tis.plugins</groupId>
   <artifactId>tis-flink-cdc-shade-4-debezium-connector-mysql</artifactId>
-  <version>4.0.0</version>
+  <version>4.0.0-rc1</version>
   <licenses>
     <license>
       <name>GNU Affero General Public License</name>
@@ -66,7 +66,7 @@
     <dependency>
       <groupId>com.qlangtech.tis</groupId>
       <artifactId>tis-plugin</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.0-rc1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

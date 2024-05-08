@@ -43,6 +43,7 @@
             <scope>compile</scope>
         </dependency>
 
+
         <!--        <dependency>-->
         <!--            <groupId>com.qlangtech.tis</groupId>-->
         <!--            <artifactId>tis-web-start-api</artifactId>-->
@@ -93,6 +94,20 @@
 
 
     </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>com.qlangtech.tis</groupId>
+                <artifactId>maven-tpi-plugin</artifactId>
+                <configuration>
+                    <maskClasses>com.alibaba.datax.</maskClasses>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 
 </project>

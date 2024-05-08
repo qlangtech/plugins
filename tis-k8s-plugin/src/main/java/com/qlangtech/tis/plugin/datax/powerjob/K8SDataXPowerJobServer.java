@@ -263,9 +263,15 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
 
     public String getPowerJobMasterGateway() {
-        final String linkHost = this.serverPortExport
-                .getClusterHost(this.getK8SApi(), this.getImage(), powerJobServiceResAndOwnerGetter.get());
-        return linkHost;
+        try {
+            final String linkHost = this.serverPortExport
+                    .getClusterHost(this.getK8SApi(), this.getImage(), powerJobServiceResAndOwnerGetter.get());
+            return linkHost;
+        } catch (ServiceNotDefinedException e) {
+            //
+            throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+            // throw new RuntimeException(e);
+        }
     }
 
     public CoreV1Api getK8SApi() {
@@ -287,21 +293,31 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
     @Override
     public TISPowerJobClient getPowerJobClient() {
         if (powerJobClient == null) {
-            powerJobClient = TISPowerJobClient.create(
-                    this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
-                    , this.appName, this.password);
+            try {
+                powerJobClient = TISPowerJobClient.create(
+                        this.serverPortExport.getClusterHost(this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get())
+                        , this.appName, this.password);
+            } catch (ServiceNotDefinedException e) {
+              throw throwPowerJobClusterLossOfContactException(Optional.of(e));
+            }
         }
         return powerJobClient;
     }
 
     @Override
     public Map<String, Object> getPayloadInfo() {
-        Map<String, Object> payloads = Maps.newHashMap();
-        // http://192.168.64.3:31000/#/welcome
-        payloads.put(CLUSTER_ENTRYPOINT_HOST
-                , "http://" + this.serverPortExport.getExternalHost(
-                        this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
-        return payloads;
+        try {
+            Map<String, Object> payloads = Maps.newHashMap();
+            // http://192.168.64.3:31000/#/welcome
+            payloads.put(CLUSTER_ENTRYPOINT_HOST
+                    , "http://" + this.serverPortExport.getExternalHost(
+                            this.getK8SApi(), this.getK8SImage(), powerJobServiceResAndOwnerGetter.get()) + "/#/welcome");
+            // throwPowerJobClusterLossOfContactException();
+            return payloads;
+        } catch (ServiceNotDefinedException e) {
+           // throw new RuntimeException(e);
+            throw throwPowerJobClusterLossOfContactException(Optional.of( e));
+        }
     }
 
     public final PowerJobK8SImage getImage() {
@@ -418,7 +434,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
             V1HorizontalPodAutoscaler autoscaler
                     = hpaApi.readNamespacedHorizontalPodAutoscalerStatus(
-                    this.getHpaName(), k8SImage.getNamespace())
+                            this.getHpaName(), k8SImage.getNamespace())
                     .pretty(K8SUtils.resultPrettyShow).execute();
 
             V1HorizontalPodAutoscalerSpec spec = autoscaler.getSpec();
@@ -569,10 +585,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         RcDeployment powerjobServer = k8SController.getRCDeployment(K8S_DATAX_POWERJOB_SERVER);
         if (powerjobServer == null) {
             // throw TisException.create("the powerJob has been loss of communication");
-            throw TisException.create(
-                    ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
-                            , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
-                    , "the powerJob has been loss of communication");
+            throw throwPowerJobClusterLossOfContactException(Optional.empty());
         }
         powerjobServer.setReplicaScalable(false);
 
@@ -590,6 +603,13 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
         }
         return rcs;
         // return getK8SController().getRCDeployment(DataXJobWorker.K8S_DATAX_INSTANCE_NAME);
+    }
+
+    private static TisException throwPowerJobClusterLossOfContactException( Optional< ServiceNotDefinedException> e) {
+        return TisException.create(
+                ErrorValue.create(ErrorCode.POWER_JOB_CLUSTER_LOSS_OF_CONTACT
+                        , IFullBuildContext.KEY_TARGET_NAME, TargetResName.K8S_DATAX_INSTANCE_NAME.getName())
+                , e.map((except)-> except.getMessage()).orElse("the powerJob has been loss of communication"));
     }
 
     @Override

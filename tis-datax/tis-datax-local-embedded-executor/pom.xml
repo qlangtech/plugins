@@ -28,52 +28,57 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>tis-datax-dameng-plugin</artifactId>
+    <artifactId>tis-datax-local-embedded-executor</artifactId>
     <packaging>tpi</packaging>
 
     <properties>
-        <dameng.jdbc.driver.version>8.1.1.193</dameng.jdbc.driver.version>
     </properties>
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-    </build>
+
 
     <dependencies>
 
+<!--        <dependency>-->
+<!--            <groupId>com.qlangtech.tis.plugins</groupId>-->
+<!--            <artifactId>tis-datax-common-plugin</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-common-plugin</artifactId>
+            <artifactId>tis-datax-local-executor-utils</artifactId>
+            <version>${tis.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-common-rdbms-plugin</artifactId>
+            <artifactId>tis-datax-executor</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-dag</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.qlangtech.tis</groupId>
+                    <artifactId>tis-hadoop-rpc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>com.qlangtech.tis.plugins</groupId>
-            <artifactId>tis-datax-test-common</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-common</artifactId>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-common</artifactId>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.dameng</groupId>
-            <artifactId>DmJdbcDriver18</artifactId>
-            <version>${dameng.jdbc.driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.qlangtech.tis</groupId>
-            <artifactId>tis-base-test</artifactId>
+            <groupId>com.alibaba.datax</groupId>
+            <artifactId>datax-core</artifactId>
+            <version>${alibaba.datax.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

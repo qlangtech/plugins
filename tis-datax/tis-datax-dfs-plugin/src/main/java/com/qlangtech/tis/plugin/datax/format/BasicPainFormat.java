@@ -34,6 +34,7 @@ import com.qlangtech.tis.plugin.datax.format.guesstype.GuessFieldType;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
+import com.qlangtech.tis.util.DescriptorsJSONResult;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -250,4 +251,5 @@ public abstract class BasicPainFormat extends FileFormat {
         }
 
     }
+
 }

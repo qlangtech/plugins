@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -100,7 +101,7 @@ public abstract class AbstractDFSReader extends DataxReader implements Supplier<
 
     @Override
     public IGroupChildTaskIterator getSubTasks(Predicate<ISelectedTab> filter) {
-        return this.resMatcher.getSubTasks(filter, this);
+        return Objects.requireNonNull( this.resMatcher).getSubTasks(filter, this);
     }
 
 

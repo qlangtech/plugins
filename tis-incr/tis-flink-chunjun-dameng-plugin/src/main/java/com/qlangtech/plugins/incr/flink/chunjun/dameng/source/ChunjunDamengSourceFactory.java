@@ -33,7 +33,7 @@ public class ChunjunDamengSourceFactory extends ChunjunSourceFactory {
         return new DamengSourceFunction(this);
     }
 
-    @TISExtension
+   // @TISExtension
     public static class DftDesc extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {

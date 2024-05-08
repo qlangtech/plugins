@@ -32,7 +32,12 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.ds.*;
+import com.qlangtech.tis.plugin.ds.ColumnMetaData;
+import com.qlangtech.tis.plugin.ds.DBConfig;
+import com.qlangtech.tis.plugin.ds.DataDumpers;
+import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.TISTable;
+import com.qlangtech.tis.plugin.ds.TableInDB;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -72,9 +77,6 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     @FormField(ordinal = 9, type = FormFieldType.INPUTTEXT, validate = {Validator.require, Validator.identity})
     public String userSource;
-
-
-
 
 
     public String getDbName() {
@@ -186,7 +188,7 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
                     default:
                         throw new IllegalStateException("illegal authMechanism:" + aMechanism);
                 }
-                logger.info("create credential by "+ aMechanism);
+                logger.info("create credential by " + aMechanism);
             }
             mongoClient = new MongoClient(parseServerAddress(addressList), Collections.singletonList(credential));
         } else {
@@ -198,9 +200,10 @@ public class MangoDBDataSourceFactory extends DataSourceFactory {
 
     private static final Option usernamePasswordAuthMethod = new Option("USERNAME & PASSWORD", "usernamePasswordAuthMethod");
 
-    public static String dftAuthMechanism(){
-       return (String)usernamePasswordAuthMethod.getValue();
+    public static String dftAuthMechanism() {
+        return (String) usernamePasswordAuthMethod.getValue();
     }
+
     public static List<Option> allAuthMechanism() {
 
         List<Option> authMethod = Lists.newArrayList(usernamePasswordAuthMethod);

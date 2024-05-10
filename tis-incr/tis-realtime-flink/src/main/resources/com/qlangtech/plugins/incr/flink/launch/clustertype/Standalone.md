@@ -6,7 +6,7 @@ Standalone 集群: [详细请查看](https://nightlies.apache.org/flink/flink-do
 1. 下载、解压
 
    ```shell script
-     wget http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.13.1-bin.tar.gz && rm -rf flink-tis-1.13.1 && mkdir flink-tis-1.13.1 && tar xvf flink-tis-1.13.1-bin.tar.gz -C ./flink-tis-1.13.1
+     wget http://tis-release.oss-cn-beijing.aliyuncs.com/${project.version}/tis/flink-tis-1.18.1-bin.tar.gz && rm -rf flink-tis-1.18.1 && mkdir flink-tis-1.18.1 && tar xvf flink-tis-1.18.1-bin.tar.gz -C ./flink-tis-1.18.1
    ```
 2. 修改 `$FLINK_HOME/conf/flink-conf.yaml`
 

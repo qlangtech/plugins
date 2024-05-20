@@ -171,10 +171,10 @@ public class TestDataxMySQLWriter extends BasicTest {
         Context context = EasyMock.createMock("context", Context.class);
         EasyMock.expect(context.hasErrors()).andReturn(false);
         MySQLDataSourceFactory mysqlDs = new MySQLDataSourceFactory() {
-            @Override
-            public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
-                return null;
-            }
+//            @Override
+//            public JDBCConnection getConnection(String jdbcUrl) throws SQLException {
+//                return null;
+//            }
         };
 
         mysqlDs.dbName = dbWriterName;

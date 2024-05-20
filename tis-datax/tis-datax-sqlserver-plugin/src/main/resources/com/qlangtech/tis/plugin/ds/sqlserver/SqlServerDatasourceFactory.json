@@ -2,6 +2,9 @@
   "name": {
     "helpUrl": "https://docs.microsoft.com/zh-cn/sql/connect/jdbc/connection-url-sample?view=sql-server-ver15"
   },
+  "dbName": {
+    "validators": "identity:disable"
+  },
   "encode": {
     "disable": true
   },

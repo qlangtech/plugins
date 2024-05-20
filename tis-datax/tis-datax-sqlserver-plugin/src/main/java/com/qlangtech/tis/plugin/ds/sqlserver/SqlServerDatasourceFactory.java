@@ -87,7 +87,7 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
     // @TISExtension
     public static abstract class BasicDescriptor extends BasicRdbmsDataSourceFactoryDescriptor {
         private static final Pattern urlParamsPattern = Pattern.compile("(\\w+?\\=\\w+?)(\\;\\w+?\\=\\w+?)*");
-
+       private static final  Pattern pattern_identity = Pattern.compile("[A-Z\\da-z_\\-\\.]+");
         @Override
         protected final String getDataSourceName() {
             return DS_TYPE_SQL_SERVER + "-" + getVersion();
@@ -103,6 +103,16 @@ public abstract class SqlServerDatasourceFactory extends BasicDataSourceFactory 
         @Override
         public boolean supportFacade() {
             return false;
+        }
+
+        public boolean validateDbName(IFieldErrorHandler msgHandler, Context context, String fieldName, String value) {
+
+            Matcher matcher = pattern_identity.matcher(value);
+            if (!matcher.matches()) {
+                msgHandler.addFieldError(context, fieldName, "不符合格式：" + pattern_identity);
+                return false;
+            }
+            return true;
         }
 
         @Override

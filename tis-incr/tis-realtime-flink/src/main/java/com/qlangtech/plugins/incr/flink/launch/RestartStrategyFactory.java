@@ -32,6 +32,7 @@ import java.util.Optional;
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-25 16:33
+ * @see com.qlangtech.plugins.incr.flink.launch.restart.ExponentialDelay
  **/
 @Public
 public abstract class RestartStrategyFactory implements Describable<RestartStrategyFactory> {

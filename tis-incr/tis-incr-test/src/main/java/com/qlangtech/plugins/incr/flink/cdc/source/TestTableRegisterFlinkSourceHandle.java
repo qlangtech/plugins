@@ -130,8 +130,8 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 //    }
 
     @Override
-    protected void registerSourceTable(StreamTableEnvironment tabEnv, String tabName, DTOStream sourceStream) {
-        super.registerSourceTable(tabEnv, tabName, sourceStream);
+    protected void registerSourceTable(StreamTableEnvironment tabEnv, TableAlias alias, DTOStream sourceStream) {
+        super.registerSourceTable(tabEnv, alias, sourceStream);
         if (tableCount++ > 1) {
             throw new IllegalStateException("testCase just test 1 table,pre:" + this.tabName + ",new:" + tabName);
         }

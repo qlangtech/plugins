@@ -34,6 +34,7 @@ import com.qlangtech.tis.config.k8s.IK8sContext;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
 import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
@@ -330,7 +331,7 @@ public class KubernetesApplication extends ClusterType {
                             = new K8SRCResNameWithFieldSelector(this.clusterId
                             , new OwnerJobExec<Object, NamespacedEventCallCriteria>() {
                         @Override
-                        public NamespacedEventCallCriteria accept(Object powerJobServer) throws Exception {
+                        public NamespacedEventCallCriteria accept(Object powerJobServer) throws JobOrchestrateException {
                             throw new UnsupportedOperationException();
                         }
                     });

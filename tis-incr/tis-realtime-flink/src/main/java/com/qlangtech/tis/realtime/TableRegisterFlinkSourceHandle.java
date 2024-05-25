@@ -98,7 +98,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
                         .build());
 
         for (Map.Entry<TableAlias, DTOStream> entry : tab2OutputTag.entrySet()) {
-            this.registerSourceTable(tabEnv, entry.getKey().getFrom(), entry.getValue());
+            this.registerSourceTable(tabEnv, entry.getKey(), entry.getValue());
             if (shallRegisterSinkTable()) {
                 this.registerSinkTable(tabEnv, entry.getKey());
             }
@@ -185,9 +185,9 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
 
     protected void registerSourceTable(StreamTableEnvironment tabEnv
-            , String tabName, DTOStream sourceStream) {
+            , TableAlias alias , DTOStream sourceStream) {
 
-
+        String tabName = alias.getFrom();
         Schema.Builder scmBuilder = Schema.newBuilder();
         IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator = this.getSourceStreamTableMeta();
 
@@ -229,7 +229,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
         Objects.requireNonNull(rowStream, "rowStream can not be null");
 
         Table table = tabEnv.fromChangelogStream(rowStream, schema, ChangelogMode.all());
-        tabEnv.createTemporaryView(tabName + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
+        tabEnv.createTemporaryView(alias.getTo() + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
     }
 
     private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, String tabName) {

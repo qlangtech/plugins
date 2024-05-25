@@ -34,6 +34,7 @@ import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.FlinkClusterPojo;
 import com.qlangtech.tis.datax.job.FlinkSessionResName;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.JobResName;
 import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
 import com.qlangtech.tis.datax.job.SSERunnable;
@@ -157,7 +158,7 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
     private static class CreateFlinkSessionJobExec implements OwnerJobExec<FlinkK8SClusterManager, NamespacedEventCallCriteria> {
         @Override
-        public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws Exception {
+        public NamespacedEventCallCriteria accept(FlinkK8SClusterManager flinkManager) throws JobOrchestrateException {
             JSONObject[] clusterMeta = new JSONObject[1];
             final String clusterId = flinkManager.clusterId;
             //  final CoreV1Api coreApi = new CoreV1Api(flinkManager.getK8SApi());
@@ -285,13 +286,17 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 
                 subJob.execSubJob(this);
             }
-        } catch (ApiException e) {
-            launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getResponseBody());
-            logger.error(e.getResponseBody(), e);
-            throw K8sExceptionUtils.convert(e);
+        } catch (JobOrchestrateException  e) {
+            if(e.getCause() instanceof ApiException){
+                ApiException apiExcet = (ApiException)e.getCause();
+                launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), apiExcet.getResponseBody());
+                logger.error(apiExcet.getResponseBody(), apiExcet);
+                throw K8sExceptionUtils.convert(apiExcet);
+            }else{
+                processException(launchProcess, e);
+            }
         } catch (Exception e) {
-            launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getMessage());
-            throw new RuntimeException(e);
+            processException(launchProcess, e);
         }
 
         JSONObject[] clusterMeta = Objects.requireNonNull(
@@ -305,6 +310,11 @@ public class FlinkK8SClusterManager extends BasicFlinkK8SClusterCfg implements I
 //        });
         ServerLaunchToken.createFlinkClusterToken().cleanCache();
         return Optional.of(clusterMeta[0]);
+    }
+
+    private static void processException(SSERunnable launchProcess, Exception e) {
+        launchProcess.error(null, TimeFormat.getCurrentTimeStamp(), e.getMessage());
+        throw new RuntimeException(e);
     }
 
     private void processFlinkCluster(KubernetesSessionCliProcess process) {

@@ -30,6 +30,8 @@ import com.qlangtech.tis.compiler.java.ResourcesFile;
 import com.qlangtech.tis.compiler.java.SourceGetterStrategy;
 import com.qlangtech.tis.compiler.java.ZipPath;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.TimeFormat;
+import com.qlangtech.tis.datax.job.SSERunnable;
 import com.qlangtech.tis.extension.PluginManager;
 import com.qlangtech.tis.extension.PluginStrategy;
 import com.qlangtech.tis.extension.PluginWrapper;
@@ -283,9 +285,11 @@ public class CompileAndPackage implements ICompileAndPackage {
     }
 
     private boolean streamScriptCompile(File sourceRoot, Set<IDBNodeMeta> dependencyDBNodes) throws Exception {
+        final SSERunnable sse = SSERunnable.getLocal();
         LogProcessorUtils.LoggerListener loggerListener = new LogProcessorUtils.LoggerListener() {
             @Override
             public void receiveLog(LogProcessorUtils.Level level, String line) {
+                sse.error(null, TimeFormat.getCurrentTimeStamp(), line);
                 System.err.println(line);
             }
         };

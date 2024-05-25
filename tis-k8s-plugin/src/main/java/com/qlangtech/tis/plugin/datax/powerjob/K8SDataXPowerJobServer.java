@@ -34,6 +34,7 @@ import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.datax.job.ILaunchingOrchestrate;
 import com.qlangtech.tis.datax.job.ITISPowerJob;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.JobResName;
 import com.qlangtech.tis.datax.job.JobResName.OwnerJobExec;
 import com.qlangtech.tis.datax.job.PowerjobOrchestrateException;
@@ -126,7 +127,7 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             = new K8SRCResNameWithFieldSelector(K8SWorkerCptType.Worker
             , new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
         @Override
-        public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
+        public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws JobOrchestrateException {
             powerJobServer.launchPowerjobWorker();
             return null;
         }
@@ -173,8 +174,12 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final ServiceResNameWithFieldSelector K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE
             = new ServiceResNameWithFieldSelector("powerjob-server-nodeport", (powerJobServer) -> {
-        powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace()
-                , (powerJobServer.getK8SApi()), powerJobServerPort, powerJobServiceResAndOwnerGetter.get(), Optional.empty());
+        try {
+            powerJobServer.serverPortExport.exportPort(powerJobServer.getImage().getNamespace()
+                    , (powerJobServer.getK8SApi()), powerJobServerPort, powerJobServiceResAndOwnerGetter.get(), Optional.empty());
+        } catch (ApiException e) {
+            throw new JobOrchestrateException(e);
+        }
     });
 
 
@@ -193,13 +198,21 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
 
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_MYSQL_SERVICE
             = new ServiceResName<>("powerjob-mysql", (powerJobServer) -> {
-        powerJobServer.coreDS.launchMetaStoreService(powerJobServer);
+        try {
+            powerJobServer.coreDS.launchMetaStoreService(powerJobServer);
+        } catch (ApiException e) {
+            throw new JobOrchestrateException(e);
+        }
     });
 
     public static final ServiceResName<K8SDataXPowerJobServer> K8S_DATAX_POWERJOB_SERVER_SERVICE
             = new ServiceResName<K8SDataXPowerJobServer>("powerjob-server-service", (powerJobServer) -> {
-        K8SUtils.createService((powerJobServer.getK8SApi()), powerJobServer.getImage().getNamespace()
-                , getPowerJobServerService(), getPowerJobServerRes(), powerJobServer.serverPortExport.serverPort, powerJobServerPort);
+        try {
+            K8SUtils.createService((powerJobServer.getK8SApi()), powerJobServer.getImage().getNamespace()
+                    , getPowerJobServerService(), getPowerJobServerRes(), powerJobServer.serverPortExport.serverPort, powerJobServerPort);
+        } catch (ApiException e) {
+            throw new JobOrchestrateException(e);
+        }
 
 
     });
@@ -208,8 +221,12 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             = new K8SRCResNameWithFieldSelector(K8SWorkerCptType.Server,
             new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
                 @Override
-                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
-                    return powerJobServer.launchPowerjobServer();
+                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws JobOrchestrateException {
+                    try {
+                        return powerJobServer.launchPowerjobServer();
+                    } catch (ApiException e) {
+                        throw new JobOrchestrateException(e);
+                    }
                 }
             }
             , K8S_DATAX_POWERJOB_SERVER_SERVICE, K8S_DATAX_POWERJOB_SERVER_NODE_PORT_SERVICE);
@@ -227,8 +244,12 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
             = new K8SRCResNameWithFieldSelector("datax-worker-powerjob-mysql",
             new OwnerJobExec<K8SDataXPowerJobServer, NamespacedEventCallCriteria>() {
                 @Override
-                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws Exception {
-                    return powerJobServer.coreDS.launchMetaStore(powerJobServer);
+                public NamespacedEventCallCriteria accept(K8SDataXPowerJobServer powerJobServer) throws JobOrchestrateException {
+                    try {
+                        return powerJobServer.coreDS.launchMetaStore(powerJobServer);
+                    } catch (ApiException e) {
+                        throw new JobOrchestrateException(e);
+                    }
                 }
             }
             , K8S_DATAX_POWERJOB_MYSQL_SERVICE);
@@ -726,11 +747,15 @@ public class K8SDataXPowerJobServer extends DataXJobWorker implements ITISPowerJ
      *
      * @throws ApiException
      */
-    public void launchPowerjobWorker() throws ApiException, PowerjobOrchestrateException {
+    public void launchPowerjobWorker() throws JobOrchestrateException {
 
 
-        K8SDataXPowerJobWorker jobWorker = Objects.requireNonNull(getPowerJobWorker(), "powerjob woker can not be null");
-        jobWorker.launchPowerjobWorker(this);
+        try {
+            K8SDataXPowerJobWorker jobWorker = Objects.requireNonNull(getPowerJobWorker(), "powerjob woker can not be null");
+            jobWorker.launchPowerjobWorker(this);
+        } catch (ApiException e) {
+            throw new JobOrchestrateException(e);
+        }
 
 
         //  this.getPowerJobClient()

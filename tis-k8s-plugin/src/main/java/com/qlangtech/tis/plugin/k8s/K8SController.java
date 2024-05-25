@@ -25,6 +25,7 @@ import com.qlangtech.tis.coredefine.module.action.IRCController;
 import com.qlangtech.tis.coredefine.module.action.Specification;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.coredefine.module.action.impl.RcDeployment;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.ServiceResName;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.incr.DefaultWatchPodLog;
@@ -300,7 +301,7 @@ public class K8SController implements IRCController {
     }
 
     @Override
-    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
+    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws JobOrchestrateException {
 
     }
 

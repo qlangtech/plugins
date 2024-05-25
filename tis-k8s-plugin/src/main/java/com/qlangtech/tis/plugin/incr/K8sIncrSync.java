@@ -19,6 +19,7 @@ package com.qlangtech.tis.plugin.incr;
 
 import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.plugin.k8s.EnvVarsBuilder;
 import com.qlangtech.tis.plugin.k8s.K8SController;
 import com.qlangtech.tis.plugin.k8s.K8sExceptionUtils;
@@ -134,7 +135,7 @@ public class K8sIncrSync extends K8SController //implements IRCController
     }
 
     @Override
-    public void deploy(TargetResName indexName, ReplicasSpec incrSpec, final long timestamp) throws Exception {
+    public void deploy(TargetResName indexName, ReplicasSpec incrSpec, final long timestamp) throws JobOrchestrateException {
         if (timestamp < 1) {
             throw new IllegalArgumentException("argument timestamp can not small than 1");
         }

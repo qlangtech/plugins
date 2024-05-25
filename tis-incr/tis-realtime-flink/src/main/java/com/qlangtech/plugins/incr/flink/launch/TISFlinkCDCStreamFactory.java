@@ -26,6 +26,7 @@ import com.qlangtech.tis.config.k8s.ReplicasSpec;
 import com.qlangtech.tis.coredefine.module.action.IDeploymentDetail;
 import com.qlangtech.tis.coredefine.module.action.IFlinkIncrJobStatus;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.job.JobOrchestrateException;
 import com.qlangtech.tis.datax.job.ServerLaunchToken;
 import com.qlangtech.tis.datax.job.ServerLaunchToken.FlinkClusterType;
 import com.qlangtech.tis.extension.Descriptor;
@@ -162,15 +163,19 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
     }
 
     @Override
-    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws Exception {
+    public void deploy(TargetResName collection, ReplicasSpec incrSpec, long timestamp) throws JobOrchestrateException {
 
-        File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
-        this.deploy(collection, streamUberJar
-                , (request) -> {
-                }, (jobId) -> {
-                    IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
-                    incrJob.createNewJob(jobId);
-                });
+        try {
+            File streamUberJar = UberJarUtil.createStreamUberJar(collection, timestamp);
+            this.deploy(collection, streamUberJar
+                    , (request) -> {
+                    }, (jobId) -> {
+                        IFlinkIncrJobStatus incrJob = getIncrJobStatus(collection);
+                        incrJob.createNewJob(jobId);
+                    });
+        } catch (Exception e) {
+            throw new JobOrchestrateException(e);
+        }
     }
 
 

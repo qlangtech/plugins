@@ -88,7 +88,7 @@ public class ChunjunSqlType extends ChunjunStreamScriptType {
         }
 
         public String getSourceTable(TableAlias alia) {
-            return alia.getFrom() + KEY_STREAM_SOURCE_TABLE_SUFFIX;
+            return alia.getTo() + KEY_STREAM_SOURCE_TABLE_SUFFIX;
         }
 
         public List<IColMetaGetter> getCols(TableAlias alia) {

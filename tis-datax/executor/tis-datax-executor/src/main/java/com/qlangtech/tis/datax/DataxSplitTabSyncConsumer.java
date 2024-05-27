@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * used by com.qlangtech.tis.plugin.datax.TaskExec
@@ -18,6 +19,7 @@ import java.util.Objects;
 public abstract class DataxSplitTabSyncConsumer extends DataXJobSingleProcessorExecutor<CuratorDataXTaskMessage> {
     private static final Logger logger = LoggerFactory.getLogger(DataxSplitTabSyncConsumer.class);
     protected IExecChainContext execContext;
+
 
     public DataxSplitTabSyncConsumer(IExecChainContext execContext) {
         this.execContext = execContext;
@@ -52,8 +54,7 @@ public abstract class DataxSplitTabSyncConsumer extends DataXJobSingleProcessorE
 
         StoreResourceType resType = Objects.requireNonNull(msg.getResType(), "resType can not be null");
         Integer allRowsApproximately = msg.getAllRowsApproximately();
-        logger.info("process DataX job, dataXName:{},jobid:{},jobName:{},allrows:{}", dataxName, taskId, jobName,
-                allRowsApproximately);
+        logger.info("process DataX job, dataXName:{},jobid:{},jobName:{},allrows:{}", dataxName, taskId, jobName, allRowsApproximately);
         cmdLine.addArgument(String.valueOf(taskId));
         cmdLine.addArgument(jobName);
         // 需要一个占位

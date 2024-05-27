@@ -24,6 +24,7 @@ import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.spark.SparkConnStrategy;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -63,10 +64,15 @@ public class DefaultSparkConnGetter extends ParamsConfig implements ISparkConnGe
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
         public DefaultDescriptor() {
             super();
             // this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Spark;
         }
 
         @Override

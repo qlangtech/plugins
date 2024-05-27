@@ -24,6 +24,7 @@ import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -92,10 +93,15 @@ public class FTPServer extends ParamsConfig {
     }
 
     @TISExtension
-    public static class DefaultDesc extends Descriptor<ParamsConfig> {
+    public static class DefaultDesc extends Descriptor<ParamsConfig> implements IEndTypeGetter {
         @Override
         public String getDisplayName() {
             return FTP_SERVER;
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.TDFS;
         }
 
         @Override

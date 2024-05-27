@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -73,67 +74,73 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
             return;
         }
 
-        synchronized (DataxPrePostConsumer.class) {
-            //exec(msg);
-            CommandLine cmdLine = new CommandLine("java");
-            cmdLine.addArgument("-D" + Config.KEY_DATA_DIR + "=" + Config.getDataDir().getAbsolutePath());
-            cmdLine.addArgument("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=" + this.useRuntimePropEnvProps());
-            cmdLine.addArgument("-D" + TisAppLaunch.KEY_LOG_DIR + "=" + TisAppLaunch.getLogDir().getAbsolutePath());
-            cmdLine.addArgument("-D" + Config.KEY_RUNTIME + "=daily");
-            cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
-            cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
-            for (String sysParam : this.getExtraJavaSystemPrams()) {
-                cmdLine.addArgument(sysParam, false);
-            }
+        DataXJobSubmitParams jobSubmitParams = DataXJobSubmitParams.getDftIfEmpty();
 
-            cmdLine.addArgument("-classpath");
-            cmdLine.addArgument(getClasspath());
-            cmdLine.addArgument(getMainClassName());
-            addMainClassParams(msg, jobId, jobName, dataxName, cmdLine);
+        jobSubmitParams.execParallelTask(dataxName, () -> {
+            // 在VM中控制进入可用区执行的实例数量
+            {
+                //exec(msg);
+                CommandLine cmdLine = new CommandLine("java");
+                cmdLine.addArgument("-D" + Config.KEY_DATA_DIR + "=" + Config.getDataDir().getAbsolutePath());
+                cmdLine.addArgument("-D" + Config.KEY_JAVA_RUNTIME_PROP_ENV_PROPS + "=" + this.useRuntimePropEnvProps());
+                cmdLine.addArgument("-D" + TisAppLaunch.KEY_LOG_DIR + "=" + TisAppLaunch.getLogDir().getAbsolutePath());
+                cmdLine.addArgument("-D" + Config.KEY_RUNTIME + "=daily");
+                cmdLine.addArgument("-D" + Config.SYSTEM_KEY_LOGBACK_PATH_KEY + "=" + Config.SYSTEM_KEY_LOGBACK_PATH_VALUE);
+                cmdLine.addArgument("-D" + DataxUtils.EXEC_TIMESTAMP + "=" + msg.getExecEpochMilli());
+                for (String sysParam : this.getExtraJavaSystemPrams()) {
+                    cmdLine.addArgument(sysParam, false);
+                }
 
-            DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
+                cmdLine.addArgument("-classpath");
+                cmdLine.addArgument(getClasspath());
+                cmdLine.addArgument(getMainClassName());
+                addMainClassParams(msg, jobId, jobName, dataxName, cmdLine);
 
-            ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
-            DefaultExecutor executor = new DefaultExecutor();
-            executor.setWorkingDirectory(getWorkingDirectory());
+                DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
-            executor.setStreamHandler(new PumpStreamHandler(System.out));
-            executor.setExitValue(0);
-            executor.setWatchdog(watchdog);
-            String command = Arrays.stream(cmdLine.toStrings()).collect(Collectors.joining(" "));
-            logger.info("command:{}", command);
-            executor.execute(cmdLine, resultHandler);
+                ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
+                DefaultExecutor executor = new DefaultExecutor();
+                executor.setWorkingDirectory(getWorkingDirectory());
 
-            runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());
-            try {
-                int timeout = 5;
+                executor.setStreamHandler(new PumpStreamHandler(System.out));
+                executor.setExitValue(0);
+                executor.setWatchdog(watchdog);
+                String command = Arrays.stream(cmdLine.toStrings()).collect(Collectors.joining(" "));
+                logger.info("command:{}", command);
+                executor.execute(cmdLine, resultHandler);
 
-                // 等待5个小时
-                resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
+                runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());
+                try {
+                    int timeout = 5;
 
-                if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
-                    if ( //resultHandler.hasResult() &&
-                            resultHandler.getExitValue() != 0) {
-                        // it was killed on purpose by the watchdog
-                        if (resultHandler.getException() != null) {
-                            logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
-                            // throw new RuntimeException(command, resultHandler.getException());
-                            throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                    // 等待5个小时
+                    resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
+
+                    if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
+                        if ( //resultHandler.hasResult() &&
+                                resultHandler.getExitValue() != 0) {
+                            // it was killed on purpose by the watchdog
+                            if (resultHandler.getException() != null) {
+                                logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                                // throw new RuntimeException(command, resultHandler.getException());
+                                throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                            }
+                        }
+
+                        if (!resultHandler.hasResult()) {
+                            // 此处应该是超时了
+                            throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",job execute timeout,wait "
+                                    + "for " + timeout + " hours");
                         }
                     }
 
-                    if (!resultHandler.hasResult()) {
-                        // 此处应该是超时了
-                        throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",job execute timeout,wait "
-                                + "for " + timeout + " hours");
-                    }
+
+                } finally {
+                    runningTask.remove(jobId);
                 }
-
-
-            } finally {
-                runningTask.remove(jobId);
             }
-        }
+        });
+
     }
 
 

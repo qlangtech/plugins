@@ -34,6 +34,7 @@ import com.qlangtech.tis.dump.hive.HiveDBUtils;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.hdfs.impl.HdfsFileSystemFactory;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -246,10 +247,15 @@ public class DefaultHiveConnGetter extends ParamsConfig implements IHiveConnGett
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
         public DefaultDescriptor() {
             super();
             // this.registerSelectOptions(HiveFlatTableBuilder.KEY_FIELD_NAME, () -> TIS.getPluginStore(FileSystemFactory.class).getPlugins());
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.HiveMetaStore;
         }
 
         public boolean validateMetaStoreUrls(IFieldErrorHandler msgHandler, Context context, String fieldName, String metaUrls) {

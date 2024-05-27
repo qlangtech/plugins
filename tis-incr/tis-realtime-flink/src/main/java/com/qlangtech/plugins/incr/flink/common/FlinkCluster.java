@@ -27,6 +27,7 @@ import com.qlangtech.tis.config.flink.JobManagerAddress;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -116,7 +117,7 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
 
 
     @TISExtension
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> {
+    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements IEndTypeGetter {
 
         // private List<YarnConfig> installations;
         @Override
@@ -127,6 +128,11 @@ public class FlinkCluster extends ParamsConfig implements IFlinkCluster {
         public DefaultDescriptor() {
             super();
             // this.load();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Flink;
         }
 
         /**

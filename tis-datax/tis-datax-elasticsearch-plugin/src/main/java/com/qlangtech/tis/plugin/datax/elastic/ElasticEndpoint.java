@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.INotebookable;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.AuthToken;
 import com.qlangtech.tis.plugin.HttpEndpoint;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.aliyun.NoneToken;
 import com.qlangtech.tis.plugin.aliyun.UsernamePassword;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -76,8 +77,12 @@ public class ElasticEndpoint extends HttpEndpoint {
     }
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements INotebookable {
+    public static class DefaultDescriptor extends Descriptor<ParamsConfig> implements INotebookable, IEndTypeGetter {
 
+        @Override
+        public EndType getEndType() {
+            return EndType.ElasticSearch;
+        }
 
         /**
          * see org.apache.zeppelin.elasticsearch.ElasticsearchInterpreter

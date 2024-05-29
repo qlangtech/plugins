@@ -36,6 +36,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.order.center.IJoinTaskContext;
+import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.workflow.pojo.IWorkflow;
 import com.tis.hadoop.rpc.RpcServiceReference;
@@ -86,6 +87,12 @@ public class EmbeddedDataXJobSubmit extends DataXJobSubmit {
         try {
             List<HttpUtils.PostParam> params = Lists.newArrayList();
             params.add(new HttpUtils.PostParam(TriggerBuildResult.KEY_APPNAME, appName));
+
+            Optional<JobTrigger> partialTrigger = JobTrigger.getPartialTriggerFromContext(context);
+            partialTrigger.ifPresent((partial)->{
+                params.add(partial.getHttpPostSelectedTabsAsParam());
+            });
+
             return TriggerBuildResult.triggerBuild(module, context, params);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);

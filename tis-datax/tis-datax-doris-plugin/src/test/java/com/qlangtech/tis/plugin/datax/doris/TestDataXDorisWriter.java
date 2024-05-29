@@ -218,7 +218,7 @@ public class TestDataXDorisWriter extends TestCase {
         File createDDLDir = new File(".");
         File createDDLFile = null;
         try {
-            createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            createDDLFile = new File(createDDLDir, targetTableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(
                             DataXDorisWriter.class, "create_ddl_customer_order_relation.sql"), TisUTF8.get());

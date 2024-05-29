@@ -7,11 +7,13 @@ import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -74,7 +76,7 @@ public abstract class BasicTemplate {
             }
 
             @Override
-            public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx) {
+            public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx, Optional<JobTrigger> partialTrigger) {
                 return null;
             }
 

@@ -23,6 +23,7 @@ import com.alibaba.datax.plugin.ftp.common.FtpHelper;
 import com.alibaba.fastjson.JSONArray;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -138,7 +139,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
         final List<SelectedTab> tabs = selectedTabs;
         final int tabsLength = tabs.size();
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
-        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
+        ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
 
 //        FTPServer server = FTPServer.getServer(this.linker);
 
@@ -161,18 +162,18 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
                     return colsMeta.stream().collect(Collectors.toMap((c) -> c.getKey(), (c) -> c));
                 });
 
-                List<DataXCfgGenerator.DBDataXChildTask> childTasks
+                List<DBDataXChildTask> childTasks
                         = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
                 String childTask = tab.getName() + "_" + currentIndex;
 
-                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(StringUtils.EMPTY
+                childTasks.add(new DBDataXChildTask(StringUtils.EMPTY
                         , DataXDFSReaderContext.FTP_TASK, childTask));
 
                 return new DataXDFSSelectTableReaderContext(DataXDFSReaderWithMeta.this, tab, currentIndex);
             }
 
             @Override
-            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+            public Map<String, List<DBDataXChildTask>> getGroupedInfo() {
                 return groupedInfo;
             }
 

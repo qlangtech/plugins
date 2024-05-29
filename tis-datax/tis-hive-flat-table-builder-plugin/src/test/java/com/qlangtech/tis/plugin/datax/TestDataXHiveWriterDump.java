@@ -125,7 +125,7 @@ public class TestDataXHiveWriterDump {
         CreateTableSqlBuilder.CreateDDL createDDL = dataxWriter.generateCreateDDL(applicationTab);
         Assert.assertNotNull("createDDL can not be null", createDDL);
 
-        FileUtils.write(new File(ddlDir, applicationTab.getTo() + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX)
+        FileUtils.write(new File(ddlDir, applicationTab.getTo() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX)
                 , createDDL.getDDLScript(), TisUTF8.get());
 
         EasyMock.expect(processor.getDataxCreateDDLDir(null)).andReturn(ddlDir);

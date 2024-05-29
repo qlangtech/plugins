@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
@@ -60,6 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -141,12 +143,13 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
                     = reader.getSelectedTabs().stream()
                     .map((tab) -> (HudiSelectedTab) tab).collect(Collectors.toMap((tab) -> tab.getName(), (tab) -> tab));
 
-            DataXCfgGenerator.GenerateCfgs dataxCfgFile = dataXProcessor.getDataxCfgFileNames(null);
+            DataXCfgGenerator.GenerateCfgs dataxCfgFile
+                    = dataXProcessor.getDataxCfgFileNames(null, Optional.empty());
             Configuration cfg = null;
             Configuration paramCfg = null;
             String table = null;
             HudiTableMeta tableMeta = null;
-            for (DataXCfgGenerator.DataXCfgFile f : dataxCfgFile.getDataXCfgFiles()) {
+            for (DataXCfgFile f : dataxCfgFile.getDataXCfgFiles()) {
                 File file = f.getFile();
                 cfg = Configuration.from(file);
                 paramCfg = cfg.getConfiguration("job.content[0].writer.parameter");
@@ -180,9 +183,9 @@ public class HudiSinkFactory extends BasicTISSinkFactory<DTO> implements IStream
     @Override
     public IStreamTableMeta getStreamTableMeta(final String tableName) {
 
-        return new IStreamTableMeta(){
+        return new IStreamTableMeta() {
             @Override
-            public  List<IColMetaGetter> getColsMeta() {
+            public List<IColMetaGetter> getColsMeta() {
                 return getTableMeta(tableName).getRight().colMetas;
             }
         };

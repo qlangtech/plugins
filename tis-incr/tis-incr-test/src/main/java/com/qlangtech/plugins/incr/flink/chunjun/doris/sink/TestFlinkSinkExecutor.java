@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
@@ -246,7 +247,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             EasyMock.expect(dataxProcessor.getTabAlias(null)).andReturn(aliasMapper);
 
             File ddlDir = folder.newFolder("ddl");
-            String tabSql = tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
+            String tabSql = tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX;
 
 
             EasyMock.expect(dataxProcessor.getDataxCreateDDLDir(null)).andReturn(ddlDir).anyTimes();

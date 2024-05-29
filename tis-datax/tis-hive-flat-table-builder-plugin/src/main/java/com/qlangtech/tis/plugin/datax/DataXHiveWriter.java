@@ -23,6 +23,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
+import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -345,7 +346,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
 
     @Override
     public IRemoteTaskPostTrigger createPostTask(
-            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+            IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
 
         return new IRemoteTaskPostTrigger() {
 

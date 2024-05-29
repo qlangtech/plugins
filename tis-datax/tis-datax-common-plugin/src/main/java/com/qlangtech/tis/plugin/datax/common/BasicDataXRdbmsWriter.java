@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.common;
 import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -181,7 +182,7 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
 
 
                 File createDDL = new File(processor.getDataxCreateDDLDir(null)
-                        , tableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+                        , tableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
                 if (!createDDL.exists()) {
                     throw new IllegalStateException("create table script is not exist:" + createDDL.getAbsolutePath());
                 }

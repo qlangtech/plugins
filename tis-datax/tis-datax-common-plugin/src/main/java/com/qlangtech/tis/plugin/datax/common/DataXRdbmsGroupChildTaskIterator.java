@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.common;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -44,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator {
     AtomicInteger selectedTabIndex = new AtomicInteger(0);
     AtomicInteger taskIndex = new AtomicInteger(0);
-    ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
+    ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
     private final List<SelectedTab> tabs;
     final int selectedTabsSize;
     AtomicReference<Iterator<IDataSourceDumper>> dumperItRef = new AtomicReference<>();
@@ -53,7 +54,7 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
     private final BasicDataXRdbmsReader rdbmsReader;
 
     @Override
-    public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+    public Map<String, List<DBDataXChildTask>> getGroupedInfo() {
         return groupedInfo;
     }
 
@@ -117,9 +118,9 @@ public class DataXRdbmsGroupChildTaskIterator implements IGroupChildTaskIterator
         IDataSourceDumper dumper = dumperIterator.next();
         SelectedTab tab = tabs.get(selectedTabIndex.get() - 1);
         String childTask = tab.getName() + "_" + taskIndex.getAndIncrement();
-        List<DataXCfgGenerator.DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(tab.getName(),
+        List<DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(tab.getName(),
                 (tabname) -> Lists.newArrayList());
-        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(dumper.getDbHost(),
+        childTasks.add(new DBDataXChildTask(dumper.getDbHost(),
                 this.rdbmsReader.getDataSourceFactory().identityValue(), childTask));
         RdbmsReaderContext dataxContext = rdbmsReader.createDataXReaderContext(childTask, tab, dumper);
 

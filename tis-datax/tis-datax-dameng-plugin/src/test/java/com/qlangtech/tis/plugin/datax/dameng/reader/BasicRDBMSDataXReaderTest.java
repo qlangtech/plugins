@@ -81,7 +81,7 @@ public abstract class BasicRDBMSDataXReaderTest
                 = this.dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(tab));
 
         FileUtils.write(new File(ddlDir
-                , tab.getName() + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX), createDDL.getDDLScript());
+                , tab.getName() + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX), createDDL.getDDLScript());
 
 
         EasyMock.replay(processor);

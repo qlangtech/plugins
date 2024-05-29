@@ -33,6 +33,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.zeppelin.TISZeppelinClient;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -50,6 +51,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -206,7 +208,7 @@ public abstract class BasicDataSourceFactory extends DataSourceFactory
     }
 
     @Override
-    public void afterSaved() {
+    public void afterSaved(IPluginContext pluginContext, Optional<Context> context) {
         this.refresh();
     }
 

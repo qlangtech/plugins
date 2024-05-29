@@ -241,7 +241,7 @@ public class TISTableDumpProcessor implements MapReduceProcessor {
             if (cycleHook == IDataXBatchPost.LifeCycleHook.Post) {
                 //IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames
                 return dataXBatchPost.createPostTask(execContext, new DefaultTab(tableName),
-                        processor.getDataxCfgFileNames(null));
+                        processor.getDataxCfgFileNames(null,Optional.empty()));
             } else if (cycleHook == IDataXBatchPost.LifeCycleHook.Prep) {
                 return dataXBatchPost.createPreExecuteTask(execContext, new DefaultTab(tableName));
             } else {

@@ -5,6 +5,7 @@ package com.qlangtech.tis.plugin.datax;
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.datax.IDataXBatchPost;
+import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -143,7 +144,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
 
     @Override
     public IRemoteTaskPostTrigger createPostTask(
-            IExecChainContext execContext, ISelectedTab tab, DataXCfgGenerator.GenerateCfgs cfgFileNames) {
+            IExecChainContext execContext, ISelectedTab tab, IDataXGenerateCfgs cfgFileNames) {
 
         return new IRemoteTaskPostTrigger() {
             @Override

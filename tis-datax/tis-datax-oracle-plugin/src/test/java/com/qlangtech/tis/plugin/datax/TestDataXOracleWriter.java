@@ -161,7 +161,7 @@ public class TestDataXOracleWriter {
         File createDDLDir = new File(".");
         File createDDLFile = null;
         try {
-            createDDLFile = new File(createDDLDir, targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            createDDLFile = new File(createDDLDir, targetTableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile, ddl.getDDLScript(), TisUTF8.get());
 
             EasyMock.expect(dataXProcessor.getDataxCreateDDLDir(null)).andReturn(createDDLDir);

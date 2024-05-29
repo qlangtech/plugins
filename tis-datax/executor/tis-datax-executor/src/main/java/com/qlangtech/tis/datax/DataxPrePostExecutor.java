@@ -104,7 +104,8 @@ public class DataxPrePostExecutor {
             execContext.setResType(resType);
 
             if (IDataXBatchPost.KEY_POST.equalsIgnoreCase(lifecycleHookName)) {
-                hookTrigger = batchPost.createPostTask(execContext, tab, dataxProcessor.getDataxCfgFileNames(null));
+                hookTrigger = batchPost.createPostTask(
+                        execContext, tab, dataxProcessor.getDataxCfgFileNames(null,Optional.empty()));
             } else if (IDataXBatchPost.KEY_PREP.equalsIgnoreCase(lifecycleHookName)) {
                 hookTrigger = batchPost.createPreExecuteTask(execContext, tab);
             } else {

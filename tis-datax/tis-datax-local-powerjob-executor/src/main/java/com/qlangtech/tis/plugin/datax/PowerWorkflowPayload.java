@@ -15,6 +15,7 @@ import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.job.DataXJobWorker;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.datax.powerjob.PowerJobWrokerMemorySpec;
 import com.qlangtech.tis.plugin.datax.powerjob.TISPowerJobClient;
 import com.qlangtech.tis.plugin.datax.powerjob.WorkflowUnEffectiveJudge;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.powerjob.IDAGSessionSpec;
 import com.qlangtech.tis.powerjob.IDataFlowTopology;
 import com.qlangtech.tis.powerjob.SelectedTabTriggers;
@@ -187,8 +189,15 @@ public abstract class PowerWorkflowPayload {
         SelectedTabTriggers tabTriggers = null;
         PowerJobTskTriggers tskTriggers = null;
 
+        DataXCfgGenerator.GenerateCfgs cfgFileNames
+                = dataxProcessor.getDataxCfgFileNames(null, JobTrigger.getTriggerFromHttpParam(execChainContext));
+
         for (IDataxReader reader : dataxProcessor.getReaders(null)) {
             for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
+
+                if (!cfgFileNames.getTargetTabs().contains(selectedTab.getName())) {
+                    continue;
+                }
 
                 execChainContext = new PowerJobExecContext();
                 tskTriggers = new PowerJobTskTriggers();
@@ -202,9 +211,10 @@ public abstract class PowerWorkflowPayload {
 
 
                 DAGSessionSpec sessionSpec = new DAGSessionSpec();
+
                 tabTriggers = DAGSessionSpec.buildTaskTriggers(
                         execChainContext, dataxProcessor, submit, rpcStub, selectedTab, selectedTab.getName(),
-                        sessionSpec);
+                        sessionSpec, cfgFileNames);
 
                 selectedTabTriggers.put(selectedTab, tabTriggers);
             }

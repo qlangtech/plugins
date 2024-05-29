@@ -27,6 +27,7 @@ import com.qlangtech.tis.config.hive.IHiveConn;
 import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.datax.IDataXBatchPost;
+import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -313,7 +314,7 @@ public class DataXHudiWriter extends BasicFSWriter implements KeyedPluginStore.I
 
     @Override
     public IRemoteTaskPostTrigger createPostTask(IExecChainContext execContext, ISelectedTab tab,
-                                                         DataXCfgGenerator.GenerateCfgs genCfg) {
+                                                 IDataXGenerateCfgs genCfg) {
 
         //        if (generateCfgs == null) {
         //            generateCfgs = new AtomicReference<>();

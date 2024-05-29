@@ -300,7 +300,7 @@ public class TestDataXHudiWriter {
         File createDDLDir = folder.newFolder();
         File createDDLFile = null;
         try {
-            createDDLFile = new File(createDDLDir, HudiWriter.targetTableName + IDataxProcessor.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
+            createDDLFile = new File(createDDLDir, HudiWriter.targetTableName + DataXCfgFile.DATAX_CREATE_DDL_FILE_NAME_SUFFIX);
             FileUtils.write(createDDLFile
                     , com.qlangtech.tis.extension.impl.IOUtils.loadResourceFromClasspath(DataXHudiWriter.class
                             , "create_ddl_customer_order_relation.sql"), TisUTF8.get());

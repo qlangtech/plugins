@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.resmatcher;
 
 import com.alibaba.datax.plugin.ftp.common.FtpHelper;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IDataxReaderContext;
@@ -129,7 +130,7 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
         final List<ISelectedTab> tabs = dfsReader.getSelectedTabs();
         final int tabsLength = tabs.size();
         AtomicInteger selectedTabIndex = new AtomicInteger(0);
-        ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
+        ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
 
 //        FTPServer server = FTPServer.getServer(this.linker);
 
@@ -152,18 +153,18 @@ public class MetaAwareDFSResMatcher extends BasicDFSResMatcher {
                     return colsMeta.stream().collect(Collectors.toMap((c) -> c.getKey(), (c) -> c));
                 });
 
-                List<DataXCfgGenerator.DBDataXChildTask> childTasks
+                List<DBDataXChildTask> childTasks
                         = groupedInfo.computeIfAbsent(tab.getName(), (tabname) -> Lists.newArrayList());
                 String childTask = tab.getName() + "_" + currentIndex;
 
-                childTasks.add(new DataXCfgGenerator.DBDataXChildTask(StringUtils.EMPTY
+                childTasks.add(new DBDataXChildTask(StringUtils.EMPTY
                         , DataXDFSReaderContext.FTP_TASK, childTask));
 
                 return new DataXDFSSelectTableReaderContext(dfsReader, tab, currentIndex);
             }
 
             @Override
-            public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+            public Map<String, List<DBDataXChildTask>> getGroupedInfo() {
                 return groupedInfo;
             }
 

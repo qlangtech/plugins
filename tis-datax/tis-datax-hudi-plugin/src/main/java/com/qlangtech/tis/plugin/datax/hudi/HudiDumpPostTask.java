@@ -29,6 +29,7 @@ import com.qlangtech.tis.config.hive.IHiveConnGetter;
 import com.qlangtech.tis.config.spark.ISparkConnGetter;
 import com.qlangtech.tis.config.yarn.IYarnConfig;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -81,13 +82,13 @@ public class HudiDumpPostTask implements IRemoteTaskPostTrigger {
     private final ISparkConnGetter sparkConnGetter;
     private final IHiveConnGetter hiveConnMeta;
     private final DataXHudiWriter hudiWriter;
-    private final DataXCfgGenerator.GenerateCfgs generateCfgs;
+    private final IDataXGenerateCfgs generateCfgs;
     private final IExecChainContext execContext;
 
 
     private SparkAppHandle sparkAppHandle;
 
-    public HudiDumpPostTask(IExecChainContext execContext, HudiSelectedTab hudiTab, DataXHudiWriter hudiWriter, DataXCfgGenerator.GenerateCfgs generateCfgs) {
+    public HudiDumpPostTask(IExecChainContext execContext, HudiSelectedTab hudiTab, DataXHudiWriter hudiWriter, IDataXGenerateCfgs generateCfgs) {
         if (hudiTab == null) {
             throw new IllegalArgumentException("param tableName can not be empty");
         }

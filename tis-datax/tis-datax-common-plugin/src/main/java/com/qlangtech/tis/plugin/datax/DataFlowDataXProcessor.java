@@ -47,6 +47,7 @@ import com.qlangtech.tis.plugin.ds.AdapterSelectedTab;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.SqlTaskNodeMeta;
 import com.qlangtech.tis.sql.parser.TopologyDir;
@@ -60,6 +61,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -267,8 +269,8 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
     }
 
     @Override
-    public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx) {
-        return DataxProcessor.getDataxCfgFileNames(pluginCtx, this);
+    public DataXCfgGenerator.GenerateCfgs getDataxCfgFileNames(IPluginContext pluginCtx, Optional<JobTrigger> partialTrigger) {
+        return DataxProcessor.getDataxCfgFileNames(pluginCtx, partialTrigger, this);
     }
 
 

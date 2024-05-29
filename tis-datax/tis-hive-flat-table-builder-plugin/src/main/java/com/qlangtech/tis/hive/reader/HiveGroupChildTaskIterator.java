@@ -20,6 +20,7 @@ package com.qlangtech.tis.hive.reader;
 
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -39,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
 
     private final AtomicInteger taskIndex = new AtomicInteger(0);
-    ConcurrentHashMap<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
+    ConcurrentHashMap<String, List<DBDataXChildTask>> groupedInfo = new ConcurrentHashMap();
     private final Iterator<ISelectedTab> tabs;
 
     private ISelectedTab current;
@@ -65,7 +66,7 @@ public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
     }
 
     @Override
-    public Map<String, List<DataXCfgGenerator.DBDataXChildTask>> getGroupedInfo() {
+    public Map<String, List<DBDataXChildTask>> getGroupedInfo() {
         return groupedInfo;
 
 
@@ -76,11 +77,11 @@ public class HiveGroupChildTaskIterator implements IGroupChildTaskIterator {
     public IDataxReaderContext next() {
 
         HiveDataxReaderContext readerContext = new HiveDataxReaderContext(current, taskIndex.getAndIncrement());
-        List<DataXCfgGenerator.DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(current.getName(),
+        List<DBDataXChildTask> childTasks = groupedInfo.computeIfAbsent(current.getName(),
                 (tabName) -> {
             return Lists.newArrayList();
         });
-        childTasks.add(new DataXCfgGenerator.DBDataXChildTask(readerContext.getReaderContextId(),
+        childTasks.add(new DBDataXChildTask(readerContext.getReaderContextId(),
                 readerContext.getReaderContextId(), readerContext.getTaskName()));
         return readerContext;
     }

@@ -37,6 +37,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.BaseSubFormProperties;
 import com.qlangtech.tis.extension.impl.IOUtils;
@@ -256,9 +257,9 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
         @Override
         public SelectedTabExtend getCompanionPlugin(UploadPluginMeta pluginMeta) {
-            String tabName = pluginMeta.getExtraParam(IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE);
+            String tabName = pluginMeta.getExtraParam(SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE);
             if (StringUtils.isEmpty(tabName)) {
-                throw new IllegalArgumentException("param:" + IPropertyType.SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE + " is not exsit in pluginMeta");
+                throw new IllegalArgumentException("param:" + SubFormFilter.PLUGIN_META_SUBFORM_DETAIL_ID_VALUE + " is not exsit in pluginMeta");
             }
             return SelectedTabExtend.getBatchPluginStore(pluginMeta.getPluginContext(),
                     pluginMeta.getDataXName(true)).find(tabName, false);
@@ -289,7 +290,7 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
         @Override
         public boolean validateSubFormItems(IControlMsgHandler msgHandler, Context context,
-                                            BaseSubFormProperties props, IPropertyType.SubFormFilter subFormFilter,
+                                            BaseSubFormProperties props, SubFormFilter subFormFilter,
                                             AttrVals formData) {
             // 校验一次提交的全部selectForm
             return true;

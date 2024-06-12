@@ -24,6 +24,7 @@ import com.qlangtech.tis.extension.Describable;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.SubFormFilter;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Map;
@@ -72,7 +73,7 @@ public abstract class UpdateMode implements Describable<UpdateMode> {
             return StringUtils.capitalize(writeMode.getMode());
         }
 
-        public final PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+        public final PluginFormProperties getPluginFormPropertyTypes(Optional<SubFormFilter> subFormFilter) {
             return super.getPluginFormPropertyTypes(Optional.empty());
         }
     }

@@ -62,7 +62,7 @@ public class TestSelectedTabs {
     }
 
     public static <T extends SelectedTab> List<T> createSelectedTabs(int count, Class<T> clazz,
-                                                                     Optional<CMeta.ElementCreatorFactory> elementCreator, Consumer<T> postProcess) {
+                                                                     Optional<ElementCreatorFactory<CMeta>> elementCreator, Consumer<T> postProcess) {
 
 
         try {

@@ -30,6 +30,7 @@ import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.fs.IPath;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.PluginFieldValidators;
@@ -208,7 +209,7 @@ public class DataXDFSReaderWithMeta extends AbstractDFSReader {
     public static final Pattern FTP_FILE_PATTERN
             = Pattern.compile(".+?([^/]+)" + IOUtils.DIR_SEPARATOR + StringUtils.replace(FtpHelper.KEY_META_FILE, ".", "\\."));
 
-    public static List<String> getDFSFiles(IPropertyType.SubFormFilter filter) {
+    public static List<String> getDFSFiles(SubFormFilter filter) {
         AbstractDFSReader reader = DataxReader.getDataxReader(filter);
         return getFTPFiles(reader).stream().map((meta) -> meta.entityName).collect(Collectors.toList());
     }

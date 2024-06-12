@@ -110,7 +110,8 @@ public class TISPowerJobClient extends PowerJobClient {
         try {
             String post = (String) postHAMethod.invoke(this, OpenAPIConstant.FETCH_WORKFLOW, body);
             //  String post = postHA(OpenAPIConstant.FETCH_WORKFLOW, body);
-            return JSON.parseObject(post, WF_TIS_RESULT_TYPE);
+            ResultDTO<TISWorkflowInfoDTO> resultDTO = JSON.parseObject(post, WF_TIS_RESULT_TYPE);
+            return resultDTO.isSuccess() ? ResultDTO.success(resultDTO.getData()) : ResultDTO.failed(resultDTO.getMessage());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

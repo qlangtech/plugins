@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.manage.common.CenterResource;
@@ -68,9 +69,9 @@ public class TestDataFlowDataXProcessor extends TestCase {
 
         DataXCfgGenerator.GenerateCfgs generateCfgs = gen.startGenerateCfg(dataxCfgDir);
 
-        List<DataXCfgGenerator.DataXCfgFile> cfgFiles = generateCfgs.getDataXCfgFiles();
+        List<DataXCfgFile> cfgFiles = generateCfgs.getDataXCfgFiles();
         Assert.assertEquals(2, cfgFiles.size());
-        for (DataXCfgGenerator.DataXCfgFile f : cfgFiles) {
+        for (DataXCfgFile f : cfgFiles) {
             File target = f.getFile();
             Assert.assertTrue(target.getAbsolutePath(), target.exists());
         }

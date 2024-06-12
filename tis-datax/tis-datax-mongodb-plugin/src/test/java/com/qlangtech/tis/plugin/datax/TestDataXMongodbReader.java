@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.ElementCreatorFactory;
 import com.qlangtech.tis.plugin.ds.JDBCTypes;
 import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.mangodb.TestMangoDBDataSourceFactory;
@@ -186,7 +187,7 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
     public void testParseColsHtmlPost() {
 
-        Optional<CMeta.ElementCreatorFactory> mongoElementCreator = Optional.of(new MongoCMetaCreatorFactory());
+        ElementCreatorFactory mongoElementCreator = new MongoCMetaCreatorFactory();
         IControlMsgHandler msgHandler = mock("msgHandler", IControlMsgHandler.class);
         Context context = mock("context", Context.class);
 
@@ -198,8 +199,8 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
                 , "mongo_reader_mulit_select_cols_with_docfield_split_metas_jsonpath_empty.json"));
 
         this.replay();
-        CMeta.ParsePostMCols parsePostMCols
-                = PluginExtraProps.parsePostMCols(mongoElementCreator, msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
+        CMeta.ParsePostMCols<CMeta> parsePostMCols
+                = mongoElementCreator.parsePostMCols(null , msgHandler, context, MultiItemsViewType.keyColsMeta, colsJson);
         Assert.assertNotNull(parsePostMCols);
         Assert.assertFalse(parsePostMCols.validateFaild);
         Assert.assertEquals(5, parsePostMCols.writerCols.size());
@@ -244,11 +245,11 @@ public class TestDataXMongodbReader extends TestCase implements TISEasyMock {
 
         });
 
-        Optional<CMeta.ElementCreatorFactory> metaCreator = fieldProp.getCMetaCreator();
-        Assert.assertTrue(metaCreator.isPresent());
-        List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, metaCreator, (tab) -> {
+        ElementCreatorFactory metaCreator = fieldProp.getCMetaCreator();
+      //  Assert.assertTrue(metaCreator.isPresent());
+        List<SelectedTab> tabs = TestSelectedTabs.createSelectedTabs(1, SelectedTab.class, Optional.of((ElementCreatorFactory<CMeta>)metaCreator) , (tab) -> {
 
-            MongoCMeta addCol = (MongoCMeta) CMeta.create(metaCreator, DOC_TYPE_FIELD, JDBCTypes.LONGNVARCHAR);
+            MongoCMeta addCol = (MongoCMeta) CMeta.create(Optional.of( metaCreator), DOC_TYPE_FIELD, JDBCTypes.LONGNVARCHAR);
             addCol.setDisable(disableDocTypeField);
             addCol.setMongoFieldType(BsonType.DOCUMENT);
             List<MongoCMeta.MongoDocSplitCMeta> docFieldSplitMetas = Lists.newArrayList();

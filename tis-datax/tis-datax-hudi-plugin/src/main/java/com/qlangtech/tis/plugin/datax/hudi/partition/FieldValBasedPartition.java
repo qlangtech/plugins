@@ -24,6 +24,7 @@ import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
@@ -82,7 +83,7 @@ public class FieldValBasedPartition extends HudiTablePartition {
         }
 
         @Override
-        public PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+        public PluginFormProperties getPluginFormPropertyTypes(Optional<SubFormFilter> subFormFilter) {
             return super.getPluginFormPropertyTypes(Optional.empty());
         }
 

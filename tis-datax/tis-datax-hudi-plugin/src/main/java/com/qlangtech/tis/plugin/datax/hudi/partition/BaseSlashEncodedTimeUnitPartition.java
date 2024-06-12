@@ -23,6 +23,7 @@ import com.alibaba.datax.plugin.writer.hudi.IPropertiesBuilder;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
 import com.qlangtech.tis.extension.PluginFormProperties;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.hudi.IDataXHudiWriter;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -115,7 +116,7 @@ public abstract class BaseSlashEncodedTimeUnitPartition extends HudiTablePartiti
         }
 
         @Override
-        public final PluginFormProperties getPluginFormPropertyTypes(Optional<IPropertyType.SubFormFilter> subFormFilter) {
+        public final PluginFormProperties getPluginFormPropertyTypes(Optional<SubFormFilter> subFormFilter) {
             return super.getPluginFormPropertyTypes(Optional.empty());
         }
 

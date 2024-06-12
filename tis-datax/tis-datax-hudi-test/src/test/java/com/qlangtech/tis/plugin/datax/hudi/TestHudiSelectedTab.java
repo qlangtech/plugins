@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -86,7 +87,7 @@ public class TestHudiSelectedTab {
         UploadPluginMeta pmeta = UploadPluginMeta.parse(
                 "dataxReader:require,targetDescriptorName_MySQL,targetDescriptorImpl_DataxMySQLReader,subFormFieldName_selectedTabs,dataxName_hudi");
 
-        Optional<IPropertyType.SubFormFilter> subFormFilter = pmeta.getSubFormFilter();
+        Optional<SubFormFilter> subFormFilter = pmeta.getSubFormFilter();
         Assert.assertTrue(subFormFilter.isPresent());
 
         EasyMock.replay(fieldErrorHandler, pluginContext, context);

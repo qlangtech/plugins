@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.plugin.writer.hdfswriter.HdfsColMeta;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -177,7 +178,7 @@ public class TestDataXOracleWriter {
             OracleDSFactoryContainer.oracleDS.getDbConfig().vistDbURL(false, (a, b, url) -> {
                 jdbcUrl[0] = url;
             });
-            DataXCfgJson wjson = DataXCfgJson.path("oracle_writer_real_dump.json");
+            DataXCfgJson wjson = DataXCfgJson.path(TestDataXOracleWriter.class,"oracle_writer_real_dump.json");
             wjson.addCfgSetter((cfg) -> {
                 cfg.set("parameter.connection[0].jdbcUrl", jdbcUrl[0]);
                 return cfg;

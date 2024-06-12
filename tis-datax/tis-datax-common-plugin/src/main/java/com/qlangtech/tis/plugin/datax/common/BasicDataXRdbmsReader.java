@@ -23,6 +23,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.IPropertyType;
+import com.qlangtech.tis.extension.SubFormFilter;
 import com.qlangtech.tis.lang.TisException;
 import com.qlangtech.tis.plugin.KeyedPluginStore;
 import com.qlangtech.tis.plugin.annotation.FormField;
@@ -239,7 +240,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         }
 
         @Override
-        public boolean validate(IFieldErrorHandler msgHandler, Optional<IPropertyType.SubFormFilter> subFormFilter,
+        public boolean validate(IFieldErrorHandler msgHandler, Optional<SubFormFilter> subFormFilter,
                                 Context context, String fieldName, List<FormFieldType.SelectedItem> items) {
 
             return true;

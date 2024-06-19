@@ -68,7 +68,7 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-            IFlinkColCreator<FlinkCol> flinkColCreator = null;
+            IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
             return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor, flinkColCreator);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);

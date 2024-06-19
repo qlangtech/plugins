@@ -18,10 +18,10 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.dameng.source;
 
-import com.qlangtech.tis.extension.TISExtension;
-import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -33,7 +33,12 @@ public class ChunjunDamengSourceFactory extends ChunjunSourceFactory {
         return new DamengSourceFunction(this);
     }
 
-   // @TISExtension
+    @Override
+    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator() {
+        throw new UnsupportedOperationException();
+    }
+
+    // @TISExtension
     public static class DftDesc extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {

@@ -18,14 +18,17 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.oracle;
 
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.ververica.cdc.connectors.base.options.StartupOptions;
 
 import java.util.Objects;
@@ -42,6 +45,11 @@ public class FlinkCDCOracleSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public String startupOptions;
+
+    @Override
+    public final IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+        return AbstractRowDataMapper::mapFlinkCol;
+    }
 
     StartupOptions getStartupOptions() {
         switch (startupOptions) {

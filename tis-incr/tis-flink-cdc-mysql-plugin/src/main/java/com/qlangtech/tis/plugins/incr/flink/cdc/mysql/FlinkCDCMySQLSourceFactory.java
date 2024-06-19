@@ -23,6 +23,7 @@ import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDbs;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -36,6 +37,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMysqlSourceFunction.MySQLCDCTypeVisitor;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.FlinkCDCMysqlSourceFunction.MySQLReaderSourceCreator;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -46,6 +48,7 @@ import com.ververica.cdc.connectors.mysql.source.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.flink.table.api.ValidationException;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 
 import java.util.List;
 import java.util.Objects;
@@ -61,6 +64,15 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions startupOptions;
+
+
+    @Override
+    public IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+        final IFlinkColCreator flinkColCreator = (meta, colIndex) -> {
+            return meta.getType().accept(new MySQLCDCTypeVisitor(meta, colIndex));
+        };
+        return flinkColCreator;
+    }
 
     /**
      * binlog监听在独立的slot中执行

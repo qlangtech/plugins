@@ -76,9 +76,8 @@ public class FlinkCDCPostgreSQLSourceFunction implements IMQListener<JobExecutio
             if (StringUtils.isEmpty(schemaSupported.getDBSchema())) {
                 throw new IllegalStateException("dsFactory:" + dsFactory.dbName + " relevant dbSchema can not be null");
             }
-            IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
-                return meta.getType().accept(new PGCDCTypeVisitor(meta, colIndex));
-            };
+
+            final IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
 
             List<ReaderSource> readerSources = SourceChannel.getSourceFunction(
                     dsFactory, tabs, (dbHost, dbs, tbs, debeziumProperties) -> {

@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.chunjun.oracle.source;
 
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.source.ChunjunSourceFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
@@ -33,7 +34,12 @@ public class ChunjunOracleSourceFactory extends ChunjunSourceFactory {
         return new OracleSourceFunction(this);
     }
 
-    @TISExtension
+    @Override
+    public <FlinkColType> IFlinkColCreator<FlinkColType> createFlinkColCreator() {
+        throw new UnsupportedOperationException();
+    }
+
+    // @TISExtension
     public static class DftDesc extends BaseChunjunDescriptor {
         @Override
         public IEndTypeGetter.EndType getEndType() {

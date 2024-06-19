@@ -18,8 +18,11 @@
 
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.plugins.incr.flink.cdc.postgresql.PGDTOColValProcess.PGCDCTypeVisitor;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.extension.TISExtension;
@@ -49,6 +52,14 @@ public class FlinkCDCPostreSQLSourceFactory extends MQListenerFactory {
 //    The name of the Postgres logical decoding plug-in installed on the server. Supported
 //         * values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming,
 //            * wal2json_rds_streaming and pgoutput.
+
+    @Override
+    public  IFlinkColCreator<FlinkCol> createFlinkColCreator() {
+        IFlinkColCreator<FlinkCol> flinkColCreator = (meta, colIndex) -> {
+            return meta.getType().accept(new PGCDCTypeVisitor(meta, colIndex));
+        };
+        return flinkColCreator;
+    }
 
     /**
      * The name of the Postgres logical decoding plug-in installed on the server. Supported values are decoderbufs, wal2json, wal2json_rds, wal2json_streaming, wal2json_rds_streaming and pgoutput.

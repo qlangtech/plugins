@@ -47,7 +47,6 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
-import com.qlangtech.tis.plugin.incr.CreatedSinkFunction;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.tis.realtime.transfer.DTO;

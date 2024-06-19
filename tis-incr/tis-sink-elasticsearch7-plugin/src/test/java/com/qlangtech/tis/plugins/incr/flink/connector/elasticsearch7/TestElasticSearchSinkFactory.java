@@ -23,6 +23,7 @@ import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
@@ -170,9 +171,11 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         this.replay();
 
+        IFlinkColCreator flinkColCreator = null;
+
         ElasticSearchSinkFactory esSinkFactory = new ElasticSearchSinkFactory();
         Map<TableAlias, TabSinkFunc<RowData>>
-                sinkFuncs = esSinkFactory.createSinkFunction(dataxProcessor);
+                sinkFuncs = esSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
         Assert.assertTrue("sinkFuncs must > 0", sinkFuncs.size() > 0);
 
         // StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -235,7 +238,7 @@ public class TestElasticSearchSinkFactory<C extends AutoCloseable>
 
         verifyProducedSinkData(client, index);
 
-      //  client.close();
+        //  client.close();
     }
 
     /**

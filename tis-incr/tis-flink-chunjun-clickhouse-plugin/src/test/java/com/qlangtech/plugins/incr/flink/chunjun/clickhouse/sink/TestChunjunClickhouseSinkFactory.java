@@ -21,6 +21,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.TableAlias;
@@ -155,7 +156,8 @@ public class TestChunjunClickhouseSinkFactory
             SelectedTab totalpayinfo = mock(tableName, SelectedTab.class);
             SinkTabPropsExtends sinkExt = new SinkTabPropsExtends();
             sinkExt.tabName = tableName;
-            sinkExt.uniqueKey = Collections.singletonList(colId);
+            totalpayinfo.primaryKeys = Collections.singletonList(colId);
+            // sinkExt.uniqueKey =
             // ReplaceType replaceMode = new ReplaceType();
             // replaceMode.updateKey = Collections.singletonList(colId);
             InsertType insertType = new InsertType();
@@ -225,9 +227,9 @@ public class TestChunjunClickhouseSinkFactory
             clickHouseSinkFactory.batchSize = 100;
             clickHouseSinkFactory.parallelism = 1;
             clickHouseSinkFactory.semantic = "at-least-once";
-
+            IFlinkColCreator flinkColCreator = null;
             Map<TableAlias, TabSinkFunc<RowData>>
-                    sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor);
+                    sinkFuncs = clickHouseSinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
             Assert.assertTrue(sinkFuncs.size() > 0);
 
             StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -274,7 +276,7 @@ public class TestChunjunClickhouseSinkFactory
             });
 
             try {
-                try (DataSourceMeta.JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0])) {
+                try (DataSourceMeta.JDBCConnection conn = sourceFactory.getConnection(jdbcUrls[0], false)) {
                     Statement statement = conn.createStatement();
                     //+ " where id='" + colIdVal + "'"
                     ResultSet resultSet = statement.executeQuery("select * from " + jdbcUrls[1] + "." + tableName);

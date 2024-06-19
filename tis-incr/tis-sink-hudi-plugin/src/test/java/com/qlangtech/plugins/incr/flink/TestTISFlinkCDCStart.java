@@ -23,6 +23,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
@@ -89,7 +90,6 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
     public static void beforeClass() {
         CenterResource.setNotFetchFromCenterRepository();
     }
-
 
 
     /**
@@ -195,7 +195,7 @@ public class TestTISFlinkCDCStart //extends AbstractTestBase
         Map<TableAlias, TabSinkFunc<DTO>> sinkFuncts = Collections.singletonMap(new TableAlias(table1), null);
         HudiSinkFactory sinkFactory = new HudiSinkFactory() {
             @Override
-            public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
+            public Map<TableAlias, TabSinkFunc<DTO>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
                 //  return super.createSinkFunction(dataxProcessor);
                 return sinkFuncts;
             }

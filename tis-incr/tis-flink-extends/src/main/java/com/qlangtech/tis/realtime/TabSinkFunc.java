@@ -41,8 +41,6 @@ import java.util.List;
  * @see com.qlangtech.tis.realtime.transfer.DTO
  **/
 public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
-    // private transient final Map<TableAlias, SinkFunction<TRANSFER_OBJ>> sinkFunction;
-    // public transient final StreamExecutionEnvironment env;
 
     private transient List<String> primaryKeys;
     protected transient final SinkFunction<SINK_TRANSFER_OBJ> sinkFunction;

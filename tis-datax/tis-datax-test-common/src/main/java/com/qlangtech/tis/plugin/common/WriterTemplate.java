@@ -168,7 +168,7 @@ public class WriterTemplate {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
             @Override
-            protected String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
+            protected String getTemplateContent(IDataxReaderContext readerContext,IDataxReader reader, IDataxWriter writer) {
                 return dataXWriter.getTemplate();
             }
             //            @Override

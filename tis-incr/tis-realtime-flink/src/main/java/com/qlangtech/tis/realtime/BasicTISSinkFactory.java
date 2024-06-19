@@ -19,10 +19,14 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -32,8 +36,13 @@ import org.apache.flink.table.data.RowData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import com.qlangtech.tis.plugin.incr.CreatedSinkFunction;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -43,7 +52,8 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     private static final Logger logger = LoggerFactory.getLogger(BasicTISSinkFactory.class);
 
     @Override
-    public abstract Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor);
+    public abstract Map<TableAlias, TabSinkFunc<TRANSFER_OBJ>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator);
+
 
     /**
      * (RowData,DTO) -> DTO
@@ -80,17 +90,22 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      */
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
 
-        public RowDataSinkFunc(TableAlias tab
+        private final Optional<RecordTransformerRules> transformers;
+        private final IFlinkColCreator<FlinkCol> flinkColCreator;
+
+        public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
                 , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
-                , boolean supportUpset, int sinkTaskParallelism) {
-            this(tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism);
+                , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
+            this(dataXName, tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism, flinkColCreator);
         }
 
-        public RowDataSinkFunc(TableAlias tab
+        public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
                 , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, final List<FlinkCol> sourceColsMeta, List<FlinkCol> sinkColsMeta
-                , boolean supportUpset, int sinkTaskParallelism) {
+                , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
             super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
-
+            this.transformers
+                    = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(dataXName, tab.getFrom()));
+            this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"
                         , new FilterUpdateBeforeEvent.RowDataFilter());
@@ -104,15 +119,26 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
 
         @Override
         protected DataStream<RowData> streamMap(DTOStream sourceStream) {
+
+            DataStream<RowData> result = null;
             if (sourceStream.clazz == DTO.class) {
-                return sourceStream.getStream().map(new DTO2RowDataMapper(this.sourceColsMeta))
+                result = sourceStream.getStream().map(new DTO2RowDataMapper(this.sourceColsMeta))
                         .name(tab.getFrom() + "_dto2Rowdata")
                         .setParallelism(this.sinkTaskParallelism);
             } else if (sourceStream.clazz == RowData.class) {
                 logger.info("create stream directly, source type is RowData");
-                return sourceStream.getStream();
+                result = sourceStream.getStream();
             }
-            throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
+            if (result == null) {
+                throw new IllegalStateException("not illegal source Stream class:" + sourceStream.clazz);
+            }
+
+            if (transformers.isPresent()) {
+                return result.map(new RowDataTransformerMapper(this.sourceColsMeta, transformers.get(), this.flinkColCreator))
+                        .name(tab.getFrom() + "_transformer").setParallelism(this.sinkTaskParallelism);
+            } else {
+                return result;
+            }
         }
     }
 }

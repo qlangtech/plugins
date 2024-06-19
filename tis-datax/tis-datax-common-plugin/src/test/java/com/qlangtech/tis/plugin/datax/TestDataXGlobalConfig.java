@@ -22,6 +22,7 @@ import com.alibaba.fastjson.JSON;
 import com.qlangtech.tis.config.ParamsConfig;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.impl.IOUtils;
+import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
 import junit.framework.TestCase;
 
@@ -47,8 +48,9 @@ public class TestDataXGlobalConfig extends TestCase {
 
        // System.out.println(descriptorsJSON.getDescriptorsJSON().toJSONString());
 
-        assertEquals(JSON.parseObject(IOUtils.loadResourceFromClasspath(TestDataXGlobalConfig.class, "dataXGlobalConfig-descriptor-assert.json")).toJSONString()
-                , descriptorsJSON.getDescriptorsJSON().toJSONString());
+        assertEquals(JSON.parseObject(IOUtils.loadResourceFromClasspath(TestDataXGlobalConfig.class
+                        , "dataXGlobalConfig-descriptor-assert.json")).toJSONString()
+                , JsonUtil.toString( descriptorsJSON.getDescriptorsJSON()));
 
     }
 

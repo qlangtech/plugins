@@ -142,7 +142,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
         String colName = null;
         dsFactory = getDorisSourceFactory(feServiceHost, jdbcPort, loadPort);
         try (DataSourceMeta.JDBCConnection conn = dsFactory.getConnection(
-                dsFactory.buidJdbcUrl(null, feServiceHost, null))) {
+                dsFactory.buidJdbcUrl(null, feServiceHost, null), false)) {
 
             try (Statement statement = conn.createStatement()) {
 //                System.out.println("beContainerName:" + beContainerName);
@@ -201,7 +201,6 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
 //    public void afterRun() throws Exception {
 //        httpStub.stop();
 //    }
-
 
 
     /**
@@ -264,7 +263,7 @@ public class TestChunjunDorisSinkFactory extends TestFlinkSinkExecutor {
             tableRegisterHandle.setSourceStreamTableMeta(new IStreamTableMeataCreator.ISourceStreamMetaCreator() {
                 @Override
                 public ISelectedTab getSelectedTab(String tableName) {
-                   throw new UnsupportedOperationException(tableName);
+                    throw new UnsupportedOperationException(tableName);
                 }
 
                 @Override

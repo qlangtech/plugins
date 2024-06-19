@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
@@ -46,6 +47,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
+import com.qlangtech.tis.plugin.incr.CreatedSinkFunction;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
 import com.qlangtech.tis.realtime.transfer.DTO;
@@ -586,9 +588,18 @@ public abstract class CUDCDCTestSuit {
         }
 
         @Override
-        public Map<TableAlias, SinkFunction<DTO>> createSinkFunction(IDataxProcessor dataxProcessor) {
-            return Collections.emptyMap();
+        public Map<TableAlias, SinkFunction<DTO>>  createSinkFunction(
+                IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
+            Map<TableAlias, SinkFunction<DTO>> createdSinkFunc = Maps.newHashMap();
+            return createdSinkFunc;
         }
+
+//        public CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator<FlinkCol> flinkColCreator) {
+//
+//            CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createdSinkFunc = new CreatedSinkFunction<>();
+//
+//            return createdSinkFunc;
+//        }
     }
 
 

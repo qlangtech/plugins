@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.table;
 
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -76,9 +77,10 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
         }
         ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(dataXName);
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
-
+        //FIXME
+        IFlinkColCreator<FlinkCol> srcColCreator = null;
         BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
-                , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false);
+                , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false, srcColCreator);
         return new ChunjunStreamTableSink(false, endType, rowDataSinkFunc);
     }
 

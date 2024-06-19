@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.common;
 import com.alibaba.datax.common.element.ColumnCast;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.core.job.JobContainer;
+import com.alibaba.datax.core.util.container.CoreConstant;
 import com.alibaba.datax.core.util.container.JarLoader;
 import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.datax.plugin.writer.streamwriter.Key;
@@ -35,12 +36,14 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import junit.framework.TestCase;
+import org.apache.commons.lang3.tuple.Pair;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -92,6 +95,7 @@ public class ReaderTemplate {
             @Override
             public void startScanDependency() {
             }
+
             @Override
             public String getTemplate() {
                 return null;
@@ -138,8 +142,20 @@ public class ReaderTemplate {
 //        realExecute(readerJson, dataxReader);
 //    }
 
-
     public static void realExecute(final String dataXName, final Configuration readerCfg, File writeFile, IDataXPluginMeta dataxReader) throws IllegalAccessException {
+        realExecute(dataXName, readerCfg, writeFile, dataxReader, Optional.empty());
+    }
+
+    /**
+     * @param dataXName
+     * @param readerCfg
+     * @param writeFile
+     * @param dataxReader
+     * @param transformer Optional<Pair<String, List<String>>> key: tableName 用于获取Transformer udf集合，value：新增字段序列
+     * @throws IllegalAccessException
+     */
+    public static void realExecute(final String dataXName, final Configuration readerCfg
+            , File writeFile, IDataXPluginMeta dataxReader, Optional<Pair<String, List<String>>> transformer) throws IllegalAccessException {
         Objects.requireNonNull(readerCfg);
         final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
@@ -153,6 +169,14 @@ public class ReaderTemplate {
                     cfg.set("plugin.writer.streamwriter.class", "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
 
                     cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
+                    transformer.ifPresent((tt) -> {
+                        Pair<String, List<String>> t = tt;
+                        Configuration c = Configuration.newDefault();
+                        c.set(CoreConstant.JOB_TRANSFORMER_NAME, t.getKey());
+                        c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());
+                        cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
+                    });
+
                     cfg.set("job.content[0].reader" //
                             , readerCfg);
                     cfg.set("job.content[0].writer", Configuration.from("{\n" //

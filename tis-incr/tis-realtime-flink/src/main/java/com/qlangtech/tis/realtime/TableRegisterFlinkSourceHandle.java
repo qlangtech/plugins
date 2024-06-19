@@ -21,6 +21,7 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -109,7 +110,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     }
 
     @Override
-    protected Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+    protected <FlinkColType> Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
     }
@@ -185,7 +186,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
 
 
     protected void registerSourceTable(StreamTableEnvironment tabEnv
-            , TableAlias alias , DTOStream sourceStream) {
+            , TableAlias alias, DTOStream sourceStream) {
 
         String tabName = alias.getFrom();
         Schema.Builder scmBuilder = Schema.newBuilder();

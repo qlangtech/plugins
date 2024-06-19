@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.realtime;
@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.async.message.client.consumer.AsyncMsg;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -84,8 +85,8 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
 
 
     @Override
-    public JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
-            , IDataxProcessor dataXProcessor) throws Exception {
+    public <FlinkColType> JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
+            , IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) throws Exception {
         StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
 
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
@@ -93,7 +94,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         }
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
-        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
+        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor, flinkColCreator);
         // CountDownLatch countDown = new CountDownLatch(1);
 
         this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
@@ -104,9 +105,10 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return executeFlinkJob(dataxName, env);
     }
 
-    protected Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
+    protected <FlinkColType> Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(
+            IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) {
         Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
-                = this.getSinkFuncFactory().createSinkFunction(dataXProcessor);
+                = this.getSinkFuncFactory().createSinkFunction(dataXProcessor, flinkColCreator);
         sinks.forEach((tab, func) -> {
             if (StringUtils.isEmpty(tab.getTo()) || StringUtils.isEmpty(tab.getFrom())) {
                 throw new IllegalArgumentException("tab of "

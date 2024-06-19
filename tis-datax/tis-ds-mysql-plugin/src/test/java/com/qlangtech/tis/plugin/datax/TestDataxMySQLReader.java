@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.datax.DBDataXChildTask;
 import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IGroupChildTaskIterator;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -297,10 +298,10 @@ public class TestDataxMySQLReader extends BasicTest {
         assertEquals(16, readerContextCount);
 
 
-        Map<String, List<DataXCfgGenerator.DBDataXChildTask>> groupedInfo = subTasks.getGroupedInfo();
+        Map<String, List<DBDataXChildTask>> groupedInfo = subTasks.getGroupedInfo();
         assertNotNull("groupedInfo can not be null", groupedInfo);
 
-        List<DataXCfgGenerator.DBDataXChildTask> subTabs = groupedInfo.get(TestSelectedTabs.tabNameOrderDetail);
+        List<DBDataXChildTask> subTabs = groupedInfo.get(TestSelectedTabs.tabNameOrderDetail);
         assertEquals(8, subTabs.size());
 
         subTabs = groupedInfo.get(TestSelectedTabs.tabNameTotalpayinfo);

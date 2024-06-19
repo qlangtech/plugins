@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -94,7 +95,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     }
 
 
-    public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta, IFlinkColCreator flinkColCreator) {
+    public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
         final AtomicInteger colIndex = new AtomicInteger();
         return colsMeta.stream()
                 .map((c) -> flinkColCreator.build(c, colIndex.getAndIncrement()))
@@ -105,7 +106,7 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
         return getAllTabColsMetaMapper(colsMeta, AbstractRowDataMapper::mapFlinkCol);
     }
 
-    public static <T extends IColMetaGetter> FlinkColMapper getAllTabColsMetaMapper(List<T> colsMeta, IFlinkColCreator flinkColCreator) {
+    public static <T extends IColMetaGetter> FlinkColMapper getAllTabColsMetaMapper(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
         List<FlinkCol> cols = getAllTabColsMeta(colsMeta, flinkColCreator);
         return new FlinkColMapper(cols.stream().collect(Collectors.toMap((c) -> c.name, (c) -> c)));
     }
@@ -298,10 +299,6 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
 
     public static FlinkCol mapFlinkCol(IColMetaGetter meta, int colIndex) {
         return meta.getType().accept(new DefaultTypeVisitor(meta, colIndex));
-    }
-
-    public interface IFlinkColCreator {
-        FlinkCol build(IColMetaGetter meta, int colIndex);
     }
 
 

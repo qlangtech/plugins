@@ -19,7 +19,6 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxReaderContext;
-import com.qlangtech.tis.plugin.datax.format.CSVFormat;
 import com.qlangtech.tis.plugin.tdfs.IDFSReader;
 
 import java.util.Objects;

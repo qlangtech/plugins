@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.BiFunction;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.ISourceValConvert;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -46,14 +47,14 @@ public class PGDTOColValProcess implements ISourceValConvert, Serializable {
     final Map<String, FlinkColMapper> tabColsMapper;
 
 
-    public PGDTOColValProcess(List<ISelectedTab> tabs) {
+    public PGDTOColValProcess(List<ISelectedTab> tabs,IFlinkColCreator<FlinkCol> flinkColCreator) {
+
+
 
         Map<String, FlinkColMapper> tabColsMapper = Maps.newHashMap();
         FlinkColMapper colsMapper = null;
         for (ISelectedTab tab : tabs) {
-            colsMapper = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), (meta, colIndex) -> {
-                return meta.getType().accept(new PGCDCTypeVisitor(meta, colIndex));
-            });
+            colsMapper = AbstractRowDataMapper.getAllTabColsMetaMapper(tab.getCols(), flinkColCreator);
             tabColsMapper.put(tab.getName(), colsMapper);
         }
 
@@ -87,6 +88,7 @@ public class PGDTOColValProcess implements ISourceValConvert, Serializable {
 
     /**
      * for reslve issue: https://github.com/datavane/tis/issues/293
+     *
      * @see DecimalConvert
      */
     static class PGDecimalDTOConvert extends BiFunction {

@@ -3,6 +3,7 @@ package com.qlangtech.tis.plugin.common;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
+import com.qlangtech.tis.datax.IDataxReaderContext;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -126,7 +127,7 @@ public abstract class BasicTemplate {
             }
         }) {
             @Override
-            protected String getTemplateContent(IDataxReader reader, IDataxWriter writer) {
+            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer) {
                 return vmTplContent;
             }
         };

@@ -26,9 +26,11 @@ import com.dtstack.chunjun.connector.jdbc.source.JdbcSourceFactory;
 import com.dtstack.chunjun.constants.ConfigConstant;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -117,10 +119,12 @@ public abstract class ChunjunSourceFunction
             }
         });
 
+        //FIXME
+        IFlinkColCreator<FlinkCol> flinkColCreator = null;
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
-            return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
+            return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor, flinkColCreator);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

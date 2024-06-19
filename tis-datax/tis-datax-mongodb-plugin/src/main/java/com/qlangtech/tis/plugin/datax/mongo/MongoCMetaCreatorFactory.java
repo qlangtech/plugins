@@ -13,6 +13,7 @@ import com.qlangtech.tis.plugin.ds.CMeta.ParsePostMCols;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ElementCreatorFactory;
 import com.qlangtech.tis.plugin.ds.IdlistElementCreatorFactory;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonType;
@@ -34,7 +35,7 @@ public class MongoCMetaCreatorFactory extends IdlistElementCreatorFactory {
     public static final String KEY_JSON_PATH = "jsonPath";
 
     @Override
-    public ParsePostMCols<CMeta> parsePostMCols(IPropertyType propertyType, IFieldErrorHandler msgHandler, Context context, String keyColsMeta, JSONArray targetCols) {
+    public ParsePostMCols<CMeta> parsePostMCols(IPropertyType propertyType, IControlMsgHandler msgHandler, Context context, String keyColsMeta, JSONArray targetCols) {
 
         if (targetCols == null) {
             throw new IllegalArgumentException("param targetCols can not be null");
@@ -124,16 +125,11 @@ public class MongoCMetaCreatorFactory extends IdlistElementCreatorFactory {
     /**
      * @param targetCol
      * @return
-     * @see frontend angular class: RowAssist
+     * @see //frontend angular class: RowAssist
      */
     @Override
     public CMeta create(JSONObject targetCol, BiConsumer<String, String> errorProcess) {
         MongoCMeta cMeta = (MongoCMeta) super.create(targetCol, errorProcess);
-//        String targetColName = targetCol.getString("name");
-//        boolean pk = targetCol.getBooleanValue("pk");
-//        cMeta.setDisable(targetCol.getBooleanValue("disable"));
-//        cMeta.setName(targetColName);
-//        cMeta.setPk(pk);
 
         JSONArray fieldSplitterMetas = null;
         JSONObject fieldSplit = null;

@@ -19,7 +19,9 @@
 package com.qlangtech.plugins.incr.flink.cdc.postgresql;
 
 import com.qlangtech.plugins.incr.flink.cdc.DefaultTableNameConvert;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.apache.kafka.connect.data.Struct;
 
@@ -31,8 +33,8 @@ import java.util.List;
  **/
 public class PostgreSQLDeserializationSchema extends TISDeserializationSchema {
 
-    public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs) {
-        super(new PGDTOColValProcess(tabs), new DefaultTableNameConvert());
+    public PostgreSQLDeserializationSchema(List<ISelectedTab> tabs, IFlinkColCreator<FlinkCol> flinkColCreator) {
+        super(new PGDTOColValProcess(tabs, flinkColCreator), new DefaultTableNameConvert());
     }
 
     @Override

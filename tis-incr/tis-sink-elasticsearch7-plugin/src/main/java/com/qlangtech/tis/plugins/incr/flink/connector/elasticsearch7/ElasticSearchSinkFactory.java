@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.org.apache.http.HttpHost;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.annotation.Public;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -102,7 +103,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator sourceFlinkColCreator) {
 
         DataXElasticsearchWriter dataXWriter = (DataXElasticsearchWriter) dataxProcessor.getWriter(null);
 
@@ -119,14 +120,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
             }
             esSchema = (ESTableAlias) value;
         }
-//        for (Map.Entry<String, TableAlias> e : dataxProcessor.getTabAlias().entrySet()) {
-//            TableAlias value = e.getValue();
-//            if (!(value instanceof ESTableAlias)) {
-//                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
-//            }
-//            esSchema = (ESTableAlias) value;
-//            break;
-//        }
+
         Objects.requireNonNull(esSchema, "esSchema can not be null");
         List<CMeta> cols = esSchema.getSourceCols();
         if (CollectionUtils.isEmpty(cols)) {
@@ -150,27 +144,10 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
 
         // ISelectedTab tab = null;
         IDataxReader reader = dataxProcessor.getReader(null);
-//        IGroupChildTaskIterator subTasks = reader.getSubTasks();
-//        DataXCfgGenerator.DBDataXChildTask esTask = null;
-//        while (subTasks.hasNext()) {
-//            subTasks.next();
-//            break;
-//        }
-//        aa:
-//        for (Map.Entry<String, List<DataXCfgGenerator.DBDataXChildTask>> tskEntry : subTasks.getGroupedInfo().entrySet()) {
-//            for (DataXCfgGenerator.DBDataXChildTask t : tskEntry.getValue()) {
-//                esTask = t;
-//                break aa;
-//            }
-//        }
-//        Objects.requireNonNull(esTask, "esTask can not be null");
-//
-//        File dataXJobPath = esTask.getJobPath(dataxProcessor.getDataxCfgDir(null));
-//        Configuration cfg = Configuration.from(dataXJobPath);
 
         List<IColMetaGetter> sinkMcols = Lists.newArrayList();
         List<String> primaryKeys = Lists.newArrayList();
-        //  DataConvertUtils.genMappings((JSONArray) cfg.getList(IDataXCfg.writerKeyPrefix + "column"), null, (columnList) -> {
+
         for (ESColumn col : esCols) {
             if (col.isPk()) {
                 primaryKeys.add(col.getName());
@@ -183,9 +160,12 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
             tab = selectedTab;
             break;
         }
+
+        IFlinkColCreator<FlinkCol> flinkColCreator = AbstractRowDataMapper::mapFlinkCol;
+
         Objects.requireNonNull(tab, "tab ca not be null");
-        final List<FlinkCol> sourceColsMeta = AbstractRowDataMapper.getAllTabColsMeta(tab.getCols());
-        final List<FlinkCol> sinkColsMeta = AbstractRowDataMapper.getAllTabColsMeta(sinkMcols);
+        final List<FlinkCol> sourceColsMeta = AbstractRowDataMapper.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
+        final List<FlinkCol> sinkColsMeta = AbstractRowDataMapper.getAllTabColsMeta(sinkMcols, flinkColCreator);
         ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
@@ -222,10 +202,10 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         });
 
         return Collections.singletonMap(esSchema
-                , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys
+                , new RowDataSinkFunc(this, esSchema, sinkBuilder.build(), primaryKeys
                         , sourceColsMeta
                         , sinkColsMeta
-                        , true, DEFAULT_PARALLELISM));
+                        , true, DEFAULT_PARALLELISM, flinkColCreator));
     }
 
 

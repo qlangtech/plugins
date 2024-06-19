@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.datax.common.spi.IDataXCfg;
 import com.alibaba.datax.common.util.Configuration;
+import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.DataXJobInfo;
@@ -40,6 +41,7 @@ import com.qlangtech.tis.plugin.ds.mysql.MySQLDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.split.SplitTableStrategyUtils;
 import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -48,7 +50,9 @@ import org.junit.rules.TemporaryFolder;
 import org.testcontainers.lifecycle.Startables;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -82,6 +86,21 @@ public class TestDataxMySQLReaderDump {
     @Test
     public void testRealDump() throws Exception {
 
+        executePipeline(Optional.empty());
+    }
+
+    @Test
+    public void testRealDumpWithTransformer() throws Exception {
+        executePipeline(Optional.of(Pair.of("base", Lists.newArrayList("new_base_id"))));
+    }
+
+    /**
+     *
+     * @param transformer Optional<Pair<String, List<String>>> key: tableName 用于获取Transformer udf集合，value：新增字段序列
+     * @throws IOException
+     * @throws IllegalAccessException
+     */
+    private void executePipeline(Optional<Pair<String, List<String>>> transformer) throws IOException, IllegalAccessException {
         MySQLDataSourceFactory mysqlDs = (MySQLDataSourceFactory) dsFactory;
         mysqlDs.splitTableStrategy = new NoneSplitTableStrategy();
 
@@ -108,9 +127,10 @@ public class TestDataxMySQLReaderDump {
         readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
         readerConf.set(IDataXCfg.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY,
                 dsFactory.identityValue());
-        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, readerConf, dataxReaderResult, dataxReader);
+        ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, readerConf, dataxReaderResult, dataxReader, transformer);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
     }
+
 
     /**
      * 基于分表的数据导入方式

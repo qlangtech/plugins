@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.junit.TISApplySkipFlinkClassloaderFactoryCreation;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -188,7 +189,8 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
     protected void testSinkSync() throws Exception {
         testSinkSync((dataxProcessor, sinkFactory, env, selectedTab) -> {
 
-            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor);
+            IFlinkColCreator flinkColCreator = null;
+            Map<TableAlias, TabSinkFunc<RowData>> sinkFunction = sinkFactory.createSinkFunction(dataxProcessor, flinkColCreator);
             //int updateNumVal = 999;
             Assert.assertEquals(1, sinkFunction.size());
             for (Map.Entry<TableAlias, TabSinkFunc<RowData>> entry : sinkFunction.entrySet()) {
@@ -287,7 +289,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
                 createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
-               // log.info("create table ddl:\n{}", createDDL);
+                // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());
             }
             // EasyMock.expect(dataXWriter.getDataSourceFactory()).andReturn(sourceFactory);
@@ -397,11 +399,11 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
         UpdateMode updateMode = createIncrMode();
         // EasyMock.expect(sinkExt.getIncrMode()).andReturn(updateMode);
         sinkExt.incrMode = updateMode;
-       // sinkExt.uniqueKey =
+        // sinkExt.uniqueKey =
         List<CMeta> metaCols = Lists.newArrayList();
         CMeta cm = new CMeta();
         cm.setName(colEntityId);
-        cm.setType( DataType.create(Types.VARCHAR, "VARCHAR", 6));
+        cm.setType(DataType.create(Types.VARCHAR, "VARCHAR", 6));
         metaCols.add(cm);
 
         cm = new CMeta();
@@ -417,7 +419,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         cm = new CMeta();
         cm.setName(colCreateTime);
-        cm.setType( DataType.create(Types.BIGINT, "bigint", 8));
+        cm.setType(DataType.create(Types.BIGINT, "bigint", 8));
         metaCols.add(cm);
 
         cm = createUpdateTime();
@@ -435,7 +437,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
 
         cm = new CMeta();
         cm.setName(price);
-        DataType decimal =  DataType.create(Types.DECIMAL, "decimal", 10);
+        DataType decimal = DataType.create(Types.DECIMAL, "decimal", 10);
         decimal.setDecimalDigits(2);
         cm.setType(decimal);
         metaCols.add(cm);

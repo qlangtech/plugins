@@ -19,10 +19,12 @@
 package com.qlangtech.plugins.incr.flink.cdc.mongdb;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.TISDeserializationSchema;
 import com.qlangtech.tis.async.message.client.consumer.IAsyncMsgDeserialize;
 import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
@@ -66,8 +68,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
+            IFlinkColCreator<FlinkCol> flinkColCreator = null;
+            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor, flinkColCreator);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
@@ -110,30 +112,6 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             }
 
             SourceFunction<DTO> source = builder.build();
-
-//                    MongoDBSource.<DTO>builder()
-//                    .hosts(dsFactory.address)
-//                    .database(dsFactory.dbName)
-//                    .collection(mongoReader.collectionName)
-//                    .connectionOptions(sourceFactory.connectionOptions)
-//                    .errorsTolerance(sourceFactory.errorsTolerance)
-//                    .errorsLogEnable(sourceFactory.errorsLogEnable)
-//                    .copyExisting(sourceFactory.copyExisting)
-//                    .copyExistingPipeline(sourceFactory.copyExistingPipeline)
-//                    .copyExistingMaxThreads(sourceFactory.copyExistingMaxThreads)
-//                    .copyExistingQueueSize(sourceFactory.copyExistingQueueSize)
-//                    .pollMaxBatchSize(sourceFactory.pollMaxBatchSize)
-//                    .pollAwaitTimeMillis(sourceFactory.pollAwaitTimeMillis)
-//                    .heartbeatIntervalMillis(sourceFactory.heartbeatIntervalMillis)
-//                    //.port(dsFactory.port)
-//                    // .databaseList(dbs.toArray(new String[dbs.size()])) // monitor all tables under inventory database
-////                              .tableList(tbs.toArray(new String[tbs.size()]))
-//                    .username(dsFactory.getUserName())
-//                    .password(dsFactory.getPassword())
-////                              .startupOptions(sourceFactory.getStartupOptions())
-//                    //.debeziumProperties(debeziumProperties)
-//                    .deserializer(new TISDeserializationSchema()) // converts SourceRecord to JSON String
-//                    .build();
 
             sourceFuncs.add(ReaderSource.createDTOSource(dsFactory.address + "_" + dsFactory.dbName + "_" + tab.getName(), source));
         }

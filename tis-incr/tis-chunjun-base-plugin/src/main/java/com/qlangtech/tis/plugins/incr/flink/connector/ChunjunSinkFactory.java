@@ -43,7 +43,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
@@ -59,6 +62,7 @@ import com.qlangtech.tis.plugin.datax.IWriteModeSupport;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.SelectedTabExtend;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DBConfig;
@@ -66,6 +70,7 @@ import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.incr.CreatedSinkFunction;
 import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
@@ -106,7 +111,7 @@ import java.util.stream.Collectors;
  * @create: 2022-08-10 13:45
  **/
 public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
-        implements IStreamTableMeataCreator.ISinkStreamMetaCreator, IStreamIncrGenerateStrategy {
+        implements IStreamTableMeataCreator.ISinkStreamMetaCreator, IStreamIncrGenerateStrategy, IDataXNameAware {
 
     public static final String DISPLAY_NAME_FLINK_CDC_SINK = "Chunjun-Sink-";
     public static final String KEY_FULL_COLS = "fullColumn";
@@ -155,7 +160,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
 
     @Override
-    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor) {
+    public Map<TableAlias, TabSinkFunc<RowData>> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
         Map<TableAlias, TabSinkFunc<RowData>> sinkFuncs = Maps.newHashMap();
 
 
@@ -177,7 +182,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             }
             final TableAlias tabName = val;
 
-            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true));
+            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true, flinkColCreator));
         });
 
         if (sinkFuncs.size() < 1) {
@@ -187,7 +192,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     public RowDataSinkFunc createRowDataSinkFunc(IDataxProcessor dataxProcessor
-            , final TableAlias tabName, boolean shallInitSinkTable) {
+            , final TableAlias tabName, boolean shallInitSinkTable, IFlinkColCreator<FlinkCol> colCreator) {
 
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();
@@ -208,12 +213,13 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             throw new IllegalStateException("param parallelism can not be null");
         }
 
-        return new RowDataSinkFunc(tabName
+
+        return new RowDataSinkFunc(this, tabName
                 , sinkFunc.getSinkFunction()
                 , sinkFunc.primaryKeys
                 , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
-                , this.parallelism);
+                , this.parallelism, colCreator);
     }
 
 

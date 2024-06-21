@@ -113,7 +113,7 @@ public class TestChunjunOracleSourceFactory {
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
                 //   super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), createProcess());
@@ -210,9 +210,9 @@ public class TestChunjunOracleSourceFactory {
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
-                super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+                super.manipulateAndVerfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 // imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);
             }

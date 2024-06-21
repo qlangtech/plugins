@@ -27,25 +27,36 @@ import com.qlangtech.plugins.incr.flink.cdc.IResultRows;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample;
 import com.qlangtech.plugins.incr.flink.cdc.TestRow;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestTableRegisterFlinkSourceHandle;
+import com.qlangtech.plugins.incr.flink.launch.TISFlinkCDCStreamFactory;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.MQConsumeException;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.TisUTF8;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformer;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.datax.transformer.impl.CopyValUDF;
+import com.qlangtech.tis.plugin.datax.transformer.impl.ExistTargetCoumn;
+import com.qlangtech.tis.plugin.datax.transformer.impl.SubStrUDF;
+import com.qlangtech.tis.plugin.datax.transformer.impl.VirtualTargetColumn;
+import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.ds.JDBCTypes;
+import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.LatestStartupOptions;
 import com.qlangtech.tis.test.TISEasyMock;
 import com.qlangtech.tis.utils.IntegerUtils;
-import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +73,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.keyCol_text;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -95,7 +108,10 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
     public void testBaseTableWithSplit() throws Exception {
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
+
         // final String tabName = "base";
+        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.parallelism = 1;
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);//new CDCTestSuitParams("base");
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams, Optional.of("_01")) {
             @Override
@@ -108,6 +124,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
                 sourceHandle.setSinkFuncFactory(sinkFuncFactory);
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
+                sourceHandle.setStreamFactory(streamFactory);
                 return sourceHandle;
             }
         };
@@ -122,13 +139,13 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
-        // final String tabName = "base";
-        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);//new CDCTestSuitParams("base");
+
+        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
-                //  return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
+
             }
 
             @Override
@@ -138,15 +155,95 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
                 sourceHandle.setSourceStreamTableMeta(dataxReader);
                 return sourceHandle;
             }
+        };
 
-//            @Override
-//            protected String getColEscape() {
-//                return "`";
-//            }
+        cdcTestSuit.startTest(mysqlCDCFactory);
+    }
+
+    /**
+     * 在增量消费流程中使用 T(Transformer) 规则
+     *
+     * @throws Exception
+     */
+    @Test()
+    public void testBinlogConsumeWithRowTransformer() throws Exception {
+        // 测试中使用一个copyVal，和subString 两个控制字段
+        RecordTransformerRules.transformerRulesLoader4Test = (tab) -> {
+            RecordTransformerRules tRules = new RecordTransformerRules();
+
+            addCopyValTransformer(tRules);
+            addSubStrTransformer(tRules);
+
+            return tRules;
+        };
+
+        TISFlinkCDCStreamFactory streamFactory = new TISFlinkCDCStreamFactory();
+        streamFactory.parallelism = 1;
+        FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
+        mysqlCDCFactory.startupOptions = new LatestStartupOptions();
+
+        CDCTestSuitParams suitParams = tabParamMap.get(tabBase);
+        CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
+            @Override
+            protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
+                return (BasicDataSourceFactory) getMysqlContainer().createMySqlDataSourceFactory(dataxName);
+
+            }
+
+            @Override
+            protected IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName, TISSinkFactory sinkFuncFactory) {
+                TestTableRegisterFlinkSourceHandle sourceHandle = new TestTableRegisterFlinkSourceHandle(tabName, cols);
+                sourceHandle.setSinkFuncFactory(sinkFuncFactory);
+                sourceHandle.setSourceStreamTableMeta(dataxReader);
+                sourceHandle.setStreamFactory(streamFactory);
+                sourceHandle.setSourceFlinkColCreator(mysqlCDCFactory.createFlinkColCreator());
+
+                return sourceHandle;
+            }
         };
 
         cdcTestSuit.startTest(mysqlCDCFactory);
 
+    }
+
+    private static void addSubStrTransformer(RecordTransformerRules tRules) {
+
+        TargetColType targetColType;
+
+        RecordTransformer transformer = new RecordTransformer();
+        SubStrUDF subStr = new SubStrUDF();
+        subStr.start = 0;
+        subStr.length = 2;
+        subStr.from = keyCol_text;
+        targetColType = new TargetColType();
+
+
+        ExistTargetCoumn existTargetCoumn = new ExistTargetCoumn();
+        existTargetCoumn.name = keyCol_text;
+        targetColType.setTarget(existTargetCoumn);
+        targetColType.setType(DataType.createVarChar(32));
+
+
+        transformer.setUdf(subStr);
+        tRules.rules.add(transformer);
+    }
+
+    private static void addCopyValTransformer(RecordTransformerRules tRules) {
+        RecordTransformer transformer = new RecordTransformer();
+        CopyValUDF cpUDF = new CopyValUDF();
+        cpUDF.from = "price";
+        TargetColType targetColType = new TargetColType();
+        VirtualTargetColumn targetColumn = new VirtualTargetColumn();
+        final String baseId = "copy_from_price";
+        targetColumn.name = baseId;
+        targetColType.setTarget(targetColumn);
+        DataType decimal = new DataType(JDBCTypes.DECIMAL, 5);
+        decimal.setDecimalDigits(2);
+        targetColType.setType(decimal);
+        cpUDF.to = targetColType;
+        transformer.setUdf(cpUDF);
+        tRules.rules.add(transformer);
+        //  return cpUDF;
     }
 
 
@@ -161,7 +258,6 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             @Override
             protected BasicDataSourceFactory createDataSourceFactory(TargetResName dataxName, boolean useSplitTabStrategy) {
                 return (BasicDataSourceFactory) MySqlContainer.MYSQL5_CONTAINER.createMySqlDataSourceFactory(dataxName);
-                // return MySqlContainer.createMySqlDataSourceFactory(dataxName, MYSQL_CONTAINER);
             }
 
             @Override
@@ -339,7 +435,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
                     throws MQConsumeException, InterruptedException {
                 // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);

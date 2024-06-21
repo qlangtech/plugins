@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-package com.ververica.cdc.connectors.mysql.testutils;
+package org.apache.flink.cdc.connectors.mysql.testutils;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -50,14 +50,14 @@ public class UniqueDatabase {
             new String[] {"CREATE DATABASE $DBNAME$;", "USE $DBNAME$;"};
     private static final Pattern COMMENT_PATTERN = Pattern.compile("^(.*)--.*$");
 
-    private final MySqlContainer container;
+    private final org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer container;
     private final String databaseName;
     private final String templateName;
     private final String username;
     private final String password;
 
     public UniqueDatabase(
-            MySqlContainer container, String databaseName, String username, String password) {
+            org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer container, String databaseName, String username, String password) {
         this(
                 container,
                 databaseName,
@@ -67,7 +67,7 @@ public class UniqueDatabase {
     }
 
     private UniqueDatabase(
-            MySqlContainer c,
+            org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer c,
             String databaseName,
             final String identifier,
             String username,

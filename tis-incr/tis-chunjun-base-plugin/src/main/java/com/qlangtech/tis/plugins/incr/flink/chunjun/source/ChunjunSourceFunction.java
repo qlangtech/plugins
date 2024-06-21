@@ -114,17 +114,14 @@ public abstract class ChunjunSourceFunction
                     sourceFuncs.add(ReaderSource.createRowDataSource(
                             dbHost + ":" + sourceFactory.port + "_" + dbName + "." + physicsName, tab, sourceFunc));
                 }
-
-
             }
         });
 
-        //FIXME
-        IFlinkColCreator<FlinkCol> flinkColCreator = null;
+
         try {
             SourceChannel sourceChannel = new SourceChannel(sourceFuncs);
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), (tabName) -> DTOStream.createRowData());
-            return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor, flinkColCreator);
+            return (JobExecutionResult) getConsumerHandle().consume(name, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

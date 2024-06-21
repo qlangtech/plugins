@@ -21,7 +21,6 @@ package com.qlangtech.tis.realtime;
 import com.qlangtech.plugins.incr.flink.cdc.DTO2RowMapper;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowData2RowMapper;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
@@ -29,6 +28,7 @@ import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
@@ -36,13 +36,14 @@ import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowTransformerMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowUtils;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
@@ -52,14 +53,13 @@ import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.types.DataType;
-import org.apache.flink.table.types.utils.LegacyTypeInfoDataTypeConverter;
 import org.apache.flink.types.Row;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 将源DataStream 转成Table
@@ -67,21 +67,9 @@ import java.util.Objects;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-02-18 11:50
  **/
-public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> {
+public abstract class TableRegisterFlinkSourceHandle
+        extends BasicFlinkSourceHandle<DTO> {
 
-
-    public static org.apache.flink.table.types.DataType createFlinkColType(List<String> primaryKeys, FlinkCol col) {
-        if (CollectionUtils.isEmpty(primaryKeys)) {
-            throw new IllegalArgumentException("primaryKeys can not be empty");
-        }
-        org.apache.flink.table.types.DataType type = col.type;
-        if (primaryKeys.contains(col.name)) {
-            if (type.getLogicalType().isNullable()) {
-                type = type.notNull();// new AtomicDataType(type.getLogicalType().copy(false));
-            }
-        }
-        return type;
-    }
 
     /**
      * @param env
@@ -110,7 +98,7 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
     }
 
     @Override
-    protected <FlinkColType> Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) {
+    protected Map<TableAlias, TabSinkFunc<DTO>> createTabSinkFunc(IDataxProcessor dataXProcessor) {
         // return super.createTabSinkFunc(dataXProcessor);
         return Collections.emptyMap();
     }
@@ -189,47 +177,68 @@ public abstract class TableRegisterFlinkSourceHandle extends BasicFlinkSourceHan
             , TableAlias alias, DTOStream sourceStream) {
 
         String tabName = alias.getFrom();
-        Schema.Builder scmBuilder = Schema.newBuilder();
+        // Schema.Builder scmBuilder = Schema.newBuilder();
         IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator = this.getSourceStreamTableMeta();
 
         ISelectedTab selectedTab = sourceStreamMetaCreator.getSelectedTab(tabName);
 
         List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(sourceStreamMetaCreator.getStreamTableMeta(tabName));
-        String[] fieldNames = new String[cols.size()];
-        TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
-        int i = 0;
-        DataType colType = null;
-        for (FlinkCol col : cols) {
-            colType = createFlinkColType(selectedTab.getPrimaryKeys(), col);
-            scmBuilder.column(col.name, colType);
-            // TypeConversions.fromDataTypeToLegacyInfo()
+        //  String[] fieldNames = new String[cols.size()];
+        //TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
+//        int i = 0;
+//        DataType colType = null;
+//        for (FlinkCol col : cols) {
+//            colType = createFlinkColType(selectedTab.getPrimaryKeys(), col);
+//            // scmBuilder.column(col.name, colType);
+//            // TypeConversions.fromDataTypeToLegacyInfo()
+//
+//            types[i] = LegacyTypeInfoDataTypeConverter.toLegacyTypeInfo(colType);
+//            fieldNames[i++] = col.name;
+//
+//        }
 
-            types[i] = LegacyTypeInfoDataTypeConverter.toLegacyTypeInfo(colType);
-            fieldNames[i++] = col.name;
+        Pair<TypeInformation<Row>, Schema> outputTypeSchema
+                = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
 
-        }
-        List<String> pks = selectedTab.getPrimaryKeys();
-        if (CollectionUtils.isEmpty(pks)) {
-            throw new IllegalStateException("pks can not be empty");
-        }
-        scmBuilder.primaryKey(pks);
-        Schema schema = scmBuilder.build();
+        // TypeInformation<Row> outputType = RowUtils.getRowOutputType(selectedTab.getPrimaryKeys(), cols);// Types.ROW_NAMED(fieldNames, types);
+        // List<String> pks = selectedTab.getPrimaryKeys();
+//        if (CollectionUtils.isEmpty(pks)) {
+//            throw new IllegalStateException("pks can not be empty");
+//        }
+//        scmBuilder.primaryKey(pks);
+        // Schema schema = RowUtils.createSchema(selectedTab.getPrimaryKeys(), cols);  //scmBuilder.build();
+        // RowDataSinkFunc
 
-        TypeInformation<Row> outputType = Types.ROW_NAMED(fieldNames, types);
 
         SingleOutputStreamOperator<Row> rowStream = null;
         if (sourceStream.clazz == DTO.class) {
             rowStream = sourceStream.getStream()
-                    .map(new DTO2RowMapper(cols), outputType)
+                    .map(new DTO2RowMapper(cols), outputTypeSchema.getLeft())
                     .name(tabName).uid("uid_" + tabName);
         } else if (sourceStream.clazz == RowData.class) {
             rowStream = sourceStream.getStream()
-                    .map(new RowData2RowMapper(cols), outputType)
+                    .map(new RowData2RowMapper(cols), outputTypeSchema.getLeft())
                     .name(tabName).uid("uid_" + tabName);
         }
         Objects.requireNonNull(rowStream, "rowStream can not be null");
+        rowStream.setParallelism(Objects.requireNonNull(streamFactory, "streamFactory can not be null").getParallelism());
 
-        Table table = tabEnv.fromChangelogStream(rowStream, schema, ChangelogMode.all());
+        /**
+         添加transformer执行逻辑
+         */
+        Optional<RecordTransformerRules> transformers
+                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(this, tabName));
+        //  this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
+        if (transformers.isPresent()) {
+            RowTransformerMapper transformerMapper = new RowTransformerMapper(cols
+                    , transformers.get(), Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
+            rowStream = rowStream.map(transformerMapper, outputTypeSchema.getKey())
+                    .name(tabName + "_transformer")
+                    .setParallelism(streamFactory.getParallelism());
+        }
+
+        Table table = tabEnv.fromChangelogStream(rowStream, outputTypeSchema.getValue(), ChangelogMode.all());
         tabEnv.createTemporaryView(alias.getTo() + IStreamIncrGenerateStrategy.IStreamTemplateData.KEY_STREAM_SOURCE_TABLE_SUFFIX, table);
     }
 

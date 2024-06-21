@@ -25,6 +25,7 @@ import com.qlangtech.tis.async.message.client.consumer.IConsumerHandle;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
+import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
@@ -50,18 +51,25 @@ import java.util.Objects;
 @Public
 @TISExtensible
 public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
-        implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable {
+        implements IConsumerHandle<List<ReaderSource>, JobExecutionResult>, Serializable, IDataXNameAware {
 
     private transient TISSinkFactory sinkFuncFactory;
-    private transient IncrStreamFactory streamFactory;
+    protected transient IncrStreamFactory streamFactory;
     private transient IStreamTableMeataCreator.ISourceStreamMetaCreator metaCreator;
+    protected transient IFlinkColCreator<FlinkCol> flinkColCreator;
 
     protected String getDataXName() {
         String name = this.sinkFuncFactory.dataXName;
         if (StringUtils.isEmpty(name)) {
             throw new IllegalStateException("dataXName can not be empty");
         }
+
         return name;
+    }
+
+    @Override
+    public final String getCollectionName() {
+        return this.getDataXName();
     }
 
     public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
@@ -85,8 +93,8 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
 
 
     @Override
-    public <FlinkColType> JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
-            , IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) throws Exception {
+    public JobExecutionResult consume(TargetResName dataxName, AsyncMsg<List<ReaderSource>> asyncMsg
+            , IDataxProcessor dataXProcessor) throws Exception {
         StreamExecutionEnvironment env = getFlinkExecutionEnvironment();
 
         if (CollectionUtils.isEmpty(asyncMsg.getFocusTabs())) {
@@ -94,7 +102,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         }
 
         Tab2OutputTag<DTOStream> tab2OutputTag = createTab2OutputTag(asyncMsg, env, dataxName);
-        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor, flinkColCreator);
+        Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks = createTabSinkFunc(dataXProcessor);
         // CountDownLatch countDown = new CountDownLatch(1);
 
         this.processTableStream(env, tab2OutputTag, new SinkFuncs(sinks));
@@ -105,8 +113,8 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return executeFlinkJob(dataxName, env);
     }
 
-    protected <FlinkColType> Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(
-            IDataxProcessor dataXProcessor, IFlinkColCreator<FlinkColType> flinkColCreator) {
+    protected Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> createTabSinkFunc(
+            IDataxProcessor dataXProcessor) {
         Map<TableAlias, TabSinkFunc<SINK_TRANSFER_OBJ>> sinks
                 = this.getSinkFuncFactory().createSinkFunction(dataXProcessor, flinkColCreator);
         sinks.forEach((tab, func) -> {
@@ -178,5 +186,10 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
     public IStreamTableMeataCreator.ISourceStreamMetaCreator getSourceStreamTableMeta() {
         Objects.requireNonNull(this.metaCreator, "metaCreator can not be null");
         return metaCreator;
+    }
+
+    public void setSourceFlinkColCreator(IFlinkColCreator<FlinkCol> flinkColCreator) {
+        Objects.requireNonNull(flinkColCreator, "metaCreator can not be null");
+        this.flinkColCreator = flinkColCreator;
     }
 }

@@ -18,10 +18,6 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.ColumnAwareRecord;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
@@ -31,8 +27,6 @@ import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.table.data.GenericRowData;
-import org.apache.flink.table.data.RowData;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -47,12 +41,12 @@ import java.util.stream.Collectors;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-06-18 15:29
  **/
-public class RowDataTransformerMapper implements MapFunction<RowData, RowData>, Serializable {
-    private final List<FlinkCol> cols;
+public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type, Type>, Serializable {
+    public final List<FlinkCol> cols;
     private final List<UDFDefinition> transformerUDF;
     private final Map<String, Integer> col2IdxMapper;
 
-    public RowDataTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules, IFlinkColCreator<FlinkCol> flinkColCreator) {
+    public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules, IFlinkColCreator<FlinkCol> flinkColCreator) {
         if (flinkColCreator == null) {
             throw new IllegalArgumentException("param flinkColCreator can not be null");
         }
@@ -92,14 +86,16 @@ public class RowDataTransformerMapper implements MapFunction<RowData, RowData>, 
     }
 
     @Override
-    public RowData map(RowData row) throws Exception {
-        GenericRowData grow = new GenericRowData(row.getRowKind(), this.cols.size());
-        TransformerRowData trowData = new TransformerRowData(grow);
+    public Type map(Type row) throws Exception {
+
+        AbstractTransformerRecord<Type> trowData = createDelegate(row);
         trowData.setCol2Index(this.col2IdxMapper);
         for (UDFDefinition transformer : this.transformerUDF) {
             transformer.evaluate(trowData);
         }
 
-        return trowData;
+        return trowData.getDelegate();
     }
+
+    protected abstract AbstractTransformerRecord<Type> createDelegate(Type row);
 }

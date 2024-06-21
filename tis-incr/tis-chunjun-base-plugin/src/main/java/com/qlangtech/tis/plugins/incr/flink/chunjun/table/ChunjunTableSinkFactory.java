@@ -27,10 +27,10 @@ import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
+import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunSqlType;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
-import com.qlangtech.tis.realtime.TableRegisterFlinkSourceHandle;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
@@ -165,7 +165,7 @@ public class ChunjunTableSinkFactory implements StreamTableSinkFactory<Tuple2<Bo
 //                        type = new AtomicDataType(type.getLogicalType().copy(false));
 //                    }
 //                }
-                schemaBuilder.field(col.name, TableRegisterFlinkSourceHandle.createFlinkColType(primaryKeys, col));
+                schemaBuilder.field(col.name, RowUtils.createFlinkColType(primaryKeys, col));
             }
 
             schemaBuilder.primaryKey(primaryKeys.toArray(new String[primaryKeys.size()]));

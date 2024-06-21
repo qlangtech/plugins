@@ -1,24 +1,25 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.plugins.incr.flink;
 
 import com.qlangtech.tis.TIS;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -60,8 +61,8 @@ public class TestTISFlinkClassLoaderFactory implements TISEasyMock {
         //EasyMock.expectLastCall().anyTimes();
         DataxProcessor dataXProcessor = mock("dataXProcessor", DataxProcessor.class);
         TISSinkFactory sinkFactory = mock("sinkFactory", TISSinkFactory.class);
-
-        EasyMock.expect(sinkFactory.createSinkFunction(dataXProcessor)).andReturn(null);
+        IFlinkColCreator flinkColCreator = null;
+        EasyMock.expect(sinkFactory.createSinkFunction(dataXProcessor, flinkColCreator)).andReturn(null);
 
         HeteroEnum.incrSourceListenerFactoryStub = (n) -> {
             return incrSource;

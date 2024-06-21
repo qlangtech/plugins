@@ -29,7 +29,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
-import com.ververica.cdc.connectors.base.options.StartupOptions;
+import org.apache.flink.cdc.connectors.base.options.StartupOptions;
 
 import java.util.Objects;
 

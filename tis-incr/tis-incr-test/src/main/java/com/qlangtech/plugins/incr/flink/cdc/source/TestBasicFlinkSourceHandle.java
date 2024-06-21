@@ -76,8 +76,6 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
     protected void processTableStream(StreamExecutionEnvironment env
             , Tab2OutputTag<DTOStream> streamMap, SinkFuncs<DTO> sinkFunction) {
 
-//    @Override
-//    protected void processTableStream(Map<String, DataStream<DTO>> streamMap, SinkFuncs sinkFunction) {
         sinkFunction.add2Sink(tabName, streamMap.getSourceMapper().get(tabName));
         if (tabEnv == null) {
 
@@ -106,29 +104,10 @@ public class TestBasicFlinkSourceHandle extends BasicFlinkSourceHandle<DTO> impl
         return this;
     }
 
-//    @Override
-//    public CloseableIterator<Row> getRowSnapshot(String tabName) {
-//        TableResult tableResult = getSourceTableQueryResult().get(tabName);
-//        Objects.requireNonNull(tableResult, "tabName:" + tabName + " relevant TableResult can not be null");
-//        CloseableIterator<Row> collect = tableResult.collect();
-//        return collect;
-//    }
 
     public Map<String, TableResult> getSourceTableQueryResult() {
         return sourceTableQueryResult;
     }
 
-//    /**
-//     * 终止flink
-//     */
-//    @Override
-//    public void cancel() {
-//        try {
-//            for (TableResult tabResult : getSourceTableQueryResult().values()) {
-//                tabResult.getJobClient().get().cancel().get();
-//            }
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+
 }

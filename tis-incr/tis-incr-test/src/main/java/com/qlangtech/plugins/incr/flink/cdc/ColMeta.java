@@ -39,6 +39,11 @@ public class ColMeta {
         this.meta = meta;
     }
 
+    @Override
+    public String toString() {
+        return "idx:" + this.statementIndex + ",name:" + this.meta.getName() + ",type:" + this.meta.getType().getTypeDesc() + ",pk:" + this.meta.pk;
+    }
+
     public DataType getType() {
         return this.meta.type;
     }

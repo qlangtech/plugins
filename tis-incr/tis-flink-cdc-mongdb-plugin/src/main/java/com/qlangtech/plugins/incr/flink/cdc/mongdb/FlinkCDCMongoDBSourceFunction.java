@@ -36,7 +36,7 @@ import com.qlangtech.tis.plugin.ds.mangodb.MangoDBDataSourceFactory;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.ververica.cdc.connectors.mongodb.MongoDBSource;
+import org.apache.flink.cdc.connectors.mongodb.MongoDBSource;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
@@ -68,8 +68,8 @@ public class FlinkCDCMongoDBSourceFunction implements IMQListener<JobExecutionRe
             SourceChannel sourceChannel = new SourceChannel(sourceFunctions);
 
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null), DTOStream::createDispatched);
-            IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor, flinkColCreator);
+           // IFlinkColCreator<FlinkCol> flinkColCreator = this.sourceFactory.createFlinkColCreator();
+            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }

@@ -24,6 +24,7 @@ import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
+import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.ColumnMetaData;
 import com.qlangtech.tis.realtime.transfer.UnderlineUtils;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
@@ -83,7 +84,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
 
 
-        List<String> outParameters = cpValueUDF.outParameters();
+        List<TargetColType> outParameters = cpValueUDF.outParameters();
 
         makeAssert.assertOutParameters(outParameters);
 
@@ -104,7 +105,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
     interface OutParametersAndLiteriaAssert {
 
-        void assertOutParameters(List<String> outParameters);
+        void assertOutParameters(List<TargetColType> outParameters);
 
         void assertLiteriaDesc(List<UDFDesc> literiaDesc);
     }

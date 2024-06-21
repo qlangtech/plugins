@@ -19,7 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.util.Collector;
@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
  * A JSON format implementation of {@link DebeziumDeserializationSchema} which deserializes the
  * received {@link SourceRecord} to JSON String.
  *
- * @see com.ververica.cdc.debezium.table.RowDataDebeziumDeserializeSchema
+ * @see org.apache.flink.cdc.debezium.table.RowDataDebeziumDeserializeSchema
  */
 public class TISDeserializationSchema implements DebeziumDeserializationSchema<DTO> {
     private static final Pattern PATTERN_TOPIC = Pattern.compile(".+\\.(.+)\\.(.+)");

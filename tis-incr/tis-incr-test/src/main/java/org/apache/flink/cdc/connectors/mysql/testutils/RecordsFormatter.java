@@ -16,10 +16,10 @@
  *   limitations under the License.
  */
 
-package com.ververica.cdc.connectors.mysql.testutils;
+package org.apache.flink.cdc.connectors.mysql.testutils;
 
-import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
-import com.ververica.cdc.debezium.table.RowDataDebeziumDeserializeSchema;
+import org.apache.flink.cdc.debezium.DebeziumDeserializationSchema;
+import org.apache.flink.cdc.debezium.table.RowDataDebeziumDeserializeSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.conversion.RowRowConverter;
@@ -35,8 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.ververica.cdc.connectors.mysql.source.utils.RecordUtils.isSchemaChangeEvent;
-import static com.ververica.cdc.connectors.mysql.source.utils.RecordUtils.isWatermarkEvent;
+import static org.apache.flink.cdc.connectors.mysql.source.utils.RecordUtils.isSchemaChangeEvent;
+import static org.apache.flink.cdc.connectors.mysql.source.utils.RecordUtils.isWatermarkEvent;
 
 /** Formatter that formats the {@link SourceRecord} to String. */
 public class RecordsFormatter {

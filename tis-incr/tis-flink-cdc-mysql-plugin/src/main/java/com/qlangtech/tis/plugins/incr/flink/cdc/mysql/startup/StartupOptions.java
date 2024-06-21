@@ -27,5 +27,5 @@ import com.qlangtech.tis.extension.Describable;
  * @create: 2024-01-29 11:21
  **/
 public abstract class StartupOptions implements Describable<StartupOptions> {
-    public abstract com.ververica.cdc.connectors.mysql.table.StartupOptions getOptionsType();
+    public abstract org.apache.flink.cdc.connectors.mysql.table.StartupOptions getOptionsType();
 }

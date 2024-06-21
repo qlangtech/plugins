@@ -56,7 +56,7 @@ public class TestConcatUDF extends BasicUDFDefinitionTest<ConcatUDF> {
     protected OutParametersAndLiteriaAssert getOutParametersAndLiteriaAssert() {
         return new OutParametersAndLiteriaAssert(){
             @Override
-            public void assertOutParameters(List<String> outParameters) {
+            public void assertOutParameters(List<TargetColType> outParameters) {
 
             }
 

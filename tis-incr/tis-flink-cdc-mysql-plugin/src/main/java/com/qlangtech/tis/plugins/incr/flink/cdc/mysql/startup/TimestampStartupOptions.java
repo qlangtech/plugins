@@ -26,7 +26,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
-import com.ververica.cdc.connectors.mysql.table.StartupMode;
+import org.apache.flink.cdc.connectors.mysql.table.StartupMode;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -38,8 +38,8 @@ public class TimestampStartupOptions extends StartupOptions {
     public Long startupTimestampMillis;
 
     @Override
-    public com.ververica.cdc.connectors.mysql.table.StartupOptions getOptionsType() {
-        return com.ververica.cdc.connectors.mysql.table.StartupOptions.timestamp(startupTimestampMillis);
+    public org.apache.flink.cdc.connectors.mysql.table.StartupOptions getOptionsType() {
+        return org.apache.flink.cdc.connectors.mysql.table.StartupOptions.timestamp(startupTimestampMillis);
     }
 
 

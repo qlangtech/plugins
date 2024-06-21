@@ -23,14 +23,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.RowValsExample.RowVal;
 import com.qlangtech.plugins.incr.flink.cdc.source.TestBasicFlinkSourceHandle;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.async.message.client.consumer.IMQListener;
 import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
-import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
-import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.manage.biz.dal.pojo.Application;
@@ -43,21 +39,17 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.mysql.MySqlSourceTestBase;
-import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.util.IPluginContext;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.JobExecutionResult;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.CloseableIterator;
@@ -115,7 +107,7 @@ public abstract class CUDCDCTestSuit {
     }
 
     protected final TargetResName dataxName = new TargetResName("x");
-    static String keyCol_text = "col_text";
+    public static String keyCol_text = "col_text";
     public static String keyStart_time = "start_time";
     public static String key_update_time = "update_time";
     static String keyBaseId = "base_id";
@@ -190,7 +182,7 @@ public abstract class CUDCDCTestSuit {
         IMQListener<JobExecutionResult> imqListener = cdcFactory.create();
 
 
-        this.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+        this.manipulateAndVerfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
 
 
         consumerHandle.cancel();
@@ -219,7 +211,7 @@ public abstract class CUDCDCTestSuit {
         });
     }
 
-    protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+    protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
             , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
             throws Exception {
 //        File file = new File("full_types.xml");
@@ -310,14 +302,6 @@ public abstract class CUDCDCTestSuit {
                     assertTestRow(tabName, Optional.of(new ExpectRowGetter(eventKind, true))
                             , consumerHandle, exceptRow, find.get());
                 }
-
-//                            for (AssertRow rr : rows) {
-//                                //System.out.println("------------" + rr.getInt(keyBaseId));
-//                                // RowKind.UPDATE_AFTER
-//                                assertTestRow(tabName, Optional.of(new ExpectRowGetter(this.suitParam.updateRowKind, true))
-//                                        , consumerHandle, exceptRow, rr);
-//
-//                            }
             }
 
 
@@ -431,10 +415,10 @@ public abstract class CUDCDCTestSuit {
         }
 
 
-        int insertCount = 5;
+        int insertCount = 6;
 
         // setup.sql 中已经插入了baseid 为1的记录，为了避免重复，这里id从2开始插入
-        for (int i = 2; i <= insertCount + 1; i++) {
+        for (int i = 3; i <= insertCount + 1; i++) {
             //  if (i > 1) {
             now = this.getTime();
             // }
@@ -561,44 +545,10 @@ public abstract class CUDCDCTestSuit {
 
     private IResultRows createConsumerHandle(BasicDataXRdbmsReader dataxReader, String tabName) {
         // TestBasicFlinkSourceHandle sourceHandle = new TestBasicFlinkSourceHandle(tabName);
-        TISSinkFactory sinkFuncFactory = new StubSinkFactory();
+        TISSinkFactory sinkFuncFactory = new TestStubSinkFactory(this.cols);
         sinkFuncFactory.dataXName = dataxName.getName();
 
         return createConsumerHandle(dataxReader, tabName, sinkFuncFactory);
-    }
-
-    private class StubSinkFactory extends TISSinkFactory implements IStreamTableMeataCreator.ISinkStreamMetaCreator {
-        @Override
-        public IStreamTableMeta getStreamTableMeta(String tableName) {
-            return new IStreamTableMeta() {
-                @Override
-                public List<IColMetaGetter> getColsMeta() {
-                    if (CollectionUtils.isEmpty(cols)) {
-                        throw new IllegalStateException("cols can not be null");
-                    }
-                    return cols.stream().map(c -> c.meta).collect(Collectors.toList());
-                }
-            };
-        }
-
-        @Override
-        public ICompileAndPackage getCompileAndPackageManager() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Map<TableAlias, SinkFunction<DTO>>  createSinkFunction(
-                IDataxProcessor dataxProcessor, IFlinkColCreator flinkColCreator) {
-            Map<TableAlias, SinkFunction<DTO>> createdSinkFunc = Maps.newHashMap();
-            return createdSinkFunc;
-        }
-
-//        public CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createSinkFunction(IDataxProcessor dataxProcessor, IFlinkColCreator<FlinkCol> flinkColCreator) {
-//
-//            CreatedSinkFunction<SinkFunction<DTO>, FlinkCol> createdSinkFunc = new CreatedSinkFunction<>();
-//
-//            return createdSinkFunc;
-//        }
     }
 
 

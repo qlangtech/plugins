@@ -23,7 +23,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.TableInDB;
-import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

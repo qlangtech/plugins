@@ -30,7 +30,7 @@ import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugins.incr.flink.connector.ChunjunSinkFactory;
-import com.ververica.cdc.connectors.mysql.testutils.MySqlContainer;
+import org.apache.flink.cdc.connectors.mysql.testutils.MySqlContainer;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

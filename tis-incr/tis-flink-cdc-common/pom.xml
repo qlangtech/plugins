@@ -34,7 +34,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ververica</groupId>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-debezium</artifactId>
             <version>${flink.cdc.version}</version>
 <!--            <scope>provided</scope>-->

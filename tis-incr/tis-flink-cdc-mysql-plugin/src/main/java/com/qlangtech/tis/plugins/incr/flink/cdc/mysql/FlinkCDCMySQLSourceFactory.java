@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc.mysql;
 
 import com.alibaba.citrus.turbine.Context;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel;
 import com.qlangtech.plugins.incr.flink.cdc.SourceChannel.HostDbs;
 import com.qlangtech.tis.annotation.Public;
@@ -29,6 +30,7 @@ import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.lang.TisException;
+import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
@@ -43,13 +45,14 @@ import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.util.IPluginContext;
-import com.ververica.cdc.connectors.mysql.MySqlValidator;
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
-import com.ververica.cdc.connectors.mysql.table.StartupOptions;
+import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.flink.cdc.connectors.mysql.MySqlValidator;
+import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
+import org.apache.flink.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.table.api.ValidationException;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,6 +67,22 @@ public class FlinkCDCMySQLSourceFactory extends MQListenerFactory {
 
     @FormField(ordinal = 0, type = FormFieldType.ENUM, validate = {Validator.require})
     public com.qlangtech.tis.plugins.incr.flink.cdc.mysql.startup.StartupOptions startupOptions;
+
+    @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
+    public String timeZone;
+
+    public static String dftZoneId() {
+        //  return ZoneId.systemDefault().getId();
+        return BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId();
+    }
+
+    public static List<Option> availableZoneIds() {
+        List<Option> opts = Lists.newArrayList();
+        ZoneId.SHORT_IDS.forEach((key, val) -> {
+            opts.add(new Option(val, val));
+        });
+        return opts;
+    }
 
 
     @Override

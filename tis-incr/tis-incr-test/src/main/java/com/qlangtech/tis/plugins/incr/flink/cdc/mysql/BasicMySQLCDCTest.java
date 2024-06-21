@@ -120,7 +120,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
                 //  super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
@@ -304,7 +304,7 @@ public abstract class BasicMySQLCDCTest extends MySqlSourceTestBase implements T
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener)
                     throws MQConsumeException, InterruptedException {
                 // super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.ververica.cdc.connectors.mysql.testutils;
+package org.apache.flink.cdc.connectors.mysql.testutils;
 
 import com.qlangtech.plugins.incr.flink.slf4j.TISLoggerConsumer;
 import com.qlangtech.tis.TIS;

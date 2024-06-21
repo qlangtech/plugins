@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-package com.qlangtech.tis.plugins.incr.flink.cdc;
+package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
-import com.alibaba.datax.common.element.Column;
-import com.alibaba.datax.common.element.ColumnAwareRecord;
+import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import org.apache.flink.table.data.ArrayData;
 import org.apache.flink.table.data.DecimalData;
-import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.MapData;
 import org.apache.flink.table.data.RawValueData;
 import org.apache.flink.table.data.RowData;
@@ -30,25 +29,32 @@ import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.types.RowKind;
 
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-06-18 17:33
+ * @create: 2024-06-20 16:55
  **/
-public class TransformerRowData implements RowData, ColumnAwareRecord<Object> {
-    private GenericRowData row;
-    private Map<String, Integer> col2IndexMapper;
-
-    public TransformerRowData(GenericRowData row) {
-        this.row = Objects.requireNonNull(row, "param row can not be null");
+public class TransformerRowData extends AbstractTransformerRecord<RowData> implements RowData {
+    protected Object[] rewriteVals;
+    public TransformerRowData(RowData row, List<FlinkCol> cols) {
+        super(row, cols);
+        int newSize = cols.size();
+        this.rewriteVals = new Object[newSize];
     }
 
     @Override
-    public void setCol2Index(Map<String, Integer> mapper) {
-        this.col2IndexMapper = mapper;
+    public void setColumn(String field, Object val) {
+        rewriteVals[getPos(field)] = (val == null ? NULL : val);
+    }
+    @Override
+    public Object getColumn(String field) {
+        Integer pos = getPos(field);
+        if (rewriteVals[pos] != null) {
+            return rewriteVals[pos];
+        }
+        FlinkCol flinkCol = cols.get(pos);
+        return getColVal(flinkCol);
     }
 
     @Override
@@ -59,41 +65,19 @@ public class TransformerRowData implements RowData, ColumnAwareRecord<Object> {
         }
         return val.toString();
     }
-
-    private Integer getPos(String field) {
-        Integer pos = col2IndexMapper.get(field);
-        if (pos == null) {
-            throw new IllegalStateException("field:" + field + " relevant pos can not be null,exist:"
-                    + col2IndexMapper.entrySet().stream().map((entry) -> entry.getKey() + "->" + entry.getValue()).collect(Collectors.joining(",")));
-        }
-        return pos;
+    @Override
+    public RowData getDelegate() {
+        return this;
     }
 
-    @Override
-    public void setColumn(String field, Object val) {
-        this.row.setField(getPos(field), val);
-    }
-
-    @Override
-    public void setString(String field, String val) {
-        Integer pos = getPos(field);
-        if (val == null) {
-            this.row.setField(pos, null);
-        } else {
-            this.row.setField(pos, StringData.fromString(val));
-        }
-    }
-
-    @Override
-    public Object getColumn(String field) {
-        Integer pos = getPos(field);
-        return this.row.getField(pos);
+    protected Object getColVal(FlinkCol flinkCol) {
+        return flinkCol.getRowDataVal(this.row);
     }
 
 
     @Override
     public int getArity() {
-        return row.getArity();
+        return this.rewriteVals.length;
     }
 
     @Override
@@ -108,83 +92,150 @@ public class TransformerRowData implements RowData, ColumnAwareRecord<Object> {
 
     @Override
     public boolean isNullAt(int pos) {
+        if (rewriteVals[pos] != null) {
+            return (rewriteVals[pos] == NULL);
+        }
+
         return row.isNullAt(pos);
     }
 
     @Override
     public boolean getBoolean(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Boolean) val;
+        }
+
         return row.getBoolean(pos);
     }
 
     @Override
     public byte getByte(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Byte) val;
+        }
         return row.getByte(pos);
     }
 
     @Override
     public short getShort(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Short) val;
+        }
         return row.getShort(pos);
     }
 
     @Override
     public int getInt(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Integer) val;
+        }
         return row.getInt(pos);
     }
 
     @Override
     public long getLong(int pos) {
+
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Long) val;
+        }
+
         return row.getLong(pos);
     }
 
     @Override
     public float getFloat(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Float) val;
+        }
         return row.getFloat(pos);
     }
 
     @Override
     public double getDouble(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (Double) val;
+        }
         return row.getDouble(pos);
     }
 
     @Override
     public StringData getString(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (StringData) val;
+        }
         return row.getString(pos);
     }
 
     @Override
     public DecimalData getDecimal(int pos, int precision, int scale) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (DecimalData) val;
+        }
         return row.getDecimal(pos, precision, scale);
     }
 
     @Override
     public TimestampData getTimestamp(int pos, int precision) {
+
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (TimestampData) val;
+        }
+
         return row.getTimestamp(pos, precision);
     }
 
     @Override
     public <T> RawValueData<T> getRawValue(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (RawValueData<T>) val;
+        }
         return row.getRawValue(pos);
     }
 
     @Override
     public byte[] getBinary(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (byte[]) val;
+        }
         return row.getBinary(pos);
     }
 
     @Override
     public ArrayData getArray(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (ArrayData) val;
+        }
         return row.getArray(pos);
     }
 
     @Override
     public MapData getMap(int pos) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (MapData) val;
+        }
         return row.getMap(pos);
     }
 
     @Override
     public RowData getRow(int pos, int numFields) {
+        Object val = null;
+        if ((val = rewriteVals[pos]) != null && val != NULL) {
+            return (RowData) val;
+        }
         return row.getRow(pos, numFields);
     }
-
-
 }

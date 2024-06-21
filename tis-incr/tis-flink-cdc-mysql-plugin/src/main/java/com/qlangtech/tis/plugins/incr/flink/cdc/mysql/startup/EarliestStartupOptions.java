@@ -28,12 +28,12 @@ import com.qlangtech.tis.extension.TISExtension;
 public class EarliestStartupOptions extends StartupOptions {
 
     @Override
-    public com.ververica.cdc.connectors.mysql.table.StartupOptions getOptionsType() {
+    public org.apache.flink.cdc.connectors.mysql.table.StartupOptions getOptionsType() {
         return option();
     }
 
-    private static com.ververica.cdc.connectors.mysql.table.StartupOptions option() {
-        return com.ververica.cdc.connectors.mysql.table.StartupOptions.earliest();
+    private static org.apache.flink.cdc.connectors.mysql.table.StartupOptions option() {
+        return org.apache.flink.cdc.connectors.mysql.table.StartupOptions.earliest();
     }
 
 

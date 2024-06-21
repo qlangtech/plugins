@@ -26,7 +26,8 @@ import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
-import com.qlangtech.tis.plugins.incr.flink.cdc.RowDataTransformerMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
+import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -97,7 +98,10 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
         }
 
         public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
-                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, final List<FlinkCol> sourceColsMeta, List<FlinkCol> sinkColsMeta
+                , SinkFunction<RowData> sinkFunction //
+                , List<String> primaryKeys //
+                , final List<FlinkCol> sourceColsMeta //
+                , List<FlinkCol> sinkColsMeta //
                 , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
             super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
             this.transformers

@@ -4,15 +4,16 @@
       {
         "describable":false,
         "eprops":{
-          "dftVal":"1706503617788",
+          "dateTimeFormat":"yyyy-MM-dd HH:mm:ss",
           "help":"timestamp for the startup offsets, as milliseconds from epoch.",
-          "label":"开始时间"
+          "label":"开始时间",
+          "placeholder":"消费起始点"
         },
         "key":"startupTimestampMillis",
         "ord":0,
         "pk":false,
         "required":true,
-        "type":4
+        "type":10
       }
     ],
     "containAdvance":false,

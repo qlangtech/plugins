@@ -30,8 +30,8 @@ import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.ververica.cdc.connectors.base.config.JdbcSourceConfigFactory;
-import com.ververica.cdc.connectors.base.options.StartupOptions;
+import org.apache.flink.cdc.connectors.base.config.JdbcSourceConfigFactory;
+import org.apache.flink.cdc.connectors.base.options.StartupOptions;
 
 import java.util.Objects;
 

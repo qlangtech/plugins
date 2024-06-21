@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.ververica.cdc.connectors.mysql.testutils;
+package org.apache.flink.cdc.connectors.mysql.testutils;
 
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;

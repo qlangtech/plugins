@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import com.ververica.cdc.connectors.mysql.testutils.TestMySqlContainer;
+import org.apache.flink.cdc.connectors.mysql.testutils.TestMySqlContainer;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 

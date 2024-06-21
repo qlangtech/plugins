@@ -50,19 +50,19 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ververica</groupId>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-mongodb-cdc</artifactId>
             <version>${flink.cdc.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>com.ververica</groupId>
+                    <groupId>org.apache.flink</groupId>
                     <artifactId>flink-connector-debezium</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
 
         <!--        <dependency>-->
-        <!--            <groupId>com.ververica</groupId>-->
+        <!--            <groupId>org.apache.flink</groupId>-->
         <!--            <artifactId>flink-connector-debezium</artifactId>-->
         <!--            <version>${flink.cdc.version}</version>-->
         <!--        </dependency>-->

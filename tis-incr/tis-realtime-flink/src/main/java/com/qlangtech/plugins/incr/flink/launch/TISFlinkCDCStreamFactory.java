@@ -106,6 +106,11 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
         return Optional.empty();
     }
 
+    @Override
+    public Integer getParallelism() {
+        return this.parallelism;
+    }
+
     private boolean isCheckpointEnable() {
         return checkpoint instanceof CKOn;
     }

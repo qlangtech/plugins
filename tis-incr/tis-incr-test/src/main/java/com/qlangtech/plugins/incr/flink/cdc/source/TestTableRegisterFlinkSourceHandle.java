@@ -82,7 +82,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 
     @Override
     protected void initWriterTable(TableAlias alias) {
-       // super.initWriterTable(alias);
+        // super.initWriterTable(alias);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class TestTableRegisterFlinkSourceHandle extends TableRegisterFlinkSource
 
     @Override
     protected String getSinkTypeName() {
-       throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
 

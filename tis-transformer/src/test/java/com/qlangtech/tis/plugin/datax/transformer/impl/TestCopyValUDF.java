@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -46,9 +47,10 @@ public class TestCopyValUDF extends BasicUDFDefinitionTest<CopyValUDF> {
 
         return new OutParametersAndLiteriaAssert() {
             @Override
-            public void assertOutParameters(List<String> outParameters) {
+            public void assertOutParameters(List<TargetColType> outParameters) {
                 Assert.assertTrue("outParameters"
-                        , CollectionUtils.isEqualCollection(Collections.singletonList(addedField), outParameters));
+                        , CollectionUtils.isEqualCollection(Collections.singletonList(addedField)
+                                , outParameters.stream().map((p) -> p.getName()).collect(Collectors.toList())));
             }
 
             @Override

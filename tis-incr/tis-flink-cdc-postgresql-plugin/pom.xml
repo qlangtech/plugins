@@ -54,12 +54,12 @@
 
 
         <dependency>
-            <groupId>com.ververica</groupId>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-postgres-cdc</artifactId>
             <version>${flink.cdc.version}</version>
             <exclusions>
                 <exclusion>
-                    <groupId>com.ververica</groupId>
+                    <groupId>org.apache.flink</groupId>
                     <artifactId>flink-connector-debezium</artifactId>
                 </exclusion>
                 <exclusion>

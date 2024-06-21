@@ -46,7 +46,8 @@ import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.realtime.ReaderSource;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
-import com.ververica.cdc.connectors.mysql.source.MySqlSource;
+import org.apache.commons.lang.StringUtils;
+import org.apache.flink.cdc.connectors.mysql.source.MySqlSource;
 import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import org.apache.flink.api.common.JobExecutionResult;
@@ -186,7 +187,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     ));
             sourceChannel.setFocusTabs(tabs, dataXProcessor.getTabAlias(null)
                     , (tabName) -> DTOStream.createDispatched(tabName, sourceFactory.independentBinLogMonitor));
-            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor, flinkColCreator);
+            return (JobExecutionResult) getConsumerHandle().consume(dataxName, sourceChannel, dataXProcessor);
         } catch (Exception e) {
             throw new MQConsumeException(e.getMessage(), e);
         }
@@ -221,13 +222,16 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
 
             String[] databases = dbs.getDataBases();
-
+            if (StringUtils.isNotEmpty(sourceFactory.timeZone)) {
+                throw new IllegalStateException("timezone can not be null");
+            }
             MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()
                     .hostname(dbHost)
+                    .serverTimeZone(sourceFactory.timeZone)
                     .port(dsFactory.port)
                     .databaseList(databases) // monitor all tables under inventory database
                     .tableList(tbs.toArray(new String[tbs.size()]))
-                    .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
+                   // .serverTimeZone(BasicDataSourceFactory.DEFAULT_SERVER_TIME_ZONE.getId())
                     .username(dsFactory.getUserName())
                     .password(dsFactory.getPassword())
                     .startupOptions(sourceFactory.getStartupOptions())

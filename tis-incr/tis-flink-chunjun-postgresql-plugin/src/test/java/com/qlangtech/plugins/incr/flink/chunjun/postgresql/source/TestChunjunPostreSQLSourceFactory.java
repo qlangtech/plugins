@@ -29,8 +29,7 @@ import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsReader;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.test.TISEasyMock;
-import com.ververica.cdc.connectors.postgres.PostgresTestBase;
-import org.apache.commons.lang.StringUtils;
+import org.apache.flink.cdc.connectors.postgres.PostgresTestBase;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.types.RowKind;
 import org.junit.Before;
@@ -262,9 +261,9 @@ public class TestChunjunPostreSQLSourceFactory extends PostgresTestBase implemen
             }
 
             @Override
-            protected void verfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
+            protected void manipulateAndVerfiyTableCrudProcess(String tabName, BasicDataXRdbmsReader dataxReader
                     , ISelectedTab tab, IResultRows consumerHandle, IMQListener<JobExecutionResult> imqListener) throws Exception {
-                super.verfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
+                super.manipulateAndVerfiyTableCrudProcess(tabName, dataxReader, tab, consumerHandle, imqListener);
                 // imqListener.start(dataxName, dataxReader, Collections.singletonList(tab), null);
                 Thread.sleep(1000);
 

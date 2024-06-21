@@ -47,22 +47,5 @@ public class RowData2RowMapper implements MapFunction<RowData, Row> {
     @Override
     public Row map(RowData r) throws Exception {
         return rowRowConverter.toExternal(r);
-        //  throw new UnsupportedOperationException();
-//        GenericRowData rr = (GenericRowData) r;
-//
-//        Row row = new Row(r.getRowKind(), cols.size());
-//        int index = 0;
-//        Object val = null;
-//        for (FlinkCol col : cols) {
-//            if (r.isNullAt(index)) {
-//                row.setField(index, null);
-//            } else {
-//                val = rr.getField(index);
-//                row.setField(index, col.processVal(val));
-//            }
-//            index++;
-//        }
-//        return row;
-
     }
 }

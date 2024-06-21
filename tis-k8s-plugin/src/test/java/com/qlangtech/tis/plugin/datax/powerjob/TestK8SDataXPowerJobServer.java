@@ -137,8 +137,8 @@ public class TestK8SDataXPowerJobServer extends TestCase {
                     TestEmbeddedPowerjobCoreDataSource.K8S_IMAGE;
 
             powerJobServer.launchPowerjobWorker();
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getResponseBody());
+        } catch (Exception e) {
+           throw new RuntimeException(e);
         }
     }
 

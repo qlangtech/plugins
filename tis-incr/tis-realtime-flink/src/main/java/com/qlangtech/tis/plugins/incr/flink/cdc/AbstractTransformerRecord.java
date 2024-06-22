@@ -36,14 +36,12 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
     protected static final Object NULL = new Object();
 
     protected Type row;
-    private Map<String, Integer> col2IndexMapper;
+    protected Map<String, Integer> col2IndexMapper;
 
-    protected List<FlinkCol> cols;
 
-    public AbstractTransformerRecord(Type row, List<FlinkCol> cols) {
+
+    public AbstractTransformerRecord(Type row) {
         this.row = Objects.requireNonNull(row, "param row can not be null");
-        this.cols = cols;
-
     }
 
     @Override
@@ -63,14 +61,10 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
 
 
 
-    @Override
-    public void setString(String field, String val) {
-        setColumn(field, (val == null) ? null : StringData.fromString(val));
-    }
 
     public abstract Type getDelegate();
 
-    protected abstract Object getColVal(FlinkCol flinkCol);
+
 
 
 

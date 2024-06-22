@@ -24,6 +24,7 @@ import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.annotation.Public;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.ElementPluginDesc;
@@ -36,8 +37,10 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import org.apache.commons.lang3.StringUtils;
 
@@ -102,16 +105,20 @@ public class DataXDorisWriter extends BasicDorisWriter {
         }
     };
 
+
+
     @Override
-    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), columnTokenRecognise) {
+    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), columnTokenRecognise, transformers) {
+
+
             @Override
             protected String getUniqueKeyToken() {
                 return createTableModel.getKeyToken();
             }
 
             @Override
-            protected DorisType convertType(CMeta col) {
+            protected DorisType convertType(IColMetaGetter col) {
                 DorisType type = super.convertType(col);
                 DorisType fixType = col.getType().accept(new DataType.TypeVisitor<DorisType>() {
 

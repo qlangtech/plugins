@@ -10,9 +10,11 @@ import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.dameng.ds.DaMengDataSourceFactory;
 import com.qlangtech.tis.plugin.datax.dameng.reader.DataXDaMengReader;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDBReservedKeys;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
@@ -88,7 +90,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
      * @return
      */
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         //        if (!this.autoCreateTable) {
         //            return null;
         //        }
@@ -149,7 +151,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
 
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (CollectionUtils.isEmpty(pks)) {
@@ -165,7 +167,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
             }
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -180,7 +182,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
              * @param col
              * @return
              */
-            private String convertType(CMeta col) {
+            private String convertType(IColMetaGetter col) {
                 DataType type = col.getType();
                 switch (type.getJdbcType()) {
                     case CHAR: {

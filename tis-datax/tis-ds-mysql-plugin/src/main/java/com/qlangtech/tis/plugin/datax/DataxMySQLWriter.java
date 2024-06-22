@@ -32,10 +32,12 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataDumpers;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceDumper;
 import com.qlangtech.tis.plugin.ds.TISTable;
 import com.qlangtech.tis.plugin.ds.TableNotFoundException;
@@ -117,17 +119,16 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
     }
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
-        //        if (!this.autoCreateTable) {
-        //            return null;
-        //        }
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+
+
         StringBuffer script = new StringBuffer();
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
         try {
             if (threadBingDataXReader instanceof DataxMySQLReader
                     // 没有使用别名
-                    && tableMapper.hasNotUseAlias()) {
+                    && tableMapper.hasNotUseAlias() && !transformers.isPresent()) {
                 DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
                 dsFactory.visitFirstConnection((c) -> {
@@ -175,7 +176,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         final AtomicInteger timestampCount = new AtomicInteger();
 
         final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper,
-                this.getDataSourceFactory()) {
+                this.getDataSourceFactory(), transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (!pks.isEmpty()) {
@@ -189,7 +190,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
             }
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -203,7 +204,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
              * @param col
              * @return
              */
-            private String convertType(CMeta col) {
+            private String convertType(IColMetaGetter col) {
                 DataType type = col.getType();
                 switch (type.getJdbcType()) {
                     case CHAR: {
@@ -227,12 +228,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                     case INTEGER:
                         return "int(11)";
                     case BIGINT: {
-                        //                        if (type.columnSize < 1) {
-                        //                            throw new IllegalStateException("col:" + col.getName() + type +
-                        //                            " colsize can not small than 1");
-                        //                        }
-                        // return "BIGINT(" + type.columnSize + ") " + type.getUnsignedToken();
-
                         return "BIGINT " + type.getUnsignedToken();
                     }
                     case FLOAT:
@@ -273,8 +268,6 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
                         return "TINYTEXT";
                 }
             }
-
-
         };
         return createTableSqlBuilder.build();
     }

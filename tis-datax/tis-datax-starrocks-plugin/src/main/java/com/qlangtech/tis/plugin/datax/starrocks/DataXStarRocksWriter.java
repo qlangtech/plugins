@@ -24,8 +24,11 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.BasicStarRocksWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -59,8 +62,8 @@ public class DataXStarRocksWriter extends BasicStarRocksWriter {
     }
 
     @Override
-    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper) {
-        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+    protected BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
+        return new BasicCreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
             @Override
             protected String getUniqueKeyToken() {
                 return "PRIMARY KEY";
@@ -83,6 +86,7 @@ public class DataXStarRocksWriter extends BasicStarRocksWriter {
         protected String getRowDelimiterKey() {
             return Separator.ROW_DELIMITER;
         }
+
         @Override
         protected String getColSeparatorKey() {
             return Separator.COL_SEPARATOR;

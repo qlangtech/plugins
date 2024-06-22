@@ -38,6 +38,7 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformer;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.datax.transformer.impl.CopyValUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.ExistTargetCoumn;
+import com.qlangtech.tis.plugin.datax.transformer.impl.JSONSplitterUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.SubStrUDF;
 import com.qlangtech.tis.plugin.datax.transformer.impl.VirtualTargetColumn;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -75,6 +76,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.keyCol_text;
+import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.key_json_content;
+import static com.qlangtech.plugins.incr.flink.cdc.CUDCDCTestSuit.key_name_from_json_content;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -173,6 +176,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
             addCopyValTransformer(tRules);
             addSubStrTransformer(tRules);
+            addJSONSplit(tRules);
 
             return tRules;
         };
@@ -181,6 +185,7 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         streamFactory.parallelism = 1;
         FlinkCDCMySQLSourceFactory mysqlCDCFactory = new FlinkCDCMySQLSourceFactory();
         mysqlCDCFactory.startupOptions = new LatestStartupOptions();
+        mysqlCDCFactory.timeZone = FlinkCDCMySQLSourceFactory.dftZoneId();
 
         CDCTestSuitParams suitParams = tabParamMap.get(tabBase);
         CUDCDCTestSuit cdcTestSuit = new CUDCDCTestSuit(suitParams) {
@@ -206,6 +211,30 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
 
     }
 
+
+    private static void addJSONSplit(RecordTransformerRules tRules) {
+
+        TargetColType toColType;
+
+        RecordTransformer transformer = new RecordTransformer();
+        JSONSplitterUDF jsonSplit = new JSONSplitterUDF();
+        jsonSplit.from = key_json_content;
+
+
+        toColType = new TargetColType();
+        VirtualTargetColumn existTargetCoumn = new VirtualTargetColumn();
+        existTargetCoumn.name = key_name_from_json_content;
+        toColType.setTarget(existTargetCoumn);
+        toColType.setType(DataType.createVarChar(64));
+        jsonSplit.skipError = false;
+        jsonSplit.prefix = "prefix_";
+
+        jsonSplit.to = Lists.newArrayList(toColType);
+        transformer.setUdf(jsonSplit);
+        tRules.rules.add(transformer);
+    }
+
+
     private static void addSubStrTransformer(RecordTransformerRules tRules) {
 
         TargetColType targetColType;
@@ -215,15 +244,14 @@ public class TestFlinkCDCMySQLSourceFactory extends MySqlSourceTestBase implemen
         subStr.start = 0;
         subStr.length = 2;
         subStr.from = keyCol_text;
+
         targetColType = new TargetColType();
-
-
         ExistTargetCoumn existTargetCoumn = new ExistTargetCoumn();
         existTargetCoumn.name = keyCol_text;
         targetColType.setTarget(existTargetCoumn);
         targetColType.setType(DataType.createVarChar(32));
 
-
+        subStr.to = targetColType;
         transformer.setUdf(subStr);
         tRules.rules.add(transformer);
     }

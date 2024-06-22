@@ -24,8 +24,10 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
 
 import java.util.List;
@@ -59,14 +61,15 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(
+            IDataxProcessor.TableMap tableMapper,Optional<RecordTransformerRules> transformers) {
 //        if (!this.autoCreateTable) {
 //            return null;
 //        }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
 
-            private String convertType(CMeta col) {
+            private String convertType(IColMetaGetter col) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html
                 StringBuffer createSql = new StringBuffer(getSqlServerType(col));
                 if (col.isPk()) {
@@ -76,7 +79,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
             }
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -85,7 +88,7 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
                 };
             }
 
-            private String getSqlServerType(CMeta col) {
+            private String getSqlServerType(IColMetaGetter col) {
                 DataType type = col.getType();
                 switch (type.getJdbcType()) {
                     case INTEGER:

@@ -20,6 +20,7 @@ package com.qlangtech.tis.plugin.datax.doris;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxReader;
@@ -100,7 +101,7 @@ public class TestDataXDorisWriter extends TestCase {
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
-        }));
+        }), Optional.empty());
 
         assertNotNull(ddl);
         // System.out.println(ddl);

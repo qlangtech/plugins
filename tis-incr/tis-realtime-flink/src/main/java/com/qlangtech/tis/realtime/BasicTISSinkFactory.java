@@ -135,7 +135,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             }
 
             if (transformers.isPresent()) {
-                return result.map(new RowDataTransformerMapper(this.sourceColsMeta, transformers.get(), this.flinkColCreator))
+                return result.map(new RowDataTransformerMapper(this.sourceColsMeta, transformers.get()))
                         .name(tab.getFrom() + "_transformer").setParallelism(this.sinkTaskParallelism);
             } else {
                 return result;

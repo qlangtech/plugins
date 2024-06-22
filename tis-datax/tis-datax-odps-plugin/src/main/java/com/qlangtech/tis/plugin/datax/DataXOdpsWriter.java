@@ -8,6 +8,7 @@ import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.exec.ExecChainContextUtils;
@@ -31,12 +32,15 @@ import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder.CreateDDL;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.odps.JoinOdpsTask;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -188,6 +192,8 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         return odpsTask;
     }
 
+
+
     /**
      * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
      *
@@ -195,9 +201,9 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
      * @return
      */
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper,Optional<RecordTransformerRules> transformers) {
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
 
             @Override
             protected CreateTableName getCreateTableName() {
@@ -224,7 +230,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
             }
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {

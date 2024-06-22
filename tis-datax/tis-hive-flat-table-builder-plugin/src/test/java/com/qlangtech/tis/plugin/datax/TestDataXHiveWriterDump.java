@@ -22,6 +22,7 @@ import com.google.common.collect.Maps;
 import com.qlangtech.tis.config.authtoken.UserToken;
 import com.qlangtech.tis.config.authtoken.UserTokenUtils;
 import com.qlangtech.tis.config.hive.meta.IHiveMetaStore;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.Delimiter;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TimeFormat;
@@ -141,7 +142,7 @@ public class TestDataXHiveWriterDump {
         preExec.run();
 
         WriterTemplate.realExecuteDump(TestDataXHiveWriter.mysql2hiveDataXName
-                , DataXCfgJson.path("hive-datax-writer-assert-without-option-val.json"), dataxWriter);
+                , DataXCfgJson.path(TestDataXHiveWriterDump.class,"hive-datax-writer-assert-without-option-val.json"), dataxWriter);
 
         IRemoteTaskTrigger postExec = dataxWriter.createPostTask(execContext, applicationTab.getSourceTab(), null);
         postExec.run();

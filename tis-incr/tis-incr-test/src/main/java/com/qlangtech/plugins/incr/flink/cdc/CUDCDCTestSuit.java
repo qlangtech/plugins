@@ -110,6 +110,8 @@ public abstract class CUDCDCTestSuit {
     public static String keyCol_text = "col_text";
     public static String keyStart_time = "start_time";
     public static String key_update_time = "update_time";
+    public static String key_json_content = "json_content";
+    public static String key_name_from_json_content = "name";
     static String keyBaseId = "base_id";
     String keyColBlob = "col_blob";
 
@@ -239,19 +241,19 @@ public abstract class CUDCDCTestSuit {
         try {
             // 执行添加
             System.out.println("start to insert");
-            for (TestRow r : exampleRows) {
+            for (TestRow expect : exampleRows) {
                 visitConn((conn) -> {
-                    insertTestRow(conn.getConnection(), r);
+                    insertTestRow(conn.getConnection(), expect);
                 });
                 sleepForAWhile();
 
                 System.out.println("wait to show insert rows");
                 waitForSnapshotStarted(snapshot);
 
-                List<AssertRow> rows = fetchRows(snapshot, 1, r, false);
+                List<AssertRow> rows = fetchRows(snapshot, 1, expect, false);
                 for (AssertRow rr : rows) {
                     System.out.println("------------" + rr.getObj(this.getPrimaryKeyName(tab)));
-                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), consumerHandle, r, rr);
+                    assertTestRow(tabName, Optional.of(new ExpectRowGetter(RowKind.INSERT, false)), consumerHandle, expect, rr);
                 }
                 // System.out.println("########################");
 
@@ -428,7 +430,7 @@ public abstract class CUDCDCTestSuit {
             vals.put("update_date", parseDate(dateFormat.get().format(now)));
             vals.put(key_update_time, parseTimestamp(timeFormat.get().format(now)));
             vals.put("price", RowValsExample.RowVal.decimal(199, 2));
-            vals.put("json_content", RowValsExample.RowVal.json("{\"name\":\"baisui#" + i + "\"}"));
+            vals.put(key_json_content, RowValsExample.RowVal.json("{\"name\":\"baisui#" + i + "\"}"));
             vals.put("col_blob", RowValsExample.RowVal.stream("Hello world"));
             vals.put(keyCol_text, RowValsExample.RowVal.$("我爱北京天安门" + i));
             row = new TestRow(RowKind.INSERT, new RowValsExample(vals));

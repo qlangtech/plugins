@@ -128,7 +128,7 @@ public class TestDataxMySQLWriter extends BasicTest {
             col.setName("col6");
             col.setType(DataXReaderColType.STRING.dataType);
             cols.add(col);
-        }));
+        }), Optional.empty());
 
         Assert.assertNotNull(ddl);
         // System.out.println(ddl);
@@ -187,7 +187,7 @@ public class TestDataxMySQLWriter extends BasicTest {
         pluginContext.addDb(desc, dbWriterName, context, true);
         EasyMock.replay(pluginContext, context);
 
-        DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore( PostedDSProp.parse(dbWriterName));
+        DataSourceFactoryPluginStore dbStore = TIS.getDataSourceFactoryPluginStore(PostedDSProp.parse(dbWriterName));
 
         Assert.assertTrue("save mysql db Config faild"
                 , dbStore.setPlugins(pluginContext, Optional.of(context), Collections.singletonList(desc)).success);

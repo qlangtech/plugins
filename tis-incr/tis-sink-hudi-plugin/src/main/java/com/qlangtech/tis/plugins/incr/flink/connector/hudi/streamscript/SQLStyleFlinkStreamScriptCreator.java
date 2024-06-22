@@ -94,15 +94,16 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
                 @Override
                 public void refresh() {
                 }
+
                 @Override
                 public Optional<String> getEscapeChar() {
                     return Optional.of("`");
                 }
             };
             CreateTableSqlBuilder flinkTableDdlBuilder
-                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta) {
+                    = new CreateTableSqlBuilder(IDataxProcessor.TableMap.create(tableName, tabMeta.colMetas), sourceMeta, Optional.empty()) {
                 @Override
-                protected ColWrapper createColWrapper(CMeta c) {
+                protected ColWrapper createColWrapper(IColMetaGetter c) {
                     return new ColWrapper(c) {
                         @Override
                         public String getMapperType() {
@@ -183,7 +184,7 @@ public class SQLStyleFlinkStreamScriptCreator extends BasicFlinkStreamScriptCrea
         }
     }
 
-    private String convertType(CMeta col) {
+    private String convertType(IColMetaGetter col) {
         // https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/types/
         return col.getType().accept(new DataType.TypeVisitor<String>() {
             @Override

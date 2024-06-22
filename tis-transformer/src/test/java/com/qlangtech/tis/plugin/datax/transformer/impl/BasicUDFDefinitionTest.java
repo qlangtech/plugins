@@ -22,6 +22,7 @@ import com.qlangtech.tis.extension.impl.SuFormProperties;
 import com.qlangtech.tis.extension.util.impl.DefaultGroovyShellFactory;
 import com.qlangtech.tis.plugin.common.PluginDesc;
 import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -84,7 +85,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
 
 
-        List<TargetColType> outParameters = cpValueUDF.outParameters();
+        List<OutputParameter> outParameters = cpValueUDF.outParameters();
 
         makeAssert.assertOutParameters(outParameters);
 
@@ -105,7 +106,7 @@ public abstract class BasicUDFDefinitionTest<T extends UDFDefinition> implements
 
     interface OutParametersAndLiteriaAssert {
 
-        void assertOutParameters(List<TargetColType> outParameters);
+        void assertOutParameters(List<OutputParameter> outParameters);
 
         void assertLiteriaDesc(List<UDFDesc> literiaDesc);
     }

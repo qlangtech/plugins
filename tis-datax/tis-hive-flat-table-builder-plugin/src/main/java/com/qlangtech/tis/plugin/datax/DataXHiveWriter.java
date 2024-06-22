@@ -58,8 +58,10 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -75,6 +77,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -172,11 +175,11 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
     }
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 
         final ITISFileSystem fileSystem = this.getFs().getFileSystem();
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory()) {
+                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
 
             @Override
             protected CreateTableName getCreateTableName() {
@@ -210,7 +213,7 @@ public class DataXHiveWriter extends BasicFSWriter implements IFlatTableBuilder,
             }
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {

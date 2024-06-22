@@ -24,8 +24,10 @@ import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
@@ -51,17 +53,17 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
     }
 
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 //        if (!this.autoCreateTable) {
 //            return null;
 //        }
 
         PGDataSourceFactory ds = this.getDataSourceFactory();
         // 多个主键
-        boolean multiPk = Objects.requireNonNull(tableMapper.getSourceCols(),"sourceCols can not be null")
+        boolean multiPk = Objects.requireNonNull(tableMapper.getSourceCols(), "sourceCols can not be null")
                 .stream().filter((col) -> col.isPk()).count() > 1;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, ds) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, ds, transformers) {
             @Override
             protected CreateTableName getCreateTableName() {
                 return new CreateTableName(ds.tabSchema, tableMapper.getTo(), this);
@@ -82,7 +84,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
 
 
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return new ColWrapper(c) {
                     @Override
                     public String getMapperType() {
@@ -101,7 +103,7 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
              * @param col
              * @return
              */
-            private String convertType(CMeta col) {
+            private String convertType(IColMetaGetter col) {
                 DataType type = col.getType();
                 String colType = type.accept(new DataType.TypeVisitor<String>() {
                     @Override

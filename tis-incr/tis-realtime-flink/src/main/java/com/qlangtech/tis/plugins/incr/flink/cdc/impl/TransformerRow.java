@@ -18,11 +18,8 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import org.apache.flink.types.Row;
-
-import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,8 +27,8 @@ import java.util.List;
  **/
 public class TransformerRow extends AbstractTransformerRecord<Row> {
 
-    public TransformerRow(Row row, List<FlinkCol> cols) {
-        super(row, cols);
+    public TransformerRow(Row row) {
+        super(row);
     }
 
     @Override
@@ -40,22 +37,26 @@ public class TransformerRow extends AbstractTransformerRecord<Row> {
     }
 
     @Override
-    protected Object getColVal(FlinkCol flinkCol) {
-        return null;
+    public void setString(String field, String val) {
+        this.setColumn(field, val);
     }
 
     @Override
     public void setColumn(String field, Object colVal) {
-
+        this.row.setField(field, colVal);
     }
 
     @Override
     public Object getColumn(String field) {
-        return null;
+        return this.row.getField(field);
     }
 
     @Override
     public String getString(String field) {
-        return "";
+        Object val = this.row.getField(field);
+        if (val == null) {
+            return null;
+        }
+        return String.valueOf(val);
     }
 }

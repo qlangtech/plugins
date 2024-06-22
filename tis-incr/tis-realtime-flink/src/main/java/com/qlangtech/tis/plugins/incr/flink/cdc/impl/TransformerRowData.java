@@ -37,16 +37,25 @@ import java.util.List;
  **/
 public class TransformerRowData extends AbstractTransformerRecord<RowData> implements RowData {
     protected Object[] rewriteVals;
+    protected List<FlinkCol> cols;
+
     public TransformerRowData(RowData row, List<FlinkCol> cols) {
-        super(row, cols);
+        super(row);
+        this.cols = cols;
         int newSize = cols.size();
         this.rewriteVals = new Object[newSize];
+    }
+
+    @Override
+    public void setString(String field, String val) {
+        setColumn(field, (val == null) ? null : StringData.fromString(val));
     }
 
     @Override
     public void setColumn(String field, Object val) {
         rewriteVals[getPos(field)] = (val == null ? NULL : val);
     }
+
     @Override
     public Object getColumn(String field) {
         Integer pos = getPos(field);
@@ -65,6 +74,7 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
         }
         return val.toString();
     }
+
     @Override
     public RowData getDelegate() {
         return this;

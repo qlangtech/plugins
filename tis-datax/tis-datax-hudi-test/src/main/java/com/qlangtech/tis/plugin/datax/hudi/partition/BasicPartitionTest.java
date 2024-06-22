@@ -26,12 +26,14 @@ import com.qlangtech.tis.plugin.datax.hudi.DataXHudiWriter;
 import com.qlangtech.tis.plugin.datax.hudi.keygenerator.HudiKeyGenerator;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import org.junit.Assert;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -46,9 +48,9 @@ public class BasicPartitionTest {
             public void refresh() {
             }
         };
-        CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList()), sourceMeta) {
+        CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(new IDataxProcessor.TableMap(Lists.newArrayList()), sourceMeta, Optional.empty()) {
             @Override
-            protected ColWrapper createColWrapper(CMeta c) {
+            protected ColWrapper createColWrapper(IColMetaGetter c) {
                 return null;
             }
         };

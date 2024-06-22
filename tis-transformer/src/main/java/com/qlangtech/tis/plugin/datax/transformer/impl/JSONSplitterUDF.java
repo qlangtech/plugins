@@ -18,9 +18,7 @@
 
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
-import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.ColumnAwareRecord;
-import com.alibaba.datax.common.element.Record;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.google.common.collect.Lists;
@@ -29,6 +27,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -65,8 +64,10 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
 
 
     @Override
-    public List<TargetColType> outParameters() {
-        return this.to;//.stream().map((c) -> c).collect(Collectors.toList());
+    public List<OutputParameter> outParameters() {
+        return this.to.stream().map((col) -> {
+            return OutputParameter.create(getPrefixToFieldName(col), col);
+        }).collect(Collectors.toList());//.stream().map((c) -> c).collect(Collectors.toList());
     }
 
     @Override
@@ -101,7 +102,7 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
                 for (TargetColType t : this.to) {
                     String val = json.getString(t.getName());
                     if (val != null) {
-                        record.setString(prefix == null ? t.getName() : (prefix + t.getName()), val);
+                        record.setString(getPrefixToFieldName(t), val);
                     }
                 }
             } catch (Exception e) {
@@ -112,6 +113,10 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
                 }
             }
         }
+    }
+
+    private String getPrefixToFieldName(TargetColType t) {
+        return prefix == null ? t.getName() : (prefix + t.getName());
     }
 
 

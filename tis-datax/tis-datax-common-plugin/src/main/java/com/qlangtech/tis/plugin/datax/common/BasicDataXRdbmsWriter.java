@@ -22,6 +22,7 @@ import com.alibaba.citrus.turbine.Context;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.datax.DataXCfgFile;
+import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
@@ -63,7 +64,7 @@ import java.util.stream.Collectors;
  * @create: 2021-06-23 12:07
  **/
 public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extends DataxWriter
-        implements IDataSourceFactoryGetter, IInitWriterTableExecutor, KeyedPluginStore.IPluginKeyAware {
+        implements IDataSourceFactoryGetter, IInitWriterTableExecutor, KeyedPluginStore.IPluginKeyAware, IDataXNameAware {
     public static final String KEY_DB_NAME_FIELD_NAME = "dbName";
     private static final Logger logger = LoggerFactory.getLogger(BasicDataXRdbmsWriter.class);
 
@@ -100,6 +101,11 @@ public abstract class BasicDataXRdbmsWriter<DS extends DataSourceFactory> extend
     public String template;
 
     public transient String dataXName;
+
+    @Override
+    public final String getCollectionName() {
+        return this.dataXName;
+    }
 
     @Override
     public Integer getRowFetchSize() {

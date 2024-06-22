@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.impl.ConcatUDF.Separator;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -56,7 +57,7 @@ public class TestConcatUDF extends BasicUDFDefinitionTest<ConcatUDF> {
     protected OutParametersAndLiteriaAssert getOutParametersAndLiteriaAssert() {
         return new OutParametersAndLiteriaAssert(){
             @Override
-            public void assertOutParameters(List<TargetColType> outParameters) {
+            public void assertOutParameters(List<OutputParameter> outParameters) {
 
             }
 

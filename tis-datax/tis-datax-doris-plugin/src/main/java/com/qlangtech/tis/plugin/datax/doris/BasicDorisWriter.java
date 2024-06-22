@@ -28,10 +28,12 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.CreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
@@ -82,19 +84,19 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
     @Override
-    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         //        if (!this.autoCreateTable) {
         //            return null;
         //        }
         // https://doris.apache.org/docs/1.2/sql-manual/sql-reference/Data-Types/DATETIMEV2/
         // https://doris.apache.org/docs/dev/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
-        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
+        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper, transformers);
 
         return createTableSqlBuilder.build();
     }
 
-    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper);
+    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
@@ -102,8 +104,11 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         private final List<String> primaryKeys;
         private final DataType.TypeVisitor<DorisType> columnTokenRecognise;
 
-        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta, DataType.TypeVisitor<DorisType> columnTokenRecognise) {
-            super(tableMapper, dsMeta);
+        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper
+                , DataSourceMeta dsMeta
+                , DataType.TypeVisitor<DorisType> columnTokenRecognise
+                , Optional<RecordTransformerRules> transformers) {
+            super(tableMapper, dsMeta, transformers);
             // (DorisSelectedTab)
             this.dorisTab = tableMapper.getSourceTab();
             this.primaryKeys = this.dorisTab.getPrimaryKeys();
@@ -119,11 +124,11 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
+        protected List<ColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
             // 将主键排在最前面
             List<ColWrapper> result = Lists.newArrayList();
             for (String pk : primaryKeys) {
-                for (CMeta c : cols) {
+                for (IColMetaGetter c : cols) {
                     if (pk.equalsIgnoreCase(c.getName())) {
                         result.add(createColWrapper(c));
                     }
@@ -146,8 +151,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             if (pks.size() > 0) {
                 script.append(pks.stream().map((pk) -> wrapWithEscape(pk)).collect(Collectors.joining(",")));
             } else {
-                List<CMeta> cols = this.getCols();
-                Optional<CMeta> firstCol = cols.stream().findFirst();
+                List<IColMetaGetter> cols = this.getCols();
+                Optional<IColMetaGetter> firstCol = cols.stream().findFirst();
                 if (firstCol.isPresent()) {
                     script.append(firstCol.get().getName());
                 } else {
@@ -158,27 +163,8 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             script.append("BUCKETS 10\n");
             StringBuffer seqBuffer = new StringBuffer();
             if (dorisTab instanceof DorisSelectedTab) {
-                seqBuffer = ((DorisSelectedTab) dorisTab).seqKey.createDDLScript(this.tableMapper);
+                seqBuffer = ((DorisSelectedTab) dorisTab).seqKey.createDDLScript(this);
             }
-            //  StringBuffer seqBuffer = dorisTab// new StringBuffer();
-            //            if (StringUtils.isNotEmpty(dorisTab.seqKey)) {
-            //
-            //                List<CMeta> cols = this.tableMapper.getSourceCols();
-            //                Optional<CMeta> p = cols.stream().filter((c) -> dorisTab.seqKey.equals(c.getName()))
-            //                .findFirst();
-            //                if (!p.isPresent()) {
-            //                    throw new IllegalStateException("can not find col:" + dorisTab.seqKey);
-            //                }
-            //
-            ////                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey)
-            ////                        .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper
-            // (p.get()).getMapperType()).append("'");
-            //
-            //                seqBuffer.append("\n\t, \"function_column.sequence_col\" = '").append(dorisTab.seqKey);
-            //                       // .append("'\n\t, \"function_column.sequence_type\"='").append(createColWrapper
-            //                       (p.get()).getMapperType()).append("'");
-            //
-            //            }
 
             script.append("PROPERTIES(\"replication_num\" = \"1\" " + seqBuffer + " )");
 
@@ -186,7 +172,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
         }
 
         @Override
-        protected ColWrapper createColWrapper(CMeta c) {
+        protected ColWrapper createColWrapper(IColMetaGetter c) {
             return new ColWrapper(c) {
                 @Override
                 public String getMapperType() {
@@ -206,7 +192,7 @@ public abstract class BasicDorisWriter extends BasicDataXRdbmsWriter<DorisSource
             };
         }
 
-        protected DorisType convertType(CMeta col) {
+        protected DorisType convertType(IColMetaGetter col) {
             DataType type = col.getType();
             return type.accept(columnTokenRecognise);
         }

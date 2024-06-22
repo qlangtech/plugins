@@ -19,8 +19,8 @@
 package com.qlangtech.tis.plugin.datax.seq;
 
 import com.alibaba.fastjson.JSONObject;
-import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.extension.Describable;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 
 /**
  * https://doris.apache.org/docs/dev/data-operate/update-delete/sequence-column-manual?_highlight=seq
@@ -30,7 +30,7 @@ import com.qlangtech.tis.extension.Describable;
  **/
 public abstract class SeqKey implements Describable<SeqKey> {
 
-    public StringBuffer createDDLScript(IDataxProcessor.TableMap tableMapper) {
+    public StringBuffer createDDLScript(AbstractCreateTableSqlBuilder tableMapper) {
         return new StringBuffer();
     }
 

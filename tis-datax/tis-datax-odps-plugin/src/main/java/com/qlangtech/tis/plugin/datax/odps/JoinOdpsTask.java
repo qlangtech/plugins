@@ -247,7 +247,7 @@ public class JoinOdpsTask extends HiveTask {
         IDataxProcessor.TableMap tabMapper
                 = IDataxProcessor.TableMap.create(dumpTable.getTabName(), cols);
 
-        CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(tabMapper);
+        CreateTableSqlBuilder.CreateDDL createDDL = odpsWriter.generateCreateDDL(tabMapper, Optional.empty());
         StringBuffer ddlScript = createDDL.getDDLScript();
         try {
             conn.execute(ddlScript.toString());

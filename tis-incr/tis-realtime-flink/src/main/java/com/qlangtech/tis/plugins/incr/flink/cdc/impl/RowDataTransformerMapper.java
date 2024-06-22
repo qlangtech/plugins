@@ -19,10 +19,9 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc.impl;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
-import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
+import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
 import org.apache.flink.table.data.RowData;
 
 import java.util.List;
@@ -33,8 +32,8 @@ import java.util.List;
  * @create: 2024-06-20 17:09
  **/
 public class RowDataTransformerMapper extends ReocrdTransformerMapper<RowData> {
-    public RowDataTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules, IFlinkColCreator<FlinkCol> flinkColCreator) {
-        super(cols, transformerRules, flinkColCreator);
+    public RowDataTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
+        super(cols, transformerRules);
     }
 
     @Override

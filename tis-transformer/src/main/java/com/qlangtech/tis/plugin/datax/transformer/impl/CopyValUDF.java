@@ -26,6 +26,7 @@ import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -52,8 +53,8 @@ public class CopyValUDF extends AbstractFromColumnUDFDefinition {
     }
 
     @Override
-    public List<TargetColType> outParameters() {
-        return Collections.singletonList(this.getTO());
+    public List<OutputParameter> outParameters() {
+        return Collections.singletonList(OutputParameter.create(this.getTO()));
     }
 
     @Override

@@ -27,9 +27,11 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.AbstractCreateTableSqlBuilder;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -61,7 +63,7 @@ public class OnSeqKey extends SeqKey {
     }
 
     @Override
-    public StringBuffer createDDLScript(IDataxProcessor.TableMap tableMapper) {
+    public StringBuffer createDDLScript(AbstractCreateTableSqlBuilder tableMapper) {
         // if (StringUtils.isNotEmpty(this.seqKey)) {
         if (tableMapper == null) {
             throw new IllegalArgumentException("param tableMapper can not be null");
@@ -70,8 +72,8 @@ public class OnSeqKey extends SeqKey {
             throw new IllegalArgumentException("param seqKey can not be null");
         }
         StringBuffer seqBuffer = new StringBuffer();
-        List<CMeta> cols = tableMapper.getSourceCols();
-        Optional<CMeta> p = cols.stream().filter((c) -> seqKey.equals(c.getName())).findFirst();
+        List<IColMetaGetter> cols = tableMapper.getCols();
+        Optional<IColMetaGetter> p = cols.stream().filter((c) -> seqKey.equals(c.getName())).findFirst();
         if (!p.isPresent()) {
             throw new IllegalStateException("can not find col:" + seqKey);
         }

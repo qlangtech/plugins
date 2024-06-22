@@ -82,6 +82,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -287,7 +288,7 @@ public abstract class TestFlinkSinkExecutor extends AbstractTestBase implements 
             // Assert.assertTrue("autoCreateTable must be true", dataXWriter.autoCreateTable);
             CreateTableSqlBuilder.CreateDDL createDDL = null;
             if (!dataXWriter.isGenerateCreateDDLSwitchOff()) {
-                createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo));
+                createDDL = dataXWriter.generateCreateDDL(new IDataxProcessor.TableMap(totalpayInfo), Optional.empty());
                 Assert.assertNotNull("createDDL can not be empty", createDDL);
                 // log.info("create table ddl:\n{}", createDDL);
                 FileUtils.write(new File(ddlDir, tabSql), createDDL.getDDLScript(), TisUTF8.get());

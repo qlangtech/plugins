@@ -31,6 +31,7 @@ import com.qlangtech.tis.offline.DataxUtils;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DBConfig;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.IInitWriterTableExecutor;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -182,7 +183,11 @@ public abstract class TableRegisterFlinkSourceHandle
 
         ISelectedTab selectedTab = sourceStreamMetaCreator.getSelectedTab(tabName);
 
-        List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(sourceStreamMetaCreator.getStreamTableMeta(tabName));
+
+        List<IColMetaGetter> srcCols = sourceStreamMetaCreator.getStreamTableMeta(tabName).getColsMeta();
+
+
+        // List<FlinkCol> cols = AbstractRowDataMapper.getAllTabColsMeta(sourceStreamMetaCreator.getStreamTableMeta(tabName));
         //  String[] fieldNames = new String[cols.size()];
         //TypeInformation<?>[] types = new TypeInformation<?>[cols.size()];
 //        int i = 0;
@@ -197,17 +202,26 @@ public abstract class TableRegisterFlinkSourceHandle
 //
 //        }
 
-        Pair<TypeInformation<Row>, Schema> outputTypeSchema
-                = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
+        Pair<TypeInformation<Row>, Schema> outputTypeSchema = null;
 
-        // TypeInformation<Row> outputType = RowUtils.getRowOutputType(selectedTab.getPrimaryKeys(), cols);// Types.ROW_NAMED(fieldNames, types);
-        // List<String> pks = selectedTab.getPrimaryKeys();
-//        if (CollectionUtils.isEmpty(pks)) {
-//            throw new IllegalStateException("pks can not be empty");
-//        }
-//        scmBuilder.primaryKey(pks);
-        // Schema schema = RowUtils.createSchema(selectedTab.getPrimaryKeys(), cols);  //scmBuilder.build();
-        // RowDataSinkFunc
+        /**
+         添加transformer执行逻辑
+         */
+        Optional<RecordTransformerRules> transformers
+                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(this, tabName));
+        RecordTransformerRules tRules = null;
+        RowTransformerMapper transformerMapper = null;
+        List<FlinkCol> cols = null;
+        if (transformers.isPresent()) {
+            tRules = transformers.get();
+            srcCols = tRules.overwriteCols(srcCols);
+            cols = AbstractRowDataMapper.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            transformerMapper = new RowTransformerMapper(cols, transformers.get());
+            outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
+        } else {
+            cols = AbstractRowDataMapper.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            outputTypeSchema = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
+        }
 
 
         SingleOutputStreamOperator<Row> rowStream = null;
@@ -223,17 +237,10 @@ public abstract class TableRegisterFlinkSourceHandle
         Objects.requireNonNull(rowStream, "rowStream can not be null");
         rowStream.setParallelism(Objects.requireNonNull(streamFactory, "streamFactory can not be null").getParallelism());
 
-        /**
-         添加transformer执行逻辑
-         */
-        Optional<RecordTransformerRules> transformers
-                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(this, tabName));
-        //  this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
+
         if (transformers.isPresent()) {
-            RowTransformerMapper transformerMapper = new RowTransformerMapper(cols
-                    , transformers.get(), Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
-            outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
-            rowStream = rowStream.map(transformerMapper, outputTypeSchema.getKey())
+            rowStream = rowStream.map(
+                            Objects.requireNonNull(transformerMapper, "transformerMapper can not be null"), outputTypeSchema.getKey())
                     .name(tabName + "_transformer")
                     .setParallelism(streamFactory.getParallelism());
         }

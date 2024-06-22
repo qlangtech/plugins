@@ -29,9 +29,11 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.common.BasicDataXRdbmsWriter;
 import com.qlangtech.tis.plugin.datax.starrocks.StarRocksWriterContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.visitor.BlockScriptBuffer;
@@ -88,23 +90,24 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
 
     @Override
-    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper) {
+    public final CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 //        if (!this.autoCreateTable) {
 //            return null;
 //        }
         // https://doris.apache.org/docs/sql-manual/sql-reference/Data-Definition-Statements/Create/CREATE-TABLE
         // https://docs.starrocks.io/zh-cn/2.4/sql-reference/sql-statements/data-definition/CREATE%20TABLE
-        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper);
+        final BasicCreateTableSqlBuilder createTableSqlBuilder = createSQLDDLBuilder(tableMapper, transformers);
 
         return createTableSqlBuilder.build();
     }
 
-    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper);
+    protected abstract BasicCreateTableSqlBuilder createSQLDDLBuilder(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers);
 
 
     protected static abstract class BasicCreateTableSqlBuilder extends CreateTableSqlBuilder {
-        public BasicCreateTableSqlBuilder(IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta) {
-            super(tableMapper, dsMeta);
+        public BasicCreateTableSqlBuilder(
+                IDataxProcessor.TableMap tableMapper, DataSourceMeta dsMeta, Optional<RecordTransformerRules> transformers) {
+            super(tableMapper, dsMeta, transformers);
         }
 
         @Override
@@ -118,12 +121,12 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
 
 
         @Override
-        protected List<ColWrapper> preProcessCols(List<String> pks, List<CMeta> cols) {
+        protected List<ColWrapper> preProcessCols(List<String> pks, List<IColMetaGetter> cols) {
             // 将主键排在最前面
 
             List<ColWrapper> result = Lists.newArrayList();
             for (String pk : pks) {
-                for (CMeta c : cols) {
+                for (IColMetaGetter c : cols) {
                     if (pk.equalsIgnoreCase(c.getName())) {
                         result.add(createColWrapper(c));
                     }
@@ -149,8 +152,8 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
                         .map((pk) -> wrapWithEscape(pk))
                         .collect(Collectors.joining(",")));
             } else {
-                List<CMeta> cols = this.getCols();
-                Optional<CMeta> firstCol = cols.stream().findFirst();
+                List<IColMetaGetter> cols = this.getCols();
+                Optional<IColMetaGetter> firstCol = cols.stream().findFirst();
                 if (firstCol.isPresent()) {
                     script.append(firstCol.get().getName());
                 } else {
@@ -163,7 +166,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
         }
 
         @Override
-        protected ColWrapper createColWrapper(CMeta c) {
+        protected ColWrapper createColWrapper(IColMetaGetter c) {
             return new ColWrapper(c) {
                 @Override
                 public String getMapperType() {
@@ -179,7 +182,7 @@ public abstract class BasicStarRocksWriter extends BasicDataXRdbmsWriter<StarRoc
             };
         }
 
-        protected DorisType convertType(CMeta col) {
+        protected DorisType convertType(IColMetaGetter col) {
             DataType type = col.getType();
             return type.accept(columnTokenRecognise);
         }

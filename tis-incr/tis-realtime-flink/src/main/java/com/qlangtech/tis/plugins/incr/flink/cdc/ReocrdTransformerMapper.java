@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
@@ -46,11 +47,9 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
     private final List<UDFDefinition> transformerUDF;
     private final Map<String, Integer> col2IdxMapper;
 
-    public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules, IFlinkColCreator<FlinkCol> flinkColCreator) {
-        if (flinkColCreator == null) {
-            throw new IllegalArgumentException("param flinkColCreator can not be null");
-        }
-        this.cols = Lists.newArrayList(Objects.requireNonNull(cols, "cols can not be null"));
+    public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
+
+        this.cols = Collections.unmodifiableList(Objects.requireNonNull(cols, "cols can not be null"));
         this.transformerUDF
                 = Objects.requireNonNull(transformerRules, "param transformerRules can not be null")
                 .rules.stream().map((t) -> t.getUdf()).collect(Collectors.toList());
@@ -59,25 +58,6 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
         int idx = 0;
         for (FlinkCol col : cols) {
             col2IdxBuilder.put(col.name, Pair.of(idx++, col));
-        }
-        FlinkCol col = null;
-        for (TargetColType colType : transformerRules.relevantTypedColKeys()) {
-            if (colType.isVirtual()) {
-                // 新增虚拟列
-                col = flinkColCreator.build(colType, idx);
-                col2IdxBuilder.put(colType.getName(), Pair.of(idx++, col));
-                this.cols.add(col);
-            } else {
-                // 替换已有列
-                Pair<Integer, FlinkCol> exist = col2IdxBuilder.get(colType.getName());
-                if (exist == null) {
-                    throw new IllegalStateException("colName:" + colType.getName() + " relevant table col conf can not be null");
-                }
-                int existIdx = exist.getLeft();
-                col = flinkColCreator.build(colType, existIdx);
-                col2IdxBuilder.put(colType.getName(), Pair.of(existIdx, col));
-                this.cols.set(existIdx, col);
-            }
         }
 
         this.col2IdxMapper = Collections.unmodifiableMap(

@@ -193,7 +193,7 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
             };
             EasyMock.replay(dataXProcessor);
             DataXClickhouseWriter writer = new DataXClickhouseWriter();
-            WriterTemplate.realExecuteDump(DataXCfgJson.path(TestDataXClickhouseWriter.class,clickhouse_datax_writer_assert_without_optional), writer);
+            WriterTemplate.realExecuteDump(DataXCfgJson.path(TestDataXClickhouseWriter.class, clickhouse_datax_writer_assert_without_optional), writer);
 
             EasyMock.verify(dataXProcessor);
         } finally {
@@ -205,11 +205,11 @@ public class TestDataXClickhouseWriter extends com.qlangtech.tis.plugin.test.Bas
 
         ClickHouseTest dataXWriter = createDataXWriter();
 
-        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
+        CreateTableSqlBuilder.CreateDDL createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap, Optional.empty());
         assertNull(createDDL);
 
         dataXWriter.writer.autoCreateTable = true;
-        createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap);
+        createDDL = dataXWriter.writer.generateCreateDDL(dataXWriter.tableMap, Optional.empty());
         assertNotNull(createDDL);
 
         assertEquals("CREATE TABLE customer_order_relation\n" +

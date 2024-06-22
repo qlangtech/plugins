@@ -21,6 +21,7 @@ package com.qlangtech.tis.plugin.datax.transformer.impl;
 import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.Record;
 import com.qlangtech.tis.common.utils.Assert;
+import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
 import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import com.qlangtech.tis.plugin.ds.DataType;
@@ -47,7 +48,7 @@ public class TestCopyValUDF extends BasicUDFDefinitionTest<CopyValUDF> {
 
         return new OutParametersAndLiteriaAssert() {
             @Override
-            public void assertOutParameters(List<TargetColType> outParameters) {
+            public void assertOutParameters(List<OutputParameter> outParameters) {
                 Assert.assertTrue("outParameters"
                         , CollectionUtils.isEqualCollection(Collections.singletonList(addedField)
                                 , outParameters.stream().map((p) -> p.getName()).collect(Collectors.toList())));

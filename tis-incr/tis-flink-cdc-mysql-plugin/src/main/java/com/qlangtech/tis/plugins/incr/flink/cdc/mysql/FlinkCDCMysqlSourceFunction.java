@@ -222,7 +222,7 @@ public class FlinkCDCMysqlSourceFunction implements IMQListener<JobExecutionResu
                     , CommonConnectorConfig.EventProcessingFailureHandlingMode.WARN.getValue());
 
             String[] databases = dbs.getDataBases();
-            if (StringUtils.isNotEmpty(sourceFactory.timeZone)) {
+            if (StringUtils.isEmpty(sourceFactory.timeZone)) {
                 throw new IllegalStateException("timezone can not be null");
             }
             MySqlSource<DTO> sourceFunc = MySqlSource.<DTO>builder()

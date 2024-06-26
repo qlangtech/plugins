@@ -36,6 +36,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.SelectedTab;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugins.datax.kafka.writer.protocol.KafkaProtocol;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
@@ -147,7 +148,7 @@ public class DataXKafkaWriter extends DataxWriter {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap,Optional<RecordTransformerRules> transformerRules) {
         return null;
     }
 

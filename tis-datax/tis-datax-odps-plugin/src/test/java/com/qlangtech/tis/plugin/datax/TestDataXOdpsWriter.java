@@ -9,7 +9,8 @@ import com.qlangtech.tis.fs.ITISFileSystem;
 import com.qlangtech.tis.offline.FileSystemFactory;
 import com.qlangtech.tis.plugin.aliyun.AccessKey;
 import com.qlangtech.tis.plugin.datax.odps.OdpsDataSourceFactory;
-import com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
+
+import  com.qlangtech.tis.plugin.datax.test.TestSelectedTabs;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.trigger.util.JsonUtil;
@@ -85,7 +86,7 @@ public class TestDataXOdpsWriter extends TestCase {
 
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
         IDataxProcessor.TableMap tab = tableMap.get();
-        IDataxContext subTaskCtx = odpsWriter.getSubTask(tableMap);
+        IDataxContext subTaskCtx = odpsWriter.getSubTask(tableMap, Optional.empty());
         Assert.assertNotNull(subTaskCtx);
 
         DataXOdpsWriter.OdpsContext odpsWriterContext = (DataXOdpsWriter.OdpsContext) subTaskCtx;
@@ -129,7 +130,7 @@ public class TestDataXOdpsWriter extends TestCase {
 
         final DataXOdpsWriter writer = createDataXOdpsWriter();
         Assert.assertFalse(writer.isGenerateCreateDDLSwitchOff());
-       // EasyMock.replay(fsFactory, fs);
+        // EasyMock.replay(fsFactory, fs);
         CreateTableSqlBuilder.CreateDDL ddl = writer.generateCreateDDL(getTabApplication((cols) -> {
             CMeta col = new CMeta();
             col.setPk(true);

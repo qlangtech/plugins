@@ -37,6 +37,7 @@ import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.mongo.MongoWriterSelectedTab;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
@@ -136,12 +137,12 @@ public class DataXMongodbWriter extends DataxWriter implements  //IDataxProcesso
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         //        if (tableMap.isPresent()) {
         //            throw new IllegalStateException("tableMap must not be present");
         //        }
         MongoDBWriterContext context = new MongoDBWriterContext(this,
-                tableMap.orElseThrow(() -> new IllegalStateException("tableMap can not be null")));
+                tableMap.orElseThrow(() -> new IllegalStateException("tableMap can not be null")), transformerRules);
         return context;
     }
 

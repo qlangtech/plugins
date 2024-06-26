@@ -20,8 +20,11 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriterContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.postgresql.PGDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -29,8 +32,8 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class PostgreWriterContext extends RdbmsWriterContext<DataXPostgresqlWriter, PGDataSourceFactory> {
 
-    public PostgreWriterContext(DataXPostgresqlWriter writer, IDataxProcessor.TableMap tabMapper) {
-        super(writer, tabMapper);
+    public PostgreWriterContext(DataXPostgresqlWriter writer, IDataxProcessor.TableMap tabMapper, Optional<RecordTransformerRules> transformerRules) {
+         super(writer, tabMapper, transformerRules);
     }
 
     @Override

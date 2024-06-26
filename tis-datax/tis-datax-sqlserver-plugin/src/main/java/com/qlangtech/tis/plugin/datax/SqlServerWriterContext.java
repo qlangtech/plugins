@@ -20,7 +20,10 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriterContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -28,8 +31,8 @@ import com.qlangtech.tis.plugin.ds.sqlserver.SqlServerDatasourceFactory;
  **/
 public class SqlServerWriterContext extends RdbmsWriterContext<DataXSqlserverWriter, SqlServerDatasourceFactory> {
     public static final String EscapeChar = "\\\"";
-    public SqlServerWriterContext(DataXSqlserverWriter writer, IDataxProcessor.TableMap tabMapper) {
-        super(writer, tabMapper);
+    public SqlServerWriterContext(DataXSqlserverWriter writer, IDataxProcessor.TableMap tabMapper, Optional<RecordTransformerRules> transformerRules) {
+        super(writer, tabMapper,transformerRules);
     }
 
     @Override

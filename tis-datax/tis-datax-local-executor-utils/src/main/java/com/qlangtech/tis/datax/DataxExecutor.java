@@ -487,7 +487,10 @@ public class DataxExecutor {
         public String getTISDataXName() {
             return this.dataXName.getTISDataXName();
         }
-
+        @Override
+        public String getDataXName() {
+            return this.dataXName.getTISDataXName();
+        }
         @Override
         protected StandAloneJobContainerCommunicator createContainerCommunicator(Configuration configuration) {
             return new StandAloneJobContainerCommunicator(configuration) {

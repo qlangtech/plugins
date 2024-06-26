@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.datax.common;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TabCols;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import org.apache.commons.lang.StringUtils;
 
@@ -35,10 +37,12 @@ public abstract class RdbmsWriterContext<WRITER extends BasicDataXRdbmsWriter, D
         extends BasicRdbmsContext<WRITER, DS> implements IDataxContext {
     private final String tableName;
 
-    public RdbmsWriterContext(WRITER writer, IDataxProcessor.TableMap tabMapper) {
+    public RdbmsWriterContext(WRITER writer, IDataxProcessor.TableMap tabMapper, Optional< RecordTransformerRules> transformerRules) {
         super(writer, (DS) writer.getDataSourceFactory());
         this.tableName = tabMapper.getTo();
-        this.setCols(tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        TabCols tabCols = TabCols.create(dsFactory, tabMapper, transformerRules);
+      //  this.setCols(tabMapper.getSourceCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        this.setCols(tabCols.getRawCols());
     }
 
     public String getTableName() {

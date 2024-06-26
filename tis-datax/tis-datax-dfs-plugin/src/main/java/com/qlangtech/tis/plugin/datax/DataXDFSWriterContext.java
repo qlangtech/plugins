@@ -20,11 +20,14 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -35,55 +38,20 @@ public class DataXDFSWriterContext implements IDataxContext {
     private final DataXDFSWriter writer;
     private final IDataxProcessor.TableMap tableMapper;
     // private final FTPServer ftpServer;
+    private final List<IColMetaGetter> cols;
 
-    public DataXDFSWriterContext(DataXDFSWriter writer, IDataxProcessor.TableMap tableMapper) {
+    public DataXDFSWriterContext(DataXDFSWriter writer, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformerRules) {
         this.writer = writer;
         Objects.requireNonNull(writer.fileFormat, "prop fileFormat can not be null");
         Objects.requireNonNull(writer.dfsLinker, "prop linker can not be null");
         this.tableMapper = tableMapper;
+
+        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tableMapper.getSourceCols()))
+                .orElseGet(() -> tableMapper.getSourceCols().stream().collect(Collectors.toList()));
+
         //  this.ftpServer = FTPServer.getServer(writer.linker);
     }
 
-    //    public String getProtocol() {
-//        return this.ftpServer.protocol;
-//    }
-//
-//    public String getHost() {
-//        return this.ftpServer.host;
-//    }
-//
-//    public boolean isContainPort() {
-//        return this.ftpServer.port != null;
-//    }
-//
-//    public Integer getPort() {
-//        return this.ftpServer.port;
-//    }
-//
-//    public boolean isContainTimeout() {
-//        return this.ftpServer.timeout != null;
-//    }
-//
-//    public Integer getTimeout() {
-//        return this.ftpServer.timeout;
-//    }
-//
-//    public String getUsername() {
-//        return this.ftpServer.username;
-//    }
-//
-//    public String getPassword() {
-//        return this.ftpServer.password;
-//    }
-//
-//    public boolean isContainConnectPattern() {
-//        return StringUtils.isNotBlank(this.ftpServer.connectPattern);
-//    }
-//
-//    public String getConnectPattern() {
-//        return this.ftpServer.connectPattern;
-//    }
-//
     public String getPath() {
         String path = null;
         if (StringUtils.isEmpty(path = this.writer.dfsLinker.getRootPath())) {
@@ -113,7 +81,7 @@ public class DataXDFSWriterContext implements IDataxContext {
     }
 
     public String getEncoding() {
-      //  return this.writer.encoding;
+        //  return this.writer.encoding;
         throw new UnsupportedOperationException();
     }
 
@@ -162,12 +130,12 @@ public class DataXDFSWriterContext implements IDataxContext {
     }
 
     public boolean isContainHeader() {
-        List<CMeta> cols = tableMapper.getSourceCols();
+        // List<CMeta> cols = tableMapper.getSourceCols();
         return (this.writer.fileFormat.containHeader() && cols.size() > 0);
     }
 
     public String getHeader() {
-        return tableMapper.getSourceCols().stream().map((c) -> "'" + c.getName() + "'").collect(Collectors.joining(","));
+        return this.cols.stream().map((c) -> "'" + c.getName() + "'").collect(Collectors.joining(","));
     }
 
 }

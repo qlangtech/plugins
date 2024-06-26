@@ -50,11 +50,11 @@ public class DataXOracleWriter extends BasicDataXRdbmsWriter<OracleDataSourceFac
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalStateException("tableMap must be present");
         }
-        OracleWriterContext writerContext = new OracleWriterContext(this, tableMap.get());
+        OracleWriterContext writerContext = new OracleWriterContext(this, tableMap.get(), transformerRules);
         return writerContext;
     }
 

@@ -73,11 +73,11 @@ public class DataXDorisWriter extends BasicDorisWriter {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalStateException("tableMap must be present");
         }
-        return new DorisWriterContext(this, tableMap.get());
+        return new DorisWriterContext(this, tableMap.get(), transformerRules);
     }
 
     @Override
@@ -104,7 +104,6 @@ public class DataXDorisWriter extends BasicDorisWriter {
             return "DECIMALV3";
         }
     };
-
 
 
     @Override

@@ -167,16 +167,13 @@ public class K8SUtils {
             V1ObjectMeta meta = new V1ObjectMeta();
             meta.setName(svcRes.getName());
 
-            // V1OwnerReference ownerRef = createOwnerReference();
             List<V1OwnerReference> ownerRefs = Collections.singletonList(ownerRef.orElseGet(() -> createOwnerReference()));
             meta.setOwnerReferences(ownerRefs);
             svcBody.setMetadata(meta);
 
-            // V1ServiceSpec svcSpec = specCreator.get().getKey();// new V1ServiceSpec();
-            //svcSpec.setType("ClusterIP");
             svcSpec.setSelector(Collections.singletonMap(K8SUtils.LABEL_APP, selector.getK8SResName()));
 
-            // V1ServicePort svcPort = specCreator.get().getRight();// new V1ServicePort();
+
             svcPort.setName(targetPortName);
             svcPort.setTargetPort(targetPort);
             svcPort.setPort(exportPort);
@@ -207,7 +204,7 @@ public class K8SUtils {
         return createOwnerReference(metadata.getUid(), metadata.getName());
     }
 
-    private static V1OwnerReference createOwnerReference(String ownerId, String ownerName) {
+    public static V1OwnerReference createOwnerReference(String ownerId, String ownerName) {
         V1OwnerReference ownerRef = new V1OwnerReference();
         ownerRef.setUid(ownerId);
         ownerRef.setName(ownerName);
@@ -591,10 +588,10 @@ public class K8SUtils {
              * 在Waiting等待过程中是否要获取已有的Pods，在scala pods避免要出现刚添加的pod，随即马上去掉，此时程序识别成又添加了一个pod的情况
              */
             V1PodList pods = targetResName.setFieldSelector(
-                    api
-                            .listNamespacedPod(powerjobServerImage.getNamespace())
-                            .resourceVersion(resourceVer.getPreListPodsResourceVersion())
-            )
+                            api
+                                    .listNamespacedPod(powerjobServerImage.getNamespace())
+                                    .resourceVersion(resourceVer.getPreListPodsResourceVersion())
+                    )
                     .execute();
 
             for (V1Pod pod : pods.getItems()) {
@@ -626,10 +623,10 @@ public class K8SUtils {
                     //
                     ,
                     targetResName.setFieldSelector(
-                            api.listNamespacedPod(powerjobServerImage.getNamespace())
-                                    .allowWatchBookmarks(false)
-                                    .watch(true)
-                                    .resourceVersion(currentResVer))
+                                    api.listNamespacedPod(powerjobServerImage.getNamespace())
+                                            .allowWatchBookmarks(false)
+                                            .watch(true)
+                                            .resourceVersion(currentResVer))
                             .buildCall(K8SUtils.createApiCallback())
 
                     //

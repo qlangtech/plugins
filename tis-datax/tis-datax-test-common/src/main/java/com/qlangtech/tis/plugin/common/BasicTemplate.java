@@ -8,6 +8,7 @@ import com.qlangtech.tis.datax.IDataxWriter;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.plugin.StoreResourceType;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.trigger.JobTrigger;
 import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
@@ -127,7 +128,7 @@ public abstract class BasicTemplate {
             }
         }) {
             @Override
-            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer) {
+            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
                 return vmTplContent;
             }
         };

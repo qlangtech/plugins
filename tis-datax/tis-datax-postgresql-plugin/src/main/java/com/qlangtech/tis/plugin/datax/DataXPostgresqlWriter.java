@@ -180,8 +180,8 @@ public class DataXPostgresqlWriter extends BasicDataXRdbmsWriter<PGDataSourceFac
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        PostgreWriterContext writerContext = new PostgreWriterContext(this, tableMap.get());
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
+        PostgreWriterContext writerContext = new PostgreWriterContext(this, tableMap.get(), transformerRules);
 
         return writerContext;
     }

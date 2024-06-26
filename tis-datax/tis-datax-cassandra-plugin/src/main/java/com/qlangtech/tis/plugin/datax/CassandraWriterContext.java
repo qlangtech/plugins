@@ -1,19 +1,19 @@
 /**
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing, software
- *   distributed under the License is distributed on an "AS IS" BASIS,
- *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *   See the License for the specific language governing permissions and
- *   limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.qlangtech.tis.plugin.datax;
@@ -21,13 +21,13 @@ package com.qlangtech.tis.plugin.datax;
 import com.google.common.collect.Lists;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.plugin.ds.CMeta;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
-import com.qlangtech.tis.plugin.ds.ISelectedTab;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -38,11 +38,15 @@ public class CassandraWriterContext implements IDataxContext {
     private final DataXCassandraWriter writer;
     private final IDataxProcessor.TableMap tabMapper;
     private final CassandraDatasourceFactory dsFactory;
+    private final List<IColMetaGetter> cols;
 
-    public CassandraWriterContext(DataXCassandraWriter writer, IDataxProcessor.TableMap tabMapper) {
+    public CassandraWriterContext(DataXCassandraWriter writer, IDataxProcessor.TableMap tabMapper, Optional<RecordTransformerRules> transformerRules) {
         this.writer = writer;
         this.tabMapper = tabMapper;
         this.dsFactory = writer.getDataSourceFactory();
+
+        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tabMapper.getSourceCols()))
+                .orElseGet(() -> tabMapper.getSourceCols().stream().collect(Collectors.toList()));
     }
 
     public String getKeyspace() {
@@ -61,8 +65,9 @@ public class CassandraWriterContext implements IDataxContext {
         return this.tabMapper.getTo();
     }
 
-    public List<CMeta> getColumn() {
-        return this.tabMapper.getSourceCols();
+    public List<IColMetaGetter> getColumn() {
+        return cols;
+       // return this.tabMapper.getSourceCols();
     }
 
     public String getHost() {

@@ -28,6 +28,7 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import org.apache.commons.lang.StringUtils;
 
@@ -97,7 +98,7 @@ public abstract class BasicFSWriter extends DataxWriter implements KeyedPluginSt
     }
 
     @Override
-    public final IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public final IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }

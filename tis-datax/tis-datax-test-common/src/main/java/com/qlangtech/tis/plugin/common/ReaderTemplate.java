@@ -35,6 +35,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.easymock.EasyMock;
@@ -61,7 +62,7 @@ public class ReaderTemplate {
         IDataxWriter dataxWriter = EasyMock.mock("dataxWriter", IDataxWriter.class);
         //  EasyMock.expect(processor.getWriter(null, true)).andReturn(dataxWriter).anyTimes();
         IDataxContext dataxContext = EasyMock.mock("dataxWriterContext", IDataxContext.class);
-        EasyMock.expect(dataxWriter.getSubTask(Optional.empty())).andReturn(dataxContext).anyTimes();
+        EasyMock.expect(dataxWriter.getSubTask(Optional.empty(), Optional.empty())).andReturn(dataxContext).anyTimes();
 
         //  EasyMock.expect(processor.getReader(null)).andReturn(dataxReader);
 
@@ -107,7 +108,7 @@ public class ReaderTemplate {
             }
 
             @Override
-            public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+            public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
                 return null;
             }
         };

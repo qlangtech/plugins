@@ -21,8 +21,11 @@ package com.qlangtech.tis.plugin.datax.starrocks;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.BasicStarRocksWriter;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriterContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.starrocks.StarRocksSourceFactory;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -30,8 +33,9 @@ import org.apache.commons.lang.StringUtils;
  **/
 public class StarRocksWriterContext extends RdbmsWriterContext<BasicStarRocksWriter, StarRocksSourceFactory> {
 
-    public StarRocksWriterContext(BasicStarRocksWriter writer, IDataxProcessor.TableMap tabMapper) {
-        super(writer, tabMapper);
+    public StarRocksWriterContext(BasicStarRocksWriter writer
+            , IDataxProcessor.TableMap tabMapper, Optional<RecordTransformerRules> transformerRules) {
+        super(writer, tabMapper, transformerRules);
     }
 
     public String getDataXName() {

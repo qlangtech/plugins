@@ -34,6 +34,7 @@ import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
@@ -168,7 +169,7 @@ public class WriterTemplate {
         MockDataxReaderContext mockReaderContext = new MockDataxReaderContext();
         DataXCfgGenerator dataProcessor = new DataXCfgGenerator(null, BasicTest.testDataXName, processor) {
             @Override
-            protected String getTemplateContent(IDataxReaderContext readerContext,IDataxReader reader, IDataxWriter writer) {
+            protected String getTemplateContent(IDataxReaderContext readerContext, IDataxReader reader, IDataxWriter writer, RecordTransformerRules transformerRules) {
                 return dataXWriter.getTemplate();
             }
             //            @Override

@@ -56,6 +56,7 @@ public class ConcatUDF extends UDFDefinition {
 
     /**
      * 取得可用的字段分隔符
+     *
      * @return
      */
     public static List<Option> acceptableSeparator() {
@@ -103,6 +104,9 @@ public class ConcatUDF extends UDFDefinition {
                 , this.from.stream().flatMap((f) -> f.getLiteria().stream()).collect(Collectors.toList()));
         result.add(from);
         result.add(new UDFDesc(KEY_TO, to.getLiteria()));
+
+        Separator sep = Separator.valueOf(separator);
+        result.add(new UDFDesc("separate with", sep + "(" + sep.sign + ")"));
         return result;
     }
 

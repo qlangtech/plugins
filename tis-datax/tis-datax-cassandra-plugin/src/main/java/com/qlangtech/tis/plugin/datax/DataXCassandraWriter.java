@@ -28,6 +28,7 @@ import com.qlangtech.tis.extension.impl.IOUtils;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.PostedDSProp;
 import com.qlangtech.tis.plugin.ds.cassandra.CassandraDatasourceFactory;
 
@@ -84,11 +85,11 @@ public class DataXCassandraWriter extends DataxWriter {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
-        return new CassandraWriterContext(this, tableMap.get());
+        return new CassandraWriterContext(this, tableMap.get(),transformerRules);
     }
 
     public CassandraDatasourceFactory getDataSourceFactory() {

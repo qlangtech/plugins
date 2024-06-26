@@ -30,6 +30,7 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -105,7 +106,7 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                 , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
             super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
             this.transformers
-                    = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(dataXName, tab.getFrom()));
+                    = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(dataXName.getTISDataXName()), tab.getFrom()));
             this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"

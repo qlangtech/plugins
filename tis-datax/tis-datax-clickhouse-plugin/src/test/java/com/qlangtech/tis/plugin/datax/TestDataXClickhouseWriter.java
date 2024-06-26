@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.google.common.collect.Lists;
+import com.qlangtech.tis.datax.DataXCfgFile;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.datax.impl.DataxWriter;

@@ -53,7 +53,7 @@ public class NodePort extends ServerPortExport {
 
     @Override
     protected Integer getExportPort() {
-        return this.nodePort;
+        return this.serverPort;
     }
 
     @Override

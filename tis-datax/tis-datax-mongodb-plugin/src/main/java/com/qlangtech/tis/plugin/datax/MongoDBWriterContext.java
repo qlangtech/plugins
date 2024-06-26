@@ -23,10 +23,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.mongo.MongoWriterSelectedTab;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -37,13 +43,14 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
     private final DataXMongodbWriter writer;
     private final IDataxProcessor.TableMap tableMapMapper;
     private final MongoWriterSelectedTab selectedTab;
+    private final Optional<RecordTransformerRules> transformerRules;
 
-
-    public MongoDBWriterContext(DataXMongodbWriter writer, IDataxProcessor.TableMap tableMapMapper) {
+    public MongoDBWriterContext(DataXMongodbWriter writer, IDataxProcessor.TableMap tableMapMapper, Optional<RecordTransformerRules> transformerRules) {
         super(writer.getDsFactory());
         this.tableMapMapper = tableMapMapper;
         this.writer = writer;
         this.selectedTab = (MongoWriterSelectedTab) tableMapMapper.getSourceTab();
+        this.transformerRules = transformerRules;
     }
 
     /**
@@ -51,7 +58,7 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
      *
      * @return
      */
-    private static String getDftColumn(ISelectedTab tab) {
+    private static String getDftColumn(ISelectedTab tab, Optional<RecordTransformerRules> transformerRules) {
         //[{"name":"user_id","type":"string"},{"name":"user_name","type":"array","splitter":","}]
 
         JSONArray fields = new JSONArray();
@@ -62,12 +69,14 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
         //        }
         //
         try {
-            //            List<ISelectedTab> selectedTabs = dataReader.getSelectedTabs();
-            //            if (CollectionUtils.isEmpty(selectedTabs)) {
-            //                return "[]";
-            //            }
-            //            for (ISelectedTab tab : selectedTabs) {
-            tab.getCols().forEach((col) -> {
+            List<IColMetaGetter> cols = null;
+            if (transformerRules.isPresent()) {
+                cols = transformerRules.get().overwriteCols(tab.getCols());
+            } else {
+                cols = tab.getCols().stream().collect(Collectors.toList());
+            }
+
+            cols.forEach((col) -> {
                 JSONObject field = new JSONObject();
                 field.put("name", col.getName());
                 field.put("type", col.getType().getCollapse().getLiteria());
@@ -93,7 +102,7 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
     }
 
     public String getColumn() {
-        return getDftColumn(tableMapMapper.getSourceTab());
+        return getDftColumn(tableMapMapper.getSourceTab(), this.transformerRules);
     }
 
 

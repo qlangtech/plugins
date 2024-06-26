@@ -8,6 +8,7 @@ import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.IDataxProcessor.TabCols;
 import com.qlangtech.tis.datax.IDataxProcessor.TableMap;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
@@ -193,7 +194,6 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
 
-
     /**
      * https://help.aliyun.com/document_detail/73768.html#section-ixi-bgd-948
      *
@@ -201,9 +201,9 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
      * @return
      */
     @Override
-    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper,Optional<RecordTransformerRules> transformers) {
+    public CreateTableSqlBuilder.CreateDDL generateCreateDDL(IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
         final CreateTableSqlBuilder createTableSqlBuilder
-                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
+                = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
 
             @Override
             protected CreateTableName getCreateTableName() {
@@ -345,12 +345,12 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
 
-        return new OdpsContext(this, tableMap.get());
+        return new OdpsContext(this, tableMap.get(), transformerRules);
     }
 
     @Override
@@ -369,11 +369,12 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         private final IDataxProcessor.TableMap tableMapper;
         private final AccessKey accessKey;
         private final OdpsDataSourceFactory dsFactory;
+        private final List<String> cols;
 
-        public OdpsContext(DataXOdpsWriter odpsWriter, IDataxProcessor.TableMap tableMapper) {
+        public OdpsContext(DataXOdpsWriter odpsWriter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformerRules) {
             this.odpsWriter = odpsWriter;
             this.tableMapper = tableMapper;
-
+            this.cols = TabCols.create(null, tableMapper, transformerRules).getRawCols();
             this.dsFactory = odpsWriter.getDataSourceFactory();
             this.accessKey = this.dsFactory.getAccessKey();
 
@@ -388,8 +389,9 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         }
 
         public List<String> getColumn() {
-            return this.tableMapper.getSourceCols()
-                    .stream().map((col) -> col.getName()).collect(Collectors.toList());
+//            return this.tableMapper.getSourceCols()
+//                    .stream().map((col) -> col.getName()).collect(Collectors.toList());
+            return this.cols;
         }
 
         public String getAccessId() {

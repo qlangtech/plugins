@@ -191,7 +191,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("tableMap shall be present");
         }
@@ -228,7 +228,7 @@ public class DataXClickhouseWriter extends BasicDataXRdbmsWriter<ClickHouseDataS
             // context.setPostSql(helper.replacePlaceholders(this.postSql, resolver));
             context.setPostSql(this.postSql);
         }
-        context.setCols(IDataxProcessor.TabCols.create(ds, tableMap.get()));
+        context.setCols(IDataxProcessor.TabCols.create(ds, tableMap.get(), transformerRules));
         return context;
     }
 

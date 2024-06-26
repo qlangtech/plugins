@@ -43,6 +43,7 @@ import com.qlangtech.tis.plugin.ds.TableNotFoundException;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,12 +93,19 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         if (this.preSelectedTabsHash == selectedTabs.hashCode()) {
             return selectedTabs;
         }
-        boolean shallFillSelectedTabMeta = shallFillSelectedTabMeta();
+        this.selectedTabs = fillSelectedTabMeta(this.selectedTabs);
+        this.preSelectedTabsHash = selectedTabs.hashCode();
+        return this.selectedTabs;
 
+    }
+
+    @Override
+    public List<SelectedTab> fillSelectedTabMeta(List<SelectedTab> tabs) {
+        boolean shallFillSelectedTabMeta = shallFillSelectedTabMeta();
 
         if (shallFillSelectedTabMeta) {
             try (TableColsMeta tabsMeta = getTabsMeta()) {
-                this.selectedTabs = this.selectedTabs.stream().map((tab) -> {
+                return tabs.stream().map((tab) -> {
                     ColumnMetaData.fillSelectedTabMeta(tab, (t) -> {
                         return tabsMeta.get(t.getName());
                     });
@@ -107,12 +115,13 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
                 throw new RuntimeException(e);
             }
         }
-        this.preSelectedTabsHash = selectedTabs.hashCode();
-        return this.selectedTabs;
-
+        return tabs;
     }
 
     protected boolean shallFillSelectedTabMeta() {
+        if (CollectionUtils.isEmpty(this.selectedTabs)) {
+            return true;
+        }
         for (SelectedTab tab : this.selectedTabs) {
             for (CMeta c : tab.cols) {
                 return (c.getType() == null);
@@ -123,6 +132,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     protected abstract RdbmsReaderContext createDataXReaderContext(String jobName, SelectedTab tab,
                                                                    IDataSourceDumper dumper);
+
     @Override
     public void setKey(KeyedPluginStore.Key key) {
         this.dataXName = key.keyVal.getVal();

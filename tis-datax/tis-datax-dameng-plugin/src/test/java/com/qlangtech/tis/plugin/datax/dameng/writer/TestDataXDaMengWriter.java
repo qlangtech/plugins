@@ -211,7 +211,7 @@ public class TestDataXDaMengWriter {
     private void validateConfigGenerate(String assertFileName, DataXDaMengWriter mySQLWriter) throws IOException {
 
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
+        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap,Optional.empty());
         Assert.assertNotNull(subTaskCtx);
 
         RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;

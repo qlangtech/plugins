@@ -19,17 +19,13 @@
 package com.qlangtech.tis.plugin.datax.transformer.impl;
 
 import com.google.common.collect.Lists;
-import com.qlangtech.tis.plugin.IdentityName;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
-import com.qlangtech.tis.plugin.datax.SelectedTab;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
-import com.qlangtech.tis.plugin.ds.CMeta;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -45,9 +41,6 @@ public abstract class AbstractFromColumnUDFDefinition extends UDFDefinition {
     }
 
 
-    public static List<IdentityName> colsCandidate() {
-        List<CMeta> colsCandidate = SelectedTab.getColsCandidate();
-        return colsCandidate.stream().collect(Collectors.toList());
-    }
+
 
 }

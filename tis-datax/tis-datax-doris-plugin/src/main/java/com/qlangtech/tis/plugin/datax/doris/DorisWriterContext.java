@@ -22,10 +22,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.plugin.datax.common.RdbmsWriterContext;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.ds.doris.DorisSourceFactory;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import org.apache.commons.lang.StringUtils;
+
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -34,8 +37,8 @@ import org.apache.commons.lang.StringUtils;
 public class DorisWriterContext extends RdbmsWriterContext<DataXDorisWriter, DorisSourceFactory> {
     private final ISelectedTab dorisTab;
 
-    public DorisWriterContext(DataXDorisWriter writer, IDataxProcessor.TableMap tabMapper) {
-        super(writer, tabMapper);
+    public DorisWriterContext(DataXDorisWriter writer, IDataxProcessor.TableMap tabMapper, Optional<RecordTransformerRules> transformerRules) {
+        super(writer, tabMapper, transformerRules);
         this.dorisTab = tabMapper.getSourceTab();
     }
 

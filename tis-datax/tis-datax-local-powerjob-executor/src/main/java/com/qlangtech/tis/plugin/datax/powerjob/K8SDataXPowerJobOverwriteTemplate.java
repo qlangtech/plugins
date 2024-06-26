@@ -22,19 +22,9 @@ public class K8SDataXPowerJobOverwriteTemplate extends K8SDataXPowerJobJobTempla
     @Override
     public SaveWorkflowRequest createWorkflowRequest(IDataxProcessor dataxProcessor) {
         SaveWorkflowRequest req = super.createWorkflowRequest(dataxProcessor);
-//        req.setWfName(dataxProcessor.identityValue());
-//        req.setWfDescription(dataxProcessor.identityValue());
-//        req.setEnable(true);
         Objects.requireNonNull(this.triggerStrategy, "triggerStrategy can not be null").setTimeExpression(req);
         return req;
     }
-
-//    @Override
-//    public void afterSaved() {
-//        PowerJobClient powerJob = DistributedPowerJobDataXJobSubmit.getTISPowerJob();
-//
-//        DistributedPowerJobDataXJobSubmit.innerSaveJob( );
-//    }
 
     @TISExtension()
     public static class DescriptorImpl extends BasicDescriptor implements IEndTypeGetter {

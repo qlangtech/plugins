@@ -51,23 +51,23 @@ public class DataXSqlserverWriter extends BasicDataXRdbmsWriter<SqlServerDatasou
 //    }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
-        SqlServerWriterContext writerContext = new SqlServerWriterContext(this, tableMap.get());
+        SqlServerWriterContext writerContext = new SqlServerWriterContext(this, tableMap.get(), transformerRules);
         return writerContext;
     }
 
 
     @Override
     public CreateTableSqlBuilder.CreateDDL generateCreateDDL(
-            IDataxProcessor.TableMap tableMapper,Optional<RecordTransformerRules> transformers) {
+            IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformers) {
 //        if (!this.autoCreateTable) {
 //            return null;
 //        }
         // https://www.cnblogs.com/mingfei200169/articles/427591.html
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
 
             private String convertType(IColMetaGetter col) {
                 //https://www.cnblogs.com/liberty777/p/10748570.html

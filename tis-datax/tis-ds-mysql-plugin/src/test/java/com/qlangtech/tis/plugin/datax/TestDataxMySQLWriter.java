@@ -224,7 +224,7 @@ public class TestDataxMySQLWriter extends BasicTest {
     private void validateConfigGenerate(String assertFileName, DataxMySQLWriter mySQLWriter) throws IOException {
 
         Optional<IDataxProcessor.TableMap> tableMap = TestSelectedTabs.createTableMapper();
-        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap);
+        IDataxContext subTaskCtx = mySQLWriter.getSubTask(tableMap, Optional.empty());
         Assert.assertNotNull(subTaskCtx);
 
         RdbmsDataxContext mySQLDataxContext = (RdbmsDataxContext) subTaskCtx;

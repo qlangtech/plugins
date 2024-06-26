@@ -44,7 +44,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
 
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
@@ -68,7 +68,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
             context.setUsername(dsFactory.userName);
             context.setTabName(table.getTableName());
             context.cols = IDataxProcessor.TabCols.create(new IDBReservedKeys() {
-            }, tm);
+            }, tm, transformerRules);
             context.setDbName(this.dbName);
             //    context.writeMode = this.writeMode;
             context.setPreSql(this.preSql);
@@ -151,7 +151,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
 
         CreateTableSqlBuilder.CreateDDL createDDL = null;
 
-        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(),transformers) {
+        final CreateTableSqlBuilder createTableSqlBuilder = new CreateTableSqlBuilder(tableMapper, this.getDataSourceFactory(), transformers) {
             @Override
             protected void appendExtraColDef(List<String> pks) {
                 if (CollectionUtils.isEmpty(pks)) {

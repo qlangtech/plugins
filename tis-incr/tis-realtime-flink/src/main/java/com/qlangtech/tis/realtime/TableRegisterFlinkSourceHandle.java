@@ -42,6 +42,7 @@ import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowUtils;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -208,7 +209,7 @@ public abstract class TableRegisterFlinkSourceHandle
          添加transformer执行逻辑
          */
         Optional<RecordTransformerRules> transformers
-                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(this, tabName));
+                = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(this.getCollectionName()), tabName));
         RecordTransformerRules tRules = null;
         RowTransformerMapper transformerMapper = null;
         List<FlinkCol> cols = null;

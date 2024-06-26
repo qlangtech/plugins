@@ -82,7 +82,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
         if (!tableMap.isPresent()) {
             throw new IllegalArgumentException("param tableMap shall be present");
         }
@@ -105,7 +105,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = IDataxProcessor.TabCols.create(dsFactory, tm);
+            context.cols = IDataxProcessor.TabCols.create(dsFactory, tm, transformerRules);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;
@@ -126,9 +126,10 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
         DataxReader threadBingDataXReader = DataxReader.getThreadBingDataXReader();
         Objects.requireNonNull(threadBingDataXReader, "getThreadBingDataXReader can not be null");
         try {
-            if (threadBingDataXReader instanceof DataxMySQLReader
+            if (threadBingDataXReader instanceof DataxMySQLReader //
                     // 没有使用别名
-                    && tableMapper.hasNotUseAlias() && !transformers.isPresent()) {
+                    && tableMapper.hasNotUseAlias() //
+                    && !transformers.isPresent()) {
                 DataxMySQLReader mySQLReader = (DataxMySQLReader) threadBingDataXReader;
                 MySQLDataSourceFactory dsFactory = mySQLReader.getDataSourceFactory();
                 dsFactory.visitFirstConnection((c) -> {

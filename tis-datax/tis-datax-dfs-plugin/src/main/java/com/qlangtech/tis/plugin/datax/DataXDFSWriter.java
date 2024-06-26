@@ -26,7 +26,6 @@ import com.qlangtech.tis.datax.IDataXBatchPost;
 import com.qlangtech.tis.datax.IDataXGenerateCfgs;
 import com.qlangtech.tis.datax.IDataxContext;
 import com.qlangtech.tis.datax.IDataxProcessor;
-import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
@@ -40,6 +39,7 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.format.FileFormat;
 import com.qlangtech.tis.plugin.datax.meta.MetaDataWriter;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.tdfs.ITDFSSession;
 import com.qlangtech.tis.plugin.tdfs.TDFSLinker;
@@ -118,14 +118,14 @@ public class DataXDFSWriter extends DataxWriter implements IDataXBatchPost {
     }
 
     @Override
-    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap) {
-        DataXDFSWriterContext writerContext = new DataXDFSWriterContext(this, tableMap.get());
+    public IDataxContext getSubTask(Optional<IDataxProcessor.TableMap> tableMap, Optional<RecordTransformerRules> transformerRules) {
+        DataXDFSWriterContext writerContext = new DataXDFSWriterContext(this, tableMap.get(), transformerRules);
         return writerContext;
     }
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends BaseDataxWriterDescriptor  {
+    public static class DefaultDescriptor extends BaseDataxWriterDescriptor {
         public DefaultDescriptor() {
             super();
             // registerSelectOptions(KEY_FTP_SERVER_LINK, () -> ParamsConfig.getItems(FTPServer.FTP_SERVER));

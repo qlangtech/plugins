@@ -42,6 +42,7 @@ public class RowTransformerMapper extends ReocrdTransformerMapper<Row> {
 
     @Override
     protected AbstractTransformerRecord<Row> createDelegate(Row row) {
-        return new TransformerRow(row);
+
+        return new TransformerRow(row, this.cols);
     }
 }

@@ -73,6 +73,12 @@
             <artifactId>tis-flink-cdc-shade-4-debezium-connector-mysql</artifactId>
             <version>${project.version}</version>
             <classifier>shaded</classifier>
+            <exclusions>
+                <exclusion>
+                    <artifactId>*</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 

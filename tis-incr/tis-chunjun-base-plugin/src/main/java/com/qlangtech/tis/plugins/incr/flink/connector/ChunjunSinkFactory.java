@@ -180,7 +180,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             }
             final TableAlias tabName = val;
 
-            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true, flinkColCreator));
+            sinkFuncs.put(val, createRowDataSinkFunc(dataxProcessor, tabName, true));
         });
 
         if (sinkFuncs.size() < 1) {
@@ -190,7 +190,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
     }
 
     public RowDataSinkFunc createRowDataSinkFunc(IDataxProcessor dataxProcessor
-            , final TableAlias tabName, boolean shallInitSinkTable, IFlinkColCreator<FlinkCol> colCreator) {
+            , final TableAlias tabName, boolean shallInitSinkTable) {
 
         IDataxReader reader = dataxProcessor.getReader(null);
         List<ISelectedTab> tabs = reader.getSelectedTabs();
@@ -217,7 +217,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 , sinkFunc.primaryKeys
                 , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
-                , this.parallelism, colCreator);
+                , this.parallelism);
     }
 
 

@@ -90,12 +90,12 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
 
         private final Optional<RecordTransformerRules> transformers;
-        private final IFlinkColCreator<FlinkCol> flinkColCreator;
+      //  private final IFlinkColCreator<FlinkCol> flinkColCreator;
 
         public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
                 , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
-                , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
-            this(dataXName, tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism, flinkColCreator);
+                , boolean supportUpset, int sinkTaskParallelism) {
+            this(dataXName, tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism);
         }
 
         public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
@@ -103,11 +103,11 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
                 , List<String> primaryKeys //
                 , final List<FlinkCol> sourceColsMeta //
                 , List<FlinkCol> sinkColsMeta //
-                , boolean supportUpset, int sinkTaskParallelism, IFlinkColCreator<FlinkCol> flinkColCreator) {
+                , boolean supportUpset, int sinkTaskParallelism) {
             super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
             this.transformers
                     = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(dataXName.getTISDataXName()), tab.getFrom()));
-            this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
+            //this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"
                         , new FilterUpdateBeforeEvent.RowDataFilter());

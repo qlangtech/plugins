@@ -205,7 +205,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 , new RowDataSinkFunc(this, esSchema, sinkBuilder.build(), primaryKeys
                         , sourceColsMeta
                         , sinkColsMeta
-                        , true, DEFAULT_PARALLELISM, flinkColCreator));
+                        , true, DEFAULT_PARALLELISM));
     }
 
 

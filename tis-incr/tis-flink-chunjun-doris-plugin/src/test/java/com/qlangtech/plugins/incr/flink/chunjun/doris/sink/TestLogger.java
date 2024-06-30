@@ -20,6 +20,9 @@ package com.qlangtech.plugins.incr.flink.chunjun.doris.sink;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-08-17 10:34
@@ -28,6 +31,14 @@ public class TestLogger {
 
     @Test
     public void test() {
+
+        List<String> list = new ArrayList<>();
+        list.add("a");
+        list.add(null);
+        list.add("b");
+
+        System.out.println(String.join(",", list));
+
         System.out.println(this.getClass().getResource("/org/slf4j/impl/StaticLoggerBinder.class"));
         System.out.println(this.getClass().getResource("/logback.xml"));
     }

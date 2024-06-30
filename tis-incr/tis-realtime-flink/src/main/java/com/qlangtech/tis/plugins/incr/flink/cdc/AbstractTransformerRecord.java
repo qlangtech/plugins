@@ -19,10 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.common.element.ColumnAwareRecord;
-import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import org.apache.flink.table.data.StringData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -37,8 +34,6 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
 
     protected Type row;
     protected Map<String, Integer> col2IndexMapper;
-
-
 
     public AbstractTransformerRecord(Type row) {
         this.row = Objects.requireNonNull(row, "param row can not be null");

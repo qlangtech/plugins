@@ -43,8 +43,15 @@ import java.util.Map;
 public class TISDorisColumnConverter
         extends AbstractRowConverter<RowData, RowData, List<String>, DataType> {
 
+    /**
+     * 只有在Streamload为csv 模式下起效
+     */
+    //private static final String NULL_VALUE = "\\N";
 
-    private static final String NULL_VALUE = "\\N";
+    /**
+     * 在json模式下只需要为null即可
+     */
+    private static final String NULL_VALUE = null;
 
     private final Map<String, Integer> col2ordMap;
 

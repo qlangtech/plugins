@@ -64,6 +64,12 @@
 
         <dependency>
             <groupId>com.qlangtech.tis</groupId>
+            <artifactId>datax-config</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.qlangtech.tis</groupId>
             <artifactId>tis-plugin</artifactId>
             <scope>compile</scope>
         </dependency>

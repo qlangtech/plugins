@@ -100,9 +100,10 @@ public class JSONSplitterUDF extends AbstractFromColumnUDFDefinition {
             try {
                 JSONObject json = JSON.parseObject(jsonCol);
                 for (TargetColType t : this.to) {
-                    String val = json.getString(t.getName());
+                    Object val = json.get(t.getName());
                     if (val != null) {
-                        record.setString(getPrefixToFieldName(t), val);
+                        record.setColumn(getPrefixToFieldName(t), val);
+                      //  record.setColumn();
                     }
                 }
             } catch (Exception e) {

@@ -83,11 +83,9 @@ public abstract class ChunjunDynamicTableFactory implements DynamicTableSinkFact
         }
         ChunjunSinkFactory sinKFactory = (ChunjunSinkFactory) TISSinkFactory.getIncrSinKFactory(dataXName);
         IDataxProcessor dataxProcessor = DataxProcessor.load(null, dataXName);
-        // FIXME
-        IFlinkColCreator<FlinkCol> srcTabColCreator = null;
 
         BasicTISSinkFactory.RowDataSinkFunc rowDataSinkFunc = sinKFactory.createRowDataSinkFunc(dataxProcessor
-                , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false, srcTabColCreator);
+                , dataxProcessor.getTabAlias(null).getWithCheckNotNull(sourceTableName), false);
 
         // 3.封装参数
         return new TISJdbcDymaincTableSink(this.endType, rowDataSinkFunc);

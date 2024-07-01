@@ -25,6 +25,7 @@ import com.dtstack.chunjun.connector.postgresql.source.PostgresqlSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.postgresql.dialect.TISPostgresqlDialect;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -54,7 +55,7 @@ public class PostgreSQLSourceFunction extends ChunjunSourceFunction {
     @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
             SyncConf conf, BasicDataSourceFactory sourceFactory
-            , IStreamTableMeataCreator.IStreamTableMeta cmetas, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+            , IStreamTableMeta cmetas, AtomicReference<SourceFunction<RowData>> sourceFunc) {
         //List<IColMetaGetter> colsMeta = reader.getStreamTableMeta(sourceTabName).getColsMeta();
         return new ExtendPostgresqlSourceFactory(conf, null, cmetas.getColsMeta(), sourceFactory) {
             protected DataStream<RowData> createInput(

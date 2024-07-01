@@ -20,8 +20,10 @@ package com.qlangtech.tis.plugins.incr.flink.chunjun.common;
 
 import com.dtstack.chunjun.connector.jdbc.conf.JdbcConf;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
+import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class ColMetaUtils {
 
     public static List<IColMetaGetter> getColMetas(
             IStreamTableMeataCreator.ISourceStreamMetaCreator sourceStreamMetaCreator, JdbcConf conf) {
-        IStreamTableMeataCreator.IStreamTableMeta tabColMetas
+        IStreamTableMeta tabColMetas
                 = sourceStreamMetaCreator.getStreamTableMeta(conf.getTable());
         return tabColMetas.getColsMeta().stream().map((c) -> c).collect(Collectors.toList());
     }
@@ -47,10 +49,11 @@ public class ColMetaUtils {
      * @param conf
      * @return
      */
-    public static Map<String, IColMetaGetter> getColMetasMap(
+    public static SinkColMetas getColMetasMap(
             IStreamTableMeataCreator.ISinkStreamMetaCreator sinkStreamMetaCreator, JdbcConf conf) {
         EntityName tab = EntityName.parse(conf.getTable());
-        IStreamTableMeataCreator.IStreamTableMeta tableMeta = sinkStreamMetaCreator.getStreamTableMeta(tab.getTabName());
-        return tableMeta.getColsMeta().stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> c));
+        IStreamTableMeta tableMeta = sinkStreamMetaCreator.getStreamTableMeta(tab.getTabName());
+        return new SinkColMetas(tableMeta);
+       // return tableMeta.getColsMeta().stream().collect(Collectors.toMap((c) -> c.getName(), (c) -> c));
     }
 }

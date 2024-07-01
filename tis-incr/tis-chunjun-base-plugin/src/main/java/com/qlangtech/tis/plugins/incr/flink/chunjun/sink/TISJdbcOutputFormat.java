@@ -19,14 +19,13 @@
 package com.qlangtech.tis.plugins.incr.flink.chunjun.sink;
 
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
+import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -37,7 +36,7 @@ public class TISJdbcOutputFormat extends JdbcOutputFormat {
 
     private final DataSourceFactory dsFactory;
 
-    public TISJdbcOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+    public TISJdbcOutputFormat(DataSourceFactory dsFactory, SinkColMetas cols) {
         super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");

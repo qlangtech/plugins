@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.chunjun.clickhouse.sink;
 
 import com.dtstack.chunjun.connector.clickhouse.sink.ClickhouseOutputFormat;
+import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -36,7 +37,7 @@ import java.util.Objects;
 public class TISClickhouseOutputFormat extends ClickhouseOutputFormat {
     private final DataSourceFactory dsFactory;
 
-    public TISClickhouseOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+    public TISClickhouseOutputFormat(DataSourceFactory dsFactory, SinkColMetas cols) {
         super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");

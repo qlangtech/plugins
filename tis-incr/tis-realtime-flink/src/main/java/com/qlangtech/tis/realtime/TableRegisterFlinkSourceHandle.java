@@ -25,6 +25,7 @@ import com.qlangtech.tis.async.message.client.consumer.Tab2OutputTag;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.offline.DataxUtils;
@@ -251,7 +252,7 @@ public abstract class TableRegisterFlinkSourceHandle
     }
 
     private static List<FlinkCol> getAllTabColsMeta(TISSinkFactory sinkFactory, String tabName) {
-        IStreamTableMeataCreator.IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
+        IStreamTableMeta streamTableMeta = getStreamTableMeta(sinkFactory, tabName);
         return AbstractRowDataMapper.getAllTabColsMeta(streamTableMeta);
     }
 

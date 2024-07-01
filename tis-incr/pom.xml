@@ -40,7 +40,7 @@
         <!--https://github.com/ververica/flink-cdc-connectors-->
 <!--        <flink.cdc.version>2.1.0</flink.cdc.version>-->
         <flink.cdc.version>3.1.0</flink.cdc.version>
-        <chunjun.version>1.12.5</chunjun.version>
+        <chunjun.version>1.12.5.20240701</chunjun.version>
     </properties>
 
     <modules>
@@ -76,7 +76,7 @@
 
         <module>tis-flink-chunjun-oracle-plugin</module>
         <module>tis-chunjun-base-plugin</module>
-        <module>tis-flink-chunjun-greenplum-plugin</module>
+<!--        <module>tis-flink-chunjun-greenplum-plugin</module>-->
 
         <module>tis-flink-chunjun-clickhouse-plugin</module>
         <module>tis-flink-chunjun-starrocks-plugin</module>

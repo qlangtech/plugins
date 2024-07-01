@@ -20,6 +20,7 @@ package com.qlangtech.plugins.incr.flink.chunjun.postgresql.sink;
 
 import com.dtstack.chunjun.connector.jdbc.converter.JdbcColumnConverter;
 import com.dtstack.chunjun.connector.jdbc.sink.IFieldNamesAttachedStatement;
+import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.dtstack.chunjun.connector.postgresql.sink.PostgresOutputFormat;
 import com.dtstack.chunjun.converter.ISerializationConverter;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
@@ -40,7 +41,7 @@ import java.util.Objects;
 public class TISPostgresOutputFormat extends PostgresOutputFormat {
     private final DataSourceFactory dsFactory;
 
-    public TISPostgresOutputFormat(DataSourceFactory dsFactory, Map<String, IColMetaGetter> cols) {
+    public TISPostgresOutputFormat(DataSourceFactory dsFactory, SinkColMetas cols) {
         super(cols);
         if (dsFactory == null) {
             throw new IllegalArgumentException("param dsFactory can not be null");

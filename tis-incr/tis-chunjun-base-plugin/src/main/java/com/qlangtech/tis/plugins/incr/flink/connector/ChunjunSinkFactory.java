@@ -50,6 +50,7 @@ import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.datax.TableAliasMapper;
 import com.qlangtech.tis.datax.impl.DataxWriter;
@@ -287,15 +288,15 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
         Map<String, Object> col = null;
 
         //FIXME: 构建sink端的列不应该使用Source端的colMeta信息，你该需要重构
-        for (CMeta cm : tab.getCols()) {
-            col = Maps.newHashMap();
-            col.put("name", cm.getName());
-            col.put("type", parseType(cm));
-            cols.add(col);
-        }
+//        for (CMeta cm : tab.getCols()) {
+//            col = Maps.newHashMap();
+//            col.put("name", cm.getName());
+//            col.put("type", parseType(cm));
+//            cols.add(col);
+//        }
 
 
-        params.put(ConfigConstant.KEY_COLUMN, cols);
+        // params.put(ConfigConstant.KEY_COLUMN, cols);
         params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         params.put("batchSize", this.batchSize);
         params.put("flushIntervalMills", this.flushIntervalMills);
@@ -492,8 +493,12 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                 }
                 TableCols tableCols = new TableCols(routputFormat.colsMeta);
 
+//                JdbcColumnConverter rowConverter = (JdbcColumnConverter)
+//                        DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, tableCols.filterBy(jdbcConf.getColumn()));
+
                 JdbcColumnConverter rowConverter = (JdbcColumnConverter)
-                        DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, tableCols.filterBy(jdbcConf.getColumn()));
+                        DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, tableCols.getCols());
+
 
                 DtOutputFormatSinkFunction<RowData> sinkFunction =
                         new DtOutputFormatSinkFunction<>(outputFormat);

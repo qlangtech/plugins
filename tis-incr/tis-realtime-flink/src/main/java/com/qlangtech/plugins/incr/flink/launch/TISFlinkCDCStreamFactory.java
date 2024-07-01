@@ -33,6 +33,7 @@ import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.manage.common.incr.UberJarUtil;
+import com.qlangtech.tis.plugin.IEndTypeGetter;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
@@ -242,10 +243,15 @@ public class TISFlinkCDCStreamFactory extends IncrStreamFactory {
 
 
     @TISExtension()
-    public static class DefaultDescriptor extends Descriptor<IncrStreamFactory> {
+    public static class DefaultDescriptor extends Descriptor<IncrStreamFactory> implements IEndTypeGetter {
 
         public DefaultDescriptor() {
             super();
+        }
+
+        @Override
+        public EndType getEndType() {
+            return EndType.Flink;
         }
 
         @Override

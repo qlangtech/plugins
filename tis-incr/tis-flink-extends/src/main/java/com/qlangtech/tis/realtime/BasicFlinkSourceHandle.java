@@ -28,6 +28,7 @@ import com.qlangtech.tis.coredefine.module.action.TargetResName;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.extension.TISExtensible;
 import com.qlangtech.tis.plugin.incr.IncrStreamFactory;
@@ -72,12 +73,12 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return this.getDataXName();
     }
 
-    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TargetResName dataxName, String tabName) {
         TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(dataxName.getName());
         return getStreamTableMeta(sinKFactory, tabName);
     }
 
-    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
+    public static IStreamTableMeta getStreamTableMeta(TISSinkFactory sinKFactory, String tabName) {
         if (!(sinKFactory instanceof IStreamTableMeataCreator.ISinkStreamMetaCreator)) {
             throw new IllegalStateException("writer:"
                     + sinKFactory.getClass().getName() + " must be type of "
@@ -86,7 +87,7 @@ public abstract class BasicFlinkSourceHandle<SINK_TRANSFER_OBJ>
         return ((IStreamTableMeataCreator.ISinkStreamMetaCreator) sinKFactory).getStreamTableMeta(tabName);
     }
 
-    public static IStreamTableMeataCreator.IStreamTableMeta getStreamTableMeta(
+    public static IStreamTableMeta getStreamTableMeta(
             IStreamTableMeataCreator.ISourceStreamMetaCreator sourceFactory, String tabName) {
         return sourceFactory.getStreamTableMeta(tabName);
     }

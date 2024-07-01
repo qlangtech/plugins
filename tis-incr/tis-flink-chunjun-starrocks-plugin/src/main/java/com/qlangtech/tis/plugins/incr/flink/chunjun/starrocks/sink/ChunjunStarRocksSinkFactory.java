@@ -32,6 +32,7 @@ import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.google.common.collect.Sets;
 import com.qlangtech.tis.compiler.incr.ICompileAndPackage;
 import com.qlangtech.tis.compiler.streamcode.CompileAndPackage;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.extension.Descriptor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.plugin.IEndTypeGetter;

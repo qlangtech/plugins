@@ -19,6 +19,7 @@
 package com.qlangtech.plugins.incr.flink.cdc;
 
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 
 import java.io.Serializable;
@@ -28,7 +29,7 @@ import java.util.List;
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2022-03-01 09:50
  **/
-public class StubTableMeta implements IStreamTableMeataCreator.IStreamTableMeta, Serializable {
+public class StubTableMeta implements IStreamTableMeta, Serializable {
     final List<IColMetaGetter> cols;
 
     public StubTableMeta(List<IColMetaGetter> cols) {

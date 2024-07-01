@@ -25,6 +25,7 @@ import com.dtstack.chunjun.connector.oracle.source.OracleSourceFactory;
 import com.dtstack.chunjun.source.DtInputFormatSourceFunction;
 import com.qlangtech.plugins.incr.flink.chunjun.oracle.dialect.TISOracleDialect;
 import com.qlangtech.tis.datax.IStreamTableMeataCreator;
+import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.plugin.ds.BasicDataSourceFactory;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
@@ -52,7 +53,7 @@ public class OracleSourceFunction extends ChunjunSourceFunction {
 
     @Override
     protected JdbcSourceFactory createChunjunSourceFactory(
-            SyncConf conf, BasicDataSourceFactory sourceFactory, IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc) {
+            SyncConf conf, BasicDataSourceFactory sourceFactory, IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc) {
         return new ExtendOracleSourceFactory(conf, sourceFactory, streamTableMeta.getColsMeta()) {
             protected DataStream<RowData> createInput(
                     InputFormat<RowData, InputSplit> inputFormat, String sourceName) {

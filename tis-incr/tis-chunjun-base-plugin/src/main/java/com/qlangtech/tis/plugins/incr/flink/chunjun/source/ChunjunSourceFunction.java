@@ -73,7 +73,7 @@ public abstract class ChunjunSourceFunction
             String sourceTabName, SyncConf conf, BasicDataSourceFactory sourceFactory, BasicDataXRdbmsReader reader) {
 
         AtomicReference<SourceFunction<RowData>> sourceFunc = new AtomicReference<>();
-        IStreamTableMeataCreator.IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(sourceTabName);
+        IStreamTableMeta streamTableMeta = reader.getStreamTableMeta(sourceTabName);
         JdbcSourceFactory chunjunSourceFactory = createChunjunSourceFactory(conf, sourceFactory, streamTableMeta, sourceFunc);
         Objects.requireNonNull(chunjunSourceFactory, "chunjunSourceFactory can not be null");
         chunjunSourceFactory.createSource();
@@ -83,7 +83,7 @@ public abstract class ChunjunSourceFunction
     protected abstract JdbcSourceFactory //
     createChunjunSourceFactory( //
                                 SyncConf conf, BasicDataSourceFactory sourceFactory
-            , IStreamTableMeataCreator.IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc);
+            , IStreamTableMeta streamTableMeta, AtomicReference<SourceFunction<RowData>> sourceFunc);
 
 
     @Override

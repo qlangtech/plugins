@@ -23,6 +23,7 @@ import com.alibaba.datax.plugin.writer.elasticsearchwriter.DataConvertUtils;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESClient;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESColumn;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESFieldType;
+import com.alibaba.datax.plugin.writer.elasticsearchwriter.IInitialElasticSearchIndex;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -46,14 +47,18 @@ import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataXReaderColType;
+import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.runtime.module.misc.VisualType;
 import com.qlangtech.tis.solrdao.ISchema;
 import com.qlangtech.tis.solrdao.ISchemaField;
 import com.qlangtech.tis.solrdao.SchemaMetaContent;
+import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -70,7 +75,7 @@ import java.util.stream.Collectors;
  * @create: 2021-04-07 15:30
  **/
 @Public
-public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext, ISearchEngineTypeTransfer {
+public class DataXElasticsearchWriter extends DataxWriter implements IDataxContext, ISearchEngineTypeTransfer, IInitialElasticSearchIndex {
     private static final String DATAX_NAME = "Elasticsearch";
     private static final String FIELD_ENDPOINT = "endpoint";
     public static VisualType ES_TYPE_TEXT
@@ -133,6 +138,13 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
+    public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, TableAlias tableAlias) {
+        List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx);
+        ISchema schema = convert2Schema(tableAlias);
+        return schema.getSchemaFields().size() != cols.size();
+    }
+
+    @Override
     public String getIndexName() {
         if (StringUtils.isEmpty(this.index)) {
             throw new IllegalArgumentException("prop index can not be empty");
@@ -141,16 +153,24 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public SchemaMetaContent initSchemaMetaContent(ISelectedTab tab) {
+    public SchemaMetaContent initSchemaMetaContent(IPluginContext pluginCtx, ISelectedTab tab) {
 
         SchemaMetaContent metaContent = new SchemaMetaContent();
         ESSchema schema = new ESSchema();
         metaContent.parseResult = schema;
         ESField field = null;
-        for (CMeta m : tab.getCols()) {
-            if (m.isDisable()) {
-                continue;
-            }
+
+        // RecordTransformerRules transformerRules = RecordTransformerRules.loadTransformerRules(pluginCtx, tab.getName());
+        List<IColMetaGetter> cols = tab.overwriteCols(pluginCtx);// RecordTransformerRules.overwriteCols(pluginCtx, tab);
+//        if (transformerRules != null) {
+//            cols = transformerRules.overwriteCols(tab.getCols());
+//        } else {
+//            cols = tab.getCols().stream().collect(Collectors.toList());
+//        }
+        for (IColMetaGetter m : cols) {
+//            if (m.isDisable()) {
+//                continue;
+//            }
 
 
             field = convert(m);// new ESField();
@@ -169,7 +189,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         return metaContent;
     }
 
-    private ESField convert(CMeta m) {
+    private ESField convert(IColMetaGetter m) {
         ESField field = new ESField();
         field.setName(m.getName());
         field.setStored(true);
@@ -232,6 +252,30 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         }
     }
 
+    @Override
+    public List<ESColumn> initialIndex(IDataxProcessor dataxProcessor) {
+        ESTableAlias esSchema = null;
+        Optional<TableAlias> first = dataxProcessor.getTabAlias(null).findFirst();
+        if (first.isPresent()) {
+            TableAlias value = first.get();
+            if (!(value instanceof ESTableAlias)) {
+                throw new IllegalStateException("value must be type of 'ESTableAlias',but now is :" + value.getClass());
+            }
+            esSchema = (ESTableAlias) value;
+        }
+
+        Objects.requireNonNull(esSchema, "esSchema can not be null");
+        List<CMeta> cols = esSchema.getSourceCols();
+        if (CollectionUtils.isEmpty(cols)) {
+            throw new IllegalStateException("cols can not be null");
+        }
+        Optional<CMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
+        if (!firstPK.isPresent()) {
+            throw new IllegalStateException("has not set PK col");
+        }
+        return this.initialIndex(esSchema);
+    }
+
     /**
      * 当增量开始执行前，先需要初始化一下索引实例
      *
@@ -250,11 +294,12 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         ESClient esClient = (token.createESClient());
         String type = null;
         try {
+            final String esMapping = DataConvertUtils.genMappings(schemaCols, type, (columnList) -> {
+                colsRef.set(columnList);
+            });
             esClient.createIndex(this.getIndexName()
                     , type
-                    , DataConvertUtils.genMappings(schemaCols, type, (columnList) -> {
-                        colsRef.set(columnList);
-                    }), this.settings, false);
+                    , Pair.of(esMapping, Objects.requireNonNull(colsRef.get())), this.settings, false);
             return Objects.requireNonNull(colsRef.get(), "colsRef can not be null");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -267,52 +312,58 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     }
 
     @Override
-    public ISchema projectionFromExpertModel(ISelectedTab esTab, TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
+    public ISchema projectionFromExpertModel(IPluginContext context, ISelectedTab esTab, TableAlias tableAlias, Consumer<byte[]> schemaContentConsumer) {
+        schemaContentConsumer.accept(((ESTableAlias) tableAlias).getSchemaByteContent());
+        return convert2Schema(tableAlias);
+    }
+
+    private ISchema convert2Schema(TableAlias tableAlias) {
         ESTableAlias esTable = (ESTableAlias) tableAlias;
-        schemaContentConsumer.accept(esTable.getSchemaByteContent());
+
         JSONObject body = new JSONObject();
         body.put("content", esTable.getSchemaContent());
 
-        List<CMeta> cols = esTab.getCols();
-        AtomicInteger index = new AtomicInteger();
-        Map<String, CMetaProc> cmetaProc = cols.stream().filter((c) -> !c.isDisable()) //
-                .collect(Collectors.toMap((c) -> c.getName(), (c) -> new CMetaProc(index.getAndIncrement(), c)));
+//        List<CMeta> cols = esTab.getCols();
+//        AtomicInteger index = new AtomicInteger();
+//        Map<String, CMetaProc> cmetaProc = cols.stream().filter((c) -> !c.isDisable()) //
+//                .collect(Collectors.toMap((c) -> c.getName(), (c) -> new CMetaProc(index.getAndIncrement(), c)));
 
         // final Set<String> acceptKeys = //esTab.acceptedCols();// esTab.getCols().stream().filter((c) -> !c.isDisable()).map((c) -> c.getName()).collect(Collectors.toSet());
         ISchema schema = this.projectionFromExpertModel(body, (field) -> {
-            CMetaProc proc = cmetaProc.get(field.getName());
-            if (proc != null) {
-                proc.setProcessed(true);
-                return true;
-            } else {
-                return false;
-            }
+            return true;
+//            CMetaProc proc = cmetaProc.get(field.getName());
+//            if (proc != null) {
+//                proc.setProcessed(true);
+//                return true;
+//            } else {
+//                return false;
+//            }
         });
 
-        cmetaProc.forEach((key, val) -> {
-            // 有某一列之前被删除了，后来又加回来了，需要重新加上
-            if (!val.processed) {
-                schema.getSchemaFields().add(val.index, convert(val.cm));
-            }
-        });
+//        cmetaProc.forEach((key, val) -> {
+//            // 有某一列之前被删除了，后来又加回来了，需要重新加上
+//            if (!val.processed) {
+//                schema.getSchemaFields().add(val.index, convert(val.cm));
+//            }
+//        });
         return schema;
     }
 
-    private static class CMetaProc {
-        final CMeta cm;
-        final int index;
-
-        boolean processed;
-
-        public void setProcessed(boolean processed) {
-            this.processed = processed;
-        }
-
-        public CMetaProc(int index, CMeta cm) {
-            this.cm = cm;
-            this.index = index;
-        }
-    }
+//    private static class CMetaProc {
+//        final CMeta cm;
+//        final int index;
+//
+//        boolean processed;
+//
+//        public void setProcessed(boolean processed) {
+//            this.processed = processed;
+//        }
+//
+//        public CMetaProc(int index, CMeta cm) {
+//            this.cm = cm;
+//            this.index = index;
+//        }
+//    }
 
     @Override
     public ISchema projectionFromExpertModel(JSONObject body, Predicate<ISchemaField> fieldAcceptPredicate) {

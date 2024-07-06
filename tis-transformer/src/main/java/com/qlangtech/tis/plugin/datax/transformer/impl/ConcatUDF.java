@@ -92,8 +92,9 @@ public class ConcatUDF extends UDFDefinition {
     @Override
     public void evaluate(ColumnAwareRecord record) {
         record.setString(this.to.getName()
-                , this.from.stream().map((f) -> record.getString(f.getName()))
-                        .filter((colVal) -> colVal != null)
+                , this.from.stream().map((f) -> record.getColumn(f.getName()))
+                        //.filter((colVal) -> colVal != null)
+                        .map((val) -> (val == null) ? StringUtils.EMPTY : String.valueOf(val))
                         .collect(Collectors.joining(Separator.valueOf(separator).sign)));
     }
 

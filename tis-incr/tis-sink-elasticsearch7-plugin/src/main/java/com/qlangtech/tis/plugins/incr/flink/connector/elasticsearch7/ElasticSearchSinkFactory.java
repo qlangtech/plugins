@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.connector.elasticsearch7;
 
 
+import com.alibaba.citrus.turbine.Context;
 import com.alibaba.datax.plugin.writer.elasticsearchwriter.ESColumn;
 import com.google.common.collect.Sets;
 import com.qlangtech.org.apache.http.HttpHost;
@@ -47,6 +48,7 @@ import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
+import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
@@ -122,19 +124,19 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         }
 
         Objects.requireNonNull(esSchema, "esSchema can not be null");
-        List<CMeta> cols = esSchema.getSourceCols();
-        if (CollectionUtils.isEmpty(cols)) {
-            throw new IllegalStateException("cols can not be null");
-        }
-        Optional<CMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
-        if (!firstPK.isPresent()) {
-            throw new IllegalStateException("has not set PK col");
-        }
+//        List<CMeta> cols = esSchema.getSourceCols();
+//        if (CollectionUtils.isEmpty(cols)) {
+//            throw new IllegalStateException("cols can not be null");
+//        }
+//        Optional<CMeta> firstPK = cols.stream().filter((c) -> c.isPk()).findFirst();
+//        if (!firstPK.isPresent()) {
+//            throw new IllegalStateException("has not set PK col");
+//        }
 
         /********************************************************
          * 初始化索引Schema
          *******************************************************/
-        List<ESColumn> esCols = dataXWriter.initialIndex(esSchema);
+        List<ESColumn> esCols = dataXWriter.initialIndex(dataxProcessor);
         List<HttpHost> transportAddresses = new ArrayList<>();
         String endpoint = token.getEndpoint();
         if (StringUtils.isEmpty(endpoint)) {
@@ -154,7 +156,7 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
             }
             sinkMcols.add(IColMetaGetter.create(col.getName(), col.getEsType().getDataType(), col.isPk()));
         }
-        // });
+
         ISelectedTab tab = null;
         for (ISelectedTab selectedTab : reader.getSelectedTabs()) {
             tab = selectedTab;
@@ -169,9 +171,10 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
-                cols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
+                esCols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
                 , sinkColsMeta
-                , firstPK.get().getName()
+                //, firstPK.get().getName()
+                ,primaryKeys.get(0)
                 , dataXWriter.getIndexName()));
 
         if (this.bulkFlushMaxActions != null) {
@@ -278,6 +281,19 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         @Override
         public String getDisplayName() {
             return DISPLAY_NAME_FLINK_CDC_SINK;
+        }
+
+        @Override
+        protected boolean verify(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+
+            ElasticSearchSinkFactory sinkFactory = postFormVals.newInstance();
+
+            return super.verify(msgHandler, context, postFormVals);
+        }
+
+        @Override
+        protected boolean validateAll(IControlMsgHandler msgHandler, Context context, PostFormVals postFormVals) {
+            return super.validateAll(msgHandler, context, postFormVals);
         }
 
         @Override

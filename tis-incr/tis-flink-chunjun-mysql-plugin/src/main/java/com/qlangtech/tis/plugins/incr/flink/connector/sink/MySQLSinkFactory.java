@@ -66,10 +66,7 @@ public class MySQLSinkFactory extends ChunjunSinkFactory {
     @Override
     public ICompileAndPackage getCompileAndPackageManager() {
         return new CompileAndPackage(Sets.newHashSet(
-                //  "tis-sink-hudi-plugin"
                 MySQLSinkFactory.class
-                // "tis-datax-hudi-plugin"
-                // , "com.alibaba.datax.plugin.writer.hudi.HudiConfig"
         ));
     }
 

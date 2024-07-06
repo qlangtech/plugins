@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type, Type>, Serializable {
     public final List<FlinkCol> cols;
     private final List<UDFDefinition> transformerUDF;
-    private final Map<String, Integer> col2IdxMapper;
+    private final FlinkCol2Index col2IdxMapper;
 
     public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
 
@@ -60,9 +60,9 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
             col2IdxBuilder.put(col.name, Pair.of(idx++, col));
         }
 
-        this.col2IdxMapper = Collections.unmodifiableMap(
+        this.col2IdxMapper = new FlinkCol2Index(Collections.unmodifiableMap(
                 col2IdxBuilder.entrySet().stream().collect(
-                        Collectors.toMap((entry) -> entry.getKey(), (entry) -> entry.getValue().getKey())));
+                        Collectors.toMap((entry) -> entry.getKey(), (entry) -> entry.getValue().getKey()))));
     }
 
     @Override

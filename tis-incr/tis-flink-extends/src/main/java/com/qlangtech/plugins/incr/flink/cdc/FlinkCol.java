@@ -62,7 +62,11 @@ public class FlinkCol implements Serializable {
     }
 
     public Object getRowDataVal(RowData row) {
-        return rowDataValGetter.getFieldOrNull(row);
+        try {
+            return rowDataValGetter.getFieldOrNull(row);
+        } catch (Exception e) {
+            throw new RuntimeException("col:" + this.name + ",type:" + this.colType.getTypeDesc(), e);
+        }
     }
 
     public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, BiFunction rowDataProcess, RowData.FieldGetter rowDataValGetter) {
@@ -70,7 +74,6 @@ public class FlinkCol implements Serializable {
     }
 
     /**
-     *
      * @param meta
      * @param colType
      * @param type

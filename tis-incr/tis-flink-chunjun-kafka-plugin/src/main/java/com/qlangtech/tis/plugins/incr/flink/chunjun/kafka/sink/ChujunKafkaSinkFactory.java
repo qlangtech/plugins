@@ -105,7 +105,7 @@ public class ChujunKafkaSinkFactory extends ChunjunSinkFactory {
 
         kafkaConf.setProducerSettings(dataXWriter.buildKafkaConfig());
 
-        SyncConf syncConf = createSyncConf(selectedTab, () -> {
+        SyncConf syncConf = createSyncConf(selectedTab, targetTabName,() -> {
             Map<String, Object> params = Maps.newHashMap();
             return params;
         }, dataXWriter);

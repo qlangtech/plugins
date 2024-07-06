@@ -21,12 +21,10 @@ package com.qlangtech.tis.plugins.incr.flink.connector.sink;
 import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.dtstack.chunjun.connector.mysql.sink.MysqlOutputFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
-import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -53,15 +51,6 @@ public final class TISMysqlOutputFormat extends MysqlOutputFormat {
 
     @Override
     protected void initializeRowConverter() {
-        //super.initializeRowConverter();
-//
-//        RowType rowType =
-//                TableUtil.createRowTypeByColsMeta(
-//                        this.colsMeta, jdbcDialect.getRawTypeConverter());
-
-        ;
-
         this.setRowConverter(DialectUtils.createColumnConverter(jdbcDialect, jdbcConf, this.colsMeta));
-
     }
 }

@@ -38,6 +38,7 @@ import com.qlangtech.tis.solrdao.ISchema;
 import com.qlangtech.tis.solrdao.SchemaMetaContent;
 import com.qlangtech.tis.trigger.util.JsonUtil;
 import com.qlangtech.tis.util.DescriptorsJSON;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.lang.StringUtils;
 import org.easymock.EasyMock;
 
@@ -233,7 +234,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
     public void testInitSchemaMetaContent() {
 
         DataXElasticsearchWriter dataXWriter = new DataXElasticsearchWriter();
-
+        IPluginContext pluginContext = IPluginContext.namedContext("testDataX");
         ISelectedTab selectedTab = EasyMock.createMock("selectedTab", ISelectedTab.class);
         // ISelectedTab
         List<CMeta> cols = Lists.newArrayList();
@@ -250,7 +251,7 @@ public class TestDataXElasticsearchWriter extends BasicTest {
 
         EasyMock.replay(selectedTab);
 
-        SchemaMetaContent metaContent = dataXWriter.initSchemaMetaContent(selectedTab);
+        SchemaMetaContent metaContent = dataXWriter.initSchemaMetaContent(pluginContext, selectedTab);
 
         // System.out.println(JsonUtil.toString(metaContent.toJSON()));
         JsonUtil.assertJSONEqual(DataXElasticsearchWriter.class, "initSchemaMetaContent_assert.json", metaContent.toJSON(), (m, e, a) -> {

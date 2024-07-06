@@ -18,43 +18,29 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
-import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.alibaba.datax.common.element.ICol2Index;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-06-18 17:33
+ * @create: 2024-07-03 13:48
  **/
-public abstract class AbstractTransformerRecord<Type> implements ColumnAwareRecord<Object> {
+public class FlinkCol2Index implements ICol2Index, Serializable {
+    final Map<String, Integer> col2IndexMapper;
 
-    protected static final Object NULL = new Object();
-
-    protected Type row;
-    protected FlinkCol2Index col2IndexMapper;
-
-    public AbstractTransformerRecord(Type row) {
-        this.row = Objects.requireNonNull(row, "param row can not be null");
+    public FlinkCol2Index(Map<String, Integer> col2IndexMapper) {
+        this.col2IndexMapper = Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null");
     }
 
-    @Override
-    public void setCol2Index(ICol2Index mapper) {
-        this.col2IndexMapper = (FlinkCol2Index) mapper;
+    public Integer get(String field) {
+        return col2IndexMapper.get(field);
     }
 
-
-    protected Integer getPos(String field) {
-        Integer pos = col2IndexMapper.get(field);
-        if (pos == null) {
-            throw new IllegalStateException("field:" + field + " relevant pos can not be null,exist:"
-                    + col2IndexMapper.descKeyVals());
-        }
-        return pos;
+    public String descKeyVals() {
+        return col2IndexMapper.entrySet().stream().map((entry) -> entry.getKey() + "->" + entry.getValue()).collect(Collectors.joining(","));
     }
-
-
-    public abstract Type getDelegate();
-
-
 }

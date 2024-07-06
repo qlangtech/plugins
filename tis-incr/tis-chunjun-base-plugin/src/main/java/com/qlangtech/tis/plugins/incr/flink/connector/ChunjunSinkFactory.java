@@ -33,6 +33,7 @@ import com.dtstack.chunjun.connector.jdbc.dialect.SupportUpdateMode;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormat;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcOutputFormatBuilder;
 import com.dtstack.chunjun.connector.jdbc.sink.JdbcSinkFactory;
+import com.dtstack.chunjun.connector.jdbc.sink.SinkColMetas;
 import com.dtstack.chunjun.constants.ConfigConstant;
 import com.dtstack.chunjun.sink.DtOutputFormatSinkFunction;
 import com.dtstack.chunjun.sink.SinkFactory;
@@ -72,6 +73,7 @@ import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.ISelectedTabExtendFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
+import com.qlangtech.tis.plugins.incr.flink.chunjun.common.ColMetaUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.common.DialectUtils;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.script.ChunjunStreamScriptType;
 import com.qlangtech.tis.plugins.incr.flink.chunjun.sink.SinkTabPropsExtends;
@@ -262,7 +264,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 
     protected abstract boolean supportUpsetDML();
 
-    protected final SyncConf createSyncConf(SelectedTab tab, Supplier<Map<String, Object>> paramsCreator, DataxWriter dataxWriter) {
+    protected final SyncConf createSyncConf(SelectedTab tab, String targetTabName, Supplier<Map<String, Object>> paramsCreator, DataxWriter dataxWriter) {
         SyncConf syncConf = new SyncConf();
 
         JobConf jobConf = new JobConf();
@@ -294,10 +296,11 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
 //            col.put("type", parseType(cm));
 //            cols.add(col);
 //        }
-
+        SinkColMetas colMetasMap = ColMetaUtils.getColMetasMap(this, targetTabName);
 
         // params.put(ConfigConstant.KEY_COLUMN, cols);
-        params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        params.put(KEY_FULL_COLS, colMetasMap.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
+        //    params.put(KEY_FULL_COLS, tab.getCols().stream().map((c) -> c.getName()).collect(Collectors.toList()));
         params.put("batchSize", this.batchSize);
         params.put("flushIntervalMills", this.flushIntervalMills);
         params.put("semantic", this.semantic);
@@ -345,7 +348,7 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
             , BasicDataSourceFactory dsFactory, BasicDataXRdbmsWriter dataXWriter) {
 
 
-        SyncConf syncConf = createSyncConf(tab, () -> {
+        SyncConf syncConf = createSyncConf(tab, targetTabName, () -> {
             Map<String, Object> params = Maps.newHashMap();
             params.put("username", dsFactory.getUserName());
             params.put("password", dsFactory.getPassword());

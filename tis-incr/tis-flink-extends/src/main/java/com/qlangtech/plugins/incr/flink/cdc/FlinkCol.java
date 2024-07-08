@@ -18,6 +18,7 @@
 
 package com.qlangtech.plugins.incr.flink.cdc;
 
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.table.data.RowData;
@@ -28,6 +29,9 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -59,6 +63,13 @@ public class FlinkCol implements Serializable {
 
     public FlinkCol(IColMetaGetter meta, com.qlangtech.tis.plugin.ds.DataType colType, DataType type, RowData.FieldGetter rowDataValGetter) {
         this(meta, colType, type, new NoOpProcess(), rowDataValGetter);
+    }
+
+    public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
+        final AtomicInteger colIndex = new AtomicInteger();
+        return colsMeta.stream()
+                .map((c) -> flinkColCreator.build(c, colIndex.getAndIncrement()))
+                .collect(Collectors.toList());
     }
 
     public Object getRowDataVal(RowData row) {

@@ -23,7 +23,6 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.plugins.incr.flink.cdc.RowFieldGetterFactory;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.coredefine.module.action.TargetResName;
-import com.qlangtech.tis.datax.IStreamTableMeataCreator;
 import com.qlangtech.tis.datax.IStreamTableMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.DataTypeMeta;
@@ -92,23 +91,16 @@ public abstract class AbstractRowDataMapper implements MapFunction<DTO, RowData>
     }
 
     public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta) {
-        return getAllTabColsMeta(colsMeta, AbstractRowDataMapper::mapFlinkCol);
+        return FlinkCol.getAllTabColsMeta(colsMeta, AbstractRowDataMapper::mapFlinkCol);
     }
 
-
-    public static <T extends IColMetaGetter> List<FlinkCol> getAllTabColsMeta(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
-        final AtomicInteger colIndex = new AtomicInteger();
-        return colsMeta.stream()
-                .map((c) -> flinkColCreator.build(c, colIndex.getAndIncrement()))
-                .collect(Collectors.toList());
-    }
 
     public static <T extends IColMetaGetter> FlinkColMapper getAllTabColsMetaMapper(List<T> colsMeta) {
         return getAllTabColsMetaMapper(colsMeta, AbstractRowDataMapper::mapFlinkCol);
     }
 
     public static <T extends IColMetaGetter> FlinkColMapper getAllTabColsMetaMapper(List<T> colsMeta, IFlinkColCreator<FlinkCol> flinkColCreator) {
-        List<FlinkCol> cols = getAllTabColsMeta(colsMeta, flinkColCreator);
+        List<FlinkCol> cols = FlinkCol.getAllTabColsMeta(colsMeta, flinkColCreator);
         return new FlinkColMapper(cols.stream().collect(Collectors.toMap((c) -> c.name, (c) -> c)));
     }
 

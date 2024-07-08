@@ -42,16 +42,17 @@ import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
 import com.qlangtech.tis.plugin.datax.DataXElasticsearchWriter;
 import com.qlangtech.tis.plugin.datax.elastic.ElasticEndpoint;
-import com.qlangtech.tis.plugin.ds.CMeta;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.ds.IColMetaGetter;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractRowDataMapper;
 import com.qlangtech.tis.realtime.BasicTISSinkFactory;
 import com.qlangtech.tis.realtime.TabSinkFunc;
 import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
-import org.apache.commons.collections.CollectionUtils;
+import com.qlangtech.tis.util.IPluginContext;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.streaming.connectors.elasticsearch.ActionRequestFailureHandler;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
@@ -90,13 +91,13 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchSinkFactory.class);
     private static final int DEFAULT_PARALLELISM = 1;// parallelism
     // bulk.flush.max.actions
-    @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
+    @FormField(ordinal = 1, advance = true, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
     public Integer bulkFlushMaxActions;
 
-    @FormField(ordinal = 1, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
+    @FormField(ordinal = 2, advance = true, type = FormFieldType.INT_NUMBER, validate = Validator.integer)
     public Integer bulkFlushMaxSizeMb;
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
+    @FormField(ordinal = 0, type = FormFieldType.INT_NUMBER, validate = {Validator.integer, Validator.require})
     public Integer bulkFlushIntervalMs;
 
     static {
@@ -166,15 +167,15 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
         IFlinkColCreator<FlinkCol> flinkColCreator = AbstractRowDataMapper::mapFlinkCol;
 
         Objects.requireNonNull(tab, "tab ca not be null");
-        final List<FlinkCol> sourceColsMeta = AbstractRowDataMapper.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
-        final List<FlinkCol> sinkColsMeta = AbstractRowDataMapper.getAllTabColsMeta(sinkMcols, flinkColCreator);
+
+        final List<FlinkCol> sinkColsMeta = FlinkCol.getAllTabColsMeta(sinkMcols, flinkColCreator);
         ElasticsearchSink.Builder<RowData> sinkBuilder
                 = new ElasticsearchSink.Builder<>(transportAddresses
                 , new DefaultElasticsearchSinkFunction(
                 esCols.stream().map((c) -> c.getName()).collect(Collectors.toSet())
                 , sinkColsMeta
                 //, firstPK.get().getName()
-                ,primaryKeys.get(0)
+                , primaryKeys.get(0)
                 , dataXWriter.getIndexName()));
 
         if (this.bulkFlushMaxActions != null) {
@@ -203,12 +204,16 @@ public class ElasticSearchSinkFactory extends BasicTISSinkFactory<RowData> {
                 return null;
             }
         });
+        final List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
+
+        Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt
+                = RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), esSchema, tab, sourceFlinkColCreator);
         return Collections.singletonMap(esSchema
-                , new RowDataSinkFunc(this, esSchema, sinkBuilder.build(), primaryKeys
+                , new RowDataSinkFunc(esSchema, sinkBuilder.build(), primaryKeys
                         , sourceColsMeta
                         , sinkColsMeta
-                        , true, DEFAULT_PARALLELISM));
+                        , true, DEFAULT_PARALLELISM, transformerOpt));
     }
 
 

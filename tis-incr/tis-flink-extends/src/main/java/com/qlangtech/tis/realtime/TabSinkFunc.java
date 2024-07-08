@@ -19,11 +19,15 @@
 package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
+import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
 import com.qlangtech.tis.datax.TableAlias;
+import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -31,7 +35,10 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.DynamicTableSink.Context;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * <TRANSFER_OBJ/> 可以是用：
@@ -58,10 +65,11 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
     }
 
     private transient Pair<String, FilterFunction<SINK_TRANSFER_OBJ>> sourceFilter;
+    protected transient final Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformers;
 
     public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
             , final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism) {
-        this(tab, primaryKeys, sinkFunction, sinkColsMeta, sinkColsMeta, sinkTaskParallelism);
+        this(tab, primaryKeys, sinkFunction, sinkColsMeta, sinkColsMeta, sinkTaskParallelism, Optional.empty());
     }
 
     /**
@@ -69,7 +77,8 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
      * @param sinkFunction
      */
     public TabSinkFunc(TableAlias tab, List<String> primaryKeys, SinkFunction<SINK_TRANSFER_OBJ> sinkFunction
-            , final List<FlinkCol> sourceColsMeta, final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism) {
+            , final List<FlinkCol> sourceColsMeta, final List<FlinkCol> sinkColsMeta, int sinkTaskParallelism
+            , Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt) {
         if (CollectionUtils.isEmpty(sinkColsMeta)) {
             throw new IllegalArgumentException("colsMeta can not be empty");
         }
@@ -82,7 +91,7 @@ public abstract class TabSinkFunc<SINK_TRANSFER_OBJ> {
         this.sinkTaskParallelism = sinkTaskParallelism;
         this.sinkColsMeta = sinkColsMeta;
         this.sourceColsMeta = sourceColsMeta;
-        //  this.env = env;
+        this.transformers = transformerOpt;
     }
 
     public List<String> getPrimaryKeys() {

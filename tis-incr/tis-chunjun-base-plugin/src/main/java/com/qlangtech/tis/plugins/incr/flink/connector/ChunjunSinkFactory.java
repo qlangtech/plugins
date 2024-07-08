@@ -47,6 +47,7 @@ import com.google.common.collect.Sets;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.TIS;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
+import com.qlangtech.tis.async.message.client.consumer.impl.MQListenerFactory;
 import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.IDataxReader;
@@ -83,6 +84,7 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.EntityName;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import com.qlangtech.tis.util.HeteroEnum;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.io.OutputFormat;
@@ -205,22 +207,27 @@ public abstract class ChunjunSinkFactory extends BasicTISSinkFactory<RowData>
                     + " can not find matched table in:["
                     + tabs.stream().map((t) -> t.getName()).collect(Collectors.joining(",")) + "]");
         }
-
+        final SelectedTab tab = (SelectedTab) selectedTab.get();
         final CreateChunjunSinkFunctionResult sinkFunc
                 = createSinFunctionResult(dataxProcessor
-                , (SelectedTab) selectedTab.get(), tabName.getTo(), shallInitSinkTable);
+                , tab, tabName.getTo(), shallInitSinkTable);
 
         if (this.parallelism == null) {
             throw new IllegalStateException("param parallelism can not be null");
         }
 
+//String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator
+        MQListenerFactory sourceListenerFactory = HeteroEnum.getIncrSourceListenerFactory(dataxProcessor.identityValue());
+        IFlinkColCreator<FlinkCol> sourceFlinkColCreator = Objects.requireNonNull(sourceListenerFactory, "sourceListenerFactory").createFlinkColCreator();
+        List<FlinkCol> sourceColsMeta = FlinkCol.getAllTabColsMeta(tab.getCols(), sourceFlinkColCreator);
 
-        return new RowDataSinkFunc(this, tabName
+        return new RowDataSinkFunc(tabName
                 , sinkFunc.getSinkFunction()
                 , sinkFunc.primaryKeys
+                , sourceColsMeta
                 , AbstractRowDataMapper.getAllTabColsMeta(Objects.requireNonNull(sinkFunc.tableCols, "tabCols can not be null").getCols())
                 , supportUpsetDML()
-                , this.parallelism);
+                , this.parallelism, RowDataSinkFunc.createTransformerRules(dataxProcessor.identityValue(), tabName, tab, sourceFlinkColCreator));
     }
 
 

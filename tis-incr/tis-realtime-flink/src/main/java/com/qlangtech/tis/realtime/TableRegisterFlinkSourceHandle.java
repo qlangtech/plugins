@@ -217,11 +217,11 @@ public abstract class TableRegisterFlinkSourceHandle
         if (transformers.isPresent()) {
             tRules = transformers.get();
             srcCols = tRules.overwriteCols(srcCols);
-            cols = AbstractRowDataMapper.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            cols = FlinkCol.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
             transformerMapper = new RowTransformerMapper(cols, transformers.get());
             outputTypeSchema = RowUtils.outputTypeSchema(transformerMapper.cols, selectedTab.getPrimaryKeys());
         } else {
-            cols = AbstractRowDataMapper.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
+            cols = FlinkCol.getAllTabColsMeta(srcCols, Objects.requireNonNull(this.flinkColCreator, "flinkColCreator"));
             outputTypeSchema = RowUtils.outputTypeSchema(cols, selectedTab.getPrimaryKeys());
         }
 

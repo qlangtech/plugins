@@ -20,17 +20,17 @@ package com.qlangtech.tis.realtime;
 
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
-import com.qlangtech.tis.datax.IDataXNameAware;
 import com.qlangtech.tis.datax.IDataxProcessor;
 import com.qlangtech.tis.datax.TableAlias;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
+import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.plugins.incr.flink.cdc.DTO2RowDataMapper;
-import com.qlangtech.tis.plugins.incr.flink.cdc.ReocrdTransformerMapper;
 import com.qlangtech.tis.plugins.incr.flink.cdc.impl.RowDataTransformerMapper;
 import com.qlangtech.tis.realtime.dto.DTOStream;
 import com.qlangtech.tis.realtime.transfer.DTO;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -89,24 +89,32 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
      */
     public final static class RowDataSinkFunc extends TabSinkFunc<RowData> {
 
-        private final Optional<RecordTransformerRules> transformers;
-      //  private final IFlinkColCreator<FlinkCol> flinkColCreator;
+        public static Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>>
+        createTransformerRules(String dataXName, TableAlias tabAlias, ISelectedTab tab, IFlinkColCreator<FlinkCol> sourceFlinkColCreator) {
 
-        public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
-                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
-                , boolean supportUpset, int sinkTaskParallelism) {
-            this(dataXName, tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism);
+            RecordTransformerRules transformerRules = RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(dataXName), tabAlias.getFrom());
+            Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt
+                    = (transformerRules != null) ? Optional.of(Triple.of(transformerRules, tab, sourceFlinkColCreator)) : Optional.empty();
+            return transformerOpt;
         }
+        //  private final IFlinkColCreator<FlinkCol> flinkColCreator;
 
-        public RowDataSinkFunc(IDataXNameAware dataXName, TableAlias tab
+//        public RowDataSinkFunc(TableAlias tab
+//                , SinkFunction<RowData> sinkFunction, List<String> primaryKeys, List<FlinkCol> colsMeta
+//                , boolean supportUpset, int sinkTaskParallelism) {
+//            this(tab, sinkFunction, primaryKeys, colsMeta, colsMeta, supportUpset, sinkTaskParallelism, Optional.empty());
+//        }
+
+
+        public RowDataSinkFunc(TableAlias tab
                 , SinkFunction<RowData> sinkFunction //
                 , List<String> primaryKeys //
                 , final List<FlinkCol> sourceColsMeta //
                 , List<FlinkCol> sinkColsMeta //
-                , boolean supportUpset, int sinkTaskParallelism) {
-            super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism);
-            this.transformers
-                    = Optional.ofNullable(RecordTransformerRules.loadTransformerRules(IPluginContext.namedContext(dataXName.getTISDataXName()), tab.getFrom()));
+                , boolean supportUpset, int sinkTaskParallelism, Optional<Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>>> transformerOpt) {
+            super(tab, primaryKeys, sinkFunction, sourceColsMeta, sinkColsMeta, sinkTaskParallelism
+                    , transformerOpt);
+
             //this.flinkColCreator = Objects.requireNonNull(flinkColCreator, "flinkColCreator can not be null");
             if (supportUpset) {
                 this.setSourceFilter("skipUpdateBeforeEvent"
@@ -136,7 +144,13 @@ public abstract class BasicTISSinkFactory<TRANSFER_OBJ> extends TISSinkFactory {
             }
 
             if (transformers.isPresent()) {
-                return result.map(new RowDataTransformerMapper(this.sourceColsMeta, transformers.get()))
+                Triple<RecordTransformerRules, ISelectedTab, IFlinkColCreator<FlinkCol>> triple = transformers.get();
+                RecordTransformerRules rule = triple.getLeft();
+                ISelectedTab table = triple.getMiddle();
+
+                return result.map(new RowDataTransformerMapper(
+                        FlinkCol.getAllTabColsMeta(rule.overwriteCols(table.getCols())
+                                , Objects.requireNonNull(triple.getRight(), "flinkColCreator")), triple.getLeft()))
                         .name(tab.getFrom() + "_transformer").setParallelism(this.sinkTaskParallelism);
             } else {
                 return result;

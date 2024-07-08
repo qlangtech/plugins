@@ -60,7 +60,7 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
             col2IdxBuilder.put(col.name, Pair.of(idx++, col));
         }
 
-        this.col2IdxMapper = new FlinkCol2Index(Collections.unmodifiableMap(
+        this.col2IdxMapper = new FlinkCol2Index((
                 col2IdxBuilder.entrySet().stream().collect(
                         Collectors.toMap((entry) -> entry.getKey(), (entry) -> entry.getValue().getKey()))));
     }

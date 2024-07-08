@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
 import com.alibaba.datax.common.element.ICol2Index;
+import org.apache.flink.calcite.shaded.com.google.common.collect.Maps;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class FlinkCol2Index implements ICol2Index, Serializable {
     final Map<String, Integer> col2IndexMapper;
 
     public FlinkCol2Index(Map<String, Integer> col2IndexMapper) {
-        this.col2IndexMapper = Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null");
+        this.col2IndexMapper = Maps.newHashMap(Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null"));
     }
 
     public Integer get(String field) {

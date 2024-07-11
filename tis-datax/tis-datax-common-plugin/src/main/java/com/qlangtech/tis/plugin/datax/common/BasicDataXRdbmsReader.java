@@ -93,7 +93,7 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
         if (this.preSelectedTabsHash == selectedTabs.hashCode()) {
             return selectedTabs;
         }
-        this.selectedTabs = fillSelectedTabMeta(this.selectedTabs);
+        this.selectedTabs = fillSelectedTabMeta(false, this.selectedTabs);
         this.preSelectedTabsHash = selectedTabs.hashCode();
         return this.selectedTabs;
 
@@ -101,7 +101,16 @@ public abstract class BasicDataXRdbmsReader<DS extends DataSourceFactory> extend
 
     @Override
     public List<SelectedTab> fillSelectedTabMeta(List<SelectedTab> tabs) {
-        boolean shallFillSelectedTabMeta = shallFillSelectedTabMeta();
+        return fillSelectedTabMeta(true, tabs);
+    }
+
+    /**
+     * @param forceFill 忽视缓存的存在，每次都填充
+     * @param tabs
+     * @return
+     */
+    public List<SelectedTab> fillSelectedTabMeta(boolean forceFill, List<SelectedTab> tabs) {
+        boolean shallFillSelectedTabMeta = forceFill || shallFillSelectedTabMeta();
 
         if (shallFillSelectedTabMeta) {
             try (TableColsMeta tabsMeta = getTabsMeta()) {

@@ -260,7 +260,7 @@ public class KubernetesApplication extends ClusterType {
         JSONObject meta = launchTokenMeta != null ? this.launchTokenMeta : this.getLaunchToken().readLaunchedToken();
         return new JobManagerAddress(null, -1) {
             @Override
-            public String getURL() {
+            public String getUrl() {
                 String url = meta.getString(FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL);
                 if (StringUtils.isEmpty(url)) {
                     throw new IllegalStateException("key:" + FlinkClusterTokenManager.JSON_KEY_WEB_INTERFACE_URL + " relevant value can not be empty");

@@ -243,6 +243,9 @@ public class RowFieldGetterFactory {
         }
 
         private Object getVal(RowData rowData) {
+            if (rowData.isNullAt(this.colIndex)) {
+                return null;
+            }
             try {
                 return getObject((GenericRowData) rowData);
             } catch (ClassCastException e) {

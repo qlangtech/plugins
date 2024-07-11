@@ -20,9 +20,11 @@ package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.config.ParamsConfig;
+import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
 import com.qlangtech.tis.datax.IDataxGlobalCfg;
 import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.Descriptor;
+import com.qlangtech.tis.extension.IDescribableManipulate;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.manage.biz.dal.pojo.AppType;
@@ -31,11 +33,17 @@ import com.qlangtech.tis.plugin.StoreResourceType;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.ds.DataSourceFactoryManipulate;
 import com.qlangtech.tis.plugin.incr.TISSinkFactory;
 import com.qlangtech.tis.runtime.module.misc.IFieldErrorHandler;
 import com.qlangtech.tis.sql.parser.tuple.creator.IStreamIncrGenerateStrategy;
+import com.qlangtech.tis.util.IPluginContext;
 import com.qlangtech.tis.util.UploadPluginMeta;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -45,7 +53,7 @@ import java.util.regex.Pattern;
  * @author: baisui 百岁
  * @create: 2021-04-21 09:09
  **/
-public class DefaultDataxProcessor extends DataxProcessor  {
+public class DefaultDataxProcessor extends DataxProcessor {
 
     public static final String KEY_FIELD_NAME = "globalCfg";
 
@@ -75,7 +83,22 @@ public class DefaultDataxProcessor extends DataxProcessor  {
         return app;
     }
 
-
+    @Override
+    public void copy(String newIdentityVal) {
+        if (StringUtils.isEmpty(newIdentityVal)) {
+            throw new IllegalArgumentException("param newIdentityVal can not be empty");
+        }
+        try {
+            File workDir = this.getDataXWorkDir(null);
+            if (!workDir.exists()) {
+                throw new IllegalStateException("workDir:" + workDir.getAbsolutePath() + " is not exist ");
+            }
+            File newWorkDir = new File(workDir.getParentFile(), newIdentityVal);
+            FileUtils.copyDirectory(workDir, newWorkDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public String identityValue() {
@@ -93,14 +116,6 @@ public class DefaultDataxProcessor extends DataxProcessor  {
 
         return writerPluginOverwrite((d) -> d.getFlinkStreamGenerateTplResource(),
                 () -> DefaultDataxProcessor.super.getFlinkStreamGenerateTplResource());
-
-        //        TISSinkFactory sinKFactory = TISSinkFactory.getIncrSinKFactory(this.identityValue());
-        //        Objects.requireNonNull(sinKFactory, "writer plugin can not be null");
-        //        if (sinKFactory instanceof IStreamIncrGenerateStrategy) {
-        //            return ((IStreamIncrGenerateStrategy) sinKFactory).getFlinkStreamGenerateTemplateFileName();
-        //        }
-        //
-        //        return super.getFlinkStreamGenerateTemplateFileName();
     }
 
     @Override
@@ -123,7 +138,7 @@ public class DefaultDataxProcessor extends DataxProcessor  {
 
 
     @TISExtension()
-    public static class DescriptorImpl extends Descriptor<IAppSource> {
+    public static class DescriptorImpl extends Descriptor<IAppSource> implements IDescribableManipulate<DefaultDataXProcessorManipulate> {
 
         private static final Pattern PATTERN_START_WITH_NUMBER = Pattern.compile("^\\d.{0,}");
 
@@ -144,13 +159,18 @@ public class DefaultDataxProcessor extends DataxProcessor  {
             if (pluginMeta.isUpdate()) {
                 return true;
             }
-            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.APP_NAME_DUPLICATE, context, fieldName,
+            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.VALIDATE_APP_NAME_DUPLICATE, context, fieldName,
                     value);
         }
 
         @Override
         public String getDisplayName() {
             return DataxProcessor.DEFAULT_DATAX_PROCESSOR_NAME;
+        }
+
+        @Override
+        public Class<DefaultDataXProcessorManipulate> getManipulateExtendPoint() {
+            return DefaultDataXProcessorManipulate.class;
         }
     }
 

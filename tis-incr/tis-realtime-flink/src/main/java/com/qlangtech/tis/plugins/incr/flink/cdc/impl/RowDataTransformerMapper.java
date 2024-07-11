@@ -27,7 +27,6 @@ import org.apache.flink.table.data.RowData;
 import java.util.List;
 
 /**
- *
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2024-06-20 17:09
  **/
@@ -35,6 +34,7 @@ public class RowDataTransformerMapper extends ReocrdTransformerMapper<RowData> {
     public RowDataTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
         super(cols, transformerRules);
     }
+
 
     @Override
     protected AbstractTransformerRecord<RowData> createDelegate(RowData row) {

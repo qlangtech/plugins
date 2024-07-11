@@ -239,7 +239,7 @@ public class FlinkTaskNodeController {
         } catch (TimeoutException e) {
             ClusterType clusterCfg = this.factory.getClusterCfg();
             throw TisException.create(//"flinkClusterId:" + clusterCfg.getClusterId()
-                    ",Address:" + clusterCfg.getJobManagerAddress().getURL() + "连接超时，请检查相应配置是否正确", e);
+                    ",Address:" + clusterCfg.getJobManagerAddress().getUrl() + "连接超时，请检查相应配置是否正确", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             if (isNotFoundException(cause)) {

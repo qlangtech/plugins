@@ -21,16 +21,12 @@ package com.qlangtech.tis.plugins.incr.flink.cdc;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
-import com.qlangtech.tis.async.message.client.consumer.IFlinkColCreator;
-import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
-import com.qlangtech.tis.plugin.datax.transformer.jdbcprop.TargetColType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.flink.api.common.functions.MapFunction;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,8 +44,7 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
     private final FlinkCol2Index col2IdxMapper;
 
     public ReocrdTransformerMapper(List<FlinkCol> cols, RecordTransformerRules transformerRules) {
-
-        this.cols = Collections.unmodifiableList(Objects.requireNonNull(cols, "cols can not be null"));
+        this.cols = Lists.newArrayList(Objects.requireNonNull(cols, "cols can not be null"));
         this.transformerUDF
                 = Objects.requireNonNull(transformerRules, "param transformerRules can not be null")
                 .rules.stream().map((t) -> t.getUdf()).collect(Collectors.toList());

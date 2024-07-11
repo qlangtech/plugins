@@ -140,8 +140,15 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
     @Override
     public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, TableAlias tableAlias) {
         List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx);
+//        IColMetaGetter col = null;
+//        ISchemaField schemaCol = null;
         ISchema schema = convert2Schema(tableAlias);
-        return schema.getSchemaFields().size() != cols.size();
+        List<ISchemaField> schemaFields = schema.getSchemaFields();
+        if (schemaFields.size() != cols.size()) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

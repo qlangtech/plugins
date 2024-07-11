@@ -78,7 +78,7 @@ public class KubernetesSession extends AbstractClusterType {
     public JobManagerAddress getJobManagerAddress() {
         return new JobManagerAddress(null, -1) {
             @Override
-            public String getURL() {
+            public String getUrl() {
                 return createRestClusterClient().getWebInterfaceURL();
             }
         };

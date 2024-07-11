@@ -22,6 +22,7 @@ import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
 import com.qlangtech.tis.plugins.incr.flink.cdc.AbstractTransformerRecord;
 import org.apache.flink.table.data.ArrayData;
 import org.apache.flink.table.data.DecimalData;
+import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.MapData;
 import org.apache.flink.table.data.RawValueData;
 import org.apache.flink.table.data.RowData;
@@ -41,6 +42,9 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
 
     public TransformerRowData(RowData row, List<FlinkCol> cols) {
         super(row);
+        if (!(row instanceof GenericRowData)) {
+            throw new IllegalArgumentException("param row must be type of " + GenericRowData.class);
+        }
         this.cols = cols;
         int newSize = cols.size();
         this.rewriteVals = new Object[newSize];
@@ -48,21 +52,24 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
 
     @Override
     public void setString(String field, String val) {
-        setColumn(field, (val == null) ? null : StringData.fromString(val));
+        setColumn(field, (val == null) ? null : val);
     }
 
     @Override
     public void setColumn(String field, Object val) {
-        rewriteVals[getPos(field)] = (val == null ? NULL : val);
+        Integer pos = getPos(field);
+        FlinkCol flinkCol = cols.get(pos);
+        rewriteVals[pos] = (val == null ? NULL : flinkCol.rowDataProcess.apply(val));
     }
 
     @Override
     public Object getColumn(String field) {
         Integer pos = getPos(field);
-        if (rewriteVals[pos] != null) {
-            return rewriteVals[pos];
-        }
         FlinkCol flinkCol = cols.get(pos);
+        if (rewriteVals[pos] != null) {
+            Object overWrite = rewriteVals[pos];
+            return overWrite == NULL ? null : flinkCol.getRowDataVal(this);
+        }
         return getColVal(flinkCol);
     }
 
@@ -77,10 +84,23 @@ public class TransformerRowData extends AbstractTransformerRecord<RowData> imple
 
     @Override
     public RowData getDelegate() {
-        return this;
+        final int rewriteValsLength = this.rewriteVals.length;
+        GenericRowData old = (GenericRowData) this.row;
+        GenericRowData rowData = new GenericRowData(this.row.getRowKind(), rewriteValsLength);
+        Object rewriteVal = null;
+        for (int i = 0; i < rewriteValsLength; i++) {
+            if ((rewriteVal = rewriteVals[i]) != null && rewriteVal != NULL) {
+                rowData.setField(i, rewriteVal);
+            } else {
+                if (i < old.getArity()) {
+                    rowData.setField(i, old.getField(i));
+                }
+            }
+        }
+        return rowData;
     }
 
-    protected Object getColVal(FlinkCol flinkCol) {
+    private Object getColVal(FlinkCol flinkCol) {
         return flinkCol.getRowDataVal(this.row);
     }
 

@@ -288,7 +288,7 @@ public class DataFlowDataXProcessor implements IDataxProcessor, IAppSource, Iden
             if (pluginMeta.isUpdate()) {
                 return true;
             }
-            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.WORKFLOW_NAME_DUPLICATE, context, fieldName, value);
+            return msgHandler.validateBizLogic(IFieldErrorHandler.BizLogic.VALIDATE_WORKFLOW_NAME_DUPLICATE, context, fieldName, value);
         }
 
         @Override

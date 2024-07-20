@@ -67,6 +67,7 @@
         <module>tis-ds-mysql-plugin</module>
         <module>tis-ds-mysql-v5-plugin</module>
         <module>tis-ds-mysql-v8-plugin</module>
+        <module>tis-ds-mysql-mariadb-plugin</module>
         <module>tis-datax-local-executor</module>
         <!-- 为测试通过暂时注释掉-->
         <module>tis-datax-hudi-dependency</module>

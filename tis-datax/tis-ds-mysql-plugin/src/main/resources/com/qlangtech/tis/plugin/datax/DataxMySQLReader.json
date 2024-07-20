@@ -1,6 +1,6 @@
 {
   "dbName": {
-    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\")",
+    "enum": "com.qlangtech.tis.util.PluginItems.getExistDbs(\"MySQL-V5\",\"MySQL-V8\",\"MariaDB\")",
     "creator": {
       "plugin": [
         {
@@ -8,6 +8,9 @@
         },
         {
           "descName": "MySQL-V8"
+        },
+        {
+          "descName": "MariaDB"
         }
       ]
     }

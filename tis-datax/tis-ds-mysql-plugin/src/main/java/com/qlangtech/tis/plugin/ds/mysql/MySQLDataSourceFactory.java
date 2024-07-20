@@ -501,7 +501,7 @@ public abstract class MySQLDataSourceFactory extends BasicDataSourceFactory impl
         }
 
         @Override
-        public final EndType getEndType() {
+        public EndType getEndType() {
             return EndType.MySQL;
         }
 

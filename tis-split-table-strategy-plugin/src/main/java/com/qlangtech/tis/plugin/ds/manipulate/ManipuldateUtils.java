@@ -39,12 +39,15 @@ import java.util.function.Consumer;
  * @create: 2024-07-10 23:16
  **/
 public class ManipuldateUtils {
+
+
+
     public static IPluginItemsProcessor cloneInstance(IPluginContext pluginContext, Context context, String newIdentityName
             , Consumer<IUploadPluginMeta> pluginMetaConsumer
             , Consumer<String> originIdentityIdConsumer) {
         Objects.requireNonNull(context, "param content can not be null");
         JSONObject postContent = Objects.requireNonNull(pluginContext, "pluginContext can not be null").getJSONPostContent();
-        JSONObject manipulateTarget = postContent.getJSONObject("manipulateTarget");
+        JSONObject manipulateTarget = postContent.getJSONObject(IUploadPluginMeta.KEY_JSON_MANIPULATE_TARGET);
         final String keyManipulatePluginMeta = "manipulatePluginMeta";
         String pluginType = postContent.getString(keyManipulatePluginMeta);
         if (StringUtils.isEmpty(pluginType)) {
@@ -58,6 +61,7 @@ public class ManipuldateUtils {
             throw new IllegalStateException("pluginMeta can not be empty");
         }
         for (IUploadPluginMeta meta : pluginMeta) {
+            meta.putExtraParams(DBIdentity.KEY_UPDATE, Boolean.FALSE.toString());
             pluginMetaConsumer.accept(meta);
 
             JSONArray itemsArray = new JSONArray();

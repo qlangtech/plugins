@@ -20,6 +20,8 @@ package com.qlangtech.tis.plugin.ds.manipulate;
 
 import com.alibaba.citrus.turbine.Context;
 import com.qlangtech.tis.datax.DefaultDataXProcessorManipulate;
+import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.impl.DataxProcessor;
 import com.qlangtech.tis.extension.TISExtension;
 import com.qlangtech.tis.manage.IAppSource;
 import com.qlangtech.tis.plugin.IPluginStore.AfterPluginSaved;
@@ -35,6 +37,7 @@ import com.qlangtech.tis.util.IPluginWithStore;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -71,11 +74,14 @@ public class CloneDefaultDataXProcessor extends DefaultDataXProcessorManipulate 
         /**
          * 先拷贝所有文件，与下面一步执行前后顺序不能颠倒
          */
-        IPluginWithStore storePlugins = itemsProcessor.getStorePlugins();
-        List<IAppSource> pipelines = storePlugins.listPlugins();
-        for (IAppSource pipeline : pipelines) {
-            pipeline.copy(this.name);
-        }
+        //IPluginWithStore storePlugins = itemsProcessor.getStorePlugins();
+        DataxProcessor copyFromPipeline = (DataxProcessor) DataxProcessor.load(null, originId[0]);
+        Objects.requireNonNull(copyFromPipeline, "name:" + originId[0] + " relevant pipeline can not be null");
+        copyFromPipeline.copy(this.name);
+//        List<IAppSource> pipelines = storePlugins.listPlugins();
+//        for (IAppSource pipeline : pipelines) {
+//            pipeline.copy(this.name);
+//        }
 
         /**
          * 再将新的带有替换后的identityName名的实例保存

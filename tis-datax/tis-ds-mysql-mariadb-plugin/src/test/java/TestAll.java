@@ -16,27 +16,21 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.ds.manipulate.TestManipuldateUtils;
-import com.qlangtech.tis.plugin.ds.split.TestDefaultSplitTableStrategy;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import com.qlangtech.tis.plugin.ds.mysql.TestMariaDBDataSourceFactory;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * @author: baisui 百岁
  * @create: 2021-01-07 18:52
  **/
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-        TestDefaultSplitTableStrategy.class
-        , TestManipuldateUtils.class})
-public class TestAll  //extends TestCase
-{
+public class TestAll extends TestCase {
 
-//    public static Test suite() {
-//        TestSuite suite = new TestSuite();
-//        suite.addTestSuite(TestMySQLDataSourceFactory.class);
-//        suite.addTestSuite(TestDataxMySQLReader.class);
-//        suite.addTestSuite(TestDataxMySQLWriter.class);
-//        return suite;
-//    }
+    public static Test suite() {
+        TestSuite suite = new TestSuite();
+        suite.addTestSuite(TestMariaDBDataSourceFactory.class);
+
+        return suite;
+    }
 }

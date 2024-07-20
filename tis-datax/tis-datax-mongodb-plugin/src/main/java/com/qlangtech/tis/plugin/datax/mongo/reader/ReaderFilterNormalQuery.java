@@ -27,6 +27,7 @@ public class ReaderFilterNormalQuery extends ReaderFilter {
     @Override
     public Document createFilter() {
         Document fitler = Document.parse(query);
+        logger.info("create MongoDB collection filter:{}", fitler.toJson());
         return fitler;
     }
 

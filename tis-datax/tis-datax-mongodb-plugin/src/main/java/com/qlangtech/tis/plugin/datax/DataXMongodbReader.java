@@ -118,9 +118,6 @@ public class DataXMongodbReader extends BasicDataXRdbmsReader<MangoDBDataSourceF
 
             MongoDatabase database = mongoClient.getDatabase(plugin.getDbName());
             MongoCollection<Document> user = database.getCollection(table.getTableName());
-            BsonValue val = null;
-            BsonDocument bdoc = null;
-            MongoColumnMetaData colMeta = null;
 
             for (Document doc : user.find().limit(Objects.requireNonNull(inspectRowCount,
                     "inspectRowCount can not " + "be" + " null"))) {

@@ -374,7 +374,7 @@ public class DataXOdpsWriter extends BasicDataXRdbmsWriter implements IFlatTable
         public OdpsContext(DataXOdpsWriter odpsWriter, IDataxProcessor.TableMap tableMapper, Optional<RecordTransformerRules> transformerRules) {
             this.odpsWriter = odpsWriter;
             this.tableMapper = tableMapper;
-            this.cols = TabCols.create(null, tableMapper, transformerRules).getRawCols();
+            this.cols = TabCols.create( null, tableMapper, transformerRules).getRawCols();
             this.dsFactory = odpsWriter.getDataSourceFactory();
             this.accessKey = this.dsFactory.getAccessKey();
 

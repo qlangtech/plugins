@@ -131,6 +131,16 @@ public class JobHookMsg implements IDataXTaskRelevant {
     }
 
     @Override
+    public <T> void setAttr(Class<T> key, Object val) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> T getAttr(Class<T> key) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getTaskSerializeNum() {
         throw new UnsupportedOperationException();
     }

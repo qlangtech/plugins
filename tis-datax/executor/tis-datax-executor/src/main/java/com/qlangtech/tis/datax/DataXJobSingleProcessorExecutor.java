@@ -99,6 +99,7 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
                 ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
+
                 DefaultExecutor executor = new DefaultExecutor();
                 executor.setWorkingDirectory(getWorkingDirectory());
 
@@ -110,37 +111,50 @@ public abstract class DataXJobSingleProcessorExecutor<T extends IDataXTaskReleva
                 executor.execute(cmdLine, resultHandler);
 
                 runningTask.computeIfAbsent(jobId, (id) -> executor.getWatchdog());
-                try {
-                    int timeout = 5;
 
-                    // 等待5个小时
-                    resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
-
-                    if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
-                        if ( //resultHandler.hasResult() &&
-                                resultHandler.getExitValue() != 0) {
-                            // it was killed on purpose by the watchdog
-                            if (resultHandler.getException() != null) {
-                                logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
-                                // throw new RuntimeException(command, resultHandler.getException());
-                                throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
-                            }
-                        }
-
-                        if (!resultHandler.hasResult()) {
-                            // 此处应该是超时了
-                            throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",job execute timeout,wait "
-                                    + "for " + timeout + " hours");
-                        }
-                    }
+                waitForTerminator(jobId, dataxName, resultHandler);
 
 
-                } finally {
-                    runningTask.remove(jobId);
-                }
             }
         });
 
+    }
+
+    /**
+     * 等待任务执行结束
+     *
+     * @param jobId
+     * @param dataxName
+     * @param resultHandler
+     * @throws InterruptedException
+     * @throws DataXJobSingleProcessorException
+     */
+    protected void waitForTerminator(Integer jobId, String dataxName, DefaultExecuteResultHandler resultHandler) throws InterruptedException, DataXJobSingleProcessorException {
+        int timeout = 5;
+        try {
+            // 等待5个小时
+            resultHandler.waitFor(TimeUnit.HOURS.toMillis(6));
+
+            if (resultHandler.getExitValue() != DataXJobInfo.DATAX_THREAD_PROCESSING_CANCAL_EXITCODE) {
+                if ( //resultHandler.hasResult() &&
+                        resultHandler.getExitValue() != 0) {
+                    // it was killed on purpose by the watchdog
+                    if (resultHandler.getException() != null) {
+                        logger.error("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                        // throw new RuntimeException(command, resultHandler.getException());
+                        throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",ERROR MSG:" + resultHandler.getException().getMessage());
+                    }
+                }
+
+                if (!resultHandler.hasResult()) {
+                    // 此处应该是超时了
+                    throw new DataXJobSingleProcessorException("dataX:" + dataxName + ",job execute timeout,wait "
+                            + "for " + timeout + " hours");
+                }
+            }
+        } finally {
+            runningTask.remove(jobId);
+        }
     }
 
 

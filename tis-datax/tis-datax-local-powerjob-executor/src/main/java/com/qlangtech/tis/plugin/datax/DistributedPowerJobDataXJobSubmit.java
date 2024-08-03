@@ -19,6 +19,7 @@
 package com.qlangtech.tis.plugin.datax;
 
 import com.alibaba.citrus.turbine.Context;
+import com.alibaba.datax.common.element.Record;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qlangtech.tis.annotation.Public;
@@ -62,6 +63,7 @@ import tech.powerjob.common.request.http.SaveJobInfoRequest;
 import tech.powerjob.common.request.http.SaveWorkflowNodeRequest;
 import tech.powerjob.common.response.WorkflowInfoDTO;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -87,6 +89,8 @@ public class DistributedPowerJobDataXJobSubmit extends DataXJobSubmit implements
 
     public DistributedPowerJobDataXJobSubmit() {
     }
+
+
 
 
     @Override

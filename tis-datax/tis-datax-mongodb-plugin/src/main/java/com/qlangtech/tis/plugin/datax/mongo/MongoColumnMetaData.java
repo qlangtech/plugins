@@ -78,35 +78,43 @@ public class MongoColumnMetaData extends ColumnMetaData {
             val = entry.getValue();
             keys = ListUtils.union(parentKeys, Collections.singletonList(entry.getKey()));
             key = String.join(MongoCMeta.KEY_MONOG_NEST_PROP_SEPERATOR, keys);
-            //            if (val.getBsonType() == BsonType.OBJECT_ID) {
-            //                continue;
-            //            }
             colMeta = colsSchema.get(key);
-            if (colMeta == null) {
-                colMeta = new MongoColumnMetaData(index++, key, val.getBsonType(), 0,
-                        (val.getBsonType() == BsonType.OBJECT_ID));
-                colsSchema.put(key, colMeta);
-            } else {
-                if (colMeta.getMongoFieldType() != BsonType.STRING //
-                        && !val.isNull() && colMeta.getMongoFieldType() != val.getBsonType()) {
-                    //TODO： 前后两次类型不同
-                    // 则直接将类型改成String类型
-                    colMeta = new MongoColumnMetaData(index++, key, BsonType.STRING);
+
+            try {
+
+                if (colMeta == null) {
+                    colMeta = new MongoColumnMetaData(index, key, val.getBsonType(), 0,
+                            (val.getBsonType() == BsonType.OBJECT_ID));
                     colsSchema.put(key, colMeta);
+                } else {
+                    if (colMeta.getMongoFieldType() == BsonType.NULL && !val.isNull()) {
+                        colMeta = new MongoColumnMetaData(index, key, val.getBsonType());
+                        colsSchema.put(key, colMeta);
+                    } else if (colMeta.getMongoFieldType() != BsonType.STRING //
+                            && !val.isNull() && colMeta.getMongoFieldType() != val.getBsonType()) {
+                        //TODO： 前后两次类型不同
+                        // 则直接将类型改成String类型
+                        colMeta = new MongoColumnMetaData(index, key, BsonType.STRING);
+                        colsSchema.put(key, colMeta);
+                    }
                 }
-            }
-            if (!val.isNull()) {
+                if (!val.isNull()) {
 
-                if (colMeta.getMongoFieldType() == BsonType.DOCUMENT && val.isDocument()) {
-                    parseMongoDocTypes(true, keys, parseChildDoc ? colsSchema : colMeta.docTypeFieldEnum, val.asDocument());
+                    if (colMeta.getMongoFieldType() == BsonType.DOCUMENT && val.isDocument()) {
+                        parseMongoDocTypes(true, keys, parseChildDoc ? colsSchema : colMeta.docTypeFieldEnum, val.asDocument());
+                    }
+
+
+                    if (colMeta.getMongoFieldType() == BsonType.STRING) {
+                        colMeta.setMaxStrLength(val.asString().getValue().length());
+                    }
+
+                    colMeta.incrContainValCount();
                 }
-
-
-                if (colMeta.getMongoFieldType() == BsonType.STRING) {
-                    colMeta.setMaxStrLength(val.asString().getValue().length());
-                }
-
-                colMeta.incrContainValCount();
+            } catch (Exception e) {
+                throw new RuntimeException("key:" + key + ",val:" + val, e);
+            } finally {
+                index++;
             }
 
         }
@@ -228,4 +236,5 @@ public class MongoColumnMetaData extends ColumnMetaData {
                 .filter((c) -> ((MongoColumnMetaData) c).mongoFieldType != BsonType.DOCUMENT).collect(Collectors.toList());
 
     }
+
 }

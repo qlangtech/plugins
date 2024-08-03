@@ -18,7 +18,10 @@
 
 package com.qlangtech.tis.plugin.ds.mysql;
 
+import com.alibaba.datax.core.job.IJobContainerContext;
+import com.alibaba.datax.core.job.ITransformerBuildInfo;
 import com.alibaba.datax.plugin.rdbms.util.DBUtil;
+import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.plugin.ds.DataSourceFactory;
 import com.qlangtech.tis.plugin.ds.IDataSourceFactoryGetter;
 import junit.framework.TestCase;
@@ -27,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Optional;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
@@ -56,13 +60,69 @@ public class TestMariaDBDataSourceReader extends TestCase {
             }
         };
 
+        IJobContainerContext containerContext = new IJobContainerContext() {
+            @Override
+            public <T extends ITransformerBuildInfo> Optional<T> getTransformerBuildCfg() {
+                return Optional.empty();
+            }
+
+            @Override
+            public <T> boolean containAttr(Class<T> key) {
+                return false;
+            }
+
+            @Override
+            public String getCollectionName() {
+                return "";
+            }
+
+            @Override
+            public Integer getTaskId() {
+                return 0;
+            }
+
+            @Override
+            public String getJobName() {
+                return "";
+            }
+
+            @Override
+            public String getDataXName() {
+                return "";
+            }
+
+            @Override
+            public long getExecEpochMilli() {
+                return 0;
+            }
+
+            @Override
+            public <T> void setAttr(Class<T> key, Object val) {
+
+            }
+
+            @Override
+            public <T> T getAttr(Class<T> key) {
+                return null;
+            }
+
+            @Override
+            public int getTaskSerializeNum() {
+                return 0;
+            }
+
+            @Override
+            public String getFormatTime(TimeFormat format) {
+                return "";
+            }
+        };
 
         dataSourceFactory.visitFirstConnection((conn) -> {
             Connection connection = conn.getConnection();
 //com.alibaba.datax.plugin.reader.mysqlreader.MysqlReader
             String querySql = "select * from item";
 
-            Pair<Statement, ResultSet> query = DBUtil.query(connection, querySql, 2000, dsGetter);
+            Pair<Statement, ResultSet> query = DBUtil.query(connection, querySql, 2000, dsGetter, containerContext);
             try {
                 int all = 0;
                 int count = 0;

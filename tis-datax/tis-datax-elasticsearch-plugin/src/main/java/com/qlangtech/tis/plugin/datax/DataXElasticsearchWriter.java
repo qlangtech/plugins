@@ -139,7 +139,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
 
     @Override
     public boolean hasDifferWithSource(IPluginContext pluginCtx, ISelectedTab esTab, TableAlias tableAlias) {
-        List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx);
+        List<IColMetaGetter> cols = esTab.overwriteCols(pluginCtx, Optional.empty());
 //        IColMetaGetter col = null;
 //        ISchemaField schemaCol = null;
         ISchema schema = convert2Schema(tableAlias);
@@ -168,7 +168,7 @@ public class DataXElasticsearchWriter extends DataxWriter implements IDataxConte
         ESField field = null;
 
         // RecordTransformerRules transformerRules = RecordTransformerRules.loadTransformerRules(pluginCtx, tab.getName());
-        List<IColMetaGetter> cols = tab.overwriteCols(pluginCtx);// RecordTransformerRules.overwriteCols(pluginCtx, tab);
+        List<IColMetaGetter> cols = tab.overwriteCols(pluginCtx,Optional.empty());// RecordTransformerRules.overwriteCols(pluginCtx, tab);
 //        if (transformerRules != null) {
 //            cols = transformerRules.overwriteCols(tab.getCols());
 //        } else {

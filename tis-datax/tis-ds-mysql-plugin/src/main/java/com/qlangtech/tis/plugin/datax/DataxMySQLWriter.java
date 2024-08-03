@@ -105,7 +105,7 @@ public class DataxMySQLWriter extends BasicDataXRdbmsWriter implements IWriteMod
             context.password = dsFactory.password;
             context.username = dsFactory.userName;
             context.tabName = table.getTableName();
-            context.cols = IDataxProcessor.TabCols.create(dsFactory, tm, transformerRules);
+            context.cols = IDataxProcessor.TabCols.create( dsFactory, tm, transformerRules);
             context.dbName = this.dbName;
             context.writeMode = this.writeMode;
             context.preSql = this.preSql;

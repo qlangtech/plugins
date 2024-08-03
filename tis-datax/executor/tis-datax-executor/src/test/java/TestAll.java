@@ -16,15 +16,30 @@
  * limitations under the License.
  */
 
+import com.google.common.collect.Lists;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
  * @create: 2021-05-04 10:19
  **/
 public class TestAll extends TestCase {
+
+    public void testA() {
+//        List<String> list = Lists.newArrayListWithCapacity(2);
+//        list.set(0, "hello");
+        String[] array = new String[2];
+        array[1] = "hello";
+        ArrayList<String> strings = Lists.newArrayList(array);
+        for (String v : strings) {
+            System.out.println(v);
+        }
+    }
 
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite();

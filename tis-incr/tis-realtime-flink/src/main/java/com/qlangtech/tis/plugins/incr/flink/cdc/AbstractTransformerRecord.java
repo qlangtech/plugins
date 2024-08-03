@@ -43,6 +43,10 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
         this.col2IndexMapper = (FlinkCol2Index) mapper;
     }
 
+    @Override
+    public ICol2Index getCol2Index() {
+        return col2IndexMapper;
+    }
 
     protected Integer getPos(String field) {
         Integer pos = col2IndexMapper.get(field);

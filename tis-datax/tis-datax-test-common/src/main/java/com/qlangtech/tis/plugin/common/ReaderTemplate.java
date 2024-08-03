@@ -18,23 +18,16 @@
 
 package com.qlangtech.tis.plugin.common;
 
-import com.alibaba.datax.common.element.ColumnCast;
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.core.job.JobContainer;
-import com.alibaba.datax.core.util.container.CoreConstant;
-import com.alibaba.datax.core.util.container.JarLoader;
-import com.alibaba.datax.core.util.container.LoadUtil;
 import com.alibaba.datax.plugin.writer.streamwriter.Key;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Sets;
 import com.qlangtech.tis.datax.*;
+import com.qlangtech.tis.datax.common.WriterPluginMeta;
 import com.qlangtech.tis.datax.impl.DataXCfgGenerator;
 import com.qlangtech.tis.datax.impl.DataxReader;
 import com.qlangtech.tis.datax.impl.DataxWriter;
 import com.qlangtech.tis.extension.impl.IOUtils;
-import com.qlangtech.tis.plugin.StoreResourceType;
-import com.qlangtech.tis.plugin.datax.MockDataxReaderContext;
 import com.qlangtech.tis.plugin.datax.transformer.RecordTransformerRules;
 import junit.framework.TestCase;
 import org.apache.commons.lang3.tuple.Pair;
@@ -157,63 +150,74 @@ public class ReaderTemplate {
      */
     public static void realExecute(final String dataXName, final Configuration readerCfg
             , File writeFile, IDataXPluginMeta dataxReader, Optional<Pair<String, List<String>>> transformer) throws IllegalAccessException {
-        Objects.requireNonNull(readerCfg);
-        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
 
-        DataxExecutor.initializeClassLoader(Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
+        WriterPluginMeta writerPluginMeta = new WriterPluginMeta("plugin.writer.streamwriter"
+                , "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter"
+                , Configuration.from("{\n" //
+                + "    \"name\": \"streamwriter\",\n"//
+                + "    \"parameter\": {\n" + //
+                //"        \"print\": true\n" +
+                "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" //
+                + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
+        WriterPluginMeta.realExecute(dataXName, readerCfg, writerPluginMeta, transformer, Optional.empty());
 
-        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
-                , "container.json", true, (input) -> {
-                    Configuration cfg = Configuration.from(input);
-
-
-                    cfg.set("plugin.writer.streamwriter.class", "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
-
-                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
-                    transformer.ifPresent((tt) -> {
-                        Pair<String, List<String>> t = tt;
-                        Configuration c = Configuration.newDefault();
-                        c.set(CoreConstant.JOB_TRANSFORMER_NAME, t.getKey());
-                        c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());
-                        cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
-                    });
-
-                    cfg.set("job.content[0].reader" //
-                            , readerCfg);
-                    cfg.set("job.content[0].writer", Configuration.from("{\n" //
-                            + "    \"name\": \"streamwriter\",\n"//
-                            + "    \"parameter\": {\n" + //
-                            //"        \"print\": true\n" +
-                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" //
-                            + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
-
-                    DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
-                    return cfg;
-                });
-
-
-        // 绑定column转换信息
-        ColumnCast.bind(allConf);
-        LoadUtil.bind(allConf);
-
-        JobContainer container = new JobContainer(allConf) {
-            @Override
-            public int getTaskSerializeNum() {
-                return 999;
-            }
-
-            @Override
-            public String getFormatTime(TimeFormat format) {
-                return super.getFormatTime(format);
-            }
-
-            @Override
-            public String getTISDataXName() {
-                return dataXName;
-            }
-        };
-
-        container.start();
+//        Objects.requireNonNull(readerCfg);
+//        final JarLoader uberClassLoader = new JarLoader(new String[]{"."});
+//
+//        DataxExecutor.initializeClassLoader(Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
+//
+//        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
+//                , "container.json_bak", true, (input) -> {
+//                    Configuration cfg = Configuration.from(input);
+//
+//
+//                    cfg.set("plugin.writer.streamwriter.class", "com.alibaba.datax.plugin.writer.streamwriter.StreamWriter");
+//
+//                    cfg.set("plugin.reader." + dataxReader.getDataxMeta().getName() + ".class", dataxReader.getDataxMeta().getImplClass());
+//                    transformer.ifPresent((tt) -> {
+//                        Pair<String, List<String>> t = tt;
+//                        Configuration c = Configuration.newDefault();
+//                        c.set(CoreConstant.JOB_TRANSFORMER_NAME, t.getKey());
+//                        c.set(CoreConstant.JOB_TRANSFORMER_RELEVANT_KEYS, t.getRight());
+//                        cfg.set("job.content[0]." + CoreConstant.JOB_TRANSFORMER, c);
+//                    });
+//
+//                    cfg.set("job.content[0].reader" //
+//                            , readerCfg);
+//                    cfg.set("job.content[0].writer", Configuration.from("{\n" //
+//                            + "    \"name\": \"streamwriter\",\n"//
+//                            + "    \"parameter\": {\n" + //
+//                            //"        \"print\": true\n" +
+//                            "        \"" + Key.PATH + "\": \"" + writeFile.getParentFile().getAbsolutePath() + "\",\n" //
+//                            + "        \"" + Key.FILE_NAME + "\": \"" + writeFile.getName() + "\"\n" + "    }\n" + "}"));
+//
+//                    DataxExecutor.setResType(cfg, StoreResourceType.DataApp);
+//                    return cfg;
+//                });
+//
+//
+//        // 绑定column转换信息
+//        ColumnCast.bind(allConf);
+//        LoadUtil.bind(allConf);
+//
+//        JobContainer container = new JobContainer(allConf) {
+//            @Override
+//            public int getTaskSerializeNum() {
+//                return 999;
+//            }
+//
+//            @Override
+//            public String getFormatTime(TimeFormat format) {
+//                return super.getFormatTime(format);
+//            }
+//
+//            @Override
+//            public String getTISDataXName() {
+//                return dataXName;
+//            }
+//        };
+//
+//        container.start();
     }
 
     /**
@@ -234,7 +238,7 @@ public class ReaderTemplate {
 //                Sets.newHashSet("plugin.reader." + dataxReader.getDataxMeta().getName(), "plugin.writer.streamwriter"), uberClassLoader);
 //
 //        Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
-//                , "container.json", true, (input) -> {
+//                , "container.json_bak", true, (input) -> {
 //                    Configuration cfg = Configuration.from(input);
 //
 //

@@ -18,12 +18,23 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.element.QueryCriteria;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.google.common.cache.CacheBuilder;
+
+import com.github.benmanes.caffeine.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.qlangtech.tis.assemble.FullbuildPhase;
 import com.qlangtech.tis.cloud.ITISCoordinator;
 import com.qlangtech.tis.datax.CuratorDataXTaskMessage;
 import com.qlangtech.tis.datax.DataXJobInfo;
 import com.qlangtech.tis.datax.DataXJobSubmit;
+import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataxProcessor;
+import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import com.qlangtech.tis.exec.ExecutePhaseRange;
 import com.qlangtech.tis.exec.IExecChainContext;
 import com.qlangtech.tis.fullbuild.indexbuild.IRemoteTaskTrigger;
@@ -32,17 +43,27 @@ import com.qlangtech.tis.fullbuild.phasestatus.impl.DumpPhaseStatus;
 import com.qlangtech.tis.manage.common.CenterResource;
 import com.qlangtech.tis.manage.common.HttpUtils;
 import com.qlangtech.tis.manage.common.TisUTF8;
+import com.qlangtech.tis.plugin.datax.DataXPipelinePreviewProcessorExecutor.PreviewLaunchParam;
+import com.qlangtech.tis.realtime.utils.NetUtils;
 import com.qlangtech.tis.solrj.util.ZkUtils;
 import com.tis.hadoop.rpc.ITISRpcService;
 import com.tis.hadoop.rpc.RpcServiceReference;
 import com.tis.hadoop.rpc.StatusRpcClientFactory;
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.easymock.EasyMock;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -63,6 +84,58 @@ public class TestLocalDataXJobSubmit extends TestCase {
     public static final String dataXfileName = dump_table_name + "_0.json";
     public static final String dataXName = "baisuitestTestcase";
     public static final String statusCollectorHost = "127.0.0.1:3489";
+
+//    public void testIntegerCache() throws Exception {
+//
+//        // example:  https://github.com/apache/solr/blob/main/solr/core/src/java/org/apache/solr/update/CommitTracker.java#L47
+//
+////        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+////        scheduledExecutorService.
+//        final LoadingCache<String, Integer> tabSynchronizeCache
+//                = Caffeine.newBuilder()
+//                .expireAfterAccess(10, TimeUnit.SECONDS)
+//                .refreshAfterWrite(5, TimeUnit.SECONDS)
+//                .removalListener(new RemovalListener<String, Integer>() {
+//                    @Override
+//                    public void onRemoval(String key, Integer value, RemovalCause cause) {
+//                        //  Integer executor = notification.getValue();
+//                        System.out.println(value);
+//                    }
+//                })
+//                .build(new CacheLoader<String, Integer>() {
+//                    @Override
+//                    public Integer load(String dataXName) throws Exception {
+//                        return (int) (Math.random() * 1000);
+//                    }
+//                });
+//
+//
+//        Integer test = tabSynchronizeCache.get("test");
+////        Thread.sleep(12000);
+////        tabSynchronizeCache.get("test");
+//        Thread.sleep(9999999);
+//    }
+
+
+    public void testPreviewRowsData() throws Exception {
+
+//        Enumeration<URL> resources = Thread.currentThread().getContextClassLoader().getResources("com/google/common/base/Verify.class");
+//        while(resources.hasMoreElements()){
+//            System.out.println(  resources.nextElement() );
+//        }
+
+        LocalDataXJobSubmit localJobSubmit = new LocalDataXJobSubmit();
+
+        localJobSubmit.setClasspath(DataxPrePostConsumer.DEFAULT_CLASSPATH);
+        QueryCriteria queryCriteria = new QueryCriteria();
+        queryCriteria.setPageSize(10);
+        queryCriteria.setNextPakge(true);
+        queryCriteria.setPagerOffsetPointCols( null);
+
+        PreviewRowsData previewRowsData = localJobSubmit.previewRowsData("mysql_mysql", "base", queryCriteria);
+        Assert.assertNotNull(previewRowsData);
+        Thread.sleep(99999999);
+    }
 
     public void testCreateDataXJob() throws Exception {
 
@@ -104,10 +177,10 @@ public class TestLocalDataXJobSubmit extends TestCase {
 
         String zkSubPath = "nodes0000000020";
         EasyMock.expect(zkClient.getChildren(
-                ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, true))
+                        ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH, true))
                 .andReturn(Collections.singletonList(zkSubPath)).times(3);
         EasyMock.expect(zkClient.getData(EasyMock.eq(ZkUtils.ZK_ASSEMBLE_LOG_COLLECT_PATH + "/" + zkSubPath)
-                , EasyMock.eq(true)))
+                        , EasyMock.eq(true)))
                 .andReturn(statusCollectorHost.getBytes(TisUTF8.get())).times(3);
 
         EasyMock.expect(taskContext.getZkClient()).andReturn(zkClient).anyTimes();
@@ -126,20 +199,20 @@ public class TestLocalDataXJobSubmit extends TestCase {
 //                , DataXJobInfo jobName, IDataxProcessor processor, CuratorDataXTaskMessage dataXJobDTO
 
         IRemoteTaskTrigger dataXJob = jobSubmit.createDataXJob(
-                dataXJobContext, statusRpc, jobName ,dataxProcessor, dataXTaskMessage);
+                dataXJobContext, statusRpc, jobName, dataxProcessor, dataXTaskMessage);
 
         // RunningStatus running = getRunningStatus(dataXJob);
         // assertTrue("running.isSuccess", running.isSuccess());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointThrowException.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc,jobName ,dataxProcessor, dataXTaskMessage);
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, jobName, dataxProcessor, dataXTaskMessage);
 
 //        running = getRunningStatus(dataXJob);
 //        assertFalse("shall faild", running.isSuccess());
 //        assertTrue("shall complete", running.isComplete());
 
         jobSubmit.setMainClassName(LocalDataXJobMainEntrypointCancellable.class.getName());
-        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc,jobName ,dataxProcessor , dataXTaskMessage);
+        dataXJob = jobSubmit.createDataXJob(dataXJobContext, statusRpc, jobName, dataxProcessor, dataXTaskMessage);
         //  running = getRunningStatus(dataXJob, false);
         Thread.sleep(2000);
         dataXJob.cancel();

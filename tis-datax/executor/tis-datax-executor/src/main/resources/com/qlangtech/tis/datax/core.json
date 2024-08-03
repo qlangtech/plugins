@@ -3,6 +3,17 @@
     "jvm": "-Xms1G -Xmx1G",
     "environment": {}
   },
+  "job": {
+    "setting":{
+      "errorLimit":{
+        "record":1,
+        "percentage":0.02
+      },
+      "speed":{
+        "channel":1
+      }
+    }
+  },
   "common": {
     "column": {
       "datetimeFormat": "yyyy-MM-dd HH:mm:ss",

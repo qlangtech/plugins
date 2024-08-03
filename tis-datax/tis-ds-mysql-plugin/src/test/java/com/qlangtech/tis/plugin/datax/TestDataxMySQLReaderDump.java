@@ -95,7 +95,6 @@ public class TestDataxMySQLReaderDump {
     }
 
     /**
-     *
      * @param transformer Optional<Pair<String, List<String>>> key: tableName 用于获取Transformer udf集合，value：新增字段序列
      * @throws IOException
      * @throws IllegalAccessException
@@ -125,8 +124,7 @@ public class TestDataxMySQLReaderDump {
                     return Configuration.from(writerJsonInput);
                 });
         readerConf.set("parameter.connection[0].jdbcUrl[0]", dsFactory.getJdbcUrls().get(0));
-        readerConf.set(IDataXCfg.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY,
-                dsFactory.identityValue());
+        readerConf.set(IDataXCfg.connectKeyParameter + "." + DataxUtils.DATASOURCE_FACTORY_IDENTITY, dsFactory.identityValue());
         ReaderTemplate.realExecute(TestDataxMySQLReader.dataXName, readerConf, dataxReaderResult, dataxReader, transformer);
         System.out.println(FileUtils.readFileToString(dataxReaderResult, TisUTF8.get()));
     }

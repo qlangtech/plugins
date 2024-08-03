@@ -16,19 +16,22 @@
  * limitations under the License.
  */
 
-import com.qlangtech.tis.plugin.datax.TestEmbeddedDataXJobSubmit;
-import junit.framework.Test;
+package com.qlangtech.tis.plugin.datax;
+
+import com.qlangtech.tis.datax.PreviewRowsData;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Assert;
 
 /**
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2021-11-23 09:55
+ * @create: 2024-07-22 09:48
  **/
-public class TestAll extends TestCase {
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(TestEmbeddedDataXJobSubmit.class);
-        return suite;
+public class TestEmbeddedDataXJobSubmit extends TestCase {
+
+    public void testPreviewRowsData() {
+        EmbeddedDataXJobSubmit embeddedDataXJobSubmit = new EmbeddedDataXJobSubmit();
+        int pageSize = 10;
+        PreviewRowsData records = embeddedDataXJobSubmit.previewRowsData("mysql_mysql", "base", "testid", true, true, 10);
+        Assert.assertTrue(records.getRows().size() > 0);
     }
 }

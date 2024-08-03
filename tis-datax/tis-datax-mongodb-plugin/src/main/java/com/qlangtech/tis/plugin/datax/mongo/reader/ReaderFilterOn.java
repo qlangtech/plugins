@@ -12,6 +12,8 @@ import com.qlangtech.tis.runtime.module.misc.IControlMsgHandler;
 import org.apache.commons.lang.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author 百岁 (baisui@qlangtech.com)
@@ -19,7 +21,7 @@ import org.bson.types.ObjectId;
  * @see MongoDBReader.Task
  */
 public class ReaderFilterOn extends ReaderFilter {
-
+    private static final Logger logger = LoggerFactory.getLogger(ReaderFilterOn.class);
     @FormField(ordinal = 1, type = FormFieldType.ENUM, validate = {Validator.require})
     public Boolean usingObjectId;
 
@@ -45,7 +47,7 @@ public class ReaderFilterOn extends ReaderFilter {
                     , new Document("$gte", usingObjectId ? new ObjectId(lowerBound) : lowerBound) //
                             .append("$lt", usingObjectId ? new ObjectId(upperBound) : upperBound));
         }
-
+        logger.info("mongoReader filter:{}", filter.toJson());
         return filter;
     }
 
@@ -62,8 +64,8 @@ public class ReaderFilterOn extends ReaderFilter {
 
             ReaderFilterOn filter = postFormVals.newInstance();
             if (StringUtils.isEmpty(filter.lowerBound) && StringUtils.isEmpty(filter.upperBound)) {
-                msgHandler.addFieldError(context,"lowerBound","至少填一项");
-                msgHandler.addFieldError(context,"upperBound","至少填一项");
+                msgHandler.addFieldError(context, "lowerBound", "至少填一项");
+                msgHandler.addFieldError(context, "upperBound", "至少填一项");
                 msgHandler.addErrorMessage(context, "查询区间不能都为空，上下区间至少填一项");
                 return false;
             }

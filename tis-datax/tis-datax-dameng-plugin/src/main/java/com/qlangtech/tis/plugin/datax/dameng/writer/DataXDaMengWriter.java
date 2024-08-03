@@ -67,7 +67,7 @@ public class DataXDaMengWriter extends BasicDataXRdbmsWriter<DaMengDataSourceFac
             context.setPassword(dsFactory.password);
             context.setUsername(dsFactory.userName);
             context.setTabName(table.getTableName());
-            context.cols = IDataxProcessor.TabCols.create(new IDBReservedKeys() {
+            context.cols = IDataxProcessor.TabCols.create( new IDBReservedKeys() {
             }, tm, transformerRules);
             context.setDbName(this.dbName);
             //    context.writeMode = this.writeMode;

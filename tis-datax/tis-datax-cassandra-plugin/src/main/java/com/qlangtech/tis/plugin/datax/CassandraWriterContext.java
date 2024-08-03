@@ -45,7 +45,7 @@ public class CassandraWriterContext implements IDataxContext {
         this.tabMapper = tabMapper;
         this.dsFactory = writer.getDataSourceFactory();
 
-        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tabMapper.getSourceCols()))
+        this.cols = transformerRules.map((rule) -> rule.overwriteCols(tabMapper.getSourceCols()).getCols())
                 .orElseGet(() -> tabMapper.getSourceCols().stream().collect(Collectors.toList()));
     }
 
@@ -67,7 +67,7 @@ public class CassandraWriterContext implements IDataxContext {
 
     public List<IColMetaGetter> getColumn() {
         return cols;
-       // return this.tabMapper.getSourceCols();
+        // return this.tabMapper.getSourceCols();
     }
 
     public String getHost() {

@@ -289,7 +289,7 @@ public class WriterTemplate {
 //        jarLoaderCenter.put("plugin.writer." + dataxWriter.getDataxMeta().getName(), uberClassLoader);
 
         Configuration allConf = IOUtils.loadResourceFromClasspath(MockDataxReaderContext.class //
-                , "container.json", true, (input) -> {
+                , "container.json_bak", true, (input) -> {
                     Configuration cfg = Configuration.from(input);
 
 //                    "streamreader": {

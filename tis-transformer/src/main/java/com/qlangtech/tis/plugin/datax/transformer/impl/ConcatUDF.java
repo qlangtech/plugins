@@ -27,6 +27,7 @@ import com.qlangtech.tis.manage.common.Option;
 import com.qlangtech.tis.plugin.annotation.FormField;
 import com.qlangtech.tis.plugin.annotation.FormFieldType;
 import com.qlangtech.tis.plugin.annotation.Validator;
+import com.qlangtech.tis.plugin.datax.transformer.InParamer;
 import com.qlangtech.tis.plugin.datax.transformer.OutputParameter;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDefinition;
 import com.qlangtech.tis.plugin.datax.transformer.UDFDesc;
@@ -53,6 +54,11 @@ public class ConcatUDF extends UDFDefinition {
 
     @FormField(ordinal = 3, type = FormFieldType.MULTI_SELECTABLE, validate = {Validator.require})
     public TargetColType to;
+
+    @Override
+    public List<InParamer> inParameters() {
+        return this.from.stream().map((col) -> InParamer.create(col.getName())).collect(Collectors.toList());
+    }
 
     /**
      * 取得可用的字段分隔符

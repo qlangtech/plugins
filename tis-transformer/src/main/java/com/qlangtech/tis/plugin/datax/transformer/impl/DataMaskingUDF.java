@@ -31,67 +31,62 @@ import org.apache.commons.lang.StringUtils;
 import java.util.List;
 
 /**
+ * 数据脱敏（数据脱敏是对敏感信息进行变形以保护隐私，如身份证号、手机号、卡号、客户号等。数据库安全技术包括漏扫、加密、防火墙、脱敏、审计系统。数据库安全风险有拖库、刷库、撞库）；
+ *
  * @author: 百岁（baisui@qlangtech.com）
- * @create: 2024-06-20 11:27
+ * @create: 2024-07-29 09:40
  **/
-public class SubStrUDF extends CopyValUDF {
+public class DataMaskingUDF extends SubStrUDF {
 
-    @FormField(ordinal = 2, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer start;
-    @FormField(ordinal = 3, type = FormFieldType.INT_NUMBER, validate = {Validator.require})
-    public Integer length;
+    @FormField(ordinal = 4, type = FormFieldType.INPUTTEXT, validate = {Validator.require})
+    public String replaceChar;
 
     @Override
     public List<UDFDesc> getLiteria() {
         List<UDFDesc> descs = super.getLiteria();
-        descs.add(new UDFDesc("start", String.valueOf(this.start)));
-        descs.add(new UDFDesc("length", String.valueOf(this.length)));
+        descs.add(new UDFDesc("replaceChar", this.replaceChar));
         return descs;
     }
 
+
     @Override
     public void evaluate(ColumnAwareRecord record) {
-
         final String sourceFieldVal = record.getString(this.from);
         if (StringUtils.isNotEmpty(sourceFieldVal)) {
-            record.setString(this.to.getName(), StringUtils.substring(sourceFieldVal, start, length));
+            StringBuffer masking = new StringBuffer();
+            int addMaskCharCount = 0;
+            for (int idx = 0; idx < sourceFieldVal.length(); idx++) {
+                if (idx < start || (addMaskCharCount >= length)) {
+                    masking.append(sourceFieldVal.charAt(idx));
+                } else {
+                    masking.append(replaceChar);
+                    addMaskCharCount++;
+                }
+            }
+            record.setString(this.to.getName(), masking.toString());
         }
     }
 
+
     @TISExtension
-    public static class DefaultSubStrDescriptor extends CopyValUDF.DefaultDescriptor {
-        public DefaultSubStrDescriptor() {
+    public static final class DefaultDescriptor extends DefaultSubStrDescriptor {
+        public DefaultDescriptor() {
             super();
         }
 
-        public boolean validateStart(
+        public boolean validateReplaceChar(
                 IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
-
-            Integer start = Integer.parseInt(val);
-
-            if (start < 0) {
-                msgHandler.addFieldError(context, fieldName, "不能小于0");
+            int length = StringUtils.length(val);
+            if (length > 1) {
+                msgHandler.addFieldError(context, fieldName, "长度不能大于1");
                 return false;
             }
-
-            return true;
-        }
-
-        public boolean validateLength(
-                IFieldErrorHandler msgHandler, Context context, String fieldName, String val) {
-            Integer length = Integer.parseInt(val);
-
-            if (length < 0) {
-                msgHandler.addFieldError(context, fieldName, "不能小于0");
-                return false;
-            }
-
             return true;
         }
 
         @Override
         public String getDisplayName() {
-            return "SubStr";
+            return "Data Masking";
         }
     }
 }

@@ -71,7 +71,7 @@ public class MongoDBWriterContext extends BasicMongoDBContext implements IDataxC
         try {
             List<IColMetaGetter> cols = null;
             if (transformerRules.isPresent()) {
-                cols = transformerRules.get().overwriteCols(tab.getCols());
+                cols = transformerRules.get().overwriteCols(tab.getCols()).getCols();
             } else {
                 cols = tab.getCols().stream().collect(Collectors.toList());
             }

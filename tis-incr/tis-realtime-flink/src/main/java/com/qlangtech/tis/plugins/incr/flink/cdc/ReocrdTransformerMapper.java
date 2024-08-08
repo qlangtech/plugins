@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
+import com.alibaba.datax.common.element.ICol2Index;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qlangtech.plugins.incr.flink.cdc.FlinkCol;
@@ -55,9 +56,10 @@ public abstract class ReocrdTransformerMapper<Type> implements MapFunction<Type,
             col2IdxBuilder.put(col.name, Pair.of(idx++, col));
         }
 
-        this.col2IdxMapper = new FlinkCol2Index((
+        this.col2IdxMapper = new FlinkCol2Index(
                 col2IdxBuilder.entrySet().stream().collect(
-                        Collectors.toMap((entry) -> entry.getKey(), (entry) -> entry.getValue().getKey()))));
+                        Collectors.toMap((entry) -> entry.getKey() //
+                                , (entry) -> new ICol2Index.Col(entry.getValue().getKey(), entry.getValue().getValue().colType))));
     }
 
     @Override

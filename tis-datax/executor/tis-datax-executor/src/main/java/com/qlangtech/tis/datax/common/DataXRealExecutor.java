@@ -21,6 +21,7 @@ package com.qlangtech.tis.datax.common;
 import com.alibaba.datax.common.element.ColumnCast;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
 import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
+import com.alibaba.datax.common.element.PreviewRecords;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.alibaba.datax.common.element.Record;
 import com.alibaba.datax.common.element.ThreadLocalRows;
@@ -46,8 +47,10 @@ import com.qlangtech.tis.plugin.ds.CMeta;
 import com.qlangtech.tis.plugin.ds.DataType;
 import com.qlangtech.tis.plugin.ds.ISelectedTab;
 import com.qlangtech.tis.util.IPluginContext;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Collections;
 import java.util.List;
@@ -107,7 +110,8 @@ public class DataXRealExecutor {
      * @param queryCriteria
      * @return
      */
-    public List<Record> previewRecords(String tableName, QueryCriteria queryCriteria) {
+    public PreviewRecords previewRecords(String tableName, QueryCriteria queryCriteria) {
+
         if (StringUtils.isEmpty(tableName)) {
             throw new IllegalArgumentException("param tableName can not be null");
         }
@@ -126,13 +130,13 @@ public class DataXRealExecutor {
                     , this.dataxProcessor.getWriter(pluginCtx), this.getDataxReader(), transformerRules, tableMap));
 
             ThreadLocalRows rows = new ThreadLocalRows();
-
+            ISelectedTab tab = null;
             if (tableMap.isPresent()) {
                 TableMap tabMapper = tableMap.get();
-                ISelectedTab tab = tabMapper.getSourceTab();
+                tab = tabMapper.getSourceTab();
                 List<String> primaryKeys = tab.getPrimaryKeys();
-                Map<String, String> offsetPointer = queryCriteria.getPagerOffsetPointCols();
-                boolean firstPage = offsetPointer == null;
+                List<OffsetColVal> offsetPointer = queryCriteria.getPagerOffsetCursor();
+                boolean firstPage = CollectionUtils.isEmpty(offsetPointer);
                 DataXResultPreviewOrderByCols orderByCols = new DataXResultPreviewOrderByCols(firstPage);
 
                 if (firstPage) {
@@ -140,11 +144,14 @@ public class DataXRealExecutor {
                         orderByCols.addOffsetColVal(new OffsetColVal(pk, null, null));
                     }
                 } else {
-                    Map<String, DataType> typeMap
-                            = tab.getCols().stream().collect(Collectors.toMap((col) -> col.getName(), (col) -> col.getType()));
-                    for (String pk : primaryKeys) {
-                        orderByCols.addOffsetColVal(new OffsetColVal(pk, offsetPointer.get(pk), isNumericJdbcType(typeMap, pk)));
+//                    Map<String, DataType> typeMap
+//                            = tab.getCols().stream().collect(Collectors.toMap((col) -> col.getName(), (col) -> col.getType()));
+                    // for (String pk : primaryKeys) {
+                    for (OffsetColVal val : offsetPointer) {
+                        orderByCols.addOffsetColVal(val);
                     }
+                    //   orderByCols.addOffsetColVal(new OffsetColVal(pk, offsetPointer.get(pk), isNumericJdbcType(typeMap, pk)));
+                    // }
                 }
                 rows.setPagerOffsetPointCols(orderByCols);
             }
@@ -161,7 +168,10 @@ public class DataXRealExecutor {
             this.startPipeline(readerCfg, transformer, (jobContainer) -> {
                 jobContainer.setAttr(ThreadLocalRows.class, rows);
             });
-            return rows.getRows();
+
+            return rows.createPreviewRecords(tab);
+
+            //  return new PreviewRecords( rows.getRows(), );
         }
 
         throw new IllegalStateException("can not arrive here ,tableName:" + tableName);

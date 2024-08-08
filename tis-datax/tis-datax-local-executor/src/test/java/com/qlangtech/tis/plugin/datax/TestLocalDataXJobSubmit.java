@@ -130,9 +130,9 @@ public class TestLocalDataXJobSubmit extends TestCase {
         QueryCriteria queryCriteria = new QueryCriteria();
         queryCriteria.setPageSize(10);
         queryCriteria.setNextPakge(true);
-        queryCriteria.setPagerOffsetPointCols( null);
+        queryCriteria.setPagerOffsetCursor(null);
 
-        PreviewRowsData previewRowsData = localJobSubmit.previewRowsData("mysql_mysql", "base", queryCriteria);
+        PreviewRowsData previewRowsData = localJobSubmit.previewRowsData("mysql", "base", queryCriteria);
         Assert.assertNotNull(previewRowsData);
         Thread.sleep(99999999);
     }

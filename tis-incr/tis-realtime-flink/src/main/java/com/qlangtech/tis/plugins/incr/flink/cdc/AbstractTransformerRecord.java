@@ -18,6 +18,7 @@
 
 package com.qlangtech.tis.plugins.incr.flink.cdc;
 
+import com.alibaba.datax.common.element.Column;
 import com.alibaba.datax.common.element.ColumnAwareRecord;
 import com.alibaba.datax.common.element.ICol2Index;
 
@@ -57,6 +58,11 @@ public abstract class AbstractTransformerRecord<Type> implements ColumnAwareReco
         return pos;
     }
 
+    @Override
+    public String getString(String field, boolean origin) {
+        Object  colVal = this.getColumn(field);
+        return colVal != null ? String.valueOf(colVal) : null;
+    }
 
     public abstract Type getDelegate();
 

@@ -30,18 +30,19 @@ import org.junit.Assert;
 public class TestDataXPipelinePreviewProcessorExecutor extends TestCase {
     public void testPreviewRowsData() {
         final String dataXName = "mysql";
+
         DataXPipelinePreviewProcessorExecutor previewExecutor = new DataXPipelinePreviewProcessorExecutor(51509);
         PreviewProgressorExpireTracker expireTracker = new PreviewProgressorExpireTracker(dataXName, 999999);
         previewExecutor.setCommitTracker(expireTracker);
         String identityVal = null;
         boolean next = true;
         boolean needHeader = true;
-        int pageSize = 10;
+        int pageSize = 1;
         QueryCriteria queryCriteria = new QueryCriteria();
-        queryCriteria.setPagerOffsetPointCols(null);
+        queryCriteria.setPagerOffsetCursor(null);
         queryCriteria.setNextPakge(next);
         queryCriteria.setPageSize(pageSize);
-        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "orderdetail", queryCriteria);
+        PreviewRowsData previewRowsData = previewExecutor.previewRowsData(dataXName, "base", queryCriteria);
         Assert.assertNotNull(previewRowsData);
     }
 }

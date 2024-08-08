@@ -18,9 +18,11 @@
 
 package com.qlangtech.tis.plugin.datax;
 
+import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols;
+import com.alibaba.datax.common.element.DataXResultPreviewOrderByCols.OffsetColVal;
 import com.alibaba.datax.common.element.QueryCriteria;
 import com.google.common.collect.Lists;
-import com.google.protobuf.StringValue;
+
 import com.qlangtech.tis.datax.DataXJobSingleProcessorException;
 import com.qlangtech.tis.datax.DataXJobSingleProcessorExecutor;
 import com.qlangtech.tis.datax.DataXJobSubmit.InstanceType;
@@ -28,18 +30,23 @@ import com.qlangtech.tis.datax.DataxPrePostConsumer;
 import com.qlangtech.tis.datax.IDataXTaskRelevant;
 import com.qlangtech.tis.datax.TimeFormat;
 import com.qlangtech.tis.datax.preview.IPreviewRowsDataService;
+import com.qlangtech.tis.datax.preview.PreviewHeaderCol;
 import com.qlangtech.tis.datax.preview.PreviewRowsData;
 import com.qlangtech.tis.plugin.datax.DataXPipelinePreviewProcessorExecutor.PreviewLaunchParam;
 import com.qlangtech.tis.rpc.grpc.datax.preview.DataXRecordsPreviewGrpc;
 import com.qlangtech.tis.rpc.grpc.datax.preview.DataXRecordsPreviewGrpc.DataXRecordsPreviewBlockingStub;
+import com.qlangtech.tis.rpc.grpc.datax.preview.HeaderColGrpc;
+import com.qlangtech.tis.rpc.grpc.datax.preview.OffsetColValGrpc;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataCriteria.Builder;
 import com.qlangtech.tis.rpc.grpc.datax.preview.PreviewRowsDataResponse;
+import com.qlangtech.tis.rpc.grpc.datax.preview.StringValue;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
@@ -52,6 +59,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 启动新的基于独立进程的数据预览执行启动器
@@ -118,8 +126,8 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
         rowsDataBuilder.setTableName(tableName);
         rowsDataBuilder.setPageSize(queryCriteria.getPageSize());
         rowsDataBuilder.setNext(queryCriteria.isNextPakge());
-        Map<String, String> orderByCols = null;
-        if (MapUtils.isNotEmpty(orderByCols = queryCriteria.getPagerOffsetPointCols())) {
+        List<OffsetColVal> orderByCols = null;
+        if (CollectionUtils.isNotEmpty(orderByCols = queryCriteria.getPagerOffsetCursor())) {
 //            if (CollectionUtils.isEmpty(orderByCols.getOffsetCols())) {
 //                throw new IllegalStateException("dataXName:" + dataXName
 //                        + ",table:" + tableName + " relevant offsetCols can not be empty");
@@ -134,12 +142,17 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
 //            }).collect(Collectors.toList()));
 //
 //            rowsDataBuilder.setOrderByCols(orderByColsBuilder.build());
-
-            rowsDataBuilder.putAllOrderByCols(orderByCols);
+            rowsDataBuilder.addAllOrderByCols(orderByCols.stream().map((col) -> {
+                OffsetColValGrpc.Builder colValBuilder = OffsetColValGrpc.newBuilder();
+                colValBuilder.setNumericJdbcType(col.isNumericJdbcType());
+                colValBuilder.setColKey(col.getColKey());
+                colValBuilder.setVal(col.getVal());
+                return colValBuilder.build();
+            }).collect(Collectors.toList()));
         }
 
 
-        String[] header = null;
+        PreviewHeaderCol[] header = null;
         List<String[]> rows = null;
         String[] cols = null;
         int retryCount = 0;
@@ -148,23 +161,40 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
 
             try {
                 PreviewRowsDataResponse response = blockingStub.previewRowsData(rowsDataBuilder.build());
-                Map<String, Integer> columnHeader = response.getColumnHeaderMap();
+
+                List<DataXResultPreviewOrderByCols.OffsetColVal> headerCursor = Lists.newArrayList();
+                List<DataXResultPreviewOrderByCols.OffsetColVal> tailerCursor = Lists.newArrayList();
+                //  DataXResultPreviewOrderByCols.OffsetColVal colVal = null;
+                for (OffsetColValGrpc offsetColVal : response.getHeaderCursorList()) {
+                    headerCursor.add(new OffsetColVal(offsetColVal.getColKey(), offsetColVal.getVal(), offsetColVal.getNumericJdbcType()));
+                }
+
+                for (OffsetColValGrpc offsetColVal : response.getTailerCursorList()) {
+                    tailerCursor.add(new OffsetColVal(offsetColVal.getColKey(), offsetColVal.getVal(), offsetColVal.getNumericJdbcType()));
+                }
+
+                Map<String, HeaderColGrpc> columnHeader = response.getColumnHeaderMap();
                 List<com.qlangtech.tis.rpc.grpc.datax.preview.Record> records = response.getRecordsList();
 
-                header = new String[columnHeader.size()];
+                header = new PreviewHeaderCol[columnHeader.size()];
                 rows = Lists.newArrayListWithCapacity(records.size());
-                for (Map.Entry<String, Integer> entry : columnHeader.entrySet()) {
-                    header[entry.getValue()] = entry.getKey();
+                PreviewHeaderCol headerCol = null;
+                HeaderColGrpc col = null;
+                for (Map.Entry<String, HeaderColGrpc> entry : columnHeader.entrySet()) {
+                    headerCol = new PreviewHeaderCol(entry.getKey());
+                    col = entry.getValue();
+                    headerCol.setBlob(col.getBlob());
+                    header[col.getIndex()] = headerCol;
                 }
                 java.util.List<StringValue> vals = null;
 
 
                 for (com.qlangtech.tis.rpc.grpc.datax.preview.Record record : records) {
                     vals = record.getColValsList();
-                    rows.add(vals.stream().map((val) -> val.getValue()).toArray(String[]::new));
+                    rows.add(vals.stream().map((val) -> val.getNil() ? null : val.getVal()).toArray(String[]::new));
                 }
 
-                break aa;
+                return new PreviewRowsData(header, rows, headerCursor, tailerCursor);
 
             } catch (StatusRuntimeException e) {
                 if (e.getStatus().getCode() == Status.Code.UNAVAILABLE && retryCount++ < 3) {
@@ -183,7 +213,7 @@ public class DataXPipelinePreviewProcessorExecutor extends DataXJobSingleProcess
                 }
             }
         }
-        return new PreviewRowsData(header, rows);
+
     }
 
     public void setClasspath(String classpath) {

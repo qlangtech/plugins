@@ -32,19 +32,24 @@ import java.util.stream.Collectors;
  * @create: 2024-07-03 13:48
  **/
 public class FlinkCol2Index implements ICol2Index, Serializable {
-    final Map<String, Integer> col2IndexMapper;
+    final Map<String, ICol2Index.Col> col2IndexMapper;
 
-    public FlinkCol2Index(Map<String, Integer> col2IndexMapper) {
+    public FlinkCol2Index(Map<String, ICol2Index.Col> col2IndexMapper) {
         this.col2IndexMapper = Maps.newHashMap(Objects.requireNonNull(col2IndexMapper, "param col2IndexMapper can not be null"));
     }
 
     @Override
-    public Map<String, Integer> getCol2Index() {
+    public int contextParamValsCount() {
+        throw new UnsupportedOperationException("contextParamValsCount");
+    }
+
+    @Override
+    public Map<String, ICol2Index.Col> getCol2Index() {
         return this.col2IndexMapper;
     }
 
     public Integer get(String field) {
-        return col2IndexMapper.get(field);
+        return Objects.requireNonNull(col2IndexMapper.get(field), "field:" + field + " relevant Col can not be null").getIndex();
     }
 
     public String descKeyVals() {

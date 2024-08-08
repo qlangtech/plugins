@@ -36,6 +36,8 @@ public class TransformerRow extends AbstractTransformerRecord<Row> {
         this.cols = cols;
     }
 
+
+
     @Override
     public Row getDelegate() {
         return this.row;
